@@ -212,8 +212,7 @@ function RuleSheet({ rule, members, onClose }: RuleSheetProps) {
   const onSubmit = useCallback(
     (data: RuleForm) => {
       const assigneeId = data.assigneeId === NO_ASSIGNEE ? undefined : data.assigneeId;
-      const setPriority =
-        data.setPriority === NO_PRIORITY ? undefined : (data.setPriority as TicketPriority);
+      const setPriority = PRIORITIES.find((p) => p === data.setPriority);
 
       if (isEdit) {
         update.mutate(
@@ -550,12 +549,36 @@ export default function SupportRoutingPage() {
     });
   }, [deleteTarget, deleteRule]);
 
+  function handleOpenCreate() {
+    setCreateOpen(true);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
+  function handleNewRuleAction() {
+    setCreateOpen(true);
+  }
+
+  function handleCloseCreate() {
+    setCreateOpen(false);
+  }
+
+  function handleCloseEdit() {
+    setEditTarget(null);
+  }
+
+  function handleDeleteOpenChange(open: boolean) {
+    if (!open) setDeleteTarget(null);
+  }
+
   return (
     <PageWrapper
       title="Routing Rules"
       subtitle="Auto-assign and prioritise incoming tickets"
       actions={
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" /> New Rule
         </Button>
       }
@@ -563,7 +586,7 @@ export default function SupportRoutingPage() {
       {isLoading ? (
         <LoadingState variant="list" rows={5} />
       ) : isError ? (
-        <ErrorState onRetry={() => refetch()} />
+        <ErrorState onRetry={handleRetry} />
       ) : orderedRules.length > 0 ? (
         <div className="space-y-3">
           {orderedRules.map((rule, index) => (
@@ -585,17 +608,17 @@ export default function SupportRoutingPage() {
           illustration={<EmptySearchIllustration />}
           title="No routing rules yet"
           description="Create rules to auto-assign and prioritise tickets as they arrive."
-          action={{ label: "New Rule", onClick: () => setCreateOpen(true) }}
+          action={{ label: "New Rule", onClick: handleNewRuleAction }}
           className="flex-1"
         />
       )}
 
-      {createOpen && <RuleSheet members={members} onClose={() => setCreateOpen(false)} />}
+      {createOpen && <RuleSheet members={members} onClose={handleCloseCreate} />}
       {editTarget && (
-        <RuleSheet rule={editTarget} members={members} onClose={() => setEditTarget(null)} />
+        <RuleSheet rule={editTarget} members={members} onClose={handleCloseEdit} />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete routing rule?</AlertDialogTitle>

@@ -2,8 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { resolveImageUrl } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { Bug, Bookmark, Zap, CheckSquare, ChevronRight } from "lucide-react";
 
 interface Ticket {
@@ -21,7 +20,7 @@ interface Ticket {
 interface ListViewProps {
   tickets: Ticket[];
   onTicketClick: (ticketId: number) => void;
-  groupBy?: string;
+  groupBy?: keyof Ticket;
 }
 
 const typeIcons: Record<string, typeof CheckSquare> = {
@@ -48,11 +47,13 @@ const statusColors: Record<string, string> = {
 export function ListView({ tickets, onTicketClick, groupBy }: ListViewProps) {
   const grouped = groupBy
     ? tickets.reduce<Record<string, Ticket[]>>((acc, t) => {
-        const key = String((t as unknown as Record<string, unknown>)[groupBy] ?? "None");
+        const key = String(t[groupBy] ?? "None");
         (acc[key] ??= []).push(t);
         return acc;
       }, {})
     : { "All Items": tickets };
+
+  const handleTicketClick = (id: number) => () => onTicketClick(id);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -70,7 +71,7 @@ export function ListView({ tickets, onTicketClick, groupBy }: ListViewProps) {
               return (
                 <button
                   key={ticket.id}
-                  onClick={() => onTicketClick(ticket.id)}
+                  onClick={handleTicketClick(ticket.id)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors text-left"
                 >
                   <div className={cn("h-2 w-2 rounded-full flex-shrink-0", statusColors[ticket.status] ?? "bg-slate-400")} />

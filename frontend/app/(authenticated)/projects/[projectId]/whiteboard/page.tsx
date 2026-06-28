@@ -2,6 +2,7 @@
 
 import {
   use,
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -73,6 +74,43 @@ const TOOL_DEFS: { type: ElementType; label: string; icon: typeof StickyNote }[]
   { type: "ellipse", label: "Ellipse", icon: Circle },
   { type: "text", label: "Text", icon: Type },
 ];
+
+interface ToolButtonProps {
+  tool: (typeof TOOL_DEFS)[number];
+  onAdd: (type: ElementType) => void;
+}
+
+const ToolButton = memo(function ToolButton({ tool, onAdd }: ToolButtonProps) {
+  const handleClick = useCallback(() => onAdd(tool.type), [onAdd, tool.type]);
+  return (
+    <Button size="sm" variant="outline" className="h-8" onClick={handleClick}>
+      <tool.icon className="h-3.5 w-3.5 mr-1" />
+      {tool.label}
+    </Button>
+  );
+});
+
+interface PaletteButtonProps {
+  color: string;
+  isActive: boolean;
+  onSelect: (color: string) => void;
+}
+
+const PaletteButton = memo(function PaletteButton({ color, isActive, onSelect }: PaletteButtonProps) {
+  const handleClick = useCallback(() => onSelect(color), [onSelect, color]);
+  return (
+    <button
+      type="button"
+      aria-label={`Color ${color}`}
+      onClick={handleClick}
+      className={cn(
+        "h-6 w-6 rounded-md border transition",
+        isActive ? "border-primary ring-2 ring-primary/30" : "border-border",
+      )}
+      style={{ backgroundColor: color }}
+    />
+  );
+});
 
 function nextElementId(elements: WhiteboardElement[]): string {
   let max = 0;
@@ -213,6 +251,9 @@ function CreateBoardDialog({
     if (!name.trim()) return;
     onCreate(name.trim());
   }
+  function handleCancel() {
+    onOpenChange(false);
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -230,7 +271,7 @@ function CreateBoardDialog({
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isPending || !name.trim()}>
@@ -251,6 +292,8 @@ function BoardCanvas({
 }) {
   const { data, isLoading, isError, refetch } = useWhiteboard(projectId, board.id);
   const update = useUpdateWhiteboard(projectId);
+
+  const handleRetry = useCallback(() => refetch(), [refetch]);
 
   const [elements, setElements] = useState<WhiteboardElement[]>(() => data?.data ?? []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -421,7 +464,7 @@ function BoardCanvas({
   if (isError || !data) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <ErrorState onRetry={() => refetch()} />
+        <ErrorState onRetry={handleRetry} />
       </div>
     );
   }
@@ -435,30 +478,16 @@ function BoardCanvas({
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-2 mb-2">
         <div className="flex items-center gap-1">
           {TOOL_DEFS.map((tool) => (
-            <Button
-              key={tool.type}
-              size="sm"
-              variant="outline"
-              className="h-8"
-              onClick={() => handleAdd(tool.type)}
-            >
-              <tool.icon className="h-3.5 w-3.5 mr-1" />
-              {tool.label}
-            </Button>
+            <ToolButton key={tool.type} tool={tool} onAdd={handleAdd} />
           ))}
         </div>
         <div className="flex items-center gap-1 pl-2 border-l border-border">
           {PALETTE.map((color) => (
-            <button
+            <PaletteButton
               key={color}
-              type="button"
-              aria-label={`Color ${color}`}
-              onClick={() => handleColorSelect(color)}
-              className={cn(
-                "h-6 w-6 rounded-md border transition",
-                activeColor === color ? "border-primary ring-2 ring-primary/30" : "border-border",
-              )}
-              style={{ backgroundColor: color }}
+              color={color}
+              isActive={activeColor === color}
+              onSelect={handleColorSelect}
             />
           ))}
         </div>
@@ -536,6 +565,49 @@ function BoardCanvas({
   );
 }
 
+interface BoardItemProps {
+  board: WhiteboardSummary;
+  isSelected: boolean;
+  onSelect: (id: number) => void;
+  onDelete: (board: WhiteboardSummary) => void;
+}
+
+const BoardItem = memo(function BoardItem({ board, isSelected, onSelect, onDelete }: BoardItemProps) {
+  const handleSelect = useCallback(() => onSelect(board.id), [onSelect, board.id]);
+  const handleDelete = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onDelete(board);
+  }, [onDelete, board]);
+
+  return (
+    <li>
+      <div
+        className={cn(
+          "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer",
+          isSelected ? "bg-primary/10 text-primary" : "hover:bg-muted",
+        )}
+        onClick={handleSelect}
+      >
+        <StickyNote className="h-3.5 w-3.5 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium">{board.name}</p>
+          <p className="text-[11px] text-muted-foreground">
+            {board.elementCount} {board.elementCount === 1 ? "item" : "items"}
+          </p>
+        </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+          onClick={handleDelete}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
+    </li>
+  );
+});
+
 export default function WhiteboardPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: projectIdStr } = use(params);
   const projectId = Number(projectIdStr);
@@ -553,6 +625,14 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
     return boards.find((board) => board.id === chosenBoardId) ?? boards[0];
   }, [boards, chosenBoardId]);
   const selectedBoardId = selectedBoard?.id ?? null;
+
+  const handleBoardSelect = useCallback((id: number) => setChosenBoardId(id), []);
+  const handleBoardDelete = useCallback((board: WhiteboardSummary) => setDeleteTarget(board), []);
+  const handleAlertOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleRefetch = useCallback(() => refetch(), [refetch]);
 
   function handleCreate(name: string) {
     createBoard.mutate(name, {
@@ -577,10 +657,6 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
     });
   }
 
-  function handleOpenCreate() {
-    setCreateOpen(true);
-  }
-
   return (
     <PageWrapper
       title="Whiteboard"
@@ -599,7 +675,7 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
         </div>
       ) : isError ? (
         <div className="flex flex-1 items-center justify-center">
-          <ErrorState onRetry={() => refetch()} />
+          <ErrorState onRetry={handleRefetch} />
         </div>
       ) : !boards || boards.length === 0 ? (
         <div className="flex flex-1">
@@ -616,36 +692,13 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
           <aside className="w-56 shrink-0 overflow-y-auto scrollbar-thin border-r border-border pr-3">
             <ul className="space-y-1">
               {boards.map((board) => (
-                <li key={board.id}>
-                  <div
-                    className={cn(
-                      "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer",
-                      board.id === selectedBoardId
-                        ? "bg-primary/10 text-primary"
-                        : "hover:bg-muted",
-                    )}
-                    onClick={() => setChosenBoardId(board.id)}
-                  >
-                    <StickyNote className="h-3.5 w-3.5 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{board.name}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {board.elementCount} {board.elementCount === 1 ? "item" : "items"}
-                      </p>
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setDeleteTarget(board);
-                      }}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </li>
+                <BoardItem
+                  key={board.id}
+                  board={board}
+                  isSelected={board.id === selectedBoardId}
+                  onSelect={handleBoardSelect}
+                  onDelete={handleBoardDelete}
+                />
               ))}
             </ul>
           </aside>
@@ -676,7 +729,7 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
 
       <AlertDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onOpenChange={handleAlertOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

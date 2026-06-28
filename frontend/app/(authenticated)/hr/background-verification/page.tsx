@@ -50,6 +50,7 @@ import {
   Building2,
   Clock,
   ShieldAlert,
+  AlertCircle,
 } from "lucide-react";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
@@ -159,21 +160,116 @@ function ComplianceDashboard() {
   );
 }
 
+interface BgvRowProps {
+  bgv: BackgroundVerification;
+  onUpdateStatus: (id: number, status: string) => void;
+  onOpenEdit: (bgv: BackgroundVerification) => void;
+  isPending: boolean;
+}
+
+function BgvRow({ bgv, onUpdateStatus, onOpenEdit, isPending }: BgvRowProps) {
+  const statusCfg = getStatusConfig(bgv.status);
+  const employeeName = bgv.user?.name ?? bgv.user?.email ?? "Employee";
+
+  const handlePass = useCallback(() => onUpdateStatus(bgv.id, "PASSED"), [bgv.id, onUpdateStatus]);
+  const handleFail = useCallback(() => onUpdateStatus(bgv.id, "FAILED"), [bgv.id, onUpdateStatus]);
+  const handleEdit = useCallback(() => onOpenEdit(bgv), [bgv, onOpenEdit]);
+
+  return (
+    <TableRow className="hover:bg-muted/20 transition-colors duration-200">
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Avatar className="h-6 w-6 shrink-0">
+            <AvatarFallback className="text-[9px] bg-muted text-muted-foreground">
+              {getInitials(bgv.user?.name)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-xs font-medium whitespace-nowrap">
+            {employeeName}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800">
+          {bgv.type}
+        </span>
+      </TableCell>
+      <TableCell>
+        {bgv.provider ? (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-violet-200 dark:border-violet-800">
+            <Building2 className="h-2.5 w-2.5" />
+            {bgv.provider}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
+      </TableCell>
+      <TableCell className="text-xs text-muted-foreground">
+        {bgv.referenceNumber ?? "—"}
+      </TableCell>
+      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+        {bgv.createdAt
+          ? format(new Date(bgv.createdAt), "MMM d, yyyy")
+          : "—"}
+      </TableCell>
+      <TableCell>
+        <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
+          {statusCfg.icon}
+          {statusCfg.label}
+        </span>
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex gap-1 justify-end">
+          {(bgv.status === "PENDING" || bgv.status === "IN_PROGRESS") && (
+            <>
+              <Button
+                size="sm"
+                className="h-7 gap-1 text-xs"
+                onClick={handlePass}
+                disabled={isPending}
+              >
+                <CheckCircle2 className="h-3 w-3" />
+                Pass
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1 text-xs"
+                onClick={handleFail}
+                disabled={isPending}
+              >
+                <XCircle className="h-3 w-3" />
+                Fail
+              </Button>
+            </>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            onClick={handleEdit}
+            aria-label="Edit verification"
+          >
+            <Pencil className="h-3 w-3" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 function BGVContent() {
-  const { data: items, isLoading } = useBackgroundVerifications();
+  const { data: items, isLoading, isError, refetch } = useBackgroundVerifications();
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const { data: employeesRaw } = useHrEmployees();
   const create = useCreateBackgroundVerification();
   const update = useUpdateBackgroundVerification();
 
-  const employees = useMemo(
-    () =>
-      (
-        Array.isArray(employeesRaw)
-          ? employeesRaw
-          : (employeesRaw as PaginatedEmployees | undefined)?.data ?? []
-      ) as Employee[],
-    [employeesRaw],
-  );
+  const employees = useMemo<Employee[]>(() => {
+    if (Array.isArray(employeesRaw)) return employeesRaw;
+    if (employeesRaw && "data" in employeesRaw) return employeesRaw.data;
+    return [];
+  }, [employeesRaw]);
 
   const employeeOptions = useMemo<ComboboxOption[]>(
     () =>
@@ -209,6 +305,8 @@ function BGVContent() {
     setRefNumber("");
     setNotes("");
   }, []);
+
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleSheetOpenChange = useCallback((open: boolean) => {
     if (!open) resetForm();
@@ -290,13 +388,44 @@ function BGVContent() {
     [update],
   );
 
+  if (isLoading) {
+    return (
+      <PageWrapper
+        title="Background Verification"
+        subtitle="Initiate, track employee background checks, and view candidate compliance"
+      >
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 rounded-2xl" />
+          ))}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Background Verification"
+        subtitle="Initiate, track employee background checks, and view candidate compliance"
+      >
+        <EmptyState
+          illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
+          title="Failed to load verifications"
+          description="Something went wrong. Please try again."
+          action={{ label: "Retry", onClick: handleRetry }}
+        />
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Background Verification"
       subtitle="Initiate, track employee background checks, and view candidate compliance"
       badge={`${items?.length ?? 0} checks`}
       actions={
-        <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />
           Initiate BGV
         </Button>
@@ -309,13 +438,7 @@ function BGVContent() {
         </TabsList>
 
         <TabsContent value="employee-bgv">
-          {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 rounded-2xl" />
-              ))}
-            </div>
-          ) : !items?.length ? (
+          {!items?.length ? (
             <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
               <EmptyState
                 illustration={<ShieldCheck className="h-8 w-8 text-muted-foreground" />}
@@ -340,95 +463,15 @@ function BGVContent() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {items.map((bgv: BackgroundVerification) => {
-                        const statusCfg = getStatusConfig(bgv.status);
-                        const employeeName = bgv.user?.name ?? bgv.user?.email ?? "Employee";
-
-                        return (
-                          <TableRow
-                            key={bgv.id}
-                            className="hover:bg-muted/20 transition-colors duration-200"
-                          >
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-6 w-6 shrink-0">
-                                  <AvatarFallback className="text-[9px] bg-muted text-muted-foreground">
-                                    {getInitials(bgv.user?.name)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="text-xs font-medium whitespace-nowrap">
-                                  {employeeName}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800">
-                                {bgv.type}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              {bgv.provider ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-violet-200 dark:border-violet-800">
-                                  <Building2 className="h-2.5 w-2.5" />
-                                  {bgv.provider}
-                                </span>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {bgv.referenceNumber ?? "—"}
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                              {bgv.createdAt
-                                ? format(new Date(bgv.createdAt), "MMM d, yyyy")
-                                : "—"}
-                            </TableCell>
-                            <TableCell>
-                              <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
-                                {statusCfg.icon}
-                                {statusCfg.label}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex gap-1 justify-end">
-                                {(bgv.status === "PENDING" || bgv.status === "IN_PROGRESS") && (
-                                  <>
-                                    <Button
-                                      size="sm"
-                                      className="h-7 gap-1 text-xs"
-                                      onClick={() => handleUpdateStatus(bgv.id, "PASSED")}
-                                      disabled={update.isPending}
-                                    >
-                                      <CheckCircle2 className="h-3 w-3" />
-                                      Pass
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-7 gap-1 text-xs"
-                                      onClick={() => handleUpdateStatus(bgv.id, "FAILED")}
-                                      disabled={update.isPending}
-                                    >
-                                      <XCircle className="h-3 w-3" />
-                                      Fail
-                                    </Button>
-                                  </>
-                                )}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 w-7 p-0"
-                                  onClick={() => handleOpenEdit(bgv)}
-                                  aria-label="Edit verification"
-                                >
-                                  <Pencil className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                      {items.map((bgv: BackgroundVerification) => (
+                        <BgvRow
+                          key={bgv.id}
+                          bgv={bgv}
+                          onUpdateStatus={handleUpdateStatus}
+                          onOpenEdit={handleOpenEdit}
+                          isPending={update.isPending}
+                        />
+                      ))}
                     </TableBody>
                   </Table>
                 </div>

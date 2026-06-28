@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -32,7 +32,7 @@ export function LeadDistributionDialog({ open, onOpenChange, leadIds, onSuccess 
 
   const distributeMutation = useDistributeLeads();
 
-  const handleDistribute = () => {
+  const handleDistribute = useCallback(() => {
     distributeMutation.mutate(
       { leadIds, skipAbsent },
       {
@@ -44,12 +44,12 @@ export function LeadDistributionDialog({ open, onOpenChange, leadIds, onSuccess 
         onError: (err) => toast.error(err.message),
       }
     );
-  };
+  }, [distributeMutation, leadIds, skipAbsent, onSuccess]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setResult(null);
     onOpenChange(false);
-  };
+  }, [onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

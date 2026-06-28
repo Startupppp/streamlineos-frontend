@@ -47,7 +47,7 @@ import {
 import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
 import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { CeoDashboard } from "@/features/dashboard/ceo-dashboard";
 import { HrDashboard } from "@/features/dashboard/hr-dashboard";
 import { SalesDashboard } from "@/features/dashboard/sales-dashboard";
@@ -86,8 +86,7 @@ export function DashboardClient() {
   const currentUserId = session?.user?.id;
   const firstName = getFirstName(session);
   const role = session?.user?.role;
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const {
     data: stats,

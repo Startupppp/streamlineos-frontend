@@ -107,8 +107,12 @@ export function UpsellFormSheet({
     [onFormChange]
   );
 
+  const handleOpenChange = useCallback((v: boolean) => { if (!v) onCancel(); }, [onCancel]);
+  const handleCancel = useCallback(() => onCancel(), [onCancel]);
+  const handleSubmit = useCallback(() => onSubmit(), [onSubmit]);
+
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onCancel()}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Add Opportunity</SheetTitle>
@@ -204,12 +208,12 @@ export function UpsellFormSheet({
         </div>
 
         <SheetFooter>
-          <Button variant="outline" className="flex-1" onClick={onCancel}>
+          <Button variant="outline" className="flex-1" onClick={handleCancel}>
             Cancel
           </Button>
           <Button
             className="flex-1"
-            onClick={onSubmit}
+            onClick={handleSubmit}
             disabled={!form.clientId || !form.title.trim() || isCreating}
           >
             {isCreating ? "Creating…" : "Create"}

@@ -261,6 +261,8 @@ export default function BacklogPage({ params }: PageProps) {
     [handleBulkUpdate]
   );
 
+  const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
   const statuses =
     data && "statuses" in data
       ? (data.statuses as { id: number; name: string; color: string | null; order: number }[])
@@ -330,7 +332,7 @@ export default function BacklogPage({ params }: PageProps) {
               variant="ghost"
               size="sm"
               className="h-7 text-xs"
-              onClick={() => setSelectedIds(new Set())}
+              onClick={handleClearSelection}
             >
               <X className="h-3.5 w-3.5" />
             </Button>

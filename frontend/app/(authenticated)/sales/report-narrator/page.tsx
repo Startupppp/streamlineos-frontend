@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useReportNarrator, type ReportNarratorResult } from "@/lib/api/hooks/ai";
 import { toast } from "sonner";
@@ -66,6 +67,7 @@ interface PreviousNarrativeCardProps {
 function PreviousNarrativeCard({ entry }: PreviousNarrativeCardProps) {
   const [expanded, setExpanded] = useState(false);
   const preview = entry.narrative.slice(0, 180);
+  const handleToggleExpand = useCallback(() => setExpanded((v) => !v), []);
   const generatedAt = new Date(entry.generatedAt).toLocaleString("en-IN", {
     dateStyle: "short",
     timeStyle: "short",
@@ -90,7 +92,7 @@ function PreviousNarrativeCard({ entry }: PreviousNarrativeCardProps) {
         <button
           type="button"
           className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
-          onClick={() => setExpanded((v) => !v)}
+          onClick={handleToggleExpand}
         >
           {expanded ? "Show less" : "Show more"}
         </button>
@@ -141,6 +143,14 @@ export default function ReportNarratorPage() {
   const handleLoadExample = useCallback(() => {
     setData(SAMPLE_DATA);
     setContext(SAMPLE_CONTEXT);
+  }, []);
+
+  const handleContextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setContext(e.target.value);
+  }, []);
+
+  const handleDataChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setData(e.target.value);
   }, []);
 
   const generatedAt = result
@@ -305,15 +315,5 @@ export default function ReportNarratorPage() {
         </div>
       </div>
     </PageWrapper>
-  );
-}
-
-
-function Skeleton({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-md bg-muted ${className ?? ""}`}
-      aria-hidden="true"
-    />
   );
 }

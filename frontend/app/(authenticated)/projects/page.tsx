@@ -16,6 +16,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/use-expense-filters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
 type ViewMode = "grid" | "list";
@@ -65,12 +66,21 @@ export default function ProjectsPage() {
     [updateParams],
   );
 
-  const { data, isLoading } = useProjects({
+  const handleClearFilters = useCallback(
+    () => updateParams({ q: null, status: null, page: null }),
+    [updateParams],
+  );
+
+  const { data, isLoading, isError, refetch } = useProjects({
     page,
     limit: 12,
     search: debouncedSearch || undefined,
     status,
   });
+
+  function handleRetry() {
+    refetch();
+  }
 
   const projects = data?.data ?? [];
   const pagination = data
@@ -143,6 +153,8 @@ export default function ProjectsPage() {
             ))}
           </div>
         )
+      ) : isError ? (
+        <ErrorState onRetry={handleRetry} />
       ) : projects.length === 0 && !debouncedSearch && status === "ALL" ? (
         <ProjectsEmptyState />
       ) : projects.length === 0 ? (
@@ -152,7 +164,7 @@ export default function ProjectsPage() {
           description="Try adjusting the search or status filter."
           action={{
             label: "Clear all filters",
-            onClick: () => updateParams({ q: null, status: null, page: null }),
+            onClick: handleClearFilters,
           }}
         />
       ) : viewMode === "grid" ? (

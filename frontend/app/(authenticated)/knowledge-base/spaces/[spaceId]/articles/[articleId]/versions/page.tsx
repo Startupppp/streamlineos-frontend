@@ -113,6 +113,10 @@ export default function KbArticleVersionsPage() {
   const versionsQuery = useKbArticleVersions(articleId);
   const versions = versionsQuery.data ?? [];
 
+  function handleRetryVersions() {
+    void versionsQuery.refetch();
+  }
+
   const latestVersionNumber =
     versions.length > 0 ? Math.max(...versions.map((v) => v.versionNumber)) : -1;
 
@@ -137,7 +141,7 @@ export default function KbArticleVersionsPage() {
         <ErrorState
           title="Couldn't load version history"
           description={getApiError(versionsQuery.error)}
-          onRetry={() => versionsQuery.refetch()}
+          onRetry={handleRetryVersions}
         />
       )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,6 +58,18 @@ function MacroDialog({
   const update = useUpdateMacro();
   const isPending = create.isPending || update.isPending;
 
+  function handleTitleChange(event: ChangeEvent<HTMLInputElement>) {
+    setTitle(event.target.value);
+  }
+
+  function handleCategoryChange(event: ChangeEvent<HTMLInputElement>) {
+    setCategory(event.target.value);
+  }
+
+  function handleBodyChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setBody(event.target.value);
+  }
+
   function handleSave() {
     const trimmedTitle = title.trim();
     const trimmedBody = body.trim();
@@ -104,7 +116,7 @@ function MacroDialog({
               id="macro-title"
               placeholder="e.g. Refund acknowledgement"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
             />
           </div>
           <div className="space-y-1">
@@ -114,7 +126,7 @@ function MacroDialog({
               list="macro-category-options"
               placeholder="e.g. Billing"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={handleCategoryChange}
             />
             {categoryOptions.length > 0 && (
               <datalist id="macro-category-options">
@@ -134,7 +146,7 @@ function MacroDialog({
               rows={6}
               placeholder="Hi {name}, thanks for reaching out…"
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={handleBodyChange}
             />
           </div>
         </div>
@@ -158,10 +170,19 @@ function MacroCard({
   onDelete,
 }: {
   macro: SupportMacro;
-  onCopy: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onCopy: (macro: SupportMacro) => void;
+  onEdit: (macro: SupportMacro) => void;
+  onDelete: (macro: SupportMacro) => void;
 }) {
+  function handleCopy() {
+    onCopy(macro);
+  }
+  function handleEdit() {
+    onEdit(macro);
+  }
+  function handleDelete() {
+    onDelete(macro);
+  }
   return (
     <Card>
       <CardContent className="pt-4">
@@ -180,17 +201,17 @@ function MacroCard({
             </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onCopy} aria-label="Copy response">
+            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleCopy} aria-label="Copy response">
               <Copy className="h-3.5 w-3.5" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onEdit} aria-label="Edit response">
+            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleEdit} aria-label="Edit response">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
               className="h-7 w-7 text-destructive hover:text-destructive"
-              onClick={onDelete}
+              onClick={handleDelete}
               aria-label="Delete response"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -244,12 +265,48 @@ export default function SupportMacrosPage() {
     });
   }
 
+  function handleOpenCreate() {
+    setCreateOpen(true);
+  }
+
+  function handleSearchChange(event: ChangeEvent<HTMLInputElement>) {
+    setSearch(event.target.value);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
+  function handleNewResponseAction() {
+    setCreateOpen(true);
+  }
+
+  function handleEditMacro(macro: SupportMacro) {
+    setEditTarget(macro);
+  }
+
+  function handleDeleteMacro(macro: SupportMacro) {
+    setDeleteTarget(macro);
+  }
+
+  function handleCloseCreate() {
+    setCreateOpen(false);
+  }
+
+  function handleCloseEdit() {
+    setEditTarget(null);
+  }
+
+  function handleDeleteOpenChange(open: boolean) {
+    if (!open) setDeleteTarget(null);
+  }
+
   return (
     <PageWrapper
       title="Canned Responses"
       subtitle="Reusable reply templates for faster support"
       actions={
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" /> New Response
         </Button>
       }
@@ -260,23 +317,23 @@ export default function SupportMacrosPage() {
           className="pl-8"
           placeholder="Search responses…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
         />
       </div>
 
       {isLoading ? (
         <LoadingState variant="cards" rows={6} />
       ) : isError ? (
-        <ErrorState onRetry={() => refetch()} />
+        <ErrorState onRetry={handleRetry} />
       ) : macros && macros.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {macros.map((macro) => (
             <MacroCard
               key={macro.id}
               macro={macro}
-              onCopy={() => handleCopy(macro)}
-              onEdit={() => setEditTarget(macro)}
-              onDelete={() => setDeleteTarget(macro)}
+              onCopy={handleCopy}
+              onEdit={handleEditMacro}
+              onDelete={handleDeleteMacro}
             />
           ))}
         </div>
@@ -289,23 +346,23 @@ export default function SupportMacrosPage() {
               ? "Try a different search term."
               : "Create reusable reply templates to speed up support."
           }
-          action={search.trim() ? undefined : { label: "New Response", onClick: () => setCreateOpen(true) }}
+          action={search.trim() ? undefined : { label: "New Response", onClick: handleNewResponseAction }}
           className="flex-1"
         />
       )}
 
       {createOpen && (
-        <MacroDialog categoryOptions={categoryOptions} onClose={() => setCreateOpen(false)} />
+        <MacroDialog categoryOptions={categoryOptions} onClose={handleCloseCreate} />
       )}
       {editTarget && (
         <MacroDialog
           macro={editTarget}
           categoryOptions={categoryOptions}
-          onClose={() => setEditTarget(null)}
+          onClose={handleCloseEdit}
         />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete canned response?</AlertDialogTitle>

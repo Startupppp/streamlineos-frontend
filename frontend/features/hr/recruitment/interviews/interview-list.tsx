@@ -101,6 +101,75 @@ function CandidateAvatar({ firstName, lastName }: { firstName?: string; lastName
   );
 }
 
+interface InterviewTableRowProps {
+  interview: Interview;
+  isSelected: boolean;
+  onToggleSelect: (id: number) => void;
+  onFeedback: (interview: Interview) => void;
+}
+
+function InterviewTableRow({ interview, isSelected, onToggleSelect, onFeedback }: InterviewTableRowProps) {
+  const handleToggleSelect = useCallback(() => onToggleSelect(interview.id), [onToggleSelect, interview.id]);
+  const handleFeedback = useCallback(() => onFeedback(interview), [onFeedback, interview]);
+  const panelIds = interview.panelInterviewerIds;
+
+  return (
+    <TableRow
+      className={cn(
+        "transition-colors duration-150",
+        isSelected && "bg-primary/5 hover:bg-primary/8"
+      )}
+    >
+      <TableCell className="pl-4">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={handleToggleSelect}
+          aria-label={`Select interview for ${interview.candidate?.firstName} ${interview.candidate?.lastName}`}
+        />
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2.5">
+          <CandidateAvatar
+            firstName={interview.candidate?.firstName}
+            lastName={interview.candidate?.lastName}
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {interview.candidate?.firstName} {interview.candidate?.lastName}
+            </p>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <TypeBadge type={interview.type} panelCount={panelIds?.length} />
+      </TableCell>
+      <TableCell>
+        <div className="text-sm">
+          <p className="font-medium text-foreground">{format(new Date(interview.scheduledAt), "MMM d, yyyy")}</p>
+          <p className="text-[11px] text-muted-foreground">{format(new Date(interview.scheduledAt), "h:mm a")}</p>
+        </div>
+      </TableCell>
+      <TableCell>
+        <span className="text-sm text-muted-foreground">{interview.duration} min</span>
+      </TableCell>
+      <TableCell>
+        <ResultBadge result={interview.result} />
+      </TableCell>
+      <TableCell>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+          onClick={handleFeedback}
+        >
+          <MessageSquare className="h-3 w-3" />
+          Feedback
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export function InterviewList() {
   const { data: interviews } = useInterviews();
   const updateInterview = useUpdateInterview();
@@ -249,66 +318,15 @@ export function InterviewList() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    interviews.map((interview) => {
-                      const isSelected = selectedIds.has(interview.id);
-                      const panelIds = (interview as Interview & { panelInterviewerIds?: string[] }).panelInterviewerIds;
-                      return (
-                        <TableRow
-                          key={interview.id}
-                          className={cn(
-                            "transition-colors duration-150",
-                            isSelected && "bg-primary/5 hover:bg-primary/8"
-                          )}
-                        >
-                          <TableCell className="pl-4">
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => toggleSelect(interview.id)}
-                              aria-label={`Select interview for ${interview.candidate?.firstName} ${interview.candidate?.lastName}`}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2.5">
-                              <CandidateAvatar
-                                firstName={interview.candidate?.firstName}
-                                lastName={interview.candidate?.lastName}
-                              />
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold text-foreground truncate">
-                                  {interview.candidate?.firstName} {interview.candidate?.lastName}
-                                </p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <TypeBadge type={interview.type} panelCount={panelIds?.length} />
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <p className="font-medium text-foreground">{format(new Date(interview.scheduledAt), "MMM d, yyyy")}</p>
-                              <p className="text-[11px] text-muted-foreground">{format(new Date(interview.scheduledAt), "h:mm a")}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm text-muted-foreground">{interview.duration} min</span>
-                          </TableCell>
-                          <TableCell>
-                            <ResultBadge result={interview.result} />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-                              onClick={() => setFeedbackInterview(interview as Interview)}
-                            >
-                              <MessageSquare className="h-3 w-3" />
-                              Feedback
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
+                    interviews.map((interview) => (
+                      <InterviewTableRow
+                        key={interview.id}
+                        interview={interview}
+                        isSelected={selectedIds.has(interview.id)}
+                        onToggleSelect={toggleSelect}
+                        onFeedback={setFeedbackInterview}
+                      />
+                    ))
                   )}
                 </TableBody>
               </Table>

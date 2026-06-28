@@ -13,6 +13,35 @@ import { useCrmOrganizations, useUpdateCrmOrganization } from "@/lib/api/hooks/c
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+interface OrgSelectButtonProps {
+  org: { id: number; name: string; industry?: string | null };
+  selected: boolean;
+  onSelect: (id: number) => void;
+}
+
+function OrgSelectButton({ org, selected, onSelect }: OrgSelectButtonProps) {
+  const handleClick = useCallback(() => onSelect(org.id), [org.id, onSelect]);
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
+        selected ? "bg-blue-500/10 text-blue-600" : "hover:bg-accent text-foreground",
+      )}
+    >
+      <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0">
+        {org.name[0]?.toUpperCase()}
+      </span>
+      <span className="truncate">{org.name}</span>
+      {org.industry && (
+        <span className="text-xs text-muted-foreground ml-auto shrink-0">{org.industry}</span>
+      )}
+      {selected && <Check className="h-3.5 w-3.5 ml-2 shrink-0" />}
+    </button>
+  );
+}
+
 interface LinkParentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,6 +62,11 @@ export function LinkParentDialog({
   const updateMutation = useUpdateCrmOrganization();
 
   const candidates = (data?.organizations ?? []).filter((o) => o.id !== organizationId);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleSelectNone = useCallback(() => setSelectedId(null), []);
+  const handleSelect = useCallback((id: number) => setSelectedId(id), []);
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   const handleConfirm = useCallback(() => {
     updateMutation.mutate(
@@ -59,7 +93,7 @@ export function LinkParentDialog({
           <Input
             placeholder="Search organizations..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-9"
           />
         </div>
@@ -73,7 +107,7 @@ export function LinkParentDialog({
             <div className="space-y-1 p-1">
               <button
                 type="button"
-                onClick={() => setSelectedId(null)}
+                onClick={handleSelectNone}
                 className={cn(
 "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
                   selectedId === null
@@ -87,26 +121,12 @@ export function LinkParentDialog({
               </button>
 
               {candidates.map((org) => (
-                <button
+                <OrgSelectButton
                   key={org.id}
-                  type="button"
-                  onClick={() => setSelectedId(org.id)}
-                  className={cn(
-"w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
-                    selectedId === org.id
-                      ?"bg-blue-500/10 text-blue-600"
-                      :"hover:bg-accent text-foreground",
-                  )}
-                >
-                  <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0">
-                    {org.name[0]?.toUpperCase()}
-                  </span>
-                  <span className="truncate">{org.name}</span>
-                  {org.industry && (
-                    <span className="text-xs text-muted-foreground ml-auto shrink-0">{org.industry}</span>
-                  )}
-                  {selectedId === org.id && <Check className="h-3.5 w-3.5 ml-2 shrink-0" />}
-                </button>
+                  org={org}
+                  selected={selectedId === org.id}
+                  onSelect={handleSelect}
+                />
               ))}
 
               {candidates.length === 0 && !isLoading && (
@@ -117,7 +137,7 @@ export function LinkParentDialog({
         </ScrollArea>
 
         <DialogFooter className="flex-row gap-2 border-t pt-3">
-          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" className="flex-1" onClick={handleCancel}>
             <X className="h-4 w-4 mr-1" /> Cancel
           </Button>
           <Button

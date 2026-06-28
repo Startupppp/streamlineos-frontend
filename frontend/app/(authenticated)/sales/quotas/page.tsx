@@ -38,6 +38,7 @@ import { useHrEmployees } from "@/lib/api/hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { SalesQuota } from "@/lib/api/hooks/crm";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 
 function fmt(amount: string | number) {
@@ -58,12 +59,23 @@ export default function SalesQuotasPage() {
   const createQuota = useCreateSalesQuota();
 
   const items: SalesQuota[] = Array.isArray(quotas) ? quotas : [];
-  const employees = (employeesData as { data?: Array<{ id: string; name: string }>; items?: Array<{ id: string; name: string }> } | Array<{ id: string; name: string }> | undefined);
-  const employeeList: Array<{ id: string; name: string }> = Array.isArray(employees) ? employees : (employees?.data ?? employees?.items ?? []);
+  const employeeList = useMemo(() => {
+    if (!employeesData) return [];
+    const list: Employee[] = Array.isArray(employeesData) ? employeesData : (employeesData as PaginatedEmployees).data;
+    return list.flatMap((e) => (e.name ? [{ id: e.id, name: e.name }] : []));
+  }, [employeesData]);
 
   const totalTarget = items.reduce((s, q) => s + Number(q.targetRevenue), 0);
   const totalActual = items.reduce((s, q) => s + Number(q.actualRevenue), 0);
   const overallAttainment = totalTarget > 0 ? Math.round((totalActual / totalTarget) * 100) : 0;
+
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleUserIdChange = useCallback((v: string) => setUserId(v), []);
+  const handlePeriodChange = useCallback((v: string) => setPeriod(v), []);
+  const handleStartDateChange = useCallback((v: string) => setStartDate(v), []);
+  const handleEndDateChange = useCallback((v: string) => setEndDate(v), []);
+  const handleTargetRevenueChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTargetRevenue(e.target.value), []);
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
 
   const resetForm = useCallback(() => {
     setUserId(""); setPeriod("monthly"); setStartDate(""); setEndDate("");
@@ -98,7 +110,7 @@ export default function SalesQuotasPage() {
       title="Sales Quotas"
       subtitle="Manage revenue targets per rep"
       actions={
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5 mr-1.5" />
           Set Quota
         </Button>
@@ -127,7 +139,16 @@ export default function SalesQuotasPage() {
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                      </TableRow>
+                    ))
                   ) : items.length === 0 ? (
                     <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
                       <EmptyTargetIllustration className="h-36 w-36 opacity-95" />
@@ -162,7 +183,7 @@ export default function SalesQuotasPage() {
       <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Set Sales Quota" description="Assign a revenue target to a team member." onSubmit={handleCreate} submitLabel="Create Quota" isPending={createQuota.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee</label>
-          <Select value={userId} onValueChange={setUserId}>
+          <Select value={userId} onValueChange={handleUserIdChange}>
             <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
             <SelectContent>
               {employeeList.map((emp) => (
@@ -173,7 +194,7 @@ export default function SalesQuotasPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Period</label>
-          <Select value={period} onValueChange={setPeriod}>
+          <Select value={period} onValueChange={handlePeriodChange}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="monthly">Monthly</SelectItem>
@@ -185,20 +206,20 @@ export default function SalesQuotasPage() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
-            <DatePicker value={startDate} onChange={setStartDate} placeholder="Start date" />
+            <DatePicker value={startDate} onChange={handleStartDateChange} placeholder="Start date" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">End Date <span className="text-destructive">*</span></label>
-            <DatePicker value={endDate} onChange={setEndDate} placeholder="End date" />
+            <DatePicker value={endDate} onChange={handleEndDateChange} placeholder="End date" />
           </div>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Target Revenue (₹) <span className="text-destructive">*</span></label>
-          <Input type="number" min="0" step="1" value={targetRevenue} onChange={(e) => setTargetRevenue(e.target.value)} placeholder="e.g. 500000" />
+          <Input type="number" min="0" step="1" value={targetRevenue} onChange={handleTargetRevenueChange} placeholder="e.g. 500000" />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes</label>
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes..." rows={2} />
+          <Textarea value={notes} onChange={handleNotesChange} placeholder="Optional notes..." rows={2} />
         </div>
       </HrSheet>
     </PageWrapper>

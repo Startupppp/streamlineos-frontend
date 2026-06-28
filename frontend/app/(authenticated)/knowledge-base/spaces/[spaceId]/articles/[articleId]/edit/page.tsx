@@ -13,6 +13,10 @@ export default function EditKbArticlePage() {
 
   const articleQuery = useKbArticle(articleId);
 
+  function handleRetry() {
+    void articleQuery.refetch();
+  }
+
   if (articleQuery.isLoading) {
     return <ArticleEditorSkeleton />;
   }
@@ -27,7 +31,7 @@ export default function EditKbArticlePage() {
               ? getErrorMessage(articleQuery.error)
               : "This article does not exist."
           }
-          onRetry={() => articleQuery.refetch()}
+          onRetry={handleRetry}
         />
       </div>
     );

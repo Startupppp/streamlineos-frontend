@@ -8,7 +8,8 @@ import { CreateSprintDialog } from "@/components/projects/create-sprint-dialog";
 import { BurndownChart } from "@/components/projects/burndown-chart";
 import { VelocityChart } from "@/components/projects/velocity-chart";
 import { Card, CardContent } from "@/components/ui/card";
-import { Play, Calendar, CheckCircle2, Loader2 } from "lucide-react";
+import { Play, Calendar, CheckCircle2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptySprintIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -106,11 +107,21 @@ export default function SprintsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <div className="p-6 md:p-8 lg:p-12">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <PageWrapper title="Sprints" actions={<CreateSprintDialog projectId={projectId} />}>
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-40 rounded-lg" />
+            <Skeleton className="h-32 rounded-lg" />
+          </div>
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-24" />
+            {Array.from({ length: 2 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-lg" />
+            ))}
+          </div>
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 

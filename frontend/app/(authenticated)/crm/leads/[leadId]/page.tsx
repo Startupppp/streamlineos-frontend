@@ -62,7 +62,7 @@ export default function LeadDetailPage({
           phone: lead.phone ?? "",
           company: lead.company ?? "",
           city: lead.city ?? "",
-          priority: (lead.priority as "HOT" | "WARM" | "COLD") ?? "WARM",
+          priority: lead.priority ?? "WARM",
           potentialValue: lead.potentialValue ?? "",
           investmentInterest: lead.investmentInterest ?? "",
           notes: lead.notes ?? "",
@@ -83,7 +83,7 @@ export default function LeadDetailPage({
       const promise = updateStatusMutation.mutateAsync({
         leadId,
         status,
-        expectedStatus: lead?.status as PipelineStatus,
+        expectedStatus: lead?.status,
       });
       toast.promise(promise, {
         loading: "Updating status...",
@@ -215,6 +215,9 @@ export default function LeadDetailPage({
     );
   }
 
+  type LeadData = NonNullable<typeof lead> & { [key: string]: unknown };
+  const leadData = lead as LeadData;
+
   return (
     <PageWrapper
       title={lead.name}
@@ -233,7 +236,7 @@ export default function LeadDetailPage({
       >
         <motion.div variants={fadeUp}>
           <LeadDetailHeader
-            lead={lead as unknown as Parameters<typeof LeadDetailHeader>[0]["lead"]}
+            lead={leadData}
             isEditing={isEditing}
             onToggleEdit={handleToggleEdit}
             onStatusChange={handleStatusChange}
@@ -244,7 +247,7 @@ export default function LeadDetailPage({
         <motion.div variants={fadeUp} className="grid gap-4 lg:grid-cols-5">
           <div className="lg:col-span-3 space-y-4">
             <LeadInfoCard
-              lead={lead as unknown as Parameters<typeof LeadInfoCard>[0]["lead"]}
+              lead={leadData}
               isEditing={isEditing}
               editForm={editForm}
               isUpdatePending={updateLeadMutation.isPending}
@@ -276,7 +279,7 @@ export default function LeadDetailPage({
 
           <div className="lg:col-span-2">
             <LeadSidebar
-              lead={lead as unknown as Parameters<typeof LeadSidebar>[0]["lead"]}
+              lead={leadData}
               timeline={timeline}
               timelineLoading={timelineLoading}
             />

@@ -13,7 +13,6 @@ import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import { NewDMDialog } from "@/features/chat/new-dm-dialog";
 import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
-import type { Channel } from "@/types/chat";
 
 function ChatNotifications({
   activeChannelId,

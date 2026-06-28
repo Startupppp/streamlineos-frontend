@@ -7,14 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import {
-  submitContactForm,
-  type ContactInput,
-  type ContactResult,
-} from "@/server/actions/contact-submission";
+import { submitContactForm } from "@/server/actions/contact-submission";
 import { TurnstileWidget, isTurnstileEnabled } from "@/features/security/turnstile-widget";
 
-const TOPICS: { value: ContactInput["topic"]; label: string }[] = [
+type ContactTopic = "sales" | "support" | "partnership" | "press" | "other";
+
+const TOPICS: { value: ContactTopic; label: string }[] = [
   { value: "sales", label: "Talk to sales" },
   { value: "support", label: "Get support" },
   { value: "partnership", label: "Partnership" },
@@ -27,7 +25,7 @@ type FormState = {
   email: string;
   company: string;
   phone: string;
-  topic: ContactInput["topic"];
+  topic: ContactTopic;
   message: string;
 };
 
@@ -70,7 +68,7 @@ export function ContactForm() {
     }
 
     startTransition(async () => {
-      const result: ContactResult = await submitContactForm({
+      const result = await submitContactForm({
         ...values,
         cfTurnstileToken: turnstileToken ?? undefined,
       });

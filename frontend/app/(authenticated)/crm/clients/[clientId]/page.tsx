@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -162,7 +162,10 @@ function LogActivityDialog({
   const [description, setDescription] = useState("");
   const mutation = useLogClientActivity();
 
-  const handleSubmit = async () => {
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
+
+  const handleSubmit = useCallback(async () => {
     if (!title.trim()) {
       toast.error("Activity title is required.");
       return;
@@ -182,14 +185,14 @@ function LogActivityDialog({
     } catch {
       toast.error("Failed to log activity. Please try again.");
     }
-  };
+  }, [mutation, clientAccountId, activityType, title, description, onOpenChange]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setTitle("");
     setDescription("");
     setActivityType("note");
     onOpenChange(false);
-  };
+  }, [onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -220,7 +223,7 @@ function LogActivityDialog({
             <Input
               placeholder="e.g. Follow-up call with client"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
               className="h-9"
             />
           </div>
@@ -229,7 +232,7 @@ function LogActivityDialog({
             <Textarea
               placeholder="Additional details..."
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={handleDescriptionChange}
               rows={3}
               className="resize-none text-sm"
             />
@@ -357,7 +360,7 @@ export default function ClientDetailPage() {
   const statusConfig =
     STATUS_CONFIG[account?.status ?? "ACCOUNT_OPENING"] ?? STATUS_CONFIG.ACCOUNT_OPENING;
 
-  const handleRenewalStageChange = async (stage: string) => {
+  const handleRenewalStageChange = useCallback(async (stage: string) => {
     try {
       await updateRenewal.mutateAsync({
         accountId: clientId,
@@ -367,9 +370,11 @@ export default function ClientDetailPage() {
     } catch {
       toast.error("Failed to update renewal stage.");
     }
-  };
+  }, [updateRenewal, clientId]);
 
-  const handleBack = () => router.push("/crm/clients");
+  const handleBack = useCallback(() => router.push("/crm/clients"), [router]);
+
+  const handleOpenLog = useCallback(() => setLogOpen(true), []);
 
   if (!accountLoading && !account) {
     return (
@@ -416,7 +421,7 @@ export default function ClientDetailPage() {
             <ArrowLeft className="h-4 w-4 mr-1.5" />
             Back
           </Button>
-          <Button size="sm" onClick={() => setLogOpen(true)} disabled={accountLoading}>
+          <Button size="sm" onClick={handleOpenLog} disabled={accountLoading}>
             <Plus className="h-4 w-4 mr-1.5" />
             Log Activity
           </Button>
@@ -676,7 +681,7 @@ export default function ClientDetailPage() {
                       variant="outline"
                       size="sm"
                       className="h-7 text-xs gap-1"
-                      onClick={() => setLogOpen(true)}
+                      onClick={handleOpenLog}
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Log

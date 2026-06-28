@@ -40,7 +40,7 @@ export default function WinLossAnalysisPage() {
     [data]
   );
 
-  const handleRetry = useCallback(() => { refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (

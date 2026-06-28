@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import {
   Plus,
-  Gauge,
   Trash2,
   Link2,
   Check,
@@ -116,8 +115,10 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
     );
   }, [title, question, create, handleClose]);
 
+  const handleDialogOpenChange = useCallback((o: boolean) => { if (!o) handleClose(); }, [handleClose]);
+
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>New NPS Survey</DialogTitle>
@@ -152,6 +153,9 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
 function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: () => void }) {
   const { data, isLoading, isError, refetch } = useNpsSurvey(surveyId);
 
+  const handleSheetOpenChange = useCallback((o: boolean) => { if (!o) onClose(); }, [onClose]);
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   const chartData = useMemo(() => {
     if (!data) return [];
     return (
@@ -164,7 +168,7 @@ function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: (
   }, [data]);
 
   return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
+    <Sheet open onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader className="px-0">
           <SheetTitle>{data?.survey.title ?? "Survey"}</SheetTitle>
@@ -174,7 +178,7 @@ function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: (
         {isLoading ? (
           <LoadingState variant="list" rows={5} />
         ) : isError || !data ? (
-          <ErrorState onRetry={() => refetch()} />
+          <ErrorState onRetry={handleRetry} />
         ) : (
           <div className="space-y-5 py-2">
             <div className="flex items-center gap-4">
@@ -269,11 +273,18 @@ function SurveyRow({
   isUpdating: boolean;
 }) {
   const cfg = STATUS_CONFIG[survey.status];
+
+  const handleView = useCallback(() => onView(survey), [onView, survey]);
+  const handleCopyLinkSurvey = useCallback(() => onCopyLink(survey), [onCopyLink, survey]);
+  const handleActivate = useCallback(() => onToggleStatus(survey, "active"), [onToggleStatus, survey]);
+  const handleCloseSurvey = useCallback(() => onToggleStatus(survey, "closed"), [onToggleStatus, survey]);
+  const handleDeleteSurvey = useCallback(() => onDelete(survey), [onDelete, survey]);
+
   return (
     <Card>
       <CardContent className="pt-4">
         <div className="flex items-start justify-between gap-3">
-          <button type="button" onClick={() => onView(survey)} className="min-w-0 flex-1 text-left">
+          <button type="button" onClick={handleView} className="min-w-0 flex-1 text-left">
             <div className="flex items-center gap-2">
               <p className="font-medium text-sm truncate">{survey.title}</p>
               <Badge variant={cfg.variant} className="text-[10px]">{cfg.label}</Badge>
@@ -305,7 +316,7 @@ function SurveyRow({
                 size="icon"
                 variant="ghost"
                 className="h-7 w-7"
-                onClick={() => onCopyLink(survey)}
+                onClick={handleCopyLinkSurvey}
                 aria-label="Copy public link"
                 title="Copy public link"
               >
@@ -316,7 +327,7 @@ function SurveyRow({
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7 text-emerald-600 hover:text-emerald-600"
-                  onClick={() => onToggleStatus(survey, "active")}
+                  onClick={handleActivate}
                   disabled={isUpdating}
                   aria-label="Activate survey"
                   title="Activate"
@@ -328,7 +339,7 @@ function SurveyRow({
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7"
-                  onClick={() => onToggleStatus(survey, "closed")}
+                  onClick={handleCloseSurvey}
                   disabled={isUpdating}
                   aria-label="Close survey"
                   title="Close"
@@ -340,7 +351,7 @@ function SurveyRow({
                 size="icon"
                 variant="ghost"
                 className="h-7 w-7 text-destructive hover:text-destructive"
-                onClick={() => onDelete(survey)}
+                onClick={handleDeleteSurvey}
                 aria-label="Delete survey"
                 title="Delete"
               >
@@ -413,12 +424,20 @@ export default function NpsPage() {
     });
   }, [deleteTarget, deleteSurvey]);
 
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
+  const handleViewDetail = useCallback((s: NpsSurvey) => setDetailTarget(s), []);
+  const handleDeleteTarget = useCallback((s: NpsSurvey) => setDeleteTarget(s), []);
+  const handleCloseDetail = useCallback(() => setDetailTarget(null), []);
+  const handleDeleteAlertChange = useCallback((o: boolean) => { if (!o) setDeleteTarget(null); }, []);
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   return (
     <PageWrapper
       title="NPS Surveys"
       subtitle="Measure customer loyalty and close the loop on detractor feedback"
       actions={
-        <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+        <Button size="sm" onClick={handleOpenCreate} className="gap-1.5">
           <Plus className="size-4" />
           New Survey
         </Button>
@@ -430,7 +449,7 @@ export default function NpsPage() {
         <ErrorState
           title="Couldn't load NPS surveys"
           description="An error occurred while loading surveys. Please try again."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
         />
       ) : (
         <div className="space-y-4">
@@ -495,8 +514,8 @@ export default function NpsPage() {
                   copied={copiedId === survey.id}
                   onCopyLink={handleCopyLink}
                   onToggleStatus={handleToggleStatus}
-                  onView={setDetailTarget}
-                  onDelete={setDeleteTarget}
+                  onView={handleViewDetail}
+                  onDelete={handleDeleteTarget}
                   isUpdating={updateSurvey.isPending}
                 />
               ))}
@@ -507,20 +526,20 @@ export default function NpsPage() {
                 illustration={<EmptyLeaderboardIllustration />}
                 title="No NPS surveys yet"
                 description="Create a survey, activate it, and share the public link to start measuring loyalty."
-                action={{ label: "New Survey", onClick: () => setCreateOpen(true) }}
+                action={{ label: "New Survey", onClick: handleOpenCreate }}
               />
             </div>
           )}
         </div>
       )}
 
-      <CreateSurveyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
+      <CreateSurveyDialog open={createOpen} onClose={handleCloseCreate} />
 
       {detailTarget && (
-        <SurveyDetailSheet surveyId={detailTarget.id} onClose={() => setDetailTarget(null)} />
+        <SurveyDetailSheet surveyId={detailTarget.id} onClose={handleCloseDetail} />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteAlertChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete survey?</AlertDialogTitle>

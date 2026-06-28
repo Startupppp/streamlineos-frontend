@@ -76,6 +76,12 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
     if (!isOpen) handleClose();
   }, [leadName, dealName, handleClose]);
 
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setConversionNotes(e.target.value), []);
+  const handleInvestmentChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setInvestmentInterest(e.target.value), []);
+  const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEstimatedAmount(e.target.value), []);
+  const handleCreateDealChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCreateDeal(e.target.checked), []);
+  const handleDealNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDealName(e.target.value), []);
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -89,7 +95,7 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
               id="conversion-notes"
               placeholder="Describe why this lead is being converted..."
               value={conversionNotes}
-              onChange={(e) => setConversionNotes(e.target.value)}
+              onChange={handleNotesChange}
               rows={3}
             />
           </div>
@@ -99,7 +105,7 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
               id="investment-interest"
               placeholder="e.g., Mutual Funds, SIP, Stocks"
               value={investmentInterest}
-              onChange={(e) => setInvestmentInterest(e.target.value)}
+              onChange={handleInvestmentChange}
             />
           </div>
           <div className="space-y-2">
@@ -109,7 +115,7 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
               type="number"
               placeholder="e.g., 500000"
               value={estimatedAmount}
-              onChange={(e) => setEstimatedAmount(e.target.value)}
+              onChange={handleAmountChange}
             />
           </div>
 
@@ -117,7 +123,7 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
             <input
               type="checkbox"
               checked={createDeal}
-              onChange={(e) => setCreateDeal(e.target.checked)}
+              onChange={handleCreateDealChange}
               className="h-4 w-4 rounded border-input accent-gold"
             />
             <div>
@@ -133,7 +139,7 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
                 id="deal-name"
                 placeholder="e.g., Investment - Rahul Sharma"
                 value={dealName}
-                onChange={(e) => setDealName(e.target.value)}
+                onChange={handleDealNameChange}
               />
             </div>
           )}
@@ -176,8 +182,11 @@ export function LostModal({ leadName, open, onClose, onSubmit }: LostModalProps)
     onClose();
   }, [onClose]);
 
+  const handleLostOpenChange = useCallback((o: boolean) => { if (!o) handleClose(); }, [handleClose]);
+  const handleLostNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setLostNotes(e.target.value), []);
+
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={open} onOpenChange={handleLostOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Mark as Lost: {leadName}</DialogTitle>
@@ -200,7 +209,7 @@ export function LostModal({ leadName, open, onClose, onSubmit }: LostModalProps)
               id="lost-notes"
               placeholder="Optional additional details..."
               value={lostNotes}
-              onChange={(e) => setLostNotes(e.target.value)}
+              onChange={handleLostNotesChange}
               rows={3}
             />
           </div>
@@ -269,6 +278,21 @@ export function BulkActionsBar({
     }
   }, [leads, selectedIds]);
 
+  const handleBulkStatus = useCallback((v: string) => {
+    onBulkUpdate(selectedArray, { status: v });
+    onClearSelection();
+  }, [onBulkUpdate, selectedArray, onClearSelection]);
+
+  const handleBulkPriority = useCallback((v: string) => {
+    onBulkUpdate(selectedArray, { priority: v });
+    onClearSelection();
+  }, [onBulkUpdate, selectedArray, onClearSelection]);
+
+  const handleBulkAssign = useCallback((v: string) => {
+    onBulkUpdate(selectedArray, { assignedToId: v });
+    onClearSelection();
+  }, [onBulkUpdate, selectedArray, onClearSelection]);
+
   const handleOpenDeleteDialog = useCallback(() => setDeleteDialogOpen(true), []);
 
   const handleConfirmDelete = useCallback(() => {
@@ -285,12 +309,7 @@ export function BulkActionsBar({
         <span className="text-sm font-medium">{selectedIds.size} selected</span>
         <div className="h-4 w-px bg-border" />
 
-        <Select
-          onValueChange={(v) => {
-            onBulkUpdate(selectedArray, { status: v });
-            onClearSelection();
-          }}
-        >
+        <Select onValueChange={handleBulkStatus}>
           <SelectTrigger className="h-7 w-[120px] text-xs">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -301,12 +320,7 @@ export function BulkActionsBar({
           </SelectContent>
         </Select>
 
-        <Select
-          onValueChange={(v) => {
-            onBulkUpdate(selectedArray, { priority: v });
-            onClearSelection();
-          }}
-        >
+        <Select onValueChange={handleBulkPriority}>
           <SelectTrigger className="h-7 w-[100px] text-xs">
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
@@ -317,12 +331,7 @@ export function BulkActionsBar({
           </SelectContent>
         </Select>
 
-        <Select
-          onValueChange={(v) => {
-            onBulkUpdate(selectedArray, { assignedToId: v });
-            onClearSelection();
-          }}
-        >
+        <Select onValueChange={handleBulkAssign}>
           <SelectTrigger className="h-7 w-[130px] text-xs">
             <SelectValue placeholder="Assign" />
           </SelectTrigger>

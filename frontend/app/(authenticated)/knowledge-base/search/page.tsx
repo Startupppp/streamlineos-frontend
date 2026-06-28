@@ -57,7 +57,7 @@ export default function KnowledgeBaseSearchPage() {
   }
 
   function handleRetry() {
-    searchQuery.refetch();
+    void searchQuery.refetch();
   }
 
   function handlePrevPage() {

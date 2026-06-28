@@ -73,6 +73,11 @@ export default function OrganizationsPage() {
     [updateParams, page],
   );
 
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => updateParams({ q: e.target.value || null, page: null }),
+    [updateParams],
+  );
+
   return (
     <PageWrapper
       title="Organizations"
@@ -91,7 +96,7 @@ export default function OrganizationsPage() {
           <Input
             placeholder="Search organizations..."
             value={search}
-            onChange={(e) => updateParams({ q: e.target.value || null, page: null })}
+            onChange={handleSearchChange}
             className="pl-9"
           />
         </div>

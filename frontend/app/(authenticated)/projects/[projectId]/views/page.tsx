@@ -196,7 +196,7 @@ export default function ViewsPage({
       togglePinMutation.mutate(
         { id: viewId, projectId, isPinned },
         {
-          onError: (err) => toast.error((err as Error).message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         }
       );
     },
@@ -209,7 +209,7 @@ export default function ViewsPage({
         { id: viewId, projectId },
         {
           onSuccess: () => toast.success("View deleted"),
-          onError: (err) => toast.error((err as Error).message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         }
       );
     },
@@ -304,7 +304,7 @@ export default function ViewsPage({
     >
       <div className="space-y-6">
         {!views?.length ? (
-          <div className="text-center py-16">
+          <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[300px] text-center py-16">
             <EmptySearchIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No saved views</h3>
             <p className="text-sm text-muted-foreground mb-4">

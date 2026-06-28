@@ -28,8 +28,9 @@ export function TicketTypeIcon({
   size = "sm",
   className,
 }: TicketTypeIconProps) {
-  const key = type.toUpperCase() as keyof typeof typeMap;
-  const config = typeMap[key] ?? typeMap.TASK;
+  const rawKey = type.toUpperCase();
+  const isTypeKey = (k: string): k is keyof typeof typeMap => k in typeMap;
+  const config = isTypeKey(rawKey) ? typeMap[rawKey] : typeMap.TASK;
   const Icon = config.icon;
 
   const sizeClass =

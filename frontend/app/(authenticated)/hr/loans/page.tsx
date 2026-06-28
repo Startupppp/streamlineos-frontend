@@ -22,8 +22,8 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, CheckCircle2, XCircle, Banknote, User, CalendarDays } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { Plus, CheckCircle2, XCircle, Banknote, User, CalendarDays, AlertCircle } from "lucide-react";
+import { useCan } from "@/lib/api/hooks/access";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { cn } from "@/lib/utils";
 
@@ -190,8 +190,7 @@ export default function LoansPage() {
   const { data: loans, isLoading, isError, refetch } = useSalaryLoans();
   const create = useCreateSalaryLoan();
   const process = useProcessSalaryLoan();
-  const ability = useAbility();
-  const isAdmin = ability.can("approve", "hr:expenses");
+  const isAdmin = useCan("hr:expenses:approve");
   const { data: employeesRaw } = useHrEmployees({ limit: 500 });
 
   const employeeOptions = useMemo<ComboboxOption[]>(() => {
@@ -226,6 +225,7 @@ export default function LoansPage() {
   }, [resetForm]);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value), []);
   const handleReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value), []);
   const handleTotalEmisChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTotalEmis(e.target.value), []);
@@ -303,9 +303,13 @@ export default function LoansPage() {
   if (isError) {
     return (
       <PageWrapper title="Salary Loans" subtitle="Request salary advances and track repayments">
-        <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
-          <p className="text-sm text-muted-foreground">Failed to load salary loans.</p>
-          <Button variant="outline" size="sm" onClick={() => void refetch()}>Retry</Button>
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load salary loans</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

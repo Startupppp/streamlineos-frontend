@@ -303,22 +303,32 @@ export default function MeetingPrepPage() {
             <div className="space-y-1.5">
               <Label>Attendee Type <span className="text-destructive">*</span></Label>
               <div className="flex gap-2">
-                {(["lead", "client"] as const).map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setField("attendeeType", type)}
-                    aria-pressed={form.attendeeType === type}
-                    className={cn(
-                      "flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all",
-                      form.attendeeType === type
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                    )}
-                  >
-                    {type === "lead" ? "Lead (Prospect)" : "Client (Existing)"}
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  onClick={handleSetAttendeeTypeLead}
+                  aria-pressed={form.attendeeType === "lead"}
+                  className={cn(
+                    "flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all",
+                    form.attendeeType === "lead"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                  )}
+                >
+                  Lead (Prospect)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSetAttendeeTypeClient}
+                  aria-pressed={form.attendeeType === "client"}
+                  className={cn(
+                    "flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all",
+                    form.attendeeType === "client"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                  )}
+                >
+                  Client (Existing)
+                </button>
               </div>
             </div>
 
@@ -334,7 +344,7 @@ export default function MeetingPrepPage() {
                   min="1"
                   placeholder={`Enter ${form.attendeeType === "lead" ? "lead" : "client"} ID…`}
                   value={form.attendeeId}
-                  onChange={(e) => setField("attendeeId", e.target.value)}
+                  onChange={handleAttendeeIdChange}
                   className="max-w-xs"
                   aria-label={form.attendeeType === "lead" ? "Lead ID" : "Client ID"}
                 />
@@ -356,7 +366,7 @@ export default function MeetingPrepPage() {
                 id="scheduled-at"
                 type="datetime-local"
                 value={form.scheduledAt}
-                onChange={(e) => setField("scheduledAt", e.target.value)}
+                onChange={handleScheduledAtChange}
                 className="max-w-xs"
                 aria-label="Meeting scheduled date and time"
               />
@@ -372,7 +382,7 @@ export default function MeetingPrepPage() {
                 placeholder="Any additional context about this meeting — agenda items, specific concerns, goals…"
                 rows={4}
                 value={form.notes}
-                onChange={(e) => setField("notes", e.target.value)}
+                onChange={handleNotesChange}
                 className="resize-none"
                 aria-label="Additional meeting notes"
               />

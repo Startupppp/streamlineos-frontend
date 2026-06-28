@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ChangeEvent } from "react";
 import { motion } from "framer-motion";
-import { Plus, ClipboardList } from "lucide-react";
+import { Plus, ClipboardList, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -129,7 +129,7 @@ function AdjustmentsTableSkeleton() {
 }
 
 export default function AdjustmentsPage() {
-  const { data: adjData, isLoading } = useAdjustments();
+  const { data: adjData, isLoading, isError, refetch } = useAdjustments();
   const { data: warehousesData } = useWarehouses();
   const createMutation = useCreateAdjustment();
 
@@ -168,6 +168,33 @@ export default function AdjustmentsPage() {
       setSheetOpen(false);
       setForm(blankForm());
     }
+  }, []);
+
+  function handleRetry() { void refetch(); }
+
+  const handleWarehouseSelectChange = useCallback((v: string) => {
+    setField("warehouseId", v);
+  }, [setField]);
+
+  const handleProductIdChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("productId", e.target.value);
+  }, [setField]);
+
+  const handleLocationIdChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("locationId", e.target.value);
+  }, [setField]);
+
+  const handleQtyChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("quantity", e.target.value);
+  }, [setField]);
+
+  const handleNotesChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
+    setField("notes", e.target.value);
+  }, [setField]);
+
+  const handleCancelSheet = useCallback(() => {
+    setSheetOpen(false);
+    setForm(blankForm());
   }, []);
 
   const handleSubmit = useCallback(() => {
@@ -216,6 +243,15 @@ export default function AdjustmentsPage() {
     >
       {isLoading ? (
         <AdjustmentsTableSkeleton />
+      ) : isError ? (
+        <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <EmptyState
+            illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+            title="Failed to load adjustments"
+            description="An error occurred while fetching adjustment records. Please try again."
+            action={{ label: "Retry", onClick: handleRetry }}
+          />
+        </motion.div>
       ) : adjustments.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
@@ -294,7 +330,7 @@ export default function AdjustmentsPage() {
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="adj-warehouse">Warehouse <span className="text-destructive">*</span></Label>
-              <Select value={form.warehouseId} onValueChange={(v) => setField("warehouseId", v)}>
+              <Select value={form.warehouseId} onValueChange={handleWarehouseSelectChange}>
                 <SelectTrigger id="adj-warehouse">
                   <SelectValue placeholder="Select warehouse" />
                 </SelectTrigger>
@@ -314,7 +350,7 @@ export default function AdjustmentsPage() {
                 type="number"
                 placeholder="Product variant ID"
                 value={form.productId}
-                onChange={(e) => setField("productId", e.target.value)}
+                onChange={handleProductIdChange}
               />
             </div>
             <div className="space-y-1.5">
@@ -324,7 +360,7 @@ export default function AdjustmentsPage() {
                 type="number"
                 placeholder="Location ID"
                 value={form.locationId}
-                onChange={(e) => setField("locationId", e.target.value)}
+                onChange={handleLocationIdChange}
               />
             </div>
             <div className="space-y-1.5">
@@ -351,7 +387,7 @@ export default function AdjustmentsPage() {
                 min="0"
                 placeholder="0"
                 value={form.quantity}
-                onChange={(e) => setField("quantity", e.target.value)}
+                onChange={handleQtyChange}
               />
             </div>
             <div className="space-y-1.5">
@@ -375,7 +411,7 @@ export default function AdjustmentsPage() {
                 id="adj-notes"
                 placeholder="Additional details about this adjustment…"
                 value={form.notes}
-                onChange={(e) => setField("notes", e.target.value)}
+                onChange={handleNotesChange}
                 rows={3}
               />
             </div>
@@ -383,7 +419,7 @@ export default function AdjustmentsPage() {
           <SheetFooter>
             <Button
               variant="outline"
-              onClick={() => setSheetOpen(false)}
+              onClick={handleCancelSheet}
               disabled={createMutation.isPending}
             >
               Cancel

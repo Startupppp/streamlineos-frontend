@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +28,7 @@ export function AIBulkScoreButton({ leadIds, onComplete }: AIBulkScoreButtonProp
   const batchMutation = useAIBatchScoreLeads();
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.lead-scoring");
 
-  const handleScore = () => {
+  const handleScore = useCallback(() => {
     if (!featureEnabled) { toast.error(`AI bulk scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     batchMutation.mutate(leadIds, {
       onSuccess: (data) => {
@@ -38,7 +38,9 @@ export function AIBulkScoreButton({ leadIds, onComplete }: AIBulkScoreButtonProp
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  };
+  }, [featureEnabled, requiredPlan, batchMutation, leadIds, onComplete]);
+
+  const handleOpenConfirm = useCallback(() => setConfirmOpen(true), []);
 
   if (leadIds.length === 0) return null;
 
@@ -47,7 +49,7 @@ export function AIBulkScoreButton({ leadIds, onComplete }: AIBulkScoreButtonProp
       <Button
         size="sm"
         variant="outline"
-        onClick={() => setConfirmOpen(true)}
+        onClick={handleOpenConfirm}
         disabled={batchMutation.isPending}
       >
         {batchMutation.isPending ? (

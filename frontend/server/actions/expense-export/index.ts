@@ -5,11 +5,7 @@ import { getAuthenticatedMember } from "@/lib/auth-helpers";
 import { isAuthError } from "@/lib/auth-types";
 import { getTodayString } from "@/lib/date-utils";
 import { serverApiClient } from "@/lib/api/server-client";
-import {
-  buildExportConditions,
-  fetchExpensesForExport,
-  fetchExportStats,
-} from "./query";
+import { fetchExpensesForExport, fetchExportStats } from "./query";
 import { generateCSVContent } from "./csv-export";
 import { generateXLSXData, generatePDFData } from "./data-generators";
 import type { ExportOptions, ExportResult, ExportFilters } from "./types";
@@ -22,20 +18,9 @@ export async function exportExpenses(
     return { success: false, error: authResult.error };
   }
 
-  const { isAdmin, userId, orgId } = authResult;
-
   try {
-    const conditions = buildExportConditions(
-      options.filters,
-      orgId,
-      isAdmin,
-      userId,
-    );
-
-    const [expenseList, stats] = await Promise.all([
-      fetchExpensesForExport(conditions),
-      fetchExportStats(conditions),
-    ]);
+    const expenseList = await fetchExpensesForExport(options.filters);
+    const stats = fetchExportStats(expenseList);
 
     const dateStr = getTodayString();
 

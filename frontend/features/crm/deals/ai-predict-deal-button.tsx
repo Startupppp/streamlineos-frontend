@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Sparkles, Loader2, TrendingUp, AlertTriangle, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,12 +26,16 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
   const result = predictMutation.data;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.deal-prediction");
 
-  const handlePredict = () => {
+  const handlePredict = useCallback(() => {
     if (!featureEnabled) { toast.error(`AI deal prediction requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     predictMutation.mutate(dealId, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  };
+  }, [featureEnabled, requiredPlan, predictMutation, dealId]);
+
+  const handleCompactClick = useCallback(() => {
+    if (!result) handlePredict();
+  }, [result, handlePredict]);
 
   const probColor = (prob: number) => {
     if (prob >= 75) return "text-emerald-500";
@@ -61,7 +65,7 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-xs gap-1"
-            onClick={() => { if (!result) handlePredict(); }}
+            onClick={handleCompactClick}
             disabled={predictMutation.isPending}
           >
             {predictMutation.isPending ? (

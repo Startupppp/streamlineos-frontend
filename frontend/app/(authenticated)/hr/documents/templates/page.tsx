@@ -14,6 +14,7 @@ import {
   FileKey,
   Smile,
   MoreHorizontal,
+  AlertCircle,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -250,7 +251,7 @@ function TemplateTableRow({
 }
 
 export default function DocumentTemplatesPage() {
-  const { data: templates, isLoading } = useDocumentTemplates();
+  const { data: templates, isLoading, isError, refetch } = useDocumentTemplates();
   const deleteMutation = useDeleteDocumentTemplate();
   const setDefaultMutation = useSetDocumentTemplateDefault();
 
@@ -278,7 +279,27 @@ export default function DocumentTemplatesPage() {
     [setDefaultMutation],
   );
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   if (isLoading) return <TemplatesPageSkeleton />;
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Document Templates"
+        subtitle="Manage reusable HTML templates for offer letters, NDAs, and policies."
+      >
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load document templates</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
 
   const list = templates ?? [];
   const total = list.length;

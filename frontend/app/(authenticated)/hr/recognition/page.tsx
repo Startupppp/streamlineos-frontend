@@ -1,6 +1,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import { useState, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRecognitions, useCreateRecognition, type Recognition } from "@/lib/api/hooks/hr";
@@ -44,9 +45,57 @@ function getCategoryMeta(category: string | null) {
   return CATEGORIES.find((c) => c.value === category) ?? CATEGORIES[0];
 }
 
+interface CategoryButtonProps {
+  category: typeof CATEGORIES[number];
+  isActive: boolean;
+  onToggle: (value: string) => void;
+}
+
+function CategoryButton({ category, isActive, onToggle }: CategoryButtonProps) {
+  const handleClick = useCallback(() => onToggle(category.value), [onToggle, category.value]);
+  const Icon = category.icon;
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "text-xs px-3 py-1 rounded-full border transition-colors duration-200 flex items-center gap-1",
+        isActive
+          ? "bg-primary text-primary-foreground border-primary"
+          : "border-border hover:bg-muted text-muted-foreground hover:text-foreground",
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {category.label}
+    </button>
+  );
+}
+
+interface EmployeeCommandItemProps {
+  employee: Employee;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+  onClose: () => void;
+}
+
+function EmployeeCommandItem({ employee, isSelected, onSelect, onClose }: EmployeeCommandItemProps) {
+  const handleSelect = useCallback(() => {
+    onSelect(employee.id);
+    onClose();
+  }, [onSelect, onClose, employee.id]);
+  return (
+    <CommandItem
+      value={employee.name ?? employee.email ?? employee.id}
+      onSelect={handleSelect}
+    >
+      <Check className={cn("mr-2 h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />
+      {employee.name ?? employee.email}
+    </CommandItem>
+  );
+}
+
 export default function RecognitionPage() {
   const { data: session } = useSession();
-  const { data: recognitions, isLoading } = useRecognitions();
+  const { data: recognitions, isLoading, isError, refetch } = useRecognitions();
   const { data: employeesRaw } = useHrEmployees();
   const createRecognition = useCreateRecognition();
 
@@ -140,6 +189,18 @@ export default function RecognitionPage() {
 
   const handleClearCategory = useCallback(() => setActiveCategory(null), []);
 
+  const handleSelectEmployee = useCallback((id: string) => setToUserId(id), []);
+  const handleCloseEmployeePicker = useCallback(() => setEmployeePickerOpen(false), []);
+  const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value), []);
+
+  if (isError) {
+    return (
+      <PageWrapper title="Recognition" subtitle="Celebrate your team">
+        <ErrorState description="Failed to load recognitions" onRetry={refetch} />
+      </PageWrapper>
+    );
+  }
+
   if (isLoading) {
     return (
       <PageWrapper title="Recognition" subtitle="Celebrate your team">
@@ -191,24 +252,14 @@ export default function RecognitionPage() {
               >
                 All
               </button>
-              {CATEGORIES.map((c) => {
-                const Icon = c.icon;
-                return (
-                  <button
-                    key={c.value}
-                    onClick={() => handleToggleCategory(c.value)}
-                    className={cn(
-                      "text-xs px-3 py-1 rounded-full border transition-colors duration-200 flex items-center gap-1",
-                      activeCategory === c.value
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border hover:bg-muted text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <Icon className="h-3 w-3" />
-                    {c.label}
-                  </button>
-                );
-              })}
+              {CATEGORIES.map((c) => (
+                <CategoryButton
+                  key={c.value}
+                  category={c}
+                  isActive={activeCategory === c.value}
+                  onToggle={handleToggleCategory}
+                />
+              ))}
             </div>
 
             {!filteredList.length ? (
@@ -384,14 +435,13 @@ export default function RecognitionPage() {
                   <CommandEmpty>No employees found.</CommandEmpty>
                   <CommandGroup>
                     {employees.filter((e) => !!e.id && e.id !== session?.user?.id).map((e) => (
-                      <CommandItem
+                      <EmployeeCommandItem
                         key={e.id}
-                        value={e.name ?? e.email ?? e.id}
-                        onSelect={() => { setToUserId(e.id); setEmployeePickerOpen(false); }}
-                      >
-                        <Check className={cn("mr-2 h-4 w-4", toUserId === e.id ? "opacity-100" : "opacity-0")} />
-                        {e.name ?? e.email}
-                      </CommandItem>
+                        employee={e}
+                        isSelected={toUserId === e.id}
+                        onSelect={handleSelectEmployee}
+                        onClose={handleCloseEmployeePicker}
+                      />
                     ))}
                   </CommandGroup>
                 </CommandList>
@@ -413,7 +463,7 @@ export default function RecognitionPage() {
           <Textarea
             placeholder="What did they do that was awesome?"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={handleMessageChange}
             rows={4}
             maxLength={500}
           />

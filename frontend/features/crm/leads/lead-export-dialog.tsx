@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
@@ -43,7 +43,14 @@ export function LeadExportDialog() {
     { enabled: open }
   );
 
-  const handleExport = async () => {
+  const handleStatusChange = useCallback((v: string) => setFilters(f => ({ ...f, status: v })), []);
+  const handleSourceChange = useCallback((v: string) => setFilters(f => ({ ...f, source: v })), []);
+  const handlePriorityChange = useCallback((v: string) => setFilters(f => ({ ...f, priority: v })), []);
+  const handleDateFromChange = useCallback((v: string) => setFilters(f => ({ ...f, dateFrom: v })), []);
+  const handleDateToChange = useCallback((v: string) => setFilters(f => ({ ...f, dateTo: v })), []);
+  const handleClose = useCallback(() => setOpen(false), []);
+
+  const handleExport = useCallback(async () => {
     setIsExporting(true);
     try {
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
@@ -99,7 +106,7 @@ export function LeadExportDialog() {
     } finally {
       setIsExporting(false);
     }
-  };
+  }, [data]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -116,7 +123,7 @@ export function LeadExportDialog() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Status</Label>
-              <Select value={filters.status} onValueChange={(v) => setFilters(f => ({ ...f, status: v }))}>
+              <Select value={filters.status} onValueChange={handleStatusChange}>
                 <SelectTrigger className="w-full h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
@@ -126,7 +133,7 @@ export function LeadExportDialog() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Source</Label>
-              <Select value={filters.source} onValueChange={(v) => setFilters(f => ({ ...f, source: v }))}>
+              <Select value={filters.source} onValueChange={handleSourceChange}>
                 <SelectTrigger className="w-full h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all" className="text-xs">All Sources</SelectItem>
@@ -136,7 +143,7 @@ export function LeadExportDialog() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Priority</Label>
-              <Select value={filters.priority} onValueChange={(v) => setFilters(f => ({ ...f, priority: v }))}>
+              <Select value={filters.priority} onValueChange={handlePriorityChange}>
                 <SelectTrigger className="w-full h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all" className="text-xs">All Priorities</SelectItem>
@@ -148,11 +155,11 @@ export function LeadExportDialog() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">From Date</Label>
-              <DatePicker value={filters.dateFrom} onChange={(v) => setFilters(f => ({ ...f, dateFrom: v }))} placeholder="From date" />
+              <DatePicker value={filters.dateFrom} onChange={handleDateFromChange} placeholder="From date" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">To Date</Label>
-              <DatePicker value={filters.dateTo} onChange={(v) => setFilters(f => ({ ...f, dateTo: v }))} placeholder="To date" />
+              <DatePicker value={filters.dateTo} onChange={handleDateToChange} placeholder="To date" />
             </div>
           </div>
           <div className="text-xs text-muted-foreground">
@@ -160,7 +167,7 @@ export function LeadExportDialog() {
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="outline" onClick={handleClose}>Cancel</Button>
           <Button onClick={handleExport} disabled={isExporting || !data?.leads?.length}>
             {isExporting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Export ({data?.totalCount ?? 0})

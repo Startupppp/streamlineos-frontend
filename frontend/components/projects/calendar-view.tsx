@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -63,8 +62,12 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
     return map;
   }, [tickets]);
 
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const handleTodayClick = () => setCurrentDate(new Date());
+  const handleMonthChange = (value: string) => setCurrentDate(new Date(year, parseInt(value), 1));
+  const handleYearChange = (value: string) => setCurrentDate(new Date(parseInt(value), month, 1));
+
   const today = new Date().toISOString().split("T")[0];
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
@@ -77,10 +80,7 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
     <div className="p-4">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-1.5">
-          <Select
-            value={String(month)}
-            onValueChange={(v) => setCurrentDate(new Date(year, parseInt(v), 1))}
-          >
+          <Select value={String(month)} onValueChange={handleMonthChange}>
             <SelectTrigger className="h-8 w-[120px] text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -90,10 +90,7 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
               ))}
             </SelectContent>
           </Select>
-          <Select
-            value={String(year)}
-            onValueChange={(v) => setCurrentDate(new Date(parseInt(v), month, 1))}
-          >
+          <Select value={String(year)} onValueChange={handleYearChange}>
             <SelectTrigger className="h-8 w-[80px] text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -105,13 +102,13 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
           </Select>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={prevMonth} aria-label="Previous month">
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePrevMonth} aria-label="Previous month">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => setCurrentDate(new Date())}>
+          <Button variant="outline" size="sm" className="h-8" onClick={handleTodayClick}>
             Today
           </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={nextMonth} aria-label="Next month">
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleNextMonth} aria-label="Next month">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

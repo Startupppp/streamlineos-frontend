@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, type ChangeEvent } from "react";
 import { motion } from "framer-motion";
-import { Plus, ArrowRightLeft } from "lucide-react";
+import { Plus, ArrowRightLeft, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,10 @@ const STATUS_LABELS: Record<TransferStatus, string> = {
 
 const ALL_STATUSES: TransferStatus[] = ["PENDING", "IN_TRANSIT", "COMPLETED", "CANCELLED"];
 
+function isTransferStatusOrAll(val: string): val is TransferStatus | "all" {
+  return val === "all" || val in STATUS_LABELS;
+}
+
 function blankForm(): TransferFormState {
   return { fromWarehouseId: "", toWarehouseId: "", productId: "", quantity: "", notes: "" };
 }
@@ -111,7 +115,7 @@ export default function TransfersPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<TransferFormState>(blankForm());
 
-  const { data: transfersData, isLoading } = useTransfers();
+  const { data: transfersData, isLoading, isError, refetch } = useTransfers();
   const { data: warehousesData } = useWarehouses();
   const createMutation = useCreateTransfer();
 
@@ -143,8 +147,35 @@ export default function TransfersPage() {
     }
   }, []);
 
+  function handleRetry() { void refetch(); }
+
   const handleStatusFilterChange = useCallback((val: string) => {
-    setStatusFilter(val as TransferStatus | "all");
+    if (isTransferStatusOrAll(val)) setStatusFilter(val);
+  }, []);
+
+  const handleFromWarehouseChange = useCallback((v: string) => {
+    setField("fromWarehouseId", v);
+  }, [setField]);
+
+  const handleToWarehouseChange = useCallback((v: string) => {
+    setField("toWarehouseId", v);
+  }, [setField]);
+
+  const handleProductIdChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("productId", e.target.value);
+  }, [setField]);
+
+  const handleQtyChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("quantity", e.target.value);
+  }, [setField]);
+
+  const handleNotesChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
+    setField("notes", e.target.value);
+  }, [setField]);
+
+  const handleCancelSheet = useCallback(() => {
+    setSheetOpen(false);
+    setForm(blankForm());
   }, []);
 
   const handleSubmit = useCallback(() => {
@@ -206,6 +237,15 @@ export default function TransfersPage() {
     >
       {isLoading ? (
         <TransfersTableSkeleton />
+      ) : isError ? (
+        <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <EmptyState
+            illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+            title="Failed to load transfers"
+            description="An error occurred while fetching transfer records. Please try again."
+            action={{ label: "Retry", onClick: handleRetry }}
+          />
+        </motion.div>
       ) : transfers.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
@@ -215,7 +255,7 @@ export default function TransfersPage() {
             title="No transfers found"
             description={
               statusFilter !== "all"
-                ? `No transfers with status "${STATUS_LABELS[statusFilter as TransferStatus]}".`
+                ? `No transfers with status "${STATUS_LABELS[statusFilter]}".`
                 : "Create a transfer to move stock between locations."
             }
             action={{ label: "New Transfer", onClick: handleOpenSheet }}
@@ -300,7 +340,7 @@ export default function TransfersPage() {
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="tf-from">From Warehouse <span className="text-destructive">*</span></Label>
-              <Select value={form.fromWarehouseId} onValueChange={(v) => setField("fromWarehouseId", v)}>
+              <Select value={form.fromWarehouseId} onValueChange={handleFromWarehouseChange}>
                 <SelectTrigger id="tf-from">
                   <SelectValue placeholder="Select source warehouse" />
                 </SelectTrigger>
@@ -315,7 +355,7 @@ export default function TransfersPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="tf-to">To Warehouse <span className="text-destructive">*</span></Label>
-              <Select value={form.toWarehouseId} onValueChange={(v) => setField("toWarehouseId", v)}>
+              <Select value={form.toWarehouseId} onValueChange={handleToWarehouseChange}>
                 <SelectTrigger id="tf-to">
                   <SelectValue placeholder="Select destination warehouse" />
                 </SelectTrigger>
@@ -335,7 +375,7 @@ export default function TransfersPage() {
                 type="number"
                 placeholder="Product ID"
                 value={form.productId}
-                onChange={(e) => setField("productId", e.target.value)}
+                onChange={handleProductIdChange}
               />
             </div>
             <div className="space-y-1.5">
@@ -346,7 +386,7 @@ export default function TransfersPage() {
                 min="1"
                 placeholder="0"
                 value={form.quantity}
-                onChange={(e) => setField("quantity", e.target.value)}
+                onChange={handleQtyChange}
               />
             </div>
             <div className="space-y-1.5">
@@ -355,7 +395,7 @@ export default function TransfersPage() {
                 id="tf-notes"
                 placeholder="Reason or notes for this transfer…"
                 value={form.notes}
-                onChange={(e) => setField("notes", e.target.value)}
+                onChange={handleNotesChange}
                 rows={3}
               />
             </div>
@@ -363,7 +403,7 @@ export default function TransfersPage() {
           <SheetFooter>
             <Button
               variant="outline"
-              onClick={() => setSheetOpen(false)}
+              onClick={handleCancelSheet}
               disabled={createMutation.isPending}
             >
               Cancel

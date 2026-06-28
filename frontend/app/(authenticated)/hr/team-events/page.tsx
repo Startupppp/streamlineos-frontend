@@ -15,8 +15,8 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, PartyPopper, MapPin, Users, UserPlus, CheckCircle2, Calendar } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { Plus, PartyPopper, MapPin, Users, UserPlus, CheckCircle2, Calendar, AlertCircle } from "lucide-react";
+import { useCan } from "@/lib/api/hooks/access";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
@@ -136,9 +136,8 @@ function EventCard({ event: ev, currentUserId, onRsvp, isRsvping }: EventCardPro
 
 export default function TeamEventsPage() {
   const qc = useQueryClient();
-  const ability = useAbility();
   const { data: session } = useSession();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const { data: events, isLoading, isError, refetch } = useQuery({
     queryKey: eventKeys.list(),
@@ -183,6 +182,7 @@ export default function TeamEventsPage() {
   }, [resetForm]);
 
   const handleOpenCreateSheet = useCallback(() => setSheetOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
   const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
@@ -247,11 +247,13 @@ export default function TeamEventsPage() {
   if (isError) {
     return (
       <PageWrapper title="Team Events" subtitle="Company events, outings, and celebrations">
-        <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
-          <p className="text-sm text-muted-foreground">Failed to load team events.</p>
-          <Button variant="outline" size="sm" onClick={() => void refetch()}>
-            Retry
-          </Button>
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load team events</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

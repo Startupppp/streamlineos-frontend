@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles, Loader2, AlertTriangle, ShieldCheck, Lightbulb } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Sparkles, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -35,13 +35,17 @@ export function AIChurnRiskButton({
   const result = analyzeMutation.data;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.churn-risk");
 
-  const handleAnalyze = () => {
+  const handleAnalyze = useCallback(() => {
     if (!featureEnabled) { toast.error(`AI churn risk analysis requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     analyzeMutation.mutate(
       { clientId, openTickets, ticketsLast90Days, daysSinceLastActivity },
       { onError: (e) => toast.error(getErrorMessage(e)) },
     );
-  };
+  }, [featureEnabled, requiredPlan, analyzeMutation, clientId, openTickets, ticketsLast90Days, daysSinceLastActivity]);
+
+  const handleCompactClick = useCallback(() => {
+    if (!result) handleAnalyze();
+  }, [result, handleAnalyze]);
 
   const riskColor = (level: string) => {
     if (level === "critical") return "text-red-500";
@@ -65,7 +69,7 @@ export function AIChurnRiskButton({
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-xs gap-1"
-            onClick={() => { if (!result) handleAnalyze(); }}
+            onClick={handleCompactClick}
             disabled={analyzeMutation.isPending}
           >
             {analyzeMutation.isPending ? (

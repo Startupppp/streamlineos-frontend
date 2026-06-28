@@ -26,3 +26,4 @@ export * from "./dashboard";
 export * from "./onboarding";
 export * from "./document-templates";
 export * from "./hr-settings";
+export * from "./handbook";

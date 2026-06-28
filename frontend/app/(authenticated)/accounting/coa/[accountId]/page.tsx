@@ -2,7 +2,7 @@
 
 import { use, useState, useCallback } from "react";
 import Link from "next/link";
-import { ChevronLeft, Pencil, ExternalLink } from "lucide-react";
+import { ChevronLeft, Pencil, ExternalLink, BookOpen } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -61,7 +61,7 @@ const editAccountSchema = z.object({
 type EditAccountValues = z.infer<typeof editAccountSchema>;
 
 function formatDate(value: string | Date): string {
-  const d = new Date(value as string);
+  const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
   return d.toLocaleDateString(undefined, {
     year: "numeric",
@@ -196,8 +196,8 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
   }, []);
 
   const handleRetry = useCallback(() => {
-    accountsQuery.refetch();
-    journalQuery.refetch();
+    void accountsQuery.refetch();
+    void journalQuery.refetch();
   }, [accountsQuery, journalQuery]);
 
   const journalEntries = journalQuery.data?.items ?? [];
@@ -345,11 +345,16 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                       compact
                       title="Failed to load journal entries"
                       description={getErrorMessage(journalQuery.error)}
+                      onRetry={handleRetry}
                     />
                   </div>
                 ) : journalEntries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
+                    <BookOpen className="h-8 w-8 text-muted-foreground/40 mb-2" />
                     <p className="text-sm text-muted-foreground">No journal entries yet.</p>
+                    <Button variant="outline" size="sm" className="mt-3" asChild>
+                      <Link href="/accounting/journal/new">New entry</Link>
+                    </Button>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">

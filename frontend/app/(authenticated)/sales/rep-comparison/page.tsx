@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +25,7 @@ import {
 } from "recharts";
 import { useRepComparison, useSalesDashboardLeaderboard } from "@/lib/api/hooks/crm";
 import { GitCompare } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 
 function fmt(n: number) {
   return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -65,11 +66,16 @@ export default function RepComparisonPage() {
   const [rep1, setRep1] = useState<string>("");
   const [rep2, setRep2] = useState<string>("");
 
+  const handleRep1Change = useCallback((v: string) => setRep1(v), []);
+  const handleRep2Change = useCallback((v: string) => setRep2(v), []);
+
   const { data: leaderboard } = useSalesDashboardLeaderboard();
-  const { data: comparison, isLoading: cmpLoading } = useRepComparison(
+  const { data: comparison, isLoading: cmpLoading, isError: cmpError, refetch: refetchCmp } = useRepComparison(
     rep1 && rep1 !== rep2 ? Number(rep1) : null,
     rep2 && rep1 !== rep2 ? Number(rep2) : null,
   );
+
+  const handleRetry = useCallback(() => refetchCmp(), [refetchCmp]);
 
   const reps = leaderboard ?? [];
 
@@ -92,7 +98,7 @@ export default function RepComparisonPage() {
       subtitle="Overlay two sales reps' performance side by side"
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
-        <Select value={rep1} onValueChange={setRep1}>
+        <Select value={rep1} onValueChange={handleRep1Change}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Select Rep 1" />
           </SelectTrigger>
@@ -103,7 +109,7 @@ export default function RepComparisonPage() {
           </SelectContent>
         </Select>
         <GitCompare className="h-4 w-4 text-muted-foreground shrink-0 self-center hidden sm:block" />
-        <Select value={rep2} onValueChange={setRep2}>
+        <Select value={rep2} onValueChange={handleRep2Change}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Select Rep 2" />
           </SelectTrigger>
@@ -116,14 +122,14 @@ export default function RepComparisonPage() {
       </div>
 
       {(!rep1 || !rep2) && (
-        <div className="flex flex-col items-center justify-center py-12 text-center space-y-2 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center min-h-[40vh] text-center space-y-2 text-muted-foreground">
           <GitCompare className="h-10 w-10 opacity-30" />
           <p>Select two reps to compare their performance</p>
         </div>
       )}
 
       {rep1 && rep2 && rep1 === rep2 && (
-        <div className="flex flex-col items-center justify-center py-12 text-center space-y-2 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center min-h-[40vh] text-center space-y-2 text-muted-foreground">
           <GitCompare className="h-10 w-10 opacity-30" />
           <p>Please select two different reps to compare</p>
         </div>
@@ -134,6 +140,14 @@ export default function RepComparisonPage() {
           <Skeleton className="h-48" />
           <Skeleton className="h-72" />
         </div>
+      )}
+
+      {rep1 && rep2 && rep1 !== rep2 && !cmpLoading && cmpError && (
+        <ErrorState
+          title="Couldn't load comparison"
+          description="An error occurred while comparing reps. Please try again."
+          onRetry={handleRetry}
+        />
       )}
 
       {comparison && rep1 !== rep2 && (

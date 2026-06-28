@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Filter, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,89 @@ import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog
 import { STATUS_LABELS, type StatusFilter } from "./expense-constants";
 import type { ExpenseFilters, ExpenseCategoryRecord as ExpenseCategory } from "@/types/hr/expenses";
 import type { DatePreset } from "@/hooks/use-expense-filters";
+
+function StatusFilterButton({
+  filterKey,
+  label,
+  count,
+  isActive,
+  onStatusChange,
+}: {
+  filterKey: StatusFilter;
+  label: string;
+  count: number | null;
+  isActive: boolean;
+  onStatusChange: (status: StatusFilter) => void;
+}) {
+  function handleClick() { onStatusChange(filterKey); }
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 border inline-flex items-center gap-1.5",
+        isActive
+          ? "bg-foreground text-background border-foreground"
+          : "bg-card text-muted-foreground border-border hover:border-foreground/20 hover:bg-muted/50",
+      )}
+    >
+      {label}
+      {count !== null && (
+        <span
+          className={cn(
+            "text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[18px] text-center",
+            isActive
+              ? "bg-white/20 dark:bg-black/20"
+              : "bg-muted text-muted-foreground",
+          )}
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function MemberStatusTab({
+  status,
+  index,
+  totalCount,
+  isActive,
+  onStatusChange,
+}: {
+  status: StatusFilter;
+  index: number;
+  totalCount: number;
+  isActive: boolean;
+  onStatusChange: (status: StatusFilter) => void;
+}) {
+  function handleClick() { onStatusChange(status); }
+  function handleKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
+    let nextIdx = index;
+    if (e.key === "ArrowRight") nextIdx = (index + 1) % totalCount;
+    else if (e.key === "ArrowLeft") nextIdx = (index - 1 + totalCount) % totalCount;
+    else return;
+    e.preventDefault();
+    onStatusChange(["ALL", "PENDING", "APPROVED", "REJECTED"][nextIdx] as StatusFilter);
+    (e.currentTarget.parentElement?.children[nextIdx] as HTMLElement)?.focus();
+  }
+  return (
+    <button
+      role="tab"
+      aria-selected={isActive}
+      tabIndex={isActive ? 0 : -1}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      className={cn(
+        "h-7 px-3 rounded-lg text-xs font-medium transition-all duration-200",
+        isActive
+          ? "bg-background text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {status === "ALL" ? "All Claims" : STATUS_LABELS[status]}
+    </button>
+  );
+}
 
 interface EmployeeOption {
   id: string;
@@ -37,6 +121,10 @@ export function AdminExpenseFilters({
   selectedUserId,
   onUserChange,
 }: AdminExpenseFiltersProps) {
+  function handleUserChange(v: string) {
+    if (onUserChange) onUserChange(v === "all" ? "" : v);
+  }
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="flex items-center gap-1.5 flex-wrap">
@@ -46,36 +134,20 @@ export function AdminExpenseFilters({
           { key: "APPROVED" as StatusFilter, label: "Approved", count: null },
           { key: "REJECTED" as StatusFilter, label: "Rejected", count: null },
         ]).map((item) => (
-          <button
+          <StatusFilterButton
             key={item.key}
-            onClick={() => onStatusChange(item.key)}
-            className={cn(
-              "h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 border inline-flex items-center gap-1.5",
-              statusFilter === item.key
-                ? "bg-foreground text-background border-foreground"
-                : "bg-card text-muted-foreground border-border hover:border-foreground/20 hover:bg-muted/50",
-            )}
-          >
-            {item.label}
-            {item.count !== null && (
-              <span
-                className={cn(
-                  "text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[18px] text-center",
-                  statusFilter === item.key
-                    ? "bg-white/20 dark:bg-black/20"
-                    : "bg-muted text-muted-foreground",
-                )}
-              >
-                {item.count}
-              </span>
-            )}
-          </button>
+            filterKey={item.key}
+            label={item.label}
+            count={item.count}
+            isActive={statusFilter === item.key}
+            onStatusChange={onStatusChange}
+          />
         ))}
       </div>
       {employees.length > 0 && onUserChange && (
         <Select
           value={selectedUserId || "all"}
-          onValueChange={(v) => onUserChange(v === "all" ? "" : v)}
+          onValueChange={handleUserChange}
         >
           <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Filter by employee">
             <SelectValue placeholder="All Employees" />
@@ -111,6 +183,8 @@ export function MemberExpenseFilters({
 }: MemberExpenseFiltersProps) {
   const statuses = ["ALL", "PENDING", "APPROVED", "REJECTED"] as const;
 
+  function handleDatePresetChange(v: string) { onDatePresetChange(v as DatePreset); }
+
   return (
     <div className="flex flex-wrap gap-3 items-center justify-between">
       <div
@@ -119,34 +193,18 @@ export function MemberExpenseFilters({
         aria-label="Filter by status"
       >
         {statuses.map((s, i, arr) => (
-          <button
+          <MemberStatusTab
             key={s}
-            role="tab"
-            aria-selected={statusFilter === s}
-            tabIndex={statusFilter === s ? 0 : -1}
-            onClick={() => onStatusChange(s)}
-            onKeyDown={(e) => {
-              let nextIdx = i;
-              if (e.key === "ArrowRight") nextIdx = (i + 1) % arr.length;
-              else if (e.key === "ArrowLeft") nextIdx = (i - 1 + arr.length) % arr.length;
-              else return;
-              e.preventDefault();
-              onStatusChange(arr[nextIdx]);
-              (e.currentTarget.parentElement?.children[nextIdx] as HTMLElement)?.focus();
-            }}
-            className={cn(
-              "h-7 px-3 rounded-lg text-xs font-medium transition-all duration-200",
-              statusFilter === s
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {s === "ALL" ? "All Claims" : STATUS_LABELS[s]}
-          </button>
+            status={s}
+            index={i}
+            totalCount={arr.length}
+            isActive={statusFilter === s}
+            onStatusChange={onStatusChange}
+          />
         ))}
       </div>
       <div className="flex items-center gap-2">
-        <Select value={datePreset} onValueChange={(v) => onDatePresetChange(v as DatePreset)}>
+        <Select value={datePreset} onValueChange={handleDatePresetChange}>
           <SelectTrigger className="h-8 w-[150px] text-xs gap-1.5" aria-label="Filter expenses by date range">
             <Filter className="h-3 w-3 shrink-0" />
             <SelectValue placeholder="All Time" />

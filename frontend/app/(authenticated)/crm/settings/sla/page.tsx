@@ -150,6 +150,10 @@ export default function SlaPage() {
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
+
   if (isLoading || reportLoading) {
     return (
       <div className="space-y-6 p-6">
@@ -169,7 +173,7 @@ export default function SlaPage() {
           illustration={<Shield className="h-10 w-10 text-muted-foreground" />}
           title="Failed to load SLA policies"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: () => refetch() }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </div>
     );
@@ -177,7 +181,7 @@ export default function SlaPage() {
 
   return (
     <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={(open) => { if (!open) handleDeleteCancel(); }}>
+      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete SLA Policy</AlertDialogTitle>

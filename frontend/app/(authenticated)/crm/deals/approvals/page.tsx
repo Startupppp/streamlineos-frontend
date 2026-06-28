@@ -53,6 +53,71 @@ const STATUS_BADGE: Record<string, { label: string; variant: "default" | "second
   rejected: { label: "Rejected", variant: "destructive" },
 };
 
+interface ApprovalItem {
+  id: number;
+  status: string;
+  dealName?: string | null;
+  dealId: number;
+  dealValue?: string | number | null;
+  requesterName?: string | null;
+  requestedStage: string;
+  createdAt?: string | null;
+  rejectionReason?: string | null;
+}
+
+interface ApprovalTableRowProps {
+  item: ApprovalItem;
+  onApprove: (id: number) => void;
+  onReject: (id: number) => void;
+}
+
+function ApprovalTableRow({ item, onApprove, onReject }: ApprovalTableRowProps) {
+  const badge = STATUS_BADGE[item.status] ?? { label: item.status, variant: "secondary" as const };
+
+  const handleApprove = useCallback(() => onApprove(item.id), [onApprove, item.id]);
+  const handleReject = useCallback(() => onReject(item.id), [onReject, item.id]);
+
+  return (
+    <TableRow key={item.id}>
+      <TableCell className="font-medium text-sm">{item.dealName ?? `Deal #${item.dealId}`}</TableCell>
+      <TableCell className="text-right text-sm">{item.dealValue ? fmt(item.dealValue) : "—"}</TableCell>
+      <TableCell className="text-sm">{item.requesterName ?? "—"}</TableCell>
+      <TableCell><Badge variant="outline" className="text-[11px]">{item.requestedStage}</Badge></TableCell>
+      <TableCell><Badge variant={badge.variant} className="text-[11px]">{badge.label}</Badge></TableCell>
+      <TableCell className="text-xs text-muted-foreground">
+        {item.createdAt ? format(new Date(item.createdAt), "dd MMM yyyy") : "—"}
+      </TableCell>
+      <TableCell className="text-right">
+        {item.status === "pending" && (
+          <div className="flex items-center justify-end gap-1.5">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-green-600 hover:text-green-700"
+              onClick={handleApprove}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-destructive hover:text-destructive"
+              onClick={handleReject}
+            >
+              <XCircle className="h-3.5 w-3.5 mr-1" />Reject
+            </Button>
+          </div>
+        )}
+        {item.status === "rejected" && item.rejectionReason && (
+          <span className="text-xs text-muted-foreground italic" title={item.rejectionReason}>
+            {item.rejectionReason.slice(0, 30)}{item.rejectionReason.length > 30 ? "..." : ""}
+          </span>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+}
+
 function ApprovalsTableSkeleton() {
   return (
     <Table>
@@ -112,6 +177,10 @@ export default function DealApprovalsPage() {
     setRejectionReason(e.target.value);
   }, []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleApprove = useCallback((id: number) => handleOpenConfirm(id, "approve"), [handleOpenConfirm]);
+  const handleReject = useCallback((id: number) => handleOpenConfirm(id, "reject"), [handleOpenConfirm]);
+
   const handleResolve = useCallback(() => {
     if (!confirmAction) return;
     resolve.mutate(
@@ -152,7 +221,7 @@ export default function DealApprovalsPage() {
         <div className="flex flex-col items-center justify-center flex-1 gap-3 py-20 text-center">
           <AlertCircle className="h-10 w-10 text-destructive" />
           <p className="text-sm text-muted-foreground">Failed to load approvals.</p>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
         </div>
       ) : (
         <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -184,48 +253,14 @@ export default function DealApprovalsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {items.map((a) => {
-                      const badge = STATUS_BADGE[a.status] ?? { label: a.status, variant: "secondary" as const };
-                      return (
-                        <TableRow key={a.id}>
-                          <TableCell className="font-medium text-sm">{a.dealName ?? `Deal #${a.dealId}`}</TableCell>
-                          <TableCell className="text-right text-sm">{a.dealValue ? fmt(a.dealValue) : "—"}</TableCell>
-                          <TableCell className="text-sm">{a.requesterName ?? "—"}</TableCell>
-                          <TableCell><Badge variant="outline" className="text-[11px]">{a.requestedStage}</Badge></TableCell>
-                          <TableCell><Badge variant={badge.variant} className="text-[11px]">{badge.label}</Badge></TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {a.createdAt ? format(new Date(a.createdAt), "dd MMM yyyy") : "—"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {a.status === "pending" && (
-                              <div className="flex items-center justify-end gap-1.5">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 text-xs text-green-600 hover:text-green-700"
-                                  onClick={() => handleOpenConfirm(a.id, "approve")}
-                                >
-                                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" />Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 text-xs text-destructive hover:text-destructive"
-                                  onClick={() => handleOpenConfirm(a.id, "reject")}
-                                >
-                                  <XCircle className="h-3.5 w-3.5 mr-1" />Reject
-                                </Button>
-                              </div>
-                            )}
-                            {a.status === "rejected" && a.rejectionReason && (
-                              <span className="text-xs text-muted-foreground italic" title={a.rejectionReason}>
-                                {a.rejectionReason.slice(0, 30)}{a.rejectionReason.length > 30 ? "..." : ""}
-                              </span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {items.map((a) => (
+                      <ApprovalTableRow
+                        key={a.id}
+                        item={a}
+                        onApprove={handleApprove}
+                        onReject={handleReject}
+                      />
+                    ))}
                   </TableBody>
                 </Table>
               </div>

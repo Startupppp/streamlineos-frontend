@@ -98,7 +98,7 @@ export function InvoiceLineItems({
       setEditNotes(notes ?? "");
       setEditCurrency(currency ?? "INR");
     }
-  }, [editOpen]);
+  }, [editOpen, lineItems, taxRate, discount, dueDate, notes, currency]);
 
   function handleDescriptionChange(idx: number, value: string) {
     setEditLineItems((prev) =>
@@ -151,6 +151,10 @@ export function InvoiceLineItems({
 
   function handleCurrencyChange(e: React.ChangeEvent<HTMLInputElement>) {
     setEditCurrency(e.target.value);
+  }
+
+  function handleCancelEdit() {
+    onEditOpenChange(false);
   }
 
   function handleSaveEdit() {
@@ -271,45 +275,16 @@ export function InvoiceLineItems({
                   <span className="col-span-2 text-right">Amount</span>
                 </div>
                 {editLineItems.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                    <Input
-                      className="col-span-5 h-8 text-sm"
-                      placeholder="Description"
-                      value={item.description}
-                      onChange={(e) =>
-                        handleDescriptionChange(idx, e.target.value)
-                      }
-                    />
-                    <Input
-                      className="col-span-2 h-8 text-sm text-right"
-                      type="number"
-                      min={1}
-                      value={item.quantity || ""}
-                      onChange={(e) => handleQuantityChange(idx, e.target.value)}
-                      aria-label={`Quantity for item ${idx + 1}`}
-                    />
-                    <Input
-                      className="col-span-2 h-8 text-sm text-right"
-                      type="number"
-                      min={0}
-                      value={item.rate || ""}
-                      onChange={(e) => handleRateChange(idx, e.target.value)}
-                      aria-label={`Rate for item ${idx + 1}`}
-                    />
-                    <div className="col-span-2 text-sm font-medium text-right pr-1">
-                      {fmt(item.amount)}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="col-span-1 h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleRemoveItem(idx)}
-                      disabled={editLineItems.length === 1}
-                      aria-label={`Remove item ${idx + 1}`}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
+                  <EditLineItemRow
+                    key={idx}
+                    item={item}
+                    idx={idx}
+                    isOnly={editLineItems.length === 1}
+                    onDescriptionChange={handleDescriptionChange}
+                    onQuantityChange={handleQuantityChange}
+                    onRateChange={handleRateChange}
+                    onRemove={handleRemoveItem}
+                  />
                 ))}
                 <Button
                   variant="outline"
@@ -396,7 +371,7 @@ export function InvoiceLineItems({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onEditOpenChange(false)}
+              onClick={handleCancelEdit}
             >
               Cancel
             </Button>
@@ -416,5 +391,78 @@ export function InvoiceLineItems({
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+interface EditLineItemRowProps {
+  item: { description: string; quantity: number; rate: number; amount: number };
+  idx: number;
+  isOnly: boolean;
+  onDescriptionChange: (idx: number, value: string) => void;
+  onQuantityChange: (idx: number, value: string) => void;
+  onRateChange: (idx: number, value: string) => void;
+  onRemove: (idx: number) => void;
+}
+
+function EditLineItemRow({
+  item,
+  idx,
+  isOnly,
+  onDescriptionChange,
+  onQuantityChange,
+  onRateChange,
+  onRemove,
+}: EditLineItemRowProps) {
+  function handleDescChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onDescriptionChange(idx, e.target.value);
+  }
+  function handleQtyChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onQuantityChange(idx, e.target.value);
+  }
+  function handleRateFieldChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onRateChange(idx, e.target.value);
+  }
+  function handleRemoveClick() {
+    onRemove(idx);
+  }
+
+  return (
+    <div className="grid grid-cols-12 gap-2 items-center">
+      <Input
+        className="col-span-5 h-8 text-sm"
+        placeholder="Description"
+        value={item.description}
+        onChange={handleDescChange}
+      />
+      <Input
+        className="col-span-2 h-8 text-sm text-right"
+        type="number"
+        min={1}
+        value={item.quantity || ""}
+        onChange={handleQtyChange}
+        aria-label={`Quantity for item ${idx + 1}`}
+      />
+      <Input
+        className="col-span-2 h-8 text-sm text-right"
+        type="number"
+        min={0}
+        value={item.rate || ""}
+        onChange={handleRateFieldChange}
+        aria-label={`Rate for item ${idx + 1}`}
+      />
+      <div className="col-span-2 text-sm font-medium text-right pr-1">
+        {fmt(item.amount)}
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="col-span-1 h-8 w-8 text-muted-foreground hover:text-destructive"
+        onClick={handleRemoveClick}
+        disabled={isOnly}
+        aria-label={`Remove item ${idx + 1}`}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </Button>
+    </div>
   );
 }

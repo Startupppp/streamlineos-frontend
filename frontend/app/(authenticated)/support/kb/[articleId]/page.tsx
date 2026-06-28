@@ -122,6 +122,14 @@ function isArticleVisibility(value: unknown): value is KbArticleVisibility {
   return value === "internal" || value === "public";
 }
 
+function asArticleStatus(v: string): KbArticleStatus | undefined {
+  return isArticleStatus(v) ? v : undefined;
+}
+
+function asArticleVisibility(v: string): KbArticleVisibility | undefined {
+  return isArticleVisibility(v) ? v : undefined;
+}
+
 function parseDraft(value: unknown): ArticleDraft | null {
   if (typeof value !== "object" || value === null) return null;
   const record: Record<string, unknown> = { ...value };
@@ -248,6 +256,59 @@ function getCommentInitials(name: string | null | undefined) {
     .slice(0, 2);
 }
 
+interface CommentItemProps {
+  comment: {
+    id: number;
+    userImage?: string | null;
+    userName?: string | null;
+    createdAt?: string | null;
+    body: string;
+  };
+  isPendingDelete: boolean;
+  onDelete: (commentId: number) => void;
+}
+
+function CommentItem({ comment, isPendingDelete, onDelete }: CommentItemProps) {
+  function handleDelete() {
+    onDelete(comment.id);
+  }
+  return (
+    <div className="rounded-lg border border-border px-3 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Avatar className="h-5 w-5 shrink-0">
+            <AvatarImage src={resolveImageUrl(comment.userImage)} />
+            <AvatarFallback className="text-[8px]">
+              {getCommentInitials(comment.userName)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-xs font-medium truncate">
+            {comment.userName ?? "Unknown"}
+          </span>
+          {comment.createdAt && (
+            <span className="text-[10px] text-muted-foreground shrink-0">
+              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+            </span>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+          onClick={handleDelete}
+          disabled={isPendingDelete}
+          aria-label="Delete comment"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      <p className="text-xs text-foreground mt-1 whitespace-pre-wrap break-words">
+        {comment.body}
+      </p>
+    </div>
+  );
+}
+
 function InternalCommentsPanel({ article }: { article: KbArticleDetail }) {
   const commentsQuery = useKbComments(article.id);
   const addComment = useAddKbComment(article.id);
@@ -280,6 +341,10 @@ function InternalCommentsPanel({ article }: { article: KbArticleDetail }) {
       onSuccess: () => toast.success("Comment deleted"),
       onError: (e) => toast.error(getApiError(e)),
     });
+  }
+
+  function handleCommentsRetry() {
+    void commentsQuery.refetch();
   }
 
   return (
@@ -322,7 +387,7 @@ function InternalCommentsPanel({ article }: { article: KbArticleDetail }) {
             compact
             title="Couldn't load comments"
             description={getApiError(commentsQuery.error)}
-            onRetry={() => commentsQuery.refetch()}
+            onRetry={handleCommentsRetry}
           />
         ) : comments.length === 0 ? (
           <EmptyState
@@ -334,44 +399,12 @@ function InternalCommentsPanel({ article }: { article: KbArticleDetail }) {
         ) : (
           <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
             {comments.map((comment) => (
-              <div
+              <CommentItem
                 key={comment.id}
-                className="rounded-lg border border-border px-3 py-2"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <Avatar className="h-5 w-5 shrink-0">
-                      <AvatarImage src={resolveImageUrl(comment.userImage)} />
-                      <AvatarFallback className="text-[8px]">
-                        {getCommentInitials(comment.userName)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-xs font-medium truncate">
-                      {comment.userName ?? "Unknown"}
-                    </span>
-                    {comment.createdAt && (
-                      <span className="text-[10px] text-muted-foreground shrink-0">
-                        {formatDistanceToNow(new Date(comment.createdAt), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => handleDelete(comment.id)}
-                    disabled={deleteComment.isPending}
-                    aria-label="Delete comment"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-                <p className="text-xs text-foreground mt-1 whitespace-pre-wrap break-words">
-                  {comment.body}
-                </p>
-              </div>
+                comment={comment}
+                isPendingDelete={deleteComment.isPending}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}
@@ -385,6 +418,62 @@ function AttachmentIcon({ mimeType }: { mimeType: string | null }) {
     return <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />;
   }
   return <FileText className="h-4 w-4 text-muted-foreground shrink-0" />;
+}
+
+interface AttachmentRowItemProps {
+  attachment: KbAttachment;
+  isDownloadPending: boolean;
+  isDeletePending: boolean;
+  onDownload: (attachment: KbAttachment) => void;
+  onDelete: (attachment: KbAttachment) => void;
+}
+
+function AttachmentRowItem({
+  attachment,
+  isDownloadPending,
+  isDeletePending,
+  onDownload,
+  onDelete,
+}: AttachmentRowItemProps) {
+  function handleDownload() {
+    onDownload(attachment);
+  }
+  function handleDelete() {
+    onDelete(attachment);
+  }
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
+      <AttachmentIcon mimeType={attachment.mimeType} />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium truncate">{attachment.fileName}</p>
+        {attachment.fileSize !== null && (
+          <p className="text-[10px] text-muted-foreground">
+            {formatFileSize(attachment.fileSize)}
+          </p>
+        )}
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+        onClick={handleDownload}
+        disabled={isDownloadPending}
+        aria-label={`Download ${attachment.fileName}`}
+      >
+        <Download className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+        onClick={handleDelete}
+        disabled={isDeletePending}
+        aria-label={`Delete ${attachment.fileName}`}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
 }
 
 function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
@@ -444,6 +533,14 @@ function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
     setPendingDelete(null);
   }
 
+  function handleAttachmentsRetry() {
+    void attachmentsQuery.refetch();
+  }
+
+  function handlePendingDeleteOpenChange(open: boolean) {
+    if (!open) setPendingDelete(null);
+  }
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -485,7 +582,7 @@ function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
             compact
             title="Couldn't load attachments"
             description={getApiError(attachmentsQuery.error)}
-            onRetry={() => attachmentsQuery.refetch()}
+            onRetry={handleAttachmentsRetry}
           />
         ) : attachments.length === 0 ? (
           <EmptyState
@@ -497,40 +594,14 @@ function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
         ) : (
           <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
             {attachments.map((attachment) => (
-              <div
+              <AttachmentRowItem
                 key={attachment.id}
-                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
-              >
-                <AttachmentIcon mimeType={attachment.mimeType} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium truncate">{attachment.fileName}</p>
-                  {attachment.fileSize !== null && (
-                    <p className="text-[10px] text-muted-foreground">
-                      {formatFileSize(attachment.fileSize)}
-                    </p>
-                  )}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
-                  onClick={() => handleDownload(attachment)}
-                  disabled={downloadUrl.isPending}
-                  aria-label={`Download ${attachment.fileName}`}
-                >
-                  <Download className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
-                  onClick={() => setPendingDelete(attachment)}
-                  disabled={deleteAttachment.isPending}
-                  aria-label={`Delete ${attachment.fileName}`}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+                attachment={attachment}
+                isDownloadPending={downloadUrl.isPending}
+                isDeletePending={deleteAttachment.isPending}
+                onDownload={handleDownload}
+                onDelete={setPendingDelete}
+              />
             ))}
           </div>
         )}
@@ -568,7 +639,7 @@ function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
 
       <AlertDialog
         open={pendingDelete !== null}
-        onOpenChange={(open) => !open && setPendingDelete(null)}
+        onOpenChange={handlePendingDeleteOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -680,6 +751,16 @@ function ArticleEditor({
 
   function handleTagsChange(event: ChangeEvent<HTMLInputElement>) {
     setTagsInput(event.target.value);
+  }
+
+  function handleStatusChange(v: string) {
+    const next = asArticleStatus(v);
+    if (next) setStatus(next);
+  }
+
+  function handleVisibilityChange(v: string) {
+    const next = asArticleVisibility(v);
+    if (next) setVisibility(next);
   }
 
   function handleSave() {
@@ -822,7 +903,7 @@ function ArticleEditor({
               </div>
               <div className="space-y-1">
                 <Label>Status</Label>
-                <Select value={status} onValueChange={(v) => setStatus(v as KbArticleStatus)}>
+                <Select value={status} onValueChange={handleStatusChange}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -837,7 +918,7 @@ function ArticleEditor({
                 <Label>Visibility</Label>
                 <Select
                   value={visibility}
-                  onValueChange={(v) => setVisibility(v as KbArticleVisibility)}
+                  onValueChange={handleVisibilityChange}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -885,6 +966,10 @@ export default function KbArticleEditorPage({
   const categoriesQuery = useKbCategories();
   const categories = categoriesQuery.data ?? [];
 
+  function handleRetry() {
+    void articleQuery.refetch();
+  }
+
   if (articleQuery.isLoading) {
     return (
       <PageWrapper eyebrow="Support · Knowledge Base" title="Edit Article">
@@ -903,7 +988,7 @@ export default function KbArticleEditorPage({
               ? getApiError(articleQuery.error)
               : "This article does not exist."
           }
-          onRetry={() => articleQuery.refetch()}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );

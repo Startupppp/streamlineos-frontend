@@ -67,6 +67,25 @@ export default function SupportDashboardPage() {
     );
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Support Analytics"
+        subtitle="Real-time insights into customer support performance across all channels"
+      >
+        <ErrorState
+          title="Failed to load support analytics"
+          description="We couldn't load the dashboard data. Please try again."
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
   const { supportDashboardStats } = data;
 
   return (
@@ -158,9 +177,9 @@ export default function SupportDashboardPage() {
               <CardTitle className="text-base">Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-y-auto pr-1 max-h-[380px]">
+              <ScrollArea className="h-[380px] pr-1">
                 <ActivityFeed items={supportActivityFeed} />
-              </div>
+              </ScrollArea>
             </CardContent>
           </Card>
         </motion.div>
@@ -184,9 +203,9 @@ export default function SupportDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {supportTeamMembers.map((member, idx) => (
+                    {supportTeamMembers.map((member) => (
                       <motion.tr
-                        key={`member-${idx}`}
+                        key={member.name}
                         className="border-b border-border/50 last:border-0"
                         variants={fadeUp}
                       >

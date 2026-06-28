@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useTransition } from "react";
 import { useSession } from "next-auth/react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -64,8 +64,7 @@ export default function TimesheetsPage() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
-  const ability = useAbility();
-  const isCEO = ability.can("manage","all");
+  const isCEO = useCan("hr:employees:manage");
 
   const selectedProject = searchParams.get("project") ??"all";
   const dateRange = searchParams.get("range") ??"this-quarter";

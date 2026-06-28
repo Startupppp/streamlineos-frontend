@@ -20,8 +20,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, CheckCircle2, Laptop } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { Plus, CheckCircle2, Laptop, AlertCircle } from "lucide-react";
+import { useCan } from "@/lib/api/hooks/access";
 import { useHrEmployees, useHrAssets } from "@/lib/api/hooks/hr";
 import { cn } from "@/lib/utils";
 import type { Employee, PaginatedEmployees, Asset } from "@/types/hr";
@@ -87,8 +87,7 @@ function AssetReturnActionButton({ id, onMark }: { id: number; onMark: (id: numb
 
 export default function AssetReturnsPage() {
   const qc = useQueryClient();
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const { data: employeesRaw } = useHrEmployees();
   const employees = useMemo<Employee[]>(() => {
@@ -134,7 +133,7 @@ export default function AssetReturnsPage() {
     [assignedAssets, selectedAssetId],
   );
 
-  const { data: items, isLoading } = useQuery({
+  const { data: items, isLoading, isError, refetch } = useQuery({
     queryKey: arKeys.list(),
     queryFn: () => apiClient.get<AssetReturn[]>("/hr/asset-returns"),
   });
@@ -207,6 +206,7 @@ export default function AssetReturnsPage() {
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
   const handleSetReturnId = useCallback((id: number) => setReturnId(id), []);
   const handleCloseConfirm = useCallback((open: boolean) => { if (!open) setReturnId(null); }, []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (
@@ -224,6 +224,21 @@ export default function AssetReturnsPage() {
               </div>
             ))}
           </div>
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Asset Returns" subtitle="Track company asset returns">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load asset returns</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

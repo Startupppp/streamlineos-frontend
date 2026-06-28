@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus,
   Clock,
@@ -53,7 +54,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { useCommissions, useCommissionRules, useCreateCommissionRule, useUpdateCommissionStatus, type CommissionItem, type CommissionRule } from "@/lib/api/hooks/crm";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
@@ -74,6 +75,40 @@ interface PendingAction {
   status: "approved" | "paid";
 }
 
+interface CommissionActionCellProps {
+  commissionId: number;
+  userName: string | null;
+  status: string;
+  onAction: (action: PendingAction) => void;
+}
+
+function CommissionActionCell({ commissionId, userName, status, onAction }: CommissionActionCellProps) {
+  const handleApprove = useCallback(() => {
+    onAction({ id: commissionId, userName, status: "approved" });
+  }, [commissionId, userName, onAction]);
+
+  const handleMarkPaid = useCallback(() => {
+    onAction({ id: commissionId, userName, status: "paid" });
+  }, [commissionId, userName, onAction]);
+
+  if (status !== "pending") {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  return (
+    <div className="flex items-center justify-end gap-1.5">
+      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleApprove}>
+        <Check className="h-3.5 w-3.5 mr-1" />
+        Approve
+      </Button>
+      <Button size="sm" className="h-7 text-xs" onClick={handleMarkPaid}>
+        <BadgeIndianRupee className="h-3.5 w-3.5 mr-1" />
+        Mark Paid
+      </Button>
+    </div>
+  );
+}
+
 export default function CommissionsPage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
@@ -82,13 +117,22 @@ export default function CommissionsPage() {
   const [ruleRate, setRuleRate] = useState("");
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
-  const ability = useAbility();
-  const canManage = ability.can("manage", "sales");
+  const canManage = useCan("crm:targets:manage");
 
   const { data, isLoading } = useCommissions({ status: statusFilter });
   const { data: rules } = useCommissionRules();
   const createRule = useCreateCommissionRule();
   const updateStatus = useUpdateCommissionStatus();
+
+  const handleOpenRuleDialog = useCallback(() => setRuleDialogOpen(true), []);
+  const handleCloseRuleDialog = useCallback(() => setRuleDialogOpen(false), []);
+  const handleStatusFilterChange = useCallback((v: string) => setStatusFilter(v === "all" ? undefined : v), []);
+  const handlePendingDialogChange = useCallback((open: boolean) => { if (!open) setPendingAction(null); }, []);
+  const handleRuleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRuleName(e.target.value), []);
+  const handleRuleRateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRuleRate(e.target.value), []);
+  const handleRuleDialogChange = useCallback((open: boolean) => setRuleDialogOpen(open), []);
+  const handleRuleTypeChange = useCallback((v: string) => setRuleType(v), []);
+  const handleCommissionAction = useCallback((action: PendingAction) => setPendingAction(action), []);
 
   const items: CommissionItem[] = data?.items ?? [];
 
@@ -131,13 +175,13 @@ export default function CommissionsPage() {
       title="Commissions"
       subtitle="Track earned commissions"
       actions={
-        <Button size="sm" variant="outline" onClick={() => setRuleDialogOpen(true)}>
+        <Button size="sm" variant="outline" onClick={handleOpenRuleDialog}>
           <Plus className="h-3.5 w-3.5 mr-1.5" />
           Commission Rule
         </Button>
       }
       filters={
-        <Tabs value={statusFilter ?? "all"} onValueChange={(v) => setStatusFilter(v === "all" ? undefined : v)}>
+        <Tabs value={statusFilter ?? "all"} onValueChange={handleStatusFilterChange}>
           <TabsList className="h-8">
             <TabsTrigger value="all" className="text-xs px-3 h-7">All</TabsTrigger>
             <TabsTrigger value="pending" className="text-xs px-3 h-7">Pending</TabsTrigger>
@@ -170,7 +214,17 @@ export default function CommissionsPage() {
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={canManage ? 7 : 6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                        {canManage && <TableCell><Skeleton className="h-7 w-24 ml-auto" /></TableCell>}
+                      </TableRow>
+                    ))
                   ) : items.length === 0 ? (
                     <TableRow><TableCell colSpan={canManage ? 7 : 6} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
                       <EmptyExpensesIllustration className="h-36 w-36 opacity-95" />
@@ -188,29 +242,12 @@ export default function CommissionsPage() {
                         <TableCell><Badge variant={badge.variant} className="text-[11px]">{badge.label}</Badge></TableCell>
                         {canManage && (
                           <TableCell className="text-right">
-                            {c.status === "pending" ? (
-                              <div className="flex items-center justify-end gap-1.5">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 text-xs"
-                                  onClick={() => setPendingAction({ id: c.id, userName: c.userName, status: "approved" })}
-                                >
-                                  <Check className="h-3.5 w-3.5 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  className="h-7 text-xs"
-                                  onClick={() => setPendingAction({ id: c.id, userName: c.userName, status: "paid" })}
-                                >
-                                  <BadgeIndianRupee className="h-3.5 w-3.5 mr-1" />
-                                  Mark Paid
-                                </Button>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
+                            <CommissionActionCell
+                              commissionId={c.id}
+                              userName={c.userName}
+                              status={c.status}
+                              onAction={handleCommissionAction}
+                            />
                           </TableCell>
                         )}
                       </TableRow>
@@ -228,9 +265,9 @@ export default function CommissionsPage() {
               <p className="text-sm font-semibold">Commission Rules</p>
             </div>
             <div className="p-4 space-y-2">
-              {rules.map(r => (
-                <div key={String(r.id)} className="flex items-center justify-between text-sm py-1.5 px-2 rounded-md bg-muted/40">
-                  <span className="font-medium truncate min-w-0">{String(r.name)}</span>
+              {rules.map((r) => (
+                <div key={r.id} className="flex items-center justify-between text-sm py-1.5 px-2 rounded-md bg-muted/40">
+                  <span className="font-medium truncate min-w-0">{r.name}</span>
                   <span className="text-muted-foreground tabular-nums shrink-0">{r.type === "flat_percent" ? `${Number(r.flatRate).toFixed(2)}%` : "Tiered"}</span>
                 </div>
               ))}
@@ -239,7 +276,7 @@ export default function CommissionsPage() {
         )}
       </div>
 
-      <Dialog open={ruleDialogOpen} onOpenChange={setRuleDialogOpen}>
+      <Dialog open={ruleDialogOpen} onOpenChange={handleRuleDialogChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Commission Rule</DialogTitle>
@@ -248,11 +285,11 @@ export default function CommissionsPage() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Rule Name</label>
-              <Input value={ruleName} onChange={(e) => setRuleName(e.target.value)} placeholder="e.g. Standard 5%" />
+              <Input value={ruleName} onChange={handleRuleNameChange} placeholder="e.g. Standard 5%" />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Type</label>
-              <Select value={ruleType} onValueChange={setRuleType}>
+              <Select value={ruleType} onValueChange={handleRuleTypeChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="flat_percent">Flat Percentage</SelectItem>
@@ -262,11 +299,11 @@ export default function CommissionsPage() {
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Rate (%)</label>
-              <Input value={ruleRate} onChange={(e) => setRuleRate(e.target.value)} type="number" min="0" max="100" step="0.1" placeholder="e.g. 5" />
+              <Input value={ruleRate} onChange={handleRuleRateChange} type="number" min="0" max="100" step="0.1" placeholder="e.g. 5" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRuleDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={handleCloseRuleDialog}>Cancel</Button>
             <Button onClick={handleCreateRule} disabled={createRule.isPending}>
               {createRule.isPending ? "Creating..." : "Create Rule"}
             </Button>
@@ -274,7 +311,7 @@ export default function CommissionsPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!pendingAction} onOpenChange={(open) => !open && setPendingAction(null)}>
+      <AlertDialog open={!!pendingAction} onOpenChange={handlePendingDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>

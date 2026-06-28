@@ -38,6 +38,10 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
     setEditing(false);
   }, [initialNotes]);
 
+  const handleStartEdit = useCallback(() => setEditing(true), []);
+
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+
   if (!editing) {
     return (
       <div className="space-y-2">
@@ -50,7 +54,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
           variant="ghost"
           size="sm"
           className="gap-1.5 text-xs"
-          onClick={() => setEditing(true)}
+          onClick={handleStartEdit}
         >
           <Pencil className="h-3 w-3" />
           {notes ?"Edit notes" :"Add notes"}
@@ -63,7 +67,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
     <div className="space-y-2">
       <Textarea
         value={notes}
-        onChange={(e) => setNotes(e.target.value)}
+        onChange={handleNotesChange}
         placeholder="Add internal notes about this organization..."
         rows={5}
         className="resize-none text-sm"

@@ -15,6 +15,7 @@ import {
   LayoutTemplate,
   LayoutGrid,
   List,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ import { DocumentTable, type FolderItem } from "@/features/hr/documents/document
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { EditDocumentSheet } from "@/features/hr/documents/edit-document-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 const DOCUMENT_CATEGORIES = [
   "Personal Documents",
@@ -75,8 +76,7 @@ export default function DocumentsPage() {
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const foldersKey = session?.orgId ? `hr-doc-folders-${session.orgId}` : null;
 
@@ -95,7 +95,7 @@ export default function DocumentsPage() {
 
   const typeFilter = selectedType !== "all" ? (selectedType as Document["type"]) : undefined;
 
-  const { data: rawDocuments = [], isLoading, refetch } = useHrDocuments(undefined, typeFilter);
+  const { data: rawDocuments = [], isLoading, isError, refetch } = useHrDocuments(undefined, typeFilter);
   const { data: rawPolicies = [] } = useHrDocuments(undefined, "POLICY");
   const deleteMutation = useDeleteDocument();
 
@@ -187,6 +187,7 @@ export default function DocumentsPage() {
   const handleEdit = useCallback((doc: Document) => setEditingDocument(doc), []);
   const handleUploadSuccess = useCallback(() => { void refetch(); setIsUploadOpen(false); }, [refetch]);
   const handleEditSheetChange = useCallback((open: boolean) => { if (!open) setEditingDocument(null); }, []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (
@@ -201,6 +202,24 @@ export default function DocumentsPage() {
             ))}
           </div>
           <Skeleton className="h-[400px] rounded-2xl" />
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Document Library"
+        subtitle="Centralized repository for all HR documents, contracts, and policy files."
+      >
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load documents</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

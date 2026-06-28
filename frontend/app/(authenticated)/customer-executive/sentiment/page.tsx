@@ -211,10 +211,12 @@ function HistoryItem({
   const sentCfg = sentimentConfig[entry.result.sentiment];
   const SentIcon = sentCfg.icon;
 
+  const handleClick = useCallback(() => onSelect(entry), [onSelect, entry]);
+
   return (
     <button
       type="button"
-      onClick={() => onSelect(entry)}
+      onClick={handleClick}
       className={cn(
 "w-full text-left px-3 py-2.5 rounded-lg border transition-colors text-sm",
         isActive

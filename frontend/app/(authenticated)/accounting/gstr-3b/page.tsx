@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useGstr3B } from "@/lib/api/hooks/accounting";
 import type { Gstr3BTaxBlock } from "@/types/accounting";
 
@@ -51,6 +53,10 @@ export default function Gstr3BPage() {
     setTo(event.target.value);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   return (
     <PageWrapper
       eyebrow="Accounting · Reports"
@@ -59,19 +65,26 @@ export default function Gstr3BPage() {
     >
       <div className="flex flex-col sm:flex-row gap-3 mb-4 items-end">
         <div>
-          <label className="text-sm text-muted-foreground block mb-1">From</label>
-          <Input type="date" value={from} onChange={handleFromChange} />
+          <label htmlFor="gstr3b-from" className="text-sm text-muted-foreground block mb-1">From</label>
+          <Input id="gstr3b-from" type="date" value={from} onChange={handleFromChange} />
         </div>
         <div>
-          <label className="text-sm text-muted-foreground block mb-1">To</label>
-          <Input type="date" value={to} onChange={handleToChange} />
+          <label htmlFor="gstr3b-to" className="text-sm text-muted-foreground block mb-1">To</label>
+          <Input id="gstr3b-to" type="date" value={to} onChange={handleToChange} />
         </div>
       </div>
 
-      {query.isLoading && <LoadingState variant="table" />}
-      {query.error && <ErrorState description={query.error.message} />}
-
-      {report && (
+      {query.isLoading ? (
+        <LoadingState variant="table" />
+      ) : query.error ? (
+        <ErrorState description={query.error.message} onRetry={handleRetry} />
+      ) : !report ? (
+        <EmptyState
+          illustration={<EmptyExpensesIllustration />}
+          title="No GST data for this period"
+          description="Post invoices and purchase bills within the date range to populate this return."
+        />
+      ) : (
         <div className="space-y-4">
           <Card className="p-4 bg-muted/40">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm tabular-nums">

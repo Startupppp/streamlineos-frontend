@@ -190,6 +190,8 @@ export default function ClientAccountsPage() {
   const handleViewTable = useCallback(() => handleViewMode("table"), [handleViewMode]);
   const handlePrevPage = useCallback(() => setPage(page - 1), [page, setPage]);
   const handleNextPage = useCallback(() => setPage(page + 1), [page, setPage]);
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), [setSearch]);
+  const handleStopPropagation = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
 
   const { data: allData, isLoading: statsLoading } = useClientAccounts({ limit: 500 });
   const allAccounts = allData?.accounts ?? [];
@@ -274,7 +276,7 @@ export default function ClientAccountsPage() {
             <Input
               placeholder="Search clients..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-9"
             />
           </div>
@@ -422,7 +424,7 @@ export default function ClientAccountsPage() {
                           <TableCell className="text-xs text-muted-foreground">
                             {account.convertedAt ? new Date(account.convertedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
                           </TableCell>
-                          <TableCell onClick={(e) => e.stopPropagation()}>
+                          <TableCell onClick={handleStopPropagation}>
                             <AIChurnRiskButton clientId={account.id} compact />
                           </TableCell>
                           <TableCell>

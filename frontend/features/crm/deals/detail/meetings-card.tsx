@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,20 @@ interface Meeting {
   agenda: string | null;
   notes: string | null;
   recordingLink: string | null;
+}
+
+interface DeleteMeetingButtonProps {
+  meetingId: number;
+  onDelete: (id: number) => void;
+}
+
+function DeleteMeetingButton({ meetingId, onDelete }: DeleteMeetingButtonProps) {
+  const handleClick = useCallback(() => onDelete(meetingId), [meetingId, onDelete]);
+  return (
+    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0" onClick={handleClick}>
+      <Trash2 className="h-3.5 w-3.5" />
+    </Button>
+  );
 }
 
 interface MeetingsCardProps {
@@ -59,9 +74,7 @@ export function MeetingsCard({ meetings, onAddMeeting, onDeleteMeeting }: Meetin
                     </a>
                   )}
                 </div>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0" onClick={() => onDeleteMeeting(m.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <DeleteMeetingButton meetingId={m.id} onDelete={onDeleteMeeting} />
               </div>
             ))}
           </div>

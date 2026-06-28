@@ -40,6 +40,8 @@ export default function CsatSurveysPage() {
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
+  const handleViewResults = useCallback((s: CsatSurvey) => setResultsTarget(s), []);
+  const handleDeleteTarget = useCallback((s: CsatSurvey) => setDeleteTarget(s), []);
   const handleCloseResults = useCallback(() => setResultsTarget(null), []);
   const handleCloseDelete = useCallback(() => setDeleteTarget(null), []);
 
@@ -94,8 +96,8 @@ export default function CsatSurveysPage() {
             isLoading={isLoading}
             resultsTarget={resultsTarget}
             deleteTarget={deleteTarget}
-            onViewResults={setResultsTarget}
-            onDelete={setDeleteTarget}
+            onViewResults={handleViewResults}
+            onDelete={handleDeleteTarget}
             onCloseResults={handleCloseResults}
             onCloseDelete={handleCloseDelete}
             onConfirmDelete={handleConfirmDelete}

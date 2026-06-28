@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Flag, Plus, Loader2, Archive } from "lucide-react";
+import { AlertCircle, Archive, Flag, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   useFeatureFlags,
@@ -110,8 +110,69 @@ function TableSkeleton() {
   );
 }
 
+interface FlagTableRowProps {
+  flag: FeatureFlag;
+  onToggle: (flag: FeatureFlag) => void;
+  onArchive: (flag: FeatureFlag) => void;
+  isUpdating: boolean;
+  isArchiving: boolean;
+}
+
+function FlagTableRow({ flag, onToggle, onArchive, isUpdating, isArchiving }: FlagTableRowProps) {
+  function handleToggle() {
+    onToggle(flag);
+  }
+
+  function handleArchive() {
+    onArchive(flag);
+  }
+
+  return (
+    <TableRow>
+      <TableCell className="px-5 py-3">
+        <div>
+          <p className="text-sm font-medium">{flag.name}</p>
+          {flag.description && (
+            <p className="text-xs text-muted-foreground truncate max-w-xs">{flag.description}</p>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="px-5 py-3">
+        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{flag.key}</code>
+      </TableCell>
+      <TableCell className="px-5 py-3">
+        <TypeBadge type={flag.type} />
+      </TableCell>
+      <TableCell className="px-5 py-3">
+        <Switch
+          checked={flag.enabled}
+          onCheckedChange={handleToggle}
+          disabled={isUpdating}
+          aria-label={`Toggle ${flag.name}`}
+        />
+      </TableCell>
+      <TableCell className="px-5 py-3 text-sm text-muted-foreground">
+        {flag.type === "percentage" ? `${flag.rolloutPercentage}%` : "—"}
+      </TableCell>
+      <TableCell className="px-5 py-3 text-right">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 text-muted-foreground hover:text-destructive"
+          onClick={handleArchive}
+          disabled={isArchiving}
+          aria-label={`Archive ${flag.name}`}
+        >
+          <Archive className="h-3.5 w-3.5" />
+          Archive
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 function FeatureFlagsContent() {
-  const { data: flags, isLoading } = useFeatureFlags();
+  const { data: flags, isLoading, isError, refetch } = useFeatureFlags();
   const updateFlag = useUpdateFlag();
   const archiveFlag = useArchiveFlag();
   const createFlag = useCreateFlag();
@@ -123,7 +184,10 @@ function FeatureFlagsContent() {
   });
 
   const watchedType = form.watch("type");
-  const watchedName = form.watch("name");
+
+  function handleRetry() {
+    refetch();
+  }
 
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -212,6 +276,15 @@ function FeatureFlagsContent() {
           </TableHeader>
           <TableBody><TableSkeleton /></TableBody>
         </Table>
+      ) : isError ? (
+        <div className="flex flex-1 flex-col items-center justify-center py-24 gap-3 text-center">
+          <AlertCircle className="h-10 w-10 text-destructive/40" />
+          <p className="text-sm font-medium">Failed to load feature flags</p>
+          <p className="text-xs text-muted-foreground">Something went wrong. Please try again.</p>
+          <Button variant="outline" onClick={handleRetry} className="mt-2">
+            Retry
+          </Button>
+        </div>
       ) : visibleFlags.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center py-24 gap-3 text-center">
           <Flag className="h-10 w-10 text-muted-foreground/40" />
@@ -237,46 +310,14 @@ function FeatureFlagsContent() {
           </TableHeader>
           <TableBody>
             {visibleFlags.map((flag) => (
-              <TableRow key={flag.id}>
-                <TableCell className="px-5 py-3">
-                  <div>
-                    <p className="text-sm font-medium">{flag.name}</p>
-                    {flag.description && (
-                      <p className="text-xs text-muted-foreground truncate max-w-xs">{flag.description}</p>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="px-5 py-3">
-                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{flag.key}</code>
-                </TableCell>
-                <TableCell className="px-5 py-3">
-                  <TypeBadge type={flag.type} />
-                </TableCell>
-                <TableCell className="px-5 py-3">
-                  <Switch
-                    checked={flag.enabled}
-                    onCheckedChange={() => handleToggle(flag)}
-                    disabled={updateFlag.isPending}
-                    aria-label={`Toggle ${flag.name}`}
-                  />
-                </TableCell>
-                <TableCell className="px-5 py-3 text-sm text-muted-foreground">
-                  {flag.type === "percentage" ? `${flag.rolloutPercentage}%` : "—"}
-                </TableCell>
-                <TableCell className="px-5 py-3 text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 gap-1.5 text-muted-foreground hover:text-destructive"
-                    onClick={() => handleArchive(flag)}
-                    disabled={archiveFlag.isPending}
-                    aria-label={`Archive ${flag.name}`}
-                  >
-                    <Archive className="h-3.5 w-3.5" />
-                    Archive
-                  </Button>
-                </TableCell>
-              </TableRow>
+              <FlagTableRow
+                key={flag.id}
+                flag={flag}
+                onToggle={handleToggle}
+                onArchive={handleArchive}
+                isUpdating={updateFlag.isPending}
+                isArchiving={archiveFlag.isPending}
+              />
             ))}
           </TableBody>
         </Table>

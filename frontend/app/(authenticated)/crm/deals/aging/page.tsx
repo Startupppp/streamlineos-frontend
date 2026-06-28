@@ -84,7 +84,7 @@ export default function DealAgingPage() {
     return { totalStale: stale.length, avgDays, oldestDays, totalValue };
   }, [data]);
 
-  const handleRetry = useCallback(() => { refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const backAction = (
     <Button variant="outline" size="sm" asChild>

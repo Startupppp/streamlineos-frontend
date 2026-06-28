@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { NotificationCard } from "@/features/notifications/notification-card";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import type { NotificationTabFilter } from "@/features/notifications/notification-types";
 
 export default function NotificationsPage() {
@@ -24,7 +25,7 @@ export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<NotificationTabFilter>("ALL");
 
   const isUnreadOnly = activeTab === "UNREAD";
-  const { data: notifications, isLoading } = useNotifications(
+  const { data: notifications, isLoading, isError, refetch } = useNotifications(
     isUnreadOnly,
     50,
   );
@@ -55,6 +56,13 @@ export default function NotificationsPage() {
     markAllRead.mutate(undefined);
   }, [markAllRead]);
 
+  const handleTabChange = useCallback(
+    (v: string) => setActiveTab(v as NotificationTabFilter),
+    [],
+  );
+
+  function handleRetry() { void refetch(); }
+
   return (
     <PageWrapper
       title="Notifications"
@@ -82,7 +90,7 @@ export default function NotificationsPage() {
       filters={
         <Tabs
           value={activeTab}
-          onValueChange={(v) => setActiveTab(v as NotificationTabFilter)}
+          onValueChange={handleTabChange}
         >
           <TabsList className="bg-card border border-border">
             <TabsTrigger value="ALL">All</TabsTrigger>
@@ -104,6 +112,12 @@ export default function NotificationsPage() {
     >
       {isLoading ? (
         <NotificationListSkeleton />
+      ) : isError ? (
+        <ErrorState
+          title="Failed to load notifications"
+          description="We couldn't load your notifications. Please try again."
+          onRetry={handleRetry}
+        />
       ) : filtered.length === 0 ? (
         <EmptyState
           illustration={<EmptyInboxIllustration className="h-32 w-32" />}

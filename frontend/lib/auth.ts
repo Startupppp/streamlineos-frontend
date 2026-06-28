@@ -2,11 +2,18 @@ import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import { eq, sql, and } from "drizzle-orm";
+import { Adapter } from "next-auth/adapters";
+import { randomUUID } from "crypto";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import { db } from "./db";
-import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions, subscriptions } from "./db/schema";
+import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions, subscriptions, userPermissions, rolePermissions, roles } from "./db/schema";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { resolveEnabledModules, type Module } from "@/lib/billing/plan-modules";
+import { ROLE_DEFAULT_PERMISSIONS } from "@/lib/rbac/permissions";
+import { logger } from "./logger";
+import { redis } from "./redis";
+import { createAuditLog } from "./audit-log";
 
 function parsePlatformAdminEmails(): ReadonlySet<string> {
   const raw = process.env.PLATFORM_ADMIN_EMAILS ?? "";
@@ -24,13 +31,42 @@ function isPlatformAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
   return PLATFORM_ADMIN_EMAILS.has(email.toLowerCase());
 }
-import { eq, sql } from "drizzle-orm";
-import { Adapter } from "next-auth/adapters";
-import { logger } from "./logger";
-import { redis } from "./redis";
-import { randomUUID } from "crypto";
-import { createAuditLog } from "./audit-log";
-import { getUserPermissions } from "@/server/queries/rbac";
+async function getUserPermissions(userId: string, orgId: string): Promise<string[]> {
+  const userRow = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: { role: true },
+  });
+  const role = userRow?.role;
+
+  const [userPerms, rolePerms, customRole] = await Promise.all([
+    db.query.userPermissions.findMany({
+      where: and(eq(userPermissions.userId, userId), eq(userPermissions.orgId, orgId), eq(userPermissions.granted, true)),
+      with: { permission: true },
+    }),
+    role
+      ? db.query.rolePermissions.findMany({
+          where: and(eq(rolePermissions.role, role), eq(rolePermissions.orgId, orgId)),
+          with: { permission: true },
+        })
+      : Promise.resolve([]),
+    role
+      ? db.query.roles.findFirst({
+          where: and(eq(roles.slug, role), eq(roles.orgId, orgId)),
+          columns: { permissions: true },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  const permissionSet = new Set<string>();
+  for (const up of userPerms) { if (up.permission?.name) permissionSet.add(up.permission.name); }
+  for (const rp of rolePerms) { if (rp.permission?.name) permissionSet.add(rp.permission.name); }
+  if (customRole?.permissions && Array.isArray(customRole.permissions)) {
+    for (const p of customRole.permissions as string[]) permissionSet.add(p);
+  }
+  const defaultPerms = role ? (ROLE_DEFAULT_PERMISSIONS[role] ?? []) : [];
+  defaultPerms.forEach((p) => permissionSet.add(p));
+  return Array.from(permissionSet);
+}
 
 interface UserSessionCache {
   isActive: boolean | null;

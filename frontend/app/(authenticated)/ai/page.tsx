@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
   SheetContent,
@@ -13,6 +15,16 @@ import { AI_FEATURES, AI_CATEGORIES } from "@/features/ai/ai-features";
 import { AiFeatureCard } from "@/features/ai/ai-feature-card";
 import { AiFeatureForm } from "@/features/ai/ai-feature-form";
 import type { AiFeature } from "@/features/ai/types";
+
+interface FeatureCardWrapperProps {
+  feature: AiFeature;
+  onSelect: (feature: AiFeature) => void;
+}
+
+function FeatureCardWrapper({ feature, onSelect }: FeatureCardWrapperProps) {
+  const handleClick = useCallback(() => onSelect(feature), [feature, onSelect]);
+  return <AiFeatureCard feature={feature} onClick={handleClick} />;
+}
 
 export default function AIHubPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -25,6 +37,13 @@ export default function AIHubPage() {
         : AI_FEATURES.filter((f) => f.category === selectedCategory),
     [selectedCategory],
   );
+
+  const handleSelectFeature = useCallback((f: AiFeature) => setActiveFeature(f), []);
+  const handleCloseFeature = useCallback(() => setActiveFeature(null), []);
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) setActiveFeature(null);
+  }, []);
+  const handleClearFilter = useCallback(() => setSelectedCategory("all"), []);
 
   return (
     <PageWrapper
@@ -45,24 +64,28 @@ export default function AIHubPage() {
         </TabsList>
 
         <TabsContent value={selectedCategory} className="mt-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((feature) => (
-              <AiFeatureCard
-                key={feature.id}
-                feature={feature}
-                onClick={() => setActiveFeature(feature)}
-              />
-            ))}
-          </div>
+          {filtered.length === 0 ? (
+            <EmptyState
+              illustration={<Sparkles className="text-muted-foreground/40" />}
+              title="No features in this category"
+              description="No AI tools are available for the selected category yet."
+              action={{ label: "Browse All", onClick: handleClearFilter }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((feature) => (
+                <FeatureCardWrapper
+                  key={feature.id}
+                  feature={feature}
+                  onSelect={handleSelectFeature}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
-      <Sheet
-        open={!!activeFeature}
-        onOpenChange={(open) => {
-          if (!open) setActiveFeature(null);
-        }}
-      >
+      <Sheet open={!!activeFeature} onOpenChange={handleSheetOpenChange}>
         <SheetContent
           side="right"
           className="w-full sm:max-w-[480px] flex flex-col gap-0 p-0"
@@ -78,7 +101,7 @@ export default function AIHubPage() {
               <div className="flex-1 overflow-y-auto px-6 py-4">
                 <AiFeatureForm
                   featureId={activeFeature.id}
-                  onClose={() => setActiveFeature(null)}
+                  onClose={handleCloseFeature}
                 />
               </div>
             </>

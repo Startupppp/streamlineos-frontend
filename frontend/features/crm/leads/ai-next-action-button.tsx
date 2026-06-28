@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Sparkles, Loader2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,12 +26,16 @@ export function AINextActionButton({ leadId, compact }: AINextActionButtonProps)
   const result = actionMutation.data;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.next-action");
 
-  const handleSuggest = () => {
+  const handleSuggest = useCallback(() => {
     if (!featureEnabled) { toast.error(`AI next-action suggestion requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     actionMutation.mutate(leadId, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  };
+  }, [featureEnabled, requiredPlan, actionMutation, leadId]);
+
+  const handleCompactClick = useCallback(() => {
+    if (!result) handleSuggest();
+  }, [result, handleSuggest]);
 
   const urgencyColor = (u: string) => {
     if (u === "critical") return "text-red-500";
@@ -48,7 +52,7 @@ export function AINextActionButton({ leadId, compact }: AINextActionButtonProps)
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-xs gap-1"
-            onClick={() => { if (!result) handleSuggest(); }}
+            onClick={handleCompactClick}
             disabled={actionMutation.isPending}
           >
             {actionMutation.isPending ? (

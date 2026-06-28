@@ -254,6 +254,12 @@ export function getPermissionName(resource: string, action: string): string {
 }
 
 export function parsePermission(permission: string): { resource: string; action: string } {
-  const [resource, action] = permission.split(":");
+  const parts = permission.split(":");
+  if (parts.length >= 3) {
+    const action = parts[parts.length - 1] ?? "";
+    const resource = parts.slice(0, parts.length - 1).join(":");
+    return { resource, action };
+  }
+  const [resource, action] = parts;
   return { resource: resource ?? "", action: action ?? "" };
 }

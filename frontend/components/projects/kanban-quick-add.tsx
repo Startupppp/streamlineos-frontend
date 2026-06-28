@@ -11,7 +11,12 @@ import { useQueryClient } from "@tanstack/react-query";
 
 type TicketStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
 
-export function QuickAddInput({ columnId, projectId }: { columnId: string; projectId: number }) {
+interface QuickAddInputProps {
+  columnId: string;
+  projectId: number;
+}
+
+export function QuickAddInput({ columnId, projectId }: QuickAddInputProps) {
   const [value, setValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);

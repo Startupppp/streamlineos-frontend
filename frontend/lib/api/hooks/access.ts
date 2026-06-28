@@ -5,6 +5,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { AccessResponse } from "@/types/access";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export const useAccess = (
   options?: Omit<UseQueryOptions<AccessResponse, Error>, "queryKey" | "queryFn">
@@ -17,7 +18,7 @@ export const useAccess = (
   });
 };
 
-export function useCan(permissionKey: string): boolean {
+export function useCan(permissionKey: PermissionKey): boolean {
   const { data } = useAccess();
   if (!data) return false;
   if (data.isOrgOwner) return true;

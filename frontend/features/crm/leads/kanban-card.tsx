@@ -71,6 +71,9 @@ function ScoreExplainerBadge({ leadId, score }: { leadId: number; score: number 
   const [enabled, setEnabled] = useState(false);
   const { data } = useLeadScoreExplanation(leadId, enabled);
 
+  const handleTooltipOpenChange = useCallback((open: boolean) => { if (open) setEnabled(true); }, []);
+  const handleStopPropagation = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+
   const color = score >= 80
     ? "text-emerald-500 border-emerald-500/30 bg-emerald-500/10"
     : score >= 60
@@ -81,17 +84,17 @@ function ScoreExplainerBadge({ leadId, score }: { leadId: number; score: number 
 
   return (
     <TooltipProvider>
-      <Tooltip onOpenChange={(open) => { if (open) setEnabled(true); }}>
+      <Tooltip onOpenChange={handleTooltipOpenChange}>
         <TooltipTrigger asChild>
           <span
             className={cn("inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border font-semibold cursor-help", color)}
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleStopPropagation}
           >
             <Info className="h-2.5 w-2.5 opacity-60" />
             {score}
           </span>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-56 p-2 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+        <TooltipContent side="top" className="max-w-56 p-2 space-y-1.5" onClick={handleStopPropagation}>
           <p className="text-xs font-semibold">Score: {score}/100</p>
           {data ? (
             data.firedRules.length === 0 ? (
@@ -117,6 +120,8 @@ function ScoreExplainerBadge({ leadId, score }: { leadId: number; score: number 
     </TooltipProvider>
   );
 }
+
+const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
 export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: KanbanCardProps) {
   const selfAssign = useSelfAssignLead();
@@ -224,7 +229,7 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
                       </span>
                     )}
                     {lead.slaDeadline && (
-                      <span onClick={(e) => e.stopPropagation()}>
+                      <span onClick={stopPropagation}>
                         <SlaCountdown deadline={lead.slaDeadline} />
                       </span>
                     )}
@@ -238,7 +243,7 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
                       {lead.score != null && lead.score > 0 ? (
                         <ScoreExplainerBadge leadId={lead.id} score={lead.score} />
                       ) : (
-                        <div onClick={(e) => e.stopPropagation()}>
+                        <div onClick={stopPropagation}>
                           <AIScoreButton leadId={lead.id} currentScore={lead.score} compact />
                         </div>
                       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,21 @@ import { MemberExpenseItem } from "./expense-item";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseToEdit } from "@/app/(authenticated)/hr/expenses/create-expense-dialog";
 import type { StatusFilter } from "./expense-constants";
+
+function PageNumberButton({ page, currentPage, onPageChange }: { page: number; currentPage: number; onPageChange: (page: number) => void }) {
+  function handleClick() { onPageChange(page); }
+  return (
+    <Button
+      key={page}
+      variant={page === currentPage ? "default" : "outline"}
+      size="icon"
+      className="h-8 w-8 text-xs"
+      onClick={handleClick}
+    >
+      {page}
+    </Button>
+  );
+}
 
 interface PaginationProps {
   pagination: {
@@ -41,6 +57,9 @@ function ExpensePagination({
   onPageChange,
   variant = "member",
 }: PaginationProps) {
+  const handlePrevious = useCallback(() => onPageChange(pagination.page - 1), [onPageChange, pagination.page]);
+  const handleNext = useCallback(() => onPageChange(pagination.page + 1), [onPageChange, pagination.page]);
+
   if (pagination.total === 0 || totalPages <= 1) return null;
 
   if (variant === "admin") {
@@ -63,7 +82,7 @@ function ExpensePagination({
             size="icon"
             className="h-8 w-8"
             disabled={pagination.page <= 1}
-            onClick={() => onPageChange(pagination.page - 1)}
+            onClick={handlePrevious}
             aria-label="Previous page"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -78,22 +97,19 @@ function ExpensePagination({
             start = Math.max(1, end - maxVisible + 1);
             return Array.from({ length: end - start + 1 }, (_, i) => start + i);
           })().map((p) => (
-            <Button
+            <PageNumberButton
               key={p}
-              variant={p === pagination.page ? "default" : "outline"}
-              size="icon"
-              className="h-8 w-8 text-xs"
-              onClick={() => onPageChange(p)}
-            >
-              {p}
-            </Button>
+              page={p}
+              currentPage={pagination.page}
+              onPageChange={onPageChange}
+            />
           ))}
           <Button
             variant="outline"
             size="icon"
             className="h-8 w-8"
             disabled={pagination.page >= totalPages}
-            onClick={() => onPageChange(pagination.page + 1)}
+            onClick={handleNext}
             aria-label="Next page"
           >
             <ChevronRight className="h-3.5 w-3.5" />
@@ -121,7 +137,7 @@ function ExpensePagination({
           size="sm"
           className="h-8 text-xs gap-1.5"
           disabled={pagination.page <= 1}
-          onClick={() => onPageChange(pagination.page - 1)}
+          onClick={handlePrevious}
         >
           <ChevronLeft className="h-3.5 w-3.5" />
           Previous
@@ -134,7 +150,7 @@ function ExpensePagination({
           size="sm"
           className="h-8 text-xs gap-1.5"
           disabled={pagination.page >= totalPages}
-          onClick={() => onPageChange(pagination.page + 1)}
+          onClick={handleNext}
         >
           Next
           <ChevronRight className="h-3.5 w-3.5" />

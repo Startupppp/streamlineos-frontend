@@ -1,6 +1,5 @@
 "use client";
 
-import { type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -136,11 +135,13 @@ export default function NewProductPage() {
     return <LoadingState variant="form" rows={6} />;
   }
 
-  if (categoriesQuery.error) {
+  if (categoriesQuery.error || uomQuery.error) {
+    const errorMessage =
+      categoriesQuery.error?.message ?? uomQuery.error?.message ?? "Could not load required data.";
     return (
       <ErrorState
         title="Failed to load form data"
-        description={categoriesQuery.error.message}
+        description={errorMessage}
       />
     );
   }

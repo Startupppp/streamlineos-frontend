@@ -37,7 +37,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useUpdateCsatSurvey,
-  useDeleteCsatSurvey,
   useCsatSurveyResponses,
   type CsatSurvey,
 } from "@/lib/api/hooks/crm";
@@ -80,6 +79,8 @@ function ResultsSheet({ survey, open, onClose }: ResultsSheetProps) {
     open ? survey.id : 0
   );
 
+  const handleOpenChange = useCallback((v: boolean) => { if (!v) onClose(); }, [onClose]);
+
   const distribution = Array.from({ length: survey.scaleMax }, (_, i) => {
     const val = i + 1;
     const count = responses.filter((r) => r.rating === val).length;
@@ -92,7 +93,7 @@ function ResultsSheet({ survey, open, onClose }: ResultsSheetProps) {
       : null;
 
   return (
-    <Sheet open={open} onOpenChange={onClose}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent className="w-full sm:max-w-xl flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b">
           <SheetTitle className="text-base">

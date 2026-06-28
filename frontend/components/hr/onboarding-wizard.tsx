@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Check, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import { useHrDepartments, useOnboardEmployee } from "@/lib/api/hooks/hr";
-import { useRolesList } from "@/lib/api/hooks/roles";
+import { useRoles } from "@/lib/api/hooks/roles";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
@@ -58,7 +58,7 @@ export function OnboardingWizard() {
   const checkedEmail = useRef<string>("");
   const router = useRouter();
   const { data: departments } = useHrDepartments();
-  const { data: orgRoles } = useRolesList();
+  const { data: orgRoles } = useRoles();
   const onboardEmployee = useOnboardEmployee();
 
   const assignableRoles = useMemo(

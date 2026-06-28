@@ -38,7 +38,7 @@ export default function KnowledgeBaseHomePage() {
   }
 
   function handleRetry() {
-    spacesQuery.refetch();
+    void spacesQuery.refetch();
   }
 
   return (

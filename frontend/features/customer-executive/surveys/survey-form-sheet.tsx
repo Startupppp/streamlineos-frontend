@@ -51,6 +51,8 @@ export function CreateSurveySheet({ open, onClose }: CreateSurveySheetProps) {
     []
   );
 
+  const handleOpenChange = useCallback((v: boolean) => { if (!v) onClose(); }, [onClose]);
+
   const handleSubmit = useCallback(async () => {
     if (!title.trim()) {
       toast.error("Title is required");
@@ -73,7 +75,7 @@ export function CreateSurveySheet({ open, onClose }: CreateSurveySheetProps) {
   }, [title, question, scaleMax, create, onClose]);
 
   return (
-    <Sheet open={open} onOpenChange={onClose}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent className="w-full sm:max-w-md flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b">
           <SheetTitle className="text-base">New CSAT Survey</SheetTitle>

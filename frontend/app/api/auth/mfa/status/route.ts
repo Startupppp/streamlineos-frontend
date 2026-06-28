@@ -1,14 +1,12 @@
-import { withAuth, ok } from "@/lib/api/helpers";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/lib/auth";
+import { proxyToBackend } from "@/lib/api/backend-proxy";
+import { makeBackendToken } from "@/lib/api/make-backend-token";
 
-export async function GET() {
-  return withAuth(async (session) => {
-    const user = await db.query.users.findFirst({
-      where: eq(users.id, session.user.id),
-      columns: { totpEnabled: true },
-    });
-    return ok({ enabled: user?.totpEnabled ?? false });
-  });
+export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const token = await makeBackendToken(session);
+  if (!token) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  return proxyToBackend(req, "/auth/mfa/status", { method: "GET", auth: token });
 }

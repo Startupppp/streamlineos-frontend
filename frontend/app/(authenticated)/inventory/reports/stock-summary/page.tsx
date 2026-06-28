@@ -55,6 +55,9 @@ export default function StockSummaryReportPage() {
 
   const rows = query.data ?? [];
 
+  function handleExportClick() { handleExportCsv(rows); }
+  function handleRetry() { void query.refetch(); }
+
   return (
     <PageWrapper
       eyebrow="Inventory · Reports"
@@ -64,7 +67,7 @@ export default function StockSummaryReportPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleExportCsv(rows)}
+          onClick={handleExportClick}
           disabled={rows.length === 0}
         >
           <Download className="size-4 mr-1" />
@@ -73,7 +76,7 @@ export default function StockSummaryReportPage() {
       }
     >
       {query.isLoading && <LoadingState variant="table" rows={10} />}
-      {query.error && <ErrorState description={query.error.message} />}
+      {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
 
       {!query.isLoading && !query.error && rows.length === 0 && (
         <EmptyState

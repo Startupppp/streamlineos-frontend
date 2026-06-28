@@ -36,7 +36,7 @@ export default function KnowledgeBaseGapsPage() {
   const firstSpace = spacesQuery.data?.[0] ?? null;
 
   function handleRetry() {
-    noResultsQuery.refetch();
+    void noResultsQuery.refetch();
   }
 
   return (

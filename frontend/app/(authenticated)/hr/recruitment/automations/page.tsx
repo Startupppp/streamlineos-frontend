@@ -91,6 +91,72 @@ function useDeleteAutomation() {
   });
 }
 
+interface AutomationCardProps {
+  auto: PipelineAutomation;
+  onToggle: (id: number, isActive: boolean) => void;
+  onSetDeleteId: (id: number) => void;
+  isTogglePending: boolean;
+}
+
+function AutomationCard({ auto, onToggle, onSetDeleteId, isTogglePending }: AutomationCardProps) {
+  function handleToggle() { onToggle(auto.id, auto.isActive); }
+  function handleDelete() { onSetDeleteId(auto.id); }
+
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-sm">{auto.name}</span>
+              <Badge variant={auto.isActive ? "default" : "secondary"} className="text-xs">
+                {auto.isActive ? "Active" : "Inactive"}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+              <span className="rounded-md border px-2 py-0.5 bg-muted/40">
+                When: {TRIGGER_LABELS[auto.trigger] ?? auto.trigger}
+              </span>
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+              <span className="rounded-md border px-2 py-0.5 bg-muted/40">
+                Then: {ACTION_LABELS[auto.action] ?? auto.action}
+              </span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Created {format(new Date(auto.createdAt), "dd MMM yyyy")}
+              {auto.creator?.name && ` by ${auto.creator.name}`}
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleToggle}
+              disabled={isTogglePending}
+            >
+              {auto.isActive ? "Disable" : "Enable"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-destructive"
+              onClick={handleDelete}
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function RecruitmentAutomationsPage() {
   const { data: automations, isLoading } = useAutomations();
   const create = useCreateAutomation();
@@ -137,6 +203,15 @@ export default function RecruitmentAutomationsPage() {
     });
   }, [deleteAuto]);
 
+  function handleOpenSheet() { setSheetOpen(true); }
+  function handleSheetOpenChange(v: boolean) { if (!v) resetForm(); setSheetOpen(v); }
+  function handleCancelSheet() { setSheetOpen(false); resetForm(); }
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) { setName(e.target.value); }
+  function handleTriggerChange(v: string) { setTrigger(v as Trigger); }
+  function handleActionChange(v: string) { setAction(v as Action); }
+  function handleDeleteDialogChange(v: boolean) { if (!v) setDeleteId(null); }
+  function handleConfirmDelete() { if (deleteId != null) handleDelete(deleteId); }
+
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -144,7 +219,7 @@ export default function RecruitmentAutomationsPage() {
           <h1 className="text-xl font-semibold">Pipeline Automations</h1>
           <p className="text-sm text-muted-foreground">Automate actions based on recruitment pipeline events</p>
         </div>
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" onClick={handleOpenSheet}>
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
           </svg>
@@ -159,67 +234,23 @@ export default function RecruitmentAutomationsPage() {
           illustration={<EmptyActivityIllustration />}
           title="No automations yet"
           description="Create automations to trigger actions when pipeline events occur."
-          action={{ label: "New Automation", onClick: () => setSheetOpen(true) }}
+          action={{ label: "New Automation", onClick: handleOpenSheet }}
         />
       ) : (
         <div className="space-y-3">
           {automations.map((auto) => (
-            <Card key={auto.id}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0 space-y-1.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm">{auto.name}</span>
-                      <Badge variant={auto.isActive ? "default" : "secondary"} className="text-xs">
-                        {auto.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                      <span className="rounded-md border px-2 py-0.5 bg-muted/40">
-                        When: {TRIGGER_LABELS[auto.trigger] ?? auto.trigger}
-                      </span>
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                      <span className="rounded-md border px-2 py-0.5 bg-muted/40">
-                        Then: {ACTION_LABELS[auto.action] ?? auto.action}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      Created {format(new Date(auto.createdAt), "dd MMM yyyy")}
-                      {auto.creator?.name && ` by ${auto.creator.name}`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs"
-                      onClick={() => handleToggle(auto.id, auto.isActive)}
-                      disabled={toggle.isPending}
-                    >
-                      {auto.isActive ? "Disable" : "Enable"}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive"
-                      onClick={() => setDeleteId(auto.id)}
-                    >
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-                      </svg>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <AutomationCard
+              key={auto.id}
+              auto={auto}
+              onToggle={handleToggle}
+              onSetDeleteId={setDeleteId}
+              isTogglePending={toggle.isPending}
+            />
           ))}
         </div>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={(v) => { if (!v) resetForm(); setSheetOpen(v); }}>
+      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetContent className="flex flex-col p-0 gap-0">
           <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
             <SheetTitle className="text-base">New Automation</SheetTitle>
@@ -228,11 +259,11 @@ export default function RecruitmentAutomationsPage() {
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Name</label>
-              <Input placeholder="e.g. Notify team on stage change" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input placeholder="e.g. Notify team on stage change" value={name} onChange={handleNameChange} />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">When (Trigger)</label>
-              <Select value={trigger} onValueChange={(v) => setTrigger(v as Trigger)}>
+              <Select value={trigger} onValueChange={handleTriggerChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(TRIGGER_LABELS).map(([k, v]) => (
@@ -243,7 +274,7 @@ export default function RecruitmentAutomationsPage() {
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Then (Action)</label>
-              <Select value={action} onValueChange={(v) => setAction(v as Action)}>
+              <Select value={action} onValueChange={handleActionChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(ACTION_LABELS).map(([k, v]) => (
@@ -254,7 +285,7 @@ export default function RecruitmentAutomationsPage() {
             </div>
           </div>
           <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => { setSheetOpen(false); resetForm(); }}>Cancel</Button>
+            <Button variant="outline" className="flex-1" onClick={handleCancelSheet}>Cancel</Button>
             <Button className="flex-1" onClick={handleCreate} disabled={create.isPending}>
               {create.isPending ? "Creating…" : "Create"}
             </Button>
@@ -262,7 +293,7 @@ export default function RecruitmentAutomationsPage() {
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={(v) => { if (!v) setDeleteId(null); }}>
+      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete automation?</AlertDialogTitle>
@@ -271,7 +302,7 @@ export default function RecruitmentAutomationsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteId != null && handleDelete(deleteId)}
+              onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete

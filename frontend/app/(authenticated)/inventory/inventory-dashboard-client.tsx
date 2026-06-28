@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
+import { ErrorState } from "@/components/shared";
 import {
   Table,
   TableHeader,
@@ -30,7 +31,6 @@ import { useStockTransactions } from "@/lib/api/hooks/inventory/stock";
 
 interface DashboardData {
   salesOrders: {
-    byStatus: Record<string, { count: number; value: string }>;
     totalOpen: number;
     totalShipped: number;
   };
@@ -251,11 +251,26 @@ function LowStockSkeleton() {
 }
 
 function RecentMovementsTable() {
-  const { data: rawData, isLoading } = useStockTransactions({ limit: 10 });
+  const { data: rawData, isLoading, error, refetch } = useStockTransactions({ limit: 10 });
   const transactionsData = rawData as TransactionsData | undefined;
   const movements = transactionsData?.items ?? [];
 
+  function handleRetry(): void {
+    void refetch();
+  }
+
   if (isLoading) return <MovementsTableSkeleton />;
+
+  if (error) {
+    return (
+      <ErrorState
+        compact
+        title="Failed to load movements"
+        description="Could not retrieve recent stock transactions."
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   if (movements.length === 0) {
     return (
@@ -340,12 +355,27 @@ function RecentMovementsTable() {
 }
 
 function LowStockAlertSection() {
-  const { data: rawItems, isLoading } = useReorderReport();
+  const { data: rawItems, isLoading, error, refetch } = useReorderReport();
   const items = extractItems(rawItems as ReorderReportRow[] | { items?: ReorderReportRow[] }).map(
     mapReorderRow,
   );
 
+  function handleRetry(): void {
+    void refetch();
+  }
+
   if (isLoading) return <LowStockSkeleton />;
+
+  if (error) {
+    return (
+      <ErrorState
+        compact
+        title="Failed to load alerts"
+        description="Could not retrieve the reorder report."
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -392,9 +422,9 @@ function LowStockAlertSection() {
 }
 
 export function InventoryDashboardClient() {
-  const { data: rawDashboard, isLoading: dashLoading } = useInventoryDashboard();
-  const { data: productsData, isLoading: productsLoading } = useProducts({ limit: 1 });
-  const { data: rawStockSummary, isLoading: stockSummaryLoading } = useStockSummary();
+  const { data: rawDashboard, isLoading: dashLoading, error: dashError, refetch: dashRefetch } = useInventoryDashboard();
+  const { data: productsData, isLoading: productsLoading, error: productsError, refetch: productsRefetch } = useProducts({ limit: 1 });
+  const { data: rawStockSummary, isLoading: stockSummaryLoading, error: stockSummaryError, refetch: stockSummaryRefetch } = useStockSummary();
 
   const dashboard = rawDashboard as DashboardData | undefined;
   const stockSummaryRows = extractItems(
@@ -402,6 +432,7 @@ export function InventoryDashboardClient() {
   );
 
   const isKpiLoading = dashLoading || productsLoading || stockSummaryLoading;
+  const isKpiError = !!(dashError || productsError || stockSummaryError);
 
   const totalSkus = productsData?.total ?? 0;
   const totalOnHand = stockSummaryRows.reduce((acc, item) => acc + item.onHandQty, 0);
@@ -410,7 +441,13 @@ export function InventoryDashboardClient() {
 
   const hasAnyData = !isKpiLoading && (totalSkus > 0 || totalOnHand > 0);
 
-  if (!isKpiLoading && !hasAnyData) {
+  function handleKpiRetry(): void {
+    void dashRefetch();
+    void productsRefetch();
+    void stockSummaryRefetch();
+  }
+
+  if (!isKpiLoading && !isKpiError && !hasAnyData) {
     return (
       <PageWrapper
         eyebrow="Operations · Inventory"
@@ -453,6 +490,12 @@ export function InventoryDashboardClient() {
       <div className="space-y-6">
         {isKpiLoading ? (
           <KpiSkeletons />
+        ) : isKpiError ? (
+          <ErrorState
+            title="Failed to load dashboard"
+            description="Could not retrieve inventory metrics. Please try again."
+            onRetry={handleKpiRetry}
+          />
         ) : (
           <div className={DS.gridResponsive4}>
             <StatCard

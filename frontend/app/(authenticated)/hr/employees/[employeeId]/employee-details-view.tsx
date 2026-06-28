@@ -44,7 +44,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -306,7 +306,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const terminateMutation = useTerminateEmployee();
   const router = useRouter();
   const { data: session } = useSession();
-  const ability = useAbility();
+  const canManageEmployees = useCan("hr:employees:manage");
   const [terminateOpen, setTerminateOpen] = useState(false);
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
@@ -392,7 +392,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <ArrowLeft className="h-3.5 w-3.5" />
               Back
             </Button>
-            {ability.can("manage", "hr:employees") && (
+            {canManageEmployees && (
               <Button
                 variant="outline"
                 size="sm"

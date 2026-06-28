@@ -1,31 +1,12 @@
-
-
 import { type NextRequest, NextResponse } from "next/server";
-import Ably from "ably";
-import { withAuth, err } from "@/lib/api/helpers";
+import { proxyToBackend } from "@/lib/api/backend-proxy";
+import { makeBackendToken } from "@/lib/api/make-backend-token";
+import { withAuth } from "@/lib/api/helpers";
 
-export async function GET(_req: NextRequest) {
-  if (!process.env.ABLY_API_KEY) {
-    return NextResponse.json(
-      { error: "Ably is not configured" },
-      { status: 503 }
-    );
-  }
-
-  const rest = new Ably.Rest(process.env.ABLY_API_KEY);
-
+export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    try {
-      const tokenRequest = await rest.auth.createTokenRequest({
-        clientId: session.user.id,
-        capability: {
-          [`chat:${session.orgId}:*`]: ["subscribe", "publish", "history"],
-        },
-        ttl: 3_600 * 1_000,
-      });
-      return NextResponse.json(tokenRequest);
-    } catch {
-      return err("Failed to create Ably token", 500);
-    }
+    const auth = await makeBackendToken(session);
+    if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return proxyToBackend(req, "/chat/ably-token", { method: "GET", auth });
   });
 }

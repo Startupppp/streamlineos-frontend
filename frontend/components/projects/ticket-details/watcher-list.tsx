@@ -31,6 +31,15 @@ export function WatcherList({ projectId, ticketId, members }: WatcherListProps) 
   const isWatching = watchers.some((w) => w.userId === currentUserId);
   const watcherUserIds = new Set(watchers.map((w) => w.userId));
 
+  const handleToggleWatch = () => {
+    toggleWatch.mutate({ ticketId, watching: isWatching });
+  };
+
+  const handleAddWatcher = (userId: string) => {
+    if (!userId) return;
+    addWatcher.mutate({ ticketId, userId });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -50,9 +59,7 @@ export function WatcherList({ projectId, ticketId, members }: WatcherListProps) 
           variant="ghost"
           size="sm"
           className="h-6 px-2 text-xs"
-          onClick={() =>
-            toggleWatch.mutate({ ticketId, watching: isWatching })
-          }
+          onClick={handleToggleWatch}
           disabled={toggleWatch.isPending}
         >
           {isWatching ? (
@@ -81,13 +88,7 @@ export function WatcherList({ projectId, ticketId, members }: WatcherListProps) 
         </div>
       )}
 
-      <Select
-        value=""
-        onValueChange={(userId) => {
-          if (!userId) return;
-          addWatcher.mutate({ ticketId, userId });
-        }}
-      >
+      <Select value="" onValueChange={handleAddWatcher}>
         <SelectTrigger className="h-7 text-xs bg-background">
           <SelectValue placeholder="+ Add watcher" />
         </SelectTrigger>

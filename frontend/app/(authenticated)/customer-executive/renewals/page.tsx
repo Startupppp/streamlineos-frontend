@@ -80,6 +80,11 @@ interface AccountCardProps {
 function AccountCard({ account, onStageChange, isPending }: AccountCardProps) {
   const stageCfg = STAGES.find((s) => s.id === account.renewalStage) ?? STAGES[0];
 
+  const handleStageChange = useCallback(
+    (v: string) => onStageChange(account.id, v as RenewalStage),
+    [account.id, onStageChange]
+  );
+
   return (
     <Card className="group hover:shadow-md transition-shadow">
       <CardContent className="p-4 space-y-3">
@@ -119,7 +124,7 @@ function AccountCard({ account, onStageChange, isPending }: AccountCardProps) {
 
         <Select
           value={account.renewalStage}
-          onValueChange={(v) => onStageChange(account.id, v as RenewalStage)}
+          onValueChange={handleStageChange}
           disabled={isPending}
         >
           <SelectTrigger className="h-7 text-xs">
@@ -179,6 +184,8 @@ export default function RenewalPipelinePage() {
   const { data: accounts, isLoading, isError, refetch } = useRenewalAccounts();
   const { mutate: updateRenewal, variables } = useUpdateRenewal();
 
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   const handleStageChange = useCallback(
     (accountId: number, stage: RenewalStage) => {
       updateRenewal({ accountId, renewalStage: stage });
@@ -194,7 +201,7 @@ export default function RenewalPipelinePage() {
         <ErrorState
           title="Failed to load renewals"
           description="An error occurred while loading renewal accounts. Please try again."
-          onRetry={refetch}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );

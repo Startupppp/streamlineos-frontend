@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,8 +68,7 @@ function AnnouncementItem({ ann, isAdmin, onDelete, isDeleting }: AnnouncementIt
 }
 
 export function AnnouncementsWidget() {
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "settings");
+  const isAdmin = useCan("settings:manage");
 
   const { data, isLoading, error } = useAnnouncements();
   const createMutation = useCreateAnnouncement();

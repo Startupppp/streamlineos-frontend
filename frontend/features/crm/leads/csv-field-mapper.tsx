@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { ArrowRight, AlertCircle, ChevronLeft, FileText, X } from "lucide-react";
 import {
   Table,
@@ -50,6 +51,47 @@ interface CsvFieldMapperProps {
   onBack: () => void;
 }
 
+interface FieldMappingRowProps {
+  header: string;
+  index: number;
+  previewVal: string | undefined;
+  currentMapping: string;
+  onMappingChange: (index: number, value: string) => void;
+}
+
+function FieldMappingRow({ header, index, previewVal, currentMapping, onMappingChange }: FieldMappingRowProps) {
+  const handleValueChange = useCallback((v: string) => onMappingChange(index, v), [index, onMappingChange]);
+  return (
+    <TableRow>
+      <TableCell className="text-xs">
+        <span className="font-medium">{header || `(column ${index + 1})`}</span>
+        {previewVal && (
+          <span className="block text-[10px] text-muted-foreground truncate max-w-[160px]">
+            e.g. {previewVal}
+          </span>
+        )}
+      </TableCell>
+      <TableCell className="text-center text-muted-foreground px-1">
+        <ArrowRight className="h-3.5 w-3.5" />
+      </TableCell>
+      <TableCell>
+        <Select value={currentMapping} onValueChange={handleValueChange}>
+          <SelectTrigger className="h-7 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CRM_FIELDS.map((f) => (
+              <SelectItem key={f.value} value={f.value} className="text-xs">
+                {f.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export function CsvFieldMapper({
   fileName,
   rawHeaders,
@@ -60,9 +102,9 @@ export function CsvFieldMapper({
   onConfirm,
   onBack,
 }: CsvFieldMapperProps) {
-  const handleSelectChange = (index: number, value: string) => {
+  const handleSelectChange = useCallback((index: number, value: string) => {
     onMappingChange({ ...fieldMappings, [index]: value });
-  };
+  }, [fieldMappings, onMappingChange]);
 
   return (
     <div className="space-y-4">
@@ -93,43 +135,16 @@ export function CsvFieldMapper({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rawHeaders.map((header, i) => {
-              const previewVal = rawRows[0]?.[i];
-              return (
-                <TableRow key={i}>
-                  <TableCell className="text-xs">
-                    <span className="font-medium">
-                      {header || `(column ${i + 1})`}
-                    </span>
-                    {previewVal && (
-                      <span className="block text-[10px] text-muted-foreground truncate max-w-[160px]">
-                        e.g. {previewVal}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center text-muted-foreground px-1">
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={fieldMappings[i] ?? "_skip"}
-                      onValueChange={(v) => handleSelectChange(i, v)}
-                    >
-                      <SelectTrigger className="h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CRM_FIELDS.map((f) => (
-                          <SelectItem key={f.value} value={f.value} className="text-xs">
-                            {f.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {rawHeaders.map((header, i) => (
+              <FieldMappingRow
+                key={i}
+                header={header}
+                index={i}
+                previewVal={rawRows[0]?.[i]}
+                currentMapping={fieldMappings[i] ?? "_skip"}
+                onMappingChange={handleSelectChange}
+              />
+            ))}
           </TableBody>
         </Table>
       </ScrollArea>

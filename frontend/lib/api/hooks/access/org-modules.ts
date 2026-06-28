@@ -28,6 +28,7 @@ export function useToggleOrgModule() {
       apiClient.patch<OrgModule>(`/access/org-modules/${moduleKey}`, { enabled }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.access.orgModules() });
+      qc.invalidateQueries({ queryKey: queryKeys.access.me() });
     },
   });
 }

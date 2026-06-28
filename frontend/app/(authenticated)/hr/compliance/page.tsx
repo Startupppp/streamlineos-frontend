@@ -110,6 +110,7 @@ export default function CompliancePage() {
   const { data: session } = useSession();
   const { data: acks, isLoading, isError, refetch } = usePolicyAcknowledgments();
   const acknowledgePolicy = useAcknowledgePolicy();
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleAcknowledge = useCallback(
     (id: number, status: AckStatus) => {
@@ -144,7 +145,7 @@ export default function CompliancePage() {
           illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
           title="Failed to load policies"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: refetch }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </PageWrapper>
     );

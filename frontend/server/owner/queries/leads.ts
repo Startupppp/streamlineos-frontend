@@ -1,7 +1,5 @@
 import "server-only";
-import { desc, sql } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { leads, organizations } from "@/lib/db/schema";
+import { serverApiClient } from "@/lib/api/server-client";
 
 export type CrossOrgLead = {
   publicCode: string;
@@ -16,32 +14,8 @@ export type CrossOrgLead = {
 };
 
 export async function listLeadsAcrossOrgs(limit = 200): Promise<CrossOrgLead[]> {
-  const rows = await db
-    .select({
-      id: leads.id,
-      name: leads.name,
-      email: leads.email,
-      company: leads.company,
-      status: leads.status,
-      source: leads.source,
-      orgName: organizations.name,
-      orgSlug: organizations.slug,
-      createdAt: leads.createdAt,
-    })
-    .from(leads)
-    .leftJoin(organizations, sql`${organizations.id} = ${leads.orgId}`)
-    .orderBy(desc(leads.createdAt))
-    .limit(limit);
-
-  return rows.map((r) => ({
-    publicCode: `LEAD-${r.id.toString().padStart(5, "0")}`,
-    name: r.name,
-    email: r.email,
-    company: r.company,
-    status: r.status ?? "NEW",
-    source: r.source,
-    organizationName: r.orgName,
-    organizationSlug: r.orgSlug,
-    createdAt: r.createdAt,
-  }));
+  return serverApiClient.get<CrossOrgLead[]>(
+    "/platform/leads",
+    limit !== 200 ? { limit } : undefined,
+  );
 }

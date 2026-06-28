@@ -94,6 +94,10 @@ export function TicketSubtasks({
     updateTicketMutation.mutate({ ticketId: subtaskId, status: newStatus });
   };
 
+  const handleSubtaskKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleAddSubtask();
+  };
+
   return (
     <div className="pt-2">
       <div className="flex items-center gap-2 mb-3">
@@ -148,9 +152,7 @@ export function TicketSubtasks({
           onChange={(e) => setSubtaskTitle(e.target.value)}
           placeholder="Add subtask..."
           className="h-8 text-sm flex-1"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleAddSubtask();
-          }}
+          onKeyDown={handleSubtaskKeyDown}
         />
         <Button
           size="sm"

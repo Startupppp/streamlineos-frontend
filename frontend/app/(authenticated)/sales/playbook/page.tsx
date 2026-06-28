@@ -37,7 +37,7 @@ import {
   useDeletePlaybookEntry,
   type PlaybookEntry,
 } from "@/lib/api/hooks/sales-playbook";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
@@ -87,6 +87,10 @@ function PlaybookEntrySheet({
   const update = useUpdatePlaybookEntry();
   const isPending = create.isPending || update.isPending;
 
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
+  const handleCategoryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCategory(e.target.value), []);
+  const handleContentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value), []);
+
   const handleSave = useCallback(() => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
@@ -127,7 +131,7 @@ function PlaybookEntrySheet({
               id="pb-title"
               placeholder="e.g. Cold Call Opening"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
             />
           </div>
           <div className="space-y-1.5">
@@ -136,7 +140,7 @@ function PlaybookEntrySheet({
               id="pb-category"
               placeholder="e.g. Scripts, Objections, Closing"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={handleCategoryChange}
             />
           </div>
           <div className="space-y-1.5">
@@ -146,7 +150,7 @@ function PlaybookEntrySheet({
               rows={8}
               placeholder="Script, objection handler, or best practice…"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={handleContentChange}
             />
           </div>
         </div>
@@ -166,22 +170,33 @@ function PlaybookCard({
   canManage,
   canMoveUp,
   canMoveDown,
+  neighborUp,
+  neighborDown,
   onEdit,
   onDelete,
-  onMoveUp,
-  onMoveDown,
+  onReorder,
   reordering,
 }: {
   entry: PlaybookEntry;
   canManage: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
+  neighborUp: PlaybookEntry | undefined;
+  neighborDown: PlaybookEntry | undefined;
+  onEdit: (e: PlaybookEntry) => void;
+  onDelete: (e: PlaybookEntry) => void;
+  onReorder: (entry: PlaybookEntry, neighbor: PlaybookEntry) => void;
   reordering: boolean;
 }) {
+  const handleEdit = useCallback(() => onEdit(entry), [onEdit, entry]);
+  const handleDelete = useCallback(() => onDelete(entry), [onDelete, entry]);
+  const handleMoveUp = useCallback(() => {
+    if (neighborUp) onReorder(entry, neighborUp);
+  }, [onReorder, entry, neighborUp]);
+  const handleMoveDown = useCallback(() => {
+    if (neighborDown) onReorder(entry, neighborDown);
+  }, [onReorder, entry, neighborDown]);
+
   return (
     <Card className="h-full flex flex-col shadow-sm hover:shadow-md transition-all">
       <CardHeader className="pb-2 pt-4 px-4">
@@ -195,7 +210,7 @@ function PlaybookCard({
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                  onClick={onMoveUp}
+                  onClick={handleMoveUp}
                   disabled={!canMoveUp || reordering}
                   aria-label="Move up"
                 >
@@ -205,7 +220,7 @@ function PlaybookCard({
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                  onClick={onMoveDown}
+                  onClick={handleMoveDown}
                   disabled={!canMoveDown || reordering}
                   aria-label="Move down"
                 >
@@ -215,7 +230,7 @@ function PlaybookCard({
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                  onClick={onEdit}
+                  onClick={handleEdit}
                   aria-label="Edit entry"
                 >
                   <Pencil className="h-3.5 w-3.5" />
@@ -224,7 +239,7 @@ function PlaybookCard({
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 text-destructive hover:text-destructive"
-                  onClick={onDelete}
+                  onClick={handleDelete}
                   aria-label="Delete entry"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -251,12 +266,20 @@ export default function SalesPlaybookPage() {
   const [editTarget, setEditTarget] = useState<PlaybookEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PlaybookEntry | null>(null);
 
-  const ability = useAbility();
-  const canManage = ability.can("manage", "sales");
+  const canManage = useCan("crm:targets:manage");
 
   const { data, isLoading, isError, refetch } = usePlaybookEntries();
   const updateEntry = useUpdatePlaybookEntry();
   const deleteEntry = useDeletePlaybookEntry();
+
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
+  const handleCloseEdit = useCallback(() => setEditTarget(null), []);
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+  const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
+  const handleEditEntry = useCallback((e: PlaybookEntry) => setEditTarget(e), []);
+  const handleDeleteEntry = useCallback((e: PlaybookEntry) => setDeleteTarget(e), []);
 
   const entries = useMemo(() => data ?? [], [data]);
 
@@ -310,7 +333,7 @@ export default function SalesPlaybookPage() {
       subtitle="Scripts, objection handlers, and best practices for your sales team"
       actions={
         canManage ? (
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
+          <Button size="sm" onClick={handleOpenCreate}>
             <Plus className="h-3.5 w-3.5 mr-1.5" /> New Entry
           </Button>
         ) : undefined
@@ -320,7 +343,7 @@ export default function SalesPlaybookPage() {
           <Input
             placeholder="Search by title, content, or category…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearchChange}
             className="h-8 text-xs"
           />
         </div>
@@ -332,7 +355,7 @@ export default function SalesPlaybookPage() {
         <ErrorState
           title="Couldn't load playbook"
           description="An error occurred while loading playbook entries. Please try again."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
         />
       ) : entries.length === 0 ? (
         <div className="flex-1 flex items-center justify-center min-h-[50vh]">
@@ -340,7 +363,7 @@ export default function SalesPlaybookPage() {
             illustration={<EmptyPublicDocsIllustration />}
             title="No playbook entries yet"
             description="Build a shared library of scripts, objection handlers, and best practices for your team."
-            action={canManage ? { label: "Add your first playbook entry", onClick: () => setCreateOpen(true) } : undefined}
+            action={canManage ? { label: "Add your first playbook entry", onClick: handleOpenCreate } : undefined}
           />
         </div>
       ) : filtered.length === 0 ? (
@@ -369,11 +392,12 @@ export default function SalesPlaybookPage() {
                     canManage={canManage}
                     canMoveUp={index > 0}
                     canMoveDown={index < categoryEntries.length - 1}
+                    neighborUp={index > 0 ? categoryEntries[index - 1] : undefined}
+                    neighborDown={index < categoryEntries.length - 1 ? categoryEntries[index + 1] : undefined}
                     reordering={updateEntry.isPending}
-                    onEdit={() => setEditTarget(entry)}
-                    onDelete={() => setDeleteTarget(entry)}
-                    onMoveUp={() => handleReorder(entry, categoryEntries[index - 1])}
-                    onMoveDown={() => handleReorder(entry, categoryEntries[index + 1])}
+                    onEdit={handleEditEntry}
+                    onDelete={handleDeleteEntry}
+                    onReorder={handleReorder}
                   />
                 ))}
               </div>
@@ -382,10 +406,10 @@ export default function SalesPlaybookPage() {
         </div>
       )}
 
-      {createOpen && <PlaybookEntrySheet onClose={() => setCreateOpen(false)} />}
-      {editTarget && <PlaybookEntrySheet entry={editTarget} onClose={() => setEditTarget(null)} />}
+      {createOpen && <PlaybookEntrySheet onClose={handleCloseCreate} />}
+      {editTarget && <PlaybookEntrySheet entry={editTarget} onClose={handleCloseEdit} />}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete entry?</AlertDialogTitle>

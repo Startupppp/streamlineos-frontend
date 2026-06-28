@@ -334,6 +334,8 @@ export default function GitIntegrationPage() {
 
   const handleCloseCreated = useCallback(() => setCreated(null), []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   return (
     <PageWrapper
       title="Git Integration"
@@ -351,7 +353,7 @@ export default function GitIntegrationPage() {
         <ErrorState
           title="Could not load connections"
           description="There was a problem loading your Git connections."
-          onRetry={refetch}
+          onRetry={handleRetry}
         />
       ) : !connections || connections.length === 0 ? (
         <div className="flex-1 flex flex-col gap-4">

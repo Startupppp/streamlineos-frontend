@@ -1,18 +1,20 @@
 "use client";
 
+import { useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   useOrgFeatureFlags,
   useUpdateFeatureFlag,
   useAiUsage,
   type OrgFeatureFlags,
 } from "@/lib/api/hooks/ai";
-import { Bot, Zap, TrendingUp, BarChart3, BrainCircuit } from "lucide-react";
+import { AlertCircle, BarChart3, Bot, BrainCircuit, TrendingUp, Zap } from "lucide-react";
 
 const FLAG_META: {
   key: keyof OrgFeatureFlags;
@@ -66,13 +68,24 @@ function formatTokens(n: number): string {
 }
 
 export default function AiSettingsPage() {
-  const { data: flags, isLoading: flagsLoading } = useOrgFeatureFlags();
-  const { data: usage, isLoading: usageLoading } = useAiUsage();
+  const { data: flags, isLoading: flagsLoading, isError: flagsError, refetch: refetchFlags } = useOrgFeatureFlags();
+  const { data: usage, isLoading: usageLoading, isError: usageError, refetch: refetchUsage } = useAiUsage();
   const updateFlag = useUpdateFeatureFlag();
 
-  const handleToggle = (flag: keyof OrgFeatureFlags, enabled: boolean) => {
-    updateFlag.mutate({ flag, enabled });
-  };
+  function handleRetryFlags() {
+    refetchFlags();
+  }
+
+  function handleRetryUsage() {
+    refetchUsage();
+  }
+
+  const handleToggle = useCallback(
+    (flag: keyof OrgFeatureFlags, enabled: boolean) => {
+      updateFlag.mutate({ flag, enabled });
+    },
+    [updateFlag],
+  );
 
   return (
     <PageWrapper
@@ -101,25 +114,24 @@ export default function AiSettingsPage() {
                   <Skeleton className="h-6 w-11 rounded-full" />
                 </div>
               ))
+            ) : flagsError ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
+                <AlertCircle className="h-8 w-8 text-destructive/40" />
+                <p className="text-sm text-muted-foreground">Failed to load AI feature flags.</p>
+                <Button variant="outline" size="sm" onClick={handleRetryFlags}>Retry</Button>
+              </div>
             ) : (
-              FLAG_META.map(({ key, label, description, icon: Icon }) => (
-                <div
+              FLAG_META.map(({ key, label, description, icon }) => (
+                <FlagRow
                   key={key}
-                  className="flex items-start justify-between gap-4 rounded-lg border p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <Icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
-                    <div>
-                      <Label className="text-sm font-medium">{label}</Label>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={flags?.[key] ?? true}
-                    onCheckedChange={(enabled) => handleToggle(key, enabled)}
-                    disabled={updateFlag.isPending}
-                  />
-                </div>
+                  flagKey={key}
+                  label={label}
+                  description={description}
+                  icon={icon}
+                  checked={flags?.[key] ?? true}
+                  disabled={updateFlag.isPending}
+                  onToggle={handleToggle}
+                />
               ))
             )}
           </CardContent>
@@ -140,6 +152,12 @@ export default function AiSettingsPage() {
               <div className="space-y-3">
                 <Skeleton className="h-16 w-full" />
                 <Skeleton className="h-32 w-full" />
+              </div>
+            ) : usageError ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
+                <AlertCircle className="h-8 w-8 text-destructive/40" />
+                <p className="text-sm text-muted-foreground">Failed to load usage data.</p>
+                <Button variant="outline" size="sm" onClick={handleRetryUsage}>Retry</Button>
               </div>
             ) : (
               <div className="space-y-6">
@@ -181,7 +199,7 @@ export default function AiSettingsPage() {
                 )}
 
                 {(usage?.byFeature.length ?? 0) === 0 && (
-                  <p className="text-center text-sm text-muted-foreground py-6">
+                  <p className="py-6 text-center text-sm text-muted-foreground">
                     No AI usage recorded yet.
                   </p>
                 )}
@@ -191,6 +209,36 @@ export default function AiSettingsPage() {
         </Card>
       </div>
     </PageWrapper>
+  );
+}
+
+interface FlagRowProps {
+  flagKey: keyof OrgFeatureFlags;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  checked: boolean;
+  disabled: boolean;
+  onToggle: (flag: keyof OrgFeatureFlags, enabled: boolean) => void;
+}
+
+function FlagRow({ flagKey, label, description, icon: Icon, checked, disabled, onToggle }: FlagRowProps) {
+  const handleChange = useCallback(
+    (enabled: boolean) => onToggle(flagKey, enabled),
+    [flagKey, onToggle],
+  );
+
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
+      <div className="flex items-start gap-3">
+        <Icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+        <div>
+          <Label className="text-sm font-medium">{label}</Label>
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <Switch checked={checked} onCheckedChange={handleChange} disabled={disabled} />
+    </div>
   );
 }
 

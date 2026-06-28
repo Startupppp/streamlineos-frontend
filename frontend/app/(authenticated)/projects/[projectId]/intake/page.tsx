@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, ExternalLink, Copy, ArrowRight } from "lucide-react";
-import { useForm, Controller } from "react-hook-form";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useForm, Controller, useController } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -35,7 +36,7 @@ type CreateIntakeForm = z.infer<typeof createIntakeSchema>;
 
 const acceptSchema = z.object({
   state: z.string().min(1, "State is required"),
-  assigneeId: z.number().optional(),
+  assigneeId: z.string().optional(),
   cycleId: z.number().optional(),
   moduleId: z.number().optional(),
 });
@@ -70,6 +71,23 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
   const acceptForm = useForm<AcceptForm>({ resolver: zodResolver(acceptSchema) });
   const declineForm = useForm<DeclineForm>({ resolver: zodResolver(declineSchema) });
 
+  const { field: assigneeIdField } = useController({ control: acceptForm.control, name: "assigneeId" });
+  const { field: cycleIdField } = useController({ control: acceptForm.control, name: "cycleId" });
+  const { field: moduleIdField } = useController({ control: acceptForm.control, name: "moduleId" });
+
+  const handleAssigneeChange = useCallback(
+    (v: string) => assigneeIdField.onChange(v || undefined),
+    [assigneeIdField.onChange]
+  );
+  const handleCycleChange = useCallback(
+    (v: string) => cycleIdField.onChange(v ? parseInt(v) : undefined),
+    [cycleIdField.onChange]
+  );
+  const handleModuleChange = useCallback(
+    (v: string) => moduleIdField.onChange(v ? parseInt(v) : undefined),
+    [moduleIdField.onChange]
+  );
+
   const onCreateSubmit = useCallback((data: CreateIntakeForm) => {
     createMutation.mutate(
       { ...data, projectId },
@@ -79,7 +97,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
           createForm.reset();
           toast.success("Intake item created");
         },
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [createMutation, projectId, createForm]);
@@ -94,7 +112,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
           acceptForm.reset();
           toast.success("Item accepted and work item created");
         },
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [selectedItemId, updateMutation, projectId, acceptForm]);
@@ -109,7 +127,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
           declineForm.reset();
           toast.success("Item declined");
         },
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [selectedItemId, updateMutation, projectId, declineForm]);
@@ -131,7 +149,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
       { id: itemId, projectId, status: "duplicate" },
       {
         onSuccess: () => toast.success("Item marked as duplicate"),
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [updateMutation, projectId]);
@@ -288,65 +306,47 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
             </div>
             <div>
               <Label>Assignee</Label>
-              <Controller
-                control={acceptForm.control}
-                name="assigneeId"
-                render={({ field }) => (
-                  <Select
-                    value={field.value?.toString() ?? ""}
-                    onValueChange={(v) => field.onChange(v ? parseInt(v) : undefined)}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Select assignee..." /></SelectTrigger>
-                    <SelectContent>
-                      {members?.map((m) => (
-                        <SelectItem key={m.userId} value={m.userId}>
-                          {m.user?.name ?? m.user?.email ?? m.userId}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Select
+                value={assigneeIdField.value ?? ""}
+                onValueChange={handleAssigneeChange}
+              >
+                <SelectTrigger><SelectValue placeholder="Select assignee..." /></SelectTrigger>
+                <SelectContent>
+                  {members?.map((m) => (
+                    <SelectItem key={m.userId} value={m.userId}>
+                      {m.user?.name ?? m.user?.email ?? m.userId}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Cycle</Label>
-              <Controller
-                control={acceptForm.control}
-                name="cycleId"
-                render={({ field }) => (
-                  <Select
-                    value={field.value?.toString() ?? ""}
-                    onValueChange={(v) => field.onChange(v ? parseInt(v) : undefined)}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Select cycle..." /></SelectTrigger>
-                    <SelectContent>
-                      {cycles?.map((c) => (
-                        <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Select
+                value={cycleIdField.value?.toString() ?? ""}
+                onValueChange={handleCycleChange}
+              >
+                <SelectTrigger><SelectValue placeholder="Select cycle..." /></SelectTrigger>
+                <SelectContent>
+                  {cycles?.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Module</Label>
-              <Controller
-                control={acceptForm.control}
-                name="moduleId"
-                render={({ field }) => (
-                  <Select
-                    value={field.value?.toString() ?? ""}
-                    onValueChange={(v) => field.onChange(v ? parseInt(v) : undefined)}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Select module..." /></SelectTrigger>
-                    <SelectContent>
-                      {modules?.map((m) => (
-                        <SelectItem key={m.id} value={m.id.toString()}>{m.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Select
+                value={moduleIdField.value?.toString() ?? ""}
+                onValueChange={handleModuleChange}
+              >
+                <SelectTrigger><SelectValue placeholder="Select module..." /></SelectTrigger>
+                <SelectContent>
+                  {modules?.map((m) => (
+                    <SelectItem key={m.id} value={m.id.toString()}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button type="submit" disabled={updateMutation.isPending} className="w-full">
               {updateMutation.isPending ? "Accepting..." : "Accept & Create Work Item"}

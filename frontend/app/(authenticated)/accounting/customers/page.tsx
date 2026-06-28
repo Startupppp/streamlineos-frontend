@@ -42,6 +42,10 @@ export default function CustomerLedgersPage() {
     setOnlyOutstanding(checked === true);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   const items = query.data?.items ?? [];
   const total = query.data?.total ?? 0;
 
@@ -74,6 +78,7 @@ export default function CustomerLedgersPage() {
           <ErrorState
             title="Failed to load customers"
             description={query.error.message}
+            onRetry={handleRetry}
           />
         ) : items.length === 0 ? (
           <EmptyState

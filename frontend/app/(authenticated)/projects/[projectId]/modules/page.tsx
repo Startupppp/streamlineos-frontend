@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Layers, Calendar, User, ArrowRight } from "lucide-react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useController } from "react-hook-form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -116,6 +116,12 @@ export default function ModulesPage({
     [form]
   );
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+
+  const { field: leadIdField } = useController({ control: form.control, name: "leadId" });
+  const handleLeadChange = useCallback(
+    (v: string) => leadIdField.onChange(v || undefined),
+    [leadIdField.onChange]
+  );
 
   const onSubmit = (data: CreateModuleForm) => {
     createMutation.mutate(
@@ -210,32 +216,24 @@ export default function ModulesPage({
               </div>
               <div>
                 <Label>Lead</Label>
-                <Controller
-                  control={form.control}
-                  name="leadId"
-                  render={({ field }) => (
-                    <Select
-                      value={field.value?.toString() ?? ""}
-                      onValueChange={(v) =>
-                        field.onChange(v || undefined)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select lead..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {members?.map((m) => (
-                          <SelectItem
-                            key={m.userId}
-                            value={m.userId}
-                          >
-                            {m.user?.name ?? m.user?.email ?? m.userId}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+                <Select
+                  value={leadIdField.value?.toString() ?? ""}
+                  onValueChange={handleLeadChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select lead..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {members?.map((m) => (
+                      <SelectItem
+                        key={m.userId}
+                        value={m.userId}
+                      >
+                        {m.user?.name ?? m.user?.email ?? m.userId}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <Button
                 type="submit"

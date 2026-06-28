@@ -81,6 +81,10 @@ export default function PurchaseOrdersListPage() {
     setVendorId(value);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   const items = query.data?.items ?? [];
   const vendors = vendorsQuery.data?.items ?? [];
 
@@ -128,10 +132,11 @@ export default function PurchaseOrdersListPage() {
       </div>
 
       {query.isLoading && <LoadingState variant="table" rows={8} />}
-      {query.error && <ErrorState description={query.error.message} />}
+      {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
 
       {!query.isLoading && !query.error && items.length === 0 && (
         <EmptyState
+          className="min-h-[50vh]"
           illustration={<EmptyExpensesIllustration />}
           title="No purchase orders"
           description="Create a PO to start ordering from your suppliers."

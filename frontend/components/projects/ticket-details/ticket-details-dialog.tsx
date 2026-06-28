@@ -29,13 +29,25 @@ import { ActivityFeed } from "./activity-feed";
 import { TicketActivityLog } from "@/components/projects/ticket-activity-log";
 import type { TicketDetailsDialogProps, ProjectMember } from "./types";
 
-function AttachmentImage({
-  fileUrl,
-  fileName,
-}: {
+interface AttachmentImageProps {
   fileUrl: string;
   fileName: string;
-}) {
+}
+
+interface ProjectManager {
+  id: string;
+  name?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  image?: string | null;
+  email?: string | null;
+}
+
+function isProjectWithManager(data: unknown): data is { manager?: ProjectManager } {
+  return typeof data === "object" && data !== null && "manager" in data;
+}
+
+function AttachmentImage({ fileUrl, fileName }: AttachmentImageProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -112,21 +124,7 @@ export function TicketDetailsDialog({
         image: m.user!.image || null,
         email: m.user!.email || "",
       }));
-    const mgr =
-      "manager" in projectData
-        ? (
-            projectData as {
-              manager?: {
-                id: string;
-                name?: string | null;
-                firstName?: string | null;
-                lastName?: string | null;
-                image?: string | null;
-                email?: string | null;
-              };
-            }
-          ).manager
-        : undefined;
+    const mgr = isProjectWithManager(projectData) ? projectData.manager : undefined;
     if (mgr && !list.some((m) => m.id === mgr.id)) {
       list.unshift({
         id: mgr.id,
@@ -146,9 +144,11 @@ export function TicketDetailsDialog({
     queryClient.invalidateQueries({
       queryKey: queryKeys.projects.detail(projectId),
     });
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.projects.ticket(ticketId!),
-    });
+    if (ticketId !== null) {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(ticketId),
+      });
+    }
   }, [queryClient, projectId, ticketId]);
 
   const updateTicketMutation = useUpdateTicket(projectId, {
@@ -168,8 +168,7 @@ export function TicketDetailsDialog({
       invalidateAll();
       onOpenChange(false);
     },
-    onError: (error) =>
-      toast.error(getErrorMessage(error)),
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const autoSave = useCallback(
@@ -206,13 +205,27 @@ export function TicketDetailsDialog({
     };
   }, []);
 
+  const handleDelete = () => {
+    if (!ticketId) return;
+    deleteTicketMutation.mutate({ ticketId });
+  };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalTitle(e.target.value);
+    debouncedSave({ title: e.target.value });
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setLocalDescription(e.target.value);
+    debouncedSave({ description: e.target.value });
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
         className="w-full sm:max-w-[50vw] overflow-hidden p-0 flex flex-col"
       >
-
         <TicketHeader
           ticketId={ticketId}
           ticketNumber={ticket?.ticketNumber}
@@ -222,9 +235,7 @@ export function TicketDetailsDialog({
           isLoading={isLoading}
           saving={saving}
           isDeleting={deleteTicketMutation.isPending}
-          onDelete={() =>
-            deleteTicketMutation.mutate({ ticketId: ticketId! })
-          }
+          onDelete={handleDelete}
         />
 
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -246,7 +257,6 @@ export function TicketDetailsDialog({
             </div>
           ) : ticket ? (
             <>
-
               <div className="border-b">
                 <TicketSidebar
                   ticket={ticket}
@@ -260,23 +270,16 @@ export function TicketDetailsDialog({
               </div>
 
               <div className="p-4 space-y-5">
-
                 <Input
                   value={localTitle}
-                  onChange={(e) => {
-                    setLocalTitle(e.target.value);
-                    debouncedSave({ title: e.target.value });
-                  }}
+                  onChange={handleTitleChange}
                   className="text-base font-semibold border-0 bg-transparent px-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                   placeholder="Ticket title"
                 />
 
                 <Textarea
                   value={localDescription}
-                  onChange={(e) => {
-                    setLocalDescription(e.target.value);
-                    debouncedSave({ description: e.target.value });
-                  }}
+                  onChange={handleDescriptionChange}
                   className="min-h-[80px] text-sm border-0 bg-muted/30 focus-visible:bg-background focus-visible:ring-1 resize-none rounded-lg"
                   placeholder="Add a description..."
                 />

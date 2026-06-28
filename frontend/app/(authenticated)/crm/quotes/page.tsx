@@ -269,7 +269,7 @@ export default function QuotesPage() {
   const handleCreateOpenChange = useCallback((open: boolean) => setCreateOpen(open), []);
   const handleCreateSuccess = useCallback(() => setCreateOpen(false), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleRetry = useCallback(() => refetch(), [refetch]);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const isFiltered = Boolean(debouncedSearch || statusFilter !== "all");
 

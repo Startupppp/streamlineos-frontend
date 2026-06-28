@@ -49,12 +49,14 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
 
   const createMutation = useCreateCycle();
 
-  const handleToggleCompleted = useCallback(() => setShowCompleted((v) => !v), []);
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-
   const form = useForm<CreateCycleForm>({
     resolver: zodResolver(createCycleSchema),
   });
+
+  const handleToggleCompleted = useCallback(() => setShowCompleted((v) => !v), []);
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleSetStartDate = useCallback((v: string) => form.setValue("startDate", v), [form]);
+  const handleSetEndDate = useCallback((v: string) => form.setValue("endDate", v), [form]);
 
   const onSubmit = useCallback((data: CreateCycleForm) => {
     createMutation.mutate(
@@ -145,14 +147,14 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="startDate">Start Date</Label>
-                  <DatePicker id="startDate" value={form.watch("startDate") || ""} onChange={(v) => form.setValue("startDate", v)} placeholder="Start date" />
+                  <DatePicker id="startDate" value={form.watch("startDate") || ""} onChange={handleSetStartDate} placeholder="Start date" />
                   {form.formState.errors.startDate && (
                     <p className="text-xs text-destructive mt-1">{form.formState.errors.startDate.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="endDate">End Date</Label>
-                  <DatePicker id="endDate" value={form.watch("endDate") || ""} onChange={(v) => form.setValue("endDate", v)} placeholder="End date" />
+                  <DatePicker id="endDate" value={form.watch("endDate") || ""} onChange={handleSetEndDate} placeholder="End date" />
                   {form.formState.errors.endDate && (
                     <p className="text-xs text-destructive mt-1">{form.formState.errors.endDate.message}</p>
                   )}

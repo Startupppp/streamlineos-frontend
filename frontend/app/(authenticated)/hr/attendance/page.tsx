@@ -4,12 +4,11 @@ import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AttendanceContent } from "./attendance-content";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 export default function AttendancePage() {
   const { data: session, status } = useSession();
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:attendance:manage");
 
   if (status === "loading") {
     return (

@@ -12,9 +12,9 @@ async function handler(req: NextRequest, method: string, backendPath: string) {
 }
 
 export function GET(req: NextRequest) {
-  return handler(req, "GET", "/api/auth/sessions");
+  return handler(req, "GET", "/hr/sessions");
 }
 
 export function DELETE(req: NextRequest) {
-  return handler(req, "DELETE", "/api/auth/sessions");
+  return handler(req, "DELETE", "/hr/sessions");
 }

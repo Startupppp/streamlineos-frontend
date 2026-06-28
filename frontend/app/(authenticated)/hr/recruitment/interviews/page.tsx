@@ -24,9 +24,10 @@ import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedb
 import { InterviewList } from "@/features/hr/recruitment/interviews/interview-list";
 import { InterviewFormSheet } from "@/features/hr/recruitment/interviews/interview-form-sheet";
 import { cn } from "@/lib/utils";
+import { ErrorState } from "@/components/shared/error-state";
 
 export default function InterviewsPage() {
-  const { data: interviews, isLoading } = useInterviews();
+  const { data: interviews, isLoading, isError, refetch } = useInterviews();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(null);
@@ -53,36 +54,36 @@ export default function InterviewsPage() {
     [interviews],
   );
 
-  function handleCalNavigatePrev() {
-    setCalDate((d) =>
-      calView === "month" ? subMonths(d, 1) : subWeeks(d, 1),
-    );
-  }
+  const handleCalNavigatePrev = useCallback(() => {
+    setCalDate((d) => calView === "month" ? subMonths(d, 1) : subWeeks(d, 1));
+  }, [calView]);
 
-  function handleCalNavigateNext() {
-    setCalDate((d) =>
-      calView === "month" ? addMonths(d, 1) : addWeeks(d, 1),
-    );
-  }
+  const handleCalNavigateNext = useCallback(() => {
+    setCalDate((d) => calView === "month" ? addMonths(d, 1) : addWeeks(d, 1));
+  }, [calView]);
 
-  function handleCalEventSelect(e: BigCalEvent) {
+  const handleCalEventSelect = useCallback((e: BigCalEvent) => {
     const iv = interviews?.find((i) => i.id === e.id);
     if (iv) setFeedbackInterview(iv);
-  }
+  }, [interviews]);
 
-  function handleFeedbackClose(open: boolean) {
+  const handleFeedbackClose = useCallback((open: boolean) => {
     if (!open) setFeedbackInterview(null);
-  }
+  }, []);
 
-  function handlePageViewList() {
-    setPageView("list");
-  }
-
-  function handlePageViewCalendar() {
-    setPageView("calendar");
-  }
-
+  const handlePageViewList = useCallback(() => setPageView("list"), []);
+  const handlePageViewCalendar = useCallback(() => setPageView("calendar"), []);
   const handleOpenSchedule = useCallback(() => setSheetOpen(true), []);
+  const handleMonthView = useCallback(() => setCalView("month"), []);
+  const handleWeekView = useCallback(() => setCalView("week"), []);
+
+  if (isError) {
+    return (
+      <PageWrapper title="Interviews" subtitle="Schedule and track interviews">
+        <ErrorState description="Failed to load interviews" onRetry={refetch} />
+      </PageWrapper>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -176,18 +177,24 @@ export default function InterviewsPage() {
               <ChevronRight className="h-4 w-4" />
             </button>
             <div className="flex items-center gap-1 rounded-lg border p-1">
-              {(["month", "week"] as View[]).map((v) => (
-                <button
-                  key={v}
-                  className={cn(
-                    "rounded px-2 py-0.5 text-xs capitalize",
-                    calView === v ? "bg-primary text-primary-foreground" : "hover:bg-muted",
-                  )}
-                  onClick={() => setCalView(v)}
-                >
-                  {v}
-                </button>
-              ))}
+              <button
+                className={cn(
+                  "rounded px-2 py-0.5 text-xs capitalize",
+                  calView === "month" ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+                )}
+                onClick={handleMonthView}
+              >
+                month
+              </button>
+              <button
+                className={cn(
+                  "rounded px-2 py-0.5 text-xs capitalize",
+                  calView === "week" ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+                )}
+                onClick={handleWeekView}
+              >
+                week
+              </button>
             </div>
           </div>
         )}

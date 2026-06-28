@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useForm, type Resolver } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +29,7 @@ const editSchema = z.object({
   name: z.string().min(1,"Name is required"),
   value: z.string().optional(),
   stage: z.enum(["LEAD","CONTACTED","PROPOSAL","NEGOTIATION","WON","LOST"]),
-  probability: z.coerce.number().min(0).max(100),
+  probability: z.string().optional(),
   contactPerson: z.string().optional(),
   contactEmail: z.string().email().optional().or(z.literal("")),
   contactPhone: z.string().optional(),
@@ -62,12 +62,12 @@ interface DealEditFormProps {
 
 export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFormProps) {
   const form = useForm<EditFormValues>({
-    resolver: zodResolver(editSchema) as unknown as Resolver<EditFormValues>,
+    resolver: zodResolver(editSchema),
     values: {
       name: deal.name,
       value: deal.value ??"0",
       stage: deal.stage as EditFormValues["stage"],
-      probability: deal.probability ?? 0,
+      probability: deal.probability != null ? String(deal.probability) : "",
       contactPerson: deal.contactPerson ??"",
       contactEmail: deal.contactEmail ??"",
       contactPhone: deal.contactPhone ??"",

@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -19,8 +20,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { Plus, Mail, Trash2, Copy, Pencil } from "lucide-react";
+import { Plus, Mail, Trash2, Copy, Pencil, AlertCircle } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
 
 interface EmailTemplate {
@@ -33,10 +33,51 @@ const etKeys = { all: [...queryKeys.hr.all, "email-templates"] as const, list: (
 
 const CATEGORIES = ["Onboarding", "Offboarding", "Leave", "Performance", "General", "Recruitment"];
 
+interface TemplateCardProps {
+  template: EmailTemplate;
+  onCopy: (t: EmailTemplate) => void;
+  onEdit: (t: EmailTemplate) => void;
+  onDelete: (id: number) => void;
+}
+
+function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps) {
+  const handleCopy = useCallback(() => onCopy(template), [onCopy, template]);
+  const handleEdit = useCallback(() => onEdit(template), [onEdit, template]);
+  const handleDelete = useCallback(() => onDelete(template.id), [onDelete, template.id]);
+  return (
+    <Card className="hover:shadow-sm transition-shadow">
+      <CardContent className="p-4 space-y-2">
+        <div className="flex items-start justify-between">
+          <Mail className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
+              <Copy className="h-3 w-3" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit}>
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={handleDelete}>
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold leading-tight truncate" title={template.name}>{template.name}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5 truncate" title={template.subject}>Subject: {template.subject}</p>
+        </div>
+        <p className="text-xs text-muted-foreground line-clamp-3 break-words">{template.body}</p>
+        <div className="flex gap-2">
+          {template.category && <Badge variant="outline" className="text-[10px]">{template.category}</Badge>}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function EmailTemplatesContent() {
   const qc = useQueryClient();
 
-  const { data: templates, isLoading } = useQuery({
+  const { data: templates, isLoading, isError, refetch } = useQuery({
     queryKey: etKeys.list(),
     queryFn: () => apiClient.get<EmailTemplate[]>("/hr/email-templates"),
   });
@@ -130,6 +171,15 @@ function EmailTemplatesContent() {
     toast.success("Template body copied");
   }, []);
 
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleSheetOpenChange = useCallback((open: boolean) => { if (!open) resetForm(); setSheetOpen(open); }, [resetForm]);
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
+  const handleSubjectChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value), []);
+  const handleBodyChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setBody(e.target.value), []);
+  const handleDeleteDialogOpenChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleDeleteTemplate = useCallback((id: number) => setDeleteId(id), []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Email Templates" subtitle="Manage HR email templates">
@@ -140,76 +190,83 @@ function EmailTemplatesContent() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Email Templates" subtitle="Manage HR email templates">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load email templates</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Email Templates"
       subtitle="Manage reusable email templates for HR communications"
       badge={`${templates?.length ?? 0} templates`}
-      actions={<Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />New Template</Button>}
+      actions={<Button size="sm" onClick={handleOpenSheet}><Plus className="h-3.5 w-3.5 mr-1" />New Template</Button>}
     >
       {!templates?.length ? (
-        <Card><CardContent className="py-12 text-center">
-          <EmptyMailIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">No email templates yet.</p>
-        </CardContent></Card>
+        <EmptyState
+          illustration={<EmptyMailIllustration className="h-32 w-32" />}
+          title="No email templates yet"
+          description="Create your first email template to standardize communications."
+          action={{ label: "Add Template", onClick: handleOpenSheet }}
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {templates.map((t: EmailTemplate) => (
-            <Card key={t.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-start justify-between">
-                  <Mail className="h-4 w-4 text-primary shrink-0" />
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(t)}>
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleOpenEdit(t)}>
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(t.id)}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold leading-tight truncate" title={t.name}>{t.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate" title={t.subject}>Subject: {t.subject}</p>
-                </div>
-                <p className="text-xs text-muted-foreground line-clamp-3 break-words">{t.body}</p>
-                <div className="flex gap-2">
-                  {t.category && <Badge variant="outline" className="text-[10px]">{t.category}</Badge>}
-                </div>
-              </CardContent>
-            </Card>
+            <TemplateCard
+              key={t.id}
+              template={t}
+              onCopy={handleCopy}
+              onEdit={handleOpenEdit}
+              onDelete={handleDeleteTemplate}
+            />
           ))}
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title={editTemplate ? "Edit Email Template" : "Create Email Template"} onSubmit={handleSave} submitLabel={editTemplate ? "Save Changes" : "Create"} isPending={create.isPending || update.isPending}>
+      <HrSheet
+        open={sheetOpen}
+        onOpenChange={handleSheetOpenChange}
+        title={editTemplate ? "Edit Email Template" : "Create Email Template"}
+        onSubmit={handleSave}
+        submitLabel={editTemplate ? "Save Changes" : "Create"}
+        isPending={create.isPending || update.isPending}
+      >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Template Name</label>
-          <Input placeholder="e.g., Welcome Email" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input placeholder="e.g., Welcome Email" value={name} onChange={handleNameChange} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Category</label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+              {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Subject Line</label>
-          <Input placeholder="Email subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
+          <Input placeholder="Email subject" value={subject} onChange={handleSubjectChange} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Body</label>
-          <Textarea placeholder="Email body. Use {{name}}, {{date}} as variables..." value={body} onChange={(e) => setBody(e.target.value)} rows={6} className="resize-none w-full" />
+          <Textarea placeholder="Email body. Use {{name}}, {{date}} as variables..." value={body} onChange={handleBodyChange} rows={6} className="resize-none w-full" />
         </div>
       </HrSheet>
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+        onOpenChange={handleDeleteDialogOpenChange}
         title="Delete Template"
         description="Are you sure you want to delete this email template?"
         confirmLabel="Delete"

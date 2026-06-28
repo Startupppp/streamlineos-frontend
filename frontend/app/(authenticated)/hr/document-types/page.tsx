@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { DocumentTypeFormDialog } from "@/features/hr/document-types/document-ty
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 interface DocumentType {
   id: number;
@@ -111,10 +111,9 @@ function blankForm(): FormState {
 }
 
 export default function DocumentTypesPage() {
-  const ability = useAbility();
-  const isHROrCEO = ability.can("manage", "hr:employees");
+  const isHROrCEO = useCan("hr:employees:manage");
 
-  const { data, isLoading } = useDocumentTypes();
+  const { data, isLoading, isError, refetch } = useDocumentTypes();
   const createMutation = useCreateDocumentType();
   const updateMutation = useUpdateDocumentType();
   const deleteMutation = useDeleteDocumentType();
@@ -260,6 +259,8 @@ export default function DocumentTypesPage() {
     if (!open) setReactivateTarget(null);
   }, []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const list = data ?? [];
 
   if (isLoading) {
@@ -272,6 +273,21 @@ export default function DocumentTypesPage() {
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-10" />
           ))}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Document Types" subtitle="Configure required onboarding documents">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load document types</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

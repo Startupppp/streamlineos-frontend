@@ -17,6 +17,7 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyTicketIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { SupportTicketStatus, SupportTicketPriority } from "@/types/support";
+import { ErrorState } from "@/components/shared/error-state";
 import { TicketList } from "@/features/support/inbox/ticket-list";
 import { TicketDetailSheet } from "@/features/support/inbox/ticket-detail-sheet";
 import { CreateTicketDialog } from "@/features/support/inbox/create-ticket-dialog";
@@ -52,9 +53,20 @@ function InboxContent() {
     [searchParams, router, pathname]
   );
 
-  const { data: ticketsData, isLoading } = useSupportTickets({
-    ...(statusFilter !== "all" ? { status: statusFilter as SupportTicketStatus } : {}),
-    ...(priorityFilter !== "all" ? { priority: priorityFilter as SupportTicketPriority } : {}),
+  const TICKET_STATUSES: readonly SupportTicketStatus[] = ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"];
+  const TICKET_PRIORITIES: readonly SupportTicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+
+  function isTicketStatus(v: string): v is SupportTicketStatus {
+    return (TICKET_STATUSES as readonly string[]).includes(v);
+  }
+
+  function isTicketPriority(v: string): v is SupportTicketPriority {
+    return (TICKET_PRIORITIES as readonly string[]).includes(v);
+  }
+
+  const { data: ticketsData, isLoading, isError, refetch } = useSupportTickets({
+    ...(isTicketStatus(statusFilter) ? { status: statusFilter } : {}),
+    ...(isTicketPriority(priorityFilter) ? { priority: priorityFilter } : {}),
   });
   const { data: stats, isLoading: statsLoading } = useSupportStats();
 
@@ -70,6 +82,10 @@ function InboxContent() {
     [updateFilter]
   );
   const handleBackFromTicket = useCallback(() => setSelectedTicketId(null), []);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   return (
     <>
@@ -121,12 +137,23 @@ function InboxContent() {
         noInternalScroll
         contentClassName="flex overflow-hidden !py-0 !px-0"
       >
-        <TicketList
-          tickets={tickets}
-          isLoading={isLoading}
-          selectedTicketId={selectedTicketId}
-          onSelect={setSelectedTicketId}
-        />
+        {isError ? (
+          <div className="flex-1 flex items-center justify-center">
+            <ErrorState
+              title="Failed to load tickets"
+              description="We couldn't load your support tickets. Please try again."
+              onRetry={handleRetry}
+              compact
+            />
+          </div>
+        ) : (
+          <TicketList
+            tickets={tickets}
+            isLoading={isLoading}
+            selectedTicketId={selectedTicketId}
+            onSelect={setSelectedTicketId}
+          />
+        )}
 
         <div className={cn("flex-1 flex flex-col", !selectedTicketId && "hidden md:flex")}>
           {selectedTicketId ? (

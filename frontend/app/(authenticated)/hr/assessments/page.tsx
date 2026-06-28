@@ -15,7 +15,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Plus, ClipboardCheck, Clock, Users, CheckCircle2, Minus, AlertCircle } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { cn } from "@/lib/utils";
 
 function deriveStatus(attempts: AssessmentAttempt[]): AssessStatus {
@@ -51,11 +51,11 @@ function getStatusConfig(status: AssessStatus) {
 }
 
 export default function AssessmentsPage() {
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:performance");
+  const isAdmin = useCan("hr:performance:manage");
 
   const { data: items, isLoading, isError, refetch } = useAssessments();
   const create = useCreateAssessment();
+  const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -127,7 +127,7 @@ export default function AssessmentsPage() {
             <p className="text-sm font-medium text-foreground">Failed to load assessments</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
           </div>
-          <Button size="sm" variant="outline" onClick={() => void refetch()}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={handleRefetch}>Try again</Button>
         </div>
       </PageWrapper>
     );

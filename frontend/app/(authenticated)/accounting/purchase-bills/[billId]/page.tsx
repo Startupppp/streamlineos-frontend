@@ -113,6 +113,10 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
     setPaymentDialogOpen(true);
   }, []);
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   return (
     <PageWrapper
       eyebrow="Accounting · Purchase Bills"
@@ -152,7 +156,7 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
           <ErrorState
             title="Failed to load bill"
             description={getErrorMessage(query.error)}
-            onRetry={query.refetch}
+            onRetry={handleRetry}
           />
         ) : !bill ? (
           <ErrorState

@@ -14,7 +14,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ProjectInfoSection } from "@/features/projects/settings/project-info-section";
 import {
@@ -58,8 +58,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       : undefined,
   });
 
-  const ability = useAbility();
-  const isOwner = ability.can("manage", "all");
+  const isOwner = useCan("projects:delete");
 
   const updateMutation = useUpdateProject();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

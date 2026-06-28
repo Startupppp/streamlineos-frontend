@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ import {
   PlayCircle,
   LayoutTemplate,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   useProjectTemplates,
   useCreateProjectTemplate,
@@ -78,7 +79,12 @@ function ApplyDialog({
   const [endDate, setEndDate] = useState("");
   const apply = useApplyProjectTemplate();
 
-  function handleApply() {
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
+  const handleStartDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value), []);
+  const handleEndDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value), []);
+
+  const handleApply = useCallback(() => {
     if (!name.trim()) return;
     apply.mutate(
       {
@@ -101,7 +107,7 @@ function ApplyDialog({
         onError: () => toast.error("Failed to create project"),
       },
     );
-  }
+  }, [name, description, startDate, endDate, template.id, apply, onClose, router]);
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -112,24 +118,24 @@ function ApplyDialog({
         <div className="space-y-4 py-2">
           <div className="space-y-1">
             <Label>Project Name *</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} />
+            <Input value={name} onChange={handleNameChange} />
           </div>
           <div className="space-y-1">
             <Label>Description</Label>
             <Textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={handleDescriptionChange}
               rows={2}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Start Date</Label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <Input type="date" value={startDate} onChange={handleStartDateChange} />
             </div>
             <div className="space-y-1">
               <Label>End Date</Label>
-              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Input type="date" value={endDate} onChange={handleEndDateChange} />
             </div>
           </div>
           <div className="rounded-md border p-3 space-y-1 text-sm">
@@ -160,6 +166,95 @@ function ApplyDialog({
 }
 
 
+interface TicketRowProps {
+  ticket: TicketDraft;
+  index: number;
+  isOnlyTicket: boolean;
+  onUpdate: <K extends keyof TicketDraft>(idx: number, field: K, value: TicketDraft[K]) => void;
+  onRemove: (idx: number) => void;
+}
+
+function TicketRow({ ticket, index, isOnlyTicket, onUpdate, onRemove }: TicketRowProps) {
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(index, "title", e.target.value);
+  }
+  function handleTypeChange(v: string) {
+    onUpdate(index, "type", v);
+  }
+  function handlePriorityChange(v: string) {
+    onUpdate(index, "priority", v as TicketDraft["priority"]);
+  }
+  function handleRemove() {
+    onRemove(index);
+  }
+  function handlePhaseChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(index, "phase", e.target.value);
+  }
+  function handleEstimatedHoursChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(index, "estimatedHours", e.target.value);
+  }
+
+  return (
+    <div className="border rounded-md p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+        <Input
+          className="flex-1"
+          placeholder="Task title *"
+          value={ticket.title}
+          onChange={handleTitleChange}
+        />
+        <Select value={ticket.type} onValueChange={handleTypeChange}>
+          <SelectTrigger className="w-24 shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TICKET_TYPES.map((t) => (
+              <SelectItem key={t} value={t}>{t}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={ticket.priority} onValueChange={handlePriorityChange}>
+          <SelectTrigger className="w-24 shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PRIORITIES.map((p) => (
+              <SelectItem key={p} value={p}>{p}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="text-destructive shrink-0"
+          disabled={isOnlyTicket}
+          onClick={handleRemove}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="flex gap-2">
+        <Input
+          className="text-xs"
+          placeholder="Phase (e.g. Setup, Development)"
+          value={ticket.phase}
+          onChange={handlePhaseChange}
+        />
+        <Input
+          type="number"
+          min={0}
+          className="w-24 text-xs"
+          placeholder="Est. hrs"
+          value={ticket.estimatedHours}
+          onChange={handleEstimatedHoursChange}
+        />
+      </div>
+    </div>
+  );
+}
+
 function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -169,22 +264,25 @@ function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
   ]);
   const create = useCreateProjectTemplate();
 
-  function addTicket() {
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value), []);
+
+  const addTicket = useCallback(() => {
     setTickets((prev) => [
       ...prev,
       { title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: prev.length },
     ]);
-  }
+  }, []);
 
-  function removeTicket(idx: number) {
+  const removeTicket = useCallback((idx: number) => {
     setTickets((prev) => prev.filter((_, i) => i !== idx));
-  }
+  }, []);
 
-  function updateTicket<K extends keyof TicketDraft>(idx: number, field: K, value: TicketDraft[K]) {
+  const updateTicket = useCallback(<K extends keyof TicketDraft>(idx: number, field: K, value: TicketDraft[K]) => {
     setTickets((prev) => prev.map((t, i) => (i === idx ? { ...t, [field]: value } : t)));
-  }
+  }, []);
 
-  function handleCreate() {
+  const handleCreate = useCallback(() => {
     if (!name.trim() || tickets.some((t) => !t.title.trim())) return;
     create.mutate(
       {
@@ -208,7 +306,7 @@ function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
         onError: () => toast.error("Failed to create template"),
       },
     );
-  }
+  }, [name, tickets, description, category, create, onClose]);
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -223,7 +321,7 @@ function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
               <Input
                 placeholder="e.g. Software Development"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
               />
             </div>
             <div className="space-y-1">
@@ -245,7 +343,7 @@ function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
             <Input
               placeholder="What is this template for?"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={handleDescriptionChange}
             />
           </div>
 
@@ -257,69 +355,14 @@ function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
               </Button>
             </div>
             {tickets.map((ticket, idx) => (
-              <div key={idx} className="border rounded-md p-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <Input
-                    className="flex-1"
-                    placeholder="Task title *"
-                    value={ticket.title}
-                    onChange={(e) => updateTicket(idx, "title", e.target.value)}
-                  />
-                  <Select
-                    value={ticket.type}
-                    onValueChange={(v) => updateTicket(idx, "type", v)}
-                  >
-                    <SelectTrigger className="w-24 shrink-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TICKET_TYPES.map((t) => (
-                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={ticket.priority}
-                    onValueChange={(v) => updateTicket(idx, "priority", v as TicketDraft["priority"])}
-                  >
-                    <SelectTrigger className="w-24 shrink-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PRIORITIES.map((p) => (
-                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive shrink-0"
-                    disabled={tickets.length <= 1}
-                    onClick={() => removeTicket(idx)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    className="text-xs"
-                    placeholder="Phase (e.g. Setup, Development)"
-                    value={ticket.phase}
-                    onChange={(e) => updateTicket(idx, "phase", e.target.value)}
-                  />
-                  <Input
-                    type="number"
-                    min={0}
-                    className="w-24 text-xs"
-                    placeholder="Est. hrs"
-                    value={ticket.estimatedHours}
-                    onChange={(e) => updateTicket(idx, "estimatedHours", e.target.value)}
-                  />
-                </div>
-              </div>
+              <TicketRow
+                key={idx}
+                ticket={ticket}
+                index={idx}
+                isOnlyTicket={tickets.length <= 1}
+                onUpdate={updateTicket}
+                onRemove={removeTicket}
+              />
             ))}
           </div>
         </div>
@@ -344,9 +387,12 @@ function TemplateCard({
   onDelete,
 }: {
   template: ProjectTemplate;
-  onApply: () => void;
-  onDelete: () => void;
+  onApply: (template: ProjectTemplate) => void;
+  onDelete: (template: ProjectTemplate) => void;
 }) {
+  const handleApply = useCallback(() => onApply(template), [onApply, template]);
+  const handleDelete = useCallback(() => onDelete(template), [onDelete, template]);
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -382,14 +428,14 @@ function TemplateCard({
         </div>
 
         <div className="flex gap-2 pt-1">
-          <Button size="sm" className="flex-1" onClick={onApply}>
+          <Button size="sm" className="flex-1" onClick={handleApply}>
             <PlayCircle className="h-4 w-4 mr-1" /> Use Template
           </Button>
           <Button
             size="sm"
             variant="outline"
             className="text-destructive hover:text-destructive"
-            onClick={onDelete}
+            onClick={handleDelete}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -407,7 +453,15 @@ export default function ProjectTemplatesPage() {
   const [applyTarget, setApplyTarget] = useState<ProjectTemplate | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectTemplate | null>(null);
 
-  function handleDelete() {
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleApplyTarget = useCallback((t: ProjectTemplate) => setApplyTarget(t), []);
+  const handleDeleteTarget = useCallback((t: ProjectTemplate) => setDeleteTarget(t), []);
+
+  function handleCloseCreate() { setCreateOpen(false); }
+  function handleCloseApply() { setApplyTarget(null); }
+  function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
+
+  const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteTemplate.mutate(deleteTarget.id, {
       onSuccess: () => {
@@ -416,7 +470,7 @@ export default function ProjectTemplatesPage() {
       },
       onError: () => toast.error("Failed to delete template"),
     });
-  }
+  }, [deleteTarget, deleteTemplate]);
 
   return (
     <PageWrapper title="Project Templates" subtitle="Pre-built project structures to bootstrap new projects quickly">
@@ -425,7 +479,7 @@ export default function ProjectTemplatesPage() {
           <LayoutTemplate className="h-5 w-5" />
           <span className="text-sm">{templates?.length ?? 0} template{templates?.length !== 1 ? "s" : ""}</span>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" /> New Template
         </Button>
       </div>
@@ -433,7 +487,7 @@ export default function ProjectTemplatesPage() {
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-52 rounded-lg bg-muted animate-pulse" />
+            <Skeleton key={i} className="h-52 rounded-lg" />
           ))}
         </div>
       ) : templates && templates.length > 0 ? (
@@ -442,27 +496,27 @@ export default function ProjectTemplatesPage() {
             <TemplateCard
               key={t.id}
               template={t}
-              onApply={() => setApplyTarget(t)}
-              onDelete={() => setDeleteTarget(t)}
+              onApply={handleApplyTarget}
+              onDelete={handleDeleteTarget}
             />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+        <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] py-16 text-center space-y-3">
           <FolderKanban className="h-10 w-10 text-muted-foreground/50" />
           <p className="text-muted-foreground">No templates yet.</p>
-          <Button variant="outline" onClick={() => setCreateOpen(true)}>
+          <Button variant="outline" onClick={handleOpenCreate}>
             <Plus className="h-4 w-4 mr-1" /> Create your first template
           </Button>
         </div>
       )}
 
-      {createOpen && <CreateTemplateDialog onClose={() => setCreateOpen(false)} />}
+      {createOpen && <CreateTemplateDialog onClose={handleCloseCreate} />}
       {applyTarget && (
-        <ApplyDialog template={applyTarget} onClose={() => setApplyTarget(null)} />
+        <ApplyDialog template={applyTarget} onClose={handleCloseApply} />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete template?</AlertDialogTitle>

@@ -234,6 +234,10 @@ export default function KbArticleReaderPage() {
     return memberNames.get(id) ?? "Unknown";
   }
 
+  function handleRetry() {
+    void articleQuery.refetch();
+  }
+
   function handleVerify() {
     verify.mutate(
       { articleId },
@@ -261,7 +265,7 @@ export default function KbArticleReaderPage() {
           <ErrorState
             title="Couldn't load this article"
             description={getApiError(articleQuery.error)}
-            onRetry={() => articleQuery.refetch()}
+            onRetry={handleRetry}
           />
         </div>
       </div>

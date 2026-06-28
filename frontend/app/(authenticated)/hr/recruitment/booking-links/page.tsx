@@ -50,6 +50,29 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function RevokeButton({
+  linkId,
+  onRevoke,
+  disabled,
+}: {
+  linkId: number;
+  onRevoke: (id: number) => void;
+  disabled: boolean;
+}) {
+  function handleClick() { onRevoke(linkId); }
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-7 text-xs text-destructive hover:text-destructive"
+      onClick={handleClick}
+      disabled={disabled}
+    >
+      Revoke
+    </Button>
+  );
+}
+
 export default function BookingLinksPage() {
   const { data: links, isLoading } = useHrBookingLinks();
   const revoke = useRevokeBookingLink();
@@ -139,15 +162,11 @@ export default function BookingLinksPage() {
                           </TableCell>
                           <TableCell>
                             {link.status === "pending" && !isExpired && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-xs text-destructive hover:text-destructive"
-                                onClick={() => handleRevoke(link.id)}
+                              <RevokeButton
+                                linkId={link.id}
+                                onRevoke={handleRevoke}
                                 disabled={revoke.isPending}
-                              >
-                                Revoke
-                              </Button>
+                              />
                             )}
                           </TableCell>
                         </TableRow>

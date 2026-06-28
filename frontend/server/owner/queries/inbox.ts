@@ -1,7 +1,22 @@
 import "server-only";
-import { desc, eq, ilike, or, and, type SQL } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { platformMessages, type PlatformMessageStatus } from "@/lib/db/schema";
+import { serverApiClient } from "@/lib/api/server-client";
+
+export type PlatformMessageStatus = "NEW" | "READ" | "REPLIED" | "ARCHIVED";
+
+export type PlatformMessage = {
+  id: number;
+  publicCode: string;
+  name: string;
+  email: string;
+  company: string | null;
+  phone: string | null;
+  message: string;
+  topic: string;
+  status: PlatformMessageStatus;
+  createdAt: string | Date;
+  replyBody: string | null;
+  repliedAt: string | Date | null;
+};
 
 export type InboxFilter = {
   status?: PlatformMessageStatus | "ALL";
@@ -9,34 +24,21 @@ export type InboxFilter = {
   search?: string;
 };
 
-export async function listMessages(filter: InboxFilter = {}) {
-  const conditions: SQL[] = [];
-  if (filter.status && filter.status !== "ALL") {
-    conditions.push(eq(platformMessages.status, filter.status));
-  }
-  if (filter.topic && filter.topic !== "ALL") {
-    conditions.push(eq(platformMessages.topic, filter.topic));
-  }
-  if (filter.search) {
-    const q = `%${filter.search}%`;
-    const searchCondition = or(
-      ilike(platformMessages.name, q),
-      ilike(platformMessages.email, q),
-      ilike(platformMessages.company, q),
-      ilike(platformMessages.message, q),
-    );
-    if (searchCondition) conditions.push(searchCondition);
-  }
-
-  return db.query.platformMessages.findMany({
-    where: conditions.length === 0 ? undefined : and(...conditions),
-    orderBy: desc(platformMessages.createdAt),
-    limit: 200,
-  });
+export async function listMessages(filter: InboxFilter = {}): Promise<PlatformMessage[]> {
+  const params: Record<string, string> = {};
+  if (filter.status && filter.status !== "ALL") params.status = filter.status;
+  if (filter.topic && filter.topic !== "ALL") params.topic = filter.topic;
+  if (filter.search) params.search = filter.search;
+  return serverApiClient.get<PlatformMessage[]>(
+    "/platform/messages",
+    Object.keys(params).length ? params : undefined,
+  );
 }
 
-export async function getMessageByPublicCode(code: string) {
-  return db.query.platformMessages.findFirst({
-    where: eq(platformMessages.publicCode, code),
-  });
+export async function getMessageByPublicCode(code: string): Promise<PlatformMessage | null> {
+  try {
+    return await serverApiClient.get<PlatformMessage>(`/platform/messages/${code}`);
+  } catch {
+    return null;
+  }
 }

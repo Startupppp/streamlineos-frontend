@@ -17,7 +17,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Plus, TrendingUp, ArrowRight, ChevronsUpDown, Check, Building2, AlertCircle } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { useHrDepartments } from "@/lib/api/hooks/hr";
 import { cn } from "@/lib/utils";
 
@@ -45,14 +45,15 @@ const clKeys = {
 
 export default function CareerLaddersPage() {
   const qc = useQueryClient();
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:career-ladders");
+  const isAdmin = useCan("hr:employees:manage");
   const { data: departments } = useHrDepartments();
 
   const { data: ladders, isLoading, isError, refetch } = useQuery({
     queryKey: clKeys.list(),
     queryFn: () => apiClient.get<CareerLadder[]>("/hr/career-ladders"),
   });
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const create = useMutation({
     mutationFn: (data: { title: string; department?: string; description?: string }) =>
@@ -142,7 +143,7 @@ export default function CareerLaddersPage() {
             <p className="text-sm font-medium text-foreground">Failed to load career ladders</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
           </div>
-          <Button size="sm" variant="outline" onClick={() => void refetch()}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

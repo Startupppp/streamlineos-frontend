@@ -117,6 +117,8 @@ function RoundItem({ round, flowId, onEdit }: RoundItemProps) {
     );
   }, [deleteRound, flowId, round.id]);
 
+  function handleEditClick() { onEdit(round); }
+
   return (
     <div className="flex items-center gap-3 rounded-md border bg-muted/20 px-3 py-2">
       <svg className="h-4 w-4 shrink-0 text-muted-foreground/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -132,7 +134,7 @@ function RoundItem({ round, flowId, onEdit }: RoundItemProps) {
       <div className="flex items-center gap-1 shrink-0">
         <button
           type="button"
-          onClick={() => onEdit(round)}
+          onClick={handleEditClick}
           className="rounded p-1 hover:bg-muted transition-colors"
           aria-label="Edit round"
         >
@@ -168,6 +170,11 @@ interface FlowCardProps {
 function FlowCard({ flow, onEdit, onAddRound, onEditRound, onDelete }: FlowCardProps) {
   const rounds = flow.rounds ?? [];
 
+  function handleAddRound() { onAddRound(flow); }
+  function handleEditFlow() { onEdit(flow); }
+  function handleDeleteFlow() { onDelete(flow); }
+  function handleEditRound(round: HiringFlowRound) { onEditRound(round, flow.id); }
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -179,18 +186,18 @@ function FlowCard({ flow, onEdit, onAddRound, onEditRound, onDelete }: FlowCardP
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onAddRound(flow)} aria-label="Add round">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleAddRound} aria-label="Add round">
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(flow)} aria-label="Edit flow">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEditFlow} aria-label="Edit flow">
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(flow)} aria-label="Delete flow">
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleDeleteFlow} aria-label="Delete flow">
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
               </svg>
@@ -207,7 +214,7 @@ function FlowCard({ flow, onEdit, onAddRound, onEditRound, onDelete }: FlowCardP
         ) : (
           <div className="grid gap-1.5">
             {rounds.map((r) => (
-              <RoundItem key={r.id} round={r} flowId={flow.id} onEdit={(round) => onEditRound(round, flow.id)} />
+              <RoundItem key={r.id} round={r} flowId={flow.id} onEdit={handleEditRound} />
             ))}
           </div>
         )}
@@ -266,8 +273,10 @@ function FlowFormSheet({
 
   const isPending = createFlow.isPending || updateFlow.isPending;
 
+  function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
+
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>{editFlow ? "Edit Hiring Flow" : "New Hiring Flow"}</SheetTitle>
@@ -374,8 +383,16 @@ function RoundFormSheet({
 
   const isPending = createRound.isPending || updateRound.isPending;
 
+  function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
+  function handleRoundTypeChange(v: string) {
+    setValue("roundType", v as RoundFormValues["roundType"], { shouldValidate: true });
+  }
+  function handleModeChange(v: string) {
+    setValue("mode", v as RoundFormValues["mode"], { shouldValidate: true });
+  }
+
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>{editRound ? "Edit Round" : "Add Round"}</SheetTitle>
@@ -388,7 +405,7 @@ function RoundFormSheet({
           </div>
           <div>
             <Label className="text-xs font-medium">Round Type <span className="text-destructive">*</span></Label>
-            <Select value={roundType} onValueChange={(v) => setValue("roundType", v as RoundFormValues["roundType"], { shouldValidate: true })}>
+            <Select value={roundType} onValueChange={handleRoundTypeChange}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {ROUND_TYPES.map(({ value, label }) => (
@@ -399,7 +416,7 @@ function RoundFormSheet({
           </div>
           <div>
             <Label className="text-xs font-medium">Mode <span className="text-destructive">*</span></Label>
-            <Select value={mode} onValueChange={(v) => setValue("mode", v as RoundFormValues["mode"], { shouldValidate: true })}>
+            <Select value={mode} onValueChange={handleModeChange}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {ROUND_MODES.map(({ value, label }) => (
@@ -471,6 +488,10 @@ export default function HiringFlowsPage() {
     });
   }, [deleteFlow, deleteTarget]);
 
+  const handleFlowSheetClose = useCallback(() => { setFlowSheetOpen(false); }, []);
+  const handleRoundSheetClose = useCallback(() => { setRoundSheetOpen(false); }, []);
+  const handleDeleteAlertChange = useCallback((v: boolean) => { if (!v) setDeleteTarget(null); }, []);
+
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -530,17 +551,17 @@ export default function HiringFlowsPage() {
       <FlowFormSheet
         open={flowSheetOpen}
         editFlow={editFlow}
-        onClose={() => setFlowSheetOpen(false)}
+        onClose={handleFlowSheetClose}
       />
 
       <RoundFormSheet
         open={roundSheetOpen}
         flowId={activeFlowId}
         editRound={editRound}
-        onClose={() => setRoundSheetOpen(false)}
+        onClose={handleRoundSheetClose}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteAlertChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete hiring flow?</AlertDialogTitle>

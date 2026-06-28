@@ -168,7 +168,7 @@ export default function LeadsPipelinePage() {
     const leadId = parseInt(draggableId);
     const newStatus = destination.droppableId as LeadStatus;
     if (source.droppableId !== destination.droppableId) {
-      handleMoveStatus(leadId, newStatus, source.droppableId as LeadStatus);
+      void handleMoveStatus(leadId, newStatus, source.droppableId as LeadStatus);
     }
   }, [handleMoveStatus]);
 
@@ -211,7 +211,7 @@ export default function LeadsPipelinePage() {
     } else {
       updateStatus.mutate({ leadId: id, status: status as LeadStatus });
     }
-  }, [updateLeadMutation, updateStatus, createDealMutation]);
+  }, [updateStatus, createDealMutation]);
 
   const handlePriorityChange = useCallback((id: number, priority: string) => {
     updateLeadMutation.mutate({ id, priority: priority as "HOT" | "WARM" | "COLD" });

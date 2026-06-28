@@ -40,7 +40,7 @@ import {
 import { FileUpload } from "@/components/storage/file-upload";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { RESIGNATION_REASONS, RESIGNATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 
@@ -56,6 +56,7 @@ interface RejectDialogState {
 export default function ExitManagementPage() {
   const { data: session } = useSession();
   const { data: resignations, isLoading, isError, refetch } = useResignations();
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const createResignation = useCreateResignation();
   const hrReview = useHrReviewResignation();
   const ceoReview = useCeoReviewResignation();
@@ -63,10 +64,9 @@ export default function ExitManagementPage() {
 
   const role = session?.user?.role;
   const userId = session?.user?.id;
-  const ability = useAbility();
-  const isAdmin = ability.can("approve", "hr:leaves");
+  const isAdmin = useCan("hr:leaves:approve");
   const isHR = role === "HR";
-  const isCEO = ability.can("manage", "all");
+  const isCEO = useCan("hr:employees:manage");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -353,7 +353,7 @@ export default function ExitManagementPage() {
           illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
           title="Failed to load resignations"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: refetch }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </PageWrapper>
     );

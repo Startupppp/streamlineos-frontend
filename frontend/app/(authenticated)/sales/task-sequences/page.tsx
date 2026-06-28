@@ -66,6 +66,19 @@ function ApplyDialog({
   const [entityId, setEntityId] = useState("");
   const apply = useApplyTaskSequence();
 
+  const handleBaseDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setBaseDate(e.target.value),
+    [],
+  );
+  const handleEntityTypeChange = useCallback(
+    (v: string) => setEntityType(v === "none" ? "" : (v as TaskEntityType)),
+    [],
+  );
+  const handleEntityIdChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setEntityId(e.target.value),
+    [],
+  );
+
   const handleApply = useCallback(() => {
     const base = new Date(baseDate);
     if (!baseDate || Number.isNaN(base.getTime())) {
@@ -103,7 +116,7 @@ function ApplyDialog({
             <Input
               type="date"
               value={baseDate}
-              onChange={(e) => setBaseDate(e.target.value)}
+              onChange={handleBaseDateChange}
             />
             <p className="text-xs text-muted-foreground">
               Tasks will be scheduled at offsets from this date.
@@ -113,7 +126,7 @@ function ApplyDialog({
             <Label>Link to Entity (optional)</Label>
             <Select
               value={entityType || "none"}
-              onValueChange={(v) => setEntityType(v === "none" ? "" : (v as TaskEntityType))}
+              onValueChange={handleEntityTypeChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select entity type" />
@@ -134,7 +147,7 @@ function ApplyDialog({
                 type="number"
                 placeholder="e.g. 42"
                 value={entityId}
-                onChange={(e) => setEntityId(e.target.value)}
+                onChange={handleEntityIdChange}
               />
             </div>
           )}
@@ -161,6 +174,89 @@ function ApplyDialog({
 }
 
 
+function StepRow({
+  step,
+  index,
+  totalSteps,
+  onUpdate,
+  onRemove,
+}: {
+  step: StepDraft;
+  index: number;
+  totalSteps: number;
+  onUpdate: (idx: number, field: keyof StepDraft, value: string | number) => void;
+  onRemove: (idx: number) => void;
+}) {
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => onUpdate(index, "title", e.target.value),
+    [onUpdate, index],
+  );
+  const handleTypeChange = useCallback(
+    (v: string) => onUpdate(index, "type", v),
+    [onUpdate, index],
+  );
+  const handleOffsetChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => onUpdate(index, "offsetDays", Number(e.target.value)),
+    [onUpdate, index],
+  );
+  const handleNotesChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => onUpdate(index, "notes", e.target.value),
+    [onUpdate, index],
+  );
+  const handleRemove = useCallback(() => onRemove(index), [onRemove, index]);
+
+  return (
+    <div className="border rounded-md p-3 space-y-2">
+      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 hidden sm:block" />
+        <span className="text-xs font-medium text-muted-foreground shrink-0">#{index + 1}</span>
+        <Input
+          className="flex-1 min-w-0 basis-full sm:basis-0"
+          placeholder="Step title *"
+          value={step.title}
+          onChange={handleTitleChange}
+        />
+        <Select value={step.type} onValueChange={handleTypeChange}>
+          <SelectTrigger className="w-28 shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TASK_TYPES.map((t) => (
+              <SelectItem key={t} value={t}>{t}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-1 w-24 shrink-0">
+          <Input
+            type="number"
+            min={0}
+            className="w-16 text-center"
+            value={step.offsetDays}
+            onChange={handleOffsetChange}
+          />
+          <span className="text-xs text-muted-foreground">d</span>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="shrink-0 text-destructive"
+          disabled={totalSteps <= 1}
+          onClick={handleRemove}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+      <Textarea
+        className="text-sm min-h-0 h-8 resize-none"
+        placeholder="Optional notes"
+        value={step.notes}
+        onChange={handleNotesChange}
+      />
+    </div>
+  );
+}
+
 function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -168,6 +264,15 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
     { title: "", type: "CUSTOM", notes: "", offsetDays: 0, order: 0 },
   ]);
   const create = useCreateTaskSequence();
+
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value),
+    [],
+  );
+  const handleDescriptionChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value),
+    [],
+  );
 
   function addStep() {
     setSteps((prev) => [
@@ -192,7 +297,7 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
     );
   }
 
-  function handleCreate() {
+  const handleCreate = useCallback(() => {
     if (!name.trim() || steps.some((s) => !s.title.trim())) return;
     create.mutate(
       {
@@ -214,7 +319,7 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
         onError: () => toast.error("Failed to create sequence"),
       },
     );
-  }
+  }, [name, steps, description, create, onClose]);
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -230,7 +335,7 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
                 placeholder="e.g. 5-Touch Follow-Up"
                 value={name}
                 maxLength={50}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
               />
               <p className="text-xs text-muted-foreground">Max 50 characters</p>
             </div>
@@ -239,7 +344,7 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
               <Input
                 placeholder="Optional description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={handleDescriptionChange}
               />
             </div>
           </div>
@@ -253,57 +358,14 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
             </div>
 
             {steps.map((step, idx) => (
-              <div key={idx} className="border rounded-md p-3 space-y-2">
-                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                  <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 hidden sm:block" />
-                  <span className="text-xs font-medium text-muted-foreground shrink-0">#{idx + 1}</span>
-                  <Input
-                    className="flex-1 min-w-0 basis-full sm:basis-0"
-                    placeholder="Step title *"
-                    value={step.title}
-                    onChange={(e) => updateStep(idx, "title", e.target.value)}
-                  />
-                  <Select
-                    value={step.type}
-                    onValueChange={(v) => updateStep(idx, "type", v)}
-                  >
-                    <SelectTrigger className="w-28 shrink-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TASK_TYPES.map((t) => (
-                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="flex items-center gap-1 w-24 shrink-0">
-                    <Input
-                      type="number"
-                      min={0}
-                      className="w-16 text-center"
-                      value={step.offsetDays}
-                      onChange={(e) => updateStep(idx, "offsetDays", Number(e.target.value))}
-                    />
-                    <span className="text-xs text-muted-foreground">d</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 text-destructive"
-                    disabled={steps.length <= 1}
-                    onClick={() => removeStep(idx)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Textarea
-                  className="text-sm min-h-0 h-8 resize-none"
-                  placeholder="Optional notes"
-                  value={step.notes}
-                  onChange={(e) => updateStep(idx, "notes", e.target.value)}
-                />
-              </div>
+              <StepRow
+                key={idx}
+                step={step}
+                index={idx}
+                totalSteps={steps.length}
+                onUpdate={updateStep}
+                onRemove={removeStep}
+              />
             ))}
           </div>
         </div>
@@ -328,9 +390,12 @@ function SequenceCard({
   onDelete,
 }: {
   sequence: TaskSequence;
-  onApply: () => void;
-  onDelete: () => void;
+  onApply: (seq: TaskSequence) => void;
+  onDelete: (seq: TaskSequence) => void;
 }) {
+  const handleApply = useCallback(() => onApply(sequence), [onApply, sequence]);
+  const handleDelete = useCallback(() => onDelete(sequence), [onDelete, sequence]);
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -363,14 +428,14 @@ function SequenceCard({
         </div>
 
         <div className="flex gap-2 pt-1">
-          <Button size="sm" className="flex-1" onClick={onApply}>
+          <Button size="sm" className="flex-1" onClick={handleApply}>
             <PlayCircle className="h-4 w-4 mr-1" /> Apply
           </Button>
           <Button
             size="sm"
             variant="outline"
             className="text-destructive hover:text-destructive"
-            onClick={onDelete}
+            onClick={handleDelete}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -388,7 +453,12 @@ export default function TaskSequencesPage() {
   const [applyTarget, setApplyTarget] = useState<TaskSequence | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TaskSequence | null>(null);
 
-  function handleDelete() {
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
+  const handleCloseApply = useCallback(() => setApplyTarget(null), []);
+  const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
+
+  const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteSeq.mutate(deleteTarget.id, {
       onSuccess: () => {
@@ -397,7 +467,15 @@ export default function TaskSequencesPage() {
       },
       onError: () => toast.error("Failed to delete sequence"),
     });
-  }
+  }, [deleteTarget, deleteSeq]);
+
+  const handleApplySequence = useCallback((seq: TaskSequence) => {
+    setApplyTarget(seq);
+  }, []);
+
+  const handleDeleteSequence = useCallback((seq: TaskSequence) => {
+    setDeleteTarget(seq);
+  }, []);
 
   return (
     <PageWrapper title="Task Sequences" subtitle="Pre-built task chains for repeatable workflows">
@@ -406,7 +484,7 @@ export default function TaskSequencesPage() {
           <ListChecks className="h-5 w-5 shrink-0" />
           <span className="text-sm truncate">{sequences?.length ?? 0} sequence{sequences?.length !== 1 ? "s" : ""}</span>
         </div>
-        <Button size="sm" className="shrink-0" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" className="shrink-0" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" /> New Sequence
         </Button>
       </div>
@@ -423,27 +501,27 @@ export default function TaskSequencesPage() {
             <SequenceCard
               key={seq.id}
               sequence={seq}
-              onApply={() => setApplyTarget(seq)}
-              onDelete={() => setDeleteTarget(seq)}
+              onApply={handleApplySequence}
+              onDelete={handleDeleteSequence}
             />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-3">
           <ListChecks className="h-10 w-10 text-muted-foreground/50" />
           <p className="text-muted-foreground">No sequences yet.</p>
-          <Button variant="outline" onClick={() => setCreateOpen(true)}>
+          <Button variant="outline" onClick={handleOpenCreate}>
             <Plus className="h-4 w-4 mr-1" /> Create your first sequence
           </Button>
         </div>
       )}
 
-      {createOpen && <CreateSequenceDialog onClose={() => setCreateOpen(false)} />}
+      {createOpen && <CreateSequenceDialog onClose={handleCloseCreate} />}
       {applyTarget && (
-        <ApplyDialog sequence={applyTarget} onClose={() => setApplyTarget(null)} />
+        <ApplyDialog sequence={applyTarget} onClose={handleCloseApply} />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete sequence?</AlertDialogTitle>

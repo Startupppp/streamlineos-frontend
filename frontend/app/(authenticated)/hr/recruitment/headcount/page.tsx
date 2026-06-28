@@ -120,8 +120,16 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
 
   const isPending = create.isPending || update.isPending;
 
+  function handleRoleChange(e: React.ChangeEvent<HTMLInputElement>) { setRole(e.target.value); }
+  function handleLevelChange(e: React.ChangeEvent<HTMLInputElement>) { setLevel(e.target.value); }
+  function handleTargetDateChange(e: React.ChangeEvent<HTMLInputElement>) { setTargetDate(e.target.value); }
+  function handleJustificationChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setJustification(e.target.value); }
+  function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
+  function handleSaveDraft() { handleSubmit("DRAFT"); }
+  function handleSubmitForApproval() { handleSubmit("SUBMITTED"); }
+
   return (
-    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>{initial ? "Edit" : "New"} Headcount Request</SheetTitle>
@@ -130,11 +138,11 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
         <div className="py-4 space-y-3">
           <div className="space-y-1.5">
             <Label>Role <span className="text-destructive">*</span></Label>
-            <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Senior Software Engineer" />
+            <Input value={role} onChange={handleRoleChange} placeholder="e.g. Senior Software Engineer" />
           </div>
           <div className="space-y-1.5">
             <Label>Level</Label>
-            <Input value={level} onChange={(e) => setLevel(e.target.value)} placeholder="e.g. L4, Senior, Lead" />
+            <Input value={level} onChange={handleLevelChange} placeholder="e.g. L4, Senior, Lead" />
           </div>
           <div className="space-y-1.5">
             <Label>Department</Label>
@@ -149,24 +157,24 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
           </div>
           <div className="space-y-1.5">
             <Label>Target Start Date</Label>
-            <Input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} />
+            <Input type="date" value={targetDate} onChange={handleTargetDateChange} />
           </div>
           <div className="space-y-1.5">
             <Label>Justification</Label>
             <Textarea
               rows={4}
               value={justification}
-              onChange={(e) => setJustification(e.target.value)}
+              onChange={handleJustificationChange}
               placeholder="Why is this hire needed?"
             />
           </div>
         </div>
         <SheetFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={onClose} disabled={isPending} className="flex-1">Cancel</Button>
-          <Button variant="secondary" onClick={() => handleSubmit("DRAFT")} disabled={isPending} className="flex-1">
+          <Button variant="secondary" onClick={handleSaveDraft} disabled={isPending} className="flex-1">
             Save Draft
           </Button>
-          <Button onClick={() => handleSubmit("SUBMITTED")} disabled={isPending} className="flex-1">
+          <Button onClick={handleSubmitForApproval} disabled={isPending} className="flex-1">
             {isPending ? "Saving..." : "Submit for Approval"}
           </Button>
         </SheetFooter>
@@ -193,8 +201,12 @@ function RejectDialog({ requestId, onClose }: RejectDialogProps) {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
+  function handleReasonChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setReason(e.target.value); }
+  function handleDialogOpenChange(v: boolean) { if (!v) onClose(); }
+  function handleRejectClick() { reject.mutate(); }
+
   return (
-    <AlertDialog open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <AlertDialog open onOpenChange={handleDialogOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Reject Request</AlertDialogTitle>
@@ -203,14 +215,14 @@ function RejectDialog({ requestId, onClose }: RejectDialogProps) {
               rows={3}
               placeholder="Reason for rejection (optional)"
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={handleReasonChange}
               className="mt-2"
             />
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={() => reject.mutate()} disabled={reject.isPending}>
+          <AlertDialogAction onClick={handleRejectClick} disabled={reject.isPending}>
             {reject.isPending ? "Rejecting..." : "Reject"}
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -234,6 +246,11 @@ function RequestCard({
   onReject: (id: number) => void;
   onCreateJob: (id: number) => void;
 }) {
+  function handleEdit() { onEdit(req); }
+  function handleApprove() { onApprove(req.id); }
+  function handleReject() { onReject(req.id); }
+  function handleCreateJob() { onCreateJob(req.id); }
+
   return (
     <Card className="shadow-sm">
       <CardContent className="pt-4 pb-3 space-y-2.5">
@@ -260,16 +277,16 @@ function RequestCard({
         )}
         <div className="flex flex-wrap gap-2 pt-1">
           {req.status === "DRAFT" && (
-            <Button size="sm" variant="outline" onClick={() => onEdit(req)}>Edit</Button>
+            <Button size="sm" variant="outline" onClick={handleEdit}>Edit</Button>
           )}
           {isHr && req.status === "SUBMITTED" && (
             <>
-              <Button size="sm" onClick={() => onApprove(req.id)}>Approve</Button>
-              <Button size="sm" variant="destructive" onClick={() => onReject(req.id)}>Reject</Button>
+              <Button size="sm" onClick={handleApprove}>Approve</Button>
+              <Button size="sm" variant="destructive" onClick={handleReject}>Reject</Button>
             </>
           )}
           {isHr && req.status === "APPROVED" && !req.linkedJobPostingId && (
-            <Button size="sm" onClick={() => onCreateJob(req.id)}>Create Job Posting</Button>
+            <Button size="sm" onClick={handleCreateJob}>Create Job Posting</Button>
           )}
         </div>
       </CardContent>
@@ -328,6 +345,11 @@ export default function HeadcountPage() {
     setEditingRequest(null);
   }, []);
 
+  const handleApprove = useCallback((id: number) => { approve.mutate(id); }, [approve]);
+  const handleCreateJob = useCallback((id: number) => { createJob.mutate(id); }, [createJob]);
+  const handleReject = useCallback((id: number) => { setRejectingId(id); }, []);
+  const handleCloseRejectDialog = useCallback(() => { setRejectingId(null); }, []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests">
@@ -367,9 +389,9 @@ export default function HeadcountPage() {
               req={req}
               isHr={isHr}
               onEdit={handleEdit}
-              onApprove={(id) => approve.mutate(id)}
-              onReject={(id) => setRejectingId(id)}
-              onCreateJob={(id) => createJob.mutate(id)}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onCreateJob={handleCreateJob}
             />
           ))}
         </div>
@@ -379,7 +401,7 @@ export default function HeadcountPage() {
         <RequestSheet initial={editingRequest} onClose={handleCloseSheet} />
       )}
       {rejectingId !== null && (
-        <RejectDialog requestId={rejectingId} onClose={() => setRejectingId(null)} />
+        <RejectDialog requestId={rejectingId} onClose={handleCloseRejectDialog} />
       )}
     </PageWrapper>
   );

@@ -65,6 +65,14 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
     });
   }, []);
 
+  const handleCopyIframe = useCallback(() => {
+    copy(iframeSnippet, setCopiedIframe);
+  }, [copy, iframeSnippet]);
+
+  const handleCopyJs = useCallback(() => {
+    copy(jsSnippet, setCopiedJs);
+  }, [copy, jsSnippet]);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
@@ -86,7 +94,7 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
                 size="icon"
                 variant="ghost"
                 className="absolute top-2 right-2"
-                onClick={() => copy(iframeSnippet, setCopiedIframe)}
+                onClick={handleCopyIframe}
               >
                 {copiedIframe ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
               </Button>
@@ -103,7 +111,7 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
                 size="icon"
                 variant="ghost"
                 className="absolute top-2 right-2"
-                onClick={() => copy(jsSnippet, setCopiedJs)}
+                onClick={handleCopyJs}
               >
                 {copiedJs ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
               </Button>
@@ -135,14 +143,14 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
   const update = useUpdateWebLeadForm();
   const isPending = create.isPending || update.isPending;
 
-  const addField = () => {
+  const addField = useCallback(() => {
     setFields((prev) => [
       ...prev,
       { name: `field_${prev.length + 1}`, label: "", type: "text", required: false },
     ]);
-  };
+  }, []);
 
-  const updateField = (index: number, patch: Partial<WebLeadFormField>) => {
+  const updateField = useCallback((index: number, patch: Partial<WebLeadFormField>) => {
     setFields((prev) =>
       prev.map((f, i) => {
         if (i !== index) return f;
@@ -151,13 +159,13 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
         return updated;
       })
     );
-  };
+  }, []);
 
-  const removeField = (index: number) => {
+  const removeField = useCallback((index: number) => {
     setFields((prev) => prev.filter((_, i) => i !== index));
-  };
+  }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!name.trim()) {
       toast.error("Form name is required");
       return;
@@ -176,11 +184,11 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
     } catch {
       toast.error("Failed to save form");
     }
-  };
+  }, [name, description, fields, submitMessage, isActive, existing, update, create, onClose]);
 
-  const handleOpenChange = (o: boolean) => {
+  const handleOpenChange = useCallback((o: boolean) => {
     if (!o) onClose();
-  };
+  }, [onClose]);
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -289,12 +297,17 @@ function WebFormCard({ form }: { form: WebLeadForm }) {
   const [editOpen, setEditOpen] = useState(false);
   const deleteForm = useDeleteWebLeadForm();
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     deleteForm.mutate(form.id, {
       onSuccess: () => toast.success("Form deleted"),
       onError: () => toast.error("Failed to delete form"),
     });
-  };
+  }, [deleteForm, form.id]);
+
+  const handleOpenEmbed = useCallback(() => setEmbedOpen(true), []);
+  const handleOpenEdit = useCallback(() => setEditOpen(true), []);
+  const handleCloseEmbed = useCallback(() => setEmbedOpen(false), []);
+  const handleCloseEdit = useCallback(() => setEditOpen(false), []);
 
   return (
     <>
@@ -318,10 +331,10 @@ function WebFormCard({ form }: { form: WebLeadForm }) {
           </div>
 
           <div className="flex flex-wrap gap-2 pt-1">
-            <Button size="sm" variant="outline" onClick={() => setEmbedOpen(true)}>
+            <Button size="sm" variant="outline" onClick={handleOpenEmbed}>
               <Globe className="h-3.5 w-3.5 mr-1" /> Get Embed Code
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setEditOpen(true)}>
+            <Button size="sm" variant="ghost" onClick={handleOpenEdit}>
               <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
             </Button>
             <AlertDialog>
@@ -349,8 +362,8 @@ function WebFormCard({ form }: { form: WebLeadForm }) {
         </CardContent>
       </Card>
 
-      <EmbedDialog form={form} open={embedOpen} onClose={() => setEmbedOpen(false)} />
-      <FormBuilderSheet open={editOpen} onClose={() => setEditOpen(false)} existing={form} />
+      <EmbedDialog form={form} open={embedOpen} onClose={handleCloseEmbed} />
+      <FormBuilderSheet open={editOpen} onClose={handleCloseEdit} existing={form} />
     </>
   );
 }
@@ -398,6 +411,7 @@ export default function WebFormsPage() {
   const totalSubmissions = forms.reduce((sum, f) => sum + (f.totalSubmissions ?? 0), 0);
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   return (
@@ -450,7 +464,7 @@ export default function WebFormsPage() {
         </>
       )}
 
-      <FormBuilderSheet open={createOpen} onClose={() => setCreateOpen(false)} />
+      <FormBuilderSheet open={createOpen} onClose={handleCloseCreate} />
     </PageWrapper>
   );
 }

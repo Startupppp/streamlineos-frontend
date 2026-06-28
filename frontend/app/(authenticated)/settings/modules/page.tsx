@@ -101,7 +101,7 @@ function ModulesContent() {
   );
 
   const handleRetry = useCallback(() => {
-    refetch();
+    void refetch();
   }, [refetch]);
 
   return (

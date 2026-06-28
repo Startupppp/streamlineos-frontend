@@ -26,6 +26,8 @@ export default function ReorderReportPage() {
 
   const rows = query.data ?? [];
 
+  function handleRetry() { void query.refetch(); }
+
   const outOfStock = rows.filter((r) => r.availableQty <= 0).length;
   const critical = rows.filter((r) => r.availableQty > 0 && r.reorderPoint > 0 && r.availableQty / r.reorderPoint <= 0.25).length;
   const low = rows.filter((r) => r.availableQty > 0 && r.reorderPoint > 0 && r.availableQty / r.reorderPoint > 0.25).length;
@@ -37,7 +39,7 @@ export default function ReorderReportPage() {
       subtitle="Products that have fallen at or below their reorder point and need restocking."
     >
       {query.isLoading && <LoadingState variant="table" rows={8} />}
-      {query.error && <ErrorState description={query.error.message} />}
+      {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
 
       {!query.isLoading && !query.error && rows.length === 0 && (
         <EmptyState

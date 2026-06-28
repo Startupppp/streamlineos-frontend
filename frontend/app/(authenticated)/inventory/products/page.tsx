@@ -90,6 +90,10 @@ export default function ProductsPage() {
     setPage(nextPage);
   }
 
+  function handleRetry(): void {
+    void productsQuery.refetch();
+  }
+
   return (
     <PageWrapper
       eyebrow="Inventory · Products"
@@ -150,7 +154,7 @@ export default function ProductsPage() {
                 ? "We couldn't reach the products service. Check your connection and try again."
                 : productsQuery.error.message
             }
-            onRetry={() => productsQuery.refetch()}
+            onRetry={handleRetry}
           />
         ) : items.length === 0 ? (
           <EmptyState

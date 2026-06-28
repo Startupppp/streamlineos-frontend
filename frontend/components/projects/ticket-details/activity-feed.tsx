@@ -102,7 +102,11 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
   );
 }
 
-function CommentItem({ comment }: { comment: TicketComment }) {
+interface CommentItemProps {
+  comment: TicketComment;
+}
+
+function CommentItem({ comment }: CommentItemProps) {
   const user = comment.user as TicketUser | undefined;
   const timeAgo = comment.createdAt
     ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })

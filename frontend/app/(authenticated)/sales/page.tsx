@@ -19,7 +19,7 @@ import {
 } from "@/lib/api/hooks";
 import { useSession } from "next-auth/react";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { safeMax, calcPercent } from "@/lib/format-utils";
+import { safeMax } from "@/lib/format-utils";
 import { SalesKpiCards } from "@/features/sales/sales-kpi-cards";
 import { SalesPipelineCharts } from "@/features/sales/sales-pipeline-charts";
 import { SalesLeaderboard } from "@/features/sales/sales-leaderboard";
@@ -170,38 +170,40 @@ export default function SalesDashboardPage() {
 
   if (isLoading || !salesStats) {
     return (
-      <div className="space-y-4">
-        <div className="space-y-1">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-72" />
-        </div>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-7 w-20" />
-                    <Skeleton className="h-3 w-16" />
+      <PageWrapper title="Sales Dashboard" subtitle="Pipeline overview and sales performance metrics">
+        <div className="space-y-4 pb-2">
+          <div className="space-y-1">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-7 w-20" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-12 w-12 rounded-lg" />
                   </div>
-                  <Skeleton className="h-12 w-12 rounded-lg" />
-                </div>
-              </CardContent>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
+            <Card className="lg:col-span-7">
+              <CardHeader><Skeleton className="h-5 w-36" /></CardHeader>
+              <CardContent><Skeleton className="h-[240px] w-full" /></CardContent>
             </Card>
-          ))}
+            <Card className="lg:col-span-5">
+              <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
+              <CardContent><Skeleton className="h-[240px] w-full" /></CardContent>
+            </Card>
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
-          <Card className="lg:col-span-7">
-            <CardHeader><Skeleton className="h-5 w-36" /></CardHeader>
-            <CardContent><Skeleton className="h-[240px] w-full" /></CardContent>
-          </Card>
-          <Card className="lg:col-span-5">
-            <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
-            <CardContent><Skeleton className="h-[240px] w-full" /></CardContent>
-          </Card>
-        </div>
-      </div>
+      </PageWrapper>
     );
   }
 

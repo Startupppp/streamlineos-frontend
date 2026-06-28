@@ -29,6 +29,7 @@ import {
 } from "@/lib/api/hooks/hr/recruitment";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 
 let keyCounter = 0;
 function nextKey() { return `c-${++keyCounter}`; }
@@ -51,6 +52,16 @@ interface CriterionRowProps {
 }
 
 function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRowProps) {
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => onUpdate(criterion._key, "name", e.target.value),
+    [onUpdate, criterion._key],
+  );
+  const handleWeightChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => onUpdate(criterion._key, "weight", Number(e.target.value)),
+    [onUpdate, criterion._key],
+  );
+  const handleRemoveClick = useCallback(() => onRemove(criterion._key), [onRemove, criterion._key]);
+
   return (
     <div className="flex items-center gap-2 group">
       <svg className="h-4 w-4 text-muted-foreground/40 shrink-0 cursor-grab" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -62,7 +73,7 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
         className="flex-1 h-8 text-xs"
         placeholder="Criterion name (e.g. Technical Skills)"
         value={criterion.name}
-        onChange={(e) => onUpdate(criterion._key, "name", e.target.value)}
+        onChange={handleNameChange}
       />
       <div className="flex items-center gap-1.5 shrink-0">
         <Label className="text-[10px] text-muted-foreground">Weight</Label>
@@ -72,14 +83,14 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
           min={1}
           max={10}
           value={criterion.weight}
-          onChange={(e) => onUpdate(criterion._key, "weight", Number(e.target.value))}
+          onChange={handleWeightChange}
         />
       </div>
       <Button
         variant="ghost"
         size="icon"
         className={cn("h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity", !canRemove && "invisible")}
-        onClick={() => onRemove(criterion._key)}
+        onClick={handleRemoveClick}
         aria-label="Remove criterion"
         disabled={!canRemove}
         type="button"
@@ -135,6 +146,9 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
     setCriteria((prev) => [...prev, { _key: nextKey(), name: "", weight: 2 }]);
   }, []);
 
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) { setName(e.target.value); }
+  function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
+
   const handleSubmit = useCallback(() => {
     if (!name.trim()) { toast.error("Template name is required"); return; }
     const filled = criteria.filter((c) => c.name.trim());
@@ -161,7 +175,7 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
   }, [name, criteria, editTemplate, create, update, onClose]);
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>{editTemplate ? "Edit Template" : "New Scorecard Template"}</SheetTitle>
@@ -173,7 +187,7 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
               className="mt-1"
               placeholder="e.g. Engineering Round 1, HR Screen"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
             />
           </div>
           <div className="space-y-2">
@@ -286,7 +300,7 @@ function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
 }
 
 export default function ScorecardTemplatesPage() {
-  const { data: templates, isLoading } = useScorecardTemplates();
+  const { data: templates, isLoading, isError, refetch } = useScorecardTemplates();
   const deleteTemplate = useDeleteScorecardTemplate();
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -320,6 +334,8 @@ export default function ScorecardTemplatesPage() {
     if (!open) setDeleteId(null);
   }, []);
 
+  function handleRetry() { void refetch(); }
+
   return (
     <>
       <PageWrapper
@@ -334,7 +350,9 @@ export default function ScorecardTemplatesPage() {
           </Button>
         }
       >
-        {isLoading ? (
+        {isError ? (
+          <ErrorState description="Failed to load scorecard templates" onRetry={handleRetry} />
+        ) : isLoading ? (
           <div className="grid gap-4 sm:grid-cols-2">
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36 w-full rounded-xl" />)}
           </div>

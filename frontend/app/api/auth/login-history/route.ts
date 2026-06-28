@@ -9,5 +9,5 @@ export async function GET(req: NextRequest) {
   const token = await makeBackendToken(session);
   if (!token) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   const search = req.nextUrl.search;
-  return proxyToBackend(req, `/api/auth/login-history${search}`, { method: "GET", auth: token });
+  return proxyToBackend(req, `/me/login-history${search}`, { method: "GET", auth: token });
 }

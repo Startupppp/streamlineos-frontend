@@ -1,34 +1,16 @@
-import { type NextRequest } from "next/server";
-import { withAuth, ok, err } from "@/lib/api/helpers";
-import { verifyTotpToken } from "@/lib/totp";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { z } from "zod";
-import { invalidateUserSession } from "@/lib/auth";
-import { decrypt } from "@/lib/encryption";
-
-const schema = z.object({ token: z.string().length(6) });
+import { NextResponse, type NextRequest } from "next/server";
+import { auth, invalidateUserSession } from "@/lib/auth";
+import { proxyToBackend } from "@/lib/api/backend-proxy";
+import { makeBackendToken } from "@/lib/api/make-backend-token";
 
 export async function POST(req: NextRequest) {
-  return withAuth(async (session) => {
-    let body: z.infer<typeof schema>;
-    try {
-      const json = await req.json();
-      body = schema.parse(json);
-    } catch {
-      return err("Invalid request", 400);
-    }
-
-    const user = await db.query.users.findFirst({ where: eq(users.id, session.user.id) });
-    if (!user?.totpEnabled || !user.totpSecret) return err("MFA not enabled", 400);
-
-    const valid = verifyTotpToken(body.token, decrypt(user.totpSecret));
-    if (!valid) return err("Invalid token", 400);
-
-    await db.update(users).set({ totpEnabled: false, totpSecret: null }).where(eq(users.id, session.user.id));
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const token = await makeBackendToken(session);
+  if (!token) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  const response = await proxyToBackend(req, "/auth/mfa/disable", { method: "POST", auth: token });
+  if (response.ok) {
     await invalidateUserSession(session.user.id);
-
-    return ok({ disabled: true });
-  });
+  }
+  return response;
 }

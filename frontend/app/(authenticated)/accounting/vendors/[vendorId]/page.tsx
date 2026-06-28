@@ -161,6 +161,7 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
           />
         ) : lines.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
+            <Receipt className="h-10 w-10 text-muted-foreground/40 mb-3" />
             <h3 className="text-sm font-semibold text-foreground">No ledger entries</h3>
             <p className="mt-1 text-sm text-muted-foreground max-w-xs">
               No accounts-payable journal lines for this vendor in the selected range.

@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +15,7 @@ import { ReviewSheet } from "@/features/hr/document-review/review-sheet";
 
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 function useDocReviewSummary() {
   return useQuery<EmployeeDocSummary[]>({
@@ -24,9 +25,8 @@ function useDocReviewSummary() {
 }
 
 export default function DocumentReviewPage() {
-  const ability = useAbility();
-  const canReview = ability.can("manage", "hr:onboarding");
-  const { data: summary, isLoading } = useDocReviewSummary();
+  const canReview = useCan("hr:employees:manage");
+  const { data: summary, isLoading, isError, refetch } = useDocReviewSummary();
 
   const [reviewUserId, setReviewUserId] = useState<string | null>(null);
   const [reviewUserName, setReviewUserName] = useState<string | null>(null);
@@ -49,6 +49,8 @@ export default function DocumentReviewPage() {
     return list;
   }, [summary, searchQuery, statusFilter]);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   }, []);
@@ -62,6 +64,14 @@ export default function DocumentReviewPage() {
     setReviewUserId(null);
     setReviewUserName(null);
   }, []);
+
+  if (isError) {
+    return (
+      <PageWrapper title="Document Review" subtitle="Review employee onboarding documents">
+        <ErrorState title="Failed to load document review data" onRetry={handleRetry} />
+      </PageWrapper>
+    );
+  }
 
   if (isLoading) {
     return (

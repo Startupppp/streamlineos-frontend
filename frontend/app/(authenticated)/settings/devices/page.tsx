@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Table,
   TableBody,
@@ -17,6 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+type Device = NonNullable<ReturnType<typeof useDevices>["data"]>[number];
 
 function DevicesSkeleton() {
   return (
@@ -30,15 +33,79 @@ function DevicesSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+    <div className="flex flex-col items-center justify-center flex-1 min-h-[60vh] gap-3 text-muted-foreground">
       <Laptop className="h-10 w-10 opacity-30" />
       <p className="text-sm">No devices found</p>
     </div>
   );
 }
 
+function DeviceRow({
+  device,
+  onTrust,
+  onRemove,
+  isTrustPending,
+  isRemovePending,
+}: {
+  device: Device;
+  onTrust: (id: string) => void;
+  onRemove: (id: string) => void;
+  isTrustPending: boolean;
+  isRemovePending: boolean;
+}) {
+  function handleTrust() {
+    onTrust(device.id);
+  }
+
+  function handleRemove() {
+    onRemove(device.id);
+  }
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{device.browser ?? "Unknown"}</TableCell>
+      <TableCell className="text-muted-foreground">{device.os ?? "—"}</TableCell>
+      <TableCell>
+        {device.trusted ? (
+          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200/60">
+            <ShieldCheck className="h-3 w-3 mr-1" />
+            Trusted
+          </Badge>
+        ) : (
+          <Badge variant="outline">Untrusted</Badge>
+        )}
+      </TableCell>
+      <TableCell className="text-muted-foreground">
+        {format(new Date(device.lastSeenAt), "MMM d, yyyy HH:mm")}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-1">
+          {!device.trusted && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleTrust}
+              disabled={isTrustPending}
+            >
+              Trust
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRemove}
+            disabled={isRemovePending}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function DevicesPage() {
-  const { data: devices, isLoading } = useDevices();
+  const { data: devices, isLoading, isError, refetch } = useDevices();
   const trustDevice = useTrustDevice();
   const removeDevice = useRemoveDevice();
 
@@ -56,6 +123,10 @@ export default function DevicesPage() {
     });
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
     <PageWrapper
       title="Trusted Devices"
@@ -63,6 +134,13 @@ export default function DevicesPage() {
     >
       {isLoading ? (
         <DevicesSkeleton />
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load devices"
+          description="Something went wrong while fetching your trusted devices."
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       ) : !devices || devices.length === 0 ? (
         <EmptyState />
       ) : (
@@ -78,45 +156,14 @@ export default function DevicesPage() {
           </TableHeader>
           <TableBody>
             {devices.map((d) => (
-              <TableRow key={d.id}>
-                <TableCell className="font-medium">{d.browser ?? "Unknown"}</TableCell>
-                <TableCell className="text-muted-foreground">{d.os ?? "—"}</TableCell>
-                <TableCell>
-                  {d.trusted ? (
-                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200/60">
-                      <ShieldCheck className="h-3 w-3 mr-1" />
-                      Trusted
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">Untrusted</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {format(new Date(d.lastSeenAt), "MMM d, yyyy HH:mm")}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    {!d.trusted && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleTrust(d.id)}
-                        disabled={trustDevice.isPending}
-                      >
-                        Trust
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemove(d.id)}
-                      disabled={removeDevice.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
+              <DeviceRow
+                key={d.id}
+                device={d}
+                onTrust={handleTrust}
+                onRemove={handleRemove}
+                isTrustPending={trustDevice.isPending}
+                isRemovePending={removeDevice.isPending}
+              />
             ))}
           </TableBody>
         </Table>

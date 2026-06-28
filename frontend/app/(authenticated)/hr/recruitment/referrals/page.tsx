@@ -51,8 +51,11 @@ function BonusSheet({ referral, onClose }: BonusSheetProps) {
     }
   };
 
+  function handleBonusAmountChange(e: React.ChangeEvent<HTMLInputElement>) { setBonusAmount(e.target.value); }
+  function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
+
   return (
-    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Mark Bonus Paid</SheetTitle>
@@ -68,7 +71,7 @@ function BonusSheet({ referral, onClose }: BonusSheetProps) {
               type="number"
               min={1}
               value={bonusAmount}
-              onChange={(e) => setBonusAmount(e.target.value)}
+              onChange={handleBonusAmountChange}
               placeholder="e.g. 25000"
             />
           </div>
@@ -81,6 +84,79 @@ function BonusSheet({ referral, onClose }: BonusSheetProps) {
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+interface ReferralCardProps {
+  referral: CandidateReferral;
+  onStatusChange: (id: number, status: ReferralStatus) => Promise<void>;
+  onMarkBonus: (referral: CandidateReferral) => void;
+  isUpdating: boolean;
+}
+
+function ReferralCard({ referral, onStatusChange, onMarkBonus, isUpdating }: ReferralCardProps) {
+  const cfg = STATUS_CONFIG[referral.status];
+
+  function handleStartReview() { void onStatusChange(referral.id, "REVIEWING"); }
+  function handleMarkHired() { void onStatusChange(referral.id, "HIRED"); }
+  function handleReject() { void onStatusChange(referral.id, "REJECTED"); }
+  function handleMarkBonus() { onMarkBonus(referral); }
+
+  return (
+    <Card className="shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-sm">
+                {referral.candidate?.firstName} {referral.candidate?.lastName}
+              </span>
+              <Badge variant={cfg.variant} className="text-xs">{cfg.label}</Badge>
+              {referral.jobPosting && (
+                <Badge variant="outline" className="text-xs">{referral.jobPosting.title}</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground flex-wrap">
+              <span>{referral.candidate?.email}</span>
+              {referral.referrer && <span>Referred by {referral.referrer.name}</span>}
+              {referral.relationship && <span className="capitalize">{referral.relationship}</span>}
+              <span>{format(new Date(referral.createdAt), "MMM d, yyyy")}</span>
+              {referral.bonusPaidAt && (
+                <span className="text-green-600">
+                  Bonus paid {format(new Date(referral.bonusPaidAt), "MMM d, yyyy")}
+                  {referral.bonusAmount && ` · ₹${parseFloat(referral.bonusAmount).toLocaleString()}`}
+                </span>
+              )}
+            </div>
+            {referral.notes && (
+              <p className="text-xs text-muted-foreground mt-1 truncate">{referral.notes}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {referral.status === "SUBMITTED" && (
+              <Button variant="outline" size="sm" onClick={handleStartReview} disabled={isUpdating}>
+                Start Review
+              </Button>
+            )}
+            {referral.status === "REVIEWING" && (
+              <>
+                <Button variant="outline" size="sm" onClick={handleMarkHired} disabled={isUpdating}>
+                  Mark Hired
+                </Button>
+                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={handleReject} disabled={isUpdating}>
+                  Reject
+                </Button>
+              </>
+            )}
+            {referral.status === "HIRED" && referral.bonusEligible && !referral.bonusPaidAt && (
+              <Button size="sm" onClick={handleMarkBonus}>
+                Mark Bonus Paid
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -97,6 +173,8 @@ export default function ReferralsHRPage() {
       toast.error(getErrorMessage(e));
     }
   }, [updateMutation]);
+
+  function handleCloseBonusSheet() { setBonusReferral(null); }
 
   if (isLoading) {
     return (
@@ -121,86 +199,20 @@ export default function ReferralsHRPage() {
         />
       ) : (
         <div className="space-y-3">
-          {referrals.map((referral) => {
-            const cfg = STATUS_CONFIG[referral.status];
-            return (
-              <Card key={referral.id} className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">
-                          {referral.candidate?.firstName} {referral.candidate?.lastName}
-                        </span>
-                        <Badge variant={cfg.variant} className="text-xs">{cfg.label}</Badge>
-                        {referral.jobPosting && (
-                          <Badge variant="outline" className="text-xs">{referral.jobPosting.title}</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground flex-wrap">
-                        <span>{referral.candidate?.email}</span>
-                        {referral.referrer && <span>Referred by {referral.referrer.name}</span>}
-                        {referral.relationship && <span className="capitalize">{referral.relationship}</span>}
-                        <span>{format(new Date(referral.createdAt), "MMM d, yyyy")}</span>
-                        {referral.bonusPaidAt && (
-                          <span className="text-green-600">
-                            Bonus paid {format(new Date(referral.bonusPaidAt), "MMM d, yyyy")}
-                            {referral.bonusAmount && ` · ₹${parseFloat(referral.bonusAmount).toLocaleString()}`}
-                          </span>
-                        )}
-                      </div>
-                      {referral.notes && (
-                        <p className="text-xs text-muted-foreground mt-1 truncate">{referral.notes}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {referral.status === "SUBMITTED" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleStatusChange(referral.id, "REVIEWING")}
-                          disabled={updateMutation.isPending}
-                        >
-                          Start Review
-                        </Button>
-                      )}
-                      {referral.status === "REVIEWING" && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleStatusChange(referral.id, "HIRED")}
-                            disabled={updateMutation.isPending}
-                          >
-                            Mark Hired
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleStatusChange(referral.id, "REJECTED")}
-                            disabled={updateMutation.isPending}
-                          >
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                      {referral.status === "HIRED" && referral.bonusEligible && !referral.bonusPaidAt && (
-                        <Button size="sm" onClick={() => setBonusReferral(referral)}>
-                          Mark Bonus Paid
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {referrals.map((referral) => (
+            <ReferralCard
+              key={referral.id}
+              referral={referral}
+              onStatusChange={handleStatusChange}
+              onMarkBonus={setBonusReferral}
+              isUpdating={updateMutation.isPending}
+            />
+          ))}
         </div>
       )}
 
       {bonusReferral && (
-        <BonusSheet referral={bonusReferral} onClose={() => setBonusReferral(null)} />
+        <BonusSheet referral={bonusReferral} onClose={handleCloseBonusSheet} />
       )}
     </PageWrapper>
   );

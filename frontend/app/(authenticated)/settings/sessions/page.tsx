@@ -10,6 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Table,
   TableBody,
@@ -18,6 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+type Session = NonNullable<ReturnType<typeof useSessions>["data"]>[number];
 
 function SessionsSkeleton() {
   return (
@@ -31,16 +34,70 @@ function SessionsSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+    <div className="flex flex-col items-center justify-center flex-1 min-h-[60vh] gap-3 text-muted-foreground">
       <Monitor className="h-10 w-10 opacity-30" />
       <p className="text-sm">No active sessions found</p>
     </div>
   );
 }
 
+function SessionRow({
+  session,
+  currentSessionId,
+  onRevoke,
+  isRevokePending,
+}: {
+  session: Session;
+  currentSessionId: string | undefined;
+  onRevoke: (id: string) => void;
+  isRevokePending: boolean;
+}) {
+  function handleRevoke() {
+    onRevoke(session.id);
+  }
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">
+        <div className="flex items-center gap-2">
+          <span className="truncate max-w-[200px]">
+            {session.userAgent ?? "Unknown device"}
+          </span>
+          {session.id === currentSessionId && (
+            <Badge variant="secondary" className="shrink-0 text-xs">
+              Current
+            </Badge>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-muted-foreground">
+        {session.ipAddress ?? "—"}
+      </TableCell>
+      <TableCell className="text-muted-foreground">
+        {format(new Date(session.lastActive), "MMM d, yyyy HH:mm")}
+      </TableCell>
+      <TableCell className="text-muted-foreground">
+        {format(new Date(session.createdAt), "MMM d, yyyy")}
+      </TableCell>
+      <TableCell>
+        {session.id !== currentSessionId && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRevoke}
+            disabled={isRevokePending}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function SessionsPage() {
   const { data: authSession } = useSession();
-  const { data: sessions, isLoading } = useSessions();
+  const { data: sessions, isLoading, isError, refetch } = useSessions();
   const revokeOne = useRevokeSession();
   const revokeAll = useRevokeAllSessions();
 
@@ -58,6 +115,10 @@ export default function SessionsPage() {
       onSuccess: () => toast.success("All other sessions revoked"),
       onError: (err) => toast.error(getApiError(err)),
     });
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   return (
@@ -78,6 +139,13 @@ export default function SessionsPage() {
     >
       {isLoading ? (
         <SessionsSkeleton />
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load sessions"
+          description="Something went wrong while fetching your active sessions."
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       ) : !sessions || sessions.length === 0 ? (
         <EmptyState />
       ) : (
@@ -93,41 +161,13 @@ export default function SessionsPage() {
           </TableHeader>
           <TableBody>
             {sessions.map((s) => (
-              <TableRow key={s.id}>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate max-w-[200px]">
-                      {s.userAgent ?? "Unknown device"}
-                    </span>
-                    {s.id === currentSessionId && (
-                      <Badge variant="secondary" className="shrink-0 text-xs">
-                        Current
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {s.ipAddress ?? "—"}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {format(new Date(s.lastActive), "MMM d, yyyy HH:mm")}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {format(new Date(s.createdAt), "MMM d, yyyy")}
-                </TableCell>
-                <TableCell>
-                  {s.id !== currentSessionId && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRevoke(s.id)}
-                      disabled={revokeOne.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
+              <SessionRow
+                key={s.id}
+                session={s}
+                currentSessionId={currentSessionId}
+                onRevoke={handleRevoke}
+                isRevokePending={revokeOne.isPending}
+              />
             ))}
           </TableBody>
         </Table>

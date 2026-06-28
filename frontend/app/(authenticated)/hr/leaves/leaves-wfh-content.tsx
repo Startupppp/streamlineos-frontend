@@ -31,12 +31,11 @@ import type {
 import { LeavesTabContent } from "./leaves-tab-content";
 import { WfhTabContent } from "./wfh-tab-content";
 import { LeaveApprovalsContent } from "./leave-approvals";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 export function LeavesWfhContent() {
   const { data: session } = useSession();
-  const ability = useAbility();
-  const isAdmin = ability.can("manage","hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const { data: contextData, isLoading: contextLoading } = useHrLeaveContext();
   const { data: myData, isLoading: myLoading } = useHrMyLeaveRequests();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -110,19 +110,20 @@ function BranchForm({
           <FormField
             control={form.control}
             name="code"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Code</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="e.g. MUM"
-                    {...field}
-                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              function handleCodeChange(e: ChangeEvent<HTMLInputElement>) {
+                field.onChange(e.target.value.toUpperCase());
+              }
+              return (
+                <FormItem>
+                  <FormLabel>Code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. MUM" {...field} onChange={handleCodeChange} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
           <FormField
             control={form.control}
@@ -370,6 +371,13 @@ export default function OrgBranchesPage() {
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
+  function makeRestoreHandler(branch: OrgBranch) { return () => handleRestore(branch); }
+  function makeArchiveHandler(branch: OrgBranch) { return () => handleArchive(branch); }
+  function makeSetEditingHandler(branch: OrgBranch) { return () => setEditing(branch); }
+  function makeSetDeletingHandler(branch: OrgBranch) { return () => setDeleting(branch); }
+  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
+  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
+
   return (
     <PageWrapper
       title="Branches"
@@ -450,19 +458,19 @@ export default function OrgBranchesPage() {
                   <div className="flex items-center gap-1">
                     {b.status === "ARCHIVED" ? (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => handleRestore(b)} title="Restore">
+                        <Button variant="ghost" size="sm" onClick={makeRestoreHandler(b)} title="Restore">
                           <RotateCcw className="h-4 w-4 text-blue-600" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setDeleting(b)} title="Delete permanently">
+                        <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(b)} title="Delete permanently">
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </>
                     ) : (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => setEditing(b)} title="Edit">
+                        <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(b)} title="Edit">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleArchive(b)} title="Archive">
+                        <Button variant="ghost" size="sm" onClick={makeArchiveHandler(b)} title="Archive">
                           <Archive className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </>
@@ -484,7 +492,7 @@ export default function OrgBranchesPage() {
         </SheetContent>
       </Sheet>
 
-      <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+      <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Edit Branch</SheetTitle>
@@ -513,7 +521,7 @@ export default function OrgBranchesPage() {
 
       <ConfirmDialog
         open={!!deleting}
-        onOpenChange={(o) => !o && setDeleting(null)}
+        onOpenChange={handleDeleteDialogOpenChange}
         title="Delete Branch"
         description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}

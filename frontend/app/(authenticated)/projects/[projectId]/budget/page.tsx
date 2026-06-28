@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,19 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
 
   const [editMode, setEditMode] = useState(false);
   const [newBudget, setNewBudget] = useState("");
+
+  function handleOpenEdit() {
+    setNewBudget(String(budget?.plannedBudget ?? ""));
+    setEditMode(true);
+  }
+
+  function handleCancelEdit() {
+    setEditMode(false);
+  }
+
+  function handleBudgetInputChange(e: ChangeEvent<HTMLInputElement>) {
+    setNewBudget(e.target.value);
+  }
 
   function handleSaveBudget() {
     const val = Number(newBudget);
@@ -57,19 +70,19 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
               min={0}
               className="w-36"
               value={newBudget}
-              onChange={(e) => setNewBudget(e.target.value)}
+              onChange={handleBudgetInputChange}
               placeholder={String(budget?.plannedBudget ?? "")}
             />
             <Button size="sm" onClick={handleSaveBudget} disabled={updateBudget.isPending}>
               {updateBudget.isPending ? "Saving…" : "Save"}
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setEditMode(false)}>Cancel</Button>
+            <Button size="sm" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
           </div>
         ) : (
           <Button
             size="sm"
             variant="outline"
-            onClick={() => { setNewBudget(String(budget?.plannedBudget ?? "")); setEditMode(true); }}
+            onClick={handleOpenEdit}
           >
             <Pencil className="h-4 w-4 mr-1" />
             {budget?.plannedBudget ? "Update Budget" : "Set Budget"}

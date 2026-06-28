@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useState, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useForm, useFieldArray, Controller, type UseFormRegister } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   useInvoices,
   useInvoiceStats,
@@ -63,11 +66,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { formatCurrencyFull } from "@/lib/format-utils";
-import type { InvoiceStatus } from "@/types/invoice";
-import type { Invoice } from "@/types/invoice";
+import type { InvoiceStatus, Invoice } from "@/types/invoice";
 
 const STATUS_CONFIG: Record<
-  string,
+  InvoiceStatus,
   { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof FileText }
 > = {
   DRAFT: { label: "Draft", variant: "secondary", icon: FileText },
@@ -272,7 +274,7 @@ interface InvoiceTableRowProps {
 }
 
 function InvoiceTableRow({ inv, onUpdateStatus, onDelete }: InvoiceTableRowProps) {
-  const config = STATUS_CONFIG[inv.status] ?? STATUS_CONFIG.DRAFT;
+  const config = STATUS_CONFIG[inv.status];
   const handleMarkSent = useCallback(() => onUpdateStatus(inv.id, "SENT"), [inv.id, onUpdateStatus]);
   const handleMarkPaid = useCallback(() => onUpdateStatus(inv.id, "PAID"), [inv.id, onUpdateStatus]);
   const handleMarkCancelled = useCallback(() => onUpdateStatus(inv.id, "CANCELLED"), [inv.id, onUpdateStatus]);
@@ -329,34 +331,74 @@ function InvoiceTableRow({ inv, onUpdateStatus, onDelete }: InvoiceTableRowProps
   );
 }
 
-interface LineItem {
-  description: string;
-  quantity: number;
-  rate: number;
-  amount: number;
+const dialogLineItemSchema = z.object({
+  description: z.string().min(1, "Description required"),
+  quantity: z.number().positive("Qty must be > 0"),
+  rate: z.number().nonnegative("Rate must be >= 0"),
+});
+
+const createInvoiceDialogSchema = z.object({
+  lineItems: z.array(dialogLineItemSchema).min(1, "Add at least one line item"),
+  taxRate: z.number().min(0).max(100),
+  discount: z.number().min(0),
+  dueDate: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type CreateInvoiceDialogValues = z.infer<typeof createInvoiceDialogSchema>;
+
+const DIALOG_DEFAULT_VALUES: CreateInvoiceDialogValues = {
+  lineItems: [{ description: "", quantity: 1, rate: 0 }],
+  taxRate: 18,
+  discount: 0,
+  dueDate: "",
+  notes: "",
+};
+
+interface DialogLineItemErrors {
+  description?: string;
+  quantity?: string;
+  rate?: string;
 }
 
-interface LineItemRowProps {
-  item: LineItem;
+interface DialogLineItemRowProps {
   idx: number;
-  onUpdate: (idx: number, field: keyof LineItem, value: string | number) => void;
-  onRemove: (idx: number) => void;
+  amount: number;
+  register: UseFormRegister<CreateInvoiceDialogValues>;
+  errors: DialogLineItemErrors;
   disabled: boolean;
+  onRemove: (idx: number) => void;
 }
 
-function LineItemRow({ item, idx, onUpdate, onRemove, disabled }: LineItemRowProps) {
-  const handleDescChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "description", e.target.value), [idx, onUpdate]);
-  const handleQtyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "quantity", Number(e.target.value)), [idx, onUpdate]);
-  const handleRateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "rate", Number(e.target.value)), [idx, onUpdate]);
-  const handleRemove = useCallback(() => onRemove(idx), [idx, onRemove]);
+function DialogLineItemRow({ idx, amount, register, errors, disabled, onRemove }: DialogLineItemRowProps) {
+  function handleRemove() {
+    onRemove(idx);
+  }
 
   return (
-    <div className="grid grid-cols-12 gap-2 items-center">
-      <Input className="col-span-5 h-9 text-sm" placeholder="Description" value={item.description} onChange={handleDescChange} />
-      <Input className="col-span-2 h-9 text-sm text-right" type="number" placeholder="Qty" value={item.quantity || ""} onChange={handleQtyChange} />
-      <Input className="col-span-2 h-9 text-sm text-right" type="number" placeholder="Rate" value={item.rate || ""} onChange={handleRateChange} />
-      <div className="col-span-2 text-sm font-medium text-right pr-1">{formatCurrencyFull(item.amount)}</div>
-      <Button variant="ghost" size="icon" className="col-span-1 h-8 w-8" onClick={handleRemove} disabled={disabled} aria-label="Remove line item">
+    <div className="grid grid-cols-12 gap-2 items-start">
+      <div className="col-span-5 space-y-1">
+        <Input className="h-9 text-sm" placeholder="Description" {...register(`lineItems.${idx}.description`)} />
+        {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
+      </div>
+      <div className="col-span-2 space-y-1">
+        <Input className="h-9 text-sm text-right" type="number" placeholder="Qty" {...register(`lineItems.${idx}.quantity`, { valueAsNumber: true })} />
+        {errors.quantity && <p className="text-xs text-destructive">{errors.quantity}</p>}
+      </div>
+      <div className="col-span-2 space-y-1">
+        <Input className="h-9 text-sm text-right" type="number" placeholder="Rate" {...register(`lineItems.${idx}.rate`, { valueAsNumber: true })} />
+        {errors.rate && <p className="text-xs text-destructive">{errors.rate}</p>}
+      </div>
+      <div className="col-span-2 text-sm font-medium text-right pr-1 pt-2">{formatCurrencyFull(amount)}</div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="col-span-1 h-8 w-8"
+        onClick={handleRemove}
+        disabled={disabled}
+        aria-label="Remove line item"
+      >
         <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
       </Button>
     </div>
@@ -365,114 +407,170 @@ function LineItemRow({ item, idx, onUpdate, onRemove, disabled }: LineItemRowPro
 
 function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const createInvoice = useCreateInvoice();
-  const [lineItems, setLineItems] = useState<LineItem[]>([{ description: "", quantity: 1, rate: 0, amount: 0 }]);
-  const [taxRate, setTaxRate] = useState(18);
-  const [discount, setDiscount] = useState(0);
-  const [dueDate, setDueDate] = useState("");
-  const [notes, setNotes] = useState("");
 
-  const updateLineItem = useCallback((idx: number, field: keyof LineItem, value: string | number) => {
-    setLineItems((prev) =>
-      prev.map((item, i) => {
-        if (i !== idx) return item;
-        const updated = { ...item, [field]: value };
-        if (field === "quantity" || field === "rate") {
-          updated.amount = Number(updated.quantity) * Number(updated.rate);
-        }
-        return updated;
-      })
-    );
-  }, []);
+  const { control, register, handleSubmit, watch, reset, formState: { errors } } = useForm<CreateInvoiceDialogValues>({
+    resolver: zodResolver(createInvoiceDialogSchema),
+    defaultValues: DIALOG_DEFAULT_VALUES,
+  });
 
-  const removeLineItem = useCallback((idx: number) => {
-    setLineItems((prev) => prev.filter((_, i) => i !== idx));
-  }, []);
+  const { fields, append, remove } = useFieldArray({ control, name: "lineItems" });
+  const watchedItems = watch("lineItems");
+  const watchedTaxRate = watch("taxRate");
+  const watchedDiscount = watch("discount");
 
-  const handleAddLineItem = useCallback(() => {
-    setLineItems((prev) => [...prev, { description: "", quantity: 1, rate: 0, amount: 0 }]);
-  }, []);
+  const subtotal = (watchedItems ?? []).reduce(
+    (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.rate) || 0),
+    0,
+  );
+  const taxAmount = subtotal * ((Number(watchedTaxRate) || 0) / 100);
+  const total = subtotal + taxAmount - (Number(watchedDiscount) || 0);
 
-  const handleTaxRateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTaxRate(Number(e.target.value)), []);
-  const handleDiscountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDiscount(Number(e.target.value)), []);
-  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setNotes(e.target.value), []);
-  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+  function handleOpenChange(isOpen: boolean) {
+    if (!isOpen) reset(DIALOG_DEFAULT_VALUES);
+    onOpenChange(isOpen);
+  }
 
-  const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
-  const taxAmount = subtotal * (taxRate / 100);
-  const total = subtotal + taxAmount - discount;
+  function handleAddLineItem() {
+    append({ description: "", quantity: 1, rate: 0 });
+  }
 
-  const handleSubmit = useCallback(() => {
-    const validItems = lineItems.filter((i) => i.description.trim() && i.amount > 0);
-    if (validItems.length === 0) { toast.error("Add at least one line item"); return; }
+  function handleCancel() {
+    onOpenChange(false);
+    reset(DIALOG_DEFAULT_VALUES);
+  }
+
+  function onSubmit(values: CreateInvoiceDialogValues) {
+    const lineItemsPayload = values.lineItems.map((item) => ({
+      description: item.description,
+      quantity: Number(item.quantity),
+      rate: Number(item.rate),
+      amount: Math.round(Number(item.quantity) * Number(item.rate) * 100) / 100,
+    }));
     createInvoice.mutate(
-      { lineItems: validItems, taxRate, discount, dueDate: dueDate || undefined, notes: notes || undefined },
+      {
+        lineItems: lineItemsPayload,
+        taxRate: Number(values.taxRate),
+        discount: Number(values.discount) || 0,
+        dueDate: values.dueDate || undefined,
+        notes: values.notes || undefined,
+      },
       {
         onSuccess: () => {
           onOpenChange(false);
-          setLineItems([{ description: "", quantity: 1, rate: 0, amount: 0 }]);
+          reset(DIALOG_DEFAULT_VALUES);
           toast.success("Invoice created");
         },
         onError: (err) => toast.error(err.message),
-      }
+      },
     );
-  }, [lineItems, taxRate, discount, dueDate, notes, createInvoice, onOpenChange]);
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Invoice</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <Label className="text-xs font-medium text-muted-foreground mb-2 block">Line Items</Label>
             <div className="space-y-2">
-              {lineItems.map((item, idx) => (
-                <LineItemRow key={idx} item={item} idx={idx} onUpdate={updateLineItem} onRemove={removeLineItem} disabled={lineItems.length === 1} />
-              ))}
-              <Button variant="outline" size="sm" onClick={handleAddLineItem}>
+              {fields.map((field, idx) => {
+                const lineAmount =
+                  (Number(watchedItems?.[idx]?.quantity) || 0) *
+                  (Number(watchedItems?.[idx]?.rate) || 0);
+                return (
+                  <DialogLineItemRow
+                    key={field.id}
+                    idx={idx}
+                    amount={lineAmount}
+                    register={register}
+                    errors={{
+                      description: errors.lineItems?.[idx]?.description?.message,
+                      quantity: errors.lineItems?.[idx]?.quantity?.message,
+                      rate: errors.lineItems?.[idx]?.rate?.message,
+                    }}
+                    disabled={fields.length === 1}
+                    onRemove={remove}
+                  />
+                );
+              })}
+              <Button type="button" variant="outline" size="sm" onClick={handleAddLineItem}>
                 <Plus className="h-3.5 w-3.5 mr-1" /> Add Item
               </Button>
+              {errors.lineItems && typeof errors.lineItems.message === "string" && (
+                <p className="text-xs text-destructive">{errors.lineItems.message}</p>
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-xs">Tax Rate (%)</Label>
-              <Input type="number" value={taxRate} onChange={handleTaxRateChange} className="h-9 mt-1" />
+              <Input type="number" className="h-9 mt-1" {...register("taxRate", { valueAsNumber: true })} />
+              {errors.taxRate && <p className="text-xs text-destructive mt-0.5">{errors.taxRate.message}</p>}
             </div>
             <div>
               <Label className="text-xs">Discount</Label>
-              <Input type="number" value={discount} onChange={handleDiscountChange} className="h-9 mt-1" />
+              <Input type="number" className="h-9 mt-1" {...register("discount", { valueAsNumber: true })} />
+              {errors.discount && <p className="text-xs text-destructive mt-0.5">{errors.discount.message}</p>}
             </div>
           </div>
 
           <div>
             <Label className="text-xs">Due Date</Label>
-            <DatePicker value={dueDate} onChange={setDueDate} placeholder="Select due date" />
+            <Controller
+              control={control}
+              name="dueDate"
+              render={({ field }) => (
+                <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Select due date" />
+              )}
+            />
           </div>
 
           <div>
             <Label className="text-xs">Notes</Label>
-            <Input placeholder="Payment terms, bank details, etc." value={notes} onChange={handleNotesChange} className="h-9 mt-1" />
+            <Input
+              placeholder="Payment terms, bank details, etc."
+              className="h-9 mt-1"
+              {...register("notes")}
+            />
           </div>
 
           <div className="border-t pt-3 space-y-1 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatCurrencyFull(subtotal)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Tax ({taxRate}%)</span><span>{formatCurrencyFull(taxAmount)}</span></div>
-            {discount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className="text-destructive">-{formatCurrencyFull(discount)}</span></div>}
-            <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total</span><span>{formatCurrencyFull(total)}</span></div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span>{formatCurrencyFull(subtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Tax ({Number(watchedTaxRate) || 0}%)</span>
+              <span>{formatCurrencyFull(taxAmount)}</span>
+            </div>
+            {(Number(watchedDiscount) || 0) > 0 && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Discount</span>
+                <span className="text-destructive">-{formatCurrencyFull(Number(watchedDiscount))}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-base pt-1 border-t">
+              <span>Total</span>
+              <span>{formatCurrencyFull(total)}</span>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={createInvoice.isPending}>
-              {createInvoice.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
+            <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
+            <Button type="submit" disabled={createInvoice.isPending}>
+              {createInvoice.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <FileText className="h-4 w-4 mr-1" />
+              )}
               Create Invoice
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

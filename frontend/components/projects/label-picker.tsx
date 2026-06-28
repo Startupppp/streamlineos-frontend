@@ -60,8 +60,28 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
-  const currentLabelIds = new Set(currentLabels.map(l => l.label.id));
-  const availableLabels = allLabels?.filter(l => !currentLabelIds.has(l.id)) || [];
+  const currentLabelIds = new Set(currentLabels.map((l) => l.label.id));
+  const availableLabels = allLabels?.filter((l) => !currentLabelIds.has(l.id)) ?? [];
+
+  const handleRemoveLabel = (labelId: number) => () => {
+    removeLabel.mutate({ ticketId, projectId, labelId });
+  };
+
+  const handleAddLabel = (labelId: number) => () => {
+    addLabel.mutate({ ticketId, projectId, labelId });
+  };
+
+  const handleLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && newLabelName.trim()) {
+      createLabel.mutate({ name: newLabelName.trim(), color: selectedColor });
+    }
+  };
+
+  const handleCreateLabel = () => {
+    if (newLabelName.trim()) {
+      createLabel.mutate({ name: newLabelName.trim(), color: selectedColor });
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -79,7 +99,8 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
           >
             {label.name}
             <button
-              onClick={() => removeLabel.mutate({ ticketId, projectId, labelId: label.id })}
+              onClick={handleRemoveLabel(label.id)}
+              aria-label={`Remove ${label.name} label`}
               className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
             >
               <X className="h-2.5 w-2.5" />
@@ -88,7 +109,7 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
         ))}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full">
+            <Button variant="ghost" size="sm" aria-label="Add label" className="h-6 w-6 p-0 rounded-full">
               <Plus className="h-3.5 w-3.5" />
             </Button>
           </PopoverTrigger>
@@ -99,9 +120,7 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
                   {availableLabels.map((label) => (
                     <button
                       key={label.id}
-                      onClick={() => {
-                        addLabel.mutate({ ticketId, projectId, labelId: label.id });
-                      }}
+                      onClick={handleAddLabel(label.id)}
                       className="flex items-center gap-2 w-full p-1.5 text-sm rounded hover:bg-muted transition-colors text-left"
                     >
                       <span
@@ -120,17 +139,14 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
                   onChange={(e) => setNewLabelName(e.target.value)}
                   placeholder="Label name"
                   className="h-7 text-sm"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && newLabelName.trim()) {
-                      createLabel.mutate({ name: newLabelName.trim(), color: selectedColor });
-                    }
-                  }}
+                  onKeyDown={handleLabelKeyDown}
                 />
                 <div className="flex gap-1">
                   {PRESET_COLORS.map((c) => (
                     <button
                       key={c}
                       onClick={() => setSelectedColor(c)}
+                      aria-label={`Select color ${c}`}
                       className="w-5 h-5 rounded-full transition-transform"
                       style={{
                         backgroundColor: c,
@@ -145,11 +161,7 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
                   size="sm"
                   className="w-full h-7 text-xs"
                   disabled={!newLabelName.trim() || createLabel.isPending}
-                  onClick={() => {
-                    if (newLabelName.trim()) {
-                      createLabel.mutate({ name: newLabelName.trim(), color: selectedColor });
-                    }
-                  }}
+                  onClick={handleCreateLabel}
                 >
                   Create & Add
                 </Button>

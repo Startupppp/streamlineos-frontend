@@ -158,9 +158,23 @@ export default function WebhooksPage() {
     );
   }, []);
 
-  const copyUrl = useCallback((url: string) => {
-    navigator.clipboard.writeText(url);
+  const copyUrl = useCallback((webhookUrl: string) => {
+    navigator.clipboard.writeText(webhookUrl);
     toast.success("URL copied");
+  }, []);
+
+  const handleUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setUrl(e.target.value);
+  }, []);
+
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setDescription(e.target.value);
+  }, []);
+
+  const handleSheetClose = useCallback(() => setSheetOpen(false), []);
+
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeleteId(null);
   }, []);
 
   if (isLoading) {
@@ -197,67 +211,13 @@ export default function WebhooksPage() {
           </motion.div>
         ) : (
           webhooks.map((wh) => (
-            <motion.div key={wh.id} variants={fadeUp}>
-              <Card className="shadow-noir">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${wh.isActive ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <CardTitle className="text-sm truncate">{wh.url}</CardTitle>
-                          <button onClick={() => copyUrl(wh.url)} aria-label="Copy URL">
-                            <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground transition-colors" />
-                          </button>
-                        </div>
-                        {wh.description && (
-                          <p className="text-xs text-muted-foreground mt-0.5">{wh.description}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant={wh.isActive ? "default" : "secondary"} className="text-xs">
-                        {wh.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleToggle(wh.id, wh.isActive)}
-                        aria-label={wh.isActive ? "Disable webhook" : "Enable webhook"}
-                      >
-                        {wh.isActive
-                          ? <ToggleRight className="h-4 w-4 text-emerald-500" />
-                          : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => setDeleteId(wh.id)}
-                        aria-label="Delete webhook"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(wh.events ?? []).length === 0 ? (
-                      <span className="text-xs text-muted-foreground">No events selected</span>
-                    ) : (
-                      (wh.events ?? []).map(ev => (
-                        <Badge key={ev} variant="secondary" className="text-[10px]">{ev}</Badge>
-                      ))
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    Created {new Date(wh.createdAt).toLocaleDateString("en-IN")}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
+            <WebhookCard
+              key={wh.id}
+              webhook={wh}
+              onCopyUrl={copyUrl}
+              onToggle={handleToggle}
+              onDelete={setDeleteId}
+            />
           ))
         )}
       </motion.div>
@@ -277,7 +237,7 @@ export default function WebhooksPage() {
                   className="pl-9"
                   placeholder="https://your-server.com/webhook"
                   value={url}
-                  onChange={e => setUrl(e.target.value)}
+                  onChange={handleUrlChange}
                 />
               </div>
             </div>
@@ -287,30 +247,25 @@ export default function WebhooksPage() {
                 id="webhook-desc"
                 placeholder="e.g. Notify Slack on deal won"
                 value={description}
-                onChange={e => setDescription(e.target.value)}
+                onChange={handleDescriptionChange}
               />
             </div>
             <div className="space-y-2">
               <Label>Events to send</Label>
               <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1">
                 {AVAILABLE_EVENTS.map(ev => (
-                  <div key={ev.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`ev-${ev.id}`}
-                      checked={selectedEvents.includes(ev.id)}
-                      onCheckedChange={() => toggleEvent(ev.id)}
-                    />
-                    <label htmlFor={`ev-${ev.id}`} className="text-sm cursor-pointer">
-                      <span className="font-mono text-xs text-muted-foreground mr-2">{ev.id}</span>
-                      {ev.label}
-                    </label>
-                  </div>
+                  <EventCheckboxItem
+                    key={ev.id}
+                    event={ev}
+                    checked={selectedEvents.includes(ev.id)}
+                    onToggle={toggleEvent}
+                  />
                 ))}
               </div>
             </div>
           </div>
           <SheetFooter className="mt-6">
-            <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancel</Button>
+            <Button variant="outline" className="flex-1" onClick={handleSheetClose}>Cancel</Button>
             <Button
               className="flex-1"
               onClick={handleCreate}
@@ -322,7 +277,7 @@ export default function WebhooksPage() {
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
+      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Webhook?</AlertDialogTitle>
@@ -342,5 +297,105 @@ export default function WebhooksPage() {
         </AlertDialogContent>
       </AlertDialog>
     </PageWrapper>
+  );
+}
+
+interface WebhookCardProps {
+  webhook: WebhookEndpoint;
+  onCopyUrl: (url: string) => void;
+  onToggle: (id: number, isActive: boolean) => void;
+  onDelete: (id: number) => void;
+}
+
+function WebhookCard({ webhook: wh, onCopyUrl, onToggle, onDelete }: WebhookCardProps) {
+  const handleCopy = useCallback(() => onCopyUrl(wh.url), [wh.url, onCopyUrl]);
+  const handleToggleClick = useCallback(() => onToggle(wh.id, wh.isActive), [wh.id, wh.isActive, onToggle]);
+  const handleDeleteClick = useCallback(() => onDelete(wh.id), [wh.id, onDelete]);
+
+  return (
+    <motion.div variants={fadeUp}>
+      <Card className="shadow-noir">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${wh.isActive ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-sm truncate">{wh.url}</CardTitle>
+                  <button onClick={handleCopy} aria-label="Copy URL">
+                    <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground transition-colors" />
+                  </button>
+                </div>
+                {wh.description && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{wh.description}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant={wh.isActive ? "default" : "secondary"} className="text-xs">
+                {wh.isActive ? "Active" : "Inactive"}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={handleToggleClick}
+                aria-label={wh.isActive ? "Disable webhook" : "Enable webhook"}
+              >
+                {wh.isActive
+                  ? <ToggleRight className="h-4 w-4 text-emerald-500" />
+                  : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:text-destructive"
+                onClick={handleDeleteClick}
+                aria-label="Delete webhook"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-1.5">
+            {(wh.events ?? []).length === 0 ? (
+              <span className="text-xs text-muted-foreground">No events selected</span>
+            ) : (
+              (wh.events ?? []).map(ev => (
+                <Badge key={ev} variant="secondary" className="text-[10px]">{ev}</Badge>
+              ))
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Created {new Date(wh.createdAt).toLocaleDateString("en-IN")}
+          </p>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+interface EventCheckboxItemProps {
+  event: { id: string; label: string };
+  checked: boolean;
+  onToggle: (eventId: string) => void;
+}
+
+function EventCheckboxItem({ event, checked, onToggle }: EventCheckboxItemProps) {
+  const handleChange = useCallback(() => onToggle(event.id), [event.id, onToggle]);
+  return (
+    <div className="flex items-center gap-2">
+      <Checkbox
+        id={`ev-${event.id}`}
+        checked={checked}
+        onCheckedChange={handleChange}
+      />
+      <label htmlFor={`ev-${event.id}`} className="text-sm cursor-pointer">
+        <span className="font-mono text-xs text-muted-foreground mr-2">{event.id}</span>
+        {event.label}
+      </label>
+    </div>
   );
 }

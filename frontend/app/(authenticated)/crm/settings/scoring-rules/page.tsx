@@ -148,6 +148,10 @@ export default function ScoringRulesPage() {
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
+
   const sampleScore = useMemo(() => {
     if (!rules) return 0;
     let score = 0;
@@ -183,7 +187,7 @@ export default function ScoringRulesPage() {
           illustration={<Zap className="h-10 w-10 text-muted-foreground" />}
           title="Failed to load scoring rules"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: () => refetch() }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </div>
     );
@@ -191,7 +195,7 @@ export default function ScoringRulesPage() {
 
   return (
     <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={(open) => { if (!open) handleDeleteCancel(); }}>
+      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Scoring Rule</AlertDialogTitle>

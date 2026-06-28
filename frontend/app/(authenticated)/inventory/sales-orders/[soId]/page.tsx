@@ -130,8 +130,10 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
     );
   }
 
+  function handleRetry() { void query.refetch(); }
+
   if (query.isLoading) return <LoadingState variant="form" />;
-  if (query.error) return <ErrorState description={query.error.message} />;
+  if (query.error) return <ErrorState description={query.error.message} onRetry={handleRetry} />;
   if (!so) return <ErrorState title="Not found" description={`Sales order #${soId} not found`} />;
 
   const canConfirm = so.status === "DRAFT";

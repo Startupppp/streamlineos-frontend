@@ -173,14 +173,9 @@ export function AssigneeCompletionChart({ data }: AssigneeChartProps) {
         />
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
-          formatter={
-            ((value: string | number) => [
-              `${value}%`,
-              "Completion Rate",
-            ]) as never
-          }
+          formatter={(value) => (value != null ? `${value}%` : "")}
         />
-        <Bar dataKey="rate" radius={[0, 4, 4, 0]}>
+        <Bar dataKey="rate" name="Completion Rate" radius={[0, 4, 4, 0]}>
           {data.map((_, index) => (
             <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
           ))}
@@ -350,12 +345,7 @@ export function EstimateVsActualChart({ data }: EstimateChartProps) {
             fontSize: 12,
           }}
         />
-        <Tooltip
-          contentStyle={TOOLTIP_STYLE}
-          formatter={
-            ((value: string | number, name: string) => [value, name]) as never
-          }
-        />
+        <Tooltip contentStyle={TOOLTIP_STYLE} />
         <Scatter data={data} fill="#f43f5e" shape="circle">
           {data.map((_, index) => (
             <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />

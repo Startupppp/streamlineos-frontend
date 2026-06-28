@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, Download, Send, Check, Ban, Plus, Loader2, Pencil, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Download, Send, Check, Ban, Plus, Loader2, Pencil, Trash2, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -135,12 +135,16 @@ interface InvoiceDetailProps {
 
 export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
   const router = useRouter();
-  const { data: invoice, isLoading, error } = useInvoice(invoiceId);
+  const { data: invoice, isLoading, error, refetch } = useInvoice(invoiceId);
   const updateInvoice = useUpdateInvoice();
   const deleteInvoice = useDeleteInvoice();
 
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   const handleStatusUpdate = useCallback(
     (status: InvoiceStatus) => {
@@ -253,11 +257,18 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
               {error ? getErrorMessage(error) : "The invoice you are looking for does not exist."}
             </p>
           </div>
-          <Link href="/billing/invoices">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-3.5 w-3.5 mr-1.5" /> Back to Invoices
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            {error && (
+              <Button variant="outline" size="sm" onClick={handleRetry}>
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Retry
+              </Button>
+            )}
+            <Link href="/billing/invoices">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="h-3.5 w-3.5 mr-1.5" /> Back to Invoices
+              </Button>
+            </Link>
+          </div>
         </div>
       </PageWrapper>
     );

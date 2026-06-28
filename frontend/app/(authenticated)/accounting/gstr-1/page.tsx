@@ -12,6 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useGstr1 } from "@/lib/api/hooks/accounting";
 import type {
   Gstr1PlaceBucket,
@@ -192,6 +194,10 @@ export default function Gstr1Page() {
     setTo(event.target.value);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   const report = query.data;
   const hasAnyRows =
     !!report && (report.b2b.places.length > 0 || report.b2c.places.length > 0);
@@ -242,16 +248,14 @@ export default function Gstr1Page() {
           <ErrorState
             title="Failed to load GSTR-1"
             description={query.error.message}
+            onRetry={handleRetry}
           />
         ) : !report || !hasAnyRows ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-            <h3 className="text-sm font-semibold text-foreground">
-              No outward supplies in the selected period.
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-              Issue invoices marked SENT, PAID, or OVERDUE within the date range to populate this report.
-            </p>
-          </div>
+          <EmptyState
+            illustration={<EmptyExpensesIllustration />}
+            title="No outward supplies in the selected period"
+            description="Issue invoices marked SENT, PAID, or OVERDUE within the date range to populate this report."
+          />
         ) : (
           <div className="space-y-4">
             <div className="rounded-xl border border-border/60 bg-card px-5 py-4">

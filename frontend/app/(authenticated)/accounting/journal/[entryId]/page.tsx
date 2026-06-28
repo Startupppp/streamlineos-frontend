@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { useJournalEntry, usePostJournalEntry, useReverseJournalEntry } from "@/lib/api/hooks/accounting";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { JournalEntryStatus, JournalLine } from "@/types/accounting";
 
@@ -94,8 +94,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
   const creditTotal = sumColumn(lines, "credit");
   const isBalanced = Math.abs(debitTotal - creditTotal) < 0.005;
 
-  const ability = useAbility();
-  const canManageJournal = ability.can("manage", "accounting:journal");
+  const canManageJournal = useCan("accounting:manage");
 
   const postMutation = usePostJournalEntry(entryId);
   const reverseMutation = useReverseJournalEntry(entryId);
@@ -107,6 +106,10 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
   const isPosted = entry?.status === "POSTED";
   const isReverseEntry = entry?.sourceEvent === "reverse";
   const canReverse = Boolean(entry) && isPosted && !isReverseEntry;
+
+  function handleRetry(): void {
+    void query.refetch();
+  }
 
   const handlePostClick = useCallback(() => {
     setPostDialogOpen(true);
@@ -181,6 +184,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
           <ErrorState
             title="Failed to load journal entry"
             description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
           />
         ) : !entry || !Number.isInteger(entryId) ? (
           <ErrorState

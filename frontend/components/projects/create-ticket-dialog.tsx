@@ -50,43 +50,62 @@ const formSchema = createTicketInputSchema.omit({ projectId: true }).extend({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function CreateTicketDialog({
-  projectId,
-  variant = "default"
-}: {
+interface MemberUser {
+  id: string;
+  name?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  image?: string | null;
+  email?: string | null;
+}
+
+interface CreateTicketDialogProps {
   projectId: number;
   variant?: "default" | "fab";
-}) {
+}
+
+function isProjectWithManager(data: unknown): data is { manager?: MemberUser } {
+  return typeof data === "object" && data !== null && "manager" in data;
+}
+
+export function CreateTicketDialog({
+  projectId,
+  variant = "default",
+}: CreateTicketDialogProps) {
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
   const { data: projectData } = useProject(projectId);
-  const projectMembersList = projectData?.members?.filter(m => !!m.user).map(m => ({
-    id: m.user!.id,
-    name: m.user!.name || `${m.user!.firstName || ''} ${m.user!.lastName || ''}`.trim(),
-    firstName: m.user!.firstName || undefined,
-    lastName: m.user!.lastName || undefined,
-    image: m.user!.image || null,
-    email: m.user!.email,
-  })) || [];
-  const manager = projectData && "manager" in projectData
-    ? (projectData as { manager?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; image?: string | null; email?: string | null } }).manager
-    : undefined;
-  const members = manager && !projectMembersList.some(m => m.id === manager.id)
-    ? [
-        {
-          id: manager.id,
-          name: manager.name || `${manager.firstName || ''} ${manager.lastName || ''}`.trim(),
-          firstName: manager.firstName || undefined,
-          lastName: manager.lastName || undefined,
-          image: manager.image || null,
-          email: manager.email || '',
-        },
-        ...projectMembersList
-      ]
-    : projectMembersList;
+
+  const projectMembersList =
+    projectData?.members
+      ?.filter((m): m is typeof m & { user: NonNullable<typeof m.user> } => m.user != null)
+      .map((m) => ({
+        id: m.user.id,
+        name: m.user.name || `${m.user.firstName ?? ""} ${m.user.lastName ?? ""}`.trim(),
+        firstName: m.user.firstName ?? undefined,
+        lastName: m.user.lastName ?? undefined,
+        image: m.user.image ?? null,
+        email: m.user.email,
+      })) ?? [];
+
+  const manager = projectData && isProjectWithManager(projectData) ? projectData.manager : undefined;
+  const members =
+    manager && !projectMembersList.some((m) => m.id === manager.id)
+      ? [
+          {
+            id: manager.id,
+            name: manager.name || `${manager.firstName ?? ""} ${manager.lastName ?? ""}`.trim(),
+            firstName: manager.firstName ?? undefined,
+            lastName: manager.lastName ?? undefined,
+            image: manager.image ?? null,
+            email: manager.email ?? "",
+          },
+          ...projectMembersList,
+        ]
+      : projectMembersList;
 
   const addAttachmentMutation = useAddAttachment();
 
@@ -150,7 +169,7 @@ export function CreateTicketDialog({
     },
   });
 
-  const onSubmit = (values: FormValues) => {
+  const handleSubmit = (values: FormValues) => {
     createTicketMutation.mutate({
       ...values,
       projectId,
@@ -161,6 +180,31 @@ export function CreateTicketDialog({
     });
   };
 
+  const handleAssigneeSelect = (value: string) => {
+    if (!value || value === "unassigned") return;
+    if (selectedAssignees.includes(value)) return;
+    setSelectedAssignees((prev) => [...prev, value]);
+  };
+
+  const handleRemoveAssignee = (id: string) => () =>
+    setSelectedAssignees((prev) => prev.filter((a) => a !== id));
+
+  const handleRemoveFile = (idx: number) => () =>
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? []);
+    const valid = selected.filter((f) => {
+      if (f.size > 25 * 1024 * 1024) {
+        toast.error(`${f.name} exceeds 25MB limit`);
+        return false;
+      }
+      return true;
+    });
+    setFiles((prev) => [...prev, ...valid]);
+    e.target.value = "";
+  };
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -168,9 +212,9 @@ export function CreateTicketDialog({
           <Button
             size="lg"
             className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+            aria-label="Create Ticket"
           >
             <Plus className="h-6 w-6" />
-            <span className="sr-only">Create Ticket</span>
           </Button>
         ) : (
           <Button>
@@ -186,168 +230,158 @@ export function CreateTicketDialog({
           <SheetTitle>New Ticket</SheetTitle>
         </SheetHeader>
         <div className="p-6 pt-4">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Type</FormLabel>
-                    <FormControl>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="TASK">Task</SelectItem>
+                            <SelectItem value="BUG">Bug</SelectItem>
+                            <SelectItem value="STORY">Story</SelectItem>
+                            <SelectItem value="EPIC">Epic</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Priority</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
                         <SelectContent>
-                          <SelectItem value="TASK">Task</SelectItem>
-                          <SelectItem value="BUG">Bug</SelectItem>
-                          <SelectItem value="STORY">Story</SelectItem>
-                          <SelectItem value="EPIC">Epic</SelectItem>
+                          <SelectItem value="LOW">Low</SelectItem>
+                          <SelectItem value="MEDIUM">Medium</SelectItem>
+                          <SelectItem value="HIGH">High</SelectItem>
+                          <SelectItem value="URGENT">Urgent</SelectItem>
                         </SelectContent>
                       </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
-                name="priority"
+                name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="LOW">Low</SelectItem>
-                        <SelectItem value="MEDIUM">Medium</SelectItem>
-                        <SelectItem value="HIGH">High</SelectItem>
-                        <SelectItem value="URGENT">Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="E.g. Implement login page" {...field} className="text-base font-medium capitalize" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe the issue or task in detail..."
-                      className="min-h-[120px] resize-y"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-               <FormItem>
-                    <FormLabel>Assignees</FormLabel>
-
-                    {selectedAssignees.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-2">
-                        {selectedAssignees.map((id) => {
-                          const member = members?.find((m) => m.id === id);
-                          if (!member) return null;
-                          return (
-                            <div key={id} className="flex items-center gap-1.5 bg-muted rounded-full pl-1 pr-2 py-0.5">
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage src={resolveImageUrl(member.image)} />
-                                <AvatarFallback className="text-[8px]">{member.name?.[0] || "U"}</AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs truncate max-w-[100px]">{member.name || `${member.firstName || ''} ${member.lastName || ''}`}</span>
-                              <button
-                                type="button"
-                                className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
-                                onClick={() => setSelectedAssignees((prev) => prev.filter((a) => a !== id))}
-                                aria-label={`Remove ${member.name}`}
-                              >
-                                <span className="text-xs font-bold">&times;</span>
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    <Select
-                      value=""
-                      onValueChange={(value) => {
-                        if (!value || value === "unassigned") return;
-                        if (selectedAssignees.includes(value)) return;
-                        setSelectedAssignees((prev) => [...prev, value]);
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={selectedAssignees.length > 0 ? "+ Add another assignee" : "Select assignees"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {members?.filter((m) => !selectedAssignees.includes(m.id)).map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            <div className="flex items-center gap-2">
-                               <Avatar className="h-7 w-7">
-                                  <AvatarImage src={resolveImageUrl(member.image)} />
-                                  <AvatarFallback className="text-[10px]">{member.name?.[0] || "U"}</AvatarFallback>
-                               </Avatar>
-                               <span className="truncate">{member.name || `${member.firstName || ''} ${member.lastName || ''}`}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-               <FormField
-                control={form.control}
-                name="link"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Link (Optional)</FormLabel>
+                    <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input className="pl-9" placeholder="https://..." {...field} value={field.value || ""} />
-                      </div>
+                      <Input placeholder="E.g. Implement login page" {...field} className="text-base font-medium capitalize" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            <FormItem className="pt-2">
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe the issue or task in detail..."
+                        className="min-h-[120px] resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <FormItem>
+                  <FormLabel>Assignees</FormLabel>
+
+                  {selectedAssignees.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {selectedAssignees.map((id) => {
+                        const member = members?.find((m) => m.id === id);
+                        if (!member) return null;
+                        return (
+                          <div key={id} className="flex items-center gap-1.5 bg-muted rounded-full pl-1 pr-2 py-0.5">
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={resolveImageUrl(member.image)} />
+                              <AvatarFallback className="text-[8px]">{member.name?.[0] ?? "U"}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs truncate max-w-[100px]">{member.name || `${member.firstName ?? ""} ${member.lastName ?? ""}`}</span>
+                            <button
+                              type="button"
+                              className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                              onClick={handleRemoveAssignee(id)}
+                              aria-label={`Remove ${member.name}`}
+                            >
+                              <span className="text-xs font-bold">&times;</span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <Select value="" onValueChange={handleAssigneeSelect}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={selectedAssignees.length > 0 ? "+ Add another assignee" : "Select assignees"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members?.filter((m) => !selectedAssignees.includes(m.id)).map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-7 w-7">
+                              <AvatarImage src={resolveImageUrl(member.image)} />
+                              <AvatarFallback className="text-[10px]">{member.name?.[0] ?? "U"}</AvatarFallback>
+                            </Avatar>
+                            <span className="truncate">{member.name || `${member.firstName ?? ""} ${member.lastName ?? ""}`}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+                <FormField
+                  control={form.control}
+                  name="link"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Link (Optional)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input className="pl-9" placeholder="https://..." {...field} value={field.value ?? ""} />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormItem className="pt-2">
                 <FormLabel>Attachments</FormLabel>
                 <FormControl>
                   <div className="space-y-2">
@@ -362,7 +396,7 @@ export function CreateTicketDialog({
                             </div>
                             <button
                               type="button"
-                              onClick={() => setFiles((prev) => prev.filter((_, i) => i !== idx))}
+                              onClick={handleRemoveFile(idx)}
                               className="text-muted-foreground hover:text-destructive shrink-0"
                               aria-label="Remove file"
                             >
@@ -383,33 +417,22 @@ export function CreateTicketDialog({
                         className="hidden"
                         accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
                         multiple
-                        onChange={(e) => {
-                          const selected = Array.from(e.target.files ?? []);
-                          const valid = selected.filter((f) => {
-                            if (f.size > 25 * 1024 * 1024) {
-                              toast.error(`${f.name} exceeds 25MB limit`);
-                              return false;
-                            }
-                            return true;
-                          });
-                          setFiles((prev) => [...prev, ...valid]);
-                          e.target.value = "";
-                        }}
+                        onChange={handleFileChange}
                       />
                     </label>
                   </div>
                 </FormControl>
-            </FormItem>
+              </FormItem>
 
-            <Button
-              type="submit"
-              disabled={createTicketMutation.isPending || isUploading}
-              className="w-full"
-            >
-              {createTicketMutation.isPending || isUploading ? "Creating..." : "Create Ticket"}
-            </Button>
-          </form>
-        </Form>
+              <Button
+                type="submit"
+                disabled={createTicketMutation.isPending || isUploading}
+                className="w-full"
+              >
+                {createTicketMutation.isPending || isUploading ? "Creating..." : "Create Ticket"}
+              </Button>
+            </form>
+          </Form>
         </div>
       </SheetContent>
     </Sheet>

@@ -55,16 +55,16 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
   const [htmlContent, setHtmlContent] = useState(template?.htmlContent ?? DEFAULT_TEMPLATE);
   const [isDefault, setIsDefault] = useState(template?.isDefault ?? false);
 
-  const handleOpen = (v: boolean) => {
+  const handleOpen = useCallback((v: boolean) => {
     if (!v) {
       setName(template?.name ?? "");
       setHtmlContent(template?.htmlContent ?? DEFAULT_TEMPLATE);
       setIsDefault(template?.isDefault ?? false);
     }
     onOpenChange(v);
-  };
+  }, [template, onOpenChange]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!name.trim()) { toast.error("Template name is required"); return; }
     if (!htmlContent.trim()) { toast.error("Template content is required"); return; }
 
@@ -80,9 +80,13 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
     } catch (e) {
       toast.error(getErrorMessage(e));
     }
-  };
+  }, [name, htmlContent, isDefault, isEdit, updateMutation, createMutation, handleOpen]);
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) { setName(e.target.value); }
+  function handleContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setHtmlContent(e.target.value); }
+  function handleCancelSheet() { handleOpen(false); }
 
   return (
     <Sheet open={open} onOpenChange={handleOpen}>
@@ -97,14 +101,14 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
         <div className="space-y-4 py-4">
           <div className="space-y-1.5">
             <Label htmlFor="tpl-name">Template Name</Label>
-            <Input id="tpl-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Standard Offer Letter" />
+            <Input id="tpl-name" value={name} onChange={handleNameChange} placeholder="e.g. Standard Offer Letter" />
           </div>
 
           <div className="space-y-1.5">
             <Label>Content (HTML)</Label>
             <Textarea
               value={htmlContent}
-              onChange={(e) => setHtmlContent(e.target.value)}
+              onChange={handleContentChange}
               rows={18}
               className="font-mono text-xs"
               placeholder="Enter HTML content with placeholders..."
@@ -118,7 +122,7 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
         </div>
 
         <SheetFooter>
-          <Button variant="outline" onClick={() => handleOpen(false)} disabled={isPending}>Cancel</Button>
+          <Button variant="outline" onClick={handleCancelSheet} disabled={isPending}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={isPending}>
             {isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Template"}
           </Button>
@@ -131,6 +135,61 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
 interface PreviewSheetProps {
   template: OfferLetterTemplate;
   onClose: () => void;
+}
+
+interface TemplateListItemProps {
+  template: OfferLetterTemplate;
+  onPreview: (t: OfferLetterTemplate) => void;
+  onEdit: (t: OfferLetterTemplate) => void;
+  onDelete: (id: number) => void;
+}
+
+function TemplateListItem({ template, onPreview, onEdit, onDelete }: TemplateListItemProps) {
+  function handlePreview() { onPreview(template); }
+  function handleEdit() { onEdit(template); }
+  function handleDelete() { onDelete(template.id); }
+
+  return (
+    <Card key={template.id} className="shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-sm">{template.name}</span>
+              {template.isDefault && (
+                <Badge variant="default" className="text-xs">Default</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+              {template.creator && <span>by {template.creator.name}</span>}
+              <span>{format(new Date(template.createdAt), "MMM d, yyyy")}</span>
+              <span>{template.htmlContent.length.toLocaleString()} chars</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={handlePreview}>
+              Preview
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={handleEdit}>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              onClick={handleDelete}
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 function PreviewSheet({ template, onClose }: PreviewSheetProps) {
@@ -163,8 +222,10 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
     }
   };
 
+  function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
+
   return (
-    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Preview — {template.name}</SheetTitle>

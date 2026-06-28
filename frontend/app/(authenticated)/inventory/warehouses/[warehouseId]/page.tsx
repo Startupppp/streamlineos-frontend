@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { use } from "react";
+import { useState, useCallback, useMemo, use, type ChangeEvent } from "react";
 import { motion } from "framer-motion";
-import { Plus, MapPin, ArrowLeft, Layers } from "lucide-react";
+import { Plus, MapPin, ArrowLeft, Layers, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -62,6 +61,10 @@ const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
   BIN: "Bin",
 };
 
+function isLocationType(val: string): val is LocationType {
+  return val in LOCATION_TYPE_LABELS;
+}
+
 const LOCATION_TYPE_COLORS: Record<LocationType, string> = {
   ZONE: "bg-violet-50 text-violet-700 border-violet-200/70",
   AISLE: "bg-blue-50 text-blue-700 border-blue-200/70",
@@ -113,8 +116,8 @@ export default function WarehouseDetailPage({
   const { warehouseId: warehouseIdStr } = use(params);
   const warehouseId = Number(warehouseIdStr);
 
-  const { data: warehouseData, isLoading: whLoading } = useWarehouse(warehouseId);
-  const { data: locationsData, isLoading: locLoading } = useLocations(warehouseId);
+  const { data: warehouseData, isLoading: whLoading, isError: whError, refetch: refetchWarehouse } = useWarehouse(warehouseId);
+  const { data: locationsData, isLoading: locLoading, isError: locError, refetch: refetchLocations } = useLocations(warehouseId);
   const createLocation = useCreateLocation();
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -158,6 +161,32 @@ export default function WarehouseDetailPage({
     }
   }, []);
 
+  function handleRetry() {
+    void refetchWarehouse();
+    void refetchLocations();
+  }
+
+  const handleLocationTypeChange = useCallback((v: string) => {
+    if (isLocationType(v)) setField("locationType", v);
+  }, [setField]);
+
+  const handleLocationNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("name", e.target.value);
+  }, [setField]);
+
+  const handleLocationCodeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("code", e.target.value);
+  }, [setField]);
+
+  const handleParentLocationChange = useCallback((v: string) => {
+    setField("parentLocationId", v === "none" ? "" : v);
+  }, [setField]);
+
+  const handleCancelSheet = useCallback(() => {
+    setSheetOpen(false);
+    setForm({ name: "", code: "", locationType: "ZONE", parentLocationId: "" });
+  }, []);
+
   const handleSubmit = useCallback(() => {
     const name = form.name.trim();
     const code = form.code.trim().toUpperCase();
@@ -184,6 +213,7 @@ export default function WarehouseDetailPage({
   }, [form, warehouseId, createLocation]);
 
   const isLoading = whLoading || locLoading;
+  const isError = whError || locError;
   const cityLine = warehouse
     ? [warehouse.city, warehouse.state, warehouse.country].filter(Boolean).join(", ")
     : "";
@@ -216,6 +246,19 @@ export default function WarehouseDetailPage({
             </Card>
           ))}
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Warehouse" eyebrow="Inventory / Warehouses">
+        <EmptyState
+          illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+          title="Failed to load warehouse"
+          description="An error occurred while fetching warehouse data. Please try again."
+          action={{ label: "Retry", onClick: handleRetry }}
+        />
       </PageWrapper>
     );
   }
@@ -332,7 +375,7 @@ export default function WarehouseDetailPage({
               <Label htmlFor="loc-type">Location Type <span className="text-destructive">*</span></Label>
               <Select
                 value={form.locationType}
-                onValueChange={(v) => setField("locationType", v as LocationType)}
+                onValueChange={handleLocationTypeChange}
               >
                 <SelectTrigger id="loc-type">
                   <SelectValue />
@@ -352,7 +395,7 @@ export default function WarehouseDetailPage({
                 id="loc-name"
                 placeholder="Zone A"
                 value={form.name}
-                onChange={(e) => setField("name", e.target.value)}
+                onChange={handleLocationNameChange}
               />
             </div>
             <div className="space-y-1.5">
@@ -361,7 +404,7 @@ export default function WarehouseDetailPage({
                 id="loc-code"
                 placeholder="ZA"
                 value={form.code}
-                onChange={(e) => setField("code", e.target.value)}
+                onChange={handleLocationCodeChange}
                 className="font-mono"
               />
             </div>
@@ -370,7 +413,7 @@ export default function WarehouseDetailPage({
                 <Label htmlFor="loc-parent">Parent Location</Label>
                 <Select
                   value={form.parentLocationId || "none"}
-                  onValueChange={(v) => setField("parentLocationId", v === "none" ? "" : v)}
+                  onValueChange={handleParentLocationChange}
                 >
                   <SelectTrigger id="loc-parent">
                     <SelectValue placeholder="None" />
@@ -390,7 +433,7 @@ export default function WarehouseDetailPage({
           <SheetFooter>
             <Button
               variant="outline"
-              onClick={() => setSheetOpen(false)}
+              onClick={handleCancelSheet}
               disabled={createLocation.isPending}
             >
               Cancel
