@@ -161,7 +161,7 @@ function CommentItem({
               placeholder="Write a reply…"
               rows={2}
               value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
+              onChange={handleReplyContentChange}
               className="resize-none text-sm"
             />
             <div className="flex gap-2">
@@ -175,10 +175,7 @@ function CommentItem({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => {
-                  setReplyOpen(false);
-                  setReplyContent("");
-                }}
+                onClick={handleCancelReply}
               >
                 Cancel
               </Button>
@@ -225,6 +222,10 @@ export function CommentThread({ articleId }: CommentThreadProps) {
     );
   }
 
+  function handleNewCommentChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setNewComment(event.target.value);
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-sm font-semibold text-foreground">
@@ -260,7 +261,7 @@ export function CommentThread({ articleId }: CommentThreadProps) {
           placeholder="Add a comment…"
           rows={3}
           value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
+          onChange={handleNewCommentChange}
           className="resize-none text-sm"
         />
         <Button

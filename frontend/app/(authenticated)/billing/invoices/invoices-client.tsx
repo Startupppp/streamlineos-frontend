@@ -119,6 +119,7 @@ export function InvoicesClient() {
   }, [deleteInvoice]);
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleRetryLoad = useCallback(() => { void refetch(); }, [refetch]);
 
   const filtersBar = (
     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -224,7 +225,7 @@ export function InvoicesClient() {
                     <div className="flex flex-col items-center justify-center text-center gap-3">
                       <AlertCircle className="h-8 w-8 text-destructive" />
                       <p className="text-sm font-medium">Failed to load invoices</p>
-                      <Button variant="outline" size="sm" onClick={() => refetch()}>
+                      <Button variant="outline" size="sm" onClick={handleRetryLoad}>
                         <RefreshCw className="h-3.5 w-3.5 mr-1" /> Retry
                       </Button>
                     </div>

@@ -198,6 +198,10 @@ export default function KbTranslationsPage() {
     );
   }
 
+  function handleRetryTranslations() {
+    translationsQuery.refetch();
+  }
+
   const translations = translationsQuery.data ?? [];
 
   return (
@@ -229,7 +233,7 @@ export default function KbTranslationsPage() {
               <button
                 type="button"
                 className="underline"
-                onClick={() => translationsQuery.refetch()}
+                onClick={handleRetryTranslations}
               >
                 Retry
               </button>

@@ -297,21 +297,17 @@ export default function TargetsPage() {
 
         {myTargets && myTargets.length === 0 && (
           <motion.div variants={fadeUp}>
-            <Card className="shadow-noir">
-              <CardContent className="py-12">
-                <div className="flex flex-col items-center text-center gap-4">
-                  <EmptyTargetIllustration className="w-40 h-40" />
-                  <div>
-                    <p className="text-base font-medium text-foreground">No targets assigned yet</p>
-                    <p className="text-xs text-muted-foreground/70 mt-1 max-w-md mx-auto">
-                      {canSetTargets
-                        ? "Use the Set Target button above to add daily, weekly, or monthly goals for your team."
-                        : "Your admin will set targets for you. Once they do, you'll see your progress visualized here."}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex flex-1 flex-col items-center justify-center min-h-[320px] gap-4 text-center">
+              <EmptyTargetIllustration className="w-40 h-40" />
+              <div>
+                <p className="text-base font-medium text-foreground">No targets assigned yet</p>
+                <p className="text-xs text-muted-foreground/70 mt-1 max-w-md mx-auto">
+                  {canSetTargets
+                    ? "Use the Set Target button above to add daily, weekly, or monthly goals for your team."
+                    : "Your admin will set targets for you. Once they do, you'll see your progress visualized here."}
+                </p>
+              </div>
+            </div>
           </motion.div>
         )}
 

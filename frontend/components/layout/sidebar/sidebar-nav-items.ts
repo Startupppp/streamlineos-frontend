@@ -333,7 +333,12 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Knowledge Base",
     requiredPermission: "kb:articles:view",
     routes: [
-      { label: "Knowledge Base", icon: Library, href: "/knowledge-base", requiredPermission: "kb:articles:view" },
+      {
+        label: "Knowledge Base", icon: Library, href: "/knowledge-base", requiredPermission: "kb:articles:view",
+        children: [
+          { label: "Help Widget", icon: Globe, href: "/knowledge-base/settings/widget", requiredPermission: "settings:manage" },
+        ],
+      },
     ],
   },
   {

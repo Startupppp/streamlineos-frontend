@@ -46,6 +46,10 @@ export default function BillingPage() {
   const { data: recentData, isLoading: recentLoading } = useInvoices({ limit: 5 });
   const { data: overdueData } = useInvoices({ status: "OVERDUE", limit: 5 });
 
+  function handleRetryStats() {
+    void refetchStats();
+  }
+
   const recentInvoices = recentData?.items ?? [];
   const overdueInvoices = overdueData?.items ?? [];
 
@@ -68,7 +72,7 @@ export default function BillingPage() {
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 flex flex-col items-center gap-3 text-center">
             <AlertCircle className="h-8 w-8 text-destructive" />
             <p className="text-sm font-medium">Failed to load billing stats</p>
-            <Button variant="outline" size="sm" onClick={() => refetchStats()}>
+            <Button variant="outline" size="sm" onClick={handleRetryStats}>
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Retry
             </Button>
           </div>
