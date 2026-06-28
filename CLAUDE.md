@@ -9,7 +9,7 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - When I say "go", pick the next unchecked page in PAGES.md.
 - If a task is ambiguous, ask briefly before coding.
 - Check the rules in .claude/ before starting any task.
-- NEVER run git commits, pushes, or checkouts (nor branch/merge/pull/fetch/reset/stash/rebase). The user commits manually — leave all changes in the working tree. This applies to you AND every subagent/workflow you launch.
+- Git: the ORCHESTRATOR may COMMIT verified work on the CURRENT branch between tasks; NEVER push, checkout, or run branch/merge/pull/fetch/reset/stash/rebase. Subagents/workflows NEVER run ANY git command — only the orchestrator commits.
 - LIVING RULES: if during any fix I mention a new rule, preference, or correction, immediately add it to this CLAUDE.md under the correct section (concisely worded), confirm you added it, and follow it from that point on in every page.
 
 ## Code quality
@@ -98,3 +98,5 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 ## Output format
 - During the audit step: a concise plan listing violations and intended changes.
 - During the fix step: only the modified/added/deleted file paths with changes. No long explanations unless clarifying a decision.
+
+Decompose into independent tasks, use the Task tool to dispatch each one to a separate subagent in parallel, and commit between tasks

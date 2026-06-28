@@ -1,14 +1,15 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { users, organizationMembers, departments } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendAccountDeactivationEmail } from "@/lib/email";
 import { ROLES, ADMIN_ROLES, EXPENSE_ADMIN_ROLES } from "@/lib/constants/roles";
 import { encrypt, decrypt, encryptBankDetails, decryptBankDetails } from "@/lib/encryption";
 import { getSessionAbility } from "@/lib/abilities-server";
+import { serverApiClient } from "@/lib/api/server-client";
+import { db } from "@/lib/db";
+import { users, organizationMembers, departments } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 
 export async function getEmployees() {
   const session = await auth();
@@ -32,32 +33,7 @@ export async function getEmployees() {
 }
 
 export async function getEmployeeById(userId: string) {
-  const session = await auth();
-  if (!session?.user?.id) return null;
-  const requesterOrgMember = await db.query.organizationMembers.findFirst({
-      where: eq(organizationMembers.userId, session.user.id)
-  });
-
-  if (!requesterOrgMember) return null;
-  const rows = await db.select({
-      user: users
-  })
-  .from(users)
-  .innerJoin(organizationMembers, eq(users.id, organizationMembers.userId))
-  .where(and(
-      eq(organizationMembers.userId, userId),
-      eq(organizationMembers.orgId, requesterOrgMember.orgId)
-  ))
-  .limit(1);
-
-  if (rows.length === 0) return null;
-
-  const raw = rows[0].user;
-  return {
-    ...raw,
-    taxId: raw.taxId ? decrypt(raw.taxId) : null,
-    bankDetails: decryptBankDetails(raw.bankDetails),
-  };
+  return serverApiClient.get(`/hr/employees/${userId}`);
 }
 
 export async function updateEmployee(data: {

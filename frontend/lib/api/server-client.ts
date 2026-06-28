@@ -60,10 +60,38 @@ async function request<T>(method: string, path: string, body?: unknown, params?:
   return res.json() as Promise<T>;
 }
 
+async function publicRequest<T>(method: string, path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
+  const res = await fetch(buildUrl(path, params), {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    let message = `${res.status} ${res.statusText}`;
+    try {
+      const data = await res.json();
+      if (typeof data?.error === "string") message = data.error;
+    } catch {
+    }
+    throw new Error(message);
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
 export const serverApiClient = {
   get: <T>(path: string, params?: Record<string, unknown>) => request<T>("GET", path, undefined, params),
   post: <T>(path: string, body?: unknown) => request<T>("POST", path, body),
   patch: <T>(path: string, body?: unknown) => request<T>("PATCH", path, body),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
   delete: <T>(path: string, body?: unknown) => request<T>("DELETE", path, body),
+};
+
+export const serverPublicFetch = {
+  get: <T>(path: string, params?: Record<string, unknown>) => publicRequest<T>("GET", path, undefined, params),
+  post: <T>(path: string, body?: unknown) => publicRequest<T>("POST", path, body),
+  patch: <T>(path: string, body?: unknown) => publicRequest<T>("PATCH", path, body),
+  put: <T>(path: string, body?: unknown) => publicRequest<T>("PUT", path, body),
+  delete: <T>(path: string, body?: unknown) => publicRequest<T>("DELETE", path, body),
 };
