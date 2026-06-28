@@ -23,7 +23,10 @@ export function useForgotPassword() {
 export function useResetPassword() {
   return useMutation({
     mutationFn: (variables: { token: string; password: string }) =>
-      apiClient.post<{ success: boolean }>("/auth/reset-password", variables),
+      apiClient.post<{ success: boolean }>("/auth/reset-password", {
+        token: variables.token,
+        newPassword: variables.password,
+      }),
   });
 }
 

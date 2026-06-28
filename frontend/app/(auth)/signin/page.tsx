@@ -51,10 +51,21 @@ export default function SignInPage() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const errorParam = params.get("error");
-      if (errorParam?.startsWith("ACCOUNT_LOCKED:")) {
+      if (!errorParam) return;
+      if (errorParam.startsWith("ACCOUNT_LOCKED:")) {
         const secs = parseInt(errorParam.split(":")[1] ?? "0", 10);
         setLockedSeconds(isNaN(secs) ? null : secs);
+        return;
       }
+      const oauthMessages: Record<string, string> = {
+        AccessDenied: "No account found with that identity. Please sign up first or use email and password.",
+        OAuthSignin: "Could not start Google sign-in. Please try again.",
+        OAuthCallback: "Google sign-in failed. Please try again or use email and password.",
+        OAuthCreateAccount: "Account setup failed. Please use email and password instead.",
+        Configuration: "Authentication is misconfigured. Please contact support.",
+      };
+      const message = oauthMessages[errorParam] ?? "Authentication failed. Please try again.";
+      toast.error(message);
     }
   }, []);
 

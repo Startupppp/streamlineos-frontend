@@ -200,8 +200,9 @@ async function parseResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let message = `${res.status} ${res.statusText}`;
     try {
-      const body = await res.json();
-      if (typeof body?.error === "string") message = body.error;
+      const body = await res.json() as Record<string, unknown>;
+      if (typeof body?.message === "string" && body.message) message = body.message;
+      else if (typeof body?.error === "string" && body.error) message = body.error;
     } catch {
     }
     throw new Error(message);
