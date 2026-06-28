@@ -435,6 +435,13 @@
       "when": 1783000000000,
       "tag": "0132_rbac_schema_additions",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1783100000000,
+      "tag": "0133_seats_limits_delegations",
+      "breakpoints": true
     }
   ]
 }
