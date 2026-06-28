@@ -13,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,7 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Pencil, Clock } from "lucide-react";
+import { Plus, Pencil, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -64,8 +63,81 @@ function slaStatusBadge(maxHours: number) {
   return <Badge variant="secondary" className="text-xs">Relaxed</Badge>;
 }
 
+function SlaTableRow({
+  stage,
+  existing,
+  onEdit,
+  onNew,
+}: {
+  stage: CandidateStage;
+  existing: InterviewSla | undefined;
+  onEdit: (sla: InterviewSla) => void;
+  onNew: (stage: CandidateStage) => void;
+}) {
+  const handleEdit = useCallback(() => {
+    if (existing) onEdit(existing);
+  }, [existing, onEdit]);
+
+  const handleNew = useCallback(() => {
+    onNew(stage);
+  }, [stage, onNew]);
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{STAGE_LABELS[stage]}</TableCell>
+      <TableCell>
+        {existing ? (
+          <span className="text-yellow-600 font-medium">{existing.warningHours}h</span>
+        ) : (
+          <span className="text-muted-foreground text-xs">Not set</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {existing ? (
+          <span className="text-destructive font-medium">{existing.maxHours}h</span>
+        ) : (
+          <span className="text-muted-foreground text-xs">Not set</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {existing ? slaStatusBadge(existing.maxHours) : null}
+      </TableCell>
+      <TableCell>
+        {existing ? (
+          <Badge variant="default" className="text-xs bg-green-600">Configured</Badge>
+        ) : (
+          <Badge variant="outline" className="text-xs text-muted-foreground">Default</Badge>
+        )}
+      </TableCell>
+      <TableCell className="text-right">
+        {existing ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            aria-label={`Edit SLA for ${stage}`}
+            onClick={handleEdit}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            aria-label={`Configure SLA for ${stage}`}
+            onClick={handleNew}
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function SlaConfigPage() {
-  const { data: slas, isLoading } = useInterviewSlas();
+  const { data: slas, isLoading, isError, refetch } = useInterviewSlas();
   const upsertSla = useUpsertInterviewSla();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -86,6 +158,16 @@ export default function SlaConfigPage() {
     setForm({ stage, maxHours: String(defaults.maxHours), warningHours: String(defaults.warningHours) });
     setDialogOpen(true);
   }, []);
+
+  const handleWarningHoursChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, warningHours: e.target.value }));
+  }, []);
+
+  const handleMaxHoursChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, maxHours: e.target.value }));
+  }, []);
+
+  const handleDialogClose = useCallback(() => setDialogOpen(false), []);
 
   const handleSave = useCallback(() => {
     const maxHours = Number(form.maxHours);
@@ -191,6 +273,14 @@ export default function SlaConfigPage() {
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-12">
+              <AlertCircle className="h-8 w-8 text-destructive/60" />
+              <p className="text-sm text-muted-foreground">Failed to load SLA configuration.</p>
+              <Button variant="outline" size="sm" onClick={() => void refetch()}>
+                Try again
+              </Button>
+            </div>
           ) : (
             <ScrollArea className="w-full" type="auto">
               <div className="min-w-[600px]">
@@ -206,63 +296,15 @@ export default function SlaConfigPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {CANDIDATE_STAGES.map((stage) => {
-                      const existing = slaByStage.get(stage);
-                      return (
-                        <TableRow key={stage}>
-                          <TableCell className="font-medium">
-                            {STAGE_LABELS[stage]}
-                          </TableCell>
-                          <TableCell>
-                            {existing ? (
-                              <span className="text-yellow-600 font-medium">{existing.warningHours}h</span>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">Not set</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {existing ? (
-                              <span className="text-destructive font-medium">{existing.maxHours}h</span>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">Not set</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {existing ? slaStatusBadge(existing.maxHours) : null}
-                          </TableCell>
-                          <TableCell>
-                            {existing ? (
-                              <Badge variant="default" className="text-xs bg-green-600">Configured</Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-xs text-muted-foreground">Default</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {existing ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-0"
-                                aria-label={`Edit SLA for ${stage}`}
-                                onClick={() => openEdit(existing)}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-0"
-                                aria-label={`Configure SLA for ${stage}`}
-                                onClick={() => openNew(stage)}
-                              >
-                                <Plus className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {CANDIDATE_STAGES.map((stage) => (
+                      <SlaTableRow
+                        key={stage}
+                        stage={stage}
+                        existing={slaByStage.get(stage)}
+                        onEdit={openEdit}
+                        onNew={openNew}
+                      />
+                    ))}
                   </TableBody>
                 </Table>
               </div>
@@ -272,7 +314,6 @@ export default function SlaConfigPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogTrigger className="sr-only">open</DialogTrigger>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>
@@ -288,7 +329,7 @@ export default function SlaConfigPage() {
                 type="number"
                 min={1}
                 value={form.warningHours}
-                onChange={(e) => setForm((f) => ({ ...f, warningHours: e.target.value }))}
+                onChange={handleWarningHoursChange}
                 placeholder="e.g. 36"
               />
               <p className="text-xs text-muted-foreground">
@@ -303,7 +344,7 @@ export default function SlaConfigPage() {
                 type="number"
                 min={1}
                 value={form.maxHours}
-                onChange={(e) => setForm((f) => ({ ...f, maxHours: e.target.value }))}
+                onChange={handleMaxHoursChange}
                 placeholder="e.g. 48"
               />
               <p className="text-xs text-muted-foreground">
@@ -312,7 +353,7 @@ export default function SlaConfigPage() {
             </div>
           </div>
           <DialogFooter className="flex-row gap-2 border-t pt-4">
-            <Button variant="outline" className="flex-1" onClick={() => setDialogOpen(false)}>
+            <Button variant="outline" className="flex-1" onClick={handleDialogClose}>
               Cancel
             </Button>
             <Button

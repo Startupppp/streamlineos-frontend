@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { FileCheck, Clock, XCircle, CheckCircle2, FileText, ShieldCheck } from "lucide-react";
+import { FileCheck, Clock, XCircle, CheckCircle2, FileText, ShieldCheck, AlertCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
@@ -43,9 +43,72 @@ function getStatusConfig(status: string | null) {
   };
 }
 
+interface PendingAckCardProps {
+  ack: PolicyAcknowledgment;
+  onAcknowledge: (id: number, status: AckStatus) => void;
+  isPending: boolean;
+}
+
+function PendingAckCard({ ack, onAcknowledge, isPending }: PendingAckCardProps) {
+  const handleAcknowledge = useCallback(() => {
+    onAcknowledge(ack.id, "ACKNOWLEDGED");
+  }, [ack.id, onAcknowledge]);
+
+  const handleDecline = useCallback(() => {
+    onAcknowledge(ack.id, "DECLINED");
+  }, [ack.id, onAcknowledge]);
+
+  return (
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-amber-500">
+      <CardContent className="p-4 flex items-center gap-3">
+        <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
+          <FileText className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {ack.document?.name ?? "Document"}
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            {ack.document?.type && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800 mr-1.5">
+                {ack.document.type}
+              </span>
+            )}
+            Sent{" "}
+            {ack.createdAt
+              ? formatDistanceToNow(new Date(ack.createdAt), { addSuffix: true })
+              : ""}
+          </p>
+        </div>
+        <div className="flex gap-1.5 shrink-0">
+          <Button
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={handleAcknowledge}
+            disabled={isPending}
+          >
+            <CheckCircle2 className="h-3 w-3" />
+            Acknowledge
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1.5 text-xs"
+            onClick={handleDecline}
+            disabled={isPending}
+          >
+            <XCircle className="h-3 w-3" />
+            Decline
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function CompliancePage() {
   const { data: session } = useSession();
-  const { data: acks, isLoading } = usePolicyAcknowledgments();
+  const { data: acks, isLoading, isError, refetch } = usePolicyAcknowledgments();
   const acknowledgePolicy = useAcknowledgePolicy();
 
   const handleAcknowledge = useCallback(
@@ -70,6 +133,19 @@ export default function CompliancePage() {
             <Skeleton key={i} className="h-20 rounded-2xl" />
           ))}
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Compliance" subtitle="Policy acknowledgments and document tracking">
+        <EmptyState
+          illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
+          title="Failed to load policies"
+          description="Something went wrong. Please try again."
+          action={{ label: "Retry", onClick: refetch }}
+        />
       </PageWrapper>
     );
   }
@@ -132,53 +208,12 @@ export default function CompliancePage() {
               </span>
             </div>
             {pending.map((ack: PolicyAcknowledgment) => (
-              <Card
+              <PendingAckCard
                 key={ack.id}
-                className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-amber-500"
-              >
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
-                    <FileText className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {ack.document?.name ?? "Document"}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {ack.document?.type && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800 mr-1.5">
-                          {ack.document.type}
-                        </span>
-                      )}
-                      Sent{" "}
-                      {ack.createdAt
-                        ? formatDistanceToNow(new Date(ack.createdAt), { addSuffix: true })
-                        : ""}
-                    </p>
-                  </div>
-                  <div className="flex gap-1.5 shrink-0">
-                    <Button
-                      size="sm"
-                      className="h-8 gap-1.5 text-xs"
-                      onClick={() => handleAcknowledge(ack.id, "ACKNOWLEDGED")}
-                      disabled={acknowledgePolicy.isPending}
-                    >
-                      <CheckCircle2 className="h-3 w-3" />
-                      Acknowledge
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 gap-1.5 text-xs"
-                      onClick={() => handleAcknowledge(ack.id, "DECLINED")}
-                      disabled={acknowledgePolicy.isPending}
-                    >
-                      <XCircle className="h-3 w-3" />
-                      Decline
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                ack={ack}
+                onAcknowledge={handleAcknowledge}
+                isPending={acknowledgePolicy.isPending}
+              />
             ))}
           </div>
         )}

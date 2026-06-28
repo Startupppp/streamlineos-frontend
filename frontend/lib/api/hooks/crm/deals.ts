@@ -338,10 +338,28 @@ export function useCreateSalesQuota() {
   });
 }
 
+export interface CommissionItem {
+  id: number;
+  userName: string | null;
+  dealName: string | null;
+  dealValue: string;
+  commissionRate: string;
+  commissionAmount: string;
+  status: string;
+  createdAt: string | null;
+}
+
+export interface CommissionRule {
+  id: number;
+  name: string;
+  type: string;
+  flatRate: string | null;
+}
+
 export function useCommissions(params?: { userId?: string; status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "commissions", params] as const,
-    queryFn: () => apiClient.get<{ items: Array<Record<string, unknown>>; totalPending: number; totalPaid: number }>("/sales/commissions", params as Record<string, unknown>),
+    queryFn: () => apiClient.get<{ items: CommissionItem[]; totalPending: number; totalPaid: number }>("/sales/commissions", params as Record<string, unknown>),
     staleTime: 2 * 60_000,
   });
 }
@@ -358,7 +376,7 @@ export function useUpdateCommissionStatus() {
 export function useCommissionRules() {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "commissionRules"] as const,
-    queryFn: () => apiClient.get<Array<Record<string, unknown>>>("/sales/commission-rules"),
+    queryFn: () => apiClient.get<CommissionRule[]>("/sales/commission-rules"),
     staleTime: 2 * 60_000,
   });
 }

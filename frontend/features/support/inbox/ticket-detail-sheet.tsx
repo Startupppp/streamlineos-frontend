@@ -227,7 +227,7 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
           const fd = new FormData();
           fd.append("file", file);
           fd.append("folder", "support-attachments");
-          const json = await apiClient.upload<{ url: string }>("/api/storage/upload", fd);
+          const json = await apiClient.upload<{ url: string }>("/storage/upload", fd);
           uploaded.push({
             fileName: file.name,
             fileUrl: json.url,

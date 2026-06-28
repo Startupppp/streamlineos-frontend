@@ -19,6 +19,8 @@ export * from "./celebrations";
 export * from "./pip";
 export * from "./skills";
 export * from "./surveys";
+export * from "./enps";
+export * from "./assessments";
 export * from "./key-results";
 export * from "./dashboard";
 export * from "./onboarding";

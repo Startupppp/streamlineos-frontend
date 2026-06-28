@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import {
   useHrAnalytics,
   useHrAttritionAnalytics,
@@ -10,6 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
   SelectContent,
@@ -25,6 +26,7 @@ import {
   Activity,
   CalendarDays,
   BarChart3,
+  AlertCircle,
 } from "lucide-react";
 import { WorkforceSection } from "@/features/hr/analytics/workforce-section";
 import { RecruitmentSection } from "@/features/hr/analytics/recruitment-section";
@@ -39,6 +41,17 @@ type SectionTab = "workforce" | "recruitment" | "attendance" | "leaves" | "attri
 const NOW = new Date();
 const CURRENT_YEAR = NOW.getFullYear();
 const CURRENT_MONTH = NOW.getMonth() + 1;
+
+const DATE_RANGE_VALUES: readonly DateRange[] = ["month", "quarter", "year"];
+const SECTION_TAB_VALUES: readonly SectionTab[] = ["workforce", "recruitment", "attendance", "leaves", "attrition"];
+
+function isDateRange(v: string): v is DateRange {
+  return (DATE_RANGE_VALUES as readonly string[]).includes(v);
+}
+
+function isSectionTab(v: string): v is SectionTab {
+  return (SECTION_TAB_VALUES as readonly string[]).includes(v);
+}
 
 const SECTION_TABS: Array<{
   value: SectionTab;
@@ -68,9 +81,12 @@ function DateRangeSelector({
   value: DateRange;
   onChange: (v: DateRange) => void;
 }) {
-  function handleChange(v: string) {
-    onChange(v as DateRange);
-  }
+  const handleChange = useCallback(
+    (v: string) => {
+      if (isDateRange(v)) onChange(v);
+    },
+    [onChange],
+  );
 
   return (
     <Select value={value} onValueChange={handleChange}>
@@ -209,7 +225,7 @@ function AnalyticsContent() {
     return 1;
   }, [dateRange]);
 
-  const { data, isLoading: isAnalyticsLoading } = useHrAnalytics();
+  const { data, isLoading: isAnalyticsLoading, isError, refetch } = useHrAnalytics();
   const { data: recruitmentStats, isLoading: isRecruitmentLoading } =
     useRecruitmentStats();
   const { data: attritionData, isLoading: isAttritionLoading } =
@@ -223,8 +239,24 @@ function AnalyticsContent() {
   const openPositions = recruitmentStats?.openJobs ?? 0;
   const attendanceLogs = data?.attendance.totalLogsThisMonth ?? 0;
 
-  function handleSectionChange(v: string) {
-    setActiveSection(v as SectionTab);
+  const handleSectionChange = useCallback((v: string) => {
+    if (isSectionTab(v)) setActiveSection(v);
+  }, []);
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="HR Analytics"
+        subtitle="Workforce insights and operational metrics"
+      >
+        <EmptyState
+          illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
+          title="Failed to load analytics"
+          description="Something went wrong. Please try again."
+          action={{ label: "Retry", onClick: refetch }}
+        />
+      </PageWrapper>
+    );
   }
 
   return (

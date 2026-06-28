@@ -71,10 +71,11 @@ export function isImageMime(mime: string) {
 export function resolveFileUrl(url: string, mime?: string): string {
   if (!url) return "";
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) return url;
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
   if (mime && !mime.startsWith("image/")) {
-    return `/api/storage/download?key=${encodeURIComponent(url)}&attachment=1`;
+    return `${apiBase}/storage/download?key=${encodeURIComponent(url)}&attachment=1`;
   }
-  return `/api/storage/image?key=${encodeURIComponent(url)}`;
+  return `${apiBase}/storage/image?key=${encodeURIComponent(url)}`;
 }
 
 export function getDateLabel(date: Date | string | null) {

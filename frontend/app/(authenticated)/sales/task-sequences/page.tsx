@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,7 +66,7 @@ function ApplyDialog({
   const [entityId, setEntityId] = useState("");
   const apply = useApplyTaskSequence();
 
-  function handleApply() {
+  const handleApply = useCallback(() => {
     const base = new Date(baseDate);
     if (!baseDate || Number.isNaN(base.getTime())) {
       toast.error("Please select a valid base date");
@@ -89,7 +89,7 @@ function ApplyDialog({
         onError: () => toast.error("Failed to apply sequence"),
       },
     );
-  }
+  }, [apply, baseDate, entityId, entityType, onClose, sequence]);
 
   return (
     <Dialog open onOpenChange={onClose}>

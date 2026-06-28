@@ -2,9 +2,7 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { useEnpsScores, useSubmitEnpsScore, type EnpsScore } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,21 +13,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, ThumbsUp, MessageSquare, EyeOff, User, TrendingUp } from "lucide-react";
+import { Plus, ThumbsUp, MessageSquare, EyeOff, User, TrendingUp, AlertCircle } from "lucide-react";
 import { useAbility } from "@/lib/abilities-context";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-
-interface EnpsScore {
-  id: number;
-  score: number;
-  comment: string | null;
-  isAnonymous: boolean;
-  period: string;
-  createdAt: string | null;
-}
-
-const enpsKeys = { all: [...queryKeys.hr.all, "enps"] as const, list: () => [...enpsKeys.all, "list"] as const };
 
 function getScoreMeta(score: number): { label: string; badge: string } {
   if (score >= 9) return {
@@ -54,21 +41,11 @@ function getEnpsColor(score: number | null): string {
 }
 
 export default function EnpsPage() {
-  const qc = useQueryClient();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:performance");
 
-  const { data: scores, isLoading } = useQuery({
-    queryKey: enpsKeys.list(),
-    queryFn: () => apiClient.get<EnpsScore[]>("/hr/enps"),
-    enabled: isAdmin,
-  });
-
-  const submit = useMutation({
-    mutationFn: (data: { score: number; comment?: string; isAnonymous?: boolean }) =>
-      apiClient.post<EnpsScore>("/hr/enps", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: enpsKeys.list() }),
-  });
+  const { data: scores, isLoading, isError, refetch } = useEnpsScores(isAdmin);
+  const submit = useSubmitEnpsScore();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [npsScore, setNpsScore] = useState("8");
@@ -83,6 +60,9 @@ export default function EnpsPage() {
     if (!open) resetForm();
     setSheetOpen(open);
   }, [resetForm]);
+
+  const handleNpsScoreChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setNpsScore(e.target.value), []);
+  const handleCommentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value), []);
 
   const handleSubmit = useCallback(() => {
     const numScore = Number(npsScore);
@@ -114,6 +94,21 @@ export default function EnpsPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
           </div>
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Employee NPS" subtitle="Measure employee loyalty">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load eNPS data</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={refetch}>Try again</Button>
         </div>
       </PageWrapper>
     );
@@ -294,7 +289,7 @@ export default function EnpsPage() {
           <label className="text-sm font-medium">
             How likely are you to recommend this company as a place to work? (0–10) <span className="text-destructive">*</span>
           </label>
-          <Input type="number" min={0} max={10} step={1} value={npsScore} onChange={(e) => setNpsScore(e.target.value)} />
+          <Input type="number" min={0} max={10} step={1} value={npsScore} onChange={handleNpsScoreChange} />
           <p className="text-xs text-muted-foreground">0 = Not at all likely · 10 = Extremely likely</p>
         </div>
         <div className="space-y-1.5">
@@ -302,7 +297,7 @@ export default function EnpsPage() {
           <Textarea
             placeholder="Share your thoughts..."
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={handleCommentChange}
             rows={3}
             maxLength={500}
             className="resize-none w-full"

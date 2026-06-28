@@ -235,7 +235,6 @@ const ROUTE_RULES: RouteRule[] = [
   { prefix: "/api/chat", tier: "chat" },
   { prefix: "/api/ai/", tier: "ai" },
   { prefix: "/api/support/kb/ask", tier: "ai" },
-  { prefix: "/api/storage/upload", tier: "upload" },
   { prefix: "/api/landing/submit", tier: "landing-submit" },
   { prefix: "/api/billing/", tier: "auth-write" },
   { prefix: "/api/calendar/create-meet", tier: "auth-write" },

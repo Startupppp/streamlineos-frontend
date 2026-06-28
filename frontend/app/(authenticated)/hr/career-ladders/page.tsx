@@ -16,7 +16,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { Plus, TrendingUp, ArrowRight, ChevronsUpDown, Check, Building2 } from "lucide-react";
+import { Plus, TrendingUp, ArrowRight, ChevronsUpDown, Check, Building2, AlertCircle } from "lucide-react";
 import { useAbility } from "@/lib/abilities-context";
 import { useHrDepartments } from "@/lib/api/hooks/hr";
 import { cn } from "@/lib/utils";
@@ -49,7 +49,7 @@ export default function CareerLaddersPage() {
   const isAdmin = ability.can("manage", "hr:career-ladders");
   const { data: departments } = useHrDepartments();
 
-  const { data: ladders, isLoading } = useQuery({
+  const { data: ladders, isLoading, isError, refetch } = useQuery({
     queryKey: clKeys.list(),
     queryFn: () => apiClient.get<CareerLadder[]>("/hr/career-ladders"),
   });
@@ -65,6 +65,8 @@ export default function CareerLaddersPage() {
   const [department, setDepartment] = useState("");
   const [deptPickerOpen, setDeptPickerOpen] = useState(false);
   const [description, setDescription] = useState("");
+
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleSheetOpenChange = useCallback((open: boolean) => {
     if (!open) {
@@ -131,6 +133,21 @@ export default function CareerLaddersPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Career Ladders" subtitle="Growth paths and career progression">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load career ladders</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={refetch}>Try again</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   const selectedDeptLabel = department || "Select department (optional)";
 
   return (
@@ -140,7 +157,7 @@ export default function CareerLaddersPage() {
       badge={`${ladders?.length ?? 0} paths`}
       actions={
         isAdmin ? (
-          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
             <Plus className="h-3.5 w-3.5" />
             Create Ladder
           </Button>

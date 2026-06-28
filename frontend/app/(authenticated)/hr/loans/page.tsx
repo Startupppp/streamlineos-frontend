@@ -27,7 +27,11 @@ import { useAbility } from "@/lib/abilities-context";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { cn } from "@/lib/utils";
 
-type LoanStatus = "ACTIVE" | "REPAID" | "APPROVED" | "REJECTED" | "PENDING";
+function extractEmployeeList(raw: Employee[] | PaginatedEmployees | undefined): Employee[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  return raw.data;
+}
 
 function getStatusConfig(s: string | null) {
   if (s === "ACTIVE") {
@@ -65,8 +69,125 @@ function getStatusConfig(s: string | null) {
   };
 }
 
+interface LoanCardProps {
+  loan: SalaryLoan;
+  isAdmin: boolean;
+  onApprove: (id: number) => void;
+  onReject: (id: number) => void;
+  isProcessing: boolean;
+}
+
+function LoanCard({ loan, isAdmin, onApprove, onReject, isProcessing }: LoanCardProps) {
+  const handleApproveClick = useCallback(() => onApprove(loan.id), [onApprove, loan.id]);
+  const handleRejectClick = useCallback(() => onReject(loan.id), [onReject, loan.id]);
+
+  const statusCfg = getStatusConfig(loan.status);
+  const paidEmis = loan.paidEmis ?? 0;
+  const totalEmisNum = loan.totalEmis ?? 1;
+  const repaymentPct = totalEmisNum > 0 ? Math.round((paidEmis / totalEmisNum) * 100) : 0;
+  const principalNum = Number(loan.amount);
+  const emiAmountNum = loan.emiAmount ? Number(loan.emiAmount) : null;
+  const remaining = emiAmountNum ? emiAmountNum * (totalEmisNum - paidEmis) : null;
+
+  return (
+    <Card
+      className={cn(
+        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4",
+        statusCfg.accent,
+      )}
+    >
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+              <Banknote className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xl font-bold tabular-nums text-foreground">
+                ₹{principalNum.toLocaleString("en-IN")}
+              </p>
+              {loan.reason && (
+                <p className="text-[11px] text-muted-foreground truncate">{loan.reason}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
+              {statusCfg.icon}
+              {loan.status ?? "PENDING"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+          {loan.user?.name && (
+            <span className="flex items-center gap-1">
+              <User className="h-2.5 w-2.5" />
+              {loan.user.name}
+            </span>
+          )}
+          {loan.totalEmis && (
+            <span className="flex items-center gap-1">
+              <CalendarDays className="h-2.5 w-2.5" />
+              {paidEmis}/{totalEmisNum} EMIs paid
+            </span>
+          )}
+          {emiAmountNum && (
+            <span className="font-medium text-foreground/70">
+              ₹{emiAmountNum.toLocaleString("en-IN")}/mo
+            </span>
+          )}
+          {loan.createdAt && (
+            <span>{format(new Date(loan.createdAt), "MMM d, yyyy")}</span>
+          )}
+        </div>
+
+        {(loan.status === "ACTIVE" || loan.status === "APPROVED") && loan.totalEmis && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>Repayment progress</span>
+              <span>
+                {repaymentPct}%
+                {remaining !== null && (
+                  <span className="ml-1 text-foreground/60">
+                    · ₹{remaining.toLocaleString("en-IN")} remaining
+                  </span>
+                )}
+              </span>
+            </div>
+            <Progress value={repaymentPct} className="h-1.5 bg-muted" />
+          </div>
+        )}
+
+        {isAdmin && loan.status === "PENDING" && (
+          <div className="flex gap-1.5 pt-1 border-t border-border/50">
+            <Button
+              size="sm"
+              className="h-7 gap-1.5 text-xs"
+              onClick={handleApproveClick}
+              disabled={isProcessing}
+            >
+              <CheckCircle2 className="h-3 w-3" />
+              Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1.5 text-xs"
+              onClick={handleRejectClick}
+            >
+              <XCircle className="h-3 w-3" />
+              Reject
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function LoansPage() {
-  const { data: loans, isLoading } = useSalaryLoans();
+  const { data: loans, isLoading, isError, refetch } = useSalaryLoans();
   const create = useCreateSalaryLoan();
   const process = useProcessSalaryLoan();
   const ability = useAbility();
@@ -74,11 +195,7 @@ export default function LoansPage() {
   const { data: employeesRaw } = useHrEmployees({ limit: 500 });
 
   const employeeOptions = useMemo<ComboboxOption[]>(() => {
-    const list = (
-      Array.isArray(employeesRaw)
-        ? employeesRaw
-        : (employeesRaw as PaginatedEmployees | undefined)?.data ?? []
-    ) as Employee[];
+    const list = extractEmployeeList(employeesRaw);
     return list.filter((e) => e.isActive).map((e) => ({
       value: e.id,
       label:
@@ -108,6 +225,7 @@ export default function LoansPage() {
     setSheetOpen(open);
   }, [resetForm]);
 
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
   const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value), []);
   const handleReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value), []);
   const handleTotalEmisChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTotalEmis(e.target.value), []);
@@ -154,6 +272,8 @@ export default function LoansPage() {
     [process],
   );
 
+  const handleOpenReject = useCallback((id: number) => setRejectId(id), []);
+
   const handleReject = useCallback(() => {
     if (!rejectId) return;
     process.mutate(
@@ -180,13 +300,24 @@ export default function LoansPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Salary Loans" subtitle="Request salary advances and track repayments">
+        <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
+          <p className="text-sm text-muted-foreground">Failed to load salary loans.</p>
+          <Button variant="outline" size="sm" onClick={refetch}>Retry</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Salary Loans"
       subtitle="Request salary advances and track repayments"
       badge={`${loans?.length ?? 0} loans`}
       actions={
-        <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />
           Request Loan
         </Button>
@@ -202,112 +333,16 @@ export default function LoansPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {loans.map((loan: SalaryLoan) => {
-            const statusCfg = getStatusConfig(loan.status);
-            const paidEmis = loan.paidEmis ?? 0;
-            const totalEmisNum = loan.totalEmis ?? 1;
-            const repaymentPct = totalEmisNum > 0 ? Math.round((paidEmis / totalEmisNum) * 100) : 0;
-            const principalNum = Number(loan.amount);
-            const emiAmountNum = loan.emiAmount ? Number(loan.emiAmount) : null;
-            const remaining = emiAmountNum ? emiAmountNum * (totalEmisNum - paidEmis) : null;
-
-            return (
-              <Card
-                key={loan.id}
-                className={cn(
-                  "rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4",
-                  statusCfg.accent,
-                )}
-              >
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-                        <Banknote className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xl font-bold tabular-nums text-foreground">
-                          ₹{principalNum.toLocaleString("en-IN")}
-                        </p>
-                        {loan.reason && (
-                          <p className="text-[11px] text-muted-foreground truncate">{loan.reason}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
-                        {statusCfg.icon}
-                        {loan.status ?? "PENDING"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                    {loan.user?.name && (
-                      <span className="flex items-center gap-1">
-                        <User className="h-2.5 w-2.5" />
-                        {loan.user.name}
-                      </span>
-                    )}
-                    {loan.totalEmis && (
-                      <span className="flex items-center gap-1">
-                        <CalendarDays className="h-2.5 w-2.5" />
-                        {paidEmis}/{totalEmisNum} EMIs paid
-                      </span>
-                    )}
-                    {emiAmountNum && (
-                      <span className="font-medium text-foreground/70">
-                        ₹{emiAmountNum.toLocaleString("en-IN")}/mo
-                      </span>
-                    )}
-                    {loan.createdAt && (
-                      <span>{format(new Date(loan.createdAt), "MMM d, yyyy")}</span>
-                    )}
-                  </div>
-
-                  {(loan.status === "ACTIVE" || loan.status === "APPROVED") && loan.totalEmis && (
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[10px] text-muted-foreground">
-                        <span>Repayment progress</span>
-                        <span>
-                          {repaymentPct}%
-                          {remaining !== null && (
-                            <span className="ml-1 text-foreground/60">
-                              · ₹{remaining.toLocaleString("en-IN")} remaining
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                      <Progress value={repaymentPct} className="h-1.5 bg-muted" />
-                    </div>
-                  )}
-
-                  {isAdmin && loan.status === "PENDING" && (
-                    <div className="flex gap-1.5 pt-1 border-t border-border/50">
-                      <Button
-                        size="sm"
-                        className="h-7 gap-1.5 text-xs"
-                        onClick={() => handleApprove(loan.id)}
-                        disabled={process.isPending}
-                      >
-                        <CheckCircle2 className="h-3 w-3" />
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 gap-1.5 text-xs"
-                        onClick={() => setRejectId(loan.id)}
-                      >
-                        <XCircle className="h-3 w-3" />
-                        Reject
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+          {loans.map((loan) => (
+            <LoanCard
+              key={loan.id}
+              loan={loan}
+              isAdmin={isAdmin}
+              onApprove={handleApprove}
+              onReject={handleOpenReject}
+              isProcessing={process.isPending}
+            />
+          ))}
         </div>
       )}
 

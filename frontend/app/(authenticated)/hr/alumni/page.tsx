@@ -16,10 +16,10 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, Briefcase, Calendar, Mail, Users, ExternalLink } from "lucide-react";
+import { Plus, Briefcase, Calendar, Mail, Users, ExternalLink, AlertCircle } from "lucide-react";
 import { useAbility } from "@/lib/abilities-context";
 import { cn } from "@/lib/utils";
-import type { Employee, PaginatedEmployees } from "@/types/hr";
+import type { Employee } from "@/types/hr";
 
 interface AlumniRecord {
   id: number;
@@ -49,7 +49,7 @@ export default function AlumniPage() {
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:employees");
 
-  const { data: alumni, isLoading } = useQuery({
+  const { data: alumni, isLoading, isError, refetch } = useQuery({
     queryKey: alumniKeys.list(),
     queryFn: () => apiClient.get<AlumniRecord[]>("/hr/alumni"),
   });
@@ -57,7 +57,8 @@ export default function AlumniPage() {
   const { data: employeesRaw } = useHrEmployees();
   const employees = useMemo<Employee[]>(() => {
     if (Array.isArray(employeesRaw)) return employeesRaw;
-    return (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
+    if (employeesRaw && "data" in employeesRaw) return employeesRaw.data;
+    return [];
   }, [employeesRaw]);
 
   const existingUserIds = useMemo(
@@ -125,6 +126,11 @@ export default function AlumniPage() {
     setSheetOpen(open);
   }, [resetForm]);
 
+  const handleLeftDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLeftDate(e.target.value), []);
+  const handleCurrentCompanyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCurrentCompany(e.target.value), []);
+  const handleCurrentRoleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCurrentRole(e.target.value), []);
+  const handleLinkedinUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLinkedinUrl(e.target.value), []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Alumni Network" subtitle="Stay connected with former team members">
@@ -133,6 +139,19 @@ export default function AlumniPage() {
             <Skeleton key={i} className="h-36 rounded-2xl" />
           ))}
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Alumni Network" subtitle="Stay connected with former team members">
+        <EmptyState
+          illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
+          title="Failed to load alumni"
+          description="Something went wrong. Please try again."
+          action={{ label: "Retry", onClick: refetch }}
+        />
       </PageWrapper>
     );
   }
@@ -251,21 +270,21 @@ export default function AlumniPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Left / Exit Date</label>
-          <Input type="date" value={leftDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setLeftDate(e.target.value)} />
+          <Input type="date" value={leftDate} max={new Date().toISOString().slice(0, 10)} onChange={handleLeftDateChange} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Current Company</label>
-            <Input placeholder="Where they work now" value={currentCompany} onChange={(e) => setCurrentCompany(e.target.value)} />
+            <Input placeholder="Where they work now" value={currentCompany} onChange={handleCurrentCompanyChange} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Current Role</label>
-            <Input placeholder="e.g., Engineering Lead" value={currentRole} onChange={(e) => setCurrentRole(e.target.value)} />
+            <Input placeholder="e.g., Engineering Lead" value={currentRole} onChange={handleCurrentRoleChange} />
           </div>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">LinkedIn URL</label>
-          <Input type="url" placeholder="https://linkedin.com/in/..." value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} />
+          <Input type="url" placeholder="https://linkedin.com/in/..." value={linkedinUrl} onChange={handleLinkedinUrlChange} />
         </div>
       </HrSheet>
     </PageWrapper>

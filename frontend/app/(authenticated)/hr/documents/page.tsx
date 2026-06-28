@@ -26,7 +26,6 @@ import { toast } from "sonner";
 import {
   useHrDocuments,
   useDeleteDocument,
-  useHrDocumentStats,
   useRichDocuments,
   useDeleteRichDocument,
 } from "@/lib/api/hooks/hr";
@@ -85,7 +84,12 @@ export default function DocumentsPage() {
     if (!foldersKey) return;
     try {
       const stored = localStorage.getItem(foldersKey);
-      if (stored) setCustomFolders(JSON.parse(stored) as string[]);
+      if (stored) {
+        const parsed: unknown = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setCustomFolders(parsed.filter((item): item is string => typeof item === "string"));
+        }
+      }
     } catch { }
   }, [foldersKey]);
 
@@ -93,11 +97,10 @@ export default function DocumentsPage() {
 
   const { data: rawDocuments = [], isLoading, refetch } = useHrDocuments(undefined, typeFilter);
   const { data: rawPolicies = [] } = useHrDocuments(undefined, "POLICY");
-  const { data: _statsData } = useHrDocumentStats();
   const deleteMutation = useDeleteDocument();
 
-  const documents = rawDocuments as Document[];
-  const policies = (rawPolicies as Document[]).filter((d) => d.isPublic);
+  const documents = rawDocuments;
+  const policies = rawPolicies.filter((d) => d.isPublic);
 
   const categoryTabs = useMemo(
     () => [...DEFAULT_CATEGORY_TABS, ...customFolders],
@@ -333,6 +336,69 @@ export default function DocumentsPage() {
   );
 }
 
+interface RichDocumentRowProps {
+  doc: { id: number; title: string; templateType: string | null; isPublished: boolean | null; updatedAt: Date | string | null };
+  onDelete: (id: number) => void;
+  isDeletePending: boolean;
+}
+
+function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProps) {
+  const handleDelete = useCallback(() => onDelete(doc.id), [onDelete, doc.id]);
+
+  return (
+    <div className="flex items-center justify-between p-2.5 rounded-xl border border-border/60 bg-background hover:bg-muted/30 transition-colors duration-200">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+          <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground truncate">{doc.title}</p>
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            {doc.templateType && (
+              <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700">
+                {doc.templateType}
+              </span>
+            )}
+            {doc.isPublished && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+                <Globe className="h-2.5 w-2.5" />
+                Published
+              </span>
+            )}
+            {doc.updatedAt && (
+              <span className="text-[10px] text-muted-foreground">
+                {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          asChild
+        >
+          <Link href={`/hr/documents/editor/${doc.id}`} aria-label="Edit document">
+            <Pencil className="h-3.5 w-3.5" />
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-rose-600"
+          onClick={handleDelete}
+          disabled={isDeletePending}
+          aria-label="Delete document"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function RichDocumentsSection() {
   const { data: richDocs, isLoading } = useRichDocuments();
   const deleteMutation = useDeleteRichDocument();
@@ -380,59 +446,12 @@ function RichDocumentsSection() {
         </div>
         <div className="space-y-1.5">
           {richDocs.map((doc) => (
-            <div
+            <RichDocumentRow
               key={doc.id}
-              className="flex items-center justify-between p-2.5 rounded-xl border border-border/60 bg-background hover:bg-muted/30 transition-colors duration-200"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{doc.title}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                    {doc.templateType && (
-                      <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700">
-                        {doc.templateType}
-                      </span>
-                    )}
-                    {doc.isPublished && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
-                        <Globe className="h-2.5 w-2.5" />
-                        Published
-                      </span>
-                    )}
-                    {doc.updatedAt && (
-                      <span className="text-[10px] text-muted-foreground">
-                        {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                  asChild
-                >
-                  <Link href={`/hr/documents/editor/${doc.id}`} aria-label="Edit document">
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Link>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-rose-600"
-                  onClick={() => handleDelete(doc.id)}
-                  disabled={deleteMutation.isPending}
-                  aria-label="Delete document"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
+              doc={doc}
+              onDelete={handleDelete}
+              isDeletePending={deleteMutation.isPending}
+            />
           ))}
         </div>
       </CardContent>

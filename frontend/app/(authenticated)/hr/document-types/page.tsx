@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 
@@ -112,7 +111,6 @@ function blankForm(): FormState {
 }
 
 export default function DocumentTypesPage() {
-  useSession();
   const ability = useAbility();
   const isHROrCEO = ability.can("manage", "hr:employees");
 

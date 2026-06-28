@@ -131,6 +131,7 @@ const MIGRATED_PREFIXES = [
   "/sales",
   "/search",
   "/settings",
+  "/storage",
   "/tasks",
   "/webhooks",
   "/feature-flags",

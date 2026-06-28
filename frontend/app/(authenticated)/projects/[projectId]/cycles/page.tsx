@@ -2,6 +2,7 @@
 
 import { use, useState, useCallback } from "react";
 import { useCycles, useCreateCycle } from "@/lib/api/hooks/projects";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +56,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
     resolver: zodResolver(createCycleSchema),
   });
 
-  const onSubmit = (data: CreateCycleForm) => {
+  const onSubmit = useCallback((data: CreateCycleForm) => {
     createMutation.mutate(
       { ...data, projectId },
       {
@@ -63,10 +64,10 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
           setCreateOpen(false);
           toast.success("Cycle created");
         },
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
-  };
+  }, [createMutation, projectId]);
 
   if (isLoading) {
     return (
@@ -256,7 +257,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
         )}
 
         {!cycles?.length && (
-          <div className="text-center py-16">
+          <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] text-center">
             <EmptyCalendarIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No cycles yet</h3>
             <p className="text-sm text-muted-foreground mb-4">Create your first cycle to start planning work in time-boxed iterations.</p>

@@ -129,7 +129,7 @@ function StatCard({
 
 export default function RecruitmentDashboardPage() {
   const pathname = usePathname();
-  const { data: stats, isLoading: statsLoading } = useRecruitmentStats();
+  const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useRecruitmentStats();
   const { data: recentJobs, isLoading: jobsLoading } = useJobPostings({ status: "OPEN" });
   const { data: upcomingInterviews, isLoading: interviewsLoading } = useInterviews({ upcoming: true });
   const { data: analytics } = useRecruitmentAnalytics();
@@ -137,7 +137,7 @@ export default function RecruitmentDashboardPage() {
   const isLoading = statsLoading || jobsLoading || interviewsLoading;
 
   const funnelMax = stats?.funnel
-    ? Math.max(...Object.values(stats.funnel as Record<string, number>), 1)
+    ? Math.max(...Object.values(stats.funnel), 1)
     : 1;
 
   return (
@@ -169,6 +169,14 @@ export default function RecruitmentDashboardPage() {
         })}
       </div>
 
+      {statsError ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-4 rounded-2xl border border-border bg-card text-center">
+          <p className="text-sm font-semibold text-foreground">Failed to load recruitment data</p>
+          <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
+          <Button size="sm" variant="outline" onClick={refetchStats}>Try again</Button>
+        </div>
+      ) : (
+      <>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
@@ -254,9 +262,9 @@ export default function RecruitmentDashboardPage() {
             ) : (
               <div className="space-y-2">
                 {FUNNEL_STAGES.map((stage, idx) => {
-                  const cnt = (stats?.funnel as Record<string, number>)?.[stage.key] ?? 0;
+                  const cnt = stats?.funnel?.[stage.key] ?? 0;
                   const prevCnt = idx > 0
-                    ? ((stats?.funnel as Record<string, number>)?.[FUNNEL_STAGES[idx - 1].key] ?? 0)
+                    ? (stats?.funnel?.[FUNNEL_STAGES[idx - 1].key] ?? 0)
                     : cnt;
                   const conversionPct = prevCnt > 0 && idx > 0 ? Math.round((cnt / prevCnt) * 100) : null;
                   const barWidth = funnelMax > 0 ? Math.max((cnt / funnelMax) * 100, cnt > 0 ? 3 : 0) : 0;
@@ -304,14 +312,12 @@ export default function RecruitmentDashboardPage() {
                     <div
                       className="h-full rounded-lg bg-rose-400 dark:bg-rose-500 transition-all duration-700 flex items-center px-3"
                       style={{
-                        width: `${funnelMax > 0
-                          ? Math.max((((stats?.funnel as Record<string, number>)?.REJECTED ?? 0) / funnelMax) * 100, 0)
-                          : 0}%`
+                        width: `${funnelMax > 0 ? Math.max(((stats?.funnel?.REJECTED ?? 0) / funnelMax) * 100, 0) : 0}%`
                       }}
                     >
-                      {funnelMax > 0 && (((stats?.funnel as Record<string, number>)?.REJECTED ?? 0) / funnelMax) * 100 > 10 && (
+                      {funnelMax > 0 && ((stats?.funnel?.REJECTED ?? 0) / funnelMax) * 100 > 10 && (
                         <span className="text-[11px] font-bold text-white">
-                          {(stats?.funnel as Record<string, number>)?.REJECTED ?? 0}
+                          {stats?.funnel?.REJECTED ?? 0}
                         </span>
                       )}
                     </div>
@@ -529,6 +535,8 @@ export default function RecruitmentDashboardPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

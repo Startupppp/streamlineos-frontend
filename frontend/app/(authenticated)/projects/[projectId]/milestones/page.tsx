@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,7 +68,7 @@ function MilestoneDialog({
   const update = useUpdateMilestone(projectId);
   const isPending = create.isPending || update.isPending;
 
-  function handleSave() {
+  const handleSave = useCallback(() => {
     if (!name.trim() || !targetDate) return;
     if (isEdit) {
       update.mutate(
@@ -81,7 +81,7 @@ function MilestoneDialog({
         { onSuccess: () => { toast.success("Milestone created"); onClose(); }, onError: () => toast.error("Failed to create") },
       );
     }
-  }
+  }, [name, targetDate, isEdit, milestone, description, status, update, create, onClose]);
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -133,13 +133,16 @@ function MilestoneCard({
   onDelete,
 }: {
   milestone: ProjectMilestone;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit: (milestone: ProjectMilestone) => void;
+  onDelete: (milestone: ProjectMilestone) => void;
 }) {
   const cfg = STATUS_CONFIG[milestone.status];
   const dateObj = new Date(milestone.targetDate);
   const daysLeft = differenceInDays(dateObj, new Date());
   const overdue = isPast(dateObj) && !isToday(dateObj) && milestone.status === "PENDING";
+
+  const handleEdit = useCallback(() => onEdit(milestone), [onEdit, milestone]);
+  const handleDelete = useCallback(() => onDelete(milestone), [onDelete, milestone]);
 
   return (
     <Card className={overdue ? "border-destructive/40" : ""}>
@@ -176,10 +179,10 @@ function MilestoneCard({
                 )}
               </div>
               <div className="flex items-center gap-1">
-                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onEdit}>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleEdit}>
                   <Pencil className="h-3 w-3" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive hover:text-destructive" onClick={onDelete}>
+                <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive hover:text-destructive" onClick={handleDelete}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
@@ -204,13 +207,18 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
   const achieved = milestones?.filter((m) => m.status === "ACHIEVED").length ?? 0;
   const total = milestones?.length ?? 0;
 
-  function handleDelete() {
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+
+  const handleEditTarget = useCallback((m: ProjectMilestone) => setEditTarget(m), []);
+  const handleDeleteTarget = useCallback((m: ProjectMilestone) => setDeleteTarget(m), []);
+
+  const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteMilestone.mutate(deleteTarget.id, {
       onSuccess: () => { toast.success("Milestone deleted"); setDeleteTarget(null); },
       onError: () => toast.error("Failed to delete"),
     });
-  }
+  }, [deleteTarget, deleteMilestone]);
 
   return (
     <PageWrapper title="Milestones" subtitle="Key checkpoints and target dates for this project">
@@ -218,7 +226,7 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
         <p className="text-sm text-muted-foreground">
           {achieved}/{total} achieved
         </p>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" /> New Milestone
         </Button>
       </div>
@@ -233,16 +241,16 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
             <MilestoneCard
               key={m.id}
               milestone={m}
-              onEdit={() => setEditTarget(m)}
-              onDelete={() => setDeleteTarget(m)}
+              onEdit={handleEditTarget}
+              onDelete={handleDeleteTarget}
             />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+        <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] py-16 text-center space-y-3">
           <Diamond className="h-10 w-10 text-muted-foreground/50" />
           <p className="text-muted-foreground">No milestones yet.</p>
-          <Button variant="outline" size="sm" onClick={() => setCreateOpen(true)}>
+          <Button variant="outline" size="sm" onClick={handleOpenCreate}>
             <Plus className="h-4 w-4 mr-1" /> Add first milestone
           </Button>
         </div>

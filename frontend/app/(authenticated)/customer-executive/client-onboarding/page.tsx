@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { getSessionAbility } from "@/lib/abilities-server";
-import { useSession } from "next-auth/react";
+import { useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/com
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -29,7 +28,77 @@ import {
   useOnboardingTemplates,
   useCreateOnboardingTemplate,
 } from "@/lib/api/hooks/crm";
-import type { ClientAccount } from "@/types/crm";
+import type { ClientAccount, OnboardingItem } from "@/types/crm";
+
+
+interface ChecklistItemProps {
+  item: OnboardingItem;
+  selectedClientId: number;
+  onToggle: (id: number, completed: boolean, clientId: number) => void;
+  onDelete: (id: number, clientId: number) => void;
+}
+
+function ChecklistItem({ item, selectedClientId, onToggle, onDelete }: ChecklistItemProps) {
+  const isDone = item.completedAt !== null;
+
+  const handleToggle = useCallback(() => {
+    onToggle(item.id, !isDone, selectedClientId);
+  }, [item.id, isDone, selectedClientId, onToggle]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(item.id, selectedClientId);
+  }, [item.id, selectedClientId, onDelete]);
+
+  return (
+    <div className="flex items-start gap-3 rounded-md px-3 py-2 hover:bg-muted/50 group">
+      <button
+        type="button"
+        aria-label={isDone ? "Mark incomplete" : "Mark complete"}
+        className="mt-0.5 shrink-0 text-primary"
+        onClick={handleToggle}
+      >
+        {isDone ? (
+          <CheckSquare className="h-5 w-5 text-green-500" />
+        ) : (
+          <Square className="h-5 w-5" />
+        )}
+      </button>
+
+      <div className="flex-1 min-w-0">
+        <p
+          className={`text-sm font-medium leading-snug ${
+            isDone ? "line-through text-muted-foreground" : ""
+          }`}
+        >
+          {item.title}
+        </p>
+        <div className="flex flex-wrap gap-3 mt-0.5">
+          {item.dueDate && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <CalendarDays className="h-3 w-3" />
+              {new Date(item.dueDate).toLocaleDateString()}
+            </span>
+          )}
+          {item.assignee?.name && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <User className="h-3 w-3" />
+              {item.assignee.name}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        aria-label="Delete item"
+        className="opacity-0 group-hover:opacity-100 text-destructive ml-1 shrink-0"
+        onClick={handleDelete}
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
 
 
 function ChecklistTab() {
@@ -48,12 +117,24 @@ function ChecklistTab() {
   const total = items.length;
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  function handleAdd() {
+  const handleAdd = useCallback(() => {
     const title = newTitle.trim();
     if (!title || selectedClientId <= 0) return;
     createItem.mutate({ clientId: selectedClientId, title });
     setNewTitle("");
-  }
+  }, [newTitle, selectedClientId, createItem]);
+
+  const handleToggleItem = useCallback((id: number, completed: boolean, clientId: number) => {
+    toggleItem.mutate({ id, completed, clientId });
+  }, [toggleItem]);
+
+  const handleDeleteItem = useCallback((id: number, clientId: number) => {
+    deleteItem.mutate({ id, clientId });
+  }, [deleteItem]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleAdd();
+  }, [handleAdd]);
 
   return (
     <div className="space-y-4">
@@ -103,7 +184,11 @@ function ChecklistTab() {
             </CardHeader>
             <CardContent className="space-y-2">
               {isLoading ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">Loading…</p>
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
               ) : items.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4 text-center">
                   No items yet. Add the first task below.
@@ -111,69 +196,15 @@ function ChecklistTab() {
               ) : (
                 <ScrollArea className="w-full" type="auto">
                   <div className="space-y-1 min-w-[300px]">
-                    {items.map((item) => {
-                      const isDone = item.completedAt !== null;
-                      return (
-                        <div
-                          key={item.id}
-                          className="flex items-start gap-3 rounded-md px-3 py-2 hover:bg-muted/50 group"
-                        >
-                          <button
-                            type="button"
-                            aria-label={isDone ? "Mark incomplete" : "Mark complete"}
-                            className="mt-0.5 shrink-0 text-primary"
-                            onClick={() =>
-                              toggleItem.mutate({
-                                id: item.id,
-                                completed: !isDone,
-                                clientId: selectedClientId,
-                              })
-                            }
-                          >
-                            {isDone ? (
-                              <CheckSquare className="h-5 w-5 text-green-500" />
-                            ) : (
-                              <Square className="h-5 w-5" />
-                            )}
-                          </button>
-
-                          <div className="flex-1 min-w-0">
-                            <p
-                              className={`text-sm font-medium leading-snug ${
-                                isDone ? "line-through text-muted-foreground" : ""
-                              }`}
-                            >
-                              {item.title}
-                            </p>
-                            <div className="flex flex-wrap gap-3 mt-0.5">
-                              {item.dueDate && (
-                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                  <CalendarDays className="h-3 w-3" />
-                                  {new Date(item.dueDate).toLocaleDateString()}
-                                </span>
-                              )}
-                              {item.assignee?.name && (
-                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                  <User className="h-3 w-3" />
-                                  {item.assignee.name}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            aria-label="Delete item"
-                            className="opacity-0 group-hover:opacity-100 text-destructive ml-1 shrink-0"
-                            onClick={() =>
-                              deleteItem.mutate({ id: item.id, clientId: selectedClientId })
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      );
-                    })}
+                    {items.map((item) => (
+                      <ChecklistItem
+                        key={item.id}
+                        item={item}
+                        selectedClientId={selectedClientId}
+                        onToggle={handleToggleItem}
+                        onDelete={handleDeleteItem}
+                      />
+                    ))}
                   </div>
                 </ScrollArea>
               )}
@@ -183,9 +214,7 @@ function ChecklistTab() {
                   placeholder="Add a checklist item…"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleAdd();
-                  }}
+                  onKeyDown={handleKeyDown}
                   className="flex-1"
                 />
                 <Button
@@ -216,7 +245,7 @@ function TemplatesTab() {
   const { data: templates = [], isLoading } = useOnboardingTemplates();
   const createTemplate = useCreateOnboardingTemplate();
 
-  function handleCreate() {
+  const handleCreate = useCallback(() => {
     if (!name.trim()) return;
     createTemplate.mutate(
       { name: name.trim(), description: description.trim() || undefined, isDefault },
@@ -229,7 +258,7 @@ function TemplatesTab() {
         },
       }
     );
-  }
+  }, [name, description, isDefault, createTemplate]);
 
   return (
     <div className="space-y-4">
@@ -241,7 +270,11 @@ function TemplatesTab() {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
       ) : templates.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
@@ -324,7 +357,6 @@ function TemplatesTab() {
 
 
 export default function ClientOnboardingPage() {
-  const { data: session } = useSession();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "settings");
 

@@ -16,7 +16,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, ClipboardList, Calendar, Play, Archive, BarChart3 } from "lucide-react";
+import { Plus, ClipboardList, Calendar, Play, Archive, BarChart3, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAbility } from "@/lib/abilities-context";
 
@@ -39,6 +39,28 @@ const STATUS_META: Record<string, { label: string; accent: string; badge: string
     badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
   },
 };
+
+interface StatusFilterButtonProps {
+  value: SurveyStatusFilter;
+  label: string;
+  current: SurveyStatusFilter;
+  onSelect: (v: SurveyStatusFilter) => void;
+}
+
+const StatusFilterButton = memo(function StatusFilterButton({ value, label, current, onSelect }: StatusFilterButtonProps) {
+  const handleClick = useCallback(() => onSelect(value), [onSelect, value]);
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200",
+        current === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {label}
+    </button>
+  );
+});
 
 interface SurveyCardProps {
   s: PulseSurvey;
@@ -139,7 +161,7 @@ const STATUS_FILTERS: { value: SurveyStatusFilter; label: string }[] = [
 ];
 
 export default function SurveysPage() {
-  const { data: surveys, isLoading } = usePulseSurveys();
+  const { data: surveys, isLoading, isError, refetch } = usePulseSurveys();
   const create = useCreateSurvey();
   const update = useUpdateSurvey();
   const ability = useAbility();
@@ -153,10 +175,10 @@ export default function SurveysPage() {
 
   const resetForm = useCallback(() => { setTitle(""); setClosesAt(""); }, []);
 
-  const filteredSurveys = useMemo(() => {
+  const filteredSurveys = useMemo<PulseSurvey[]>(() => {
     if (!surveys) return [];
-    if (statusFilter === "all") return surveys as PulseSurvey[];
-    return (surveys as PulseSurvey[]).filter((s) => (s.status ?? "DRAFT") === statusFilter);
+    if (statusFilter === "all") return surveys;
+    return surveys.filter((s) => (s.status ?? "DRAFT") === statusFilter);
   }, [surveys, statusFilter]);
 
   const maxResponses = useMemo(() => {
@@ -169,6 +191,9 @@ export default function SurveysPage() {
     if (!open) resetForm();
     setSheetOpen(open);
   }, [resetForm]);
+
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
+  const handleClosesAtChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setClosesAt(e.target.value), []);
 
   const handleCreate = useCallback(() => {
     const trimmedTitle = title.trim();
@@ -224,6 +249,21 @@ export default function SurveysPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Pulse Surveys" subtitle="Employee engagement surveys">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load surveys</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={refetch}>Try again</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Pulse Surveys"
@@ -240,18 +280,13 @@ export default function SurveysPage() {
       filters={
         <div className="flex items-center gap-1 rounded-lg border p-1">
           {STATUS_FILTERS.map((f) => (
-            <button
+            <StatusFilterButton
               key={f.value}
-              onClick={() => handleStatusFilterChange(f.value)}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200",
-                statusFilter === f.value
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {f.label}
-            </button>
+              value={f.value}
+              label={f.label}
+              current={statusFilter}
+              onSelect={handleStatusFilterChange}
+            />
           ))}
         </div>
       }
@@ -288,11 +323,11 @@ export default function SurveysPage() {
       >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Survey Title <span className="text-destructive">*</span></label>
-          <Input placeholder="e.g., Q1 Engagement Survey" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} />
+          <Input placeholder="e.g., Q1 Engagement Survey" value={title} onChange={handleTitleChange} maxLength={100} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Closes At</label>
-          <Input type="date" value={closesAt} min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)} onChange={(e) => setClosesAt(e.target.value)} />
+          <Input type="date" value={closesAt} min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)} onChange={handleClosesAtChange} />
         </div>
         <p className="text-xs text-muted-foreground">A default satisfaction question will be added. Edit questions after creation.</p>
       </HrSheet>

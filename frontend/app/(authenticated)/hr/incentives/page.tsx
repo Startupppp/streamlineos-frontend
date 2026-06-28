@@ -60,6 +60,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
+import { formatINR } from "@/lib/format-utils";
+
+type IncentiveItem = NonNullable<ReturnType<typeof useHrIncentives>["data"]>["incentives"][number];
 
 function getStatusConfig(status: string) {
   if (status === "APPROVED") {
@@ -86,15 +89,102 @@ function getStatusConfig(status: string) {
   };
 }
 
-function formatINR(val: string | number | null | undefined): string {
-  if (!val) return "—";
-  const num = typeof val === "string" ? parseFloat(val) : val;
-  if (isNaN(num)) return "—";
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(num);
+interface IncentiveTableRowProps {
+  incentive: IncentiveItem;
+  onApprove: (id: number, calculated: string) => void;
+  onReject: (id: number) => void;
+  isRejecting: boolean;
+}
+
+function IncentiveTableRow({ incentive: inc, onApprove, onReject, isRejecting }: IncentiveTableRowProps) {
+  const handleApproveClick = useCallback(
+    () => onApprove(inc.id, inc.calculatedAmount ?? ""),
+    [onApprove, inc.id, inc.calculatedAmount],
+  );
+  const handleRejectClick = useCallback(() => onReject(inc.id), [onReject, inc.id]);
+
+  const statusCfg = getStatusConfig(inc.status);
+  const calculated = parseFloat(inc.calculatedAmount ?? "0");
+  const approved = inc.approvedAmount ? parseFloat(inc.approvedAmount) : null;
+  const payoutPct =
+    calculated > 0 && approved !== null
+      ? Math.min(Math.round((approved / calculated) * 100), 100)
+      : null;
+
+  return (
+    <TableRow className="hover:bg-muted/20 transition-colors duration-200">
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Avatar className="h-6 w-6">
+            <AvatarImage src={inc.salesRep?.image || ""} />
+            <AvatarFallback className="text-[9px]">
+              {inc.salesRep?.name?.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-xs font-medium">{inc.salesRep?.name || "—"}</span>
+        </div>
+      </TableCell>
+      <TableCell className="text-xs">{inc.clientAccount?.clientName || "—"}</TableCell>
+      <TableCell className="text-xs font-mono tabular-nums">
+        {inc.investmentAmount ? formatINR(inc.investmentAmount) : "—"}
+      </TableCell>
+      <TableCell>
+        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800">
+          {inc.incentiveRate}%
+        </span>
+      </TableCell>
+      <TableCell className="min-w-[160px]">
+        <div className="space-y-1">
+          <div className="flex justify-between text-[10px]">
+            <span className="text-muted-foreground">
+              Target:{" "}
+              <span className="font-medium text-foreground">
+                {inc.calculatedAmount ? formatINR(inc.calculatedAmount) : "—"}
+              </span>
+            </span>
+            {approved !== null && (
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                {inc.approvedAmount ? formatINR(inc.approvedAmount) : "—"}
+              </span>
+            )}
+          </div>
+          {payoutPct !== null && (
+            <Progress value={payoutPct} className="h-1.5 bg-muted" />
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
+          {statusCfg.icon}
+          {inc.status}
+        </span>
+      </TableCell>
+      <TableCell>
+        {inc.status === "PENDING" && (
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              className="h-7 gap-1 text-xs"
+              onClick={handleApproveClick}
+            >
+              <CheckCircle2 className="h-3 w-3" />
+              Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 text-xs"
+              onClick={handleRejectClick}
+              disabled={isRejecting}
+            >
+              <XCircle className="h-3 w-3" />
+              Reject
+            </Button>
+          </div>
+        )}
+      </TableCell>
+    </TableRow>
+  );
 }
 
 export default function IncentivesPage() {
@@ -130,7 +220,7 @@ export default function IncentivesPage() {
   const qc = useQueryClient();
 
   const { data: stats } = useHrIncentiveStats();
-  const { data, isLoading } = useHrIncentives({
+  const { data, isLoading, isError } = useHrIncentives({
     status:
       statusFilter !== "all"
         ? (statusFilter as "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL")
@@ -281,9 +371,9 @@ export default function IncentivesPage() {
     >
       <div className="space-y-5">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
-          <StatCard label="This Month" value={formatINR(stats?.thisMonth)} icon={IndianRupee} color="green" index={0} />
-          <StatCard label="Total Revenue" value={formatINR(stats?.totalRevenue)} icon={TrendingUp} color="blue" index={1} />
-          <StatCard label="Avg / Conversion" value={formatINR(stats?.avgPerConversion)} icon={Users} color="violet" index={2} />
+          <StatCard label="This Month" value={stats?.thisMonth ? formatINR(stats.thisMonth) : "—"} icon={IndianRupee} color="green" index={0} />
+          <StatCard label="Total Revenue" value={stats?.totalRevenue ? formatINR(stats.totalRevenue) : "—"} icon={TrendingUp} color="blue" index={1} />
+          <StatCard label="Avg / Conversion" value={stats?.avgPerConversion ? formatINR(stats.avgPerConversion) : "—"} icon={Users} color="violet" index={2} />
           <StatCard label="Pending" value={stats?.pending ?? 0} icon={Clock} color="amber" index={3} />
           <StatCard label="Approved" value={stats?.approved ?? 0} icon={CheckCircle2} color="green" index={4} />
         </div>
@@ -332,6 +422,17 @@ export default function IncentivesPage() {
                         </TableCell>
                       </TableRow>
                     ))
+                  ) : isError ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="py-0">
+                        <EmptyState
+                          compact
+                          illustration={<XCircle className="h-8 w-8 text-muted-foreground" />}
+                          title="Failed to load incentives"
+                          description="Please refresh the page to try again."
+                        />
+                      </TableCell>
+                    </TableRow>
                   ) : incentivesList.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="py-0">
@@ -343,86 +444,15 @@ export default function IncentivesPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    incentivesList.map((inc) => {
-                      const statusCfg = getStatusConfig(inc.status);
-                      const calculated = parseFloat(inc.calculatedAmount ?? "0");
-                      const approved = inc.approvedAmount ? parseFloat(inc.approvedAmount) : null;
-                      const payoutPct =
-                        calculated > 0 && approved !== null
-                          ? Math.min(Math.round((approved / calculated) * 100), 100)
-                          : null;
-
-                      return (
-                        <TableRow key={inc.id} className="hover:bg-muted/20 transition-colors duration-200">
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={inc.salesRep?.image || ""} />
-                                <AvatarFallback className="text-[9px]">
-                                  {inc.salesRep?.name?.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs font-medium">{inc.salesRep?.name || "—"}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-xs">{inc.clientAccount?.clientName || "—"}</TableCell>
-                          <TableCell className="text-xs font-mono tabular-nums">
-                            {formatINR(inc.investmentAmount)}
-                          </TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800">
-                              {inc.incentiveRate}%
-                            </span>
-                          </TableCell>
-                          <TableCell className="min-w-[160px]">
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-[10px]">
-                                <span className="text-muted-foreground">
-                                  Target: <span className="font-medium text-foreground">{formatINR(inc.calculatedAmount)}</span>
-                                </span>
-                                {approved !== null && (
-                                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                                    {formatINR(inc.approvedAmount)}
-                                  </span>
-                                )}
-                              </div>
-                              {payoutPct !== null && (
-                                <Progress value={payoutPct} className="h-1.5 bg-muted" />
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
-                              {statusCfg.icon}
-                              {inc.status}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            {inc.status === "PENDING" && (
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  className="h-7 gap-1 text-xs"
-                                  onClick={() => handleApproveOpen(inc.id, inc.calculatedAmount)}
-                                >
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 gap-1 text-xs"
-                                  onClick={() => handleReject(inc.id)}
-                                >
-                                  <XCircle className="h-3 w-3" />
-                                  Reject
-                                </Button>
-                              </div>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
+                    incentivesList.map((inc) => (
+                      <IncentiveTableRow
+                        key={inc.id}
+                        incentive={inc}
+                        onApprove={handleApproveOpen}
+                        onReject={handleReject}
+                        isRejecting={rejectMutation.isPending}
+                      />
+                    ))
                   )}
                 </TableBody>
               </Table>
@@ -459,7 +489,9 @@ export default function IncentivesPage() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>Calculated Amount</Label>
-              <p className="text-lg font-bold">{formatINR(approveModal?.calculated)}</p>
+              <p className="text-lg font-bold">
+                {approveModal?.calculated ? formatINR(approveModal.calculated) : "—"}
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label>Approved Amount (adjust if needed)</Label>

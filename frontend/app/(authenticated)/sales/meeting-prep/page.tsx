@@ -223,6 +223,25 @@ export default function MeetingPrepPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  const handleMeetingTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setField("meetingTitle", e.target.value),
+    [setField],
+  );
+  const handleAttendeeIdChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setField("attendeeId", e.target.value),
+    [setField],
+  );
+  const handleScheduledAtChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setField("scheduledAt", e.target.value),
+    [setField],
+  );
+  const handleNotesChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setField("notes", e.target.value),
+    [setField],
+  );
+  const handleSetAttendeeTypeLead = useCallback(() => setField("attendeeType", "lead"), [setField]);
+  const handleSetAttendeeTypeClient = useCallback(() => setField("attendeeType", "client"), [setField]);
+
   if (result) {
     return (
       <PageWrapper
@@ -276,7 +295,7 @@ export default function MeetingPrepPage() {
                 id="meeting-title"
                 placeholder="e.g. Q2 Review with Acme Corp, Initial Discovery Call…"
                 value={form.meetingTitle}
-                onChange={(e) => setField("meetingTitle", e.target.value)}
+                onChange={handleMeetingTitleChange}
                 aria-label="Meeting title"
               />
             </div>

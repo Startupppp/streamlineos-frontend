@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { useDiversityReport, type DiversityFilters } from "@/lib/api/hooks/hr/recruitment";
 import { useHrDepartments } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,34 +13,9 @@ import { Label } from "@/components/ui/label";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ChevronDown, AlertCircle, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface DiversityReport {
-  total: number;
-  genderBreakdown: { gender: string; count: number }[];
-  locationBreakdown: { location: string; count: number }[];
-  sourceBreakdown: { source: string; count: number }[];
-  stageBreakdown: { stage: string; count: number }[];
-}
-
-interface DiversityFilters {
-  from: string;
-  to: string;
-  departmentIds: number[];
-}
-
-function useDiversityReport(filters: DiversityFilters) {
-  const params: Record<string, string> = {};
-  if (filters.from) params.from = filters.from;
-  if (filters.to) params.to = filters.to;
-  if (filters.departmentIds.length > 0) params.departmentIds = filters.departmentIds.join(",");
-
-  return useQuery<DiversityReport>({
-    queryKey: [...queryKeys.hr.diversityReport(), params],
-    queryFn: () => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report", params),
-    staleTime: 5 * 60 * 1000,
-  });
-}
+import type { Department } from "@/types/hr";
 
 const GENDER_COLORS: Record<string, string> = {
   MALE: "bg-blue-500",
@@ -85,6 +58,23 @@ function HorizontalBar({
   );
 }
 
+function DeptCheckboxItem({
+  dept,
+  checked,
+  onToggle,
+}: {
+  dept: Department;
+  checked: boolean;
+  onToggle: (id: number) => void;
+}) {
+  const handleChange = useCallback(() => onToggle(dept.id), [dept.id, onToggle]);
+  return (
+    <DropdownMenuCheckboxItem checked={checked} onCheckedChange={handleChange}>
+      {dept.name}
+    </DropdownMenuCheckboxItem>
+  );
+}
+
 export default function DiversityReportPage() {
   const { data: departments } = useHrDepartments();
 
@@ -99,16 +89,24 @@ export default function DiversityReportPage() {
     departmentIds: [],
   });
 
-  const { data, isLoading } = useDiversityReport(filters);
+  const { data, isLoading, isError, refetch } = useDiversityReport(filters);
 
   const handleApply = useCallback(() => {
     setFilters({ ...pendingFilters });
   }, [pendingFilters]);
 
   const handleReset = useCallback(() => {
-    const cleared = { from: "", to: "", departmentIds: [] };
+    const cleared: DiversityFilters = { from: "", to: "", departmentIds: [] };
     setPendingFilters(cleared);
     setFilters(cleared);
+  }, []);
+
+  const handleFromChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPendingFilters((p) => ({ ...p, from: e.target.value }));
+  }, []);
+
+  const handleToChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPendingFilters((p) => ({ ...p, to: e.target.value }));
   }, []);
 
   const toggleDept = useCallback((id: number) => {
@@ -134,7 +132,7 @@ export default function DiversityReportPage() {
             type="date"
             className="h-8 text-xs w-36"
             value={pendingFilters.from}
-            onChange={(e) => setPendingFilters((p) => ({ ...p, from: e.target.value }))}
+            onChange={handleFromChange}
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -143,7 +141,7 @@ export default function DiversityReportPage() {
             type="date"
             className="h-8 text-xs w-36"
             value={pendingFilters.to}
-            onChange={(e) => setPendingFilters((p) => ({ ...p, to: e.target.value }))}
+            onChange={handleToChange}
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -154,20 +152,17 @@ export default function DiversityReportPage() {
                 {pendingFilters.departmentIds.length === 0
                   ? "All Departments"
                   : `${pendingFilters.departmentIds.length} selected`}
-                <svg className="ml-2 h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+                <ChevronDown className="ml-2 h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-52 max-h-56 overflow-y-auto">
               {(departments ?? []).map((dept) => (
-                <DropdownMenuCheckboxItem
+                <DeptCheckboxItem
                   key={dept.id}
+                  dept={dept}
                   checked={pendingFilters.departmentIds.includes(dept.id)}
-                  onCheckedChange={() => toggleDept(dept.id)}
-                >
-                  {dept.name}
-                </DropdownMenuCheckboxItem>
+                  onToggle={toggleDept}
+                />
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -201,12 +196,20 @@ export default function DiversityReportPage() {
             <Card key={i}><CardContent className="pt-6"><Skeleton className="h-40 w-full" /></CardContent></Card>
           ))}
         </div>
-      ) : !data ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            Failed to load report data.
-          </CardContent>
-        </Card>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
+          <AlertCircle className="h-10 w-10 text-destructive/50" />
+          <p className="text-sm text-muted-foreground">Failed to load diversity report.</p>
+          <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            Try again
+          </Button>
+        </div>
+      ) : !data || data.total === 0 ? (
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
+          <BarChart2 className="h-10 w-10 text-muted-foreground/30" />
+          <p className="text-sm font-medium text-muted-foreground">No applicant data found.</p>
+          <p className="text-xs text-muted-foreground">Adjust the filters or wait for candidates to apply.</p>
+        </div>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-4 mb-6">

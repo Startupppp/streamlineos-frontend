@@ -8,7 +8,7 @@ export function resolveImageUrl(image: string | null | undefined): string | unde
   if (!image) return undefined;
   if (image.startsWith("http://") || image.startsWith("https://")) return image;
   if (image.startsWith("/")) return image;
-  return `/api/storage/image?key=${encodeURIComponent(image)}`;
+  return `${process.env.NEXT_PUBLIC_API_URL ?? ""}/storage/image?key=${encodeURIComponent(image)}`;
 }
 
 export { slugify as generateSlug } from "./format-utils";

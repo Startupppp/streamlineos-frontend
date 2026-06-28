@@ -16,6 +16,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useRenewalAccounts, useUpdateRenewal } from "@/lib/api/hooks/crm";
 import type { ClientAccount } from "@/types/crm";
 import { cn } from "@/lib/utils";
+import { ErrorState } from "@/components/shared/error-state";
 
 
 type RenewalStage = "upcoming" | "in_discussion" | "renewed" | "churned";
@@ -175,7 +176,7 @@ function KanbanColumn({ stage, accounts, onStageChange, mutatingId }: KanbanColu
 
 
 export default function RenewalPipelinePage() {
-  const { data: accounts, isLoading } = useRenewalAccounts();
+  const { data: accounts, isLoading, isError, refetch } = useRenewalAccounts();
   const { mutate: updateRenewal, variables } = useUpdateRenewal();
 
   const handleStageChange = useCallback(
@@ -186,6 +187,18 @@ export default function RenewalPipelinePage() {
   );
 
   const mutatingId = variables?.accountId ?? null;
+
+  if (isError) {
+    return (
+      <PageWrapper title="Renewal Pipeline" subtitle="Track and manage client renewal stages">
+        <ErrorState
+          title="Failed to load renewals"
+          description="An error occurred while loading renewal accounts. Please try again."
+          onRetry={refetch}
+        />
+      </PageWrapper>
+    );
+  }
 
   if (isLoading) {
     return (
