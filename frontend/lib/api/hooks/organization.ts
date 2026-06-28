@@ -37,7 +37,7 @@ export const useOrgMembers = (
   >
 ) => {
   return useQuery<MembersResponse, Error>({
-    queryKey: queryKeys.organization.members(),
+    queryKey: [...queryKeys.organization.members(), { page, limit, search }] as const,
     queryFn: () =>
       apiClient.get<MembersResponse>("/organization/members", {
         page: String(page),

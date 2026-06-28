@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Loader2, Plus, X, AlertTriangle, Building2, UserCircle } from "lucide-react";
 import {
   Sheet,
@@ -36,6 +36,8 @@ import { getInitials } from "@/lib/format-utils";
 import type { Role, OrgMember } from "@/types/organization";
 import type { Department } from "@/types/hr";
 
+const ORG_MEMBERS_PAGE_SIZE = 20;
+
 interface RoleAssignmentsSheetProps {
   role: Role | null;
   open: boolean;
@@ -68,20 +70,29 @@ interface EffectiveUser {
 
 function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const roleId = role.id;
+
+  const [userSearch, setUserSearch] = useState("");
+  const [userPage, setUserPage] = useState(1);
+
   const membersQuery = useRoleMembers(roleId);
-  const orgMembersQuery = useOrgMembers(1, 100);
+  const orgMembersQuery = useOrgMembers(userPage, ORG_MEMBERS_PAGE_SIZE, userSearch || undefined);
   const departmentsQuery = useHrDepartments();
   const assign = useAssignRoleMember();
   const unassign = useUnassignRoleMember();
 
   const members = membersQuery.data ?? [];
-  const directUsers = members.filter((member) => member.principalType === "user" && member.via === "direct");
+  const directUsers = members.filter(
+    (member) => member.principalType === "user" && member.via === "direct",
+  );
   const assignedDepartments = members.filter((member) => member.principalType === "department");
   const directUserIds = new Set(directUsers.map((member) => member.principalId));
   const assignedDepartmentIds = new Set(assignedDepartments.map((member) => member.principalId));
 
-  const orgMembers = orgMembersQuery.data?.data ?? [];
+  const orgMembersPage = orgMembersQuery.data;
+  const orgMembers = orgMembersPage?.data ?? [];
+  const orgMembersTotalPages = orgMembersPage?.pagination.totalPages ?? 1;
   const departments = departmentsQuery.data ?? [];
+
   const availableUsers = orgMembers.filter((member) => !directUserIds.has(member.userId));
   const availableDepartments = departments.filter(
     (department) => !assignedDepartmentIds.has(String(department.id)),
@@ -90,13 +101,14 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const effectiveUsers = new Map<string, EffectiveUser>();
   for (const member of members) {
     if (member.principalType !== "user") continue;
-    const existing =
-      effectiveUsers.get(member.principalId) ??
-      { name: member.name, email: member.email, image: member.image, vias: [] };
+    const existing = effectiveUsers.get(member.principalId) ?? {
+      name: member.name,
+      email: member.email,
+      image: member.image,
+      vias: [],
+    };
     const via =
-      member.via === "direct"
-        ? "Direct"
-        : `via ${member.departmentName ?? "Department"}`;
+      member.via === "direct" ? "Direct" : `via ${member.departmentName ?? "Department"}`;
     if (!existing.vias.includes(via)) existing.vias.push(via);
     effectiveUsers.set(member.principalId, existing);
   }
@@ -109,6 +121,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
       String(assign.variables?.principalId) === String(principalId),
     [assign.isPending, assign.variables],
   );
+
   const isRemoving = useCallback(
     (principalType: "user" | "department", principalId: string | number) =>
       unassign.isPending &&
@@ -116,6 +129,19 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
       String(unassign.variables?.principalId) === String(principalId),
     [unassign.isPending, unassign.variables],
   );
+
+  const handleUserSearchChange = useCallback((value: string) => {
+    setUserSearch(value);
+    setUserPage(1);
+  }, []);
+
+  const handleUserPagePrev = useCallback(() => {
+    setUserPage((prev) => Math.max(1, prev - 1));
+  }, []);
+
+  const handleUserPageNext = useCallback(() => {
+    setUserPage((prev) => prev + 1);
+  }, []);
 
   const handleAddUser = useCallback(
     (userId: string) => {
@@ -216,29 +242,73 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold flex items-center gap-1.5">
-                  <UserCircle className="h-4 w-4 text-muted-foreground" /> Users
+                  <UserCircle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  Users
                 </h3>
                 <Badge variant="outline" className="text-[10px]">
                   {directUsers.length} assigned
                 </Badge>
               </div>
-              <Command className="rounded-md border">
-                <CommandInput placeholder="Search people to assign..." />
+              <Command className="rounded-md border" shouldFilter={false}>
+                <CommandInput
+                  placeholder="Search people to assign..."
+                  value={userSearch}
+                  onValueChange={handleUserSearchChange}
+                  aria-label="Search users to assign"
+                />
                 <CommandList className="max-h-[180px]">
-                  <CommandEmpty>No people found.</CommandEmpty>
-                  <CommandGroup>
-                    {availableUsers.map((member) => (
-                      <AssignableUserItem
-                        key={member.userId}
-                        member={member}
-                        busy={isAdding("user", member.userId)}
-                        onAdd={handleAddUser}
-                      />
-                    ))}
-                  </CommandGroup>
+                  {orgMembersQuery.isFetching ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : availableUsers.length === 0 ? (
+                    <CommandEmpty>No people found.</CommandEmpty>
+                  ) : (
+                    <CommandGroup>
+                      {availableUsers.map((member) => (
+                        <AssignableUserItem
+                          key={member.userId}
+                          member={member}
+                          busy={isAdding("user", member.userId)}
+                          onAdd={handleAddUser}
+                        />
+                      ))}
+                    </CommandGroup>
+                  )}
                 </CommandList>
+                {orgMembersTotalPages > 1 && (
+                  <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border/40">
+                    <span className="text-[11px] text-muted-foreground">
+                      Page {userPage} of {orgMembersTotalPages}
+                    </span>
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        disabled={userPage <= 1 || orgMembersQuery.isFetching}
+                        onClick={handleUserPagePrev}
+                        aria-label="Previous page of users"
+                      >
+                        Prev
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        disabled={userPage >= orgMembersTotalPages || orgMembersQuery.isFetching}
+                        onClick={handleUserPageNext}
+                        aria-label="Next page of users"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </Command>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5" role="list" aria-label="Directly assigned users">
                 {directUsers.length === 0 ? (
                   <p className="text-xs text-muted-foreground px-1">No users directly assigned.</p>
                 ) : (
@@ -260,14 +330,18 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold flex items-center gap-1.5">
-                  <Building2 className="h-4 w-4 text-muted-foreground" /> Departments
+                  <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  Departments
                 </h3>
                 <Badge variant="outline" className="text-[10px]">
                   {assignedDepartments.length} assigned
                 </Badge>
               </div>
               <Command className="rounded-md border">
-                <CommandInput placeholder="Search departments to assign..." />
+                <CommandInput
+                  placeholder="Search departments to assign..."
+                  aria-label="Search departments to assign"
+                />
                 <CommandList className="max-h-[180px]">
                   <CommandEmpty>No departments found.</CommandEmpty>
                   <CommandGroup>
@@ -282,7 +356,11 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                   </CommandGroup>
                 </CommandList>
               </Command>
-              <div className="space-y-1.5">
+              <div
+                className="space-y-1.5"
+                role="list"
+                aria-label="Assigned departments"
+              >
                 {assignedDepartments.length === 0 ? (
                   <p className="text-xs text-muted-foreground px-1">No departments assigned.</p>
                 ) : (
@@ -311,10 +389,11 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                   No one has this role yet. Assign users or departments above.
                 </p>
               ) : (
-                <div className="space-y-1.5">
+                <div className="space-y-1.5" role="list" aria-label="Effective role members">
                   {effectiveList.map(([principalId, user]) => (
                     <div
                       key={principalId}
+                      role="listitem"
                       className="flex items-center gap-3 rounded-md border border-border/50 px-3 py-2"
                     >
                       <Avatar className="h-8 w-8">
@@ -328,7 +407,9 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                           {user.name ?? user.email ?? "Unknown"}
                         </p>
                         {user.email && (
-                          <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {user.email}
+                          </p>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center justify-end gap-1 shrink-0">
@@ -371,6 +452,7 @@ function AssignableUserItem({ member, busy, onAdd }: AssignableUserItemProps) {
       onSelect={handleSelect}
       disabled={busy}
       className="gap-2"
+      aria-label={`Assign ${member.name ?? member.email}`}
     >
       <Avatar className="h-6 w-6">
         <AvatarImage src={member.image ?? undefined} alt={member.name ?? ""} />
@@ -380,12 +462,14 @@ function AssignableUserItem({ member, busy, onAdd }: AssignableUserItemProps) {
       </Avatar>
       <div className="min-w-0 flex-1">
         <p className="text-[13px] truncate">{member.name ?? member.email}</p>
-        {member.name && <p className="text-[11px] text-muted-foreground truncate">{member.email}</p>}
+        {member.name && (
+          <p className="text-[11px] text-muted-foreground truncate">{member.email}</p>
+        )}
       </div>
       {busy ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
       ) : (
-        <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+        <Plus className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
       )}
     </CommandItem>
   );
@@ -406,13 +490,14 @@ function AssignableDepartmentItem({ department, busy, onAdd }: AssignableDepartm
       onSelect={handleSelect}
       disabled={busy}
       className="gap-2"
+      aria-label={`Assign department ${department.name}`}
     >
-      <Building2 className="h-4 w-4 text-muted-foreground" />
+      <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
       <span className="text-[13px] truncate flex-1">{department.name}</span>
       {busy ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
       ) : (
-        <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+        <Plus className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
       )}
     </CommandItem>
   );
@@ -431,10 +516,15 @@ function MemberRow({ name, subtitle, image, principalId, removing, onRemove }: M
   const handleRemove = useCallback(() => onRemove(principalId), [principalId, onRemove]);
 
   return (
-    <div className="flex items-center gap-3 rounded-md border border-border/50 px-3 py-2">
+    <div
+      role="listitem"
+      className="flex items-center gap-3 rounded-md border border-border/50 px-3 py-2"
+    >
       <Avatar className="h-8 w-8">
         <AvatarImage src={image ?? undefined} alt={name ?? ""} />
-        <AvatarFallback className="text-[10px]">{getInitials(name ?? subtitle ?? "?")}</AvatarFallback>
+        <AvatarFallback className="text-[10px]">
+          {getInitials(name ?? subtitle ?? "?")}
+        </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
         <p className="text-[13px] font-medium truncate">{name ?? subtitle ?? "Unknown"}</p>
@@ -448,9 +538,13 @@ function MemberRow({ name, subtitle, image, principalId, removing, onRemove }: M
         className="h-8 w-8 text-muted-foreground hover:text-destructive"
         onClick={handleRemove}
         disabled={removing}
-        aria-label="Remove member"
+        aria-label={`Remove ${name ?? subtitle ?? "member"} from role`}
       >
-        {removing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />}
+        {removing ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <X className="h-3.5 w-3.5" />
+        )}
       </Button>
     </div>
   );
@@ -467,8 +561,14 @@ function DepartmentRow({ name, principalId, removing, onRemove }: DepartmentRowP
   const handleRemove = useCallback(() => onRemove(principalId), [principalId, onRemove]);
 
   return (
-    <div className="flex items-center gap-3 rounded-md border border-border/50 px-3 py-2">
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted shrink-0">
+    <div
+      role="listitem"
+      className="flex items-center gap-3 rounded-md border border-border/50 px-3 py-2"
+    >
+      <span
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-muted shrink-0"
+        aria-hidden="true"
+      >
         <Building2 className="h-4 w-4 text-muted-foreground" />
       </span>
       <p className="text-[13px] font-medium truncate flex-1">{name ?? "Department"}</p>
@@ -478,9 +578,13 @@ function DepartmentRow({ name, principalId, removing, onRemove }: DepartmentRowP
         className="h-8 w-8 text-muted-foreground hover:text-destructive"
         onClick={handleRemove}
         disabled={removing}
-        aria-label="Remove department"
+        aria-label={`Remove ${name ?? "department"} from role`}
       >
-        {removing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />}
+        {removing ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <X className="h-3.5 w-3.5" />
+        )}
       </Button>
     </div>
   );

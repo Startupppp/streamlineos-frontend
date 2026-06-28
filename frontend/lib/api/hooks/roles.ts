@@ -80,8 +80,6 @@ export const useDeleteRole = () => {
   });
 };
 
-
-
 export interface RoleTemplate {
   id: string;
   name: string;

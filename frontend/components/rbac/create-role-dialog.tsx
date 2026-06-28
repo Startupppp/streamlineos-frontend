@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,38 +30,24 @@ import { useCreateRole, useRoles, useRoleTemplates } from "@/lib/api/hooks/roles
 
 const CLONE_NONE = "none";
 
+const createRoleSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Role name is required")
+    .max(80, "Name must be 80 characters or fewer"),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(60, "Slug must be 60 characters or fewer")
+    .regex(/^[A-Z0-9_]+$/, "Slug must only contain uppercase letters, digits, or underscores"),
+  cloneFrom: z.string(),
+});
+
+type FormValues = z.infer<typeof createRoleSchema>;
+
 function slugify(value: string): string {
   return value.toUpperCase().replace(/\s+/g, "_").replace(/[^A-Z0-9_]/g, "");
 }
-
-function buildSchema(existingNames: string[], existingSlugs: string[]) {
-  return z.object({
-    name: z
-      .string()
-      .min(1, "Role name is required")
-      .max(80, "Name must be 80 characters or fewer")
-      .refine(
-        (value) => !existingNames.includes(value.trim().toLowerCase()),
-        "A role with this name already exists",
-      ),
-    slug: z
-      .string()
-      .min(1, "Slug is required")
-      .max(60, "Slug must be 60 characters or fewer")
-      .regex(/^[A-Z0-9_]+$/, "Slug must contain only uppercase letters, digits, or underscores")
-      .refine(
-        (value) => !existingSlugs.includes(value.trim().toLowerCase()),
-        "A role with this slug already exists",
-      ),
-    cloneFrom: z.string().default(CLONE_NONE),
-  });
-}
-
-type FormValues = {
-  name: string;
-  slug: string;
-  cloneFrom: string;
-};
 
 interface CreateRoleDialogProps {
   open: boolean;
@@ -73,10 +59,6 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
   const { data: roles } = useRoles();
   const { data: templates } = useRoleTemplates();
 
-  const existingNames = (roles ?? []).map((role) => role.name.toLowerCase());
-  const existingSlugs = (roles ?? []).map((role) => role.slug.toLowerCase());
-  const schema = buildSchema(existingNames, existingSlugs);
-
   const {
     register,
     handleSubmit,
@@ -85,22 +67,33 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(createRoleSchema),
     defaultValues: { name: "", slug: "", cloneFrom: CLONE_NONE },
   });
 
-  const nameValue = watch("name");
   const cloneFrom = watch("cloneFrom");
 
-  useEffect(() => {
-    setValue("slug", slugify(nameValue), { shouldValidate: false });
-  }, [nameValue, setValue]);
-
-  useEffect(() => {
-    if (!open) {
-      reset();
+  const clonedPermissions = useMemo<string[]>(() => {
+    if (cloneFrom.startsWith("role:")) {
+      const roleId = Number(cloneFrom.slice("role:".length));
+      return roles?.find((role) => role.id === roleId)?.permissions ?? [];
     }
-  }, [open, reset]);
+    if (cloneFrom.startsWith("template:")) {
+      const templateId = cloneFrom.slice("template:".length);
+      const source = templates?.find((template) => template.id === templateId);
+      return source ? [...source.permissions] : [];
+    }
+    return [];
+  }, [cloneFrom, roles, templates]);
+
+  const handleNameChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setValue("name", value, { shouldValidate: true });
+      setValue("slug", slugify(value), { shouldValidate: false });
+    },
+    [setValue],
+  );
 
   const handleSlugChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,34 +111,35 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
     [setValue],
   );
 
-  const handleClose = useCallback(() => {
-    onOpenChange(false);
-  }, [onOpenChange]);
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) reset();
+      onOpenChange(nextOpen);
+    },
+    [onOpenChange, reset],
+  );
 
-  const getClonedPermissions = useCallback((): string[] => {
-    if (cloneFrom.startsWith("role:")) {
-      const roleId = Number(cloneFrom.slice("role:".length));
-      const source = roles?.find((role) => role.id === roleId);
-      return source?.permissions ?? [];
-    }
-    if (cloneFrom.startsWith("template:")) {
-      const templateId = cloneFrom.slice("template:".length);
-      const source = templates?.find((template) => template.id === templateId);
-      return source ? [...source.permissions] : [];
-    }
-    return [];
-  }, [cloneFrom, roles, templates]);
-
-  const clonedPermissions = getClonedPermissions();
+  const handleClose = useCallback(() => handleOpenChange(false), [handleOpenChange]);
 
   const onSubmit = useCallback(
     (values: FormValues) => {
-      const permissions = getClonedPermissions();
+      const existingNames = (roles ?? []).map((role) => role.name.trim().toLowerCase());
+      const existingSlugs = (roles ?? []).map((role) => role.slug.trim().toLowerCase());
+
+      if (existingNames.includes(values.name.trim().toLowerCase())) {
+        toast.error("A role with this name already exists");
+        return;
+      }
+      if (existingSlugs.includes(values.slug.trim().toLowerCase())) {
+        toast.error("A role with this slug already exists");
+        return;
+      }
+
       create.mutate(
         {
           name: values.name.trim(),
           slug: values.slug.trim(),
-          permissions: permissions.length > 0 ? permissions : undefined,
+          permissions: clonedPermissions.length > 0 ? clonedPermissions : undefined,
         },
         {
           onSuccess: () => {
@@ -157,11 +151,11 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
         },
       );
     },
-    [create, getClonedPermissions, onOpenChange, reset],
+    [create, clonedPermissions, roles, onOpenChange, reset],
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create new role</DialogTitle>
@@ -181,6 +175,7 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
               aria-invalid={Boolean(errors.name)}
               aria-describedby={errors.name ? "role-name-error" : undefined}
               {...register("name")}
+              onChange={handleNameChange}
             />
             {errors.name && (
               <p id="role-name-error" className="text-xs text-destructive">

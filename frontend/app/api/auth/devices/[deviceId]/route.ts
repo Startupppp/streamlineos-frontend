@@ -12,5 +12,5 @@ export async function DELETE(
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const token = await makeBackendToken(session);
   if (!token) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
-  return proxyToBackend(req, `/api/auth/devices/${deviceId}`, { method: "DELETE", auth: token });
+  return proxyToBackend(req, `/me/devices/${deviceId}`, { method: "DELETE", auth: token });
 }

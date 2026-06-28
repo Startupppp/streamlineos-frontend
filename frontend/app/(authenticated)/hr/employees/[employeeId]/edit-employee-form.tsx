@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useUpdateProfile } from "@/lib/api/hooks/hr";
 import { Loader2, Save } from "lucide-react";
-import { useRolesList } from "@/lib/api/hooks/roles";
+import { useRoles } from "@/lib/api/hooks/roles";
 import { PersonalInfoSection } from "@/features/hr/employees/detail/personal-info-section";
 import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professional-info-section";
 import { BankDetailsSection } from "@/features/hr/employees/detail/bank-details-section";
@@ -163,7 +163,7 @@ interface EditEmployeeFormProps {
 export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   const router = useRouter();
   const updateProfileMutation = useUpdateProfile();
-  const { data: orgRoles } = useRolesList();
+  const { data: orgRoles } = useRoles();
   const assignableRoles = useMemo(
     () => (orgRoles || []).filter((r) => r.slug !== "CEO"),
     [orgRoles],

@@ -38,7 +38,7 @@ import type { DataScope } from "@/types/access";
 
 type EditableScope = "all" | "team" | "own";
 
-type ScopeMap = Record<string, EditableScope>;
+type ScopeMap = Partial<Record<string, EditableScope>>;
 
 const MODULE_LABELS: Record<string, string> = {
   hr: "Human Resources",
@@ -430,10 +430,9 @@ export function PermissionMatrix({ role, onOpenAssignments }: PermissionMatrixPr
   const handleReset = useCallback(() => setDraft(null), []);
 
   const handleSave = useCallback(() => {
-    const items = Object.entries(effective).map(([permissionKey, scope]) => ({
-      permissionKey,
-      scope,
-    }));
+    const items = Object.entries(effective).flatMap(([permissionKey, scope]) =>
+      scope ? [{ permissionKey, scope }] : [],
+    );
     setRolePermissions.mutate(
       { roleId: role.id, items },
       {

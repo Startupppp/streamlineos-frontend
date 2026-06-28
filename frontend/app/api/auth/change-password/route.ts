@@ -8,5 +8,5 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const token = await makeBackendToken(session);
   if (!token) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
-  return proxyToBackend(req, "/api/auth/change-password", { method: "POST", auth: token });
+  return proxyToBackend(req, "/me/change-password", { method: "PATCH", auth: token });
 }

@@ -10,6 +10,7 @@ import {
   Users,
   AlertTriangle,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,9 @@ function RoleEditorContent() {
 
   const handleBack = useCallback(() => router.push("/settings/roles"), [router]);
   const handleOpenAssignments = useCallback(() => setAssignmentsOpen(true), []);
+  const handleRetry = useCallback(() => {
+    void roleQuery.refetch();
+  }, [roleQuery]);
 
   if (roleQuery.isLoading) {
     return <RoleEditorSkeleton onBack={handleBack} />;
@@ -56,10 +60,16 @@ function RoleEditorContent() {
               The role you are looking for does not exist or you do not have access.
             </p>
           </div>
-          <Button variant="outline" onClick={handleBack} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Roles
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleRetry} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Retry
+            </Button>
+            <Button variant="outline" onClick={handleBack} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Roles
+            </Button>
+          </div>
         </div>
       </PageWrapper>
     );

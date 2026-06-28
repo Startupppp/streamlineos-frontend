@@ -151,4 +151,10 @@ export const HR_PERMISSIONS: Permission[] = [
     action: "manage",
     description: "Manage goals",
   },
+  {
+    name: "hr:employees:manage",
+    resource: "hr:employees",
+    action: "manage",
+    description: "Manage employees (admin-level: full CRUD + HR operations)",
+  },
 ];

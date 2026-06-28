@@ -1,4 +1,4 @@
-export type { Permission } from "./permissions/types";
+export type { Permission, PermissionKey } from "./permissions/types";
 export { HR_PERMISSIONS } from "./permissions/hr";
 export { CRM_PERMISSIONS } from "./permissions/crm";
 export { SHARED_PERMISSIONS } from "./permissions/shared";

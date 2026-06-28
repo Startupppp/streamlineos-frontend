@@ -6,6 +6,7 @@ import type { Session } from "next-auth";
 import { auth } from "@/lib/auth";
 import { getSessionAbility } from "@/lib/abilities-server";
 import type { AppAbility } from "@/lib/abilities";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 interface RequirePermissionResult {
   session: Session;
@@ -51,7 +52,7 @@ export async function requireSession(): Promise<Session> {
 }
 
 export async function requirePermission(
-  permission: string | string[],
+  permission: PermissionKey | PermissionKey[],
   options: { redirectTo?: string } = {},
 ): Promise<RequirePermissionResult> {
   const session = (await auth()) as Session | null;

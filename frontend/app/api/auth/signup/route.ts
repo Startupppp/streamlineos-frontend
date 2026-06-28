@@ -2,5 +2,5 @@ import { type NextRequest } from "next/server";
 import { proxyToBackend } from "@/lib/api/backend-proxy";
 
 export async function POST(req: NextRequest) {
-  return proxyToBackend(req, "/api/auth/register");
+  return proxyToBackend(req, "/auth/register");
 }

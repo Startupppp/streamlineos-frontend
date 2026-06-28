@@ -4,10 +4,11 @@ import { useSession } from "next-auth/react";
 import { AccessDenied } from "./access-denied";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccess } from "@/lib/api/hooks/access";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 interface DashboardGateProps {
   allowedRoles?: string[];
-  permission?: string | string[];
+  permission?: PermissionKey | PermissionKey[];
   children: React.ReactNode;
 }
 
