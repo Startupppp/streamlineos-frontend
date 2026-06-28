@@ -76,7 +76,7 @@ export function NotActivatedPage() {
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={handleSignOut}
+            onClick={() => handleSignOut()}
             disabled={isSigningOut}
           >
             <LogOut className="h-4 w-4" />

@@ -88,7 +88,7 @@ export function SidebarUserMenu({ isCollapsed }: SidebarUserMenuProps) {
       <DropdownMenuSeparator />
       <DropdownMenuItem
         className="gap-2 text-destructive focus:text-destructive cursor-pointer"
-        onClick={handleSignOut}
+        onClick={() => handleSignOut()}
         disabled={isSigningOut}
       >
         <LogOut className="h-3.5 w-3.5" />

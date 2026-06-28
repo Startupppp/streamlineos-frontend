@@ -633,6 +633,7 @@ export const queryKeys = {
     teams: (params?: Record<string, unknown>) => [...base, "hierarchy", "teams", params] as const,
     locations: (params?: Record<string, unknown>) => [...base, "hierarchy", "locations", params] as const,
     costCenters: (params?: Record<string, unknown>) => [...base, "hierarchy", "costCenters", params] as const,
+    tree: () => [...base, "hierarchy", "tree"] as const,
   },
 
   inventory: {

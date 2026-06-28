@@ -86,6 +86,26 @@ export interface OrgCostCenter {
   updatedAt: string;
 }
 
+export interface OrgTreeTeam extends OrgTeam {
+  type: "team";
+  children: never[];
+}
+
+export interface OrgTreeDepartment extends OrgDepartment {
+  type: "department";
+  children: OrgTreeTeam[];
+}
+
+export interface OrgTreeBranch extends OrgBranch {
+  type: "branch";
+  children: OrgTreeDepartment[];
+}
+
+export interface OrgTreeNode extends OrgBusinessUnit {
+  type: "business_unit";
+  children: OrgTreeBranch[];
+}
+
 export interface OrgHierarchyOverview {
   businessUnits: number;
   branches: number;

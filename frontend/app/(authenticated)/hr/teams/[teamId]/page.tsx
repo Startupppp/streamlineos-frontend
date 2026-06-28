@@ -73,7 +73,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const team = useMemo(() => teams?.find((t) => t.id === teamId) ?? null, [teams, teamId]);
+  const team = useMemo(() => teams?.data?.find((t) => t.id === teamId) ?? null, [teams, teamId]);
   const employees = useMemo(() => resolveEmployees(employeesRaw as Employee[] | { data: Employee[]; pagination: unknown } | undefined), [employeesRaw]);
 
   const leadEmployee = useMemo(

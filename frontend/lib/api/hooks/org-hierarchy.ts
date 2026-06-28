@@ -11,9 +11,32 @@ import type {
   OrgLocation,
   OrgCostCenter,
   OrgHierarchyOverview,
+  OrgTreeNode,
 } from "@/types/org-hierarchy";
 
-// ─── Overview ────────────────────────────────────────────────────────────────
+interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+interface ListQuery extends Record<string, unknown> {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: "ACTIVE" | "DISABLED" | "ARCHIVED";
+}
+
+// ─── Overview & Tree ─────────────────────────────────────────────────────────
+
+export function useOrgTree() {
+  return useQuery({
+    queryKey: queryKeys.hierarchy.tree(),
+    queryFn: () => apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree"),
+    staleTime: 30_000,
+  });
+}
 
 export function useOrgHierarchyOverview() {
   return useQuery({
@@ -25,10 +48,16 @@ export function useOrgHierarchyOverview() {
 
 // ─── Business Units ──────────────────────────────────────────────────────────
 
-export function useBusinessUnits() {
+export function useBusinessUnits(query?: ListQuery) {
   return useQuery({
-    queryKey: queryKeys.hierarchy.businessUnits(),
-    queryFn: () => apiClient.get<OrgBusinessUnit[]>("/org-hierarchy/business-units"),
+    queryKey: queryKeys.hierarchy.businessUnits(query),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<OrgBusinessUnit>>("/org-hierarchy/business-units", {
+        page: String(query?.page ?? 1),
+        limit: String(query?.limit ?? 100),
+        ...(query?.search ? { search: query.search } : {}),
+        ...(query?.status ? { status: query.status } : {}),
+      }),
     staleTime: 60_000,
   });
 }
@@ -62,10 +91,16 @@ export function useDeleteBusinessUnit() {
 
 // ─── Org Branches ────────────────────────────────────────────────────────────
 
-export function useOrgBranches() {
+export function useOrgBranches(query?: ListQuery) {
   return useQuery({
-    queryKey: queryKeys.hierarchy.orgBranches(),
-    queryFn: () => apiClient.get<OrgBranch[]>("/org-hierarchy/branches"),
+    queryKey: queryKeys.hierarchy.orgBranches(query),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<OrgBranch>>("/org-hierarchy/branches", {
+        page: String(query?.page ?? 1),
+        limit: String(query?.limit ?? 100),
+        ...(query?.search ? { search: query.search } : {}),
+        ...(query?.status ? { status: query.status } : {}),
+      }),
     staleTime: 60_000,
   });
 }
@@ -99,10 +134,16 @@ export function useDeleteOrgBranch() {
 
 // ─── Departments ─────────────────────────────────────────────────────────────
 
-export function useOrgDepartments() {
+export function useOrgDepartments(query?: ListQuery) {
   return useQuery({
-    queryKey: queryKeys.hierarchy.departments(),
-    queryFn: () => apiClient.get<OrgDepartment[]>("/org-hierarchy/departments"),
+    queryKey: queryKeys.hierarchy.departments(query),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<OrgDepartment>>("/org-hierarchy/departments", {
+        page: String(query?.page ?? 1),
+        limit: String(query?.limit ?? 100),
+        ...(query?.search ? { search: query.search } : {}),
+        ...(query?.status ? { status: query.status } : {}),
+      }),
     staleTime: 60_000,
   });
 }
@@ -136,10 +177,16 @@ export function useDeleteOrgDepartment() {
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
 
-export function useOrgTeams() {
+export function useOrgTeams(query?: ListQuery) {
   return useQuery({
-    queryKey: queryKeys.hierarchy.teams(),
-    queryFn: () => apiClient.get<OrgTeam[]>("/org-hierarchy/teams"),
+    queryKey: queryKeys.hierarchy.teams(query),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<OrgTeam>>("/org-hierarchy/teams", {
+        page: String(query?.page ?? 1),
+        limit: String(query?.limit ?? 100),
+        ...(query?.search ? { search: query.search } : {}),
+        ...(query?.status ? { status: query.status } : {}),
+      }),
     staleTime: 60_000,
   });
 }

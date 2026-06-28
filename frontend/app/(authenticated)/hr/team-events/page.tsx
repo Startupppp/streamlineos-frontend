@@ -249,7 +249,7 @@ export default function TeamEventsPage() {
       <PageWrapper title="Team Events" subtitle="Company events, outings, and celebrations">
         <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
           <p className="text-sm text-muted-foreground">Failed to load team events.</p>
-          <Button variant="outline" size="sm" onClick={refetch}>
+          <Button variant="outline" size="sm" onClick={() => void refetch()}>
             Retry
           </Button>
         </div>

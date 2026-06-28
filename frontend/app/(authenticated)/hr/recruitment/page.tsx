@@ -173,7 +173,7 @@ export default function RecruitmentDashboardPage() {
         <div className="flex flex-col items-center justify-center py-16 gap-4 rounded-2xl border border-border bg-card text-center">
           <p className="text-sm font-semibold text-foreground">Failed to load recruitment data</p>
           <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
-          <Button size="sm" variant="outline" onClick={refetchStats}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={() => void refetchStats()}>Try again</Button>
         </div>
       ) : (
       <>

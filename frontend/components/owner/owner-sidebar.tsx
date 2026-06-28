@@ -188,7 +188,7 @@ export function OwnerSidebar({
           )}
         </div>
         <button
-          onClick={handleSignOut}
+          onClick={() => handleSignOut()}
           disabled={isSigningOut}
           title={collapsed ? "Sign out" : undefined}
           className={cn(

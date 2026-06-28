@@ -42,7 +42,7 @@ export default function ResourceAllocationPage() {
         </div>
       ) : !entries || entries.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
-          <UsersIcon className="h-10 w-10 text-muted-foreground/50" />
+          <Users className="h-10 w-10 text-muted-foreground/50" />
           <p className="text-muted-foreground">No open tickets assigned yet.</p>
         </div>
       ) : (

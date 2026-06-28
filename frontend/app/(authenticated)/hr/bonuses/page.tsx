@@ -289,7 +289,7 @@ function BonusContent() {
       <PageWrapper title="Bonus Processing" subtitle="Manage and disburse employee bonuses">
         <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
           <p className="text-sm text-muted-foreground">Failed to load bonuses.</p>
-          <Button variant="outline" size="sm" onClick={refetch}>Retry</Button>
+          <Button variant="outline" size="sm" onClick={() => void refetch()}>Retry</Button>
         </div>
       </PageWrapper>
     );

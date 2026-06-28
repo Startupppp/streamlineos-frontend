@@ -51,6 +51,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgTeam } from "@/types/org-hierarchy";
 
 const formSchema = z.object({
@@ -62,6 +63,7 @@ const formSchema = z.object({
     .max(20)
     .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
   departmentId: z.string().optional(),
+  leadUserId: z.string().optional(),
   description: z.string().trim().max(500).optional(),
   capacity: z.string().optional(),
 });
@@ -81,7 +83,7 @@ function TeamForm({
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", code: "", departmentId: "", description: "", capacity: "", ...defaultValues },
+    defaultValues: { name: "", code: "", departmentId: "", leadUserId: "", description: "", capacity: "", ...defaultValues },
   });
 
   return (
@@ -159,6 +161,19 @@ function TeamForm({
         />
         <FormField
           control={form.control}
+          name="leadUserId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Team Lead</FormLabel>
+              <FormControl>
+                <UserCombobox value={field.value ?? ""} onChange={field.onChange} placeholder="Select team lead…" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
@@ -192,9 +207,9 @@ export default function OrgTeamsPage() {
   const [deleting, setDeleting] = useState<OrgTeam | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
-  const departments = (deptsData ?? []).map((d) => ({ id: d.id, name: d.name }));
+  const departments = (deptsData?.data ?? []).map((d) => ({ id: d.id, name: d.name }));
   const deptMap = Object.fromEntries(departments.map((d) => [d.id, d.name]));
-  const allTeams = teams ?? [];
+  const allTeams = teams?.data ?? [];
   const active = allTeams.filter((t) => t.status !== "ARCHIVED" && !t.deletedAt);
   const archived = allTeams.filter((t) => t.status === "ARCHIVED" && !t.deletedAt);
   const displayed = showArchived ? archived : active;
@@ -206,6 +221,7 @@ export default function OrgTeamsPage() {
           name: values.name,
           code: values.code.toUpperCase(),
           departmentId: values.departmentId || undefined,
+          leadUserId: values.leadUserId || undefined,
           description: values.description || undefined,
           capacity: values.capacity ? Number(values.capacity) : undefined,
         },
@@ -230,6 +246,7 @@ export default function OrgTeamsPage() {
           name: values.name,
           code: values.code.toUpperCase(),
           departmentId: values.departmentId || undefined,
+          leadUserId: values.leadUserId || undefined,
           description: values.description || undefined,
           capacity: values.capacity ? Number(values.capacity) : undefined,
         },
@@ -414,6 +431,7 @@ export default function OrgTeamsPage() {
                 name: editing.name,
                 code: editing.code,
                 departmentId: editing.departmentId ?? "",
+                leadUserId: editing.leadUserId ?? "",
                 description: editing.description ?? "",
                 capacity: editing.capacity != null ? String(editing.capacity) : "",
               }}
