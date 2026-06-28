@@ -48,7 +48,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
         id: dealId,
         name: values.name,
         value: values.value ? values.value : undefined,
-        probability: values.probability,
+        probability: values.probability ? Number(values.probability) : undefined,
         stage: values.stage as DealStage,
         expectedCloseDate: values.expectedCloseDate ?? null,
         contactPerson: values.contactPerson,
