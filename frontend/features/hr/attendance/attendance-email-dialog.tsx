@@ -210,21 +210,17 @@ export function AttendanceEmailDialog() {
 
     setIsSending(true);
     try {
-      const result = await emailAttendanceReport({
+      await apiClient.post('/hr/attendance/email-report', {
         to: toEmails,
         cc: ccEmails,
         bcc: bccEmails,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
       });
-      if (result.success) {
-        toast.success("Attendance report sent successfully");
-        handleClose();
-      } else {
-        toast.error(result.error ?? "Failed to send report");
-      }
-    } catch {
-      toast.error("Failed to send attendance report");
+      toast.success("Attendance report sent successfully");
+      handleClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send attendance report");
     } finally {
       setIsSending(false);
     }

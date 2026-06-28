@@ -66,6 +66,11 @@ export default function ProjectsPage() {
     [updateParams],
   );
 
+  const handleClearFilters = useCallback(
+    () => updateParams({ q: null, status: null, page: null }),
+    [updateParams],
+  );
+
   const { data, isLoading, isError, refetch } = useProjects({
     page,
     limit: 12,

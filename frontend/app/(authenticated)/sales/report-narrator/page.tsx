@@ -145,6 +145,14 @@ export default function ReportNarratorPage() {
     setContext(SAMPLE_CONTEXT);
   }, []);
 
+  const handleContextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setContext(e.target.value);
+  }, []);
+
+  const handleDataChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setData(e.target.value);
+  }, []);
+
   const generatedAt = result
     ? new Date(result.generatedAt).toLocaleString("en-IN", {
         dateStyle: "medium",

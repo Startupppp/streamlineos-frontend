@@ -398,6 +398,15 @@ export default function JobPostingsPage() {
       {shareJobId !== null && (
         <ShareJobDialog jobId={shareJobId} onClose={() => setShareJobId(null)} />
       )}
+      <ConfirmDialog
+        open={deleteJobId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteJobId(null); }}
+        title="Delete job posting?"
+        description="This will permanently delete this job posting and all related data. This cannot be undone."
+        confirmLabel={deleteJob.isPending ? "Deleting…" : "Delete Job Posting"}
+        destructive
+        onConfirm={handleDelete}
+      />
     </>
   );
 }

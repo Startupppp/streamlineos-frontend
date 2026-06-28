@@ -128,7 +128,7 @@ export default function AssessmentsPage() {
             <p className="text-sm font-medium text-foreground">Failed to load assessments</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
           </div>
-          <Button size="sm" variant="outline" onClick={refetch}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={handleRefetch}>Try again</Button>
         </div>
       </PageWrapper>
     );

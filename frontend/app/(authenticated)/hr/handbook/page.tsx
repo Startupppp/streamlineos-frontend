@@ -2,9 +2,14 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback, useRef, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import {
+  useHandbookVersions,
+  useCreateHandbookVersion,
+  useUpdateHandbookVersion,
+  useDeleteHandbookVersion,
+  type HandbookVersion,
+} from "@/lib/api/hooks/hr";
+import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +18,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, AlertTriangle, RefreshCw } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { HandbookVersionCard } from "@/features/hr/handbook/handbook-version-card";
 import {
@@ -23,29 +28,6 @@ import {
   MAX_FILE_SIZE,
 } from "@/features/hr/handbook/handbook-create-form";
 import { cn } from "@/lib/utils";
-
-interface HandbookVersion {
-  id: number;
-  version: string;
-  title: string;
-  changelog: string | null;
-  documentUrl: string | null;
-  publishedAt: string | null;
-  publishedBy: string | null;
-  createdAt: string;
-}
-
-interface StorageUploadResult {
-  url: string;
-  key: string;
-  size: number;
-  mimeType: string;
-}
-
-const hbKeys = {
-  all: [...queryKeys.hr.all, "handbook"] as const,
-  list: () => [...hbKeys.all, "list"] as const,
-};
 
 const VERSION_FORMAT_REGEX = /^\d+\.\d+$/;
 const CONSECUTIVE_SPECIAL_CHARS_REGEX = /[^a-zA-Z0-9 ]{2,}/;
@@ -61,45 +43,11 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
 ];
 
 function HandbookContent() {
-  const qc = useQueryClient();
-
-  const { data: versions, isLoading } = useQuery({
-    queryKey: hbKeys.list(),
-    queryFn: () => apiClient.get<HandbookVersion[]>("/hr/handbook"),
-  });
-
-  const create = useMutation({
-    mutationFn: (data: {
-      version: string;
-      title: string;
-      changelog?: string;
-      documentUrl?: string;
-    }) => apiClient.post<HandbookVersion>("/hr/handbook", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: hbKeys.list() }),
-  });
-
-  const uploadDoc = useMutation({
-    mutationFn: (formData: FormData) =>
-      apiClient.upload<StorageUploadResult>("/storage/upload", formData),
-  });
-
-  const update = useMutation({
-    mutationFn: ({ id, ...data }: {
-      id: number;
-      status?: "PUBLISHED" | "DRAFT";
-      title?: string;
-      version?: string;
-      documentUrl?: string;
-      changelog?: string;
-    }) => apiClient.patch<{ success: boolean }>(`/hr/handbook/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: hbKeys.list() }),
-  });
-
-  const remove = useMutation({
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/handbook/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: hbKeys.list() }),
-  });
+  const { data: versions, isLoading, isError, refetch } = useHandbookVersions();
+  const create = useCreateHandbookVersion();
+  const update = useUpdateHandbookVersion();
+  const remove = useDeleteHandbookVersion();
+  const uploadFile = useUploadFile();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editVersion, setEditVersion] = useState<HandbookVersion | null>(null);
@@ -112,7 +60,7 @@ function HandbookContent() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const filteredVersions = useMemo(() => {
     if (!versions) return [];
@@ -193,11 +141,8 @@ function HandbookContent() {
         toast.error("File must be smaller than 10MB");
         return;
       }
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("folder", "handbook");
       try {
-        const result = await uploadDoc.mutateAsync(formData);
+        const result = await uploadFile.mutateAsync({ file: selectedFile, folder: "handbook" });
         resolvedDocumentUrl = result.url;
       } catch (e) {
         toast.error(getErrorMessage(e));
@@ -242,7 +187,19 @@ function HandbookContent() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [version, title, changelog, documentUrl, documentInputMode, selectedFile, editVersion, create, update, uploadDoc, resetForm]);
+  }, [
+    version,
+    title,
+    changelog,
+    documentUrl,
+    documentInputMode,
+    selectedFile,
+    editVersion,
+    create,
+    update,
+    uploadFile,
+    resetForm,
+  ]);
 
   const handleVersionChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setVersion(e.target.value),
@@ -368,7 +325,9 @@ function HandbookContent() {
     DRAFT: handleStatusFilterDraft,
   };
 
-  const isSubmitting = create.isPending || update.isPending || uploadDoc.isPending;
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
+
+  const isSubmitting = create.isPending || update.isPending || uploadFile.isPending;
   const isFiltered = !!searchQuery || statusFilter !== "ALL";
 
   if (isLoading) {
@@ -386,6 +345,24 @@ function HandbookContent() {
               <Skeleton key={i} className="h-[72px] rounded-2xl" />
             ))}
           </div>
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
+          <AlertTriangle className="h-10 w-10 text-muted-foreground" />
+          <div className="text-center space-y-1">
+            <p className="text-sm font-medium text-foreground">Failed to load handbook versions</p>
+            <p className="text-xs text-muted-foreground">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+            Retry
+          </Button>
         </div>
       </PageWrapper>
     );
@@ -424,7 +401,7 @@ function HandbookContent() {
                   "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
                   statusFilter === f.value
                     ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-transparent text-muted-foreground border-border hover:bg-muted"
+                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
                 )}
               >
                 {f.label}

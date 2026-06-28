@@ -22,7 +22,7 @@ interface ContactInput {
 }
 import { TurnstileWidget, isTurnstileEnabled } from "@/features/security/turnstile-widget";
 
-const TOPICS: { value: ContactInput["topic"]; label: string }[] = [
+const TOPICS: { value: ContactTopic; label: string }[] = [
   { value: "sales", label: "Talk to sales" },
   { value: "support", label: "Get support" },
   { value: "partnership", label: "Partnership" },

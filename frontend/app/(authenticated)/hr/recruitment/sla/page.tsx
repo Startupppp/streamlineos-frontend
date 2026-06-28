@@ -278,7 +278,7 @@ export default function SlaConfigPage() {
             <div className="flex flex-col items-center justify-center gap-3 py-12">
               <AlertCircle className="h-8 w-8 text-destructive/60" />
               <p className="text-sm text-muted-foreground">Failed to load SLA configuration.</p>
-              <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              <Button variant="outline" size="sm" onClick={handleRetry}>
                 Try again
               </Button>
             </div>
