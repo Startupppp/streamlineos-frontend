@@ -8,7 +8,6 @@ export * from "./dashboard";
 export * from "./notifications";
 export * from "./reports";
 export * from "./organization";
-export * from "./rbac";
 export * from "./roles";
 export * from "./access";
 export * from "./branches";

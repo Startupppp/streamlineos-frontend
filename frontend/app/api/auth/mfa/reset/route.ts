@@ -1,34 +1,12 @@
-import { type NextRequest } from "next/server";
-import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
-import { db } from "@/lib/db";
-import { users, mfaBackupCodes } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { z } from "zod";
-import { invalidateUserSession } from "@/lib/auth";
-
-const schema = z.object({ userId: z.string().min(1) });
+import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/lib/auth";
+import { proxyToBackend } from "@/lib/api/backend-proxy";
+import { makeBackendToken } from "@/lib/api/make-backend-token";
 
 export async function POST(req: NextRequest) {
-  return withAbility("manage", "settings:mfa", async () => {
-    const body = await parseBody(req, schema);
-
-    const user = await db.query.users.findFirst({
-      where: eq(users.id, body.userId),
-      columns: { id: true },
-    });
-    if (!user) return err("User not found", 404);
-
-    await db.transaction(async (tx) => {
-      await tx
-        .update(users)
-        .set({ totpEnabled: false, totpSecret: null })
-        .where(eq(users.id, body.userId));
-
-      await tx.delete(mfaBackupCodes).where(eq(mfaBackupCodes.userId, body.userId));
-    });
-
-    await invalidateUserSession(body.userId);
-
-    return ok({ reset: true });
-  });
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const token = await makeBackendToken(session);
+  if (!token) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  return proxyToBackend(req, "/auth/mfa/reset", { method: "POST", auth: token });
 }

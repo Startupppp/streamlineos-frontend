@@ -1,34 +1,12 @@
-import { withAuth, ok } from "@/lib/api/helpers";
-import { generateTotpSecret, generateTotpUri, generateQrCodeDataUrl, generateBackupCodes, hashBackupCode } from "@/lib/totp";
-import { encrypt } from "@/lib/encryption";
-import { db } from "@/lib/db";
-import { users, mfaBackupCodes } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/lib/auth";
+import { proxyToBackend } from "@/lib/api/backend-proxy";
+import { makeBackendToken } from "@/lib/api/make-backend-token";
 
-export async function POST() {
-  return withAuth(async (session) => {
-    const secret = generateTotpSecret();
-    const uri = generateTotpUri(secret, session.user.email ?? session.user.id);
-    const qrDataUrl = await generateQrCodeDataUrl(uri);
-
-    const plainCodes = generateBackupCodes();
-    const hashedCodes = await Promise.all(plainCodes.map(hashBackupCode));
-
-    await db.transaction(async (tx) => {
-      await tx.update(users).set({ totpSecret: encrypt(secret) }).where(eq(users.id, session.user.id));
-
-      await tx.delete(mfaBackupCodes).where(
-        eq(mfaBackupCodes.userId, session.user.id)
-      );
-
-      await tx.insert(mfaBackupCodes).values(
-        hashedCodes.map((codeHash) => ({
-          userId: session.user.id,
-          codeHash,
-        }))
-      );
-    });
-
-    return ok({ qrDataUrl, secret, manualEntryKey: secret, backupCodes: plainCodes });
-  });
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const token = await makeBackendToken(session);
+  if (!token) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  return proxyToBackend(req, "/auth/mfa/setup", { method: "POST", auth: token });
 }

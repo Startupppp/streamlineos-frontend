@@ -63,11 +63,6 @@ function moduleOf(key: string): string {
   return idx === -1 ? key : key.slice(0, idx);
 }
 
-function actionOf(key: string): string {
-  const parts = key.split(":");
-  return parts[parts.length - 1] ?? key;
-}
-
 function resourceOf(key: string): string {
   const parts = key.split(":");
   if (parts.length < 3) return key;
@@ -436,7 +431,6 @@ interface PermissionRowProps {
 }
 
 function PermissionRow({ permKey, scope }: PermissionRowProps) {
-  const action = actionOf(permKey);
   const resource = resourceOf(permKey);
 
   return (
