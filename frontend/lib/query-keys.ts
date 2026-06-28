@@ -506,6 +506,12 @@ export const queryKeys = {
         ? ([...base, "kb", "noResults"] as const)
         : ([...base, "kb", "noResults", range] as const),
     verificationQueue: () => [...base, "kb", "verificationQueue"] as const,
+    versions: (articleId: number) => [...base, "kb", "versions", articleId] as const,
+    tags: () => [...base, "kb", "tags"] as const,
+    articleTags: (articleId: number) => [...base, "kb", "articleTags", articleId] as const,
+    translations: (articleId: number) => [...base, "kb", "translations", articleId] as const,
+    translation: (articleId: number, locale: string) => [...base, "kb", "translation", articleId, locale] as const,
+    comments: (articleId: number) => [...base, "kb", "comments", articleId] as const,
   },
 
   roadmap: {
