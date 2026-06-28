@@ -25,6 +25,8 @@ export const organizations = pgTable("organizations", {
   maxConcurrentSessions: integer("max_concurrent_sessions"),
   enabledModules: text("enabled_modules").array(),
   onboardingCompletedAt: timestamp("onboarding_completed_at"),
+  status: text("status").default("ACTIVE").notNull(),
+  deletedAt: timestamp("deleted_at"),
   companySize: text("company_size"),
   country: text("country"),
   legalName: text("legal_name"),
@@ -35,9 +37,35 @@ export const organizations = pgTable("organizations", {
   supportPhone: text("support_phone"),
   favicon: text("favicon"),
   secondaryColor: text("secondary_color"),
+  businessHours: jsonb("business_hours").$type<Record<string, { open: string; close: string; enabled: boolean }>>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 });
+
+export const orgCustomDomains = pgTable("org_custom_domains", {
+  id: text("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  domain: text("domain").notNull(),
+  verificationToken: text("verification_token").notNull(),
+  verifiedAt: timestamp("verified_at"),
+  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uniq_org_custom_domains_domain").on(table.domain),
+  index("idx_org_custom_domains_org").on(table.orgId),
+]);
+
+export const orgHolidays = pgTable("org_holidays", {
+  id: text("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  date: date("date").notNull(),
+  recurring: boolean("recurring").default(false).notNull(),
+  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_org_holidays_org_date").on(table.orgId, table.date),
+]);
 
 export const organizationMembers = pgTable("organization_members", {
   id: serial("id").primaryKey(),

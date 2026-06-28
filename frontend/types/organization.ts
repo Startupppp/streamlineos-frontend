@@ -2,6 +2,7 @@ export interface OrgSettings {
   id: string;
   name: string;
   slug: string;
+  status: "ACTIVE" | "INACTIVE" | "ARCHIVED";
   logo: string | null;
   website: string | null;
   industry: string | null;
@@ -25,6 +26,7 @@ export interface OrgSettings {
   supportPhone?: string | null;
   favicon?: string | null;
   secondaryColor?: string | null;
+  businessHours?: Record<string, { open: string; close: string; enabled: boolean }> | null;
   createdAt: Date;
   updatedAt: Date;
 }
