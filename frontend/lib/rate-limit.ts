@@ -237,7 +237,6 @@ const ROUTE_RULES: RouteRule[] = [
   { prefix: "/api/support/kb/ask", tier: "ai" },
   { prefix: "/api/storage/upload", tier: "upload" },
   { prefix: "/api/public/", tier: "public-intake" },
-  { prefix: "/api/careers/apply", tier: "public-intake" },
   { prefix: "/api/landing/submit", tier: "landing-submit" },
   { prefix: "/api/billing/", tier: "auth-write" },
   { prefix: "/api/calendar/create-meet", tier: "auth-write" },
