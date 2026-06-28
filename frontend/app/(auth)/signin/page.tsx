@@ -171,14 +171,8 @@ export default function SignInPage() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   const magicLinkMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const res = await fetch("/api/auth/magic-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error("Failed to send magic link");
-    },
+    mutationFn: (email: string) =>
+      apiClient.post<{ message: string }>("/auth/magic-link", { email }),
     onSuccess: () => {
       setMagicLinkSent(true);
     },
