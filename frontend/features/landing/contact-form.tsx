@@ -7,20 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { apiClient } from "@/lib/api-client";
+import { submitContactForm } from "@/server/actions/contact-submission";
+import { TurnstileWidget, isTurnstileEnabled } from "@/features/security/turnstile-widget";
 
 type ContactTopic = "sales" | "support" | "partnership" | "press" | "other";
-
-interface ContactInput {
-  name: string;
-  email: string;
-  company?: string;
-  phone?: string;
-  topic: ContactTopic;
-  message: string;
-  cfTurnstileToken?: string;
-}
-import { TurnstileWidget, isTurnstileEnabled } from "@/features/security/turnstile-widget";
 
 const TOPICS: { value: ContactTopic; label: string }[] = [
   { value: "sales", label: "Talk to sales" },
@@ -35,7 +25,7 @@ type FormState = {
   email: string;
   company: string;
   phone: string;
-  topic: ContactInput["topic"];
+  topic: ContactTopic;
   message: string;
 };
 
@@ -47,22 +37,6 @@ const initialState: FormState = {
   topic: "sales",
   message: "",
 };
-
-type ContactResult =
-  | { ok: true }
-  | { ok: false; error: string; fieldErrors?: Partial<Record<keyof FormState, string>> };
-
-async function submitContactForm(input: ContactInput): Promise<ContactResult> {
-  try {
-    await apiClient.post("/contact", input);
-    return { ok: true };
-  } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : "Something went wrong. Please try again.",
-    };
-  }
-}
 
 export function ContactForm() {
   const [values, setValues] = useState<FormState>(initialState);
@@ -94,7 +68,7 @@ export function ContactForm() {
     }
 
     startTransition(async () => {
-      const result: ContactResult = await submitContactForm({
+      const result = await submitContactForm({
         ...values,
         cfTurnstileToken: turnstileToken ?? undefined,
       });
