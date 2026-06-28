@@ -12,6 +12,9 @@ import { toast } from "sonner";
 import { OrgProfileSection } from "@/features/settings/organization/org-profile-section";
 import { OrgBrandingSection } from "@/features/settings/organization/org-branding-section";
 import { OrgLocalizationSection } from "@/features/settings/organization/org-localization-section";
+import { OrgBusinessHoursSection } from "@/features/settings/organization/org-business-hours-section";
+import { OrgHolidayCalendarSection } from "@/features/settings/organization/org-holiday-calendar-section";
+import { OrgCustomDomainsSection } from "@/features/settings/organization/org-custom-domains-section";
 import { OrgConfigSection } from "@/features/settings/organization/org-config-section";
 import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
 
@@ -297,6 +300,12 @@ export default function OrganizationSettingsPage() {
         <OrgBrandingSection org={org} canEdit={canEdit} />
 
         <OrgLocalizationSection org={org} canEdit={canEdit} />
+
+        <OrgBusinessHoursSection org={org} canEdit={canEdit} />
+
+        <OrgHolidayCalendarSection canEdit={canEdit} />
+
+        <OrgCustomDomainsSection canEdit={canEdit} />
 
         {canEdit && (
           <OrgConfigSection

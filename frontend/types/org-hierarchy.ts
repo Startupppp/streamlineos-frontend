@@ -73,6 +73,7 @@ export interface OrgLocation {
   status: NodeStatus;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
 }
 
 export interface OrgCostCenter {
@@ -84,6 +85,7 @@ export interface OrgCostCenter {
   status: NodeStatus;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
 }
 
 export interface OrgTreeTeam extends OrgTeam {

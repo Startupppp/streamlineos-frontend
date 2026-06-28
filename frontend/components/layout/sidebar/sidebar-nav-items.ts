@@ -374,7 +374,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Git Integration", icon: GitBranch, href: "/settings/integrations/git", requiredPermission: "settings:manage" },
         ],
       },
-      { label: "Branches", icon: GitBranch, href: "/settings/branches", requiredPermission: ["settings:manage", "branch:read"] },
+      { label: "Branches", icon: GitBranch, href: "/organization/branches", requiredPermission: ["settings:manage", "branch:read"] },
       {
         label: "Roles & Permissions", icon: Shield, href: "/settings/roles", requiredPermission: "settings:rbac:manage",
         children: [

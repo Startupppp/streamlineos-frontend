@@ -25,6 +25,7 @@ import { PermissionMatrix } from "@/components/rbac/permission-matrix";
 import { CreateRoleDialog } from "@/components/rbac/create-role-dialog";
 import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
 import { RoleTemplateDialog } from "@/features/settings/roles/role-dialogs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function RolesPage() {
   return (
@@ -64,6 +65,11 @@ function RolesContent() {
     });
   }, [deleteRole, deleteTarget, selectedRoleId]);
 
+  const totalRoles = roles?.length ?? 0;
+  const customRoles = roles?.filter((r) => !r.isSystem).length ?? 0;
+  const systemRoles = totalRoles - customRoles;
+  const totalPermissions = roles?.reduce((sum, r) => sum + (r.permissions?.length ?? 0), 0) ?? 0;
+
   return (
     <PageWrapper
       title="Roles & Permissions"
@@ -83,6 +89,26 @@ function RolesContent() {
         </div>
       }
     >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        {isLoading ? (
+          [...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)
+        ) : (
+          <>
+            {[
+              { label: "Total Roles", value: totalRoles },
+              { label: "Custom Roles", value: customRoles },
+              { label: "System Roles", value: systemRoles },
+              { label: "Total Permissions", value: totalPermissions },
+            ].map(({ label, value }) => (
+              <Card key={label} className="p-3">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-xl font-bold tabular-nums">{value}</p>
+              </Card>
+            ))}
+          </>
+        )}
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[320px_1fr] lg:h-full lg:min-h-0">
         <Card className="flex flex-col lg:min-h-0">
           <CardHeader className="pb-3">
