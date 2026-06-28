@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -240,6 +240,13 @@ export default function BusinessUnitsPage() {
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
+  function makeRestoreHandler(unit: OrgBusinessUnit) { return () => handleRestore(unit); }
+  function makeArchiveHandler(unit: OrgBusinessUnit) { return () => handleArchive(unit); }
+  function makeSetEditingHandler(unit: OrgBusinessUnit) { return () => setEditing(unit); }
+  function makeSetDeletingHandler(unit: OrgBusinessUnit) { return () => setDeleting(unit); }
+  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
+  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
+
   return (
     <PageWrapper
       title="Business Units"
@@ -312,7 +319,7 @@ export default function BusinessUnitsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRestore(u)}
+                          onClick={makeRestoreHandler(u)}
                           title="Restore"
                         >
                           <RotateCcw className="h-4 w-4 text-blue-600" />
@@ -320,7 +327,7 @@ export default function BusinessUnitsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setDeleting(u)}
+                          onClick={makeSetDeletingHandler(u)}
                           title="Delete permanently"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
@@ -328,13 +335,13 @@ export default function BusinessUnitsPage() {
                       </>
                     ) : (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => setEditing(u)} title="Edit">
+                        <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(u)} title="Edit">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleArchive(u)}
+                          onClick={makeArchiveHandler(u)}
                           title="Archive"
                         >
                           <Archive className="h-4 w-4 text-muted-foreground" />
@@ -358,7 +365,7 @@ export default function BusinessUnitsPage() {
         </SheetContent>
       </Sheet>
 
-      <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+      <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
         <SheetContent>
           <SheetHeader>
             <SheetTitle>Edit Business Unit</SheetTitle>
@@ -379,7 +386,7 @@ export default function BusinessUnitsPage() {
 
       <ConfirmDialog
         open={!!deleting}
-        onOpenChange={(o) => !o && setDeleting(null)}
+        onOpenChange={handleDeleteDialogOpenChange}
         title="Delete Business Unit"
         description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}

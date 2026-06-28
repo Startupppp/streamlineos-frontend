@@ -53,9 +53,20 @@ function InboxContent() {
     [searchParams, router, pathname]
   );
 
+  const TICKET_STATUSES: readonly SupportTicketStatus[] = ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"];
+  const TICKET_PRIORITIES: readonly SupportTicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+
+  function isTicketStatus(v: string): v is SupportTicketStatus {
+    return (TICKET_STATUSES as readonly string[]).includes(v);
+  }
+
+  function isTicketPriority(v: string): v is SupportTicketPriority {
+    return (TICKET_PRIORITIES as readonly string[]).includes(v);
+  }
+
   const { data: ticketsData, isLoading, isError, refetch } = useSupportTickets({
-    ...(statusFilter !== "all" ? { status: statusFilter as SupportTicketStatus } : {}),
-    ...(priorityFilter !== "all" ? { priority: priorityFilter as SupportTicketPriority } : {}),
+    ...(isTicketStatus(statusFilter) ? { status: statusFilter } : {}),
+    ...(isTicketPriority(priorityFilter) ? { priority: priorityFilter } : {}),
   });
   const { data: stats, isLoading: statsLoading } = useSupportStats();
 

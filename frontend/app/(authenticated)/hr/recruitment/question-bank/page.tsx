@@ -156,7 +156,7 @@ export default function QuestionBankPage() {
       }
     >
       {isError ? (
-        <ErrorState message="Failed to load questions" onRetry={refetch} />
+        <ErrorState description="Failed to load questions" onRetry={refetch} />
       ) : (
         <QuestionList
           questions={questions}

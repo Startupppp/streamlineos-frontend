@@ -79,6 +79,13 @@ export function AIEmailDialog({
   const handleCopySubject = useCallback(() => handleCopy("subject"), [handleCopy]);
   const handleCopyBody = useCallback(() => handleCopy("body"), [handleCopy]);
 
+  const handleToneChange = useCallback((v: string) => {
+    const validTones: string[] = ["formal", "friendly", "urgent"];
+    if (validTones.includes(v)) setTone(v as EmailTone);
+  }, []);
+
+  const handleContextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setContext(e.target.value), []);
+
   const handleCopyAll = useCallback(async () => {
     if (!email) return;
     await navigator.clipboard.writeText(`Subject: ${email.subject}\n\n${email.body}`);
@@ -108,7 +115,7 @@ export function AIEmailDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Tone</Label>
-              <Select value={tone} onValueChange={(v) => setTone(v as EmailTone)}>
+              <Select value={tone} onValueChange={handleToneChange}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
@@ -130,7 +137,7 @@ export function AIEmailDialog({
             <Label className="text-xs">Additional Context (optional)</Label>
             <Textarea
               value={context}
-              onChange={(e) => setContext(e.target.value)}
+              onChange={handleContextChange}
               placeholder="e.g. Discussed property in Bandra last week, needs to finalize by month end..."
               rows={2}
               className="resize-none text-xs"

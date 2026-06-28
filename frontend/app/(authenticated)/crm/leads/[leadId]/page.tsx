@@ -215,6 +215,9 @@ export default function LeadDetailPage({
     );
   }
 
+  type LeadData = NonNullable<typeof lead> & { [key: string]: unknown };
+  const leadData = lead as LeadData;
+
   return (
     <PageWrapper
       title={lead.name}

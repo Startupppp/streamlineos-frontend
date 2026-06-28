@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ChangeEvent } from "react";
 import { motion } from "framer-motion";
-import { Plus, Warehouse, MapPin, Building2 } from "lucide-react";
+import { Plus, Warehouse, MapPin, Building2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +24,6 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useWarehouses, useCreateWarehouse } from "@/lib/api/hooks/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 interface Warehouse {
   id: number;
@@ -140,7 +139,7 @@ function WarehousesLoading() {
 }
 
 export default function WarehousesPage() {
-  const { data, isLoading } = useWarehouses();
+  const { data, isLoading, isError, refetch } = useWarehouses();
   const createMutation = useCreateWarehouse();
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -165,6 +164,37 @@ export default function WarehousesPage() {
       setSheetOpen(false);
       setForm(blankForm());
     }
+  }, []);
+
+  function handleRetry() { void refetch(); }
+
+  const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("name", e.target.value);
+  }, [setField]);
+
+  const handleCodeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("code", e.target.value);
+  }, [setField]);
+
+  const handleAddressChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("address", e.target.value);
+  }, [setField]);
+
+  const handleCityChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("city", e.target.value);
+  }, [setField]);
+
+  const handleStateChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("state", e.target.value);
+  }, [setField]);
+
+  const handleCountryChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setField("country", e.target.value);
+  }, [setField]);
+
+  const handleCancelSheet = useCallback(() => {
+    setSheetOpen(false);
+    setForm(blankForm());
   }, []);
 
   const handleSubmit = useCallback(() => {
@@ -195,6 +225,19 @@ export default function WarehousesPage() {
 
   if (isLoading) return <WarehousesLoading />;
 
+  if (isError) {
+    return (
+      <PageWrapper title="Warehouses" subtitle="Manage your storage facilities and locations">
+        <EmptyState
+          illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+          title="Failed to load warehouses"
+          description="An error occurred while fetching warehouse data. Please try again."
+          action={{ label: "Retry", onClick: handleRetry }}
+        />
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Warehouses"
@@ -209,7 +252,7 @@ export default function WarehousesPage() {
     >
       {warehouses.length > 0 ? (
         <motion.div
-          className={cn("grid gap-3 sm:grid-cols-2 lg:grid-cols-3")}
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -244,7 +287,7 @@ export default function WarehousesPage() {
                 id="wh-name"
                 placeholder="Main Warehouse"
                 value={form.name}
-                onChange={(e) => setField("name", e.target.value)}
+                onChange={handleNameChange}
               />
             </div>
             <div className="space-y-1.5">
@@ -253,7 +296,7 @@ export default function WarehousesPage() {
                 id="wh-code"
                 placeholder="WH-001"
                 value={form.code}
-                onChange={(e) => setField("code", e.target.value)}
+                onChange={handleCodeChange}
                 className="font-mono"
               />
             </div>
@@ -263,7 +306,7 @@ export default function WarehousesPage() {
                 id="wh-address"
                 placeholder="123 Storage Lane"
                 value={form.address}
-                onChange={(e) => setField("address", e.target.value)}
+                onChange={handleAddressChange}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -273,7 +316,7 @@ export default function WarehousesPage() {
                   id="wh-city"
                   placeholder="Mumbai"
                   value={form.city}
-                  onChange={(e) => setField("city", e.target.value)}
+                  onChange={handleCityChange}
                 />
               </div>
               <div className="space-y-1.5">
@@ -282,7 +325,7 @@ export default function WarehousesPage() {
                   id="wh-state"
                   placeholder="Maharashtra"
                   value={form.state}
-                  onChange={(e) => setField("state", e.target.value)}
+                  onChange={handleStateChange}
                 />
               </div>
             </div>
@@ -292,14 +335,14 @@ export default function WarehousesPage() {
                 id="wh-country"
                 placeholder="India"
                 value={form.country}
-                onChange={(e) => setField("country", e.target.value)}
+                onChange={handleCountryChange}
               />
             </div>
           </div>
           <SheetFooter>
             <Button
               variant="outline"
-              onClick={() => setSheetOpen(false)}
+              onClick={handleCancelSheet}
               disabled={createMutation.isPending}
             >
               Cancel

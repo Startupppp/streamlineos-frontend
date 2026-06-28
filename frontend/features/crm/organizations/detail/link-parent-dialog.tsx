@@ -13,6 +13,35 @@ import { useCrmOrganizations, useUpdateCrmOrganization } from "@/lib/api/hooks/c
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+interface OrgSelectButtonProps {
+  org: { id: number; name: string; industry?: string | null };
+  selected: boolean;
+  onSelect: (id: number) => void;
+}
+
+function OrgSelectButton({ org, selected, onSelect }: OrgSelectButtonProps) {
+  const handleClick = useCallback(() => onSelect(org.id), [org.id, onSelect]);
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
+        selected ? "bg-blue-500/10 text-blue-600" : "hover:bg-accent text-foreground",
+      )}
+    >
+      <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0">
+        {org.name[0]?.toUpperCase()}
+      </span>
+      <span className="truncate">{org.name}</span>
+      {org.industry && (
+        <span className="text-xs text-muted-foreground ml-auto shrink-0">{org.industry}</span>
+      )}
+      {selected && <Check className="h-3.5 w-3.5 ml-2 shrink-0" />}
+    </button>
+  );
+}
+
 interface LinkParentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

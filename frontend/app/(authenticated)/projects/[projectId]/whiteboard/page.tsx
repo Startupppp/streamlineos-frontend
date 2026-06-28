@@ -293,6 +293,8 @@ function BoardCanvas({
   const { data, isLoading, isError, refetch } = useWhiteboard(projectId, board.id);
   const update = useUpdateWhiteboard(projectId);
 
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   const [elements, setElements] = useState<WhiteboardElement[]>(() => data?.data ?? []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeColor, setActiveColor] = useState<string>(PALETTE[0]);
@@ -462,7 +464,7 @@ function BoardCanvas({
   if (isError || !data) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <ErrorState onRetry={() => refetch()} />
+        <ErrorState onRetry={handleRetry} />
       </div>
     );
   }
@@ -630,6 +632,7 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
     if (!open) setDeleteTarget(null);
   }, []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleRefetch = useCallback(() => refetch(), [refetch]);
 
   function handleCreate(name: string) {
     createBoard.mutate(name, {
@@ -672,7 +675,7 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
         </div>
       ) : isError ? (
         <div className="flex flex-1 items-center justify-center">
-          <ErrorState onRetry={() => refetch()} />
+          <ErrorState onRetry={handleRefetch} />
         </div>
       ) : !boards || boards.length === 0 ? (
         <div className="flex flex-1">

@@ -71,6 +71,9 @@ function ScoreExplainerBadge({ leadId, score }: { leadId: number; score: number 
   const [enabled, setEnabled] = useState(false);
   const { data } = useLeadScoreExplanation(leadId, enabled);
 
+  const handleTooltipOpenChange = useCallback((open: boolean) => { if (open) setEnabled(true); }, []);
+  const handleStopPropagation = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+
   const color = score >= 80
     ? "text-emerald-500 border-emerald-500/30 bg-emerald-500/10"
     : score >= 60
@@ -81,11 +84,11 @@ function ScoreExplainerBadge({ leadId, score }: { leadId: number; score: number 
 
   return (
     <TooltipProvider>
-      <Tooltip onOpenChange={(open) => { if (open) setEnabled(true); }}>
+      <Tooltip onOpenChange={handleTooltipOpenChange}>
         <TooltipTrigger asChild>
           <span
             className={cn("inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border font-semibold cursor-help", color)}
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleStopPropagation}
           >
             <Info className="h-2.5 w-2.5 opacity-60" />
             {score}

@@ -196,7 +196,7 @@ export default function RecognitionPage() {
   if (isError) {
     return (
       <PageWrapper title="Recognition" subtitle="Celebrate your team">
-        <ErrorState message="Failed to load recognitions" onRetry={refetch} />
+        <ErrorState description="Failed to load recognitions" onRetry={refetch} />
       </PageWrapper>
     );
   }

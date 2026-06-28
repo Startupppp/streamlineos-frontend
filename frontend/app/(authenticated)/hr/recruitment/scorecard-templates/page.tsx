@@ -351,7 +351,7 @@ export default function ScorecardTemplatesPage() {
         }
       >
         {isError ? (
-          <ErrorState message="Failed to load scorecard templates" onRetry={handleRetry} />
+          <ErrorState description="Failed to load scorecard templates" onRetry={handleRetry} />
         ) : isLoading ? (
           <div className="grid gap-4 sm:grid-cols-2">
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36 w-full rounded-xl" />)}

@@ -11,8 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LoadingState } from "@/components/shared/loading-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { LoadingState, ErrorState } from "@/components/shared";
 import { useWarehouses } from "@/lib/api/hooks/inventory/warehouses";
 import { useProducts } from "@/lib/api/hooks/inventory/products";
 import { useCreateSalesOrder } from "@/lib/api/hooks/inventory/sales-orders";
@@ -159,6 +158,9 @@ export default function NewSalesOrderPage() {
     return () => handleRemoveLine(key);
   }
 
+  function handleWarehousesRetry() { void warehousesQuery.refetch(); }
+  function handleProductsRetry() { void productsQuery.refetch(); }
+
   async function handleSubmit(): Promise<void> {
     if (!warehouseId) {
       toast.error("Select a warehouse");
@@ -195,8 +197,8 @@ export default function NewSalesOrderPage() {
 
   const isLoading = warehousesQuery.isLoading || productsQuery.isLoading || clientsQuery.isLoading;
   if (isLoading) return <LoadingState variant="form" />;
-  if (warehousesQuery.error) return <ErrorState description={warehousesQuery.error.message} />;
-  if (productsQuery.error) return <ErrorState description={productsQuery.error.message} />;
+  if (warehousesQuery.error) return <ErrorState description={warehousesQuery.error.message} onRetry={handleWarehousesRetry} />;
+  if (productsQuery.error) return <ErrorState description={productsQuery.error.message} onRetry={handleProductsRetry} />;
 
   return (
     <PageWrapper

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type { Value as PhoneValue } from "react-phone-number-input";
 import {
   Mail, MapPin, Building2, User, Target,
@@ -34,6 +34,9 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
   const [source, setSource] = useState<string>("referral");
   const [phone, setPhone] = useState<PhoneValue | undefined>();
   const [emailInput, setEmailInput] = useState("");
+
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEmailInput(e.target.value), []);
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   const debouncedEmail = useDebouncedValue(emailInput, 500);
   const debouncedPhone = useDebouncedValue(phone ??"", 500);
@@ -101,7 +104,7 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
                       placeholder="john@example.com"
                       className="pl-9 h-9"
                       value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
+                      onChange={handleEmailChange}
                     />
                   </div>
                 </div>
@@ -297,7 +300,7 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
         </ScrollArea>
 
         <SheetFooter className="px-6 py-3 border-t shrink-0">
-          <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" className="flex-1 h-9" onClick={handleCancel}>
             Cancel
           </Button>
           <Button type="submit" form="create-lead-form" className="flex-1 h-9" disabled={isPending}>

@@ -430,6 +430,7 @@ export default function NpsPage() {
   const handleDeleteTarget = useCallback((s: NpsSurvey) => setDeleteTarget(s), []);
   const handleCloseDetail = useCallback(() => setDetailTarget(null), []);
   const handleDeleteAlertChange = useCallback((o: boolean) => { if (!o) setDeleteTarget(null); }, []);
+  const handleRetry = useCallback(() => refetch(), [refetch]);
 
   return (
     <PageWrapper
@@ -448,7 +449,7 @@ export default function NpsPage() {
         <ErrorState
           title="Couldn't load NPS surveys"
           description="An error occurred while loading surveys. Please try again."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
         />
       ) : (
         <div className="space-y-4">

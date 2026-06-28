@@ -78,7 +78,7 @@ export function KanbanBoard({
       });
       return { previous: optimisticTickets };
     },
-    onError: (_, __, context) => {
+    onError: (_, __, context: UpdateOrderContext | undefined) => {
       if (context?.previous) setOptimisticTickets(context.previous);
       toast.error("Failed to update order");
     },

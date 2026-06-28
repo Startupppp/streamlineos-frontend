@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -143,12 +143,32 @@ export default function GoalsPage() {
 
   const hasGoals = (goals?.length ?? 0) > 0;
 
+  function handleOpenCreate() {
+    setCreateOpen(true);
+  }
+
+  function handleSearchChange(e: ChangeEvent<HTMLInputElement>) {
+    setSearch(e.target.value);
+  }
+
+  function handleLevelFilterChange(v: string) {
+    setLevelFilter(v as GoalLevel | "all");
+  }
+
+  function handleStatusFilterChange(v: string) {
+    setStatusFilter(v as GoalStatus | "all");
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
     <PageWrapper
       title="Goals & OKRs"
       subtitle="Track company, team, and individual objectives and their key results"
       actions={
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" /> New Goal
         </Button>
       }
@@ -160,10 +180,10 @@ export default function GoalsPage() {
               placeholder="Search goals..."
               className="h-8 pl-8 text-sm"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
             />
           </div>
-          <Select value={levelFilter} onValueChange={(v) => setLevelFilter(v as GoalLevel | "all")}>
+          <Select value={levelFilter} onValueChange={handleLevelFilterChange}>
             <SelectTrigger className="h-8 w-[130px] text-sm">
               <SelectValue placeholder="Level" />
             </SelectTrigger>

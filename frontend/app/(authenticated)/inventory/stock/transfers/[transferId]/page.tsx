@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
-import { use } from "react";
+import { useCallback, use } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Package } from "lucide-react";
+import { ArrowLeft, ArrowRight, Package, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -118,10 +117,12 @@ export default function TransferDetailPage({
   const { transferId: transferIdStr } = use(params);
   const transferId = Number(transferIdStr);
 
-  const { data: transferData, isLoading } = useTransfer(transferId);
+  const { data: transferData, isLoading, isError, refetch } = useTransfer(transferId);
   const completeMutation = useCompleteTransfer();
 
   const transfer = transferData ?? undefined;
+
+  function handleRetry() { void refetch(); }
 
   const handleComplete = useCallback(() => {
     if (!transfer) return;
@@ -140,6 +141,19 @@ export default function TransferDetailPage({
   }, [transfer, transferId, completeMutation]);
 
   if (isLoading) return <TransferDetailSkeleton />;
+
+  if (isError) {
+    return (
+      <PageWrapper title="Transfer" eyebrow="Inventory / Transfers">
+        <EmptyState
+          illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+          title="Failed to load transfer"
+          description="An error occurred while fetching this transfer. Please try again."
+          action={{ label: "Retry", onClick: handleRetry }}
+        />
+      </PageWrapper>
+    );
+  }
 
   if (!transfer) {
     return (

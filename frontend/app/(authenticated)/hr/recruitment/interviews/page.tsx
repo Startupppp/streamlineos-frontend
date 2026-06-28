@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared/error-state";
 
 export default function InterviewsPage() {
-  const { data: interviews, isLoading } = useInterviews();
+  const { data: interviews, isLoading, isError, refetch } = useInterviews();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(null);
@@ -80,7 +80,7 @@ export default function InterviewsPage() {
   if (isError) {
     return (
       <PageWrapper title="Interviews" subtitle="Schedule and track interviews">
-        <ErrorState message="Failed to load interviews" onRetry={refetch} />
+        <ErrorState description="Failed to load interviews" onRetry={refetch} />
       </PageWrapper>
     );
   }

@@ -31,7 +31,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
     setEditMode(false);
   }
 
-  function handleBudgetInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleBudgetInputChange(e: ChangeEvent<HTMLInputElement>) {
     setNewBudget(e.target.value);
   }
 

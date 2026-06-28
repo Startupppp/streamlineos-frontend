@@ -355,7 +355,7 @@ export default function TransfersPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="tf-to">To Warehouse <span className="text-destructive">*</span></Label>
-              <Select value={form.toWarehouseId} onValueChange={(v) => setField("toWarehouseId", v)}>
+              <Select value={form.toWarehouseId} onValueChange={handleToWarehouseChange}>
                 <SelectTrigger id="tf-to">
                   <SelectValue placeholder="Select destination warehouse" />
                 </SelectTrigger>
@@ -375,7 +375,7 @@ export default function TransfersPage() {
                 type="number"
                 placeholder="Product ID"
                 value={form.productId}
-                onChange={(e) => setField("productId", e.target.value)}
+                onChange={handleProductIdChange}
               />
             </div>
             <div className="space-y-1.5">
@@ -386,7 +386,7 @@ export default function TransfersPage() {
                 min="1"
                 placeholder="0"
                 value={form.quantity}
-                onChange={(e) => setField("quantity", e.target.value)}
+                onChange={handleQtyChange}
               />
             </div>
             <div className="space-y-1.5">
@@ -395,7 +395,7 @@ export default function TransfersPage() {
                 id="tf-notes"
                 placeholder="Reason or notes for this transfer…"
                 value={form.notes}
-                onChange={(e) => setField("notes", e.target.value)}
+                onChange={handleNotesChange}
                 rows={3}
               />
             </div>
@@ -403,7 +403,7 @@ export default function TransfersPage() {
           <SheetFooter>
             <Button
               variant="outline"
-              onClick={() => setSheetOpen(false)}
+              onClick={handleCancelSheet}
               disabled={createMutation.isPending}
             >
               Cancel
