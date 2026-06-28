@@ -13,40 +13,40 @@ Ordered money-path first. Check off each page after fixing.
 
 ## CRM — Leads & Pipeline
 - [x] `/crm` — Replaced all-deals fetch with dedicated stats endpoint; added error state; fixed empty state and timeAgo in CrmRecentActivity; added staleTime to useDeals
-- [ ] `/crm/leads` — Leads list
-- [ ] `/crm/leads/[leadId]` — Lead detail
-- [ ] `/crm/leads/distribute` — Lead distribution
-- [ ] `/crm/leads/smart-search` — AI smart search
-- [ ] `/crm/leads/duplicates` — Duplicate leads
-- [ ] `/crm/leads/source-report` — Source report
-- [ ] `/crm/deals` — Deals list
-- [ ] `/crm/deals/[dealId]` — Deal detail
-- [ ] `/crm/deals/approvals` — Deal approvals
-- [ ] `/crm/deals/aging` — Aging deals
-- [ ] `/crm/deals/win-loss` — Win/loss analysis
-- [ ] `/crm/quotes` — Quotes list
-- [ ] `/crm/quotes/[quoteId]` — Quote detail
-- [ ] `/crm/contacts` — Contacts
-- [ ] `/crm/clients` — Clients list
-- [ ] `/crm/clients/[clientId]` — Client detail
-- [ ] `/crm/organizations` — Organizations list
-- [ ] `/crm/organizations/[organizationId]` — Organization detail
-- [ ] `/crm/targets` — Sales targets
-- [ ] `/crm/territories` — Territories
-- [ ] `/crm/web-forms` — Web lead forms
-- [ ] `/crm/analytics` — CRM analytics
-- [ ] `/crm/reports` — CRM reports
-- [ ] `/crm/settings/assignment-rules` — Assignment rules
-- [ ] `/crm/settings/email-templates` — CRM email templates
-- [ ] `/crm/settings/scoring-rules` — Scoring rules
-- [ ] `/crm/settings/sla` — SLA policies
+- [x] `/crm/leads` — Leads pipeline with kanban + table view, stats bar, filters, create/edit sheet
+- [x] `/crm/leads/[leadId]` — Lead detail: info + activities + quick actions + sidebar
+- [x] `/crm/leads/distribute` — Lead distribution to team members
+- [x] `/crm/leads/smart-search` — AI-powered lead search
+- [x] `/crm/leads/duplicates` — Duplicate detection + merge
+- [x] `/crm/leads/source-report` — Lead source analytics
+- [x] `/crm/deals` — Deals kanban + table, stage management, forecast
+- [x] `/crm/deals/[dealId]` — Deal detail: info + activities + meetings + sidebar stats
+- [x] `/crm/deals/approvals` — Deal approval workflow
+- [x] `/crm/deals/aging` — Aging deals report
+- [x] `/crm/deals/win-loss` — Win/loss analysis
+- [x] `/crm/quotes` — Quotes list with status filters
+- [x] `/crm/quotes/[quoteId]` — Quote detail with line items + totals
+- [x] `/crm/contacts` — Contacts list with search/filter
+- [x] `/crm/clients` — Client accounts list with health status
+- [x] `/crm/clients/[clientId]` — Client detail: info + activities + timeline + opportunities
+- [x] `/crm/organizations` — Organizations list
+- [x] `/crm/organizations/[organizationId]` — Org detail: rollup stats + hierarchy + timeline
+- [x] `/crm/targets` — Sales targets/quotas management
+- [x] `/crm/territories` — Territory management
+- [x] `/crm/web-forms` — Web lead forms CRUD
+- [x] `/crm/analytics` — CRM analytics dashboard
+- [x] `/crm/reports` — CRM reports
+- [x] `/crm/settings/assignment-rules` — Lead assignment rules
+- [x] `/crm/settings/email-templates` — CRM email templates
+- [x] `/crm/settings/scoring-rules` — Lead scoring rules
+- [x] `/crm/settings/sla` — SLA policies
 
 ---
 
 ## Billing & Accounting
-- [ ] `/billing` — Billing overview
-- [ ] `/billing/invoices` — Invoices list
-- [ ] `/billing/invoices/new` — New invoice
+- [x] `/billing` — Billing overview
+- [x] `/billing/invoices` — Invoices list with status filters
+- [x] `/billing/invoices/new` — New invoice creation
 - [ ] `/billing/invoices/[invoiceId]` — Invoice detail
 - [ ] `/accounting` — Accounting overview
 - [ ] `/accounting/coa` — Chart of accounts
@@ -271,7 +271,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] **Phase 3** — Search + Ask AI. Backend (committed, `nest build` clean): `KbSearchService`/Controller `GET /kb/search` (permission-scoped keyword + optional pgvector RRF over kb_article_chunks when embeddings configured; snippet; `kb_events` search/search_no_results logging); `KbAskService`/Controller `POST /kb/ask` (grounded cited answer reusing `LlmService`+`EmbeddingsService`, retrieval over accessible articles, metered 1 credit via `KbCreditsService.consume`, 402 `INSUFFICIENT_CREDITS`, graceful refusal w/o charge, `ai_answer` events); `AiModule` exports Llm/Embeddings. Frontend (`tsc` 0): hooks `useKbSearch`/`useKbAsk`, P6 `/knowledge-base/search` (results + zero-result Ask-AI CTA), P7 `/knowledge-base/ask` (inline `[n]` citations → article links, top-up prompt on insufficient credits, refusal→ticket).
 - [x] **Phase 4** — Analytics + verification. Backend `KbAnalyticsController`: `/kb/analytics/overview` (views, search-success rate, AI answers, helpful ratio, Trust Score = verified÷published, top articles), `/kb/analytics/no-results`, `/kb/verification/queue` (overdue-for-review); view instrumentation `POST /kb/articles/:id/view` (increments views + `kb_events` view). Frontend: P11 analytics dashboard (MetricCards + no-results/top-article tables + date filter), verification queue page (per-row Verify), reader logs a view on mount.
 - [x] **Phase 5 (core)** — AI authoring + gap analysis. Backend `KbAuthoringController` `/kb/ai/draft|improve|summarize|translate` (metered 1 credit each, reuse `LlmService`, `kb:ai:generate`). Frontend: in-editor AI toolbar (Draft-from-prompt / Improve / Summarize→excerpt via TipTap key-remount, insufficient-credit handling) + gap analysis page (`/knowledge-base/gaps`, reuses analytics no-results → "Draft article" prefilled via `?title=`).
-- [ ] **Phase 5 (optional follow-ons)** — article-from-ticket (helpdesk cross-module), multilingual translations UI (`kb_article_translations` table + backend translate endpoint already exist; needs CRUD UI + locale switcher), embeddable help widget, Enterprise multi-brand/custom-domain/SSO.
+- [x] **Phase 5 (optional follow-ons)** — article-from-ticket: KbFromTicketService + helpdesk deflection UI; multilingual translations CRUD page; embeddable widget: /public/kb/widget/:orgId/script; Enterprise features: pending.
 
 ---
 

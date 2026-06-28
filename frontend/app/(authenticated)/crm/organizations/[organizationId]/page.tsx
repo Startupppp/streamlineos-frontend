@@ -1,25 +1,41 @@
 "use client";
 
-import { useState, use, useCallback, type ElementType } from "react";
+import { useState, use, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-  Building2, Globe, Users, Link2, Mail, Phone,
-  ChevronLeft, TrendingUp, BarChart2, UserCircle, GitBranch,
-  Clock, FileText,
+  Building2,
+  Globe,
+  Users,
+  Link2,
+  Mail,
+  Phone,
+  ChevronLeft,
+  TrendingUp,
+  BarChart2,
+  UserCircle,
+  GitBranch,
+  Pencil,
+  Trash2,
+  Inbox,
+  DollarSign,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useCrmOrganizationDetail,
   useCrmOrgHierarchy,
   useCrmOrgRollup,
   useCrmOrgTimeline,
   useCrmOrgRelatedLeads,
+  useDeleteCrmOrganization,
 } from "@/lib/api/hooks/crm";
 import { AccountHealthBadge, computeHealthScore } from "@/features/crm/organizations/detail/account-health-badge";
 import { HierarchyTree } from "@/features/crm/organizations/detail/hierarchy-tree";
@@ -29,6 +45,86 @@ import { LinkParentDialog } from "@/features/crm/organizations/detail/link-paren
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 
+function LeadStatusBadge({ status }: { status: string }) {
+  const upper = status.toUpperCase();
+  const colorMap: Record<string, string> = {
+    NEW: "bg-blue-500/10 text-blue-600",
+    CONTACTED: "bg-cyan-500/10 text-cyan-600",
+    QUALIFIED: "bg-emerald-500/10 text-emerald-600",
+    DISQUALIFIED: "bg-red-500/10 text-red-600",
+    CONVERTED: "bg-purple-500/10 text-purple-600",
+    LOST: "bg-muted text-muted-foreground",
+  };
+  return (
+    <Badge className={cn("text-[10px] border-0 capitalize", colorMap[upper] ?? "bg-muted text-muted-foreground")}>
+      {status.toLowerCase().replace(/_/g, " ")}
+    </Badge>
+  );
+}
+
+function LeadPriorityBadge({ priority }: { priority: string }) {
+  const upper = priority.toUpperCase();
+  const colorMap: Record<string, string> = {
+    HIGH: "bg-red-500/10 text-red-600",
+    MEDIUM: "bg-amber-500/10 text-amber-600",
+    LOW: "bg-muted text-muted-foreground",
+  };
+  return (
+    <Badge className={cn("text-[10px] border-0 capitalize", colorMap[upper] ?? "bg-muted text-muted-foreground")}>
+      {priority.toLowerCase()}
+    </Badge>
+  );
+}
+
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-2.5 py-2 border-b border-border/50 last:border-0">
+      <Icon className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1 flex items-start justify-between gap-3">
+        <span className="text-xs text-muted-foreground shrink-0">{label}</span>
+        <span className="text-xs text-foreground text-right min-w-0 truncate">{value}</span>
+      </div>
+    </div>
+  );
+}
+
+function DetailPageSkeleton() {
+  return (
+    <PageWrapper title="Organization" subtitle="Loading...">
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <Skeleton className="h-48" />
+            <Skeleton className="h-40" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-48" />
+            <Skeleton className="h-40" />
+          </div>
+        </div>
+        <Skeleton className="h-48" />
+      </div>
+    </PageWrapper>
+  );
+}
 
 export default function OrganizationDetailPage({
   params,
@@ -37,325 +133,287 @@ export default function OrganizationDetailPage({
 }) {
   const { organizationId } = use(params);
   const id = Number(organizationId);
+  const router = useRouter();
 
-  const [parentDialogOpen, setParentDialogOpen] = useState(false);
-  const handleOpenParentDialog = useCallback(() => setParentDialogOpen(true), []);
-  const handleParentDialogOpenChange = useCallback((open: boolean) => setParentDialogOpen(open), []);
+  const [linkParentOpen, setLinkParentOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { data: org, isLoading: orgLoading } = useCrmOrganizationDetail(id);
-  const { data: rollup, isLoading: rollupLoading } = useCrmOrgRollup(id);
-  const { data: hierarchy, isLoading: hierarchyLoading } = useCrmOrgHierarchy(id);
-  const { data: timeline, isLoading: timelineLoading } = useCrmOrgTimeline(id);
-  const { data: relatedLeads, isLoading: leadsLoading } = useCrmOrgRelatedLeads(id);
+  const { data: rollup } = useCrmOrgRollup(id);
+  const { data: hierarchy } = useCrmOrgHierarchy(id);
+  const { data: timeline } = useCrmOrgTimeline(id);
+  const { data: relatedLeads } = useCrmOrgRelatedLeads(id);
+  const deleteMutation = useDeleteCrmOrganization();
 
-  if (orgLoading) {
-    return (
-      <PageWrapper title="Organization" subtitle="Loading...">
-        <div className="space-y-4">
-          <Skeleton className="h-24 w-full" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20" />)}
-          </div>
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </PageWrapper>
-    );
-  }
+  const handleOpenLinkParent = useCallback(() => setLinkParentOpen(true), []);
+  const handleLinkParentOpenChange = useCallback((open: boolean) => setLinkParentOpen(open), []);
+  const handleOpenDelete = useCallback(() => setDeleteOpen(true), []);
+  const handleDeleteOpenChange = useCallback((open: boolean) => setDeleteOpen(open), []);
+
+  const handleConfirmDelete = useCallback(() => {
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success("Organization deleted");
+        router.push("/crm/organizations");
+      },
+      onError: (e) => toast.error(e.message),
+    });
+  }, [id, deleteMutation, router]);
+
+  if (orgLoading) return <DetailPageSkeleton />;
 
   if (!org) {
     return (
-      <PageWrapper title="Organization" subtitle="Not found">
-        <div className="text-center py-12 text-muted-foreground">
-          <Building2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Organization not found.</p>
-          <Link href="/crm/organizations">
-            <Button variant="outline" size="sm" className="mt-4">
-              <ChevronLeft className="h-4 w-4 mr-1" /> Back to Organizations
-            </Button>
-          </Link>
-        </div>
+      <PageWrapper title="Not Found" subtitle="">
+        <EmptyState
+          title="Organization not found"
+          description="This organization may have been deleted or you don't have access."
+          action={{ label: "Back to Organizations", href: "/crm/organizations" }}
+          className="min-h-[50vh]"
+        />
       </PageWrapper>
     );
   }
 
-  const computedScore = rollup ? computeHealthScore(rollup) : null;
-  const displayScore = org.healthScore ?? computedScore;
+  const displayScore = org.healthScore ?? (rollup ? computeHealthScore(rollup) : null);
 
   return (
     <PageWrapper
       title={org.name}
-      subtitle={org.industry ?? org.domain ?? "Organization"}
-      badge={<AccountHealthBadge healthScore={displayScore} />}
+      eyebrow="Organizations"
+      subtitle={org.description ?? org.industry ?? undefined}
       actions={
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-xs"
-            onClick={handleOpenParentDialog}
-          >
+          <AccountHealthBadge healthScore={displayScore} />
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleOpenLinkParent}>
             <GitBranch className="h-3.5 w-3.5" />
             {org.parentId ? "Change Parent" : "Link Parent"}
           </Button>
-          <Link href="/crm/organizations">
-            <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" asChild>
+            <Link href={`/crm/organizations/${id}/edit`}>
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={handleOpenDelete}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="sm" className="gap-1.5 text-xs" asChild>
+            <Link href="/crm/organizations">
               <ChevronLeft className="h-3.5 w-3.5" />
               Back
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       }
     >
-      <div className="space-y-6">
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap gap-4 items-start">
-              <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl font-bold text-blue-600 shrink-0">
-                {org.name[0]?.toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0 space-y-1.5">
-                <div className="flex flex-wrap gap-2 items-center">
-                  <h2 className="text-base font-semibold">{org.name}</h2>
-                  {org.size && <Badge variant="secondary" className="text-xs">{org.size} employees</Badge>}
-                  {org.industry && <Badge variant="outline" className="text-xs">{org.industry}</Badge>}
-                </div>
-                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                  {org.domain && (
-                    <span className="flex items-center gap-1">
-                      <Globe className="h-3 w-3" />{org.domain}
-                    </span>
-                  )}
-                  {org.website && (
-                    <a href={org.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-blue-600">
-                      <Link2 className="h-3 w-3" />Website
-                    </a>
-                  )}
-                  {org.linkedinUrl && (
-                    <a href={org.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-blue-600">
-                      <Building2 className="h-3 w-3" />LinkedIn
-                    </a>
-                  )}
-                </div>
-                {org.description && (
-                  <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{org.description}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard
-            label="Contacts"
-            value={rollupLoading ? "..." : (rollup?.totalContacts ?? 0)}
-            icon={UserCircle}
-            color="blue"
-          />
-          <StatCard
-            label="Open Deals"
-            value={rollupLoading ? "..." : (rollup?.openDeals ?? 0)}
-            icon={TrendingUp}
-            color="amber"
-          />
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard
             label="Total Deal Value"
-            value={rollupLoading ? "..." : (rollup ? formatCurrency(rollup.totalDealValue) : "—")}
-            icon={BarChart2}
+            value={rollup ? formatCurrency(rollup.totalDealValue) : "—"}
+            icon={DollarSign}
             color="green"
+            index={0}
           />
           <StatCard
-            label="Related Leads"
-            value={rollupLoading ? "..." : (rollup?.totalLeads ?? 0)}
-            icon={Users}
+            label="Active Deals"
+            value={rollup?.openDeals ?? "—"}
+            icon={TrendingUp}
             color="blue"
+            index={1}
+          />
+          <StatCard
+            label="Open Leads"
+            value={rollup?.totalLeads ?? "—"}
+            icon={Inbox}
+            color="amber"
+            index={2}
+          />
+          <StatCard
+            label="Total Contacts"
+            value={rollup?.totalContacts ?? "—"}
+            icon={Users}
+            color="violet"
+            index={3}
           />
         </div>
 
-        <Tabs defaultValue="timeline" className="space-y-4">
-          <TabsList className="h-8 text-xs">
-            <TabsTrigger value="timeline" className="text-xs gap-1.5">
-              <Clock className="h-3.5 w-3.5" />Timeline
-            </TabsTrigger>
-            <TabsTrigger value="contacts" className="text-xs gap-1.5">
-              <UserCircle className="h-3.5 w-3.5" />UserCircles
-            </TabsTrigger>
-            <TabsTrigger value="leads" className="text-xs gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5" />Related Leads
-            </TabsTrigger>
-            <TabsTrigger value="hierarchy" className="text-xs gap-1.5">
-              <GitBranch className="h-3.5 w-3.5" />Hierarchy
-            </TabsTrigger>
-            <TabsTrigger value="notes" className="text-xs gap-1.5">
-              <FileText className="h-3.5 w-3.5" />Notes
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="timeline">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-4">
             <Card className="shadow-sm">
               <CardHeader className="px-4 py-3 border-b">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  Activity Timeline
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  Organization Info
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
-                {timelineLoading ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
-                  </div>
-                ) : (
-                  <AccountTimeline events={timeline ?? []} />
+              <CardContent className="px-4 py-3">
+                {org.industry && (
+                  <InfoRow icon={BarChart2} label="Industry" value={org.industry} />
+                )}
+                {org.size && (
+                  <InfoRow icon={Users} label="Company Size" value={`${org.size} employees`} />
+                )}
+                {org.domain && (
+                  <InfoRow icon={Globe} label="Domain" value={org.domain} />
+                )}
+                {org.website && (
+                  <InfoRow
+                    icon={Link2}
+                    label="Website"
+                    value={
+                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate block max-w-[180px]">
+                        {org.website}
+                      </a>
+                    }
+                  />
+                )}
+                {org.linkedinUrl && (
+                  <InfoRow
+                    icon={UserCircle}
+                    label="LinkedIn"
+                    value={
+                      <a href={org.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        View profile
+                      </a>
+                    }
+                  />
+                )}
+                {org.parentId && (
+                  <InfoRow
+                    icon={GitBranch}
+                    label="Parent Account"
+                    value={
+                      <Link href={`/crm/organizations/${org.parentId}`} className="text-blue-600 hover:underline">
+                        View parent
+                      </Link>
+                    }
+                  />
+                )}
+                {!org.industry && !org.size && !org.domain && !org.website && !org.linkedinUrl && !org.parentId && (
+                  <p className="text-xs text-muted-foreground py-2">No details recorded.</p>
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="contacts">
-            <Card className="shadow-sm">
-              <CardHeader className="px-4 py-3 border-b">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <UserCircle className="h-4 w-4 text-muted-foreground" />
-                  UserCircles ({org.contacts?.length ?? 0})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {(org.contacts?.length ?? 0) === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <UserCircle className="h-7 w-7 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">No contacts linked to this organization</p>
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-border/60">
-                    {org.contacts?.map((contact) => (
-                      <li key={contact.id} className="px-4 py-3 flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0">
-                          {contact.name[0]?.toUpperCase()}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">{contact.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {[contact.title, contact.department].filter(Boolean).join(" · ")}
-                          </p>
-                        </div>
-                        <div className="flex gap-2 shrink-0">
-                          {contact.email && (
-                            <a href={`mailto:${contact.email}`} className="text-muted-foreground hover:text-blue-600">
-                              <Mail className="h-3.5 w-3.5" />
-                            </a>
-                          )}
-                          {contact.phone && (
-                            <a href={`tel:${contact.phone}`} className="text-muted-foreground hover:text-blue-600">
-                              <Phone className="h-3.5 w-3.5" />
-                            </a>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+            {hierarchy && (
+              <Card className="shadow-sm">
+                <CardHeader className="px-4 py-3 border-b">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <GitBranch className="h-4 w-4 text-muted-foreground" />
+                    Org Hierarchy
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 py-3">
+                  <HierarchyTree root={hierarchy} currentId={id} ancestors={[]} />
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-          <TabsContent value="leads">
+          <div className="space-y-4">
             <Card className="shadow-sm">
               <CardHeader className="px-4 py-3 border-b">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  Related Leads ({leadsLoading ? "..." : (relatedLeads?.length ?? 0)})
+                  Activity Timeline
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
-                {leadsLoading ? (
-                  <div className="p-4 space-y-2">
-                    {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
-                  </div>
-                ) : (relatedLeads?.length ?? 0) === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <TrendingUp className="h-7 w-7 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">No leads found for this organization</p>
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-border/60">
-                    {relatedLeads?.map((lead) => (
-                      <li key={lead.id} className="px-4 py-3 flex items-center gap-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">{lead.name ?? "Unnamed Lead"}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {lead.email ?? lead.phone ?? lead.company ?? "No contact info"}
-                          </p>
-                        </div>
-                        <div className="flex gap-1.5 shrink-0">
-                          <Badge
-                            variant="secondary"
-                            className={cn(
-                              "text-[10px]",
-                              lead.status === "WON" ? "bg-emerald-500/15 text-emerald-400" :
-                                lead.status === "LOST" ? "bg-red-500/15 text-red-400" :
-                                  "bg-blue-500/10 text-blue-600",
-                            )}
-                          >
-                            {lead.status}
-                          </Badge>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              <CardContent className="px-4 py-3">
+                <AccountTimeline events={timeline ?? []} />
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="hierarchy">
             <Card className="shadow-sm">
               <CardHeader className="px-4 py-3 border-b">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <GitBranch className="h-4 w-4 text-muted-foreground" />
-                  Organizational Hierarchy
+                  <BarChart2 className="h-4 w-4 text-muted-foreground" />
+                  Notes
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
-                {hierarchyLoading ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3].map((i) => <Skeleton key={i} className="h-9 w-full" />)}
-                  </div>
-                ) : hierarchy ? (
-                  <HierarchyTree
-                    root={hierarchy}
-                    currentId={id}
-                    ancestors={[]}
-                  />
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <GitBranch className="h-7 w-7 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">No hierarchy data available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="notes">
-            <Card className="shadow-sm">
-              <CardHeader className="px-4 py-3 border-b">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  Account Notes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
+              <CardContent className="px-4 py-3">
                 <AccountNotes organizationId={id} initialNotes={org.notes} />
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
+
+        <PageSection title="Related Leads">
+          {(relatedLeads?.length ?? 0) === 0 ? (
+            <EmptyState
+              title="No related leads"
+              description="Leads linked to this organization will appear here."
+              compact
+            />
+          ) : (
+            <Card className="shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/40">
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Name</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Status</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Priority</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Source</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {relatedLeads?.map((lead) => (
+                      <tr key={lead.id} className="border-b border-border/50 last:border-0 hover:bg-accent/40 transition-colors">
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[10px] font-semibold text-blue-600 shrink-0">
+                              {(lead.name ?? "?")[0]?.toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium truncate">{lead.name ?? "—"}</p>
+                              {lead.email && (
+                                <p className="text-[10px] text-muted-foreground truncate">{lead.email}</p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <LeadStatusBadge status={lead.status} />
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <LeadPriorityBadge priority={lead.priority} />
+                        </td>
+                        <td className="px-4 py-2.5 text-xs text-muted-foreground capitalize">
+                          {lead.source?.toLowerCase().replace(/_/g, " ") ?? "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+        </PageSection>
       </div>
 
       <LinkParentDialog
-        open={parentDialogOpen}
-        onOpenChange={handleParentDialogOpenChange}
+        open={linkParentOpen}
+        onOpenChange={handleLinkParentOpenChange}
         organizationId={id}
         currentParentId={org.parentId}
+      />
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete organization"
+        description={`Are you sure you want to delete "${org.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
       />
     </PageWrapper>
   );

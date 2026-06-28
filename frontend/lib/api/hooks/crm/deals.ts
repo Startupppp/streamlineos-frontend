@@ -72,6 +72,35 @@ export interface WinLossAnalysis {
   lostByReason: Array<{ reason: string; count: number; totalValue: number }>;
 }
 
+export interface DealApproval {
+  id: number;
+  dealId: number;
+  dealName: string | null;
+  dealValue: string | null;
+  requesterName: string | null;
+  requestedStage: string;
+  status: string;
+  rejectionReason: string | null;
+  createdAt: string | null;
+  resolvedAt: string | null;
+}
+
+export interface AgingDeal {
+  id: number;
+  name: string;
+  value: string | null;
+  stage: string;
+  daysInStage: number;
+  createdAt: string;
+  updatedAt: string;
+  assigneeName: string | null;
+}
+
+export interface AgingResponse {
+  summary: { total: number; stale: number; critical: number };
+  deals: AgingDeal[];
+}
+
 export function useDeals(filters?: DealFilters) {
   return useQuery({
     queryKey: queryKeys.deals.list(filters as Record<string, unknown>),
@@ -267,8 +296,17 @@ export function useWinLossAnalysis() {
 export function useDealApprovals(params?: { status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "approvals", params] as const,
-    queryFn: () => apiClient.get<Array<Record<string, unknown>>>("/deals/approvals", params as Record<string, unknown>),
+    queryFn: () => apiClient.get<DealApproval[]>("/deals/approvals", params as Record<string, unknown>),
     staleTime: 2 * 60_000,
+  });
+}
+
+export function useDealAging() {
+  return useQuery<AgingResponse>({
+    queryKey: queryKeys.deals.aging(),
+    queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
+    staleTime: 5 * 60_000,
+    refetchInterval: 300_000,
   });
 }
 

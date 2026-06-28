@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useDuplicateLeads, useMergeLead, type DuplicateGroup } from "@/lib/api/hooks/crm";
+import { useDuplicateLeads, useMergeLead, type DuplicateGroup } from "@/lib/api/hooks/crm/leads";
 import { cn } from "@/lib/utils";
 
 
@@ -64,6 +64,8 @@ function DuplicateGroupCard({
 }) {
   const [expanded, setExpanded] = useState(true);
 
+  const handleToggle = useCallback(() => setExpanded((p) => !p), []);
+
   const leadA = group.leads[0]!;
   const leadB = group.leads[1]!;
 
@@ -84,7 +86,7 @@ function DuplicateGroupCard({
           ))}
 
           <button
-            onClick={() => setExpanded((p) => !p)}
+            onClick={handleToggle}
             className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
             aria-label={expanded ? "Collapse group" : "Expand group"}
           >
@@ -185,7 +187,7 @@ function DuplicatesSkeleton() {
 
 
 export default function DuplicateLeadsPage() {
-  const { data, isLoading, isFetching, refetch } = useDuplicateLeads();
+  const { data, isLoading, isFetching, isError, refetch } = useDuplicateLeads();
   const { mutate: mergeLead, isPending: isMerging } = useMergeLead();
 
   const [pendingMerge, setPendingMerge] = useState<MergeTarget | null>(null);
@@ -229,6 +231,14 @@ export default function DuplicateLeadsPage() {
     >
       {isLoading ? (
         <DuplicatesSkeleton />
+      ) : isError ? (
+        <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-center">
+          <AlertTriangle className="h-10 w-10 text-destructive" />
+          <p className="text-sm text-muted-foreground">Failed to scan for duplicates</p>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            Try Again
+          </Button>
+        </div>
       ) : (
         <div className="space-y-6">
           <div className="grid gap-4 grid-cols-2 md:grid-cols-2">

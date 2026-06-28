@@ -1,17 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { format, isPast } from "date-fns";
 import {
-  IndianRupee,
   FileText,
   AlertCircle,
   CheckCircle2,
   Clock,
   ChevronRight,
   Plus,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { useInvoiceStats, useInvoices } from "@/lib/api/hooks/invoice";
@@ -41,8 +42,8 @@ function fmt(amount: string | number) {
 }
 
 export default function BillingPage() {
-  const { data: stats, isLoading: statsLoading } = useInvoiceStats();
-  const { data: recentData } = useInvoices({ limit: 5 });
+  const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useInvoiceStats();
+  const { data: recentData, isLoading: recentLoading } = useInvoices({ limit: 5 });
   const { data: overdueData } = useInvoices({ status: "OVERDUE", limit: 5 });
 
   const recentInvoices = recentData?.items ?? [];
@@ -63,47 +64,79 @@ export default function BillingPage() {
     >
       <div className="space-y-4">
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Total Invoiced"
-            value={statsLoading ? "—" : fmt(stats ? (stats.totalOutstanding + stats.totalPaid) : 0)}
-            icon={FileText}
-            color="blue"
-          />
-          <StatCard
-            label="Received (Paid)"
-            value={statsLoading ? "—" : fmt(stats?.totalPaid ?? 0)}
-            icon={CheckCircle2}
-            color="green"
-          />
-          <StatCard
-            label="Outstanding"
-            value={statsLoading ? "—" : fmt(stats?.totalOutstanding ?? 0)}
-            icon={Clock}
-            color="amber"
-          />
-          <StatCard
-            label="Overdue"
-            value={statsLoading ? "—" : `${stats?.overdue ?? 0} invoices`}
-            icon={AlertCircle}
-            color="red"
-          />
-        </div>
+        {statsError ? (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 flex flex-col items-center gap-3 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <p className="text-sm font-medium">Failed to load billing stats</p>
+            <Button variant="outline" size="sm" onClick={() => refetchStats()}>
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Retry
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {statsLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="rounded-lg border border-border bg-card px-4 py-4 space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-7 w-28" />
+                  </div>
+                ))
+              ) : (
+                <>
+                  <StatCard
+                    label="Total Invoiced"
+                    value={fmt(stats ? (stats.totalOutstanding + stats.totalPaid) : 0)}
+                    icon={FileText}
+                    color="blue"
+                  />
+                  <StatCard
+                    label="Received (Paid)"
+                    value={fmt(stats?.totalPaid ?? 0)}
+                    icon={CheckCircle2}
+                    color="green"
+                  />
+                  <StatCard
+                    label="Outstanding"
+                    value={fmt(stats?.totalOutstanding ?? 0)}
+                    icon={Clock}
+                    color="amber"
+                  />
+                  <StatCard
+                    label="Overdue"
+                    value={`${stats?.overdue ?? 0} invoices`}
+                    icon={AlertCircle}
+                    color="red"
+                  />
+                </>
+              )}
+            </div>
 
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-          {(["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as InvoiceStatus[]).map((s) => {
-            const badge = STATUS_BADGE[s];
-            const count = stats?.[s.toLowerCase() as keyof typeof stats] as number ?? 0;
-            return (
-              <Link key={s} href={`/billing/invoices?status=${s}`}>
-                <div className="rounded-lg border border-border bg-card px-3.5 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer">
-                  <p className="text-xs text-muted-foreground mb-1 truncate">{badge.label}</p>
-                  <p className="text-xl font-bold tabular-nums">{count}</p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+              {statsLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="rounded-lg border border-border bg-card px-3.5 py-2.5 space-y-2">
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-7 w-8" />
+                  </div>
+                ))
+              ) : (
+                (["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as InvoiceStatus[]).map((s) => {
+                  const badge = STATUS_BADGE[s];
+                  const count = stats?.[s.toLowerCase() as keyof typeof stats] as number ?? 0;
+                  return (
+                    <Link key={s} href={`/billing/invoices?status=${s}`}>
+                      <div className="rounded-lg border border-border bg-card px-3.5 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer">
+                        <p className="text-xs text-muted-foreground mb-1 truncate">{badge.label}</p>
+                        <p className="text-xl font-bold tabular-nums">{count}</p>
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
+            </div>
+          </>
+        )}
 
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 flex items-center justify-between border-b border-border">
@@ -114,7 +147,11 @@ export default function BillingPage() {
               </Button>
             </Link>
           </div>
-          <InvoiceTable invoices={recentInvoices} />
+          {recentLoading ? (
+            <TableSkeleton rows={5} />
+          ) : (
+            <InvoiceTable invoices={recentInvoices} />
+          )}
         </div>
 
         {overdueInvoices.length > 0 && (
@@ -138,6 +175,27 @@ export default function BillingPage() {
   );
 }
 
+function TableSkeleton({ rows }: { rows: number }) {
+  return (
+    <div className="overflow-x-auto">
+      <div className="min-w-[640px]">
+        <div className="divide-y divide-border">
+          {Array.from({ length: rows }).map((_, i) => (
+            <div key={i} className="grid grid-cols-6 gap-4 px-4 py-3 items-center">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-5 w-14 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-16 ml-auto" />
+              <Skeleton className="h-7 w-12 ml-auto" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function InvoiceTable({
   invoices,
 }: {
@@ -156,7 +214,7 @@ function InvoiceTable({
       <EmptyState
         className="border-0 bg-transparent py-10"
         illustration={
-          <EmptyExpensesIllustration className="h-28 w-28 opacity-95" />
+          <EmptyDocumentsIllustration className="h-28 w-28 opacity-95" />
         }
         title="No invoices found"
         description="Create your first invoice to start tracking revenue."

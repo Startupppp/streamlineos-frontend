@@ -2,16 +2,19 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, TrendingUp, Users, Target, IndianRupee } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Target, IndianRupee, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptySearchIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useLeadSourceReport } from "@/lib/api/hooks/crm";
+import { useLeadSourceReport } from "@/lib/api/hooks/crm/leads";
 
 const SOURCE_LABELS: Record<string, string> = {
   referral: "Referral",
@@ -40,7 +43,7 @@ function formatCurrency(val: number) {
 }
 
 export default function LeadSourceReportPage() {
-  const { data, isLoading } = useLeadSourceReport();
+  const { data, isLoading, isError, refetch } = useLeadSourceReport();
 
   const maxCount = useMemo(
     () => Math.max(1, ...(data?.sources.map((s) => s.count) ?? [])),
@@ -61,6 +64,26 @@ export default function LeadSourceReportPage() {
     () => data?.sources.reduce((sum, s) => sum + s.converted, 0) ?? 0,
     [data]
   );
+
+  function handleRetry() {
+    refetch();
+  }
+
+  function handleEmptyAction() {
+    return;
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Lead Source Report" subtitle="Attribution analysis across all lead sources">
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 text-center">
+          <AlertTriangle className="h-10 w-10 text-destructive" />
+          <p className="text-sm text-muted-foreground">Failed to load lead source report. Please try again.</p>
+          <Button onClick={handleRetry}>Try Again</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -123,9 +146,13 @@ export default function LeadSourceReportPage() {
             </CardHeader>
             <CardContent>
               {(!data?.sources || data.sources.length === 0) ? (
-                <div className="flex items-center justify-center h-40 text-sm text-muted-foreground">
-                  No lead source data available
-                </div>
+                <EmptyState
+                  illustration={<EmptySearchIllustration className="h-40 w-40" />}
+                  title="No source data"
+                  description="No lead source data is available yet."
+                  action={{ label: "Refresh", onClick: handleEmptyAction }}
+                  className="min-h-[300px]"
+                />
               ) : (
                 <div className="space-y-5">
                   {data.sources.map((s, i) => {

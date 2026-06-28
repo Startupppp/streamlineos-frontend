@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Search, Sparkles, ArrowRight, X } from "lucide-react";
+import { Search, Sparkles, ArrowRight, X, AlertTriangle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -193,7 +193,7 @@ function LoadingSkeleton() {
 export default function SmartLeadSearchPage() {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const { mutate, data, isPending, reset } = useNLSearch();
+  const { mutate, data, isPending, isError, reset } = useNLSearch();
 
   const handleSearch = useCallback(() => {
     const q = inputValue.trim();
@@ -209,11 +209,30 @@ export default function SmartLeadSearchPage() {
     [mutate],
   );
 
+  const handleChipButtonClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const q = e.currentTarget.dataset.query;
+      if (q) handleChipClick(q);
+    },
+    [handleChipClick],
+  );
+
   const handleClear = useCallback(() => {
     setInputValue("");
     reset();
     inputRef.current?.focus();
   }, [reset]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") handleSearch();
+    },
+    [handleSearch],
+  );
 
   const hasResult = !!data;
 
@@ -236,8 +255,8 @@ export default function SmartLeadSearchPage() {
               <Input
                 ref={inputRef}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
                 placeholder='Try: "hot leads from Mumbai with value above 5 lakhs"'
                 className="pl-9 pr-9 h-11 text-sm"
                 aria-label="Natural language lead search"
@@ -277,7 +296,8 @@ export default function SmartLeadSearchPage() {
               <button
                 key={q}
                 type="button"
-                onClick={() => handleChipClick(q)}
+                data-query={q}
+                onClick={handleChipButtonClick}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors",
                   "border-border text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5",
@@ -293,6 +313,12 @@ export default function SmartLeadSearchPage() {
 
         {isPending ? (
           <LoadingSkeleton />
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center min-h-[300px] gap-4 text-center">
+            <AlertTriangle className="h-10 w-10 text-destructive" />
+            <p className="text-muted-foreground text-sm">Search failed. Please try again.</p>
+            <Button onClick={handleSearch}>Retry</Button>
+          </div>
         ) : hasResult ? (
           <div className="space-y-4">
             <FilterBadges filters={data.parsedFilters} />
@@ -307,7 +333,6 @@ export default function SmartLeadSearchPage() {
             <ResultsTable leads={data.leads} />
           </div>
         ) : (
-          
           <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
             <div className="rounded-full bg-primary/10 p-5">
               <Sparkles className="h-10 w-10 text-primary" />
@@ -323,7 +348,8 @@ export default function SmartLeadSearchPage() {
                 <button
                   key={q}
                   type="button"
-                  onClick={() => handleChipClick(q)}
+                  data-query={q}
+                  onClick={handleChipButtonClick}
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
                 >
                   <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />

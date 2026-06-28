@@ -1,15 +1,14 @@
 "use client";
 
 import { useCallback, useState, useTransition } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
 import {
   Search, Users, IndianRupee, FileCheck, ClipboardList,
   ChevronRight, LayoutGrid, List, MessageSquare,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,18 +22,22 @@ import {
 } from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useClientAccounts } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { AIChurnRiskButton } from "@/features/crm/clients/ai-churn-risk-button";
 import { AssignCrmDialog } from "@/features/crm/clients/assign-crm-dialog";
+import type { ClientAccount, ClientAccountStatus, ClientAccountFilters } from "@/types/crm";
 
 
 const STATUSES = ["ACCOUNT_OPENING", "QUERIES", "PLAN_SELECTED", "INVESTED"] as const;
 type ClientStatus = typeof STATUSES[number];
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; textColor: string; icon: React.ComponentType<{ className?: string }> }> = {
+const STATUS_CONFIG: Record<ClientAccountStatus, { label: string; color: string; bg: string; textColor: string; icon: React.ComponentType<{ className?: string }> }> = {
   ACCOUNT_OPENING: { label: "Account Opening", color: "border-blue-500", bg: "bg-blue-500/10", textColor: "text-blue-500", icon: ClipboardList },
   QUERIES: { label: "Queries", color: "border-amber-500", bg: "bg-amber-500/10", textColor: "text-amber-500", icon: MessageSquare },
   PLAN_SELECTED: { label: "Plan Selected", color: "border-purple-500", bg: "bg-purple-500/10", textColor: "text-purple-500", icon: FileCheck },
@@ -48,19 +51,6 @@ function formatINR(val: string | number | null | undefined): string {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(num);
 }
 
-
-interface ClientAccount {
-  id: number;
-  clientName: string;
-  clientEmail: string | null;
-  clientPhone: string | null;
-  status: string;
-  estimatedInvestment: string | null;
-  investmentAmount: string | null;
-  convertedAt: string | null;
-  salesRep: { name: string | null; image: string | null } | null;
-  assignedCrm: { name: string | null; image: string | null } | null;
-}
 
 function KanbanCard({ account }: { account: ClientAccount }) {
   return (
@@ -162,7 +152,6 @@ function KanbanColumn({
 
 export default function ClientAccountsPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
 
@@ -182,10 +171,10 @@ export default function ClientAccountsPage() {
         else params.set(key, value);
       }
       startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
       });
     },
-    [searchParams, router, pathname],
+    [searchParams, pathname],
   );
 
   const setSearch = useCallback((q: string) => updateParams({ q: q || null, page: null }), [updateParams]);
@@ -196,8 +185,13 @@ export default function ClientAccountsPage() {
     updateParams({ view: mode === "kanban" ? null : mode });
   }, [updateParams]);
 
+  const handleViewKanban = useCallback(() => handleViewMode("kanban"), [handleViewMode]);
+  const handleViewTable = useCallback(() => handleViewMode("table"), [handleViewMode]);
+  const handlePrevPage = useCallback(() => setPage(page - 1), [page, setPage]);
+  const handleNextPage = useCallback(() => setPage(page + 1), [page, setPage]);
+
   const { data: allData, isLoading: statsLoading } = useClientAccounts({ limit: 500 });
-  const allAccounts = (allData?.accounts ?? []) as ClientAccount[];
+  const allAccounts = allData?.accounts ?? [];
   const stats = {
     total: allAccounts.length,
     accountOpening: allAccounts.filter((a) => a.status === "ACCOUNT_OPENING").length,
@@ -206,17 +200,32 @@ export default function ClientAccountsPage() {
     invested: allAccounts.filter((a) => a.status === "INVESTED").length,
   };
 
-  const queryFilters = viewMode === "kanban"
+  const queryFilters: ClientAccountFilters = viewMode === "kanban"
     ? { search: debouncedSearch || undefined, limit: 200 }
     : {
-        status: statusFilter !== "all" ? statusFilter as ClientStatus : undefined,
+        status: statusFilter !== "all" ? (statusFilter as ClientAccountStatus) : undefined,
         search: debouncedSearch || undefined,
         page,
         limit: 25,
       };
 
-  const { data, isLoading } = useClientAccounts(queryFilters);
-  const accounts = (data?.accounts ?? []) as ClientAccount[];
+  const { data, isLoading, error, refetch } = useClientAccounts(queryFilters);
+  const accounts = data?.accounts ?? [];
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  if (error) {
+    return (
+      <PageWrapper title="Client Accounts" subtitle="Post-conversion client management">
+        <ErrorState
+          title="Failed to load client accounts"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+          className="flex-1"
+        />
+      </PageWrapper>
+    );
+  }
 
   const kanbanAccounts = viewMode === "kanban" ? accounts : allAccounts;
   const kanbanColumns = STATUSES.map((status) => ({
@@ -240,7 +249,7 @@ export default function ClientAccountsPage() {
               variant={viewMode === "kanban" ? "default" : "ghost"}
               size="sm"
               className="h-7 px-2.5 gap-1.5"
-              onClick={() => handleViewMode("kanban")}
+              onClick={handleViewKanban}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
               <span className="hidden sm:inline text-xs">Board</span>
@@ -249,7 +258,7 @@ export default function ClientAccountsPage() {
               variant={viewMode === "table" ? "default" : "ghost"}
               size="sm"
               className="h-7 px-2.5 gap-1.5"
-              onClick={() => handleViewMode("table")}
+              onClick={handleViewTable}
             >
               <List className="h-3.5 w-3.5" />
               <span className="hidden sm:inline text-xs">Table</span>
@@ -343,19 +352,23 @@ export default function ClientAccountsPage() {
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell colSpan={10} className="h-12">
-                          <Skeleton className="h-4 w-full" />
-                        </TableCell>
+                    Array.from({ length: 8 }).map((_, i) => (
+                      <TableRow key={i} className="h-10">
+                        {Array.from({ length: 10 }).map((__, j) => (
+                          <TableCell key={j} className="px-2 py-1">
+                            <Skeleton className="h-4 w-full" />
+                          </TableCell>
+                        ))}
                       </TableRow>
                     ))
                   ) : accounts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
-                        <Users className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                        <p className="text-sm font-medium text-foreground">No client accounts</p>
-                        <p className="text-xs mt-1">Convert leads to CONVERTED status to create client accounts.</p>
+                      <TableCell colSpan={10} className="p-0">
+                        <EmptyState
+                          title="No client accounts"
+                          description="Convert leads to create client accounts."
+                          className="border-0 bg-transparent min-h-[40vh]"
+                        />
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -430,8 +443,8 @@ export default function ClientAccountsPage() {
               <div className="shrink-0 flex items-center justify-between p-4 border-t">
                 <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>
                 <div className="flex gap-1">
-                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Prev</Button>
-                  <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={() => setPage(page + 1)}>Next</Button>
+                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={handlePrevPage}>Prev</Button>
+                  <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={handleNextPage}>Next</Button>
                 </div>
               </div>
             )}

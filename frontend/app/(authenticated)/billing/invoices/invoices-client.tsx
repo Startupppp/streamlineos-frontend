@@ -23,6 +23,8 @@ import {
   MoreHorizontal,
   Trash2,
   IndianRupee,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +58,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { formatCurrencyFull } from "@/lib/format-utils";
@@ -91,7 +94,7 @@ export function InvoicesClient() {
     });
   }, [searchParams, router, pathname]);
 
-  const { data: invoicesData, isLoading } = useInvoices(
+  const { data: invoicesData, isLoading, isError, refetch } = useInvoices(
     statusFilter !== "all" ? { status: statusFilter as InvoiceStatus } : undefined
   );
   const { data: stats } = useInvoiceStats();

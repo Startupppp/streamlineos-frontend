@@ -20,7 +20,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -29,7 +28,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, SkeletonTable } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useContacts, useDeleteContact } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
@@ -134,10 +133,7 @@ export default function ContactsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Contacts" subtitle="People directory">
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-full max-w-sm" />
-          <Skeleton className="h-96" />
-        </div>
+        <SkeletonTable rows={8} columns={9} className="h-[calc(100dvh-16rem)]" />
       </PageWrapper>
     );
   }
@@ -241,9 +237,9 @@ export default function ContactsPage() {
                             <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.company ||"—"}</TableCell>
                             <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.title ||"—"}</TableCell>
                             <TableCell className="px-2 py-1">
-                              {contact.tags && (contact.tags as string[]).length > 0 && (
+                              {contact.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-0.5">
-                                  {(contact.tags as string[]).slice(0, 2).map(tag => (
+                                  {contact.tags.slice(0, 2).map(tag => (
                                     <Badge key={tag} variant="secondary" className="text-[8px] px-1 py-0 h-4">{tag}</Badge>
                                   ))}
                                 </div>
@@ -433,9 +429,9 @@ export default function ContactsPage() {
                           )}
                         </div>
                       )}
-                      {(contact.tags as string[]).length > 0 && (
+                      {contact.tags.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
-                          {(contact.tags as string[]).slice(0, 3).map(tag => (
+                          {contact.tags.slice(0, 3).map(tag => (
                             <Badge key={tag} variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{tag}</Badge>
                           ))}
                         </div>

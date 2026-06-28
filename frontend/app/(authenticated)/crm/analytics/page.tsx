@@ -114,7 +114,7 @@ export default function CrmAnalyticsPage() {
     if (!allLeads) return [];
     const buckets = { "0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0 };
     allLeads.forEach((l) => {
-      const score = (l as unknown as Record<string, unknown>).score as number | null ?? 0;
+      const score = l.score ?? 0;
       if (score <= 20) buckets["0-20"]++;
       else if (score <= 40) buckets["21-40"]++;
       else if (score <= 60) buckets["41-60"]++;
@@ -243,7 +243,7 @@ export default function CrmAnalyticsPage() {
           </AnalyticsChartCard>
 
           {analyticsSummary && analyticsSummary.assignmentDistribution.length > 0 && (
-            <AnalyticsChartCard title="Lead Assignment Distribution" data={analyticsSummary.assignmentDistribution as unknown as Record<string, unknown>[]} filename="assignment-distribution">
+            <AnalyticsChartCard title="Lead Assignment Distribution" data={analyticsSummary.assignmentDistribution} filename="assignment-distribution">
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={analyticsSummary.assignmentDistribution} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -257,7 +257,7 @@ export default function CrmAnalyticsPage() {
           )}
 
           {analyticsSummary && analyticsSummary.conversionBySource.length > 0 && (
-            <AnalyticsChartCard title="Conversion Rate by Source" data={analyticsSummary.conversionBySource as unknown as Record<string, unknown>[]} filename="conversion-by-source">
+            <AnalyticsChartCard title="Conversion Rate by Source" data={analyticsSummary.conversionBySource} filename="conversion-by-source">
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={analyticsSummary.conversionBySource}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -273,7 +273,7 @@ export default function CrmAnalyticsPage() {
           )}
 
           {analyticsSummary && analyticsSummary.monthlyRevenue.length > 0 && (
-            <AnalyticsChartCard title="Monthly Revenue Trend" data={analyticsSummary.monthlyRevenue as unknown as Record<string, unknown>[]} filename="monthly-revenue">
+            <AnalyticsChartCard title="Monthly Revenue Trend" data={analyticsSummary.monthlyRevenue} filename="monthly-revenue">
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={analyticsSummary.monthlyRevenue}>
                   <defs>
