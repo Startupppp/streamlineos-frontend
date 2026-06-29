@@ -13,6 +13,8 @@ interface UserListParams {
   role?: string;
   departmentId?: number;
   branchId?: number;
+  teamId?: string;
+  managerUserId?: string;
   sortBy?: "name" | "joinedAt" | "status";
   sortOrder?: "asc" | "desc";
 }
@@ -61,6 +63,13 @@ interface UserPreferences {
   timezone: string;
   dateFormat: string;
   timeFormat: string;
+  numberFormat: string | null;
+  weekStartDay: string | null;
+  accentColor: string | null;
+  density: string | null;
+  fontSize: string | null;
+  reducedMotion: boolean | null;
+  highContrast: boolean | null;
   notificationPreferences: Record<string, boolean>;
   dashboardPreferences: Record<string, unknown>;
   updatedAt: string;
@@ -114,8 +123,8 @@ interface UserStats {
   total: number;
   active: number;
   suspended: number;
-  archived: number;
-  invitedPending: number;
+  pendingInvitations: number;
+  newThisMonth: number;
 }
 
 export const useUsers = (
@@ -307,12 +316,24 @@ export const useUpdateUserPreferences = () => {
   });
 };
 
+interface InviteUserPayload {
+  email: string;
+  role: string;
+  employeeId?: string;
+  branchId?: number;
+  departmentId?: number;
+  teamId?: string;
+  managerUserId?: string;
+  startDate?: string;
+  welcomeMessage?: string;
+}
+
 export const useInviteUser = () => {
   const queryClient = useQueryClient();
   return useMutation<
     { success: boolean; invitationId: string },
     Error,
-    { email: string; role: string }
+    InviteUserPayload
   >({
     mutationFn: (data) =>
       apiClient.post<{ success: boolean; invitationId: string }>("/users/invite", data),
@@ -573,6 +594,26 @@ export const useUserAuditLog = (
   });
 };
 
+export const useOrgAuditLog = (
+  params?: { page?: number; limit?: number; actorUserId?: string; action?: string; from?: string; to?: string },
+  options?: Omit<UseQueryOptions<AuditResponse, Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<AuditResponse, Error>({
+    queryKey: queryKeys.users.orgAuditLog(params as Record<string, unknown> | undefined),
+    queryFn: () =>
+      apiClient.get<AuditResponse>("/users/audit", {
+        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.limit ? { limit: String(params.limit) } : {}),
+        ...(params?.actorUserId ? { actorUserId: params.actorUserId } : {}),
+        ...(params?.action ? { action: params.action } : {}),
+        ...(params?.from ? { from: params.from } : {}),
+        ...(params?.to ? { to: params.to } : {}),
+      }),
+    staleTime: 30_000,
+    ...options,
+  });
+};
+
 export const useExportUsers = () => {
   return useMutation<void, Error, void>({
     mutationFn: async () => {
@@ -605,4 +646,5 @@ export type {
   BulkUpdatePayload,
   AuditEntry,
   AuditResponse,
+  InviteUserPayload,
 };

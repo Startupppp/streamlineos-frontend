@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserPreferences, useUpdateUserPreferences } from "@/lib/api/hooks/users";
 import { getApiError } from "@/lib/api-client";
@@ -32,6 +34,12 @@ const preferencesSchema = z.object({
   timezone: z.string().min(1),
   dateFormat: z.string().min(1),
   timeFormat: z.string().min(1),
+  numberFormat: z.string().optional(),
+  weekStartDay: z.string().optional(),
+  density: z.string().optional(),
+  fontSize: z.string().optional(),
+  reducedMotion: z.boolean().optional(),
+  highContrast: z.boolean().optional(),
 });
 
 type PreferencesFormValues = z.infer<typeof preferencesSchema>;
@@ -66,6 +74,30 @@ const TIME_FORMATS = [
   { value: "24h", label: "24-hour (14:30)" },
 ];
 
+const NUMBER_FORMATS = [
+  { value: "1,234.56", label: "1,234.56 (US)" },
+  { value: "1.234,56", label: "1.234,56 (EU)" },
+  { value: "1 234,56", label: "1 234,56 (FR)" },
+];
+
+const WEEK_STARTS = [
+  { value: "sunday", label: "Sunday" },
+  { value: "monday", label: "Monday" },
+  { value: "saturday", label: "Saturday" },
+];
+
+const DENSITIES = [
+  { value: "compact", label: "Compact" },
+  { value: "comfortable", label: "Comfortable" },
+  { value: "spacious", label: "Spacious" },
+];
+
+const FONT_SIZES = [
+  { value: "small", label: "Small" },
+  { value: "medium", label: "Medium" },
+  { value: "large", label: "Large" },
+];
+
 export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
   const { data: preferences, isLoading } = useUserPreferences(userId);
   const { mutate: updatePreferences, isPending } = useUpdateUserPreferences();
@@ -78,6 +110,12 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
       timezone: "UTC",
       dateFormat: "MM/DD/YYYY",
       timeFormat: "12h",
+      numberFormat: "1,234.56",
+      weekStartDay: "sunday",
+      density: "comfortable",
+      fontSize: "medium",
+      reducedMotion: false,
+      highContrast: false,
     },
   });
 
@@ -89,6 +127,12 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
         timezone: preferences.timezone || "UTC",
         dateFormat: preferences.dateFormat || "MM/DD/YYYY",
         timeFormat: preferences.timeFormat || "12h",
+        numberFormat: preferences.numberFormat ?? "1,234.56",
+        weekStartDay: preferences.weekStartDay ?? "sunday",
+        density: preferences.density ?? "comfortable",
+        fontSize: preferences.fontSize ?? "medium",
+        reducedMotion: preferences.reducedMotion ?? false,
+        highContrast: preferences.highContrast ?? false,
       });
     }
   }, [preferences, form]);
@@ -106,7 +150,7 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
   if (isLoading) {
     return (
       <div className="space-y-4 pt-2">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 7 }).map((_, i) => (
           <div key={i} className="space-y-1.5">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-9 w-full" />
@@ -230,6 +274,145 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
                   </SelectContent>
                 </Select>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="numberFormat"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Number Format</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {NUMBER_FORMATS.map((nf) => (
+                      <SelectItem key={nf.value} value={nf.value}>
+                        {nf.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="weekStartDay"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Week Starts On</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {WEEK_STARTS.map((ws) => (
+                      <SelectItem key={ws.value} value={ws.value}>
+                        {ws.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Separator />
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Display</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="density"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Density</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {DENSITIES.map((d) => (
+                      <SelectItem key={d.value} value={d.value}>
+                        {d.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="fontSize"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Font Size</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {FONT_SIZES.map((fs) => (
+                      <SelectItem key={fs.value} value={fs.value}>
+                        {fs.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="space-y-3">
+          <FormField
+            control={form.control}
+            name="reducedMotion"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-lg border px-3 py-2">
+                <FormLabel className="text-sm font-normal cursor-pointer">Reduced Motion</FormLabel>
+                <FormControl>
+                  <Switch
+                    checked={field.value ?? false}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="highContrast"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-lg border px-3 py-2">
+                <FormLabel className="text-sm font-normal cursor-pointer">High Contrast</FormLabel>
+                <FormControl>
+                  <Switch
+                    checked={field.value ?? false}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
               </FormItem>
             )}
           />

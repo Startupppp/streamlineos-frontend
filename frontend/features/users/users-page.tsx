@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -19,6 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,6 +46,7 @@ import {
   useBulkSuspend,
   useBulkArchive,
   useBulkRestore,
+  useBulkUpdateUsers,
   useResetUserPassword,
   useExportUsers,
 } from "@/lib/api/hooks/users";
@@ -68,6 +77,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  UserCog,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -96,6 +106,8 @@ function RowSkeleton() {
       <TableCell><Skeleton className="h-3.5 w-40" /></TableCell>
       <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
       <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+      <TableCell><Skeleton className="h-3.5 w-20" /></TableCell>
+      <TableCell><Skeleton className="h-3.5 w-20" /></TableCell>
       <TableCell><Skeleton className="h-3.5 w-24" /></TableCell>
       <TableCell><Skeleton className="h-6 w-6 rounded" /></TableCell>
     </TableRow>
@@ -210,26 +222,48 @@ function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
 }
 
 export function UsersPage() {
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [status, setStatus] = useState<string>("all");
-  const [role, setRole] = useState<string>("all");
-  const [departmentId, setDepartmentId] = useState<string>("all");
-  const [branchId, setBranchId] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<"name" | "joinedAt" | "status">("joinedAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [search, setSearch] = useState(searchParams.get("search") ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get("search") ?? "");
+  const [status, setStatus] = useState(searchParams.get("status") ?? "all");
+  const [role, setRole] = useState(searchParams.get("role") ?? "all");
+  const [departmentId, setDepartmentId] = useState(searchParams.get("departmentId") ?? "all");
+  const [branchId, setBranchId] = useState(searchParams.get("branchId") ?? "all");
+  const [sortBy, setSortBy] = useState<"name" | "joinedAt" | "status">(
+    (searchParams.get("sortBy") as "name" | "joinedAt" | "status") ?? "joinedAt"
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
+    (searchParams.get("sortOrder") as "asc" | "desc") ?? "desc"
+  );
+  const [page, setPage] = useState(Number(searchParams.get("page") ?? "1"));
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [assignRole, setAssignRole] = useState("all");
+  const [assignBranchId, setAssignBranchId] = useState("all");
+  const [assignDeptId, setAssignDeptId] = useState("all");
+  const [selectAllMatching, setSelectAllMatching] = useState(false);
+
+  const pushParams = useCallback((updates: Record<string, string>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [k, v] of Object.entries(updates)) {
+      if (v && v !== "all" && v !== "1") params.set(k, v);
+      else params.delete(k);
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
+      pushParams({ search, page: "1" });
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
@@ -237,22 +271,26 @@ export function UsersPage() {
   const handleStatusChange = useCallback((value: string) => {
     setStatus(value);
     setPage(1);
-  }, []);
+    pushParams({ status: value, page: "1" });
+  }, [pushParams]);
 
   const handleRoleChange = useCallback((value: string) => {
     setRole(value);
     setPage(1);
-  }, []);
+    pushParams({ role: value, page: "1" });
+  }, [pushParams]);
 
   const handleDeptChange = useCallback((value: string) => {
     setDepartmentId(value);
     setPage(1);
-  }, []);
+    pushParams({ departmentId: value, page: "1" });
+  }, [pushParams]);
 
   const handleBranchChange = useCallback((value: string) => {
     setBranchId(value);
     setPage(1);
-  }, []);
+    pushParams({ branchId: value, page: "1" });
+  }, [pushParams]);
 
   const { data, isLoading } = useUsers({
     page,
@@ -270,9 +308,22 @@ export function UsersPage() {
   const { data: departmentsData } = useOrgDepartments();
   const { mutate: exportUsers, isPending: isExporting } = useExportUsers();
 
+  const branchMap = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const b of branchesData?.data ?? []) m.set(Number(b.id), b.name);
+    return m;
+  }, [branchesData]);
+
+  const deptMap = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const d of departmentsData?.data ?? []) m.set(Number(d.id), d.name);
+    return m;
+  }, [departmentsData]);
+
   const { mutate: bulkSuspend, isPending: isSuspending } = useBulkSuspend();
   const { mutate: bulkArchive, isPending: isArchiving } = useBulkArchive();
   const { mutate: bulkRestore, isPending: isRestoring } = useBulkRestore();
+  const { mutate: bulkUpdate, isPending: isBulkUpdating } = useBulkUpdateUsers();
 
   function handleRowClick(userId: string) {
     setSelectedUserId(userId);
@@ -284,6 +335,7 @@ export function UsersPage() {
       setSelectedIds(new Set(users.map((u) => u.id)));
     } else {
       setSelectedIds(new Set());
+      setSelectAllMatching(false);
     }
   }
 
@@ -335,20 +387,39 @@ export function UsersPage() {
     );
   }
 
+  function handleBulkAssign() {
+    const payload: Parameters<typeof bulkUpdate>[0] = {
+      userIds: Array.from(selectedIds),
+      ...(assignRole !== "all" ? { role: assignRole } : {}),
+      ...(assignBranchId !== "all" ? { branchId: Number(assignBranchId) } : {}),
+      ...(assignDeptId !== "all" ? { departmentId: Number(assignDeptId) } : {}),
+    };
+    bulkUpdate(payload, {
+      onSuccess: () => {
+        toast.success(`${selectedIds.size} user(s) updated`);
+        setSelectedIds(new Set());
+        setAssignOpen(false);
+        setAssignRole("all");
+        setAssignBranchId("all");
+        setAssignDeptId("all");
+      },
+      onError: (e) => toast.error(getApiError(e)),
+    });
+  }
+
   const users = data?.data ?? [];
   const pagination = data?.pagination;
   const allSelected = users.length > 0 && users.every((u) => selectedIds.has(u.id));
   const someSelected = selectedIds.size > 0;
-  const bulkIsPending = isSuspending || isArchiving || isRestoring;
+  const bulkIsPending = isSuspending || isArchiving || isRestoring || isBulkUpdating;
 
   function handleSort(column: "name" | "joinedAt" | "status") {
-    if (sortBy === column) {
-      setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
-    } else {
-      setSortBy(column);
-      setSortOrder("asc");
-    }
+    const newOrder = sortBy === column ? (sortOrder === "asc" ? "desc" : "asc") : "asc";
+    const newBy = column;
+    setSortBy(newBy);
+    setSortOrder(newOrder);
     setPage(1);
+    pushParams({ sortBy: newBy, sortOrder: newOrder, page: "1" });
   }
 
   return (
@@ -493,14 +564,46 @@ export function UsersPage() {
                 Restore
               </Button>
               <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setAssignOpen(true)}
+                disabled={bulkIsPending}
+              >
+                <UserCog className="h-3 w-3 mr-1" />
+                Assign
+              </Button>
+              <Button
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs"
-                onClick={() => setSelectedIds(new Set())}
+                onClick={() => { setSelectedIds(new Set()); setSelectAllMatching(false); }}
               >
                 Clear
               </Button>
             </div>
+          </div>
+        )}
+
+        {allSelected && !selectAllMatching && pagination && pagination.total > users.length && (
+          <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-md bg-blue-50 border border-blue-200 text-xs text-blue-700 dark:bg-blue-950/30 dark:border-blue-900 dark:text-blue-300">
+            <span>All {users.length} users on this page are selected.</span>
+            <button
+              type="button"
+              className="font-medium underline hover:no-underline ml-1"
+              onClick={() => setSelectAllMatching(true)}
+            >
+              Select all {pagination.total} matching users
+            </button>
+            {selectAllMatching && (
+              <button
+                type="button"
+                className="ml-2 font-medium underline hover:no-underline"
+                onClick={() => setSelectAllMatching(false)}
+              >
+                Clear selection
+              </button>
+            )}
           </div>
         )}
 
@@ -514,6 +617,8 @@ export function UsersPage() {
                   <TableHead className="text-xs">Email</TableHead>
                   <TableHead className="text-xs">Role</TableHead>
                   <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Branch</TableHead>
+                  <TableHead className="text-xs">Dept</TableHead>
                   <TableHead className="text-xs">Joined</TableHead>
                   <TableHead className="text-xs w-10" />
                 </TableRow>
@@ -581,6 +686,8 @@ export function UsersPage() {
                         )}
                       </span>
                     </TableHead>
+                    <TableHead className="text-xs">Branch</TableHead>
+                    <TableHead className="text-xs">Dept</TableHead>
                     <TableHead
                       className="text-xs cursor-pointer select-none hover:text-foreground"
                       onClick={() => handleSort("joinedAt")}
@@ -650,6 +757,12 @@ export function UsersPage() {
                         <UserStatusBadge isActive={user.isActive} />
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
+                        {user.branchId != null ? (branchMap.get(user.branchId) ?? String(user.branchId)) : "—"}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {user.departmentId != null ? (deptMap.get(user.departmentId) ?? String(user.departmentId)) : "—"}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
                         {user.joinedAt
                           ? formatDistanceToNow(new Date(user.joinedAt), { addSuffix: true })
                           : formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
@@ -679,7 +792,7 @@ export function UsersPage() {
                     variant="outline"
                     size="sm"
                     className="h-7 w-7 p-0"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    onClick={() => { setPage((p) => Math.max(1, p - 1)); pushParams({ page: String(Math.max(1, page - 1)) }); }}
                     disabled={page === 1}
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
@@ -691,7 +804,7 @@ export function UsersPage() {
                     variant="outline"
                     size="sm"
                     className="h-7 w-7 p-0"
-                    onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                    onClick={() => { setPage((p) => Math.min(pagination.totalPages, p + 1)); pushParams({ page: String(Math.min(pagination.totalPages, page + 1)) }); }}
                     disabled={page === pagination.totalPages}
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
@@ -712,6 +825,69 @@ export function UsersPage() {
       <UserInviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
       <UserBulkInviteDialog open={bulkInviteOpen} onOpenChange={setBulkInviteOpen} />
       <UserImportDialog open={importOpen} onOpenChange={setImportOpen} />
+
+      <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Bulk Assign — {selectedIds.size} user(s)</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium">Role</p>
+              <Select value={assignRole} onValueChange={setAssignRole}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Keep unchanged" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Keep unchanged</SelectItem>
+                  <SelectItem value="MEMBER">Member</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="MANAGER">Manager</SelectItem>
+                  <SelectItem value="HR">HR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium">Branch</p>
+              <Select value={assignBranchId} onValueChange={setAssignBranchId}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Keep unchanged" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Keep unchanged</SelectItem>
+                  {(branchesData?.data ?? []).map((b) => (
+                    <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium">Department</p>
+              <Select value={assignDeptId} onValueChange={setAssignDeptId}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Keep unchanged" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Keep unchanged</SelectItem>
+                  {(departmentsData?.data ?? []).map((d) => (
+                    <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setAssignOpen(false)}>Cancel</Button>
+            <Button
+              size="sm"
+              onClick={handleBulkAssign}
+              disabled={isBulkUpdating || (assignRole === "all" && assignBranchId === "all" && assignDeptId === "all")}
+            >
+              {isBulkUpdating ? "Applying..." : "Apply"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

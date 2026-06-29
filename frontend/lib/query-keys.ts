@@ -688,6 +688,7 @@ export const queryKeys = {
     invitations: (params?: Record<string, unknown>) => [...base, "users", "invitations", params] as const,
     loginHistory: (userId: string, params?: Record<string, unknown>) => [...base, "users", "loginHistory", userId, params] as const,
     membership: (userId: string) => [...base, "users", "membership", userId] as const,
+    orgAuditLog: (params?: Record<string, unknown>) => [...base, "users", "orgAuditLog", params] as const,
   },
 
 } as const;

@@ -28,14 +28,22 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { useInviteUser } from "@/lib/api/hooks/users";
+import { useOrgBranches, useOrgDepartments } from "@/lib/api/hooks/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { CheckCircle2, Mail } from "lucide-react";
+import { CheckCircle2, Mail, ChevronDown } from "lucide-react";
 
 const inviteSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   role: z.string().min(1, "Please select a role"),
+  employeeId: z.string().optional(),
+  branchId: z.string().optional(),
+  departmentId: z.string().optional(),
+  startDate: z.string().optional(),
+  welcomeMessage: z.string().optional(),
 });
 
 type InviteFormValues = z.infer<typeof inviteSchema>;
@@ -54,31 +62,58 @@ const ROLES = [
 
 export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) {
   const [invited, setInvited] = useState(false);
+  const [showOptional, setShowOptional] = useState(false);
   const { mutate: inviteUser, isPending } = useInviteUser();
+  const { data: branchesData } = useOrgBranches();
+  const { data: departmentsData } = useOrgDepartments();
 
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
-    defaultValues: { email: "", role: "" },
+    defaultValues: {
+      email: "",
+      role: "",
+      employeeId: "",
+      branchId: "",
+      departmentId: "",
+      startDate: "",
+      welcomeMessage: "",
+    },
   });
 
   function handleOpenChange(isOpen: boolean) {
     if (!isOpen) {
       form.reset();
       setInvited(false);
+      setShowOptional(false);
     }
     onOpenChange(isOpen);
   }
 
   function onSubmit(values: InviteFormValues) {
-    inviteUser(values, {
-      onSuccess: () => {
-        setInvited(true);
-        toast.success("Invitation sent!");
+    inviteUser(
+      {
+        email: values.email,
+        role: values.role,
+        ...(values.employeeId ? { employeeId: values.employeeId } : {}),
+        ...(values.branchId ? { branchId: Number(values.branchId) } : {}),
+        ...(values.departmentId ? { departmentId: Number(values.departmentId) } : {}),
+        ...(values.startDate ? { startDate: values.startDate } : {}),
+        ...(values.welcomeMessage ? { welcomeMessage: values.welcomeMessage } : {}),
       },
-      onError: (error) => {
-        toast.error(getApiError(error));
-      },
-    });
+      {
+        onSuccess: () => {
+          setInvited(true);
+          toast.success("Invitation sent!");
+        },
+        onError: (error) => {
+          toast.error(getApiError(error));
+        },
+      }
+    );
+  }
+
+  function handleToggleOptional() {
+    setShowOptional((v) => !v);
   }
 
   return (
@@ -103,6 +138,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
               onClick={() => {
                 form.reset();
                 setInvited(false);
+                setShowOptional(false);
               }}
             >
               Invite another
@@ -158,6 +194,122 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                   </FormItem>
                 )}
               />
+
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                onClick={handleToggleOptional}
+              >
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${showOptional ? "rotate-180" : ""}`}
+                />
+                {showOptional ? "Hide" : "Show"} optional details
+              </button>
+
+              {showOptional && (
+                <>
+                  <Separator />
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="employeeId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Employee ID</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="EMP-001" className="h-8 text-xs" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Start Date</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="date" className="h-8 text-xs" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="branchId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Branch</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="Select..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {(branchesData?.data ?? []).map((b) => (
+                                <SelectItem key={b.id} value={String(b.id)}>
+                                  {b.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="departmentId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Department</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="Select..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {(departmentsData?.data ?? []).map((d) => (
+                                <SelectItem key={d.id} value={String(d.id)}>
+                                  {d.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="welcomeMessage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Welcome Message</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Optional welcome message..."
+                            className="min-h-[64px] resize-none text-xs"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
 
               <DialogFooter>
                 <Button
