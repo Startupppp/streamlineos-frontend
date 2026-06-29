@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { UsersPage } from "@/features/users/users-page";
 
 export const metadata: Metadata = {
@@ -6,5 +7,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <UsersPage />;
+  return (
+    <Suspense>
+      <UsersPage />
+    </Suspense>
+  );
 }
