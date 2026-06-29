@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-type TransactionType =
+export type TransactionType =
   | "PURCHASE"
   | "SALE"
   | "ADJUSTMENT_IN"
@@ -15,7 +15,7 @@ type TransactionType =
   | "RETURN_OUT"
   | "GRN";
 
-type AdjustmentReason =
+export type AdjustmentReason =
   | "PURCHASE"
   | "SALE"
   | "RETURN"
@@ -25,9 +25,9 @@ type AdjustmentReason =
   | "RECOUNT"
   | "OTHER";
 
-type AdjustmentType = "IN" | "OUT" | "SET";
+export type AdjustmentType = "IN" | "OUT" | "SET";
 
-type TransferStatus = "PENDING" | "IN_TRANSIT" | "COMPLETED" | "CANCELLED";
+export type TransferStatus = "PENDING" | "IN_TRANSIT" | "COMPLETED" | "CANCELLED";
 
 type StockLevelFilters = {
   warehouseId?: number;
@@ -66,14 +66,14 @@ interface StockLevelsResult {
   limit: number;
 }
 
-interface StockTransactionVariant {
+export interface StockTransactionVariant {
   id: number;
   name: string | null;
   sku: string | null;
   product: { id: number; name: string; sku: string } | null;
 }
 
-interface StockTransaction {
+export interface StockTransaction {
   id: number;
   transactionType: TransactionType;
   quantityChange: number;
@@ -95,7 +95,7 @@ interface StockTransactionsResult {
   totalPages: number;
 }
 
-interface AdjustmentListItem {
+export interface AdjustmentListItem {
   id: number;
   referenceNumber: string;
   reason: AdjustmentReason;
@@ -113,7 +113,7 @@ interface AdjustmentsResult {
   totalPages: number;
 }
 
-interface TransferListItem {
+export interface TransferListItem {
   id: number;
   referenceNumber: string;
   status: TransferStatus;
@@ -142,7 +142,7 @@ interface TransferLocationRef {
   warehouse: { id: number; name: string } | null;
 }
 
-interface TransferDetail {
+export interface TransferDetail {
   id: number;
   referenceNumber: string;
   status: TransferStatus;

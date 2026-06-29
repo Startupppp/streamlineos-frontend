@@ -7,10 +7,10 @@ import { queryKeys } from "@/lib/query-keys";
 
 export type TaskEntityType = "LEAD" | "DEAL" | "CONTACT" | "PROJECT";
 export type TaskType = "CALL" | "EMAIL" | "MEETING" | "CUSTOM";
-export type TaskStatus = "pending" | "completed" | "cancelled";
-export type TaskBucket = "OVERDUE" | "TODAY" | "THIS_WEEK" | "UPCOMING" | "NO_DATE";
+type TaskStatus = "pending" | "completed" | "cancelled";
+type TaskBucket = "OVERDUE" | "TODAY" | "THIS_WEEK" | "UPCOMING" | "NO_DATE";
 
-export interface Task {
+interface Task {
   id: number;
   orgId: string;
   title: string;
@@ -29,18 +29,18 @@ export interface Task {
   updatedAt: string | null;
 }
 
-export interface TaskWithBucket extends Task {
+interface TaskWithBucket extends Task {
   bucket: TaskBucket;
 }
 
-export interface TasksListResponse {
+interface TasksListResponse {
   tasks: Task[];
   total: number;
   page: number;
   limit: number;
 }
 
-export interface CreateTaskInput {
+interface CreateTaskInput {
   title: string;
   notes?: string;
   entityType?: TaskEntityType;
@@ -52,7 +52,7 @@ export interface CreateTaskInput {
   timezone?: string;
 }
 
-export interface TasksFilters {
+interface TasksFilters {
   assigneeId?: string;
   status?: TaskStatus;
   type?: TaskType;
@@ -106,7 +106,7 @@ export function useCompleteTask() {
   });
 }
 
-export interface TaskRepStat {
+interface TaskRepStat {
   assigneeId: string | null;
   name: string;
   total: number;
@@ -115,7 +115,7 @@ export interface TaskRepStat {
   completionRate: number;
 }
 
-export interface TaskAnalytics {
+interface TaskAnalytics {
   period: number;
   total: number;
   completed: number;
@@ -133,7 +133,7 @@ export function useTaskAnalytics(days = 30) {
 }
 
 
-export interface TaskSequenceStep {
+interface TaskSequenceStep {
   id: number;
   sequenceId: number;
   title: string;
@@ -153,7 +153,7 @@ export interface TaskSequence {
   steps: TaskSequenceStep[];
 }
 
-export interface CreateTaskSequenceInput {
+interface CreateTaskSequenceInput {
   name: string;
   description?: string;
   steps: Array<{

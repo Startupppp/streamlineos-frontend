@@ -107,15 +107,6 @@ interface UpdateWebLeadFormInput extends Partial<CreateWebLeadFormInput> {
   id: number;
 }
 
-export function useTargets(filters?: TargetFilters) {
-  return useQuery({
-    queryKey: queryKeys.targets.list(filters as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<Target[]>("/targets", filters as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
 export function useMyTargets() {
   return useQuery({
     queryKey: queryKeys.targets.myTargets(),
@@ -150,28 +141,6 @@ export function useCreateTarget() {
   return useMutation({
     mutationFn: (input: CreateTargetInput) =>
       apiClient.post<Target[]>("/targets", input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.targets.all });
-    },
-  });
-}
-
-export function useUpdateTarget() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...data }: UpdateTargetInput) =>
-      apiClient.patch<Target>(`/targets/${id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.targets.all });
-    },
-  });
-}
-
-export function useLogTargetProgress() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...data }: LogTargetProgressInput) =>
-      apiClient.patch<Target>(`/targets/${id}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.targets.all });
     },

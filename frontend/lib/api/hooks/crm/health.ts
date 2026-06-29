@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export type HealthStatus = "healthy" | "at_risk" | "critical";
+type HealthStatus = "healthy" | "at_risk" | "critical";
 
 export interface HealthScoreBreakdown {
   sla: number;
@@ -36,7 +36,7 @@ export interface HealthScoreItem {
   computedAt: string;
 }
 
-export interface HealthScoresSummary {
+interface HealthScoresSummary {
   healthy: number;
   atRisk: number;
   critical: number;
@@ -44,23 +44,23 @@ export interface HealthScoresSummary {
   avgScore: number;
 }
 
-export interface HealthScoresResponse {
+interface HealthScoresResponse {
   items: HealthScoreItem[];
   summary: HealthScoresSummary;
 }
 
-export interface HealthConfigResponse {
+interface HealthConfigResponse {
   weights: HealthScoreWeights;
   thresholds: HealthScoreThresholds;
   isDefault: boolean;
 }
 
-export interface UpdateHealthConfigInput {
+interface UpdateHealthConfigInput {
   weights: HealthScoreWeights;
   thresholds: HealthScoreThresholds;
 }
 
-export interface RecomputeHealthResponse {
+interface RecomputeHealthResponse {
   healthy: number;
   atRisk: number;
   critical: number;

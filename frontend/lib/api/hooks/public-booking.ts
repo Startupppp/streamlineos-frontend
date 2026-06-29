@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface InterviewBookingData {
+interface InterviewBookingData {
   candidateName: string;
   orgName: string;
   interviewType: string;
@@ -13,7 +13,7 @@ export interface InterviewBookingData {
   notes: string | null;
 }
 
-export class InterviewBookingExpiredError extends Error {
+class InterviewBookingExpiredError extends Error {
   constructor() {
     super("This booking link has expired or has already been used.");
     this.name = "InterviewBookingExpiredError";

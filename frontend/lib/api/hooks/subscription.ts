@@ -4,9 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 export type SubscriptionPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
-export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "PAST_DUE" | "CANCELLED" | "EXPIRED";
+type SubscriptionStatus = "TRIAL" | "ACTIVE" | "PAST_DUE" | "CANCELLED" | "EXPIRED";
 
-export interface SubscriptionPayment {
+interface SubscriptionPayment {
   id: number;
   orgId: string;
   subscriptionId: number;
@@ -19,7 +19,7 @@ export interface SubscriptionPayment {
   createdAt: string;
 }
 
-export interface Subscription {
+interface Subscription {
   id: number;
   orgId: string;
   plan: SubscriptionPlan;
@@ -94,37 +94,7 @@ export function useVerifySubscription() {
   });
 }
 
-export interface BillingSummary {
-  subscription: {
-    plan: SubscriptionPlan;
-    status: SubscriptionStatus;
-    trialEndsAt: string | null;
-    trialDaysRemaining: number | null;
-    currentPeriodEnd: string | null;
-    isActive: boolean;
-    isTrial: boolean;
-  } | null;
-  invoiceStats: {
-    totalPaid: string;
-    totalOutstanding: string;
-    draft: number;
-    sent: number;
-    paid: number;
-    overdue: number;
-    cancelled: number;
-  };
-  isConfigured: boolean;
-}
-
 const BILLING_SUMMARY_QUERY_KEY = ["billing", "summary"] as const;
-
-export function useBillingSummary() {
-  return useQuery<BillingSummary, Error>({
-    queryKey: BILLING_SUMMARY_QUERY_KEY,
-    queryFn: () => apiClient.get<BillingSummary>("/billing/summary"),
-    staleTime: 5 * 60_000,
-  });
-}
 
 export interface CouponValidationResult {
   valid: boolean;

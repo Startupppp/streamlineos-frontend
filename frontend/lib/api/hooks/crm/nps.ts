@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 export type NpsSurveyStatus = "draft" | "active" | "closed";
-export type NpsCategory = "promoter" | "passive" | "detractor";
+type NpsCategory = "promoter" | "passive" | "detractor";
 
 export interface NpsSurvey {
   id: number;
@@ -24,7 +24,7 @@ export interface NpsSurvey {
   nps: number;
 }
 
-export interface NpsResponse {
+interface NpsResponse {
   id: number;
   orgId: string;
   surveyId: number;
@@ -37,40 +37,40 @@ export interface NpsResponse {
   createdAt: string | null;
 }
 
-export interface NpsBreakdown {
+interface NpsBreakdown {
   promoters: number;
   passives: number;
   detractors: number;
   total: number;
 }
 
-export interface NpsSurveyDetail {
+interface NpsSurveyDetail {
   survey: Omit<NpsSurvey, "responseCount" | "promoters" | "passives" | "detractors" | "nps">;
   responses: NpsResponse[];
   breakdown: NpsBreakdown;
   nps: number;
 }
 
-export interface NpsStats {
+interface NpsStats {
   activeSurveys: number;
   breakdown: NpsBreakdown;
   nps: number;
   trend: { category: NpsCategory; createdAt: string }[];
 }
 
-export interface CreateNpsSurveyInput {
+interface CreateNpsSurveyInput {
   title: string;
   question: string;
 }
 
-export interface UpdateNpsSurveyInput {
+interface UpdateNpsSurveyInput {
   id: number;
   title?: string;
   question?: string;
   status?: NpsSurveyStatus;
 }
 
-export interface PublicNpsSurvey {
+interface PublicNpsSurvey {
   title: string;
   question: string;
   status: NpsSurveyStatus;
