@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import {
   useExpensePageData,
   useUpdateExpenseStatus,
-  useDeleteExpense,
   useHrEmployees,
 } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
@@ -102,7 +101,6 @@ export default function ExpensesPage() {
   });
 
   const updateStatusMutation = useUpdateExpenseStatus();
-  const deleteMutation = useDeleteExpense();
 
   const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const employees = useMemo(() => {
@@ -158,20 +156,6 @@ export default function ExpensesPage() {
       );
     },
     [updateStatusMutation, rejectionReason, refetch],
-  );
-
-  const handleDelete = useCallback(
-    (expenseId: number) => {
-      toast.promise(deleteMutation.mutateAsync(expenseId), {
-        loading: "Deleting expense...",
-        success: () => {
-          void refetch();
-          return "Expense deleted";
-        },
-        error: "Failed to delete expense",
-      });
-    },
-    [deleteMutation, refetch],
   );
 
   const handleEdit = useCallback((expense: ExpenseToEdit) => {

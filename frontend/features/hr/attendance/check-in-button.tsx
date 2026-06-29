@@ -149,6 +149,8 @@ export const TimerCard = memo(function TimerCard() {
   }, []);
 
   const sessionTimer = useMemo(() => {
+    // eslint-disable-next-line react-hooks/refs
+    const breakStart = breakStartRef.current;
     if (!statusData?.todayLog?.checkIn || statusData?.todayLog?.checkOut) {
       return { hours: 0, minutes: 0, seconds: 0 };
     }
@@ -157,9 +159,8 @@ export const TimerCard = memo(function TimerCard() {
       (Number(statusData.todayLog.breakHours) || 0) * 3600000;
     const totalBreakMs = serverBreakMs + localExtraBreakMs;
     const currentBreakMs =
-      // eslint-disable-next-line react-hooks/refs
-      isOnBreak && breakStartRef.current
-        ? now.getTime() - breakStartRef.current
+      isOnBreak && breakStart
+        ? now.getTime() - breakStart
         : 0;
     const allBreakMs = totalBreakMs + currentBreakMs;
     const diffMs = Math.max(

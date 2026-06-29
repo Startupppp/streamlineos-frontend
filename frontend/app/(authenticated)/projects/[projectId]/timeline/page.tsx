@@ -37,7 +37,7 @@ export default function TimelinePage({ params }: PageProps) {
     }));
   }, [data]);
 
-  const handleTicketClick = useCallback((_id: number) => {}, []);
+  const handleTicketClick = useCallback((_: number) => {}, []);
 
   if (isLoading) {
     return (

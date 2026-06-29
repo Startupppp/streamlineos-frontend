@@ -46,8 +46,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
-import { apiClient } from "@/lib/api-client";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -329,21 +327,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     profileCompletenessScore(employee);
 
   const handleTerminateClick = useCallback(() => setTerminateOpen(true), []);
-  const handleDownloadProfile = useCallback(async () => {
-    try {
-      const blob = await apiClient.download(
-        `/hr/employees/${employee.id}/profile-pdf`,
-      );
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = `employee-${employee.id}-profile.pdf`;
-      anchor.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }, [employee.id]);
   const handleTerminateConfirm = useCallback(() => {
     terminateMutation.mutate(employee.id, {
       onSuccess: () => {

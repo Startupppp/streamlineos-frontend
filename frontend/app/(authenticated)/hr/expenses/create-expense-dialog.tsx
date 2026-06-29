@@ -223,7 +223,7 @@ export function CreateExpenseDialog({
     setReceiptPreview(null);
   };
 
-  const uploadFile = async (file: File): Promise<string | null> => {
+  const uploadFile = useCallback(async (file: File): Promise<string | null> => {
     try {
       setUploading(true);
       const result = await uploadFileMutation.mutateAsync({ file, folder: "receipts" });
@@ -234,7 +234,7 @@ export function CreateExpenseDialog({
     } finally {
       setUploading(false);
     }
-  };
+  }, [uploadFileMutation]);
 
   const onSubmit = useCallback(async (data: FormData) => {
     setIsLoading(true);

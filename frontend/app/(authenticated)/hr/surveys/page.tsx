@@ -185,6 +185,7 @@ export default function SurveysPage() {
     return Math.max(1, ...(filteredSurveys.map((s) => s.responses?.length ?? 0)));
   }, [filteredSurveys]);
 
+  // eslint-disable-next-line react-hooks/purity
   const tomorrowDateStr = useMemo(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10), []);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);

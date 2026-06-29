@@ -35,8 +35,6 @@ const STEPS = [
   { id: "done",          label: "Done",          icon: CheckCircle2, desc: "You\'re all set!" },
 ] as const;
 
-type StepId = (typeof STEPS)[number]["id"];
-
 const profileSchema = z.object({
   name: z.string().min(1, "Required"),
   legalName: z.string().optional(),
@@ -81,13 +79,6 @@ const departmentSchema = z.object({
 const teamSchema = z.object({
   teamName: z.string().min(1, "Required"),
   teamCode: z.string().min(1, "Required").max(10),
-});
-
-const inviteSchema = z.object({
-  invites: z.array(z.object({
-    email: z.string().email("Enter a valid email"),
-    role: z.string().min(1),
-  })).min(0),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
@@ -189,7 +180,7 @@ function ProfileStep({ onNext }: { onNext: (v: ProfileValues) => void }) {
 }
 
 function LocalizationStep({ onNext, onBack }: { onNext: (v: LocalizationValues) => void; onBack: () => void }) {
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<LocalizationValues>({
+  const { handleSubmit, setValue, watch, formState: { errors } } = useForm<LocalizationValues>({
     resolver: zodResolver(localizationSchema),
     defaultValues: { timezone: "UTC", currency: "USD", dateFormat: "MM/DD/YYYY", timeFormat: "12h", weekStartDay: "monday", language: "en" },
   });

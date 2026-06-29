@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useCallback, useTransition } from "react";
-import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -25,8 +24,6 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -51,7 +48,7 @@ import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
 import { EditTimeEntryDialog } from "@/components/timesheets/edit-time-entry-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { toast } from "sonner";
-import { Loader2, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { TimesheetTableRow, type EditEntry } from "@/features/timesheets/timesheet-table-row";
 
 const ITEMS_PER_PAGE = 10;
@@ -59,7 +56,6 @@ const ITEMS_PER_PAGE = 10;
 type ViewMode ="current" |"history";
 
 export default function TimesheetsPage() {
-  const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();

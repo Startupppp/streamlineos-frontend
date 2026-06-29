@@ -453,6 +453,9 @@ export default function ClientDetailPage() {
 
   const handleOpenLog = useCallback(() => setLogOpen(true), []);
 
+  // eslint-disable-next-line react-hooks/purity
+  const now = useMemo(() => Date.now(), []);
+
   if (!accountLoading && !account) {
     return (
       <PageWrapper
@@ -478,8 +481,6 @@ export default function ClientDetailPage() {
 
   const timelineEvents = timelineData?.events ?? [];
   const clientOpportunities = opportunitiesData ?? [];
-
-  const now = useMemo(() => Date.now(), []);
 
   const daysSinceLastActivity = timelineEvents[0]
     ? Math.floor(

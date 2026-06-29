@@ -35,22 +35,22 @@ import {
   Users,
   MessageSquare,
 } from "lucide-react";
-import type { CandidateStatus, Interview, InterviewType } from "@/types/hr";
+import type { CandidateStatus, InterviewType } from "@/types/hr";
 import { DocumentsTab } from "@/features/hr/recruitment/candidate-detail/documents-tab";
 import { VaultTab } from "@/features/hr/recruitment/candidate-detail/vault-tab";
 import { ReferenceChecksTab } from "@/features/hr/recruitment/candidate-detail/reference-checks-tab";
 import { OffersTab } from "@/features/hr/recruitment/candidate-detail/offers-tab";
 import { CalibrationTab } from "@/features/hr/recruitment/candidate-detail/calibration-tab";
-import { CandidateProfileCard } from "./_components/candidate-profile-card";
-import { AiScoreCard } from "./_components/ai-score-card";
-import { CompositeScoreCard } from "./_components/composite-score-card";
-import { ApplicationsTab } from "./_components/applications-tab";
-import { InterviewsTab } from "./_components/interviews-tab";
+import { CandidateProfileCard } from "@/features/candidates/candidate-profile-card";
+import { AiScoreCard } from "@/features/candidates/ai-score-card";
+import { CompositeScoreCard } from "@/features/candidates/composite-score-card";
+import { ApplicationsTab } from "@/features/candidates/applications-tab";
+import { InterviewsTab } from "@/features/candidates/interviews-tab";
 import {
   ScheduleInterviewSheet,
   ApplyToJobSheet,
-} from "./_components/candidate-sheets";
-import { MessagesTab } from "./_components/messages-tab";
+} from "@/features/candidates/candidate-sheets";
+import { MessagesTab } from "@/features/candidates/messages-tab";
 
 export default function CandidateDetailPage() {
   const { candidateId } = useParams<{ candidateId: string }>();

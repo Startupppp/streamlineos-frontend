@@ -1,9 +1,8 @@
 import { withAuth, err } from "@/lib/api/helpers";
 import { buildGoogleAuthUrl } from "@/lib/api/calendar-oauth";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   return withAuth(async (session) => {
     if (!process.env.GOOGLE_CALENDAR_CLIENT_ID) {
       return err("Google Calendar integration is not configured", 503);

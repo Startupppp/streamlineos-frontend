@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Layers, Calendar, User, ArrowRight } from "lucide-react";
+import { Plus, Calendar, User, ArrowRight } from "lucide-react";
 import { useForm, Controller, useController } from "react-hook-form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { z } from "zod";
@@ -120,7 +120,7 @@ export default function ModulesPage({
   const { field: leadIdField } = useController({ control: form.control, name: "leadId" });
   const handleLeadChange = useCallback(
     (v: string) => leadIdField.onChange(v || undefined),
-    [leadIdField.onChange, leadIdField]
+    [leadIdField]
   );
 
   const onSubmit = (data: CreateModuleForm) => {

@@ -10,7 +10,7 @@ import {
 } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,8 +41,6 @@ import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["Travel", "Meals", "Office Supplies", "Software", "Medical", "Other"];
-
-type ReimbStatus = "APPROVED" | "PAID" | "REJECTED" | "PENDING";
 
 function getStatusConfig(s: string | null) {
   if (s === "APPROVED" || s === "PAID") {

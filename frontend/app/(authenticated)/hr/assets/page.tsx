@@ -407,7 +407,7 @@ export default function HrAssetsPage() {
   );
   const employeeOptions = buildEmployeeOptions(employees);
 
-  const items: Asset[] = Array.isArray(data) ? data : [];
+  const items = useMemo<Asset[]>(() => (Array.isArray(data) ? data : []), [data]);
   const filteredItems = statusFilter
     ? items.filter((a) => a.status === statusFilter)
     : items;

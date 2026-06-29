@@ -302,6 +302,7 @@ export default function SubscriptionPage() {
     [data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon],
   );
 
+  // eslint-disable-next-line react-hooks/purity
   const now = useMemo(() => Date.now(), []);
 
   const currentPlan = data?.subscription?.plan ?? null;

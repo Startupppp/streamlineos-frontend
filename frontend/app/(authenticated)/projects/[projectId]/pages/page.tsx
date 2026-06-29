@@ -4,7 +4,6 @@ import { use, useState, useMemo, useCallback, memo } from "react";
 import { usePages, useCreatePage, useUpdatePage } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   Sheet,
@@ -19,7 +18,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus,
-  FileText,
   ChevronRight,
   ChevronDown,
   Pin,

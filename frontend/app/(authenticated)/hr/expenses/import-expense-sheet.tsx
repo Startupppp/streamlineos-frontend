@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { format } from "date-fns";
 import {
-  Upload, Download, FileSpreadsheet, X, CheckCircle2, FileText,
+  Download, FileSpreadsheet, X, CheckCircle2, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HrSheet } from "@/features/hr/hr-sheet";

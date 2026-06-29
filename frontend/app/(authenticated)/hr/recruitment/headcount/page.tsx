@@ -80,7 +80,6 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
   const [deptId, setDeptId] = useState(String(initial?.departmentId ?? ""));
   const [justification, setJustification] = useState(initial?.justification ?? "");
   const [targetDate, setTargetDate] = useState(initial?.targetDate ?? "");
-  const [submitStatus, setSubmitStatus] = useState<"DRAFT" | "SUBMITTED">("DRAFT");
 
   const create = useMutation({
     mutationFn: (data: Record<string, unknown>) =>

@@ -30,9 +30,8 @@ interface DealForecastWidgetProps {
 }
 
 export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
-  const now = new Date();
-  const thisMonthStart = useMemo(() => new Date(now.getFullYear(), now.getMonth(), 1), []);
-  const thisMonthEnd = useMemo(() => new Date(now.getFullYear(), now.getMonth() + 1, 0), []);
+  const thisMonthStart = useMemo(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); }, []);
+  const thisMonthEnd = useMemo(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0); }, []);
 
   const { weightedTotal, stageBreakdown, monthlyForecast, maxWeighted } = useMemo(() => {
     const activeDeals = deals.filter((d) => d.stage !== "LOST");

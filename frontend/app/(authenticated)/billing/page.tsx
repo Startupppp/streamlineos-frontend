@@ -83,6 +83,7 @@ export default function BillingPage() {
   const { data: overdueData } = useInvoices({ status: "OVERDUE", limit: 5 });
   const { data: subData } = useSubscription();
 
+  // eslint-disable-next-line react-hooks/purity
   const now = useMemo(() => Date.now(), []);
 
   function handleRetryStats() {

@@ -169,7 +169,7 @@ export default function TeamTimesheetsPage() {
     setDetailSheetOpen(true);
   }, []);
 
-  const handleDateSelect = useCallback((_date: Date) => {
+  const handleDateSelect = useCallback((_: Date) => {
     updateParams({ view: "day" });
   }, [updateParams]);
 

@@ -478,15 +478,6 @@ export default function ReportsPage() {
   function handleDateFromChange(e: React.ChangeEvent<HTMLInputElement>) {
     setDateFrom(e.target.value);
   }
-  function handleDateToChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDateTo(e.target.value);
-  }
-  function handleOpenScheduleSheet() {
-    setScheduleSheetOpen(true);
-  }
-  function handleCloseScheduleSheet() {
-    setScheduleSheetOpen(false);
-  }
 
   return (
     <PageWrapper

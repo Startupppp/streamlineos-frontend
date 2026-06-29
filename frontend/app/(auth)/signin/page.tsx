@@ -37,7 +37,6 @@ function formatLockoutTime(seconds: number): string {
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [lockedSeconds, setLockedSeconds] = useState<number | null>(null);
-  const [passwordValue, setPasswordValue] = useState("");
   const [showVerificationHint, setShowVerificationHint] = useState(false);
   const [isResendingVerification, setIsResendingVerification] = useState(false);
   const [mfaRequired, setMfaRequired] = useState(false);
@@ -190,8 +189,6 @@ export default function SignInPage() {
   }, [form]);
 
   const isPending = signInMutation.isPending;
-  const passwordStrength =
-    passwordValue.length > 0 ? validatePasswordStrength(passwordValue) : null;
 
   const hasGoogleProvider = !!process.env.NEXT_PUBLIC_GOOGLE_ENABLED;
   const hasMicrosoftProvider = !!process.env.NEXT_PUBLIC_MICROSOFT_ENABLED;
@@ -398,9 +395,7 @@ export default function SignInPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  {...form.register("password", {
-                    onChange: (e) => setPasswordValue(e.target.value),
-                  })}
+                  {...form.register("password")}
                   disabled={isPending}
                   className={cn(
                     "h-9 text-sm pr-9",

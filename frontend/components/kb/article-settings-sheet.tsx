@@ -71,7 +71,7 @@ export function ArticleSettingsSheet({
   const categories = categoriesQuery.data ?? [];
 
   const allTagsQuery = useKbTags();
-  const allTags = allTagsQuery.data ?? [];
+  const allTags = useMemo(() => allTagsQuery.data ?? [], [allTagsQuery.data]);
   const articleTagsQuery = useKbArticleTags(article.id);
   const createTag = useCreateKbTag();
   const setArticleTags = useSetKbArticleTags();

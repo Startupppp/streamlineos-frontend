@@ -140,7 +140,6 @@ export default function MyOnboardingTasksPage() {
                   task={task}
                   onToggle={handleToggle}
                   isToggling={
-                    // eslint-disable-next-line react-hooks/refs
                     completeTask.isPending && togglingIds.current.has(task.id)
                   }
                 />
@@ -156,7 +155,6 @@ export default function MyOnboardingTasksPage() {
                   task={task}
                   onToggle={handleToggle}
                   isToggling={
-                    // eslint-disable-next-line react-hooks/refs
                     completeTask.isPending && togglingIds.current.has(task.id)
                   }
                 />

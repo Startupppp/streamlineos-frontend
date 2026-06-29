@@ -74,6 +74,16 @@ const EVENT_COLORS: Record<string, string> = {
   gold: "#3b82f6",
 };
 
+const RSVP_BORDER_COLORS: Record<string, string> = {
+  accepted: "#22c55e",
+  declined: "#ef4444",
+  tentative: "#f59e0b",
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  huddle: "#f97316",
+};
+
 const VIEWS: View[] = ["month", "week", "day"];
 
 interface ViewButtonProps {
@@ -180,16 +190,6 @@ export function CalendarView() {
     setSelectedEventId(String(event.id));
   }, []);
 
-  const RSVP_BORDER_COLORS: Record<string, string> = {
-    accepted: "#22c55e",
-    declined: "#ef4444",
-    tentative: "#f59e0b",
-  };
-
-  const CATEGORY_COLORS: Record<string, string> = {
-    huddle: "#f97316",
-  };
-
   const eventPropGetter = useCallback((event: BigCalEvent) => {
     const rsvp = event.resource?.myRsvpStatus as string | null | undefined;
     const rsvpBorderColor = rsvp ? (RSVP_BORDER_COLORS[rsvp] ?? null) : null;
@@ -209,7 +209,7 @@ export function CalendarView() {
         padding: rsvpBorderColor ? "1px 6px 1px 4px" : "1px 6px",
       },
     };
-  }, [RSVP_BORDER_COLORS, CATEGORY_COLORS]);
+  }, []);
 
   const handlePrev = useCallback(() => {
     setCurrentDate((d) => {

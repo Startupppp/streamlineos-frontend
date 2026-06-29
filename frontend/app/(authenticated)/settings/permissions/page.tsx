@@ -57,7 +57,7 @@ function PermissionsContent() {
   const matrixQuery = useRolePermissionsMatrix();
   const handleRetry = useCallback(() => {
     void matrixQuery.refetch();
-  }, [matrixQuery.refetch, matrixQuery]);
+  }, [matrixQuery]);
 
   const permissionGroups = useMemo(() => groupByResource(PERMISSIONS), []);
 

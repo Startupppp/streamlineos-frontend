@@ -25,6 +25,7 @@ interface StepPersonalInfoProps {
 
 export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
   const checkedEmailRef = useRef<string>("");
+  // eslint-disable-next-line react-hooks/purity
   const minDob = useMemo(() => new Date(Date.now() - 16 * 365.25 * 24 * 60 * 60 * 1000), []);
 
   const handleEmailBlur = useCallback(async () => {

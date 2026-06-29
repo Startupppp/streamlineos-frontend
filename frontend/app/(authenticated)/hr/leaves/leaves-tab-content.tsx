@@ -9,7 +9,6 @@ import {
   isWithinInterval,
 } from "date-fns";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -270,7 +269,6 @@ export function LeavesTabContent({
   myLeaveRequests,
   approvedLeavesThisWeek = [],
 }: LeavesTabContentProps) {
-  const { data: session } = useSession();
   const isAdmin = useCan("hr:employees:manage");
 
   const currentYear = new Date().getFullYear();

@@ -77,15 +77,15 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
 
   const handleAssigneeChange = useCallback(
     (v: string) => assigneeIdField.onChange(v || undefined),
-    [assigneeIdField.onChange, assigneeIdField]
+    [assigneeIdField]
   );
   const handleCycleChange = useCallback(
     (v: string) => cycleIdField.onChange(v ? parseInt(v) : undefined),
-    [cycleIdField.onChange, cycleIdField]
+    [cycleIdField]
   );
   const handleModuleChange = useCallback(
     (v: string) => moduleIdField.onChange(v ? parseInt(v) : undefined),
-    [moduleIdField.onChange, moduleIdField]
+    [moduleIdField]
   );
 
   const onCreateSubmit = useCallback((data: CreateIntakeForm) => {
@@ -102,7 +102,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
     );
   }, [createMutation, projectId, createForm]);
 
-  const onAcceptSubmit = useCallback((_data: AcceptForm) => {
+  const onAcceptSubmit = useCallback((_: AcceptForm) => {
     if (selectedItemId === null) return;
     updateMutation.mutate(
       { id: selectedItemId, projectId, status: "accepted" },
