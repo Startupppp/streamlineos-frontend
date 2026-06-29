@@ -3,16 +3,19 @@
 import { useEffect, useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Check, CreditCard, Loader2, Zap, Calendar } from "lucide-react";
+import { Check, CreditCard, Loader2, Zap, Calendar, Tag, X } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   useSubscription,
   useCreateSubscriptionOrder,
   useVerifySubscription,
+  useValidateCoupon,
   type SubscriptionPlan,
   type BillingCycle,
+  type CouponValidationResult,
 } from "@/lib/api/hooks/subscription";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
@@ -199,6 +202,14 @@ export default function SubscriptionPage() {
   const { mutateAsync: verifySubscription, isPending: isVerifying } = useVerifySubscription();
   const [upgradingPlan, setUpgradingPlan] = useState<SubscriptionPlan | null>(null);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
+  const [selectedPlanForCoupon, setSelectedPlanForCoupon] = useState<SubscriptionPlan | null>(null);
+
+  const { data: couponResult, isFetching: isValidatingCoupon } = useValidateCoupon(
+    couponInput,
+    selectedPlanForCoupon,
+  );
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -222,15 +233,41 @@ export default function SubscriptionPage() {
     setBillingCycle("annual");
   }
 
+  function handleApplyCoupon() {
+    if (!couponResult?.valid) {
+      toast.error(couponResult?.message ?? "Invalid coupon");
+      return;
+    }
+    setAppliedCoupon(couponResult);
+    toast.success(couponResult.message);
+  }
+
+  function handleRemoveCoupon() {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setSelectedPlanForCoupon(null);
+  }
+
+  function handleCouponInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setCouponInput(e.target.value.toUpperCase());
+    setAppliedCoupon(null);
+    if (selectedPlanForCoupon) setSelectedPlanForCoupon(selectedPlanForCoupon);
+  }
+
   const handleUpgrade = useCallback(
     async (plan: SubscriptionPlan) => {
       if (!data?.isConfigured) {
         toast.error("Payment gateway not configured. Contact support.");
         return;
       }
+      setSelectedPlanForCoupon(plan);
       setUpgradingPlan(plan);
       try {
-        const order = await createOrder({ plan, billingCycle });
+        const order = await createOrder({
+          plan,
+          billingCycle,
+          couponId: appliedCoupon?.valid ? (appliedCoupon.couponId ?? undefined) : undefined,
+        });
         const rzp = new window.Razorpay({
           key: order.keyId ?? "",
           order_id: order.orderId,
@@ -262,7 +299,7 @@ export default function SubscriptionPage() {
         setUpgradingPlan(null);
       }
     },
-    [data?.isConfigured, createOrder, verifySubscription, session, billingCycle],
+    [data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon],
   );
 
   const currentPlan = data?.subscription?.plan ?? null;
@@ -398,6 +435,52 @@ export default function SubscriptionPage() {
               onUpgrade={handleUpgrade}
             />
           ))}
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-medium">Have a coupon code?</p>
+          </div>
+          {appliedCoupon ? (
+            <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+              <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+              <p className="text-sm text-emerald-700 flex-1">{appliedCoupon.message}</p>
+              <button
+                type="button"
+                onClick={handleRemoveCoupon}
+                className="text-emerald-600 hover:text-emerald-800 rounded"
+                aria-label="Remove coupon"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                value={couponInput}
+                onChange={handleCouponInputChange}
+                placeholder="Enter coupon code"
+                className="max-w-xs font-mono uppercase text-sm"
+                aria-label="Coupon code"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleApplyCoupon}
+                disabled={couponInput.trim().length < 3 || isValidatingCoupon}
+              >
+                {isValidatingCoupon ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  "Apply"
+                )}
+              </Button>
+            </div>
+          )}
+          {couponInput.trim().length >= 3 && !appliedCoupon && couponResult && !isValidatingCoupon && !couponResult.valid && (
+            <p className="text-xs text-destructive">{couponResult.message}</p>
+          )}
         </div>
 
         {data?.subscription?.payments && data.subscription.payments.length > 0 && (

@@ -186,3 +186,44 @@ export function useRsvpCalendarEvent() {
     },
   });
 }
+
+export type CalendarConnectionProvider = "GOOGLE" | "MICROSOFT";
+
+export interface CalendarConnection {
+  id: number;
+  provider: CalendarConnectionProvider;
+  providerEmail: string | null;
+  isPrimary: boolean;
+  expiresAt: string | null;
+  updatedAt: string;
+}
+
+export function useCalendarConnections() {
+  return useQuery({
+    queryKey: queryKeys.calendar.connections(),
+    queryFn: () => apiClient.get<CalendarConnection[]>("/calendar/connections"),
+    staleTime: 60_000,
+  });
+}
+
+export function useDisconnectCalendar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (connectionId: number) =>
+      apiClient.delete<{ success: boolean }>(`/calendar/connections/${connectionId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.calendar.connections() });
+    },
+  });
+}
+
+export function useSetPrimaryCalendar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (connectionId: number) =>
+      apiClient.patch<CalendarConnection>(`/calendar/connections/${connectionId}/primary`, {}),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.calendar.connections() });
+    },
+  });
+}

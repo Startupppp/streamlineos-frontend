@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, useQueryClient as useQC } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 export type SubscriptionPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
@@ -78,7 +78,7 @@ export function useSubscription() {
 }
 
 export function useCreateSubscriptionOrder() {
-  return useMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle }>({
+  return useMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle; couponId?: number }>({
     mutationFn: (data) => apiClient.post<CreateOrderResponse>("/billing/razorpay", data),
   });
 }
@@ -123,5 +123,27 @@ export function useBillingSummary() {
     queryKey: BILLING_SUMMARY_QUERY_KEY,
     queryFn: () => apiClient.get<BillingSummary>("/billing/summary"),
     staleTime: 5 * 60_000,
+  });
+}
+
+export interface CouponValidationResult {
+  valid: boolean;
+  couponId: number | null;
+  type: "PERCENTAGE" | "FIXED" | null;
+  value: number | null;
+  discountAmount: number | null;
+  message: string;
+}
+
+export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
+  return useQuery<CouponValidationResult, Error>({
+    queryKey: ["billing", "coupon", code, plan],
+    queryFn: () =>
+      apiClient.get<CouponValidationResult>(
+        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`,
+      ),
+    enabled: code.trim().length >= 3 && plan !== null,
+    staleTime: 30_000,
+    retry: false,
   });
 }
