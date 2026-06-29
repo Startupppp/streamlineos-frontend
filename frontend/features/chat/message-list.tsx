@@ -186,9 +186,16 @@ export function MessageList({
       onScroll={onScroll}
     >
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center h-full">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-          <p className="text-[13px] text-muted-foreground mt-3">Loading messages...</p>
+        <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto space-y-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className={`flex items-start gap-3 ${i % 3 === 2 ? "flex-row-reverse" : ""}`}>
+              <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
+              <div className="space-y-1.5 max-w-[60%]">
+                <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+                <div className={`h-10 rounded-xl bg-muted animate-pulse ${i % 3 === 2 ? "w-40" : "w-56"}`} />
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="py-2 px-3 sm:px-5 max-w-[900px] mx-auto">

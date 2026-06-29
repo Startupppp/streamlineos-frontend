@@ -171,6 +171,19 @@ export function MessagePanel({
   }, [mentionCandidates, mentionQuery]);
 
   useEffect(() => {
+    const saved = localStorage.getItem(`chat:draft:${channelId}`);
+    setMessageInput(saved ?? "");
+  }, [channelId]);
+
+  useEffect(() => {
+    if (messageInput) {
+      localStorage.setItem(`chat:draft:${channelId}`, messageInput);
+    } else {
+      localStorage.removeItem(`chat:draft:${channelId}`);
+    }
+  }, [channelId, messageInput]);
+
+  useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
         setShowEmojiPicker(false);
@@ -371,6 +384,7 @@ export function MessagePanel({
     const replyId = replyTo?.id;
     const attachments = [...pendingAttachments];
     setMessageInput("");
+    localStorage.removeItem(`chat:draft:${channelId}`);
     setReplyTo(null);
     setPendingAttachments([]);
     if (!isOnline) {
