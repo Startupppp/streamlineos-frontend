@@ -104,6 +104,53 @@ export interface CouponValidationResult {
   message: string;
 }
 
+export interface PlanDefinition {
+  id: SubscriptionPlan;
+  name: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  features: string[];
+  maxEmployees: number | null;
+}
+
+export interface BillingSummary {
+  subscription: {
+    plan: SubscriptionPlan;
+    status: string;
+    trialEndsAt: string | null;
+    trialDaysRemaining: number | null;
+    currentPeriodEnd: string | null;
+    isActive: boolean;
+    isTrial: boolean;
+  } | null;
+  invoiceStats: {
+    totalPaid: string;
+    totalOutstanding: string;
+    draft: number;
+    sent: number;
+    paid: number;
+    overdue: number;
+    cancelled: number;
+  };
+  isConfigured: boolean;
+}
+
+export function useBillingPlans() {
+  return useQuery<{ plans: PlanDefinition[] }, Error>({
+    queryKey: ["billing", "plans"],
+    queryFn: () => apiClient.get<{ plans: PlanDefinition[] }>("/billing/plans"),
+    staleTime: 60 * 60_000,
+  });
+}
+
+export function useBillingSummary() {
+  return useQuery<BillingSummary, Error>({
+    queryKey: BILLING_SUMMARY_QUERY_KEY,
+    queryFn: () => apiClient.get<BillingSummary>("/billing/summary"),
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
   return useQuery<CouponValidationResult, Error>({
     queryKey: ["billing", "coupon", code, plan],

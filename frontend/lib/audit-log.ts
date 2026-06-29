@@ -87,6 +87,8 @@ type AuditAction =
   | "org.ownership_transferred"
   | "oauth.login.google"
   | "oauth.login.microsoft"
+  | "oauth.signup.google"
+  | "oauth.signup.microsoft"
   | "service_account.created"
   | "service_account.updated"
   | "service_account.deleted"

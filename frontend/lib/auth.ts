@@ -235,12 +235,51 @@ export const { handlers, auth } = NextAuth({
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google" || account?.provider === "microsoft-entra-id") {
+        const email = (user.email ?? "").toLowerCase();
         const existingUser = await db.query.users.findFirst({
-          where: sql`lower(${users.email}) = ${(user.email ?? "").toLowerCase()}`,
+          where: sql`lower(${users.email}) = ${email}`,
         });
+
         if (!existingUser) {
-          return false;
+          const newUser = await db.query.users.findFirst({
+            where: sql`lower(${users.email}) = ${email}`,
+            columns: { id: true, name: true },
+          });
+          if (newUser) {
+            const orgId = randomUUID();
+            const orgName = ((user.name ?? newUser.name ?? "My Organization") as string).trim();
+            const slug =
+              orgName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, "")
+                .substring(0, 50) +
+              "-" +
+              Date.now().toString(36);
+            const trialEnd = new Date();
+            trialEnd.setDate(trialEnd.getDate() + 14);
+            await db.transaction(async (tx) => {
+              await tx.insert(organizations).values({ id: orgId, name: orgName, slug });
+              await tx.insert(organizationMembers).values({ orgId, userId: newUser.id, role: "owner", isOwner: true });
+              await tx.insert(subscriptions).values({
+                orgId,
+                plan: "STARTER",
+                status: "TRIAL",
+                trialEndsAt: trialEnd,
+                currentPeriodStart: new Date(),
+                currentPeriodEnd: trialEnd,
+              });
+            });
+            createAuditLog({
+              action: account.provider === "microsoft-entra-id" ? "oauth.signup.microsoft" : "oauth.signup.google",
+              userId: newUser.id,
+              orgId,
+              metadata: { email },
+            }).catch(() => {});
+          }
+          return true;
         }
+
         createAuditLog({
           action: account.provider === "microsoft-entra-id" ? "oauth.login.microsoft" : "oauth.login.google",
           userId: existingUser.id,
