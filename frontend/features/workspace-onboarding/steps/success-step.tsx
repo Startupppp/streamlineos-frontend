@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   CheckCircle2, Users, Package, ArrowRight,
   UserPlus, FolderOpen, Settings,
@@ -27,10 +27,13 @@ interface SuccessStepProps {
 
 export function SuccessStep({ summary, onEnter }: SuccessStepProps) {
   const completeOnboarding = useCompleteOnboarding();
+  const hasFiredRef = useRef(false);
 
   useEffect(() => {
+    if (hasFiredRef.current) return;
+    hasFiredRef.current = true;
     completeOnboarding.mutate();
-  }, []);
+  }, [completeOnboarding.mutate]);
 
   return (
     <motion.div

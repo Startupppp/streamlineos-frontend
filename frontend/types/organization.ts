@@ -33,6 +33,9 @@ export interface OrgSettings {
   numberFormat?: string | null;
   weekStartDay?: "monday" | "sunday" | "saturday" | null;
   onboardingCompletedAt?: string | null;
+  companySize?: string | null;
+  country?: string | null;
+  enabledModules?: string[] | null;
   createdAt: Date;
   updatedAt: Date;
 }

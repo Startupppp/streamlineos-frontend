@@ -27,7 +27,6 @@ const DATA_TYPES: Record<DataType, DataTypeConfig> = {
 interface ParsedFile {
   headers: string[];
   preview: string[][];
-  rowCount: number;
 }
 
 interface ColumnMapping {
@@ -40,37 +39,110 @@ interface TypeState {
   imported: boolean;
 }
 
-interface ImportStepProps {
-  onNext: () => void;
-  onSkip: () => void;
-  onBack: () => void;
+interface ParsedFileViewProps {
+  parsed: ParsedFile;
+  mapping: ColumnMapping;
+  requiredFields: string[];
+  label: string;
+  onMappingChange: (field: string, column: string) => void;
+  onClear: () => void;
+  onImport: () => void;
 }
 
-function DropZone({
-  onFile,
-  isActive,
-  onDragEnter,
-  onDragLeave,
-  onDragOver,
-  onDrop,
-  onClick,
-}: {
-  onFile: (file: File) => void;
+function ParsedFileView({
+  parsed,
+  mapping,
+  requiredFields,
+  label,
+  onMappingChange,
+  onClear,
+  onImport,
+}: ParsedFileViewProps) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium">Map CSV columns to fields</p>
+        <button
+          type="button"
+          onClick={onClear}
+          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+        >
+          <X className="h-3 w-3" />
+          Clear
+        </button>
+      </div>
+
+      <div className="rounded-xl border divide-y overflow-hidden">
+        {requiredFields.map((field) => (
+          <div key={field} className="flex items-center gap-3 px-4 py-2.5 bg-card">
+            <span className="text-sm font-medium min-w-[100px] text-muted-foreground">
+              {field}
+            </span>
+            <Select
+              value={mapping[field] ?? ""}
+              onValueChange={(v) => onMappingChange(field, v)}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Select column…" />
+              </SelectTrigger>
+              <SelectContent>
+                {parsed.headers.map((h) => (
+                  <SelectItem key={h} value={h} className="text-xs">
+                    {h}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ))}
+      </div>
+
+      {parsed.preview.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground">Preview (first 3 rows)</p>
+          <div className="rounded-lg border overflow-hidden text-xs">
+            <div className="bg-muted/50 px-3 py-1.5 flex gap-4 font-medium">
+              {parsed.headers.slice(0, 3).map((h) => (
+                <span key={h} className="min-w-[80px]">{h}</span>
+              ))}
+            </div>
+            {parsed.preview.map((row, i) => (
+              <div key={i} className="px-3 py-1.5 flex gap-4 border-t">
+                {row.slice(0, 3).map((cell, j) => (
+                  <span key={j} className="min-w-[80px] text-muted-foreground truncate max-w-[120px]">
+                    {cell}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <Button onClick={onImport} className="w-full">
+        Import {label}
+      </Button>
+    </div>
+  );
+}
+
+interface DropZoneProps {
   isActive: boolean;
   onDragEnter: (e: DragEvent<HTMLDivElement>) => void;
   onDragLeave: (e: DragEvent<HTMLDivElement>) => void;
   onDragOver: (e: DragEvent<HTMLDivElement>) => void;
   onDrop: (e: DragEvent<HTMLDivElement>) => void;
   onClick: () => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
+}
 
-  function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) onFile(file);
-    e.target.value = "";
-  }
-
+function DropZone({
+  isActive,
+  onDragEnter,
+  onDragLeave,
+  onDragOver,
+  onDrop,
+  onClick,
+}: DropZoneProps) {
   return (
     <div
       role="button"
@@ -92,15 +164,14 @@ function DropZone({
         <p className="text-sm font-medium">Drop CSV here or click to browse</p>
         <p className="text-xs text-muted-foreground mt-0.5">CSV files only · max 10 MB</p>
       </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".csv"
-        className="sr-only"
-        onChange={handleInputChange}
-      />
     </div>
   );
+}
+
+interface ImportStepProps {
+  onNext: () => void;
+  onSkip: () => void;
+  onBack: () => void;
 }
 
 export function ImportStep({ onNext, onSkip, onBack }: ImportStepProps) {
@@ -139,7 +210,7 @@ export function ImportStep({ onNext, onSkip, onBack }: ImportStepProps) {
         setStates((prev) => ({
           ...prev,
           [activeType]: {
-            parsed: { headers, preview, rowCount: 0 },
+            parsed: { headers, preview },
             mapping: defaultMapping,
             imported: false,
           },
@@ -208,6 +279,10 @@ export function ImportStep({ onNext, onSkip, onBack }: ImportStepProps) {
     }));
   }
 
+  function handleTabChange(type: DataType) {
+    setActiveType(type);
+  }
+
   const importedCount = Object.values(states).filter((s) => s.imported).length;
 
   return (
@@ -226,7 +301,7 @@ export function ImportStep({ onNext, onSkip, onBack }: ImportStepProps) {
             <button
               key={type}
               type="button"
-              onClick={() => setActiveType(type)}
+              onClick={() => handleTabChange(type)}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
                 activeType === type
@@ -252,75 +327,19 @@ export function ImportStep({ onNext, onSkip, onBack }: ImportStepProps) {
               <p className="text-sm text-muted-foreground mt-0.5">Data has been queued for import.</p>
             </div>
           </div>
-        ) : currentState.parsed ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Map CSV columns to fields</p>
-              <button
-                type="button"
-                onClick={handleClearFile}
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-              >
-                <X className="h-3 w-3" />
-                Clear
-              </button>
-            </div>
-
-            <div className="rounded-xl border divide-y overflow-hidden">
-              {config.requiredFields.map((field) => (
-                <div key={field} className="flex items-center gap-3 px-4 py-2.5 bg-card">
-                  <span className="text-sm font-medium min-w-[100px] text-muted-foreground">
-                    {field}
-                  </span>
-                  <Select
-                    value={currentState.mapping[field] ?? ""}
-                    onValueChange={(v) => handleMappingChange(field, v)}
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Select column…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currentState.parsed.headers.map((h) => (
-                        <SelectItem key={h} value={h} className="text-xs">
-                          {h}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
-            </div>
-
-            {currentState.parsed.preview.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground">Preview (first 3 rows)</p>
-                <div className="rounded-lg border overflow-hidden text-xs">
-                  <div className="bg-muted/50 px-3 py-1.5 flex gap-4 font-medium">
-                    {currentState.parsed.headers.slice(0, 3).map((h) => (
-                      <span key={h} className="min-w-[80px]">{h}</span>
-                    ))}
-                  </div>
-                  {currentState.parsed.preview.map((row, i) => (
-                    <div key={i} className="px-3 py-1.5 flex gap-4 border-t">
-                      {row.slice(0, 3).map((cell, j) => (
-                        <span key={j} className="min-w-[80px] text-muted-foreground truncate max-w-[120px]">
-                          {cell}
-                        </span>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <Button onClick={handleImport} className="w-full">
-              Import {config.label}
-            </Button>
-          </div>
+        ) : currentState.parsed !== null ? (
+          <ParsedFileView
+            parsed={currentState.parsed}
+            mapping={currentState.mapping}
+            requiredFields={config.requiredFields}
+            label={config.label}
+            onMappingChange={handleMappingChange}
+            onClear={handleClearFile}
+            onImport={handleImport}
+          />
         ) : (
           <>
             <DropZone
-              onFile={handleFile}
               isActive={isDragging}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}

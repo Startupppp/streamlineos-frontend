@@ -149,6 +149,8 @@ export const useUpdateOrgSettings = () => {
       weekStartDay?: "monday" | "sunday" | "saturday";
       businessHours?: Record<string, { open: string; close: string; enabled: boolean }>;
       enabledModules?: string[];
+      companySize?: string | null;
+      country?: string | null;
     }
   >({
     mutationFn: (data) =>

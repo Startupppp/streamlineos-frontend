@@ -114,6 +114,8 @@ export function CompanyProfileStep({ onNext, onBack, isLoading }: CompanyProfile
         name: values.name,
         timezone: values.timezone,
         currency: values.currency,
+        companySize: values.teamSize,
+        country: values.country,
       });
       onNext(values);
     } catch {
