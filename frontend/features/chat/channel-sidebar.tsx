@@ -4,14 +4,19 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageSquareText, PanelLeftClose, Search, X } from "lucide-react";
+import { ChevronDown, Compass, MessageSquareText, PanelLeftClose, Search, X } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
-import { useChatChannels, useChatOnlineUsers } from "@/hooks/api";
+import { useChatChannels, useChatOnlineUsers, useSetPresenceStatus } from "@/hooks/api";
+import { useSession } from "next-auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import type { Channel } from "./chat-types";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelItem } from "./channel-item";
 import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
+import { BrowseChannelsDialog } from "./browse-channels-dialog";
+import { ChatSearchDialog } from "./chat-search-dialog";
 
 interface ChannelListEntryProps {
   channel: Channel;
@@ -21,17 +26,8 @@ interface ChannelListEntryProps {
   onSelectChannel: (id: number) => void;
 }
 
-function ChannelListEntry({
-  channel: ch,
-  activeChannelId,
-  currentUserId,
-  onlineUserIds,
-  onSelectChannel,
-}: ChannelListEntryProps) {
-  const handleClick = useCallback(
-    () => onSelectChannel(ch.id),
-    [ch.id, onSelectChannel],
-  );
+function ChannelListEntry({ channel: ch, activeChannelId, currentUserId, onlineUserIds, onSelectChannel }: ChannelListEntryProps) {
+  const handleClick = useCallback(() => onSelectChannel(ch.id), [ch.id, onSelectChannel]);
   return (
     <ChannelItem
       channel={ch}
@@ -63,21 +59,39 @@ export function ChannelSidebar({
   const { data: onlineUsers } = useChatOnlineUsers();
   const [search, setSearch] = useState("");
   const [newDMOpen, setNewDMOpen] = useState(false);
+  const { data: session } = useSession();
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const setStatus = useSetPresenceStatus();
+  const [currentStatus, setCurrentStatus] = useState<"ONLINE" | "AWAY" | "BUSY" | "INVISIBLE">("ONLINE");
+
+  const STATUS_OPTIONS = [
+    { value: "ONLINE" as const, label: "Online", color: "bg-emerald-500" },
+    { value: "AWAY" as const, label: "Away", color: "bg-yellow-400" },
+    { value: "BUSY" as const, label: "Busy", color: "bg-red-500" },
+    { value: "INVISIBLE" as const, label: "Invisible", color: "bg-zinc-400" },
+  ];
+
+  const handleSelectStatus = useCallback((value: "ONLINE" | "AWAY" | "BUSY" | "INVISIBLE") => {
+    setCurrentStatus(value);
+    setShowStatusMenu(false);
+    setStatus.mutate(value);
+  }, [setStatus]);
+
+  const handleToggleStatusMenu = useCallback(() => setShowStatusMenu((p) => !p), []);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
+  const [browseOpen, setBrowseOpen] = useState(false);
+  const [chatSearchOpen, setChatSearchOpen] = useState(false);
   const [dmsCollapsed, setDmsCollapsed] = useState(false);
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
+  const [publicCollapsed, setPublicCollapsed] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
-    [],
-  );
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
   const handleClearSearch = useCallback(() => setSearch(""), []);
-  const handleToggleGroups = useCallback(
-    () => setGroupsCollapsed((p) => !p),
-    [],
-  );
+  const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
+  const handleTogglePublic = useCallback(() => setPublicCollapsed((p) => !p), []);
+  const handleOpenBrowse = useCallback(() => setBrowseOpen(true), []);
 
   useEffect(() => {
     if (autoFocusSearch && searchInputRef.current) {
@@ -86,9 +100,15 @@ export function ChannelSidebar({
     }
   }, [autoFocusSearch, onSearchFocused]);
 
+  useEffect(() => {
+    const handler = () => setChatSearchOpen(true);
+    window.addEventListener("chat:open-search", handler);
+    return () => window.removeEventListener("chat:open-search", handler);
+  }, []);
+
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
-    [onlineUsers],
+    [onlineUsers]
   );
 
   const filteredChannels = useMemo(() => {
@@ -98,17 +118,23 @@ export function ChannelSidebar({
     return channels.filter(
       (ch) =>
         ch.name.toLowerCase().includes(q) ||
-        ch.lastMessage?.content?.toLowerCase().includes(q),
+        ch.lastMessage?.content?.toLowerCase().includes(q)
     );
   }, [channels, search]);
 
   const dms = useMemo(
     () => filteredChannels.filter((c) => c.type === "DIRECT"),
-    [filteredChannels],
+    [filteredChannels]
   );
+
   const groups = useMemo(
-    () => filteredChannels.filter((c) => c.type === "GROUP"),
-    [filteredChannels],
+    () => filteredChannels.filter((c) => c.type === "GROUP" || c.type === "PRIVATE"),
+    [filteredChannels]
+  );
+
+  const publicChannels = useMemo(
+    () => filteredChannels.filter((c) => c.type === "PUBLIC"),
+    [filteredChannels]
   );
 
   return (
@@ -127,16 +153,24 @@ export function ChannelSidebar({
             </div>
           </div>
           <div className="flex items-center gap-0.5">
-            <NewDMDialog
-              open={newDMOpen}
-              onOpenChange={setNewDMOpen}
-              onCreated={onSelectChannel}
-            />
-            <NewGroupDialog
-              open={newGroupOpen}
-              onOpenChange={setNewGroupOpen}
-              onCreated={onSelectChannel}
-            />
+            <button
+              onClick={() => setChatSearchOpen(true)}
+              className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              aria-label="Search"
+              title="Search"
+            >
+              <Search className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={handleOpenBrowse}
+              className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              aria-label="Browse public channels"
+              title="Browse Channels"
+            >
+              <Compass className="h-3.5 w-3.5" />
+            </button>
+            <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
+            <NewGroupDialog open={newGroupOpen} onOpenChange={setNewGroupOpen} onCreated={onSelectChannel} />
             {onCollapse && (
               <button
                 onClick={onCollapse}
@@ -185,9 +219,29 @@ export function ChannelSidebar({
           </div>
         ) : (
           <div className="py-1">
+            {publicChannels.length > 0 && (
+              <ChannelSidebarSection
+                title="Public Channels"
+                count={publicChannels.reduce((a, c) => a + c.unreadCount, 0)}
+                collapsed={publicCollapsed}
+                onToggle={handleTogglePublic}
+              >
+                {publicChannels.map((ch) => (
+                  <ChannelListEntry
+                    key={ch.id}
+                    channel={ch}
+                    activeChannelId={activeChannelId}
+                    currentUserId={currentUserId}
+                    onlineUserIds={onlineUserIds}
+                    onSelectChannel={onSelectChannel}
+                  />
+                ))}
+              </ChannelSidebarSection>
+            )}
+
             {groups.length > 0 && (
               <ChannelSidebarSection
-                title="Channels"
+                title="Groups"
                 count={groups.reduce((a, c) => a + c.unreadCount, 0)}
                 collapsed={groupsCollapsed}
                 onToggle={handleToggleGroups}
@@ -232,15 +286,66 @@ export function ChannelSidebar({
                   {search ? "No results found" : "No conversations yet"}
                 </p>
                 <p className="text-[11px] text-muted-foreground/50 mt-1">
-                  {search
-                    ? "Try a different search"
-                    : "Start a new conversation"}
+                  {search ? "Try a different search" : "Start a new conversation"}
                 </p>
               </div>
             )}
           </div>
         )}
       </ScrollArea>
+
+      <div className="px-3 py-2.5 border-t border-border/30 shrink-0">
+        <div className="relative">
+          <button
+            onClick={handleToggleStatusMenu}
+            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-muted/40 transition-colors"
+            aria-label="Set status"
+          >
+            <div className="relative shrink-0">
+              <Avatar className="h-7 w-7 border border-border/30">
+                <AvatarImage src={resolveImageUrl(session?.user?.image)} />
+                <AvatarFallback className="text-[9px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
+                  {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}
+                </AvatarFallback>
+              </Avatar>
+              <span className={cn("absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background", STATUS_OPTIONS.find(o => o.value === currentStatus)?.color ?? "bg-emerald-500")} />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-[12px] font-medium truncate">{session?.user?.name ?? "You"}</p>
+              <p className="text-[10px] text-muted-foreground">{STATUS_OPTIONS.find(o => o.value === currentStatus)?.label ?? "Online"}</p>
+            </div>
+            <ChevronDown className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+          </button>
+          {showStatusMenu && (
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-background border border-border/60 rounded-xl shadow-lg overflow-hidden z-30">
+              {STATUS_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => handleSelectStatus(opt.value)}
+                  className={cn(
+                    "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors text-[12px]",
+                    currentStatus === opt.value && "bg-muted/30 font-medium"
+                  )}
+                >
+                  <span className={cn("h-2 w-2 rounded-full shrink-0", opt.color)} />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <ChatSearchDialog
+        open={chatSearchOpen}
+        onOpenChange={setChatSearchOpen}
+        onSelectChannel={onSelectChannel}
+      />
+      <BrowseChannelsDialog
+        open={browseOpen}
+        onOpenChange={setBrowseOpen}
+        onSelectChannel={onSelectChannel}
+      />
     </>
   );
 }

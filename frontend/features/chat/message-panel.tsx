@@ -5,7 +5,18 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Hash, PanelLeftOpen, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Bell,
+  Bookmark,
+  Hash,
+  Mic,
+  Paperclip,
+  PanelLeftOpen,
+  Users,
+  Video,
+} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import {
@@ -19,18 +30,38 @@ import {
   useChatOnlineUsers,
   useChatOrgUsers,
   useToggleReaction,
+  useChatPins,
+  usePinMessage,
+  useUnpinMessage,
+  useSavedMessages,
+  useSaveMessage,
+  useUnsaveMessage,
 } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
+import {
+  useStartHuddle,
+  useJoinHuddle,
+  useActiveHuddle,
+  useStartVideoMeeting,
+} from "@/hooks/api/chat-huddles";
+import { useHuddleRealtime } from "./huddle-realtime";
+import { HuddlePanel } from "./huddle-panel";
+import { VideoMeetingPanel } from "./video-meeting-panel";
 import { getInitials, getDateLabel } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
+import { ThreadPanel } from "./thread-panel";
+import { SavedMessagesPanel } from "./saved-messages-panel";
+import { SharedFilesPanel } from "./shared-files-panel";
+import { ForwardMessageDialog } from "./forward-message-dialog";
+import { NotificationCenter } from "./notification-center";
 
 export function MessagePanel({
   channelId,
-  curren
+  currentUserId,
   onBack,
   onToggleInfo,
   showInfoPanel,
@@ -60,6 +91,12 @@ export function MessagePanel({
   const deleteMessage = useDeleteMessage();
   const editMessage = useEditMessage();
   const toggleReaction = useToggleReaction(channelId);
+  const pinMessage = usePinMessage();
+  const unpinMessage = useUnpinMessage();
+  const { data: pins } = useChatPins(channelId);
+  const { data: savedData } = useSavedMessages();
+  const saveMessage = useSaveMessage();
+  const unsaveMessage = useUnsaveMessage();
   const { data: onlineUsers } = useChatOnlineUsers();
   const lastTypingSent = useRef(0);
   const {
@@ -67,6 +104,14 @@ export function MessagePanel({
     typingUsers,
     publishTyping,
   } = useChatRealtime(channelId);
+  useHuddleRealtime(channelId);
+  const { data: activeHuddle } = useActiveHuddle(channelId);
+  const startHuddle = useStartHuddle();
+  const joinHuddle = useJoinHuddle();
+  const startVideoMeeting = useStartVideoMeeting();
+
+  const isInHuddle =
+    activeHuddle?.participants.some((p) => p.userId === currentUserId) ?? false;
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
@@ -96,6 +141,15 @@ export function MessagePanel({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
+  const [showMeeting, setShowMeeting] = useState(false);
+  const [showSavedPanel, setShowSavedPanel] = useState(false);
+  const [showFilesPanel, setShowFilesPanel] = useState(false);
+  const [forwardMessage, setForwardMessage] = useState<{
+    content: string | null;
+  } | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const [pendingAttachments, setPendingAttachments] = useState<
     {
       fileName: string;
@@ -109,6 +163,20 @@ export function MessagePanel({
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiRef = useRef<HTMLDivElement>(null);
+  const [isOnline, setIsOnline] = useState(true);
+  const messageQueue = useRef<
+    {
+      content: string;
+      replyToId?: number;
+      attachments?: {
+        fileName: string;
+        fileUrl: string;
+        fileKey: string;
+        fileSize: number;
+        mimeType: string;
+      }[];
+    }[]
+  >([]);
 
   const { data: orgUsers } = useChatOrgUsers();
   const [showMentions, setShowMentions] = useState(false);
@@ -132,6 +200,19 @@ export function MessagePanel({
   }, [mentionCandidates, mentionQuery]);
 
   useEffect(() => {
+    const saved = localStorage.getItem(`chat:draft:${channelId}`);
+    setMessageInput(saved ?? "");
+  }, [channelId]);
+
+  useEffect(() => {
+    if (messageInput) {
+      localStorage.setItem(`chat:draft:${channelId}`, messageInput);
+    } else {
+      localStorage.removeItem(`chat:draft:${channelId}`);
+    }
+  }, [channelId, messageInput]);
+
+  useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
         setShowEmojiPicker(false);
@@ -140,6 +221,42 @@ export function MessagePanel({
     if (showEmojiPicker) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
+
+  useEffect(() => {
+    const goOnline = async () => {
+      setIsOnline(true);
+      const queued = [...messageQueue.current];
+      messageQueue.current = [];
+      for (const msg of queued) {
+        try {
+          await sendMessage.mutateAsync({
+            channelId,
+            content: msg.content,
+            replyToId: msg.replyToId,
+            attachments: msg.attachments,
+          });
+        } catch (_err) {}
+      }
+    };
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    setIsOnline(navigator.onLine);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("joinHuddle") === "1" && activeHuddle && !isInHuddle) {
+      joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
+      const url = new URL(window.location.href);
+      url.searchParams.delete("joinHuddle");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [activeHuddle, channelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const messages: Message[] = useMemo(() => {
     const all =
@@ -184,8 +301,51 @@ export function MessagePanel({
     setPendingAttachments([]);
     setShowEmojiPicker(false);
     setShowMentions(false);
+    setThreadMessageId(null);
+    setShowFilesPanel(false);
     inputRef.current?.focus();
   }, [channelId]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key === "k") {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("chat:open-search"));
+        return;
+      }
+      if (e.key === "Escape") {
+        if (threadMessageId !== null) {
+          setThreadMessageId(null);
+          return;
+        }
+        if (showSavedPanel) {
+          setShowSavedPanel(false);
+          return;
+        }
+        if (showFilesPanel) {
+          setShowFilesPanel(false);
+          return;
+        }
+        if (showNotifications) {
+          setShowNotifications(false);
+          return;
+        }
+        if (showMeeting) {
+          setShowMeeting(false);
+          return;
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [
+    threadMessageId,
+    showSavedPanel,
+    showFilesPanel,
+    showNotifications,
+    showMeeting,
+  ]);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
@@ -243,6 +403,46 @@ export function MessagePanel({
     [],
   );
 
+  const handlePastedFiles = useCallback(async (files: File[]) => {
+    setUploading(true);
+    const MAX_SIZE = 10 * 1024 * 1024;
+    try {
+      for (const file of files) {
+        if (file.size > MAX_SIZE) {
+          toast.error(`${file.name} is too large (max 10MB)`);
+          continue;
+        }
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "chat");
+        try {
+          const result = await apiClient.upload<{
+            url: string;
+            key: string;
+            size?: number;
+            mimeType?: string;
+          }>("/storage/upload", formData);
+          setPendingAttachments((prev) => [
+            ...prev,
+            {
+              fileName: file.name,
+              fileUrl: result.url,
+              fileKey: result.key,
+              fileSize: result.size ?? file.size,
+              mimeType: result.mimeType ?? file.type,
+            },
+          ]);
+        } catch (err) {
+          toast.error(`Failed: ${getApiError(err) || file.name}`);
+        }
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setUploading(false);
+    }
+  }, []);
+
   const insertEmoji = useCallback(
     (emoji: string) => {
       const el = inputRef.current;
@@ -293,8 +493,18 @@ export function MessagePanel({
     const replyId = replyTo?.id;
     const attachments = [...pendingAttachments];
     setMessageInput("");
+    localStorage.removeItem(`chat:draft:${channelId}`);
     setReplyTo(null);
     setPendingAttachments([]);
+    if (!isOnline) {
+      messageQueue.current.push({
+        content: content || "",
+        replyToId: replyId,
+        attachments: attachments.length > 0 ? attachments : undefined,
+      });
+      toast.info("You're offline — message will be sent when you reconnect");
+      return;
+    }
     try {
       await sendMessage.mutateAsync({
         channelId,
@@ -308,7 +518,14 @@ export function MessagePanel({
       setPendingAttachments(attachments);
       toast.error(getErrorMessage(error));
     }
-  }, [messageInput, channelId, replyTo, sendMessage, pendingAttachments]);
+  }, [
+    messageInput,
+    channelId,
+    replyTo,
+    sendMessage,
+    pendingAttachments,
+    isOnline,
+  ]);
 
   const handleEdit = useCallback(
     async (messageId: number) => {
@@ -325,11 +542,56 @@ export function MessagePanel({
     [editInput, editMessage, channelId],
   );
 
+  const pinnedMessageIds = useMemo(
+    () => new Set((pins ?? []).map((p) => p.messageId)),
+    [pins],
+  );
+
+  const savedMessageIds = useMemo(
+    () =>
+      new Set(
+        savedData?.pages.flatMap((p) => p.items.map((i) => i.messageId)) ?? [],
+      ),
+    [savedData],
+  );
+
+  const handleSave = useCallback(
+    (messageId: number) => {
+      saveMessage.mutate(messageId);
+    },
+    [saveMessage],
+  );
+
+  const handleUnsaveMsg = useCallback(
+    (messageId: number) => {
+      unsaveMessage.mutate(messageId);
+    },
+    [unsaveMessage],
+  );
+
+  const handleForward = useCallback((msg: Message) => {
+    setForwardMessage({ content: msg.content });
+  }, []);
+
   const handleReact = useCallback(
     (messageId: number, emoji: string) => {
       toggleReaction.mutate({ messageId, emoji });
     },
     [toggleReaction],
+  );
+
+  const handlePin = useCallback(
+    (messageId: number) => {
+      pinMessage.mutate({ channelId, messageId });
+    },
+    [pinMessage, channelId],
+  );
+
+  const handleUnpin = useCallback(
+    (messageId: number) => {
+      unpinMessage.mutate({ channelId, messageId });
+    },
+    [unpinMessage, channelId],
   );
 
   const handleKeyDown = useCallback(
@@ -406,6 +668,24 @@ export function MessagePanel({
       ? onlineUserIds.has(otherMember.id)
       : false;
 
+  const replyCountMap = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const msg of messages) {
+      if (msg.replyToId !== null && msg.replyToId !== undefined) {
+        map.set(msg.replyToId, (map.get(msg.replyToId) ?? 0) + 1);
+      }
+    }
+    return map;
+  }, [messages]);
+
+  const handleOpenThread = useCallback((msg: Message) => {
+    setThreadMessageId(msg.id);
+  }, []);
+
+  const handleCloseThread = useCallback(() => {
+    setThreadMessageId(null);
+  }, []);
+
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Message[] }[] = [];
     let currentDate = "";
@@ -421,162 +701,390 @@ export function MessagePanel({
     return groups;
   }, [messages]);
 
+  const firstUnreadMessageId = useMemo(() => {
+    const currentMember = channel?.members?.find(
+      (m) => m.user?.id === currentUserId,
+    );
+    const lastReadAt = currentMember?.lastReadAt;
+    if (!lastReadAt) return undefined;
+    const lastReadTime = new Date(lastReadAt).getTime();
+    return messages.find(
+      (m) =>
+        m.createdAt &&
+        new Date(m.createdAt).getTime() > lastReadTime &&
+        m.senderId !== currentUserId,
+    )?.id;
+  }, [messages, channel, currentUserId]);
+
   return (
-    <>
-      <div className="h-[56px] px-4 border-b border-border/40 flex items-center gap-3 shrink-0 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
-        {sidebarCollapsed && onExpandSidebar && (
-          <button
-            onClick={onExpandSidebar}
-            className="hidden md:flex p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"
-            aria-label="Open conversations"
-          >
-            <PanelLeftOpen className="h-4 w-4" />
-          </button>
-        )}
-        <button
-          onClick={onBack}
-          className="md:hidden p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"
-          aria-label="Back to channels"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          {channel?.type === "DIRECT" ? (
-            <div className="relative">
-              <Avatar className="h-9 w-9 border-2 border-background shadow-sm">
-                <AvatarFallback className="text-[10px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
-                  {getInitials(otherMember?.name)}
-                </AvatarFallback>
-              </Avatar>
-              {isOtherOnline && (
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
-              )}
-            </div>
-          ) : (
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border border-blue/10">
-              <Hash className="h-4 w-4 text-blue" />
-            </div>
+    <div className="flex flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <div className="h-[56px] px-4 border-b border-border/40 flex items-center gap-3 shrink-0 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
+          {sidebarCollapsed && onExpandSidebar && (
+            <button
+              onClick={onExpandSidebar}
+              className="hidden md:flex p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"
+              aria-label="Open conversations"
+            >
+              <PanelLeftOpen className="h-4 w-4" />
+            </button>
           )}
+          <button
+            onClick={onBack}
+            className="md:hidden p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"
+            aria-label="Back to channels"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
 
-          <div className="min-w-0">
-            <h3 className="text-[15px] font-bold truncate leading-tight">
-              {displayName}
-            </h3>
-            <p className="text-[11px] text-muted-foreground leading-tight">
-              {channel?.type === "DIRECT" ? (
-                isOtherOnline ? (
-                  <span className="text-emerald-500 font-medium">Online</span>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            {channel?.type === "DIRECT" ? (
+              <div className="relative">
+                <Avatar className="h-9 w-9 border-2 border-background shadow-sm">
+                  <AvatarFallback className="text-[10px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
+                    {getInitials(otherMember?.name)}
+                  </AvatarFallback>
+                </Avatar>
+                {isOtherOnline && (
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+                )}
+              </div>
+            ) : (
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border border-blue/10">
+                <Hash className="h-4 w-4 text-blue" />
+              </div>
+            )}
+
+            <div className="min-w-0">
+              <h3 className="text-[15px] font-bold truncate leading-tight">
+                {displayName}
+              </h3>
+              <p className="text-[11px] text-muted-foreground leading-tight">
+                {channel?.type === "DIRECT" ? (
+                  isOtherOnline ? (
+                    <span className="text-emerald-500 font-medium">Online</span>
+                  ) : (
+                    "Offline"
+                  )
                 ) : (
-                  "Offline"
-                )
-              ) : (
-                `${memberCount} members`
+                  `${memberCount} members`
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {channel?.type === "GROUP" && (
+              <div className="hidden sm:flex -space-x-1.5 mr-2">
+                {channel.members?.slice(0, 3).map((m) => (
+                  <Avatar
+                    key={m.user?.id}
+                    className="h-6 w-6 border-2 border-background"
+                  >
+                    <AvatarImage src={resolveImageUrl(m.user?.image)} />
+                    <AvatarFallback className="text-[8px]">
+                      {getInitials(m.user?.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {memberCount > 3 && (
+                  <div className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[9px] font-semibold text-muted-foreground">
+                    +{memberCount - 3}
+                  </div>
+                )}
+              </div>
+            )}
+            {!isInHuddle && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 gap-1.5 rounded-lg px-2 text-xs font-medium",
+                  activeHuddle
+                    ? "text-green-500 hover:text-green-500 hover:bg-green-500/10"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => {
+                  if (activeHuddle) {
+                    joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
+                  } else {
+                    startHuddle.mutate(channelId);
+                  }
+                }}
+                disabled={startHuddle.isPending || joinHuddle.isPending}
+                aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
+              >
+                <Mic className="h-3.5 w-3.5" />
+                {activeHuddle ? (
+                  <span>Join ({activeHuddle.participants.length})</span>
+                ) : (
+                  <span>Huddle</span>
+                )}
+              </Button>
+            )}
+            <button
+              onClick={() => {
+                if (!activeHuddle) {
+                  startVideoMeeting.mutate(channelId);
+                }
+                setShowMeeting(true);
+              }}
+              className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+              title="Video meeting"
+              aria-label="Video meeting"
+            >
+              <Video
+                className={cn(
+                  "h-4 w-4",
+                  activeHuddle?.hasVideo ? "text-blue-500" : "",
+                )}
+              />
+            </button>
+            <button
+              onClick={() => {
+                setShowFilesPanel((p) => !p);
+                setShowSavedPanel(false);
+                setShowNotifications(false);
+              }}
+              className={cn(
+                "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
+                showFilesPanel
+                  ? "bg-muted text-blue-500"
+                  : "text-muted-foreground hover:text-foreground",
               )}
-            </p>
+              title="Shared files"
+              aria-label="Shared files"
+            >
+              <Paperclip className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => {
+                setShowSavedPanel((p) => !p);
+                setShowNotifications(false);
+                setShowFilesPanel(false);
+              }}
+              className={cn(
+                "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
+                showSavedPanel
+                  ? "bg-muted text-amber-500"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              title="Saved messages"
+              aria-label="Saved messages"
+            >
+              <Bookmark
+                className={cn("h-4 w-4", showSavedPanel && "fill-amber-500")}
+              />
+            </button>
+            <button
+              onClick={() => {
+                setShowNotifications((p) => !p);
+                setShowSavedPanel(false);
+              }}
+              className={cn(
+                "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
+                showNotifications
+                  ? "bg-muted"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              title="Notifications"
+              aria-label="Notifications"
+            >
+              <Bell className="h-4 w-4" />
+            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("h-8 w-8 rounded-lg", showInfoPanel && "bg-muted")}
+              onClick={onToggleInfo}
+              aria-label="Toggle member info"
+            >
+              <Users className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          {channel?.type === "GROUP" && (
-            <div className="hidden sm:flex -space-x-1.5 mr-2">
-              {channel.members?.slice(0, 3).map((m) => (
-                <Avatar
-                  key={m.user?.id}
-                  className="h-6 w-6 border-2 border-background"
-                >
-                  <AvatarImage src={resolveImageUrl(m.user?.image)} />
-                  <AvatarFallback className="text-[8px]">
-                    {getInitials(m.user?.name)}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
-              {memberCount > 3 && (
-                <div className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[9px] font-semibold text-muted-foreground">
-                  +{memberCount - 3}
-                </div>
-              )}
-            </div>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn("h-8 w-8 rounded-lg", showInfoPanel && "bg-muted")}
-            onClick={onToggleInfo}
-            aria-label="Toggle member info"
-          >
-            <Users className="h-4 w-4" />
-          </Button>
-        </div>
+        {!isOnline && (
+          <div className="shrink-0 px-4 py-1.5 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2 text-[12px] text-amber-600 font-medium">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+            You&apos;re offline — messages will be sent when you reconnect
+          </div>
+        )}
+        <MessageList
+          groupedMessages={groupedMessages}
+          messages={messages}
+          isLoading={isLoading}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={fetchNextPage}
+          currentUserId={currentUserId}
+          channelId={channelId}
+          displayName={displayName}
+          channelType={channel?.type}
+          editingMessage={editingMessage}
+          editInput={editInput}
+          pinnedMessageIds={pinnedMessageIds}
+          savedMessageIds={savedMessageIds}
+          replyCountMap={replyCountMap}
+          firstUnreadMessageId={firstUnreadMessageId}
+          onEditInputChange={setEditInput}
+          onStartEdit={(msg) => {
+            setEditingMessage(msg);
+            setEditInput(msg.content ?? "");
+          }}
+          onCancelEdit={() => {
+            setEditingMessage(null);
+            setEditInput("");
+          }}
+          onSaveEdit={handleEdit}
+          onReply={(msg) => {
+            setReplyTo(msg);
+            inputRef.current?.focus();
+          }}
+          onOpenThread={handleOpenThread}
+          onDelete={(messageId) =>
+            deleteMessage.mutate({ channelId, messageId })
+          }
+          onReact={handleReact}
+          onPin={handlePin}
+          onUnpin={handleUnpin}
+          onSave={handleSave}
+          onUnsaveMsg={handleUnsaveMsg}
+          onForward={handleForward}
+          showScrollBtn={showScrollBtn}
+          scrollToBottom={scrollToBottom}
+          messagesEndRef={messagesEndRef}
+          scrollContainerRef={scrollContainerRef}
+          onScroll={handleScroll}
+        />
+
+        <MessageInput
+          channelId={channelId}
+          displayName={displayName}
+          channelType={channel?.type}
+          messageInput={messageInput}
+          setMessageInput={setMessageInput}
+          inputRef={inputRef}
+          fileInputRef={fileInputRef}
+          replyTo={replyTo}
+          setReplyTo={setReplyTo}
+          pendingAttachments={pendingAttachments}
+          setPendingAttachments={setPendingAttachments}
+          uploading={uploading}
+          onFileSelect={handleFileSelect}
+          showEmojiPicker={showEmojiPicker}
+          setShowEmojiPicker={setShowEmojiPicker}
+          emojiRef={emojiRef}
+          insertEmoji={insertEmoji}
+          showMentions={showMentions}
+          setShowMentions={setShowMentions}
+          mentionQuery={mentionQuery}
+          mentionIndex={mentionIndex}
+          setMentionIndex={setMentionIndex}
+          filteredMentions={filteredMentions}
+          insertMention={insertMention}
+          typingText={typingText}
+          sendMessage={sendMessage}
+          onSend={handleSend}
+          onKeyDown={handleKeyDown}
+          onInputChange={handleInputChange}
+          onFilesSelected={handlePastedFiles}
+        />
+
+        {activeHuddle && isInHuddle && (
+          <HuddlePanel
+            huddle={activeHuddle}
+            channelId={channelId}
+            currentUserId={currentUserId}
+          />
+        )}
       </div>
 
-      <MessageList
-        groupedMessages={groupedMessages}
-        messages={messages}
-        isLoading={isLoading}
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        fetchNextPage={fetchNextPage}
-        currentUserId={currentUserId}
-        channelId={channelId}
-        displayName={displayName}
-        channelType={channel?.type}
-        editingMessage={editingMessage}
-        editInput={editInput}
-        onEditInputChange={setEditInput}
-        onStartEdit={(msg) => {
-          setEditingMessage(msg);
-          setEditInput(msg.content ?? "");
-        }}
-        onCancelEdit={() => {
-          setEditingMessage(null);
-          setEditInput("");
-        }}
-        onSaveEdit={handleEdit}
-        onReply={(msg) => {
-          setReplyTo(msg);
-          inputRef.current?.focus();
-        }}
-        onDelete={(messageId) => deleteMessage.mutate({ channelId, messageId })}
-        onReact={handleReact}
-        showScrollBtn={showScrollBtn}
-        scrollToBottom={scrollToBottom}
-        messagesEndRef={messagesEndRef}
-        scrollContainerRef={scrollContainerRef}
-        onScroll={handleScroll}
-      />
+      {showMeeting && (
+        <VideoMeetingPanel
+          channelId={channelId}
+          currentUserId={currentUserId}
+          onClose={() => setShowMeeting(false)}
+        />
+      )}
 
-      <MessageInput
-        channelId={channelId}
-        displayName={displayName}
-        channelType={channel?.type}
-        messageInput={messageInput}
-        setMessageInput={setMessageInput}
-        inputRef={inputRef}
-        fileInputRef={fileInputRef}
-        replyTo={replyTo}
-        setReplyTo={setReplyTo}
-        pendingAttachments={pendingAttachments}
-        setPendingAttachments={setPendingAttachments}
-        uploading={uploading}
-        onFileSelect={handleFileSelect}
-        showEmojiPicker={showEmojiPicker}
-        setShowEmojiPicker={setShowEmojiPicker}
-        emojiRef={emojiRef}
-        insertEmoji={insertEmoji}
-        showMentions={showMentions}
-        setShowMentions={setShowMentions}
-        mentionQuery={mentionQuery}
-        mentionIndex={mentionIndex}
-        setMentionIndex={setMentionIndex}
-        filteredMentions={filteredMentions}
-        insertMention={insertMention}
-        typingText={typingText}
-        sendMessage={sendMessage}
-        onSend={handleSend}
-        onKeyDown={handleKeyDown}
-        onInputChange={handleInputChange}
+      <AnimatePresence>
+        {threadMessageId !== null && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <ThreadPanel
+              channelId={channelId}
+              parentMessageId={threadMessageId}
+              currentUserId={currentUserId}
+              onClose={handleCloseThread}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSavedPanel && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <SavedMessagesPanel
+              onClose={() => setShowSavedPanel(false)}
+              onJumpToChannel={() => setShowSavedPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showFilesPanel && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <SharedFilesPanel
+              channelId={channelId}
+              onClose={() => setShowFilesPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showNotifications && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <NotificationCenter
+              onClose={() => setShowNotifications(false)}
+              onSelectChannel={() => setShowNotifications(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ForwardMessageDialog
+        message={forwardMessage}
+        open={Boolean(forwardMessage)}
+        onOpenChange={(o) => {
+          if (!o) setForwardMessage(null);
+        }}
       />
-    </>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 
 
-export type ChannelType = "DIRECT" | "GROUP";
+export type ChannelType = "DIRECT" | "GROUP" | "PUBLIC" | "PRIVATE";
 
 export type ChannelMemberRole = "ADMIN" | "MEMBER";
 
@@ -40,12 +40,27 @@ export interface Channel {
   avatarUrl: string | null;
   createdBy: string;
   isArchived: boolean;
+  isPrivate: boolean;
+  entityType: string | null;
+  entityId: string | null;
   lastMessageAt: Date | string | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
   members: ChannelMember[];
   unreadCount: number;
   lastMessage: LastMessage | null;
+}
+
+export interface PublicChannel {
+  id: number;
+  name: string;
+  description: string | null;
+  avatarUrl: string | null;
+  type: ChannelType;
+  memberCount: number;
+  isMember: boolean;
+  createdAt: Date | string | null;
+  lastMessageAt: Date | string | null;
 }
 
 export interface MessageAttachment {
@@ -119,6 +134,20 @@ export interface CreateDMInput {
 }
 
 export interface CreateGroupChannelInput {
+  name: string;
+  description?: string;
+  avatarUrl?: string;
+  memberIds: string[];
+}
+
+export interface CreatePublicChannelInput {
+  name: string;
+  description?: string;
+  avatarUrl?: string;
+  memberIds: string[];
+}
+
+export interface CreatePrivateChannelInput {
   name: string;
   description?: string;
   avatarUrl?: string;
@@ -213,4 +242,86 @@ export interface VotePollInput {
 
 export interface UnreadTotalResponse {
   total: number;
+}
+
+export interface ThreadPage {
+  parentMessage: Message;
+  replies: Message[];
+  nextCursor?: number;
+}
+
+export interface PinnedMessage {
+  id: number;
+  channelId: number;
+  messageId: number;
+  pinnedBy: string;
+  pinnedAt: Date | string;
+  message: Message & { sender: { id: string; name: string | null; image: string | null } | null };
+  pinnedByUser: { id: string; name: string | null } | null;
+}
+
+export interface HuddleParticipant {
+  id: number;
+  huddleId: number;
+  userId: string;
+  joinedAt: Date | string;
+  leftAt: Date | string | null;
+  isMuted: boolean;
+  handRaised: boolean;
+  isCameraOff: boolean;
+  isScreenSharing: boolean;
+  user?: { id: string; name: string | null; image: string | null } | null;
+}
+
+export interface Huddle {
+  id: number;
+  channelId: number;
+  startedBy: string;
+  status: "active" | "ended";
+  calendarEventId: number | null;
+  hasVideo: boolean;
+  startedAt: Date | string;
+  endedAt: Date | string | null;
+  participants: HuddleParticipant[];
+  startedByUser?: { id: string; name: string | null } | null;
+}
+
+export interface HuddleSignalInput {
+  type: "offer" | "answer" | "ice-candidate";
+  targetUserId: string;
+  payload: unknown;
+}
+
+export interface SearchMessagesResult {
+  results: (Message & { channel?: { id: number; name: string | null; type: string } | null })[];
+  nextCursor?: number;
+}
+
+export interface SavedMessage {
+  id: number;
+  userId: string;
+  messageId: number;
+  savedAt: string | Date;
+  message: Message & { channel?: { id: number; name: string | null; type: string } | null };
+}
+
+export interface SavedMessagesPage {
+  items: SavedMessage[];
+  nextCursor?: number;
+}
+
+export interface SearchChannelResult {
+  id: number;
+  name: string | null;
+  type: string;
+  description: string | null;
+  avatarUrl: string | null;
+  isMember: boolean;
+}
+
+export interface SearchUserResult {
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
 }

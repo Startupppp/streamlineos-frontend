@@ -8,7 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
+import {
+  BellOff,
+  BellRing,
+  Bookmark,
+  Camera,
+  Hash,
+  ImageIcon,
+  Loader2,
+  Pencil,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
@@ -16,6 +26,12 @@ import {
   useChatChannel,
   useChatOnlineUsers,
   useUpdateChannel,
+  useChatPins,
+  useUnpinMessage,
+  useArchiveChannel,
+  useUnarchiveChannel,
+  useMuteChannel,
+  useUnmuteChannel,
 } from "@/hooks/api";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
@@ -33,6 +49,12 @@ export function ChannelInfoPanel({
   const { data: channel } = useChatChannel(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
   const updateChannel = useUpdateChannel();
+  const { data: pins } = useChatPins(channelId);
+  const unpinMessage = useUnpinMessage();
+  const archiveChannel = useArchiveChannel();
+  const unarchiveChannel = useUnarchiveChannel();
+  const muteChannel = useMuteChannel();
+  const unmuteChannel = useUnmuteChannel();
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers],
@@ -277,6 +299,56 @@ export function ChannelInfoPanel({
             </div>
           )}
 
+          {pins && pins.length > 0 && (
+            <div className="mb-6">
+              <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
+                <Bookmark className="h-3 w-3" />
+                Pinned Messages ({pins.length})
+              </h5>
+              <div className="space-y-1.5">
+                {pins.map((pin) => (
+                  <div
+                    key={pin.id}
+                    className="flex items-start gap-2.5 px-2 py-2 rounded-lg bg-muted/20 border border-border/20 hover:bg-muted/30 transition-colors"
+                  >
+                    <Avatar className="h-6 w-6 shrink-0 mt-0.5">
+                      <AvatarImage
+                        src={resolveImageUrl(pin.message.sender?.image)}
+                      />
+                      <AvatarFallback className="text-[8px] font-bold">
+                        {getInitials(pin.message.sender?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold truncate">
+                        {pin.message.sender?.name}
+                      </p>
+                      <p className="text-[12px] text-muted-foreground line-clamp-2 break-words">
+                        {pin.message.content ??
+                          (pin.message.attachments.length > 0
+                            ? `${pin.message.attachments.length} attachment(s)`
+                            : "")}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        unpinMessage.mutate({
+                          channelId,
+                          messageId: pin.messageId,
+                        })
+                      }
+                      className="shrink-0 p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+                      title="Unpin"
+                      aria-label="Unpin message"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
               Members ({channel?.members?.length ?? 0})
@@ -329,6 +401,80 @@ export function ChannelInfoPanel({
             </div>
           </div>
 
+          {channel?.type !== "DIRECT" &&
+            (() => {
+              const myMember = channel?.members?.find(
+                (m) => m.user?.id === currentUserId,
+              );
+              const mutedUntil = myMember?.mutedUntil;
+              const isMuted =
+                mutedUntil !== null &&
+                mutedUntil !== undefined &&
+                new Date(mutedUntil) > new Date();
+              const MUTE_OPTIONS = [
+                { label: "15 minutes", value: "15m" },
+                { label: "1 hour", value: "1h" },
+                { label: "8 hours", value: "8h" },
+                { label: "24 hours", value: "24h" },
+                { label: "Forever", value: "forever" },
+              ];
+              return (
+                <div className="mt-4 pt-4 border-t border-border/30">
+                  <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
+                    {isMuted ? (
+                      <BellOff className="h-3 w-3" />
+                    ) : (
+                      <BellRing className="h-3 w-3" />
+                    )}
+                    Notifications
+                  </h5>
+                  {isMuted ? (
+                    <div className="flex flex-col gap-2">
+                      <p className="text-[12px] text-muted-foreground px-1">
+                        Muted until{" "}
+                        {mutedUntil &&
+                        new Date(mutedUntil).getFullYear() >= 2099
+                          ? "forever"
+                          : mutedUntil
+                            ? new Date(mutedUntil).toLocaleString()
+                            : ""}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full h-8 text-[12px]"
+                        onClick={() => unmuteChannel.mutate(channelId)}
+                        disabled={unmuteChannel.isPending}
+                      >
+                        {unmuteChannel.isPending ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                        ) : null}
+                        Unmute
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {MUTE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() =>
+                            muteChannel.mutate({
+                              channelId,
+                              duration: opt.value,
+                            })
+                          }
+                          disabled={muteChannel.isPending}
+                          className="h-7 px-2 rounded-lg border border-border/50 text-[11px] font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
           {channel?.createdAt && (
             <div className="mt-6 pt-4 border-t border-border/30">
               <p className="text-[11px] text-muted-foreground/50 text-center">
@@ -336,6 +482,38 @@ export function ChannelInfoPanel({
                   ? `Created ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`
                   : `Started ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`}
               </p>
+            </div>
+          )}
+
+          {isAdmin && channel?.type !== "DIRECT" && (
+            <div className="mt-4 pt-4 border-t border-border/30">
+              {channel?.isArchived ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-[12px]"
+                  onClick={() => unarchiveChannel.mutate(channelId)}
+                  disabled={unarchiveChannel.isPending}
+                >
+                  {unarchiveChannel.isPending ? (
+                    <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                  ) : null}
+                  Unarchive Channel
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-[12px] border-destructive/40 text-destructive hover:bg-destructive/10"
+                  onClick={() => archiveChannel.mutate(channelId)}
+                  disabled={archiveChannel.isPending}
+                >
+                  {archiveChannel.isPending ? (
+                    <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                  ) : null}
+                  Archive Channel
+                </Button>
+              )}
             </div>
           )}
         </div>

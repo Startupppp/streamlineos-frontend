@@ -194,6 +194,7 @@ export const queryKeys = {
   chat: {
     all: [...base, "chat"] as const,
     myChannels: () => [...base, "chat", "myChannels"] as const,
+    publicChannels: () => [...base, "chat", "publicChannels"] as const,
     channel: (id: number) => [...base, "chat", "channel", id] as const,
     messages: (channelId: number, cursor?: number) => [...base, "chat", "messages", channelId, cursor] as const,
     poll: (channelId: number, since: string) => [...base, "chat", "poll", channelId, since] as const,
@@ -202,6 +203,10 @@ export const queryKeys = {
     orgUsers: () => [...base, "chat", "orgUsers"] as const,
     search: (query: string) => [...base, "chat", "search", query] as const,
     typing: (channelId: number) => [...base, "chat", "typing", channelId] as const,
+    pins: (channelId: number) => [...base, "chat", "pins", channelId] as const,
+    thread: (channelId: number, messageId: number) => [...base, "chat", "thread", channelId, messageId] as const,
+    huddle: (channelId: number) => [...base, "chat", "huddle", channelId] as const,
+    savedMessages: () => [...base, "chat", "savedMessages"] as const,
   },
 
   dashboard: {

@@ -18,7 +18,9 @@ import {
   Camera,
   Check,
   ChevronRight,
+  Globe,
   Hash,
+  Lock,
   Loader2,
   Search,
   Users,
@@ -26,10 +28,17 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useChatOrgUsers, useCreateGroupChannel } from "@/hooks/api";
+import {
+  useChatOrgUsers,
+  useCreateGroupChannel,
+  useCreatePublicChannel,
+  useCreatePrivateChannel,
+} from "@/hooks/api";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
+
+type ChannelKind = "GROUP" | "PUBLIC" | "PRIVATE";
 
 type OrgUserItem = {
   id: string;
@@ -98,6 +107,32 @@ function UserSelectItem({ user, selected, onToggle }: UserSelectItemProps) {
   );
 }
 
+const CHANNEL_KINDS: {
+  value: ChannelKind;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    value: "GROUP",
+    label: "Group",
+    description: "Private group for invited members only",
+    icon: <Users className="h-4 w-4" />,
+  },
+  {
+    value: "PUBLIC",
+    label: "Public",
+    description: "Anyone in the org can find and join",
+    icon: <Globe className="h-4 w-4" />,
+  },
+  {
+    value: "PRIVATE",
+    label: "Private",
+    description: "Invite-only, hidden from directory",
+    icon: <Lock className="h-4 w-4" />,
+  },
+];
+
 export function NewGroupDialog({
   open,
   onOpenChange,
@@ -111,6 +146,9 @@ export function NewGroupDialog({
 }) {
   const { data: orgUsers } = useChatOrgUsers();
   const createGroup = useCreateGroupChannel();
+  const createPublic = useCreatePublicChannel();
+  const createPrivate = useCreatePrivateChannel();
+  const [channelKind, setChannelKind] = useState<ChannelKind>("GROUP");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -190,15 +228,26 @@ export function NewGroupDialog({
     }
   };
 
+  const isPending =
+    createGroup.isPending || createPublic.isPending || createPrivate.isPending;
+
   const handleCreate = async () => {
     if (!name.trim() || selectedIds.size === 0) return;
+    const payload = {
+      name: name.trim(),
+      description: description.trim() || undefined,
+      avatarUrl: avatarUrl || undefined,
+      memberIds: Array.from(selectedIds),
+    };
     try {
-      const channel = await createGroup.mutateAsync({
-        name: name.trim(),
-        description: description.trim() || undefined,
-        avatarUrl: avatarUrl || undefined,
-        memberIds: Array.from(selectedIds),
-      });
+      let channel;
+      if (channelKind === "PUBLIC") {
+        channel = await createPublic.mutateAsync(payload);
+      } else if (channelKind === "PRIVATE") {
+        channel = await createPrivate.mutateAsync(payload);
+      } else {
+        channel = await createGroup.mutateAsync(payload);
+      }
       onCreated(channel.id);
       onOpenChange(false);
       setName("");
@@ -207,6 +256,7 @@ export function NewGroupDialog({
       setSelectedIds(new Set());
       setSearch("");
       setStep("info");
+      setChannelKind("GROUP");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -220,6 +270,7 @@ export function NewGroupDialog({
       setAvatarUrl("");
       setSelectedIds(new Set());
       setSearch("");
+      setChannelKind("GROUP");
     }
     onOpenChange(open);
   };
@@ -248,6 +299,30 @@ export function NewGroupDialog({
 
         {step === "info" ? (
           <div className="px-4 pb-4 space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              {CHANNEL_KINDS.map((kind) => (
+                <button
+                  key={kind.value}
+                  type="button"
+                  onClick={() => setChannelKind(kind.value)}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center",
+                    channelKind === kind.value
+                      ? "border-blue-500 bg-blue-500/5 text-blue-600"
+                      : "border-border/40 text-muted-foreground hover:border-border hover:bg-muted/30",
+                  )}
+                >
+                  {kind.icon}
+                  <span className="text-[12px] font-semibold">
+                    {kind.label}
+                  </span>
+                  <span className="text-[10px] leading-tight opacity-70">
+                    {kind.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+
             <div className="flex justify-center">
               <input
                 ref={avatarInputRef}
@@ -373,10 +448,10 @@ export function NewGroupDialog({
               </Button>
               <Button
                 onClick={handleCreate}
-                disabled={selectedIds.size === 0 || createGroup.isPending}
+                disabled={selectedIds.size === 0 || isPending}
                 className="flex-1 h-9"
               >
-                {createGroup.isPending ? (
+                {isPending ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
                     Creating...

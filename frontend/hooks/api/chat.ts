@@ -20,15 +20,35 @@ import type {
   OrgUser,
   CreateDMInput,
   CreateGroupChannelInput,
+  CreatePublicChannelInput,
+  CreatePrivateChannelInput,
   UpdateChannelInput,
   SendMessageInput,
   EditMessageInput,
+  AttachmentInput,
+  PinnedMessage,
+  PublicChannel,
+  ThreadPage,
+  SearchMessagesResult,
+  SearchChannelResult,
+  SearchUserResult,
+  SavedMessage,
+  SavedMessagesPage,
 } from "@/types/chat";
 
 export function useChatChannels(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.myChannels(),
     queryFn: () => apiClient.get<Channel[]>("/chat/channels"),
+    staleTime: 2 * 60_000,
+    enabled,
+  });
+}
+
+export function usePublicChannels(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.chat.publicChannels(),
+    queryFn: () => apiClient.get<PublicChannel[]>("/chat/channels/public"),
     staleTime: 2 * 60_000,
     enabled,
   });
@@ -235,6 +255,76 @@ export function useCreateGroupChannel() {
   });
 }
 
+export function useCreatePublicChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreatePublicChannelInput) =>
+      apiClient.post<Channel>("/chat/channels", { type: "PUBLIC", ...input }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.publicChannels() });
+    },
+  });
+}
+
+export function useCreatePrivateChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreatePrivateChannelInput) =>
+      apiClient.post<Channel>("/chat/channels", { type: "PRIVATE", ...input }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export function useJoinChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/join`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.publicChannels() });
+    },
+  });
+}
+
+export function useLeaveChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/leave`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.publicChannels() });
+    },
+  });
+}
+
+export function useAddChannelMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ channelId, userId }: { channelId: number; userId: string }) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/members`, { userId }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(variables.channelId) });
+    },
+  });
+}
+
+export function useRemoveChannelMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ channelId, userId }: { channelId: number; userId: string }) =>
+      apiClient.delete<{ ok: boolean }>(`/chat/channels/${channelId}/members/${userId}`),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
 export function useUpdateChannel() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -275,3 +365,220 @@ export function useToggleReaction(channelId: number) {
   });
 }
 
+export function useChatPins(channelId: number) {
+  return useQuery({
+    queryKey: queryKeys.chat.pins(channelId),
+    queryFn: () => apiClient.get<PinnedMessage[]>(`/chat/channels/${channelId}/pins`),
+    staleTime: 2 * 60_000,
+    enabled: channelId > 0,
+  });
+}
+
+export function usePinMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ channelId, messageId }: { channelId: number; messageId: number }) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/pins`, { messageId }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.pins(variables.channelId) });
+    },
+  });
+}
+
+export function useUnpinMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ channelId, messageId }: { channelId: number; messageId: number }) =>
+      apiClient.delete<{ ok: boolean }>(`/chat/channels/${channelId}/pins/${messageId}`),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.pins(variables.channelId) });
+    },
+  });
+}
+
+export function useThreadReplies(channelId: number, messageId: number) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.chat.thread(channelId, messageId),
+    queryFn: ({ pageParam }) =>
+      apiClient.get<ThreadPage>(
+        `/chat/channels/${channelId}/messages/${messageId}/thread`,
+        pageParam ? { cursor: pageParam } : undefined,
+      ),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: undefined as number | undefined,
+    enabled: channelId > 0 && messageId > 0,
+  });
+}
+
+export function useSendThreadReply(channelId: number, parentMessageId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { content?: string; attachments?: AttachmentInput[] }) =>
+      apiClient.post<Message>(
+        `/chat/channels/${channelId}/messages/${parentMessageId}/thread`,
+        body,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.thread(channelId, parentMessageId),
+      });
+    },
+  });
+}
+
+export function useSearchMessages(query: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.all, "search", "messages", query] as const,
+    queryFn: () => apiClient.get<SearchMessagesResult>("/chat/search/messages", { q: query }),
+    enabled: enabled && query.trim().length >= 2,
+    staleTime: 30_000,
+  });
+}
+
+export function useSearchChannels(query: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.all, "search", "channels", query] as const,
+    queryFn: () => apiClient.get<SearchChannelResult[]>("/chat/search/channels", { q: query }),
+    enabled: enabled && query.trim().length >= 1,
+    staleTime: 30_000,
+  });
+}
+
+export function useSearchUsers(query: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.all, "search", "users", query] as const,
+    queryFn: () => apiClient.get<SearchUserResult[]>("/chat/search/users", { q: query }),
+    enabled: enabled && query.trim().length >= 1,
+    staleTime: 30_000,
+  });
+}
+
+export function useSavedMessages() {
+  return useInfiniteQuery({
+    queryKey: queryKeys.chat.savedMessages(),
+    queryFn: ({ pageParam }) =>
+      apiClient.get<SavedMessagesPage>("/chat/saved", pageParam ? { cursor: pageParam } : undefined),
+    getNextPageParam: (last) => last.nextCursor,
+    initialPageParam: undefined as number | undefined,
+    staleTime: 60_000,
+  });
+}
+
+export function useSaveMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (messageId: number) => apiClient.post<{ ok: boolean }>(`/chat/saved/${messageId}`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.savedMessages() }); },
+  });
+}
+
+export function useUnsaveMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (messageId: number) => apiClient.delete<{ ok: boolean }>(`/chat/saved/${messageId}`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.savedMessages() }); },
+  });
+}
+
+export function useArchiveChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) => apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/archive`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() }); },
+  });
+}
+
+export function useUnarchiveChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) => apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unarchive`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() }); },
+  });
+}
+
+export function useSetPresenceStatus() {
+  return useMutation({
+    mutationFn: (status: "ONLINE" | "AWAY" | "BUSY" | "INVISIBLE") =>
+      apiClient.put<{ ok: boolean }>("/chat/presence/status", { status }),
+  });
+}
+
+export function useMarkChannelUnread() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) => apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/mark-unread`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() }); },
+  });
+}
+
+export function useEntityChannel(entityType: string | null, entityId: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.all, "entity", entityType, entityId] as const,
+    queryFn: () => apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`),
+    enabled: Boolean(entityType && entityId),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useMuteChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ channelId, duration }: { channelId: number; duration: string }) =>
+      apiClient.post<{ ok: boolean; mutedUntil: string }>(`/chat/channels/${channelId}/mute`, { duration }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export function useUnmuteChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unmute`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export interface ChannelFile {
+  id: number;
+  messageId: number;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  fileUrl: string;
+}
+
+export function useChannelFiles(channelId: number) {
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.chat.all, "channelFiles", channelId] as const,
+    queryFn: ({ pageParam }) =>
+      apiClient.get<{ files: ChannelFile[]; nextCursor?: number }>(
+        `/chat/channels/${channelId}/files`,
+        pageParam !== undefined ? { cursor: String(pageParam) } : undefined,
+      ),
+    getNextPageParam: (last) => last.nextCursor,
+    initialPageParam: undefined as number | undefined,
+    enabled: channelId > 0,
+  });
+}
+
+interface LinkMeta {
+  url: string;
+  title: string | null;
+  description: string | null;
+  image: string | null;
+  siteName: string | null;
+}
+
+export function useLinkPreview(url: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.all, "linkPreview", url] as const,
+    queryFn: () => apiClient.get<LinkMeta>("/chat/link-preview", { url: url! }),
+    enabled: Boolean(url) && url!.startsWith("http"),
+    staleTime: 10 * 60_000,
+    retry: false,
+  });
+}
