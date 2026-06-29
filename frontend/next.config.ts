@@ -34,19 +34,15 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: [
-        "localhost:3000",
-        "localhost:3001",
-        ...(process.env.NODE_ENV === "development"
-          ? ["*.devtunnels.ms", "*.vscode.dev"]
-          : []),
+        ...(process.env.NODE_ENV === "development" ? ["*.devtunnels.ms", "*.vscode.dev"] : []),
         ...(() => {
-          try {
-            return process.env.NEXT_PUBLIC_APP_URL
-              ? [new URL(process.env.NEXT_PUBLIC_APP_URL).host]
-              : [];
-          } catch {
-            return [];
-          }
+          const urls = [process.env.NEXT_PUBLIC_APP_URL, process.env.NEXTAUTH_URL].filter(Boolean);
+          const hosts = urls.flatMap((u) => {
+            try { return [new URL(u!).host]; } catch { return []; }
+          });
+          return process.env.NODE_ENV === "development" && !hosts.length
+            ? ["localhost:1000"]
+            : hosts;
         })(),
       ],
     },
