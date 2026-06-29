@@ -1,0 +1,437 @@
+"use client";
+
+import { useState, useCallback, useTransition, Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { format } from "date-fns";
+import {
+  Shield, ChevronLeft, ChevronRight, Activity, Info, ChevronsLeft, ChevronsRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useAuditLogs, type AuditLogRow } from "@/lib/api/hooks/audit-log";
+import { resolveImageUrl } from "@/lib/utils";
+import { getInitials } from "@/lib/format-utils";
+
+const ORG_ACTION_COLORS: Record<string, string> = {
+  "org.businessUnit": "bg-blue-500/10 text-blue-600 border-blue-200",
+  "org.branch": "bg-indigo-500/10 text-indigo-600 border-indigo-200",
+  "org.department": "bg-violet-500/10 text-violet-600 border-violet-200",
+  "org.team": "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-200",
+  "org.holiday": "bg-orange-500/10 text-orange-600 border-orange-200",
+  "org.domain": "bg-cyan-500/10 text-cyan-600 border-cyan-200",
+  "org.member_invited": "bg-blue-500/10 text-blue-600 border-blue-200",
+  "org.member_removed": "bg-red-500/10 text-red-600 border-red-200",
+  "org.member_role_changed": "bg-purple-500/10 text-purple-600 border-purple-200",
+  "org.archived": "bg-red-500/10 text-red-600 border-red-200",
+  "org.restored": "bg-emerald-500/10 text-emerald-600 border-emerald-200",
+  "org.ownership_transferred": "bg-purple-500/10 text-purple-600 border-purple-200",
+  "org.settings": "bg-amber-500/10 text-amber-700 border-amber-200",
+  "org.setup": "bg-teal-500/10 text-teal-600 border-teal-200",
+  "org.switched": "bg-slate-500/10 text-slate-600 border-slate-200",
+};
+
+const ORG_ACTION_LABELS: Record<string, string> = {
+  "org.archived": "Org Archived",
+  "org.restored": "Org Restored",
+  "org.ownership_transferred": "Ownership Transferred",
+  "org.setup.completed": "Setup Completed",
+  "org.businessUnit.created": "Business Unit Created",
+  "org.businessUnit.updated": "Business Unit Updated",
+  "org.businessUnit.deleted": "Business Unit Deleted",
+  "org.branch.created": "Branch Created",
+  "org.branch.updated": "Branch Updated",
+  "org.branch.deleted": "Branch Deleted",
+  "org.department.created": "Department Created",
+  "org.department.updated": "Department Updated",
+  "org.department.deleted": "Department Deleted",
+  "org.team.created": "Team Created",
+  "org.team.updated": "Team Updated",
+  "org.team.deleted": "Team Deleted",
+  "org.holiday.created": "Holiday Added",
+  "org.holiday.deleted": "Holiday Removed",
+  "org.domain.added": "Custom Domain Added",
+  "org.domain.verified": "Custom Domain Verified",
+  "org.domain.removed": "Custom Domain Removed",
+  "org.member_invited": "Member Invited",
+  "org.member_removed": "Member Removed",
+  "org.member_role_changed": "Role Changed",
+  "org.switched": "Org Switched",
+  "org.settings.updated": "Settings Updated",
+};
+
+function formatActionLabel(action: string): string {
+  if (ORG_ACTION_LABELS[action]) return ORG_ACTION_LABELS[action];
+  return action
+    .replace(/^org\./, "")
+    .split(".")
+    .map((p) => p.replace(/_/g, " "))
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(" — ");
+}
+
+function actionBadgeClass(action: string) {
+  for (const [key, cls] of Object.entries(ORG_ACTION_COLORS)) {
+    if (action.startsWith(key)) return cls;
+  }
+  return "bg-muted text-muted-foreground border-border";
+}
+
+const ORG_ACTION_TYPES = [
+  { value: "org.businessUnit", label: "Business Units" },
+  { value: "org.branch", label: "Branches" },
+  { value: "org.department", label: "Departments" },
+  { value: "org.team", label: "Teams" },
+  { value: "org.holiday", label: "Holidays" },
+  { value: "org.domain", label: "Custom Domains" },
+  { value: "org.member_invited", label: "Member Invited" },
+  { value: "org.member_removed", label: "Member Removed" },
+  { value: "org.member_role_changed", label: "Role Changed" },
+  { value: "org.archived", label: "Org Archived" },
+  { value: "org.restored", label: "Org Restored" },
+  { value: "org.ownership_transferred", label: "Ownership Transferred" },
+  { value: "org.settings.updated", label: "Settings Updated" },
+];
+
+const PAGE_SIZE_OPTIONS = [15, 25, 50, 100] as const;
+type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
+
+function isValidPageSize(n: number): n is PageSize {
+  return (PAGE_SIZE_OPTIONS as readonly number[]).includes(n);
+}
+
+function DetailField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => void }) {
+  return (
+    <Sheet open onOpenChange={(v) => !v && onClose()}>
+      <SheetContent className="flex flex-col p-0 w-[380px] sm:max-w-[380px]">
+        <SheetHeader className="px-4 py-3 border-b shrink-0">
+          <SheetTitle className="flex items-center gap-2 text-sm font-semibold">
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            Event Details
+          </SheetTitle>
+        </SheetHeader>
+        <div className="flex-1 min-h-0 px-4 py-3 space-y-4 overflow-hidden">
+          <DetailField label="Action">
+            <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
+              {log.action}
+            </Badge>
+          </DetailField>
+          <DetailField label="User">
+            <div className="flex items-center gap-2.5">
+              <Avatar className="h-7 w-7">
+                <AvatarImage src={resolveImageUrl(log.userImage)} />
+                <AvatarFallback className="text-[10px]">{getInitials(log.userName)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-sm font-medium leading-tight truncate">{log.userName ?? "Unknown"}</p>
+                <p className="text-xs text-muted-foreground truncate">{log.userEmail}</p>
+              </div>
+            </div>
+          </DetailField>
+          {log.targetType && (
+            <DetailField label="Target">
+              <p className="text-sm">
+                <span className="font-medium capitalize">{log.targetType}</span>
+                {log.targetId && <span className="text-muted-foreground"> #{log.targetId}</span>}
+              </p>
+            </DetailField>
+          )}
+          <DetailField label="Timestamp">
+            <p className="text-sm">{format(new Date(log.createdAt), "PPpp")}</p>
+          </DetailField>
+          {log.ipAddress && (
+            <DetailField label="IP Address">
+              <p className="text-sm font-mono">{log.ipAddress}</p>
+            </DetailField>
+          )}
+          {log.metadata && Object.keys(log.metadata).length > 0 && (
+            <DetailField label="Metadata">
+              <pre className="text-[11px] bg-muted/60 rounded-md p-3 border text-foreground overflow-y-auto overflow-x-hidden whitespace-pre-wrap wrap-break-word max-h-none h-[calc(100vh-360px)] min-h-[120px]">
+                {JSON.stringify(log.metadata, null, 2)}
+              </pre>
+            </DetailField>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function OrgAuditLogContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+  const [goToPage, setGoToPage] = useState("");
+  const [selectedLog, setSelectedLog] = useState<AuditLogRow | null>(null);
+
+  const page = Number(searchParams.get("page")) || 1;
+  const pageSizeParam = Number(searchParams.get("size"));
+  const pageSize: PageSize = isValidPageSize(pageSizeParam) ? pageSizeParam : 15;
+  const actionFilter = searchParams.get("action") || "all";
+  const dateFrom = searchParams.get("from") || "";
+  const dateTo = searchParams.get("to") || "";
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
+
+  const effectiveAction = actionFilter !== "all" ? actionFilter : "org.";
+
+  const { data, isLoading, isError, refetch } = useAuditLogs({
+    page,
+    pageSize,
+    action: effectiveAction,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
+
+  const logs = data?.logs ?? [];
+  const totalPages = data?.totalPages ?? 1;
+  const total = data?.total ?? 0;
+
+  const hasActiveFilters = actionFilter !== "all" || !!dateFrom || !!dateTo;
+  const resetFilters = useCallback(() => updateParams({ action: null, from: null, to: null, page: null }), [updateParams]);
+
+  return (
+    <PageWrapper
+      title="Organization Audit Log"
+      subtitle="Track changes to your organization structure, settings, and membership."
+      noInternalScroll
+      actions={
+        <div className="flex items-center gap-2">
+          <Shield className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground font-medium">
+            {total.toLocaleString()} events
+          </span>
+        </div>
+      }
+      filters={
+        <div className="flex flex-wrap gap-2 items-end">
+          <div className="flex flex-col gap-1 min-w-[180px] flex-1">
+            <p className="text-[11px] font-medium text-muted-foreground">Action Type</p>
+            <Select value={actionFilter} onValueChange={(v) => updateParams({ action: v === "all" ? null : v, page: null })}>
+              <SelectTrigger className="h-8 text-sm w-full">
+                <SelectValue placeholder="All org actions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Org Actions</SelectItem>
+                {ORG_ACTION_TYPES.map((a) => (
+                  <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1 min-w-[140px] flex-1">
+            <p className="text-[11px] font-medium text-muted-foreground">From</p>
+            <DatePicker value={dateFrom} onChange={(v) => updateParams({ from: v || null, page: null })} placeholder="From date" className="w-full" />
+          </div>
+          <div className="flex flex-col gap-1 min-w-[140px] flex-1">
+            <p className="text-[11px] font-medium text-muted-foreground">To</p>
+            <DatePicker value={dateTo} onChange={(v) => updateParams({ to: v || null, page: null })} placeholder="To date" className="w-full" />
+          </div>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-sm self-end">Clear</Button>
+          )}
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-4 h-full min-h-0">
+        <Card className="flex-1 min-h-0 overflow-hidden">
+          <CardContent className="p-0 flex flex-col h-full min-h-0">
+            {isLoading ? (
+              <div className="p-4 space-y-2">
+                {Array.from({ length: pageSize }).map((_, i) => (
+                  <Skeleton key={i} className="h-11 w-full" />
+                ))}
+              </div>
+            ) : isError ? (
+              <div className="py-14 flex flex-col items-center gap-3 text-center">
+                <p className="text-sm text-muted-foreground">Failed to load audit events.</p>
+                <Button variant="outline" size="sm" onClick={() => { void refetch(); }}>Retry</Button>
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="py-14 flex flex-col items-center gap-3 text-center">
+                <EmptyDocumentsIllustration className="h-40 w-40 opacity-95" />
+                <div className="space-y-1 text-muted-foreground">
+                  <p className="text-sm font-medium text-foreground">No audit events found</p>
+                  {hasActiveFilters && <p className="text-xs">Try adjusting your filters to see results.</p>}
+                </div>
+                {hasActiveFilters && (
+                  <Button variant="outline" size="sm" onClick={resetFilters}>Clear filters</Button>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col flex-1 min-h-0">
+                <div className="min-w-[700px] border-b border-border/60 bg-card">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-[170px] bg-card">Timestamp</TableHead>
+                        <TableHead className="w-[190px] bg-card">User</TableHead>
+                        <TableHead className="bg-card">Action</TableHead>
+                        <TableHead className="w-[110px] bg-card">Entity</TableHead>
+                        <TableHead className="w-[110px] bg-card">IP Address</TableHead>
+                        <TableHead className="w-[50px] bg-card" />
+                      </TableRow>
+                    </TableHeader>
+                  </Table>
+                </div>
+                <ScrollArea className="w-full flex-1 min-h-0" type="auto">
+                  <div className="min-w-[700px]">
+                    <Table>
+                      <TableBody>
+                        {logs.map((log) => (
+                          <TableRow key={log.id} className="cursor-pointer" onClick={() => setSelectedLog(log)}>
+                            <TableCell className="text-[12px] text-muted-foreground font-mono whitespace-nowrap">
+                              {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2 min-w-[140px]">
+                                <Avatar className="h-6 w-6 shrink-0">
+                                  <AvatarImage src={resolveImageUrl(log.userImage)} />
+                                  <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
+                                </Avatar>
+                                <span className="text-[13px] font-medium truncate max-w-[120px]">
+                                  {log.userName ?? log.userEmail ?? log.userId}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <Badge variant="outline" className={`text-[11px] ${actionBadgeClass(log.action)}`}>
+                                {formatActionLabel(log.action)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-[12px] text-muted-foreground capitalize whitespace-nowrap">
+                              {log.targetType ?? "—"}
+                              {log.targetId && <span className="text-[11px] opacity-60"> #{log.targetId}</span>}
+                            </TableCell>
+                            <TableCell className="text-[12px] font-mono text-muted-foreground whitespace-nowrap">
+                              {log.ipAddress ?? "—"}
+                            </TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="View details">
+                                <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+
+            {total > 0 && (
+              <div className="shrink-0 border-t border-border/60 bg-card">
+                <div className="p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[12px]">Rows per page</span>
+                    <Select value={String(pageSize)} onValueChange={(v) => updateParams({ size: v, page: null })}>
+                      <SelectTrigger className="h-7 w-[64px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAGE_SIZE_OPTIONS.map((s) => (
+                          <SelectItem key={s} value={String(s)} className="text-xs">{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-[12px] tabular-nums">
+                      {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, total)} of {total.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Button variant="outline" size="icon" className="h-7 w-7 hidden sm:inline-flex"
+                      onClick={() => updateParams({ page: null })} disabled={page <= 1} aria-label="First page">
+                      <ChevronsLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-7 w-7"
+                      onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })} disabled={page <= 1} aria-label="Previous page">
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm font-medium tabular-nums px-1">{page} / {totalPages}</span>
+                    <Button variant="outline" size="icon" className="h-7 w-7"
+                      onClick={() => updateParams({ page: String(Math.min(totalPages, page + 1)) })} disabled={page >= totalPages} aria-label="Next page">
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-7 w-7 hidden sm:inline-flex"
+                      onClick={() => updateParams({ page: String(totalPages) })} disabled={page >= totalPages} aria-label="Last page">
+                      <ChevronsRight className="h-3.5 w-3.5" />
+                    </Button>
+                    <div className="hidden md:flex items-center gap-1.5 ml-1">
+                      <span className="text-[12px]">Go to</span>
+                      <Input
+                        type="number" min={1} max={totalPages}
+                        value={goToPage}
+                        onChange={(e) => setGoToPage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            const num = parseInt(goToPage);
+                            if (!isNaN(num) && num >= 1 && num <= totalPages) {
+                              updateParams({ page: num === 1 ? null : String(num) });
+                              setGoToPage("");
+                            }
+                          }
+                        }}
+                        placeholder="—"
+                        className="h-7 w-14 text-xs text-center"
+                        aria-label="Go to page"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {selectedLog && <LogDetailSheet log={selectedLog} onClose={() => setSelectedLog(null)} />}
+    </PageWrapper>
+  );
+}
+
+export default function OrgAuditLogPage() {
+  return (
+    <Suspense>
+      <OrgAuditLogContent />
+    </Suspense>
+  );
+}

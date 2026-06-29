@@ -45,6 +45,17 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "People",
+    requiredPermission: ["settings:manage", "settings:view"],
+    routes: [
+      { label: "Users", icon: UserCog, href: "/users", requiredPermission: "settings:view" },
+      { label: "Suspended", icon: ShieldAlert, href: "/users/suspended", requiredPermission: "settings:view" },
+      { label: "Archived", icon: UserX, href: "/users/archived", requiredPermission: "settings:view" },
+      { label: "Invitations", icon: MailOpen, href: "/users/invitations", requiredPermission: "settings:view" },
+      { label: "Audit Log", icon: History, href: "/users/audit", requiredPermission: "settings:manage" },
+    ],
+  },
+  {
     label: "Organization",
     requiredPermission: ["settings:manage", "settings:view"],
     routes: [
@@ -56,6 +67,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Locations", icon: Map, href: "/organization/locations", requiredPermission: "settings:view" },
       { label: "Cost Centers", icon: Coins, href: "/organization/cost-centers", requiredPermission: "settings:view" },
       { label: "Org Tree", icon: Network, href: "/organization/tree", requiredPermission: "settings:view" },
+      { label: "Audit Log", icon: FileSearch, href: "/organization/audit", requiredPermission: "settings:manage" },
     ],
   },
   {
@@ -379,6 +391,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Roles & Permissions", icon: Shield, href: "/settings/roles", requiredPermission: "settings:rbac:manage",
         children: [
           { label: "Permission Matrix", icon: ShieldAlert, href: "/settings/permissions", requiredPermission: "settings:rbac:manage" },
+          { label: "RBAC Overview", icon: BarChart2, href: "/settings/rbac", requiredPermission: "settings:rbac:manage" },
         ],
       },
       { label: "Modules", icon: LayoutGrid, href: "/settings/modules", requiredPermission: "settings:manage" },

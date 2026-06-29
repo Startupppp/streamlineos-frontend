@@ -8,7 +8,19 @@ import { randomUUID } from "crypto";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import axios, { AxiosError } from "axios";
 import { db } from "./db";
-import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions, subscriptions, userPermissions, rolePermissions, roles } from "./db/schema";
+import {
+  accounts,
+  sessions,
+  users,
+  verificationTokens,
+  organizationMembers,
+  organizations,
+  userSessions,
+  subscriptions,
+  userPermissions,
+  rolePermissions,
+  roles,
+} from "./db/schema";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { resolveEnabledModules, type Module } from "@/lib/billing/plan-modules";
 import { ROLE_DEFAULT_PERMISSIONS } from "@/lib/rbac/permissions";
@@ -41,7 +53,10 @@ function unwrapBackend<T>(body: unknown): T {
   return body as T;
 }
 
-async function getUserPermissions(userId: string, orgId: string): Promise<string[]> {
+async function getUserPermissions(
+  userId: string,
+  orgId: string,
+): Promise<string[]> {
   const userRow = await db.query.users.findFirst({
     where: eq(users.id, userId),
     columns: { role: true },
@@ -50,12 +65,19 @@ async function getUserPermissions(userId: string, orgId: string): Promise<string
 
   const [userPerms, rolePerms, customRole] = await Promise.all([
     db.query.userPermissions.findMany({
-      where: and(eq(userPermissions.userId, userId), eq(userPermissions.orgId, orgId), eq(userPermissions.granted, true)),
+      where: and(
+        eq(userPermissions.userId, userId),
+        eq(userPermissions.orgId, orgId),
+        eq(userPermissions.granted, true),
+      ),
       with: { permission: true },
     }),
     role
       ? db.query.rolePermissions.findMany({
-          where: and(eq(rolePermissions.role, role), eq(rolePermissions.orgId, orgId)),
+          where: and(
+            eq(rolePermissions.role, role),
+            eq(rolePermissions.orgId, orgId),
+          ),
           with: { permission: true },
         })
       : Promise.resolve([]),
@@ -68,8 +90,12 @@ async function getUserPermissions(userId: string, orgId: string): Promise<string
   ]);
 
   const permissionSet = new Set<string>();
-  for (const up of userPerms) { if (up.permission?.name) permissionSet.add(up.permission.name); }
-  for (const rp of rolePerms) { if (rp.permission?.name) permissionSet.add(rp.permission.name); }
+  for (const up of userPerms) {
+    if (up.permission?.name) permissionSet.add(up.permission.name);
+  }
+  for (const rp of rolePerms) {
+    if (rp.permission?.name) permissionSet.add(rp.permission.name);
+  }
   if (customRole?.permissions && Array.isArray(customRole.permissions)) {
     for (const p of customRole.permissions as string[]) permissionSet.add(p);
   }
@@ -119,6 +145,7 @@ const credentialsProvider = Credentials({
     password: { label: "Password", type: "password" },
     rememberMe: { label: "Remember me", type: "text" },
     magicToken: { label: "Magic token", type: "text" },
+    totpCode: { label: "MFA code", type: "text" },
   },
   async authorize(credentials) {
     if (credentials?.magicToken) {
@@ -128,13 +155,31 @@ const credentialsProvider = Credentials({
           { token: credentials.magicToken },
         );
         if (!raw) return null;
-        const data = unwrapBackend<{ userId: string; orgId: string; forceChangePassword: boolean }>(raw);
+        const data = unwrapBackend<{
+          userId: string;
+          orgId: string;
+          forceChangePassword: boolean;
+        }>(raw);
         const user = await db.query.users.findFirst({
           where: eq(users.id, data.userId),
-          columns: { id: true, email: true, name: true, image: true, role: true, isActive: true, hasDashboardAccess: true, firstName: true, lastName: true, isPasswordChangeRequired: true },
+          columns: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            role: true,
+            isActive: true,
+            hasDashboardAccess: true,
+            firstName: true,
+            lastName: true,
+            isPasswordChangeRequired: true,
+          },
         });
         if (!user) return null;
-        const fullName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name ?? user.email;
+        const fullName =
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : (user.name ?? user.email);
         return {
           id: user.id,
           email: user.email,
@@ -162,24 +207,52 @@ const credentialsProvider = Credentials({
         raw = response.data;
       } catch (loginErr: unknown) {
         if (loginErr instanceof AxiosError) {
-          const errData = loginErr.response?.data as Record<string, unknown> | undefined;
-          const msgStr = typeof errData?.message === "string" ? errData.message : "Invalid credentials";
-          if (msgStr.startsWith("ACCOUNT_LOCKED:") || msgStr === "SUBSCRIPTION_INACTIVE") throw new Error(msgStr);
+          const errData = loginErr.response?.data as
+            | Record<string, unknown>
+            | undefined;
+          const msgStr =
+            typeof errData?.message === "string"
+              ? errData.message
+              : "Invalid credentials";
+          if (
+            msgStr.startsWith("ACCOUNT_LOCKED:") ||
+            msgStr === "SUBSCRIPTION_INACTIVE"
+          )
+            throw new Error(msgStr);
         }
         return null;
       }
 
       if (!raw) return null;
-      const data = unwrapBackend<{ userId: string; orgId: string; forceChangePassword: boolean; daysUntilExpiry?: number }>(raw);
+      const data = unwrapBackend<{
+        userId: string;
+        orgId: string;
+        forceChangePassword: boolean;
+        daysUntilExpiry?: number;
+      }>(raw);
 
       const user = await db.query.users.findFirst({
         where: eq(users.id, data.userId),
-        columns: { id: true, email: true, name: true, image: true, role: true, isActive: true, hasDashboardAccess: true, firstName: true, lastName: true, isPasswordChangeRequired: true },
+        columns: {
+          id: true,
+          email: true,
+          name: true,
+          image: true,
+          role: true,
+          isActive: true,
+          hasDashboardAccess: true,
+          firstName: true,
+          lastName: true,
+          isPasswordChangeRequired: true,
+        },
       });
 
       if (!user) return null;
 
-      const fullName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name ?? user.email;
+      const fullName =
+        user.firstName && user.lastName
+          ? `${user.firstName} ${user.lastName}`
+          : (user.name ?? user.email);
 
       logger.info("Auth: successful login via backend", { userId: user.id });
       return {
@@ -195,7 +268,14 @@ const credentialsProvider = Credentials({
         rememberMe: credentials?.rememberMe === "true",
       };
     } catch (err) {
-      if (err instanceof Error && (err.message.startsWith("ACCOUNT_LOCKED:") || err.message === "SUBSCRIPTION_INACTIVE")) throw err;
+      if (
+        err instanceof Error &&
+        (err.message.startsWith("ACCOUNT_LOCKED:") ||
+          err.message === "SUBSCRIPTION_INACTIVE" ||
+          err.message === "REQUIRES_MFA" ||
+          err.message === "INVALID_MFA_CODE")
+      )
+        throw err;
       logger.error("Auth: backend login error", { error: err });
       return null;
     }
@@ -236,9 +316,10 @@ export const { handlers, auth } = NextAuth({
   }) as Adapter,
   trustHost: true,
   basePath: "/api/auth",
-  providers: oauthProviders.length > 0
-    ? [credentialsProvider, ...oauthProviders]
-    : [credentialsProvider],
+  providers:
+    oauthProviders.length > 0
+      ? [credentialsProvider, ...oauthProviders]
+      : [credentialsProvider],
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
@@ -249,19 +330,28 @@ export const { handlers, auth } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google" || account?.provider === "microsoft-entra-id") {
+      if (
+        account?.provider === "google" ||
+        account?.provider === "microsoft-entra-id"
+      ) {
         const userId = user.id;
         if (!userId) return true;
 
         const isGoogle = account.provider === "google";
-        const membership = await db.query.organizationMembers.findFirst({
-          where: eq(organizationMembers.userId, userId),
-          columns: { orgId: true },
-        }).catch(() => null);
+        const membership = await db.query.organizationMembers
+          .findFirst({
+            where: eq(organizationMembers.userId, userId),
+            columns: { orgId: true },
+          })
+          .catch(() => null);
 
         if (!membership) {
           const orgId = randomUUID();
-          const orgName = ((user.name ?? user.email?.split("@")[0] ?? "My Organization") as string).trim();
+          const orgName = (
+            (user.name ??
+              user.email?.split("@")[0] ??
+              "My Organization") as string
+          ).trim();
           const slug =
             orgName
               .toLowerCase()
@@ -272,18 +362,24 @@ export const { handlers, auth } = NextAuth({
             Date.now().toString(36);
           const trialEnd = new Date();
           trialEnd.setDate(trialEnd.getDate() + 14);
-          await db.transaction(async (tx) => {
-            await tx.insert(organizations).values({ id: orgId, name: orgName, slug });
-            await tx.insert(organizationMembers).values({ orgId, userId, role: "owner", isOwner: true });
-            await tx.insert(subscriptions).values({
-              orgId,
-              plan: "STARTER",
-              status: "TRIAL",
-              trialEndsAt: trialEnd,
-              currentPeriodStart: new Date(),
-              currentPeriodEnd: trialEnd,
-            });
-          }).catch(() => {});
+          await db
+            .transaction(async (tx) => {
+              await tx
+                .insert(organizations)
+                .values({ id: orgId, name: orgName, slug });
+              await tx
+                .insert(organizationMembers)
+                .values({ orgId, userId, role: "owner", isOwner: true });
+              await tx.insert(subscriptions).values({
+                orgId,
+                plan: "STARTER",
+                status: "TRIAL",
+                trialEndsAt: trialEnd,
+                currentPeriodStart: new Date(),
+                currentPeriodEnd: trialEnd,
+              });
+            })
+            .catch(() => {});
           createAuditLog({
             action: isGoogle ? "oauth.signup.google" : "oauth.signup.microsoft",
             userId,
@@ -312,15 +408,18 @@ export const { handlers, auth } = NextAuth({
         token.orgId = null;
         token.sessionId = randomUUID();
         token.rememberMe = user.rememberMe ?? false;
-        if (user.daysUntilExpiry !== undefined) token.daysUntilExpiry = user.daysUntilExpiry;
+        if (user.daysUntilExpiry !== undefined)
+          token.daysUntilExpiry = user.daysUntilExpiry;
 
         const deviceId = token.sessionId as string;
 
-        db.insert(userSessions).values({
-          id: token.sessionId,
-          userId: user.id as string,
-          deviceId,
-        }).catch(() => {});
+        db.insert(userSessions)
+          .values({
+            id: token.sessionId,
+            userId: user.id as string,
+            deviceId,
+          })
+          .catch(() => {});
 
         createAuditLog({
           action: "user.login",
@@ -371,24 +470,34 @@ export const { handlers, auth } = NextAuth({
             if (membership?.orgId) {
               const orgRow = await db.query.organizations.findFirst({
                 where: eq(organizations.id, membership.orgId),
-                columns: { mfaEnforced: true, enabledModules: true, onboardingCompletedAt: true },
+                columns: {
+                  mfaEnforced: true,
+                  enabledModules: true,
+                  onboardingCompletedAt: true,
+                },
               });
               mfaEnforcedValue = orgRow?.mfaEnforced ?? false;
               orgEnabledModulesOverride = orgRow?.enabledModules ?? null;
-              orgOnboardingCompletedAt = orgRow?.onboardingCompletedAt?.toISOString() ?? null;
+              orgOnboardingCompletedAt =
+                orgRow?.onboardingCompletedAt?.toISOString() ?? null;
             }
 
             let permissions: string[] = [];
             if (fresh && membership?.orgId) {
-              permissions = await getUserPermissions(userId, membership.orgId).catch(() => []);
+              permissions = await getUserPermissions(
+                userId,
+                membership.orgId,
+              ).catch(() => []);
             }
 
             let plan: Plan | null = null;
             if (membership?.orgId) {
-              const sub = await db.query.subscriptions.findFirst({
-                where: eq(subscriptions.orgId, membership.orgId),
-                columns: { plan: true, status: true },
-              }).catch(() => null);
+              const sub = await db.query.subscriptions
+                .findFirst({
+                  where: eq(subscriptions.orgId, membership.orgId),
+                  columns: { plan: true, status: true },
+                })
+                .catch(() => null);
               if (sub && (sub.status === "ACTIVE" || sub.status === "TRIAL")) {
                 plan = sub.plan as Plan;
               } else {
@@ -396,7 +505,10 @@ export const { handlers, auth } = NextAuth({
               }
             }
 
-            const enabledModules = resolveEnabledModules(plan, orgEnabledModulesOverride);
+            const enabledModules = resolveEnabledModules(
+              plan,
+              orgEnabledModulesOverride,
+            );
 
             const cacheValue: UserSessionCache | null = fresh
               ? {
@@ -416,7 +528,9 @@ export const { handlers, auth } = NextAuth({
                 }
               : null;
             if (cacheValue && redis) {
-              await redis.set(userSessionKey(userId), cacheValue, { ex: USER_SESSION_TTL });
+              await redis.set(userSessionKey(userId), cacheValue, {
+                ex: USER_SESSION_TTL,
+              });
             }
             dbUser = cacheValue;
           }
@@ -424,7 +538,8 @@ export const { handlers, auth } = NextAuth({
           if (dbUser) {
             token.isActive = dbUser.isActive ?? undefined;
             token.hasDashboardAccess = dbUser.hasDashboardAccess ?? true;
-            token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
+            token.forceChangePassword =
+              dbUser.isPasswordChangeRequired || false;
             token.role = dbUser.role || token.role;
             token.image = dbUser.image || null;
             token.orgId = dbUser.orgId ?? null;
@@ -435,9 +550,13 @@ export const { handlers, auth } = NextAuth({
             token.plan = dbUser.plan ?? null;
             token.isOrgOwner = dbUser.isOrgOwner ?? false;
             token.enabledModules = dbUser.enabledModules ?? [];
-            token.orgOnboardingCompletedAt = dbUser.orgOnboardingCompletedAt ?? null;
-            token.userOnboardingCompletedAt = dbUser.userOnboardingCompletedAt ?? null;
-            token.isPlatformAdmin = isPlatformAdminEmail(token.email as string | null | undefined);
+            token.orgOnboardingCompletedAt =
+              dbUser.orgOnboardingCompletedAt ?? null;
+            token.userOnboardingCompletedAt =
+              dbUser.userOnboardingCompletedAt ?? null;
+            token.isPlatformAdmin = isPlatformAdminEmail(
+              token.email as string | null | undefined,
+            );
             if (dbUser.firstName && dbUser.lastName) {
               token.name = `${dbUser.firstName} ${dbUser.lastName}`;
             } else if (dbUser.name) {
@@ -446,15 +565,15 @@ export const { handlers, auth } = NextAuth({
           }
 
           if (redis && token.sessionId) {
-            await redis.set(
-              `session:activity:${token.sessionId as string}`,
-              Date.now(),
-              { ex: 7200 }
-            ).catch(() => {});
+            await redis
+              .set(
+                `session:activity:${token.sessionId as string}`,
+                Date.now(),
+                { ex: 7200 },
+              )
+              .catch(() => {});
           }
-        } catch {
-
-        }
+        } catch {}
       }
 
       if (trigger === "update") {
@@ -488,7 +607,8 @@ export const { handlers, auth } = NextAuth({
       session.permissions = token.permissions ?? [];
       session.enabledModules = token.enabledModules ?? [];
       session.orgOnboardingCompletedAt = token.orgOnboardingCompletedAt ?? null;
-      if (token.daysUntilExpiry !== undefined) session.daysUntilExpiry = token.daysUntilExpiry;
+      if (token.daysUntilExpiry !== undefined)
+        session.daysUntilExpiry = token.daysUntilExpiry;
       if (session.user) {
         session.user.isPlatformAdmin = token.isPlatformAdmin ?? false;
         session.user.isOrgOwner = token.isOrgOwner ?? false;

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, ArrowRight, Lock, Mail } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowRight, Lock, Mail, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { validatePasswordStrength } from "@/lib/password-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -41,6 +41,10 @@ export default function SignInPage() {
   const [passwordValue, setPasswordValue] = useState("");
   const [showVerificationHint, setShowVerificationHint] = useState(false);
   const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaError, setMfaError] = useState<string | null>(null);
+  const pendingCredentials = useRef<{ email: string; password: string; rememberMe: boolean } | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(signinSchema),
@@ -81,56 +85,81 @@ export default function SignInPage() {
     return "/post-signin";
   };
 
+  const doSignIn = async (email: string, password: string, rememberMe: boolean, totpCode?: string) => {
+    if (!navigator.onLine) throw new Error("No internet connection. Check your network and try again.");
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        rememberMe: rememberMe ? "true" : "false",
+        ...(totpCode ? { totpCode } : {}),
+        callbackUrl: getCallbackUrl(),
+        redirect: false,
+      });
+      if (result?.error) {
+        if (result.error.startsWith("ACCOUNT_LOCKED:")) {
+          const secs = parseInt(result.error.split(":")[1] ?? "0", 10);
+          setLockedSeconds(isNaN(secs) ? null : secs);
+          throw new Error(`Account locked. Try again in ${formatLockoutTime(isNaN(secs) ? 900 : secs)}.`);
+        }
+        if (result.error === "SUBSCRIPTION_INACTIVE") throw new Error("SUBSCRIPTION_INACTIVE");
+        if (result.error === "REQUIRES_MFA") throw new Error("REQUIRES_MFA");
+        if (result.error === "INVALID_MFA_CODE") throw new Error("INVALID_MFA_CODE");
+        setShowVerificationHint(true);
+        throw new Error("Invalid email or password. If you just signed up, check your inbox to verify your email first.");
+      }
+      return result;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error("No internet connection. Check your network and try again.");
+      }
+      throw error;
+    }
+  };
+
   const signInMutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      if (!navigator.onLine) {
-        throw new Error(
-          "No internet connection. Check your network and try again.",
-        );
-      }
-      try {
-        const result = await signIn("credentials", {
-          email: data.email,
-          password: data.password,
-          rememberMe: data.rememberMe ? "true" : "false",
-          callbackUrl: getCallbackUrl(),
-          redirect: false,
-        });
-        if (result?.error) {
-          if (result.error.startsWith("ACCOUNT_LOCKED:")) {
-            const secs = parseInt(result.error.split(":")[1] ?? "0", 10);
-            setLockedSeconds(isNaN(secs) ? null : secs);
-            throw new Error(
-              `Account locked. Try again in ${formatLockoutTime(isNaN(secs) ? 900 : secs)}.`,
-            );
-          }
-          if (result.error === "SUBSCRIPTION_INACTIVE") {
-            throw new Error("SUBSCRIPTION_INACTIVE");
-          }
-          setShowVerificationHint(true);
-          throw new Error("Invalid email or password. If you just signed up, check your inbox to verify your email first.");
-        }
-        return result;
-      } catch (error) {
-        if (error instanceof TypeError && error.message.includes("fetch")) {
-          throw new Error(
-            "No internet connection. Check your network and try again.",
-          );
-        }
-        throw error;
-      }
+      return doSignIn(data.email, data.password, data.rememberMe ?? false);
     },
     onSuccess: (result) => {
       toast.success("Welcome back!");
       if (result?.ok) {
-        const target =
-          result.url && result.url.length > 0 ? result.url : getCallbackUrl();
+        const target = result.url && result.url.length > 0 ? result.url : getCallbackUrl();
         window.location.href = target;
       }
     },
     onError: (error) => {
       if (error instanceof Error && error.message === "SUBSCRIPTION_INACTIVE") {
         window.location.href = "/subscription-expired";
+        return;
+      }
+      if (error instanceof Error && error.message === "REQUIRES_MFA") {
+        const vals = form.getValues();
+        pendingCredentials.current = { email: vals.email, password: vals.password, rememberMe: vals.rememberMe ?? false };
+        setMfaRequired(true);
+        return;
+      }
+      toast.error(getErrorMessage(error));
+    },
+  });
+
+  const mfaMutation = useMutation({
+    mutationFn: async () => {
+      const creds = pendingCredentials.current;
+      if (!creds || !mfaCode) throw new Error("Missing credentials");
+      return doSignIn(creds.email, creds.password, creds.rememberMe, mfaCode);
+    },
+    onSuccess: (result) => {
+      toast.success("Welcome back!");
+      if (result?.ok) {
+        const target = result.url && result.url.length > 0 ? result.url : getCallbackUrl();
+        window.location.href = target;
+      }
+    },
+    onError: (error) => {
+      if (error instanceof Error && error.message === "INVALID_MFA_CODE") {
+        setMfaError("Invalid code. Check your authenticator app and try again.");
+        setMfaCode("");
         return;
       }
       toast.error(getErrorMessage(error));
@@ -192,6 +221,85 @@ export default function SignInPage() {
       toast.error("Failed to send magic link. Please try again.");
     },
   });
+
+  if (mfaRequired) {
+    return (
+      <div className="w-full max-w-sm animate-fade-up">
+        <div className="mb-5 sm:mb-8 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950">
+            <ShieldCheck className="h-6 w-6 text-blue-600" />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+            Two-factor authentication
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Enter the 6-digit code from your authenticator app
+          </p>
+        </div>
+
+        <div className="rounded-xl p-4 sm:p-6 space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="totp-code" className="text-[13px] font-medium">
+              Authentication code
+            </Label>
+            <Input
+              id="totp-code"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="one-time-code"
+              placeholder="000000"
+              maxLength={6}
+              value={mfaCode}
+              onChange={(e) => {
+                setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                setMfaError(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && mfaCode.length === 6) mfaMutation.mutate();
+              }}
+              disabled={mfaMutation.isPending}
+              className={cn(
+                "h-9 text-sm text-center tracking-[0.4em] font-mono",
+                mfaError && "border-destructive focus-visible:ring-destructive/30",
+              )}
+              autoFocus
+            />
+            {mfaError && (
+              <p role="alert" className="text-[12px] text-destructive">{mfaError}</p>
+            )}
+          </div>
+
+          <Button
+            type="button"
+            disabled={mfaMutation.isPending || mfaCode.length !== 6}
+            className="w-full h-9 text-sm font-medium gap-2"
+            onClick={() => mfaMutation.mutate()}
+          >
+            {mfaMutation.isPending ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Verifying…
+              </>
+            ) : (
+              <>
+                Verify and sign in
+                <ArrowRight className="h-3.5 w-3.5" />
+              </>
+            )}
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => { setMfaRequired(false); setMfaCode(""); setMfaError(null); pendingCredentials.current = null; }}
+            className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-sm animate-fade-up">
