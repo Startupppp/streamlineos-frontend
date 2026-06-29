@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import type { InterviewerAvailability } from "@/hooks/api/hr/recruitment";
-import { cn } from "@/lib/utils";
 
 const WORK_START = 9;
 const WORK_END = 19;

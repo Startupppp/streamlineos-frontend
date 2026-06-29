@@ -26,14 +26,14 @@ interface SuccessStepProps {
 }
 
 export function SuccessStep({ summary, onEnter }: SuccessStepProps) {
-  const completeOnboarding = useCompleteOnboarding();
+  const { mutate: mutateCompleteOnboarding } = useCompleteOnboarding();
   const hasFiredRef = useRef(false);
 
   useEffect(() => {
     if (hasFiredRef.current) return;
     hasFiredRef.current = true;
-    completeOnboarding.mutate();
-  }, [completeOnboarding.mutate]);
+    mutateCompleteOnboarding();
+  }, [mutateCompleteOnboarding]);
 
   return (
     <motion.div

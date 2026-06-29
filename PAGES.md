@@ -6,6 +6,11 @@ Ordered money-path first. Check off each page after fixing.
 
 ---
 
+## Global Navigation (Platform Shell)
+- [x] `layout` — Implemented PRD navigation: TopHeader (workspace/search/AI/calendar/chat/notifications/profile), ProductSwitcher (11-product animated tab rail with @phosphor-icons/react fill/regular weight transitions + framer-motion spring indicator), context-aware sidebar (shows only current product's nav groups derived from pathname), MobileBottomNav (Home/Search/Create/Alerts/Me fixed bottom); deleted orphaned NotificationBell and SidebarUserMenu; merged Sales+CustomerSuccess→CRM, KB→Helpdesk, People+Org→Administration per PRD
+
+---
+
 ## Dashboard
 - [x] `/dashboard` — Removed type cast, duplicate import, dead widget exports, useEffect data fetch; added TanStack Query hook for public docs; named all event handlers; fixed empty states, grid orphan, loading skeleton alignment, quick-actions deduplication, comments removed
 

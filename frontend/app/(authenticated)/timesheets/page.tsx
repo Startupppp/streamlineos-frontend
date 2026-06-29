@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useCallback, useTransition } from "react";
-import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";

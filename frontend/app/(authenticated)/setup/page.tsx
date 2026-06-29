@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Building2 } from "lucide-react";
@@ -16,8 +16,13 @@ import { RecommendationsStep } from "@/features/workspace-onboarding/steps/recom
 import { InviteStep } from "@/features/workspace-onboarding/steps/invite-step";
 import { SuccessStep } from "@/features/workspace-onboarding/steps/success-step";
 import type { CompanyProfileData } from "@/features/workspace-onboarding/types";
-
-const TOTAL_STEPS = 8;
+import {
+  WIZARD_DEFAULTS,
+  loadWizardState,
+  saveWizardState,
+  clearWizardState,
+  type WizardState,
+} from "@/features/workspace-onboarding/wizard-storage";
 
 const STEP_LABELS = [
   "Welcome",
@@ -31,143 +36,100 @@ const STEP_LABELS = [
 ];
 
 const stepVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 40 : -40,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction: number) => ({
-    x: direction > 0 ? -40 : 40,
-    opacity: 0,
-  }),
+  enter: (direction: number) => ({ x: direction > 0 ? 40 : -40, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (direction: number) => ({ x: direction > 0 ? -40 : 40, opacity: 0 }),
 };
 
 export default function SetupPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [goals, setGoals] = useState<string[]>([]);
-  const [industry, setIndustry] = useState("");
-  const [orgName, setOrgName] = useState("");
-  const [installedModules, setInstalledModules] = useState<string[]>([]);
-  const [teamMembersInvited, setTeamMembersInvited] = useState(0);
+  const [wizardState, setWizardState] = useState<WizardState>(WIZARD_DEFAULTS);
 
-  const { data: orgSettings, isLoading: isLoadingSettings } = useOrgSettings({
-    retry: false,
-  });
+  const { data: orgSettings, isLoading } = useOrgSettings({ retry: false });
 
   useEffect(() => {
     if (!orgSettings) return;
     if (orgSettings.onboardingCompletedAt) {
+      clearWizardState();
       router.replace("/dashboard");
       return;
     }
-    if (orgSettings.name) {
-      setOrgName(orgSettings.name);
+    const stored = loadWizardState();
+    const patched: WizardState = { ...stored };
+    if (orgSettings.name && !stored.orgName) patched.orgName = orgSettings.name;
+    if (orgSettings.industry && !stored.industry) {
+      patched.industry = orgSettings.industry;
+      if (stored.currentStep < 4) patched.currentStep = 4;
     }
-    if (orgSettings.industry) {
-      setIndustry(orgSettings.industry);
-      setDirection(1);
-      setCurrentStep(4);
-    }
+    saveWizardState(patched);
+    startTransition(() => setWizardState(patched));
   }, [orgSettings, router]);
 
-  const goToStep = useCallback((step: number, dir: number) => {
-    setDirection(dir);
-    setCurrentStep(step);
+  const update = useCallback((patch: Partial<WizardState>) => {
+    setWizardState((prev) => {
+      const next = { ...prev, ...patch };
+      saveWizardState(next);
+      return next;
+    });
   }, []);
 
-  const handleWelcomeStart = useCallback(() => {
-    goToStep(1, 1);
-  }, [goToStep]);
+  const goToStep = useCallback(
+    (step: number, dir: number) => {
+      setDirection(dir);
+      update({ currentStep: step });
+    },
+    [update],
+  );
 
-  const handleWelcomeSkip = useCallback(() => {
-    router.push("/dashboard");
-  }, [router]);
+  const handleWelcomeStart = useCallback(() => goToStep(1, 1), [goToStep]);
+  const handleWelcomeSkip = useCallback(() => router.push("/dashboard"), [router]);
 
   const handleGoalsNext = useCallback(
-    (selectedGoals: string[]) => {
-      setGoals(selectedGoals);
-      goToStep(2, 1);
-    },
-    [goToStep],
+    (goals: string[]) => { update({ goals }); goToStep(2, 1); },
+    [update, goToStep],
   );
-
-  const handleGoalsBack = useCallback(() => {
-    goToStep(0, -1);
-  }, [goToStep]);
+  const handleGoalsBack = useCallback(() => goToStep(0, -1), [goToStep]);
 
   const handleIndustryNext = useCallback(
-    (selectedIndustry: string) => {
-      setIndustry(selectedIndustry);
-      goToStep(3, 1);
-    },
-    [goToStep],
+    (industry: string) => { update({ industry }); goToStep(3, 1); },
+    [update, goToStep],
   );
-
-  const handleIndustryBack = useCallback(() => {
-    goToStep(1, -1);
-  }, [goToStep]);
+  const handleIndustryBack = useCallback(() => goToStep(1, -1), [goToStep]);
 
   const handleCompanyProfileNext = useCallback(
-    (data: CompanyProfileData) => {
-      setOrgName(data.name);
-      goToStep(4, 1);
-    },
-    [goToStep],
+    (data: CompanyProfileData) => { update({ orgName: data.name }); goToStep(4, 1); },
+    [update, goToStep],
   );
+  const handleCompanyProfileBack = useCallback(() => goToStep(2, -1), [goToStep]);
 
-  const handleCompanyProfileBack = useCallback(() => {
-    goToStep(2, -1);
-  }, [goToStep]);
-
-  const handleGenerationComplete = useCallback(() => {
-    goToStep(5, 1);
-  }, [goToStep]);
+  const handleGenerationComplete = useCallback(() => goToStep(5, 1), [goToStep]);
 
   const handleRecommendationsNext = useCallback(
-    (installed: string[]) => {
-      setInstalledModules(installed);
-      goToStep(6, 1);
-    },
-    [goToStep],
+    (installedModules: string[]) => { update({ installedModules }); goToStep(6, 1); },
+    [update, goToStep],
   );
-
-  const handleRecommendationsBack = useCallback(() => {
-    goToStep(4, -1);
-  }, [goToStep]);
+  const handleRecommendationsBack = useCallback(() => goToStep(4, -1), [goToStep]);
 
   const handleInviteNext = useCallback(
-    (sent: number) => {
-      setTeamMembersInvited(sent);
-      goToStep(7, 1);
-    },
-    [goToStep],
+    (teamMembersInvited: number) => { update({ teamMembersInvited }); goToStep(7, 1); },
+    [update, goToStep],
   );
-
-  const handleInviteSkip = useCallback(() => {
-    goToStep(7, 1);
-  }, [goToStep]);
-
-  const handleInviteBack = useCallback(() => {
-    goToStep(5, -1);
-  }, [goToStep]);
+  const handleInviteSkip = useCallback(() => goToStep(7, 1), [goToStep]);
+  const handleInviteBack = useCallback(() => goToStep(5, -1), [goToStep]);
 
   const handleEnterWorkspace = useCallback(() => {
+    clearWizardState();
     router.push("/dashboard");
   }, [router]);
 
-  const handleSaveAndExit = useCallback(() => {
-    router.push("/dashboard");
-  }, [router]);
+  const handleSaveAndExit = useCallback(() => router.push("/dashboard"), [router]);
 
-  const progressPercent = (currentStep / (TOTAL_STEPS - 1)) * 100;
-  const showTopBar = currentStep > 0 && currentStep < TOTAL_STEPS - 1;
+  const { currentStep, goals, industry, orgName, installedModules, teamMembersInvited } = wizardState;
+  const progressPercent = (currentStep / (STEP_LABELS.length - 1)) * 100;
+  const showTopBar = currentStep > 0 && currentStep < STEP_LABELS.length - 1;
 
-  if (isLoadingSettings) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -215,31 +177,16 @@ export default function SetupPage() {
                 <WelcomeStep onStart={handleWelcomeStart} onSkip={handleWelcomeSkip} />
               )}
               {currentStep === 1 && (
-                <GoalsStep
-                  onNext={handleGoalsNext}
-                  onBack={handleGoalsBack}
-                  defaultGoals={goals}
-                />
+                <GoalsStep onNext={handleGoalsNext} onBack={handleGoalsBack} defaultGoals={goals} />
               )}
               {currentStep === 2 && (
-                <IndustryStep
-                  onNext={handleIndustryNext}
-                  onBack={handleIndustryBack}
-                  defaultIndustry={industry}
-                />
+                <IndustryStep onNext={handleIndustryNext} onBack={handleIndustryBack} defaultIndustry={industry} />
               )}
               {currentStep === 3 && (
-                <CompanyProfileStep
-                  onNext={handleCompanyProfileNext}
-                  onBack={handleCompanyProfileBack}
-                />
+                <CompanyProfileStep onNext={handleCompanyProfileNext} onBack={handleCompanyProfileBack} />
               )}
               {currentStep === 4 && (
-                <GenerationStep
-                  orgName={orgName}
-                  industry={industry}
-                  onComplete={handleGenerationComplete}
-                />
+                <GenerationStep orgName={orgName} industry={industry} onComplete={handleGenerationComplete} />
               )}
               {currentStep === 5 && (
                 <RecommendationsStep
@@ -250,20 +197,11 @@ export default function SetupPage() {
                 />
               )}
               {currentStep === 6 && (
-                <InviteStep
-                  onNext={handleInviteNext}
-                  onSkip={handleInviteSkip}
-                  onBack={handleInviteBack}
-                />
+                <InviteStep onNext={handleInviteNext} onSkip={handleInviteSkip} onBack={handleInviteBack} />
               )}
               {currentStep === 7 && (
                 <SuccessStep
-                  summary={{
-                    industry,
-                    modulesInstalled: installedModules,
-                    teamMembersInvited,
-                    workspaceCreated: true,
-                  }}
+                  summary={{ industry, modulesInstalled: installedModules, teamMembersInvited, workspaceCreated: true }}
                   onEnter={handleEnterWorkspace}
                 />
               )}

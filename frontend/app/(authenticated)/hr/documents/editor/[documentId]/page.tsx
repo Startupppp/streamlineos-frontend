@@ -2,7 +2,7 @@
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useRichDocument, useUpdateRichDocument, usePublishRichDocument } from "@/hooks/api/hr";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { PageWrapper } from "@/components/ui/page-wrapper";

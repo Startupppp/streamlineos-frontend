@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useUserLoginHistory } from "@/hooks/api/users";
-import { History, ChevronLeft, ChevronRight, CheckCircle, XCircle, Monitor } from "lucide-react";
+import { History, ChevronLeft, ChevronRight, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 
 interface UserLoginHistoryTabProps {

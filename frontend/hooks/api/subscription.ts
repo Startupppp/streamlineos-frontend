@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 
 export type SubscriptionPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
@@ -161,5 +162,57 @@ export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
     enabled: code.trim().length >= 3 && plan !== null,
     staleTime: 30_000,
     retry: false,
+  });
+}
+
+export interface BillingProfile {
+  id: number;
+  orgId: number;
+  gstin: string | null;
+  pan: string | null;
+  billingName: string | null;
+  billingEmail: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  state: string | null;
+  pincode: string | null;
+  country: string;
+  isTaxExempt: boolean;
+}
+
+export interface SeatInfo {
+  total: number;
+  used: number;
+  available: number;
+}
+
+export function useBillingProfile() {
+  return useQuery<BillingProfile>({
+    queryKey: ["billing", "profile"],
+    queryFn: () => apiClient.get<BillingProfile>("/billing/profile"),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpdateBillingProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<BillingProfile>) =>
+      apiClient.patch<BillingProfile>("/billing/profile", data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["billing", "profile"] });
+      toast.success("Billing profile updated");
+    },
+    onError: (e: Error) =>
+      toast.error(e.message ?? "Failed to update profile"),
+  });
+}
+
+export function useSeatInfo() {
+  return useQuery<SeatInfo>({
+    queryKey: ["billing", "seats"],
+    queryFn: () => apiClient.get<SeatInfo>("/billing/seats"),
+    staleTime: 2 * 60 * 1000,
   });
 }

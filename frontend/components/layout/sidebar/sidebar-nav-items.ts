@@ -78,6 +78,8 @@ import {
   Truck,
   Library,
   LayoutGrid,
+  Store,
+  Users2,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -842,7 +844,42 @@ export const NAV_GROUPS: NavGroup[] = [
             href: "/billing/recurring",
             requiredPermission: "settings:manage",
           },
+          {
+            label: "AI Credits",
+            icon: Zap,
+            href: "/billing/ai-credits",
+            requiredPermission: "billing:ai-credits:view",
+          },
+          {
+            label: "Checkout",
+            icon: CreditCard,
+            href: "/billing/checkout",
+          },
+          {
+            label: "Affiliate",
+            icon: Users2,
+            href: "/billing/affiliate",
+            requiredPermission: "billing:affiliate:manage",
+          },
+          {
+            label: "Analytics",
+            icon: BarChart2,
+            href: "/billing/analytics",
+            requiredPermission: "billing:analytics:view",
+          },
         ],
+      },
+    ],
+  },
+  {
+    label: "Marketplace",
+    requiredPermission: "billing:marketplace:view",
+    routes: [
+      {
+        label: "Marketplace",
+        icon: Store,
+        href: "/marketplace",
+        requiredPermission: "billing:marketplace:view",
       },
     ],
   },
@@ -1434,4 +1471,96 @@ export function flattenNavRoutes(routes: NavRoute[]): NavRoute[] {
     }
   }
   return out;
+}
+
+export type ProductKey =
+  | 'home'
+  | 'crm'
+  | 'hrms'
+  | 'projects'
+  | 'inventory'
+  | 'finance'
+  | 'helpdesk'
+  | 'documents'
+  | 'analytics'
+  | 'ai'
+  | 'administration'
+
+export interface ProductDefinition {
+  key: ProductKey
+  label: string
+  href: string
+}
+
+export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
+  { key: 'home', label: 'Home', href: '/dashboard' },
+  { key: 'crm', label: 'CRM', href: '/crm' },
+  { key: 'hrms', label: 'HRMS', href: '/hr' },
+  { key: 'projects', label: 'Projects', href: '/projects' },
+  { key: 'inventory', label: 'Inventory', href: '/inventory' },
+  { key: 'finance', label: 'Finance', href: '/accounting' },
+  { key: 'helpdesk', label: 'Helpdesk', href: '/support' },
+  { key: 'documents', label: 'Documents', href: '/knowledge-base' },
+  { key: 'analytics', label: 'Analytics', href: '/reports' },
+  { key: 'ai', label: 'AI', href: '/ai' },
+  { key: 'administration', label: 'Admin', href: '/organization' },
+]
+
+const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
+  home: [],
+  crm: ['CRM', 'Sales', 'Customer Success'],
+  hrms: ['HR – People', 'HR – Growth', 'HR – Compensation', 'Recruitment'],
+  projects: ['Projects & Time'],
+  inventory: ['Inventory'],
+  finance: ['Accounting', 'Billing'],
+  helpdesk: ['Support', 'Knowledge Base'],
+  documents: ['Knowledge Base'],
+  analytics: [],
+  ai: [],
+  administration: ['People', 'Organization', 'System'],
+}
+
+export function getNavGroupsForProduct(
+  productKey: ProductKey,
+  role: string | undefined,
+  permissions: string[] | undefined,
+): NavGroup[] {
+  const allGroups = getNavGroupsForUser(role, permissions)
+  if (productKey === 'home' || productKey === 'analytics') return []
+  if (productKey === 'ai') {
+    const coreGroup = allGroups.find((g) => g.label === 'Core')
+    if (!coreGroup) return []
+    return [{ ...coreGroup, label: 'AI', routes: coreGroup.routes.filter((r) => r.href === '/ai') }]
+  }
+  const labels = PRODUCT_NAV_GROUP_LABELS[productKey]
+  return allGroups.filter((g) => labels.includes(g.label))
+}
+
+export function getProductFromPathname(pathname: string): ProductKey {
+  if (pathname === '/dashboard' || pathname === '/') return 'home'
+  if (
+    pathname.startsWith('/crm') ||
+    pathname.startsWith('/sales') ||
+    pathname.startsWith('/customer-executive')
+  )
+    return 'crm'
+  if (pathname.startsWith('/hr') || pathname.startsWith('/recruitment')) return 'hrms'
+  if (
+    pathname.startsWith('/projects') ||
+    pathname.startsWith('/goals') ||
+    pathname.startsWith('/timesheets')
+  )
+    return 'projects'
+  if (pathname.startsWith('/inventory')) return 'inventory'
+  if (pathname.startsWith('/accounting') || pathname.startsWith('/billing')) return 'finance'
+  if (pathname.startsWith('/support') || pathname.startsWith('/knowledge-base')) return 'helpdesk'
+  if (pathname.startsWith('/ai')) return 'ai'
+  if (
+    pathname.startsWith('/organization') ||
+    pathname.startsWith('/users') ||
+    pathname.startsWith('/settings') ||
+    pathname.startsWith('/reports')
+  )
+    return 'administration'
+  return 'home'
 }

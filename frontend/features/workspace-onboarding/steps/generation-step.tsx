@@ -28,6 +28,7 @@ export function GenerationStep({ orgName, industry, onComplete }: GenerationStep
   const hasCompletedRef = useRef(false);
 
   const generateWorkspace = useGenerateWorkspace();
+  const { mutate: mutateGenerateWorkspace, isSuccess: isGenerateSuccess, isError: isGenerateError, error: generateError, reset: resetGenerate } = generateWorkspace;
 
   useEffect(() => {
     if (hasFiredRef.current) return;
@@ -45,27 +46,27 @@ export function GenerationStep({ orgName, industry, onComplete }: GenerationStep
 
     timers.push(
       setTimeout(() => {
-        generateWorkspace.mutate({ industry });
+        mutateGenerateWorkspace({ industry });
       }, TASKS.length * 300 + 500),
     );
 
     return () => timers.forEach(clearTimeout);
-  }, [industry, generateWorkspace.mutate]);
+  }, [industry, mutateGenerateWorkspace]);
 
   useEffect(() => {
-    if (generateWorkspace.isSuccess && !hasCompletedRef.current) {
+    if (isGenerateSuccess && !hasCompletedRef.current) {
       hasCompletedRef.current = true;
-      setIsWorkspaceReady(true);
-      const timer = setTimeout(() => {
+      const readyTimer = setTimeout(() => setIsWorkspaceReady(true), 0);
+      const doneTimer = setTimeout(() => {
         onComplete();
       }, 1500);
-      return () => clearTimeout(timer);
+      return () => { clearTimeout(readyTimer); clearTimeout(doneTimer); };
     }
-  }, [generateWorkspace.isSuccess, onComplete]);
+  }, [isGenerateSuccess, onComplete]);
 
   function handleRetry() {
-    generateWorkspace.reset();
-    generateWorkspace.mutate({ industry });
+    resetGenerate();
+    mutateGenerateWorkspace({ industry });
   }
 
   return (
@@ -83,7 +84,7 @@ export function GenerationStep({ orgName, industry, onComplete }: GenerationStep
       <div className="w-full max-w-sm space-y-3">
         {TASKS.map((task, i) => {
           const isVisible = visibleTasks.includes(i);
-          const isDone = isVisible && !generateWorkspace.isError;
+          const isDone = isVisible && !isGenerateError;
           return (
             <AnimatePresence key={task}>
               {isVisible && (
@@ -140,7 +141,7 @@ export function GenerationStep({ orgName, industry, onComplete }: GenerationStep
           </motion.div>
         )}
 
-        {generateWorkspace.isError && (
+        {isGenerateError && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -152,7 +153,7 @@ export function GenerationStep({ orgName, industry, onComplete }: GenerationStep
             <div>
               <p className="font-medium text-destructive">Setup encountered an error</p>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {generateWorkspace.error.message}
+                {generateError?.message}
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={handleRetry}>

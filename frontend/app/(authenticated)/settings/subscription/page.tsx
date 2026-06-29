@@ -39,7 +39,7 @@ interface RazorpayOptions {
   currency: string;
   name: string;
   description: string;
-  prefill: { email?: string };
+  prefill?: { email?: string };
   handler: (response: RazorpayPaymentResponse) => void;
   modal?: { ondismiss?: () => void };
 }

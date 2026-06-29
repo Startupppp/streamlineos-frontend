@@ -229,8 +229,6 @@ export interface UpcomingEventItem {
   status: "planning" | "confirmed" | "completed";
 }
 
-import type { SalesFunnelItem } from "./deals";
-
 
 export interface SupportDashboardStats {
   openTickets: StatWithTrend;
