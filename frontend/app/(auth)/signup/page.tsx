@@ -19,7 +19,7 @@ import { useMutation } from "@tanstack/react-query";
 export const dynamic = "force-dynamic";
 
 const signupSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
+  name: z.string().min(1, "Name is required"),
   companyName: z.string().min(1, "Company name is required"),
   email: z.string().email("Please enter a valid email"),
   password: z
@@ -35,6 +35,18 @@ const signupSchema = z.object({
 });
 
 type FormValues = z.infer<typeof signupSchema>;
+
+function splitFullName(name: string): { firstName: string; lastName: string } {
+  const trimmed = name.trim();
+  const spaceIndex = trimmed.indexOf(" ");
+  if (spaceIndex === -1) {
+    return { firstName: trimmed, lastName: "" };
+  }
+  return {
+    firstName: trimmed.slice(0, spaceIndex),
+    lastName: trimmed.slice(spaceIndex + 1).trim(),
+  };
+}
 
 const hasGoogleProvider = !!process.env.NEXT_PUBLIC_GOOGLE_ENABLED;
 
@@ -56,7 +68,7 @@ export default function SignupPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      firstName: "",
+      name: "",
       companyName: "",
       email: "",
       password: "",
@@ -67,7 +79,15 @@ export default function SignupPage() {
   const handleSubmit = useCallback(async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      await apiClient.post("/auth/register", { ...data, lastName: "", plan: "STARTER" });
+      const { firstName, lastName } = splitFullName(data.name);
+      await apiClient.post("/auth/register", {
+        firstName,
+        lastName,
+        companyName: data.companyName,
+        email: data.email,
+        password: data.password,
+        plan: "STARTER",
+      });
       toast.success("Account created! Signing you in…");
 
       const result = await signIn("credentials", {
@@ -185,21 +205,22 @@ export default function SignupPage() {
 
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3" noValidate>
           <div className="space-y-1.5">
-            <Label htmlFor="firstName" className="text-[13px] font-medium">
-              First name
+            <Label htmlFor="name" className="text-[13px] font-medium">
+              Name
             </Label>
             <Input
-              id="firstName"
-              {...form.register("firstName")}
-              placeholder="Aditya"
+              id="name"
+              autoComplete="name"
+              {...form.register("name")}
+              placeholder="Aditya Sharma"
               disabled={isSubmitting}
               className={cn(
                 "h-9 text-sm",
-                form.formState.errors.firstName && "border-destructive focus-visible:ring-destructive/30",
+                form.formState.errors.name && "border-destructive focus-visible:ring-destructive/30",
               )}
             />
-            {form.formState.errors.firstName && (
-              <p className="text-[12px] text-destructive">{form.formState.errors.firstName.message}</p>
+            {form.formState.errors.name && (
+              <p className="text-[12px] text-destructive">{form.formState.errors.name.message}</p>
             )}
           </div>
 
