@@ -56,6 +56,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Locations", icon: Map, href: "/organization/locations", requiredPermission: "settings:view" },
       { label: "Cost Centers", icon: Coins, href: "/organization/cost-centers", requiredPermission: "settings:view" },
       { label: "Org Tree", icon: Network, href: "/organization/tree", requiredPermission: "settings:view" },
+      { label: "Audit Log", icon: FileSearch, href: "/organization/audit", requiredPermission: "settings:manage" },
     ],
   },
   {
