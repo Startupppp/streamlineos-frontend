@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useAbly } from "ably/react";
-import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { queryKeys } from "@/lib/query-keys";
@@ -18,7 +17,7 @@ export function useHuddleRealtime(channelId: number | null) {
 
     const channel = ably.channels.get(`huddle:${orgId}:${channelId}`);
 
-    const handler = (_msg: InboundMessage) => {
+    const handler = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(channelId) });
     };
 

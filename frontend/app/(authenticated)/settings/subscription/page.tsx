@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Check, CreditCard, Loader2, Zap, Calendar, Tag, X } from "lucide-react";
@@ -302,6 +302,8 @@ export default function SubscriptionPage() {
     [data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon],
   );
 
+  const now = useMemo(() => Date.now(), []);
+
   const currentPlan = data?.subscription?.plan ?? null;
   const currentStatus = data?.subscription?.status ?? null;
   const statusInfo = currentStatus ? STATUS_BADGE[currentStatus] : null;
@@ -309,7 +311,7 @@ export default function SubscriptionPage() {
 
   const trialEndsAt = data?.subscription?.trialEndsAt;
   const trialDaysRemaining = trialEndsAt
-    ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86_400_000))
+    ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - now) / 86_400_000))
     : null;
 
   if (isLoading) {

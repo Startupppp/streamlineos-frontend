@@ -33,7 +33,7 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
     const content = newComment.trim();
     if (!content) return;
     addComment.mutate({ ticketId, projectId, content });
-  }, [newComment, ticketId, addComment]);
+  }, [newComment, ticketId, projectId, addComment]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

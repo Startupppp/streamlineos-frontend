@@ -145,7 +145,6 @@ export function MessageList({
   isFetchingNextPage,
   fetchNextPage,
   currentUserId,
-  channelId,
   displayName,
   channelType,
   editingMessage,

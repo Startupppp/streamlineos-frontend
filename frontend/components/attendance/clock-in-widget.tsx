@@ -38,6 +38,7 @@ export function ClockInWidget() {
   });
   useEffect(() => {
     if (statusData?.cooldownRemaining && statusData.cooldownRemaining > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalCooldown(statusData.cooldownRemaining);
     }
   }, [statusData?.cooldownRemaining]);

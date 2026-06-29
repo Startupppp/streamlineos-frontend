@@ -193,7 +193,7 @@ export function VideoMeetingPanel({
       } else {
         await video.requestPictureInPicture();
       }
-    } catch (_err) {}
+    } catch {}
   }, []);
 
   const handleFullscreen = useCallback(async () => {
@@ -205,7 +205,7 @@ export function VideoMeetingPanel({
       } else {
         await el.requestFullscreen();
       }
-    } catch (_err) {}
+    } catch {}
   }, []);
 
   const handleScreenShareFullscreen = useCallback(async () => {
@@ -217,7 +217,7 @@ export function VideoMeetingPanel({
       } else {
         await video.requestFullscreen();
       }
-    } catch (_err) {}
+    } catch {}
   }, []);
 
   useEffect(() => {

@@ -211,7 +211,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     } finally {
       setIsImporting(false);
     }
-  }, [file, categoryMapping, autoApprove, onSuccess, importMutation]);
+  }, [file, autoApprove, onSuccess, importMutation]);
 
   const validCount = parsedRows.filter((r) => r.valid).length;
 

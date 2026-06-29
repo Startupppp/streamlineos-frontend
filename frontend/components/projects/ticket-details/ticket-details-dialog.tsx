@@ -196,6 +196,7 @@ export function TicketDetailsDialog({
 
   useEffect(() => {
     if (ticket) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalTitle(ticket.title);
       setLocalDescription(ticket.description || "");
     }

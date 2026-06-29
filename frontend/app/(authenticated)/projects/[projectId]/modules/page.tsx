@@ -120,7 +120,7 @@ export default function ModulesPage({
   const { field: leadIdField } = useController({ control: form.control, name: "leadId" });
   const handleLeadChange = useCallback(
     (v: string) => leadIdField.onChange(v || undefined),
-    [leadIdField.onChange]
+    [leadIdField.onChange, leadIdField]
   );
 
   const onSubmit = (data: CreateModuleForm) => {

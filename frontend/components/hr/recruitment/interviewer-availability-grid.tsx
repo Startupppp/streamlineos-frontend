@@ -2,12 +2,9 @@
 
 import { useMemo } from "react";
 import type { InterviewerAvailability } from "@/hooks/api/hr/recruitment";
-import { cn } from "@/lib/utils";
-
 const WORK_START = 9;
 const WORK_END = 19;
 const TOTAL_HOURS = WORK_END - WORK_START;
-const SLOT_WIDTH_PX = 36;
 
 interface InterviewerAvailabilityGridProps {
   availability: InterviewerAvailability[];

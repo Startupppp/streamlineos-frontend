@@ -1,6 +1,5 @@
 "use client";
 
-import type { ElementType } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { UserPlus, TrendingUp, Link2, FileText } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";

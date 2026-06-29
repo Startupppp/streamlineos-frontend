@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, Link2, ExternalLink, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-
 interface WorkLogEntryRowProps {
   date: Date;
   initialContent: string;

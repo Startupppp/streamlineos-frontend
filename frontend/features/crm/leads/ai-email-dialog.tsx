@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { useGenerateEmail } from "@/hooks/api/ai";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
@@ -90,6 +89,8 @@ export function AIEmailDialog({
     potentialValue,
     tone,
     context,
+    featureEnabled,
+    requiredPlan,
   ]);
 
   const handleCopy = useCallback(

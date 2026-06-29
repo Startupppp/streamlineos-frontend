@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ export function CoverImageUpload({ value, onChange }: CoverImageUploadProps) {
       {preview ? (
         <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg border border-border bg-muted">
 
-          <img src={preview} alt="Cover preview" className="size-full object-cover" />
+          <Image src={preview} alt="Cover preview" fill className="object-cover" />
           <button
             type="button"
             onClick={() => onChange("")}

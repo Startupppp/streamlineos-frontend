@@ -2,7 +2,7 @@
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useRichDocument, useUpdateRichDocument, usePublishRichDocument } from "@/hooks/api/hr";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -16,7 +16,6 @@ import Link from "next/link";
 
 export default function DocumentEditorPage() {
   const params = useParams<{ documentId: string }>();
-  const router = useRouter();
   const documentId = Number(params.documentId);
 
   const { data: doc, isLoading } = useRichDocument(documentId);
@@ -30,6 +29,7 @@ export default function DocumentEditorPage() {
 
   useEffect(() => {
     if (doc) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle(doc.title);
       setContentJson(doc.contentJson);
     }

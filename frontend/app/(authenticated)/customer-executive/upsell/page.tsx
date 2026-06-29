@@ -29,7 +29,7 @@ import {
 
 export default function UpsellTrackerPage() {
   const { data: opps = [], isLoading } = useClientOpportunities();
-  const { mutate: updateOpp, isPending: isUpdating } =
+  const { mutate: updateOpp } =
     useUpdateClientOpportunity();
   const { mutate: deleteOpp, isPending: isDeleting } =
     useDeleteClientOpportunity();

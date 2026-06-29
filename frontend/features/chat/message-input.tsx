@@ -26,8 +26,6 @@ import {
 } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { EmojiGrid } from "./emoji-grid";
-import type { UseMutationResult } from "@tanstack/react-query";
-
 type PendingAttachment = {
   fileName: string;
   fileUrl: string;
@@ -154,7 +152,6 @@ interface MessageInputProps {
 }
 
 export function MessageInput({
-  channelId,
   displayName,
   channelType,
   messageInput,
@@ -173,9 +170,7 @@ export function MessageInput({
   insertEmoji,
   showMentions,
   setShowMentions,
-  mentionQuery,
   mentionIndex,
-  setMentionIndex,
   filteredMentions,
   insertMention,
   typingText,

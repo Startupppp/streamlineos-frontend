@@ -207,7 +207,7 @@ export function useCreateCustomField() {
 export function useUpdateCustomField() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, entityType: _et, ...data }: UpdateCustomFieldInput) =>
+    mutationFn: ({ id, entityType: _entityType, ...data }: UpdateCustomFieldInput) =>
       apiClient.patch<{ field: CustomFieldDefinition }>(`/settings/custom-fields/${id}`, data),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.settings.customFields(vars.entityType) });
@@ -218,7 +218,7 @@ export function useUpdateCustomField() {
 export function useDeleteCustomField() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, entityType: _et }: { id: number; entityType: "lead" | "deal" | "contact" }) =>
+    mutationFn: ({ id, entityType: _entityType }: { id: number; entityType: "lead" | "deal" | "contact" }) =>
       apiClient.delete<{ success: boolean }>(`/settings/custom-fields/${id}`),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.settings.customFields(vars.entityType) });

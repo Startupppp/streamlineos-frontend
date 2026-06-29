@@ -12,7 +12,6 @@ import {
   ChevronRight,
   CheckCircle,
   XCircle,
-  Monitor,
 } from "lucide-react";
 import { format } from "date-fns";
 

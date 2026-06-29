@@ -45,7 +45,7 @@ export default async function BlogListingPage({
       <div className="mt-12">
         {search && (
           <p className="mb-6 text-sm text-muted-foreground">
-            Results for <span className="font-medium text-foreground">"{search}"</span>
+            Results for <span className="font-medium text-foreground">&quot;{search}&quot;</span>
           </p>
         )}
         <PostFeed

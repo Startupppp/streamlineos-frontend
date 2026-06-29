@@ -185,6 +185,8 @@ export default function SurveysPage() {
     return Math.max(1, ...(filteredSurveys.map((s) => s.responses?.length ?? 0)));
   }, [filteredSurveys]);
 
+  const tomorrowDateStr = useMemo(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10), []);
+
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleSheetOpenChange = useCallback((open: boolean) => {
@@ -327,7 +329,7 @@ export default function SurveysPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Closes At</label>
-          <Input type="date" value={closesAt} min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)} onChange={handleClosesAtChange} />
+          <Input type="date" value={closesAt} min={tomorrowDateStr} onChange={handleClosesAtChange} />
         </div>
         <p className="text-xs text-muted-foreground">A default satisfaction question will be added. Edit questions after creation.</p>
       </HrSheet>

@@ -29,11 +29,11 @@ const formatTicketValue = (v: number) => v.toLocaleString();
 export default function SupportDashboardPage() {
   const { data, isLoading, isError, refetch } = useSupportDashboard();
 
-  const ticketStatusBreakdown = data?.ticketStatusBreakdown ?? [];
+  const ticketStatusBreakdown = useMemo(() => data?.ticketStatusBreakdown ?? [], [data]);
   const ticketVolumeTimeline = data?.ticketVolumeTimeline ?? [];
   const supportActivityFeed = data?.supportActivityFeed ?? [];
   const supportTeamMembers = data?.supportTeamMembers ?? [];
-  const ticketsByPriority = data?.ticketsByPriority ?? [];
+  const ticketsByPriority = useMemo(() => data?.ticketsByPriority ?? [], [data]);
 
   const totalTickets = useMemo(
     () => ticketStatusBreakdown.reduce((sum, s) => sum + s.value, 0),

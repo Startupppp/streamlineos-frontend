@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { format, isPast } from "date-fns";
@@ -82,6 +83,8 @@ export default function BillingPage() {
   const { data: overdueData } = useInvoices({ status: "OVERDUE", limit: 5 });
   const { data: subData } = useSubscription();
 
+  const now = useMemo(() => Date.now(), []);
+
   function handleRetryStats() {
     void refetchStats();
   }
@@ -96,7 +99,7 @@ export default function BillingPage() {
       ? Math.max(
           0,
           Math.ceil(
-            (new Date(sub.trialEndsAt).getTime() - Date.now()) / 86_400_000,
+            (new Date(sub.trialEndsAt).getTime() - now) / 86_400_000,
           ),
         )
       : null;

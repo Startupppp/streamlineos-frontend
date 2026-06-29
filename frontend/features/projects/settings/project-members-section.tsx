@@ -119,9 +119,10 @@ export function MembersSelector({
   onMemberRemoved,
 }: MembersSelectorProps) {
   const { data: employeesData } = useHrEmployees();
-  const employees = Array.isArray(employeesData)
-    ? employeesData
-    : (employeesData?.data ?? []);
+  const employees = useMemo(
+    () => (Array.isArray(employeesData) ? employeesData : (employeesData?.data ?? [])),
+    [employeesData]
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredEmployees = useMemo(

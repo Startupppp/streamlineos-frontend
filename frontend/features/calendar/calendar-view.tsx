@@ -209,7 +209,7 @@ export function CalendarView() {
         padding: rsvpBorderColor ? "1px 6px 1px 4px" : "1px 6px",
       },
     };
-  }, []);
+  }, [RSVP_BORDER_COLORS, CATEGORY_COLORS]);
 
   const handlePrev = useCallback(() => {
     setCurrentDate((d) => {

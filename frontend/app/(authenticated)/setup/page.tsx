@@ -461,7 +461,7 @@ function InviteStep({
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Invite teammates to join your organization. They'll receive an email with setup instructions.
+        Invite teammates to join your organization. They&apos;ll receive an email with setup instructions.
       </p>
       <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
         {invites.map((inv, i) => (
@@ -508,7 +508,7 @@ function DoneStep({ summary, onGoToDashboard }: { summary: string[]; onGoToDashb
         </div>
       </div>
       <div>
-        <h3 className="text-xl font-semibold mb-1">You're all set!</h3>
+        <h3 className="text-xl font-semibold mb-1">You&apos;re all set!</h3>
         <p className="text-sm text-muted-foreground">Your organization is configured and ready to use.</p>
       </div>
       {summary.length > 0 && (

@@ -143,7 +143,6 @@ export function LeadDetailHeader({
 }: LeadDetailHeaderProps) {
   const router = useRouter();
 
-  const handleBack = useCallback(() => router.push("/crm/leads"), [router]);
   const handleConvert = useCallback(
     () => onStatusChange("CONVERTED"),
     [onStatusChange]

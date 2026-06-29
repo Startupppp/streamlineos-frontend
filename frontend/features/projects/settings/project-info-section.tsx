@@ -25,7 +25,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
 
-const formSchema = updateProjectSettingsInputSchema.omit({ projectId: true });
+export const formSchema = updateProjectSettingsInputSchema.omit({ projectId: true });
 type FormValues = z.infer<typeof formSchema>;
 
 interface MembersSelectorProps {

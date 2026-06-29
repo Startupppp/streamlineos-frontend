@@ -108,13 +108,13 @@ export default function SalesDashboardPage() {
   );
 
   const salesStats = data?.salesStats;
-  const revenueTimeline = data?.revenueTimeline ?? [];
+  const revenueTimeline = useMemo(() => data?.revenueTimeline ?? [], [data]);
   const salesFunnel = data?.salesFunnel ?? [];
   const topDeals = data?.topDeals ?? [];
   const salesActivity = data?.salesActivity ?? [];
-  const dealsByStage = data?.dealsByStage ?? [];
+  const dealsByStage = useMemo(() => data?.dealsByStage ?? [], [data]);
   const enhanced = data?.enhancedMetrics;
-  const salesLeaderboard = data?.salesLeaderboard ?? [];
+  const salesLeaderboard = useMemo(() => data?.salesLeaderboard ?? [], [data]);
 
   const maxLeaderboardRevenue = useMemo(
     () => safeMax((leaderboardData ?? salesLeaderboard).map((r) => r.revenue)),

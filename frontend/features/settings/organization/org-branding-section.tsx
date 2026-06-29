@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -181,7 +182,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
             <div className="space-y-2">
               <p className="text-[12px] font-medium text-slate-600">Logo</p>
               {org.logo ? (
-                <img src={org.logo} alt="Org logo" className="h-10 w-auto rounded border object-contain" />
+                <Image src={org.logo} alt="Org logo" width={200} height={40} className="h-10 w-auto rounded border object-contain" />
               ) : (
                 <p className="text-xs text-muted-foreground">Not set</p>
               )}
@@ -189,7 +190,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
             <div className="space-y-2">
               <p className="text-[12px] font-medium text-slate-600">Favicon</p>
               {org.favicon ? (
-                <img src={org.favicon} alt="Favicon" className="h-8 w-8 rounded border object-contain" />
+                <Image src={org.favicon} alt="Favicon" width={32} height={32} className="h-8 w-8 rounded border object-contain" />
               ) : (
                 <p className="text-xs text-muted-foreground">Not set</p>
               )}
@@ -221,7 +222,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                   </Button>
                   <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
                 </div>
-                {logoVal && <img src={logoVal} alt="Logo preview" className="h-10 w-auto rounded border mt-1 object-contain" />}
+                {logoVal && <Image src={logoVal} alt="Logo preview" width={200} height={40} className="h-10 w-auto rounded border mt-1 object-contain" />}
                 {form.formState.errors.logo && <p className="text-[11px] text-destructive">{form.formState.errors.logo.message}</p>}
               </div>
               <div className="space-y-1">
@@ -233,7 +234,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                   </Button>
                   <input ref={faviconInputRef} type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg" className="hidden" onChange={handleFaviconUpload} />
                 </div>
-                {faviconVal && <img src={faviconVal} alt="Favicon preview" className="h-8 w-8 rounded border mt-1 object-contain" />}
+                {faviconVal && <Image src={faviconVal} alt="Favicon preview" width={32} height={32} className="h-8 w-8 rounded border mt-1 object-contain" />}
                 {form.formState.errors.favicon && <p className="text-[11px] text-destructive">{form.formState.errors.favicon.message}</p>}
               </div>
             </div>
@@ -297,7 +298,7 @@ function EmailBrandingPreview({
         <div className="max-w-sm mx-auto bg-white rounded-lg overflow-hidden shadow-sm border">
           <div className="px-6 py-4" style={{ backgroundColor: primaryColor }}>
             {logo ? (
-              <img src={logo} alt="Logo" className="h-8 w-auto object-contain brightness-0 invert" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              <Image src={logo} alt="Logo" width={200} height={32} className="h-8 w-auto object-contain brightness-0 invert" />
             ) : (
               <div className="h-8 w-24 rounded bg-white/30" />
             )}

@@ -100,12 +100,13 @@ function useAudioLevels(
   }, [remoteStreams, localStream, currentUserId]);
 
   useEffect(() => {
+    const analyzers = analyzersRef.current;
     return () => {
-      for (const entry of analyzersRef.current.values()) {
+      for (const entry of analyzers.values()) {
         entry.source.disconnect();
         entry.context.close().catch(() => {});
       }
-      analyzersRef.current.clear();
+      analyzers.clear();
     };
   }, []);
 
@@ -140,7 +141,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const elapsed = useElapsedTime(huddle.startedAt);
 
-  const { selectedAudioInput, setSelectedAudioInput } = useMediaDevices();
+  const { selectedAudioInput } = useMediaDevices();
 
   const myParticipant = huddle.participants.find((p) => p.userId === currentUserId);
   const isHandRaised = myParticipant?.handRaised ?? false;

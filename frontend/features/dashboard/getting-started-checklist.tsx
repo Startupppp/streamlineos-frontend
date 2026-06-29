@@ -92,6 +92,7 @@ export function GettingStartedChecklist() {
   useEffect(() => {
     if (!orgId) return;
     const dismissed = localStorage.getItem(`gs-checklist-dismissed-${orgId}`);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (dismissed === "1") setIsDismissed(true);
   }, [orgId]);
 

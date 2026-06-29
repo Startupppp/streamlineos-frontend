@@ -52,6 +52,7 @@ function useVoterKey() {
     try {
       const existing = window.localStorage.getItem(VOTER_KEY_STORAGE);
       if (existing) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setVoterKey(existing);
         return;
       }

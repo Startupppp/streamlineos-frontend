@@ -10,7 +10,6 @@ import type {
   Goal,
   HelpdeskTicket,
   WfhRequest,
-  Incentive,
   IncentivesResult,
   IncentiveStats,
   IncentiveConfig,

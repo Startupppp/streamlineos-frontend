@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { AttendanceLog } from "@/types/hr";
-import { tableStatusBadge, formatDuration } from "./attendance-utils";
+import { formatDuration } from "./attendance-utils";
 import { cn } from "@/lib/utils";
 
 interface AttendanceLogRowProps {

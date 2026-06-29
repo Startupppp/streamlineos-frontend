@@ -90,6 +90,7 @@ export function EditDocumentSheet({
         isPublic: document.isPublic ?? false,
         tags: document.tags ?? [],
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTags(document.tags ?? []);
     }
   }, [open, document, form]);

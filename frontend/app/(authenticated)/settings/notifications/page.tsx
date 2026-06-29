@@ -43,6 +43,7 @@ export default function NotificationPreferencesPage() {
 
   useEffect(() => {
     if (!prefs || initialized) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEmailEnabled(prefs.emailEnabled ?? true);
     setPushEnabled(prefs.pushEnabled ?? true);
     setInAppEnabled(prefs.inAppEnabled ?? true);

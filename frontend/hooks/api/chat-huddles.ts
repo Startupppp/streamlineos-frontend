@@ -29,7 +29,7 @@ export function useStartHuddle() {
 export function useJoinHuddle() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ huddleId, channelId }: { huddleId: number; channelId: number }) =>
+    mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/join`),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
@@ -40,7 +40,7 @@ export function useJoinHuddle() {
 export function useLeaveHuddle() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ huddleId, channelId }: { huddleId: number; channelId: number }) =>
+    mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/leave`),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
@@ -52,7 +52,7 @@ export function useLeaveHuddle() {
 export function useSetHuddleMute() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ huddleId, channelId, muted }: { huddleId: number; channelId: number; muted: boolean }) =>
+    mutationFn: ({ huddleId, muted }: { huddleId: number; channelId: number; muted: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/mute`, { muted }),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
@@ -63,7 +63,7 @@ export function useSetHuddleMute() {
 export function useRaiseHand() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ huddleId, channelId, raised }: { huddleId: number; channelId: number; raised: boolean }) =>
+    mutationFn: ({ huddleId, raised }: { huddleId: number; channelId: number; raised: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/hand`, { raised }),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });

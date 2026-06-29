@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText, Loader2, Paperclip, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -49,7 +50,7 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
                   rel="noopener noreferrer"
                   className="block px-4 py-2 hover:bg-muted/30 transition-colors"
                 >
-                  <img src={url} alt={file.fileName} className="w-full rounded-lg object-cover max-h-[120px]" />
+                  <Image src={url} alt={file.fileName} width={400} height={120} className="w-full rounded-lg object-cover max-h-[120px]" />
                   <p className="text-[11px] text-muted-foreground mt-1 truncate">{file.fileName}</p>
                 </a>
               ) : (

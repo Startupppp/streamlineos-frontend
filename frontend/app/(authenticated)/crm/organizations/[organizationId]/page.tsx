@@ -8,8 +8,6 @@ import {
   Globe,
   Users,
   Link2,
-  Mail,
-  Phone,
   ChevronLeft,
   TrendingUp,
   BarChart2,

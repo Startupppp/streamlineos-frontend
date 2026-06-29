@@ -72,7 +72,7 @@ export default function LeadDistributionPage() {
     qc.invalidateQueries({ queryKey: queryKeys.leads.all });
   }, [qc]);
 
-  const filteredLeads = data?.leads ?? [];
+  const filteredLeads = useMemo(() => data?.leads ?? [], [data]);
 
   const allSelected = filteredLeads.length > 0 && filteredLeads.every((l) => selectedIds.has(l.id));
 
@@ -87,7 +87,7 @@ export default function LeadDistributionPage() {
   const handleToggleSelect = useCallback((id: number) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   }, []);

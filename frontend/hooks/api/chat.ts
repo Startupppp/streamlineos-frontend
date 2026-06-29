@@ -32,7 +32,6 @@ import type {
   SearchMessagesResult,
   SearchChannelResult,
   SearchUserResult,
-  SavedMessage,
   SavedMessagesPage,
 } from "@/types/chat";
 

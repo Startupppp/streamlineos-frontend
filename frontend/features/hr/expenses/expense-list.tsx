@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { AdminExpenseItem } from "./expense-item";
 import { MemberExpenseItem } from "./expense-item";

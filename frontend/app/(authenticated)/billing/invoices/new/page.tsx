@@ -128,18 +128,25 @@ export default function NewInvoicePage() {
 
   const totals = useMemo(() => {
     const items = watchedItems ?? [];
-    let subtotal = 0;
-    let taxPool = 0;
-    const lines = items.map((it) => {
-      const qty = Number(it?.quantity) || 0;
-      const rate = Number(it?.rate) || 0;
-      const gstRate = Number(it?.gstRate) || 0;
-      const amount = round2(qty * rate);
-      const tax = round2(amount * (gstRate / 100));
-      subtotal = round2(subtotal + amount);
-      taxPool = round2(taxPool + tax);
-      return { amount, tax };
-    });
+    const { lines, subtotal, taxPool } = items.reduce<{
+      lines: { amount: number; tax: number }[];
+      subtotal: number;
+      taxPool: number;
+    }>(
+      (acc, it) => {
+        const qty = Number(it?.quantity) || 0;
+        const rate = Number(it?.rate) || 0;
+        const gstRate = Number(it?.gstRate) || 0;
+        const amount = round2(qty * rate);
+        const tax = round2(amount * (gstRate / 100));
+        return {
+          lines: [...acc.lines, { amount, tax }],
+          subtotal: round2(acc.subtotal + amount),
+          taxPool: round2(acc.taxPool + tax),
+        };
+      },
+      { lines: [], subtotal: 0, taxPool: 0 },
+    );
 
     const placeOfSupplyStateCode = watchedPlaceOfSupply ?? "";
     const supplierStateCode =

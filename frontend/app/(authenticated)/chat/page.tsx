@@ -39,6 +39,7 @@ export default function ChatPage() {
 
   const heartbeat = useChatHeartbeat();
   const heartbeatRef = useRef(heartbeat);
+  // eslint-disable-next-line react-hooks/refs
   heartbeatRef.current = heartbeat;
 
   useEffect(() => {

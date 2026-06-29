@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import { Clock, Users, FolderOpen, TrendingUp } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export interface TeamSummaryProps {
   totalHours: number;

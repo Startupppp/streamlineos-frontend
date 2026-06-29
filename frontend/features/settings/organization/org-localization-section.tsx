@@ -171,7 +171,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
         onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to save"),
       },
     );
-  }, [org.settings, updateOrg]);
+  }, [updateOrg]);
 
   const displayValues = {
     timezone: org.timezone ?? "Asia/Kolkata",

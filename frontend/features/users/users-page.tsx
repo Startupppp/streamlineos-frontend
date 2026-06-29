@@ -268,7 +268,7 @@ export function UsersPage() {
       pushParams({ search, page: "1" });
     }, 300);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, pushParams]);
 
   const handleStatusChange = useCallback((value: string) => {
     setStatus(value);

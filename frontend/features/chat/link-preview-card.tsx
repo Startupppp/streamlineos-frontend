@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLinkPreview } from "@/hooks/api";
@@ -29,11 +30,12 @@ export function LinkPreviewCard({ content, isOwn }: { content: string; isOwn: bo
     >
       {data.image && (
         <div className="h-16 w-16 shrink-0 overflow-hidden">
-          <img
+          <Image
             src={data.image}
             alt={data.title ?? ""}
+            width={64}
+            height={64}
             className="h-full w-full object-cover"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
         </div>
       )}

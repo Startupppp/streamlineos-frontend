@@ -26,17 +26,7 @@ import { toast } from "sonner";
 import { EventFormFields } from "./event-form-fields";
 import { EventAttendeesPicker } from "./event-attendees-picker";
 
-const EVENT_CATEGORIES = [
-  "general",
-  "meeting",
-  "deadline",
-  "reminder",
-  "leave",
-  "project",
-  "other",
-] as const;
-
-type EventCategory = (typeof EVENT_CATEGORIES)[number];
+type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
 
 interface FormState {
   title: string;

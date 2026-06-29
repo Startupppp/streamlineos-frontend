@@ -58,18 +58,10 @@ function PrefRow({ id, icon: Icon, label, description, checked, onCheckedChange,
 }
 
 export function SettingsPreferences() {
-  const [compactView, setCompactView] = useState(false);
-
   const { data: prefs } = useNotificationPreferences();
   const updatePrefs = useUpdateNotificationPreferences();
 
   const isPending = updatePrefs.isPending;
-
-  const handleCompactToggle = useCallback((checked: boolean) => {
-    setCompactView(checked);
-    document.documentElement.classList.toggle("compact", checked);
-    toast.success(checked ? "Compact view enabled" : "Compact view disabled");
-  }, []);
 
   const handlePrefUpdate = useCallback((field: string, value: boolean | string | null) => {
     updatePrefs.mutate(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import {
   Phone,
@@ -146,7 +146,6 @@ export function LeadQuickActions({
   isEmailPending,
   isCallPending,
   leadName,
-  leadEmail: _leadEmail,
   leadContext,
   onDraftEmail,
 }: LeadQuickActionsProps) {

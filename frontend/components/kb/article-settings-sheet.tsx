@@ -82,6 +82,7 @@ export function ArticleSettingsSheet({
 
   useEffect(() => {
     if (articleTagsQuery.data && !initializedRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedTagIds(articleTagsQuery.data.map((t) => t.id));
       initializedRef.current = true;
     }

@@ -33,7 +33,7 @@ import {
   useMuteChannel,
   useUnmuteChannel,
 } from "@/hooks/api";
-import { cn, resolveImageUrl } from "@/lib/utils";
+import { resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
 

@@ -27,9 +27,11 @@ export function useChatGlobalNotifications(
   const orgId = session?.orgId;
 
   const activeChannelIdRef = useRef(activeChannelId);
+  // eslint-disable-next-line react-hooks/refs
   activeChannelIdRef.current = activeChannelId;
 
   const currentUserIdRef = useRef(currentUserId);
+  // eslint-disable-next-line react-hooks/refs
   currentUserIdRef.current = currentUserId;
 
   useEffect(() => {

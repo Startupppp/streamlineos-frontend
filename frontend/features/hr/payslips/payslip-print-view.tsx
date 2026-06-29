@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { format, parseISO } from "date-fns";
 import { PayslipEarningsTable } from "./payslip-earnings-table";
 import { useOrgSettings } from "@/hooks/api/organization";
@@ -134,10 +135,12 @@ export function PayslipPrintView({ payslip, containerRef }: PayslipPrintViewProp
               }}
             >
               {orgLogoUrl ? (
-                <img
+                <Image
                   src={orgLogoUrl}
                   alt={orgName}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  width={56}
+                  height={56}
+                  style={{ objectFit: "cover" }}
                 />
               ) : (
                 <span style={{ color: "#ffffff", fontSize: "22px", fontWeight: 800 }}>

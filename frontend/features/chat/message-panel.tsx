@@ -235,7 +235,7 @@ export function MessagePanel({
             replyToId: msg.replyToId,
             attachments: msg.attachments,
           });
-        } catch (_err) {}
+        } catch {}
       }
     };
     const goOffline = () => setIsOnline(false);
@@ -651,8 +651,8 @@ export function MessagePanel({
         setMentionQuery("");
       }
     },
-    [],
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+    [publishTyping],
+  );
 
   const otherMember =
     channel?.type === "DIRECT"

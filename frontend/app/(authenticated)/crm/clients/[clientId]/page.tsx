@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -479,9 +479,11 @@ export default function ClientDetailPage() {
   const timelineEvents = timelineData?.events ?? [];
   const clientOpportunities = opportunitiesData ?? [];
 
+  const now = useMemo(() => Date.now(), []);
+
   const daysSinceLastActivity = timelineEvents[0]
     ? Math.floor(
-        (Date.now() - new Date(timelineEvents[0].date).getTime()) / 86_400_000,
+        (now - new Date(timelineEvents[0].date).getTime()) / 86_400_000,
       )
     : null;
 

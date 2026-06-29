@@ -108,7 +108,7 @@ export const TimerCard = memo(function TimerCard() {
 
   useEffect(() => {
     if (statusData) setLocalBreakOverride(null);
-  }, [statusData?.status]);
+  }, [statusData?.status, statusData]);
 
   const isCheckedIn =
     statusData?.status === "PRESENT" ||
@@ -157,6 +157,7 @@ export const TimerCard = memo(function TimerCard() {
       (Number(statusData.todayLog.breakHours) || 0) * 3600000;
     const totalBreakMs = serverBreakMs + localExtraBreakMs;
     const currentBreakMs =
+      // eslint-disable-next-line react-hooks/refs
       isOnBreak && breakStartRef.current
         ? now.getTime() - breakStartRef.current
         : 0;

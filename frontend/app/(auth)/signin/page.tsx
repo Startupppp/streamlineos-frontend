@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, ArrowRight, Lock, Mail, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { validatePasswordStrength } from "@/lib/password-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 

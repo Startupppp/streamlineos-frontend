@@ -120,6 +120,7 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
   useEffect(() => {
     if (open) {
       if (editTemplate) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setName(editTemplate.name);
         setCriteria(
           editTemplate.criteria.map((c) => ({ ...c, _key: nextKey() }))

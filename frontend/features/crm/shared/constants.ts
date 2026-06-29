@@ -2,8 +2,6 @@ import {
   Phone, Target, UserCheck, X, Zap, Eye,
   Share2, Megaphone, Globe, Footprints, Users, Flame, Sun, Snowflake,
 } from "lucide-react";
-import type React from "react";
-
 export const PIPELINE_STAGES = [
   { key: "NEW", label: "New", dot: "bg-blue-500", bg: "bg-blue-500/10", color: "#3B82F6", icon: Zap },
   { key: "CONTACTED", label: "Contacted", dot: "bg-sky-500", bg: "bg-sky-500/10", color: "#0EA5E9", icon: Phone },

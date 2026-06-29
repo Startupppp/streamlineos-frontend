@@ -8,18 +8,15 @@ import {
   Pencil,
   CheckCircle2,
   XCircle,
-  RotateCcw,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINR } from "@/lib/format-utils";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
-import { toast } from "sonner";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseToEdit } from "@/app/(authenticated)/hr/expenses/create-expense-dialog";
 import {

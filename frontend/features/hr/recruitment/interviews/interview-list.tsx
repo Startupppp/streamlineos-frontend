@@ -6,7 +6,6 @@ import { useBulkRescheduleInterviews } from "@/hooks/api/hr/recruitment";
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
 import type { Interview, InterviewResult } from "@/types/hr";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -178,19 +177,6 @@ export function InterviewList() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkNewDate, setBulkNewDate] = useState("");
   const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(null);
-
-  const handleResultChange = useCallback(
-    (id: number, result: InterviewResult) => {
-      updateInterview.mutate(
-        { id, result },
-        {
-          onSuccess: () => toast.success("Interview result updated"),
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [updateInterview],
-  );
 
   const handleBulkReschedule = useCallback(() => {
     if (!bulkNewDate) {

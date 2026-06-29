@@ -173,6 +173,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, unreadChatCount, 
   const [expanded, setExpanded] = useState<boolean>(isActive || containsActive);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (containsActive || isActive) setExpanded(true);
   }, [containsActive, isActive]);
 

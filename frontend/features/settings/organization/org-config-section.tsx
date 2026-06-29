@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Globe, Image, Clock, IndianRupee, CalendarRange, Users, Upload, Palette } from "lucide-react";
+import NextImage from "next/image";
+import { Loader2, Globe, Image as ImageIcon, Clock, IndianRupee, CalendarRange, Users, Upload, Palette } from "lucide-react";
 
 const CURRENCIES = [
   { value: "USD", label: "USD — US Dollar" },
@@ -130,7 +131,7 @@ export function OrgConfigSection({
       <CardContent className="space-y-5">
         <div className="space-y-1.5">
           <Label htmlFor="logo-url" className="text-sm flex items-center gap-1.5">
-            <Image className="h-3.5 w-3.5 text-muted-foreground" />
+            <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
             Logo
           </Label>
           {isEditingConfig ? (
@@ -168,13 +169,13 @@ export function OrgConfigSection({
                 />
               </div>
               {logoUrl && (
-                <img src={logoUrl} alt="Logo preview" className="h-10 w-auto rounded border border-border object-contain" />
+                <NextImage src={logoUrl} alt="Logo preview" width={200} height={40} className="h-10 w-auto rounded border border-border object-contain" />
               )}
             </div>
           ) : (
             <div className="flex items-center gap-3">
               {org.logo && (
-                <img src={org.logo} alt="Org logo" className="h-8 w-auto rounded border border-border object-contain" />
+                <NextImage src={org.logo} alt="Org logo" width={200} height={32} className="h-8 w-auto rounded border border-border object-contain" />
               )}
               <Input
                 id="logo-url"

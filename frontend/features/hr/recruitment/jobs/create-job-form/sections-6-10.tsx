@@ -1,6 +1,6 @@
 "use client";
 
-import { UseFormReturn, Controller } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { INTERVIEW_ROUND_OPTIONS } from "./schema";
 import { FieldError, SectionTitle } from "./sections-1-5";
-import type { CreateJobFormValues } from "./schema";
 import type { SectionProps } from "./sections-1-5";
 import { cn } from "@/lib/utils";
 import { useHiringFlows } from "@/hooks/api/hr/recruitment";

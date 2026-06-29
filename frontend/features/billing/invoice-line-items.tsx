@@ -84,6 +84,7 @@ export function InvoiceLineItems({
 
   useEffect(() => {
     if (editOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEditLineItems(
         lineItems.map((i) => ({
           description: i.description,

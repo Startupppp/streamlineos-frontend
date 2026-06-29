@@ -1,6 +1,5 @@
 "use client";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { TimerCard } from "@/features/hr/attendance/check-in-button";
 import { WfhBalancesCard } from "@/features/hr/attendance/wfh-balances-card";
 import { AttendanceCalendar } from "@/features/hr/attendance/attendance-calendar";

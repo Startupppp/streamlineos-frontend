@@ -56,9 +56,6 @@ function CandidateColumn({
   const name = `${candidate.firstName} ${candidate.lastName}`;
   const breakdown = candidate.aiScoreBreakdown;
   const candidateSkills = new Set((candidate.skills ?? []).map((s) => s.toLowerCase()));
-  const sharedSkills = [...allSkills].filter((s) => candidateSkills.has(s));
-  const uniqueSkills = (candidate.skills ?? []).filter((s) => !allSkills.has(s.toLowerCase()) || allSkills.size === 1);
-
   const interviews = candidate.interviews ?? [];
   const completedInterviews = interviews.filter((i) => i.result && i.result !== "PENDING");
   const avgInterviewRating =

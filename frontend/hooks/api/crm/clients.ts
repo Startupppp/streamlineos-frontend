@@ -199,7 +199,7 @@ export function useCreateOnboardingItem() {
 export function useToggleOnboardingItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, completed, clientId: _clientId }: { id: number; completed: boolean; clientId: number }) =>
+    mutationFn: ({ id, completed }: { id: number; completed: boolean; clientId: number }) =>
       apiClient.patch<OnboardingItem>(`/clients/onboarding/items/${id}`, {
         completedAt: completed ? new Date().toISOString() : null,
       }),
@@ -210,7 +210,7 @@ export function useToggleOnboardingItem() {
 export function useDeleteOnboardingItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, clientId: _clientId }: { id: number; clientId: number }) =>
+    mutationFn: ({ id }: { id: number; clientId: number }) =>
       apiClient.delete(`/clients/onboarding/items/${id}`),
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
   });

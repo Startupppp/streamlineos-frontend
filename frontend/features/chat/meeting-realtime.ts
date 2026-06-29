@@ -16,7 +16,7 @@ export function useMeetingRealtime(channelId: number | null) {
   useEffect(() => {
     if (!orgId || !channelId || channelId <= 0) return;
 
-    const handler = (_msg: InboundMessage) => {
+    const handler = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(channelId) });
     };
 

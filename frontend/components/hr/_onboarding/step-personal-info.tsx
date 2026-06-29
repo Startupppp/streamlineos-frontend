@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useMemo } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
@@ -25,6 +25,7 @@ interface StepPersonalInfoProps {
 
 export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
   const checkedEmailRef = useRef<string>("");
+  const minDob = useMemo(() => new Date(Date.now() - 16 * 365.25 * 24 * 60 * 60 * 1000), []);
 
   const handleEmailBlur = useCallback(async () => {
     const email = form.getValues("email")?.toLowerCase().trim();
@@ -140,7 +141,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
                 onChange={(v) => field.onChange(v ? new Date(v) : null)}
-                toDate={new Date(Date.now() - 16 * 365.25 * 24 * 60 * 60 * 1000)}
+                toDate={minDob}
                 placeholder="Select DOB"
               />
             </FormControl>

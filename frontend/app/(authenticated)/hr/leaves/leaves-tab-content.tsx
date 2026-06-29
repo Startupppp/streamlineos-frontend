@@ -181,7 +181,7 @@ function LeaveCalendarWidget({
           return isWithinInterval(day, { start, end });
         }),
       })),
-    [approvedLeaves],
+    [approvedLeaves, days],
   );
 
   const hasAnyLeave = leavesPerDay.some((d) => d.leaves.length > 0);

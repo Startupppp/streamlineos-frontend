@@ -75,7 +75,7 @@ export function useWebRTCMeeting(
                 const offer = await pc.createOffer({ iceRestart: true });
                 await pc.setLocalDescription(offer);
                 sendSignal.mutate({ huddleId, type: "offer", targetUserId: peerId, payload: offer });
-              } catch (_err) {}
+              } catch {}
             }
           }
         }, 2000);
@@ -109,6 +109,7 @@ export function useWebRTCMeeting(
 
   useEffect(() => {
     if (!huddleId) return;
+    const peerConns = peerConnections.current;
     const init = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } } });
@@ -117,7 +118,7 @@ export function useWebRTCMeeting(
         setMicError(null);
         for (const p of participants) {
           if (p.userId === currentUserId || p.leftAt) continue;
-          if (peerConnections.current.has(p.userId)) continue;
+          if (peerConns.has(p.userId)) continue;
           const pc = createPC(p.userId);
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
@@ -131,8 +132,8 @@ export function useWebRTCMeeting(
     return () => {
       localStreamRef.current?.getTracks().forEach(t => t.stop());
       screenStreamRef.current?.getTracks().forEach(t => t.stop());
-      peerConnections.current.forEach(pc => pc.close());
-      peerConnections.current.clear();
+      peerConns.forEach(pc => pc.close());
+      peerConns.clear();
       setLocalStream(null);
       setScreenStream(null);
       setParticipantStreams(new Map());
@@ -178,7 +179,7 @@ export function useWebRTCMeeting(
         });
       });
       stream.getVideoTracks()[0]?.addEventListener("ended", () => stopScreenShare());
-    } catch (_err) {}
+    } catch {}
   }, [stopScreenShare]);
 
   const pauseScreenShare = useCallback(() => {

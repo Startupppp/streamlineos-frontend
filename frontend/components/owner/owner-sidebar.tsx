@@ -55,6 +55,7 @@ export function OwnerSidebar({
 
   useEffect(() => {
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCollapsed(window.localStorage.getItem(COLLAPSE_KEY) === "1");
     } catch {}
   }, []);

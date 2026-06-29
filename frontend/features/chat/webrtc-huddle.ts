@@ -122,7 +122,7 @@ export function useWebRTCHuddle(
                     targetUserId,
                     payload: { sdp: offer.sdp, fromUserId: currentUserId },
                   });
-                } catch (_err) {}
+                } catch {}
               }
             }
           }, 2000);
@@ -311,7 +311,7 @@ export function useWebRTCHuddle(
         s.addTrack(newTrack);
         return s;
       });
-    } catch (_err) {}
+    } catch {}
   }, []);
 
   const getPeerConnection = useCallback((userId: string): RTCPeerConnection | undefined => {
@@ -342,7 +342,7 @@ export function useWebRTCHuddle(
         stream.getTracks().forEach((t) => pc.addTrack(t, stream));
       });
       stream.getVideoTracks()[0]?.addEventListener("ended", () => stopScreenShare());
-    } catch (_err) {}
+    } catch {}
   }, [stopScreenShare]);
 
   const pauseScreenShare = useCallback(() => {

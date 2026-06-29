@@ -129,7 +129,10 @@ export default function WarehouseDetailPage({
   });
 
   const warehouse = warehouseData;
-  const locations = Array.isArray(locationsData) ? locationsData : [];
+  const locations = useMemo(
+    () => (Array.isArray(locationsData) ? locationsData : []),
+    [locationsData],
+  );
 
   const grouped = useMemo(() => groupByType(locations), [locations]);
 

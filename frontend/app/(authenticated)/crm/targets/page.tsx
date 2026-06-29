@@ -182,9 +182,13 @@ export default function TargetsPage() {
     refetch: refetchLeaderboard,
   } = useTargetLeaderboard();
   const { data: rawEmployees } = useHrEmployees();
-  const employees: Employee[] = Array.isArray(rawEmployees)
-    ? rawEmployees
-    : ((rawEmployees as { data: Employee[] } | undefined)?.data ?? []);
+  const employees = useMemo<Employee[]>(
+    () =>
+      Array.isArray(rawEmployees)
+        ? rawEmployees
+        : ((rawEmployees as { data: Employee[] } | undefined)?.data ?? []),
+    [rawEmployees],
+  );
   const createTarget = useCreateTarget();
 
   const userRole = session?.user?.role ?? "";

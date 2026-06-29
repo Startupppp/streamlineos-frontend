@@ -36,7 +36,7 @@ export function useMediaDevices() {
             .filter((d) => d.kind === "videoinput")
             .map((d) => ({ deviceId: d.deviceId, label: d.label || `Camera ${d.deviceId.slice(0, 4)}` })),
         );
-      } catch (_err) {}
+      } catch {}
     };
     load();
     navigator.mediaDevices.addEventListener("devicechange", load);

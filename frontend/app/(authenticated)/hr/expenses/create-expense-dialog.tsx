@@ -278,7 +278,7 @@ export function CreateExpenseDialog({
     } finally {
       setIsLoading(false);
     }
-  }, [receiptFile, isEditMode, editExpense, form, onSuccess]);
+  }, [receiptFile, isEditMode, editExpense, form, onSuccess, createExpenseMutation, updateExpenseMutation, uploadFile]);
 
   return (
     <HrSheet

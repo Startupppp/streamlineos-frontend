@@ -3,23 +3,14 @@
 import { useState, useMemo, useCallback } from "react";
 import {
   format,
-  parseISO,
   eachWeekOfInterval,
   startOfYear,
   endOfYear,
   addDays,
-  getDay,
 } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAttendanceHeatmap } from "@/hooks/api/hr";
 
@@ -98,9 +89,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
 
     return { weeks: weeksData, monthPositions: positions };
   }, [year, data]);
-
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
 
   return (
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">

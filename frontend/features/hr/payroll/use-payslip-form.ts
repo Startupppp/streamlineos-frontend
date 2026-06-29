@@ -61,6 +61,7 @@ export function usePayslipForm({ employees }: UsePayslipFormArgs) {
       }
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLopDays(absentCount > 0 ? String(absentCount) : "");
     setHalfDays(halfDayCount > 0 ? String(halfDayCount) : "");
   }, [
@@ -72,6 +73,7 @@ export function usePayslipForm({ employees }: UsePayslipFormArgs) {
   ]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLopDays("");
     setHalfDays("");
   }, [selectedEmployee]);

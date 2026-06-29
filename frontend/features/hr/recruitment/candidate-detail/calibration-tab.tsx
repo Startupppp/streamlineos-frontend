@@ -6,7 +6,6 @@ import {
   useCreateCalibration,
   useUpdateCalibration,
 } from "@/hooks/api/hr/recruitment";
-import { useCalendarOrgMembers } from "@/hooks/api/calendar";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +64,6 @@ function DecisionBadge({ decision }: { decision: string | null }) {
 
 export function CalibrationTab({ candidateId }: CalibrationTabProps) {
   const { data: sessions, isLoading } = useCalibrationSessions(candidateId);
-  const { data: orgMembers } = useCalendarOrgMembers();
   const createCalibration = useCreateCalibration(candidateId);
   const updateCalibration = useUpdateCalibration(candidateId);
 
