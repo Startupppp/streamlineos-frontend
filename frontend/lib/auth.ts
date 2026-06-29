@@ -109,6 +109,7 @@ const credentialsProvider = Credentials({
     password: { label: "Password", type: "password" },
     rememberMe: { label: "Remember me", type: "text" },
     magicToken: { label: "Magic token", type: "text" },
+    totpCode: { label: "MFA code", type: "text" },
   },
   async authorize(credentials) {
     if (credentials?.magicToken) {
@@ -147,17 +148,26 @@ const credentialsProvider = Credentials({
       const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+        body: JSON.stringify({
+          email: credentials.email,
+          password: credentials.password,
+          ...(credentials.totpCode ? { totpCode: credentials.totpCode } : {}),
+        }),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as Record<string, unknown>;
         const msg = (data.message as string) ?? "Invalid credentials";
         if (msg.startsWith("ACCOUNT_LOCKED:") || msg === "SUBSCRIPTION_INACTIVE") throw new Error(msg);
+        if (msg === "Invalid MFA code") throw new Error("INVALID_MFA_CODE");
         return null;
       }
 
-      const data = await res.json() as { userId: string; orgId: string; forceChangePassword: boolean; daysUntilExpiry?: number };
+      const data = await res.json() as { userId: string; orgId: string; forceChangePassword?: boolean; daysUntilExpiry?: number; requiresMfa?: boolean };
+
+      if (data.requiresMfa) {
+        throw new Error("REQUIRES_MFA");
+      }
 
       const user = await db.query.users.findFirst({
         where: eq(users.id, data.userId),
@@ -182,7 +192,12 @@ const credentialsProvider = Credentials({
         rememberMe: credentials?.rememberMe === "true",
       };
     } catch (err) {
-      if (err instanceof Error && (err.message.startsWith("ACCOUNT_LOCKED:") || err.message === "SUBSCRIPTION_INACTIVE")) throw err;
+      if (err instanceof Error && (
+        err.message.startsWith("ACCOUNT_LOCKED:") ||
+        err.message === "SUBSCRIPTION_INACTIVE" ||
+        err.message === "REQUIRES_MFA" ||
+        err.message === "INVALID_MFA_CODE"
+      )) throw err;
       logger.error("Auth: backend login error", { error: err });
       return null;
     }
