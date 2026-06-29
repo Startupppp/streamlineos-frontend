@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-export interface UploadResult {
+interface UploadResult {
   url: string;
   key: string;
   size: number;

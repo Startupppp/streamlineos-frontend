@@ -13,7 +13,7 @@ interface InterviewBookingData {
   notes: string | null;
 }
 
-class InterviewBookingExpiredError extends Error {
+export class InterviewBookingExpiredError extends Error {
   constructor() {
     super("This booking link has expired or has already been used.");
     this.name = "InterviewBookingExpiredError";

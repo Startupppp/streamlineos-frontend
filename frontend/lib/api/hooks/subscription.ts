@@ -68,6 +68,7 @@ interface VerifySubscriptionResponse {
 }
 
 const SUBSCRIPTION_QUERY_KEY = ["subscription"] as const;
+const BILLING_SUMMARY_QUERY_KEY = ["billing", "summary"] as const;
 
 export function useSubscription() {
   return useQuery<SubscriptionResponse, Error>({
@@ -93,8 +94,6 @@ export function useVerifySubscription() {
     },
   });
 }
-
-const BILLING_SUMMARY_QUERY_KEY = ["billing", "summary"] as const;
 
 export interface CouponValidationResult {
   valid: boolean;

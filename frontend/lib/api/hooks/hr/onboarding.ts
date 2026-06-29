@@ -29,45 +29,6 @@ export interface OnboardingTask {
   createdAt: string | null;
 }
 
-export interface OnboardingTemplateStep {
-  id: number;
-  templateId: number;
-  title: string;
-  description: string | null;
-  ownerRole: string;
-  dueOffsetDays: number;
-  isRequired: boolean;
-  sortOrder: number;
-}
-
-export interface HrOnboardingTemplate {
-  id: number;
-  orgId: string;
-  name: string;
-  departmentId: number | null;
-  description: string | null;
-  isActive: boolean;
-  createdBy: string;
-  createdAt: string | null;
-  updatedAt: string | null;
-  steps: OnboardingTemplateStep[];
-}
-
-export interface CreateTemplateInput {
-  name: string;
-  departmentId?: number;
-  description?: string;
-  steps?: {
-    title: string;
-    description?: string;
-    ownerRole?: string;
-    dueOffsetDays?: number;
-    isRequired?: boolean;
-  }[];
-}
-
-
-
 export function useOnboardingStatus() {
   return useQuery<OnboardingStatus[]>({
     queryKey: queryKeys.hr.onboardingStatus(),
@@ -109,21 +70,3 @@ export function useInitiateOnboarding() {
 }
 
 
-export function useHrOnboardingTemplates() {
-  return useQuery<HrOnboardingTemplate[]>({
-    queryKey: queryKeys.hr.onboardingTemplates(),
-    queryFn: () => apiClient.get<HrOnboardingTemplate[]>("/onboarding/templates"),
-  });
-}
-
-
-export function useCreateHrOnboardingTemplate() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateTemplateInput) =>
-      apiClient.post<{ success: boolean; templateId: number }>("/onboarding/templates", data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingTemplates() });
-    },
-  });
-}

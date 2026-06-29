@@ -8,7 +8,7 @@ interface ImportVariables {
   autoApprove: boolean;
 }
 
-export interface ImportExpensesResult {
+interface ImportExpensesResult {
   success: boolean;
   count?: number;
   skipped?: number;

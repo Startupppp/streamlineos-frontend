@@ -76,7 +76,7 @@ interface PublicNpsSurvey {
   status: NpsSurveyStatus;
 }
 
-export interface SubmitNpsResponseInput {
+interface SubmitNpsResponseInput {
   score: number;
   comment?: string;
   name?: string;

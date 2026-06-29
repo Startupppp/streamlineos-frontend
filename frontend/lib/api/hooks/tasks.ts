@@ -165,7 +165,7 @@ interface CreateTaskSequenceInput {
   }>;
 }
 
-export interface ApplySequenceInput {
+interface ApplySequenceInput {
   baseDate: string;
   entityType?: TaskEntityType;
   entityId?: number;

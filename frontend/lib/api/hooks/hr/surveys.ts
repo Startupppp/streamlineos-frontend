@@ -4,8 +4,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface SurveyQuestion { id: string; text: string; type: "rating" | "text" | "choice"; options?: string[] }
-export interface SurveyResponse { id: number; surveyId: number; answers: { questionId: string; value: string | number }[] | null; submittedAt: Date | string | null }
+interface SurveyQuestion { id: string; text: string; type: "rating" | "text" | "choice"; options?: string[] }
+interface SurveyResponse { id: number; surveyId: number; answers: { questionId: string; value: string | number }[] | null; submittedAt: Date | string | null }
 
 export interface PulseSurvey {
   id: number;
@@ -42,11 +42,3 @@ export function useUpdateSurvey() {
   });
 }
 
-export function useSubmitSurveyResponse() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: { surveyId: number; answers: { questionId: string; value: string | number }[] }) =>
-      apiClient.post<SurveyResponse>("/hr/surveys", data, { headers: { "x-action": "respond" } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: surveyKeys.list() }),
-  });
-}
