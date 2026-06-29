@@ -27,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp, scaleIn } from "@/lib/motion-variants";
-import { useLeadStats, useLeadSlaAlerts } from "@/hooks/hooks/leads";
+import { useLeadStats, useLeadSlaAlerts } from "@/hooks/api/leads";
 import { toast } from "sonner";
 
 const PIPELINE_COLORS: Record<string, { color: string; bg: string }> = {

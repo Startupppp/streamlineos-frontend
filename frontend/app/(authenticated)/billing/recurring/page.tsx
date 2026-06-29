@@ -31,7 +31,7 @@ import {
   useRecurringInvoices,
   useRunRecurringInvoices,
   type RecurringInvoice,
-} from "@/hooks/hooks/invoice";
+} from "@/hooks/api/invoice";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
 const MONTHLY_FACTOR: Record<string, number> = {

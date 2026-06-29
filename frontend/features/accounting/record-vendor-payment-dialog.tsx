@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useRecordVendorPayment } from "@/hooks/hooks/accounting";
+import { useRecordVendorPayment } from "@/hooks/api/accounting";
 
 const PAYMENT_METHODS = [
   "bank_transfer",

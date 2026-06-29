@@ -28,7 +28,7 @@ import {
   useCreateDealMeeting,
   useDeleteDealMeeting,
   useCloneDeal,
-} from "@/hooks/hooks/crm";
+} from "@/hooks/api/crm";
 import { formatDealId } from "@/lib/format-utils";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";

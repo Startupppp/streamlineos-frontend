@@ -18,7 +18,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useVendorsOutstanding } from "@/hooks/hooks/accounting";
+import { useVendorsOutstanding } from "@/hooks/api/accounting";
 
 export default function VendorsListPage() {
   const [search, setSearch] = useState<string>("");

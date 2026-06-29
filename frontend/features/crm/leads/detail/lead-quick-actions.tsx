@@ -32,8 +32,8 @@ import {@/hooks/api/ai
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useGenerateEmail } from "@/hooks/hooks/ai";
-import { useEmailTemplates } from "@/hooks/hooks/crm-settings";
+import { useGenerateEmail } from "@/hooks/api/ai";
+import { useEmailTemplates } from "@/hooks/api/crm-settings";
 import {
   type QuickAction,
   type NoteForm,

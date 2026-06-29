@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useWinLossAnalysis } from "@/hooks/hooks/crm";
+import { useWinLossAnalysis } from "@/hooks/api/crm";
 
 const REASON_COLORS = [
   "bg-red-500/20 text-red-400 border-red-500/30",

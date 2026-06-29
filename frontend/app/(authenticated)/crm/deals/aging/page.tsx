@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
-import { useDealAging } from "@/hooks/hooks/crm";
+import { useDealAging } from "@/hooks/api/crm";
 import { formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 

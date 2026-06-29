@@ -20,7 +20,7 @@ import {
   useAccounts,
   useJournal,
   useTrialBalance,
-} from "@/hooks/hooks/accounting";
+} from "@/hooks/api/accounting";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);

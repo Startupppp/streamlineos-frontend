@@ -17,7 +17,7 @@ import {
   useUpdateInvoice,
   useDeleteInvoice,
   useCreateInvoice,
-} from "@/hooks/hooks/invoice";
+} from "@/hooks/api/invoice";
 import { format } from "date-fns";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {

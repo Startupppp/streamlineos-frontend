@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ListToolbar, LoadingState, ErrorState } from "@/components/shared";
-import { useAccounts } from "@/hooks/hooks/accounting";
+import { useAccounts } from "@/hooks/api/accounting";
 import type { AccountType } from "@/types/accounting";
 import { CreateAccountDialog } from "@/features/accounting/create-account-dialog";
 

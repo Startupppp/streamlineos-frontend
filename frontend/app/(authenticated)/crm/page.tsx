@@ -26,13 +26,13 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
 import { formatINRCompact } from "@/lib/format-utils";
-import { useLeadStats } from "@/hooks/hooks/leads";
+import { useLeadStats } from "@/hooks/api/leads";
 import {
   useDeals,
   useDealStats,
   useContacts,
   useCrmOrganizations,
-} from "@/hooks/hooks/crm";
+} from "@/hooks/api/crm";
 import { CrmPipelineMini } from "@/features/crm/shared/crm-pipeline-mini";
 import { CrmRecentActivity } from "@/features/crm/shared/crm-recent-activity";
 

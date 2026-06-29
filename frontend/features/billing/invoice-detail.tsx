@@ -45,7 +45,7 @@ import {
   useInvoice,
   useUpdateInvoice,
   useDeleteInvoice,
-} from "@/hooks/hooks/invoice";
+} from "@/hooks/api/invoice";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { InvoiceStatus } from "@/types/invoice";
 import { InvoiceLineItems } from "./invoice-line-items";

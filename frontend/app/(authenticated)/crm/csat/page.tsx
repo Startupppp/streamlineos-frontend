@@ -91,7 +91,7 @@ import {
   useClientAccounts,
   type CsatSurvey,
   type CsatResponse,
-} from "@/hooks/hooks/crm";
+} from "@/hooks/api/crm";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";

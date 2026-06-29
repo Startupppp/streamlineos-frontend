@@ -27,10 +27,10 @@ import {
   useLeads,
   useLeadAnalyticsSummary,
   useSalesLeaderboard,
-} from "@/hooks/hooks/leads";
-import { useDeals } from "@/hooks/hooks/crm";
-import { useTaskAnalytics } from "@/hooks/hooks/tasks";
-import { useSlaReport } from "@/hooks/hooks/crm-settings";
+} from "@/hooks/api/leads";
+import { useDeals } from "@/hooks/api/crm";
+import { useTaskAnalytics } from "@/hooks/api/tasks";
+import { useSlaReport } from "@/hooks/api/crm-settings";
 import {
   CHART_TOOLTIP_STYLE,
   AXIS_TICK,

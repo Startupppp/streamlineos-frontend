@@ -16,7 +16,7 @@ import {@/hooks/api
   useChatChannel,
   useChatOnlineUsers,
   useUpdateChannel,
-} from "@/hooks/hooks";
+} from "@/hooks/api";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";

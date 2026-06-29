@@ -2,7 +2,7 @@ import type {@/hooks/api/goals
   GoalLevel,
   GoalStatus,
   KeyResultMetric,
-} from "@/hooks/hooks/goals";
+} from "@/hooks/api/goals";
 
 interface StatusConfig {
   value: GoalStatus;

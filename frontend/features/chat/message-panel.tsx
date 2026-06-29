@@ -19,10 +19,10 @@ import {
   useChatOnlineUsers,
   useChatOrgUsers,
   useToggleReaction,
-} from "@/hooks/hooks";
+} from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
-import { useChatRealtime } from "@/hooks/hooks/chat-realtime";
+import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import { getInitials, getDateLabel } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { MessageList } from "./message-list";

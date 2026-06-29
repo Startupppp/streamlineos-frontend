@@ -20,7 +20,7 @@ import {@/hooks/api/ai
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useGenerateEmail } from "@/hooks/hooks/ai";
+import { useGenerateEmail } from "@/hooks/api/ai";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
 import type { EmailTone } from "@/lib/ai/schemas";

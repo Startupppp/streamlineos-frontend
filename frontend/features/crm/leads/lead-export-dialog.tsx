@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Download, Loader2 } from "lucide-react";
-import { useLeads } from "@/hooks/hooks/leads";
+import { useLeads } from "@/hooks/api/leads";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 

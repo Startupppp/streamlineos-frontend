@@ -25,7 +25,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { usePurchaseBills } from "@/hooks/hooks/accounting";
+import { usePurchaseBills } from "@/hooks/api/accounting";
 import type { PurchaseBillStatus } from "@/types/accounting";
 
 type StatusFilter = "ALL" | PurchaseBillStatus;

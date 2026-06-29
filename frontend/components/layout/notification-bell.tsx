@@ -15,7 +15,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/hooks/api/notifications
+} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { EmptyInboxIllustration } from "@/components/illustrations";
@@ -26,7 +26,7 @@ import {
   useMarkAllNotificationsRead,
   useDeleteNotification,
   useClearAllNotifications,
-} from "@/hooks/hooks/notifications";
+} from "@/hooks/api/notifications";
 import { formatDistanceToNow } from "date-fns";
 
 const TYPE_CONFIG = {

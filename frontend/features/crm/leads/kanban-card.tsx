@@ -23,8 +23,8 @@ import {
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINRCompact } from "@/lib/format-utils";
 import { toast } from "sonner";
-import { useSelfAssignLead } from "@/hooks/hooks";
-import { useLeadScoreExplanation } from "@/hooks/hooks/leads";
+import { useSelfAssignLead } from "@/hooks/api";
+import { useLeadScoreExplanation } from "@/hooks/api/leads";
 import {
   STATUSES,
   SOURCE_COLORS,

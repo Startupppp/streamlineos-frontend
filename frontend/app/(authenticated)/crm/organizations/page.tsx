@@ -25,7 +25,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useCrmOrganizations } from "@/hooks/hooks/crm";
+import { useCrmOrganizations } from "@/hooks/api/crm";
 import { ErrorState } from "@/components/shared/error-state";
 import { CreateOrgDialog } from "@/features/crm/organizations/create-org-dialog";
 

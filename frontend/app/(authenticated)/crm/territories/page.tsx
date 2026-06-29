@@ -48,7 +48,7 @@ import {
   useDeleteTerritory,
   type Territory,
   type CreateTerritoryInput,
-} from "@/hooks/hooks/crm";
+} from "@/hooks/api/crm";
 import { cn } from "@/lib/utils";
 
 interface TagInputProps {

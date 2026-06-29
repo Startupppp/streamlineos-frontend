@@ -70,7 +70,7 @@ import {
   useDeleteWebLeadForm,
   type WebLeadForm,
   type WebLeadFormField,
-} from "@/hooks/hooks/crm";
+} from "@/hooks/api/crm";
 
 const FIELD_TYPES = [
   { value: "text", label: "Text" },

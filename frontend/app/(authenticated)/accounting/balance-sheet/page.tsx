@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { useBalanceSheet } from "@/hooks/hooks/accounting";
+import { useBalanceSheet } from "@/hooks/api/accounting";
 import type { BalanceSheetRow } from "@/types/accounting";
 
 function todayIso(): string {

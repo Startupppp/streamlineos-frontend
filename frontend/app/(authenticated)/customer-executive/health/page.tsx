@@ -46,7 +46,7 @@ import {
   type HealthScoreWeights,
   type HealthScoreThresholds,
   type HealthScoreBreakdown,
-} from "@/hooks/hooks/crm";
+} from "@/hooks/api/crm";
 import {
   healthStatusColors,
   healthDotColors,

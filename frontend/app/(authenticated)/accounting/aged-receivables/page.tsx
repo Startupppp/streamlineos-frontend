@@ -17,7 +17,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { useAgedReceivables } from "@/hooks/hooks/accounting";
+import { useAgedReceivables } from "@/hooks/api/accounting";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);

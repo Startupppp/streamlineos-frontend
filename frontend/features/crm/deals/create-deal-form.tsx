@@ -25,7 +25,7 @@ import {@/hooks/api/crm
   FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { useCreateDeal } from "@/hooks/hooks/crm";
+import { useCreateDeal } from "@/hooks/api/crm";
 import { DEAL_STAGES } from "@/features/crm/shared/constants";
 import type { DealStage } from "@/features/crm/shared/constants";
 import { toast } from "sonner";

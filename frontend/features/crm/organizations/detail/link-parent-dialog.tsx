@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   useCrmOrganizations,
   useUpdateCrmOrganization,
-} from "@/hooks/hooks/crm";
+} from "@/hooks/api/crm";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 

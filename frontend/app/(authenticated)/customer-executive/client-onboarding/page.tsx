@@ -36,7 +36,7 @@ import {@/hooks/api/crm
   User,
   ClipboardList,
 } from "lucide-react";
-import { useCan } from "@/hooks/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import {
   useClientAccounts,
   useClientOnboardingItems,
@@ -45,7 +45,7 @@ import {
   useDeleteOnboardingItem,
   useOnboardingTemplates,
   useCreateOnboardingTemplate,
-} from "@/hooks/hooks/crm";
+} from "@/hooks/api/crm";
 import type { ClientAccount, OnboardingItem } from "@/types/crm";
 
 interface ChecklistItemProps {

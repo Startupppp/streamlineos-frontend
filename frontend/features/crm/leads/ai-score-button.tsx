@@ -15,7 +15,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useAIScoreLead } from "@/hooks/hooks/ai";
+import { useAIScoreLead } from "@/hooks/api/ai";
 import { useFeature } from "@/lib/billing/use-feature";
 import { toast } from "sonner";
 

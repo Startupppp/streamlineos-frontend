@@ -34,7 +34,7 @@ import {@/hooks/api/accounting
   useAccounts,
   useJournal,
   useUpdateAccount,
-} from "@/hooks/hooks/accounting";
+} from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   AccountType,

@@ -29,8 +29,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useAccountSummary, type AccountSummaryResult } from "@/hooks/hooks/ai";
-import { useSimpleClientsList } from "@/hooks/hooks/crm";
+import { useAccountSummary, type AccountSummaryResult } from "@/hooks/api/ai";
+import { useSimpleClientsList } from "@/hooks/api/crm";
 import { toast } from "sonner";
 
 function CopyButton({ text }: { text: string }) {

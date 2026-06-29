@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Loader2, Users, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { useDistributeLeads } from "@/hooks/hooks/leads";
+import { useDistributeLeads } from "@/hooks/api/leads";
 import { toast } from "sonner";
 
 interface LeadDistributionDialogProps {

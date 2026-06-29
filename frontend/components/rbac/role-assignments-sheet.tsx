@@ -36,9 +36,9 @@ import {
   useRoleMembers,
   useAssignRoleMember,
   useUnassignRoleMember,
-} from "@/hooks/hooks/roles";
-import { useOrgMembers } from "@/hooks/hooks/organization";
-import { useHrDepartments } from "@/hooks/hooks/hr/employees";
+} from "@/hooks/api/roles";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { useHrDepartments } from "@/hooks/api/hr/employees";
 import { getInitials } from "@/lib/format-utils";
 import type { Role, OrgMember } from "@/types/organization";
 import type { Department } from "@/types/hr";

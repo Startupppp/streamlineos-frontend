@@ -34,7 +34,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useDealApprovals, useResolveDealApproval } from "@/hooks/hooks/crm";
+import { useDealApprovals, useResolveDealApproval } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { EmptyApprovalIllustration } from "@/components/illustrations";

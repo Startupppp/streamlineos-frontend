@@ -21,7 +21,7 @@ import { ActivityFeed } from "@/components/charts/activity-feed";
 import {@/hooks/api
   useCustomerExecutiveDashboard,
   useCrmPeopleSlugs,
-} from "@/hooks/hooks";
+} from "@/hooks/api";
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import {

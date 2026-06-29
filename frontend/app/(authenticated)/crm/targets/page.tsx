@@ -41,8 +41,8 @@ import {
   useTargetLeaderboard,
   useCreateTarget,
   useTargetHistory,
-} from "@/hooks/hooks/crm";
-import { useHrEmployees } from "@/hooks/hooks/hr";
+} from "@/hooks/api/crm";
+import { useHrEmployees } from "@/hooks/api/hr";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { ADMIN_ROLES } from "@/lib/constants/roles";

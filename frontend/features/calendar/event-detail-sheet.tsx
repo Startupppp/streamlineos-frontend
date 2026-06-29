@@ -30,8 +30,8 @@ import {
   useRsvpCalendarEvent,
   useEventAttendees,
   extractEventNumericId,
-} from "@/hooks/hooks/calendar";
-import type { CalendarListItem } from "@/hooks/hooks/calendar";
+} from "@/hooks/api/calendar";
+import type { CalendarListItem } from "@/hooks/api/calendar";
 import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import { toast } from "sonner";

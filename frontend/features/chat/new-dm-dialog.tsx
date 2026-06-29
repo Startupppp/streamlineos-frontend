@@ -19,7 +19,7 @@ import {@/hooks/api
   useChatOrgUsers,
   useChatOnlineUsers,
   useCreateDMChannel,
-} from "@/hooks/hooks";
+} from "@/hooks/api";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 

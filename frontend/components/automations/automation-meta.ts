@@ -2,7 +2,7 @@ import type {@/hooks/api/automations
   AutomationTrigger,
   AutomationActionType,
   AutomationConditionOp,
-} from "@/hooks/hooks/automations";
+} from "@/hooks/api/automations";
 
 export interface TriggerMeta {
   value: AutomationTrigger;

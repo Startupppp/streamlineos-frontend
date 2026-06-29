@@ -44,7 +44,7 @@ import {
 import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
 import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
-import { useCan } from "@/hooks/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { CeoDashboard } from "@/features/dashboard/ceo-dashboard";
 import { HrDashboard } from "@/features/dashboard/hr-dashboard";
 import { SalesDashboard @/hooks/api/accessashboard/sales-dashboard";

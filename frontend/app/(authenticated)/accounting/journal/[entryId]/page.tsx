@@ -30,8 +30,8 @@ import {@/hooks/api/accounting
   useJournalEntry,@/hooks/api/access
   usePostJournalEntry,
   useReverseJournalEntry,
-} from "@/hooks/hooks/accounting";
-import { useCan } from "@/hooks/hooks/access";
+} from "@/hooks/api/accounting";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { JournalEntryStatus, JournalLine } from "@/types/accounting";
 
