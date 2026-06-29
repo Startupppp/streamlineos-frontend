@@ -14,9 +14,11 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Hash,
+  Mic,
   PanelLeftOpen,
   Users,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import {
@@ -37,10 +39,14 @@ import {
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { useChatRealtime } from "@/lib/api/hooks/chat-realtime";
+import { useStartHuddle, useJoinHuddle } from "@/lib/api/hooks/chat-huddles";
+import { useHuddleRealtime } from "./huddle-realtime";
+import { HuddlePanel } from "./huddle-panel";
 import { getInitials, getDateLabel } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
+import { ThreadPanel } from "./thread-panel";
 
 export function MessagePanel({
   channelId,
@@ -80,6 +86,11 @@ export function MessagePanel({
   const { data: onlineUsers } = useChatOnlineUsers();
   const lastTypingSent = useRef(0);
   const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
+  const { activeHuddle } = useHuddleRealtime(channelId);
+  const startHuddle = useStartHuddle();
+  const joinHuddle = useJoinHuddle();
+
+  const isInHuddle = activeHuddle?.participants.some((p) => p.userId === currentUserId) ?? false;
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
@@ -104,6 +115,8 @@ export function MessagePanel({
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
 
   const [pendingAttachments, setPendingAttachments] = useState<
     { fileName: string; fileUrl: string; fileKey: string; fileSize: number; mimeType: string }[]
@@ -179,6 +192,7 @@ export function MessagePanel({
     setPendingAttachments([]);
     setShowEmojiPicker(false);
     setShowMentions(false);
+    setThreadMessageId(null);
     inputRef.current?.focus();
   }, [channelId]);
 
@@ -331,6 +345,24 @@ export function MessagePanel({
   const isOtherOnline =
     channel?.type === "DIRECT" && otherMember ? onlineUserIds.has(otherMember.id) : false;
 
+  const replyCountMap = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const msg of messages) {
+      if (msg.replyToId !== null && msg.replyToId !== undefined) {
+        map.set(msg.replyToId, (map.get(msg.replyToId) ?? 0) + 1);
+      }
+    }
+    return map;
+  }, [messages]);
+
+  const handleOpenThread = useCallback((msg: Message) => {
+    setThreadMessageId(msg.id);
+  }, []);
+
+  const handleCloseThread = useCallback(() => {
+    setThreadMessageId(null);
+  }, []);
+
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Message[] }[] = [];
     let currentDate = "";
@@ -344,7 +376,8 @@ export function MessagePanel({
   }, [messages]);
 
   return (
-    <>
+    <div className="flex flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
 
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center gap-3 shrink-0 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
         {sidebarCollapsed && onExpandSidebar && (
@@ -414,6 +447,34 @@ export function MessagePanel({
               )}
             </div>
           )}
+          {!isInHuddle && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-8 gap-1.5 rounded-lg px-2 text-xs font-medium",
+                activeHuddle
+                  ? "text-green-500 hover:text-green-500 hover:bg-green-500/10"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              onClick={() => {
+                if (activeHuddle) {
+                  joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
+                } else {
+                  startHuddle.mutate(channelId);
+                }
+              }}
+              disabled={startHuddle.isPending || joinHuddle.isPending}
+              aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
+            >
+              <Mic className="h-3.5 w-3.5" />
+              {activeHuddle ? (
+                <span>Join ({activeHuddle.participants.length})</span>
+              ) : (
+                <span>Huddle</span>
+              )}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -440,11 +501,13 @@ export function MessagePanel({
         editingMessage={editingMessage}
         editInput={editInput}
         pinnedMessageIds={pinnedMessageIds}
+        replyCountMap={replyCountMap}
         onEditInputChange={setEditInput}
         onStartEdit={(msg) => { setEditingMessage(msg); setEditInput(msg.content ?? ""); }}
         onCancelEdit={() => { setEditingMessage(null); setEditInput(""); }}
         onSaveEdit={handleEdit}
         onReply={(msg) => { setReplyTo(msg); inputRef.current?.focus(); }}
+        onOpenThread={handleOpenThread}
         onDelete={(messageId) => deleteMessage.mutate({ channelId, messageId })}
         onReact={handleReact}
         onPin={handlePin}
@@ -487,6 +550,34 @@ export function MessagePanel({
         onKeyDown={handleKeyDown}
         onInputChange={handleInputChange}
       />
-    </>
+
+      {activeHuddle && isInHuddle && (
+        <HuddlePanel
+          huddle={activeHuddle}
+          channelId={channelId}
+          currentUserId={currentUserId}
+        />
+      )}
+      </div>
+
+      <AnimatePresence>
+        {threadMessageId !== null && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <ThreadPanel
+              channelId={channelId}
+              parentMessageId={threadMessageId}
+              currentUserId={currentUserId}
+              onClose={handleCloseThread}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

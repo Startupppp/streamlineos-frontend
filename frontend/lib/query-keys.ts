@@ -204,6 +204,8 @@ export const queryKeys = {
     search: (query: string) => [...base, "chat", "search", query] as const,
     typing: (channelId: number) => [...base, "chat", "typing", channelId] as const,
     pins: (channelId: number) => [...base, "chat", "pins", channelId] as const,
+    thread: (channelId: number, messageId: number) => [...base, "chat", "thread", channelId, messageId] as const,
+    huddle: (channelId: number) => [...base, "chat", "huddle", channelId] as const,
   },
 
   dashboard: {

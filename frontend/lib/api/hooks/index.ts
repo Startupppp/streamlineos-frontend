@@ -4,6 +4,7 @@ export * from "./crm";
 export * from "./crm-settings";
 export * from "./projects";
 export * from "./chat";
+export * from "./chat-huddles";
 export * from "./dashboard";
 export * from "./notifications";
 export * from "./organization";

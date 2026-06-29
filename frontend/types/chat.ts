@@ -242,6 +242,12 @@ export interface UnreadTotalResponse {
   total: number;
 }
 
+export interface ThreadPage {
+  parentMessage: Message;
+  replies: Message[];
+  nextCursor?: number;
+}
+
 export interface PinnedMessage {
   id: number;
   channelId: number;
@@ -250,4 +256,33 @@ export interface PinnedMessage {
   pinnedAt: Date | string;
   message: Message & { sender: { id: string; name: string | null; image: string | null } | null };
   pinnedByUser: { id: string; name: string | null } | null;
+}
+
+export interface HuddleParticipant {
+  id: number;
+  huddleId: number;
+  userId: string;
+  joinedAt: Date | string;
+  leftAt: Date | string | null;
+  isMuted: boolean;
+  handRaised: boolean;
+  user?: { id: string; name: string | null; image: string | null } | null;
+}
+
+export interface Huddle {
+  id: number;
+  channelId: number;
+  startedBy: string;
+  status: "active" | "ended";
+  calendarEventId: number | null;
+  startedAt: Date | string;
+  endedAt: Date | string | null;
+  participants: HuddleParticipant[];
+  startedByUser?: { id: string; name: string | null } | null;
+}
+
+export interface HuddleSignalInput {
+  type: "offer" | "answer" | "ice-candidate";
+  targetUserId: string;
+  payload: unknown;
 }
