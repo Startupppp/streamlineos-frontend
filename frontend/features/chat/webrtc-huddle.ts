@@ -13,12 +13,12 @@ const RTC_CONFIG: RTCConfiguration = {
   iceServers: [{ urls: STUN_SERVERS }],
 };
 
-interface SignalEventPayload {
+interface IncomingSignalData {
+  fromUserId: string;
   type: "offer" | "answer" | "ice-candidate";
-  targetUserId: string;
   payload: {
     sdp?: string;
-    fromUserId: string;
+    fromUserId?: string;
     candidate?: RTCIceCandidateInit;
   };
 }
@@ -136,11 +136,11 @@ export function useWebRTCHuddle(
     const ablyChannel = ably.channels.get(signalChannelName);
 
     const handleSignal = async (msg: InboundMessage) => {
-      const signal = msg.data as SignalEventPayload;
+      const signal = msg.data as IncomingSignalData;
       if (!signal) return;
 
       if (signal.type === "offer") {
-        const fromUserId = signal.payload.fromUserId;
+        const fromUserId = signal.fromUserId;
         let pc = peerConnections.current.get(fromUserId);
         if (!pc) {
           pc = createPeerConnection(fromUserId);
@@ -157,7 +157,7 @@ export function useWebRTCHuddle(
           payload: { sdp: answer.sdp, fromUserId: currentUserId },
         });
       } else if (signal.type === "answer") {
-        const fromUserId = signal.payload.fromUserId;
+        const fromUserId = signal.fromUserId;
         const pc = peerConnections.current.get(fromUserId);
         if (pc && pc.signalingState !== "stable") {
           await pc.setRemoteDescription(
@@ -165,7 +165,7 @@ export function useWebRTCHuddle(
           );
         }
       } else if (signal.type === "ice-candidate") {
-        const fromUserId = signal.payload.fromUserId;
+        const fromUserId = signal.fromUserId;
         const pc = peerConnections.current.get(fromUserId);
         if (pc && signal.payload.candidate) {
           await pc.addIceCandidate(new RTCIceCandidate(signal.payload.candidate));

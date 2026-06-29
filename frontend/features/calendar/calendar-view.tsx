@@ -186,13 +186,21 @@ export function CalendarView() {
     tentative: "#f59e0b",
   };
 
+  const CATEGORY_COLORS: Record<string, string> = {
+    huddle: "#f97316",
+  };
+
   const eventPropGetter = useCallback((event: BigCalEvent) => {
     const rsvp = event.resource?.myRsvpStatus as string | null | undefined;
     const rsvpBorderColor = rsvp ? (RSVP_BORDER_COLORS[rsvp] ?? null) : null;
+    const categoryColor = event.resource?.category
+      ? (CATEGORY_COLORS[event.resource.category] ?? null)
+      : null;
     return {
       style: {
         backgroundColor:
-          EVENT_COLORS[event.resource?.color ?? "blue"] ?? EVENT_COLORS.blue,
+          categoryColor ??
+          (EVENT_COLORS[event.resource?.color ?? "blue"] ?? EVENT_COLORS.blue),
         border: "none",
         borderLeft: rsvpBorderColor ? `4px solid ${rsvpBorderColor}` : "none",
         borderRadius: "4px",

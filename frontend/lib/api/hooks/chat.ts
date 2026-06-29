@@ -25,8 +25,10 @@ import type {
   UpdateChannelInput,
   SendMessageInput,
   EditMessageInput,
+  AttachmentInput,
   PinnedMessage,
   PublicChannel,
+  ThreadPage,
 } from "@/types/chat";
 
 export function useChatChannels(enabled = true) {
@@ -385,6 +387,36 @@ export function useUnpinMessage() {
       apiClient.delete<{ ok: boolean }>(`/chat/channels/${channelId}/pins/${messageId}`),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.pins(variables.channelId) });
+    },
+  });
+}
+
+export function useThreadReplies(channelId: number, messageId: number) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.chat.thread(channelId, messageId),
+    queryFn: ({ pageParam }) =>
+      apiClient.get<ThreadPage>(
+        `/chat/channels/${channelId}/messages/${messageId}/thread`,
+        pageParam ? { cursor: pageParam } : undefined,
+      ),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: undefined as number | undefined,
+    enabled: channelId > 0 && messageId > 0,
+  });
+}
+
+export function useSendThreadReply(channelId: number, parentMessageId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { content?: string; attachments?: AttachmentInput[] }) =>
+      apiClient.post<Message>(
+        `/chat/channels/${channelId}/messages/${parentMessageId}/thread`,
+        body,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.thread(channelId, parentMessageId),
+      });
     },
   });
 }

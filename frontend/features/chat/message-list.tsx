@@ -20,11 +20,13 @@ interface MessageItemProps {
   editingMessageId: number | undefined;
   editInput: string;
   pinnedMessageIds: Set<number>;
+  replyCountMap: Map<number, number>;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
   onCancelEdit: () => void;
   onSaveEdit: (messageId: number) => void;
   onReply: (msg: Message) => void;
+  onOpenThread: (msg: Message) => void;
   onDelete: (messageId: number) => void;
   onReact: (messageId: number, emoji: string) => void;
   onPin: (messageId: number) => void;
@@ -39,11 +41,13 @@ function MessageItem({
   editingMessageId,
   editInput,
   pinnedMessageIds,
+  replyCountMap,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
   onReply,
+  onOpenThread,
   onDelete,
   onReact,
   onPin,
@@ -52,6 +56,7 @@ function MessageItem({
   const handleStartEdit = useCallback(() => onStartEdit(msg), [msg, onStartEdit]);
   const handleSaveEdit = useCallback(() => onSaveEdit(msg.id), [msg.id, onSaveEdit]);
   const handleReply = useCallback(() => onReply(msg), [msg, onReply]);
+  const handleOpenThread = useCallback(() => onOpenThread(msg), [msg, onOpenThread]);
   const handleDelete = useCallback(() => onDelete(msg.id), [msg.id, onDelete]);
   const handleReact = useCallback((emoji: string) => onReact(msg.id, emoji), [msg.id, onReact]);
   const handlePin = useCallback(() => onPin(msg.id), [msg.id, onPin]);
@@ -65,11 +70,13 @@ function MessageItem({
       isEditing={editingMessageId === msg.id}
       editInput={editingMessageId === msg.id ? editInput : ""}
       isPinned={pinnedMessageIds.has(msg.id)}
+      replyCount={replyCountMap.get(msg.id)}
       onEditInputChange={onEditInputChange}
       onStartEdit={handleStartEdit}
       onCancelEdit={onCancelEdit}
       onSaveEdit={handleSaveEdit}
       onReply={handleReply}
+      onOpenThread={handleOpenThread}
       onDelete={handleDelete}
       onReact={handleReact}
       onPin={handlePin}
@@ -92,11 +99,13 @@ interface MessageListProps {
   editingMessage: Message | null;
   editInput: string;
   pinnedMessageIds: Set<number>;
+  replyCountMap: Map<number, number>;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
   onCancelEdit: () => void;
   onSaveEdit: (messageId: number) => void;
   onReply: (msg: Message) => void;
+  onOpenThread: (msg: Message) => void;
   onDelete: (messageId: number) => void;
   onReact: (messageId: number, emoji: string) => void;
   onPin: (messageId: number) => void;
@@ -122,11 +131,13 @@ export function MessageList({
   editingMessage,
   editInput,
   pinnedMessageIds,
+  replyCountMap,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
   onReply,
+  onOpenThread,
   onDelete,
   onReact,
   onPin,
@@ -209,11 +220,13 @@ export function MessageList({
                     editingMessageId={editingMessage?.id}
                     editInput={editInput}
                     pinnedMessageIds={pinnedMessageIds}
+                    replyCountMap={replyCountMap}
                     onEditInputChange={onEditInputChange}
                     onStartEdit={onStartEdit}
                     onCancelEdit={onCancelEdit}
                     onSaveEdit={onSaveEdit}
                     onReply={onReply}
+                    onOpenThread={onOpenThread}
                     onDelete={onDelete}
                     onReact={onReact}
                     onPin={onPin}

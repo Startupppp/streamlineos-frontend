@@ -21,6 +21,7 @@ export function useStartHuddle() {
       apiClient.post<Huddle>(`/chat/channels/${channelId}/huddle/start`),
     onSuccess: (_data, channelId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(channelId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
     },
   });
 }
@@ -43,6 +44,7 @@ export function useLeaveHuddle() {
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/leave`),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
     },
   });
 }

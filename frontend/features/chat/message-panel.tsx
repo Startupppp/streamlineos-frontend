@@ -39,7 +39,7 @@ import {
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { useChatRealtime } from "@/lib/api/hooks/chat-realtime";
-import { useStartHuddle, useJoinHuddle } from "@/lib/api/hooks/chat-huddles";
+import { useStartHuddle, useJoinHuddle, useActiveHuddle } from "@/lib/api/hooks/chat-huddles";
 import { useHuddleRealtime } from "./huddle-realtime";
 import { HuddlePanel } from "./huddle-panel";
 import { getInitials, getDateLabel } from "./chat-helpers";
@@ -86,7 +86,8 @@ export function MessagePanel({
   const { data: onlineUsers } = useChatOnlineUsers();
   const lastTypingSent = useRef(0);
   const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
-  const { activeHuddle } = useHuddleRealtime(channelId);
+  useHuddleRealtime(channelId);
+  const { data: activeHuddle } = useActiveHuddle(channelId);
   const startHuddle = useStartHuddle();
   const joinHuddle = useJoinHuddle();
 

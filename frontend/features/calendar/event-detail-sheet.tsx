@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { CalendarIcon, MapPin, Trash2, Tag, Pencil, Download, Users, Check, X, HelpCircle } from "lucide-react";
+import { CalendarIcon, MapPin, Trash2, Tag, Pencil, Download, Users, Check, X, HelpCircle, Mic } from "lucide-react";
 import {
   useDeleteCalendarEvent,
   useRsvpCalendarEvent,
@@ -26,6 +26,7 @@ import { EventCreateDialog } from "./event-create-dialog";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
+import Link from "next/link";
 
 const EVENT_COLORS: Record<string, string> = {
   blue: "#3b82f6",
@@ -245,8 +246,18 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
               )}
             </div>
           </ScrollArea>
+          {event?.category === "huddle" && event.entityId && (
+            <div className="px-5 pt-3 pb-1 shrink-0">
+              <Link href={`/chat?channel=${event.entityId}`} onClick={onClose}>
+                <Button size="sm" className="w-full h-8 text-xs gap-1.5 bg-orange-500 hover:bg-orange-600 text-white">
+                  <Mic className="h-3.5 w-3.5" />
+                  Join Huddle
+                </Button>
+              </Link>
+            </div>
+          )}
           <div className="px-5 py-3 border-t shrink-0 flex items-center justify-between gap-2">
-            {isCalendarEvent ? (
+            {isCalendarEvent && event?.category !== "huddle" ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -269,7 +280,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                 <Download className="h-3.5 w-3.5 mr-1.5" />
                 .ics
               </Button>
-              {isCalendarEvent && (
+              {isCalendarEvent && event?.category !== "huddle" && (
                 <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
                   <Pencil className="h-3.5 w-3.5 mr-1.5" />
                   Edit

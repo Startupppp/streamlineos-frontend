@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { ArrowDown, Bookmark, CheckCheck, Copy, FileText, Pencil, Reply, Smile, Trash2 } from "lucide-react";
+import { ArrowDown, Bookmark, CheckCheck, Copy, FileText, MessageSquare, Pencil, Reply, Smile, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,11 +29,13 @@ export function ChatBubble({
   editInput,
   currentUserId,
   isPinned,
+  replyCount,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
   onReply,
+  onOpenThread,
   onDelete,
   onReact,
   onPin,
@@ -46,11 +48,13 @@ export function ChatBubble({
   editInput: string;
   currentUserId: string;
   isPinned?: boolean;
+  replyCount?: number;
   onEditInputChange: (v: string) => void;
   onStartEdit: () => void;
   onCancelEdit: () => void;
   onSaveEdit: () => void;
   onReply: () => void;
+  onOpenThread: () => void;
   onDelete: () => void;
   onReact: (emoji: string) => void;
   onPin: () => void;
@@ -250,6 +254,19 @@ export function ChatBubble({
           </div>
         )}
 
+        {replyCount !== undefined && replyCount > 0 && (
+          <button
+            onClick={onOpenThread}
+            className={cn(
+              "mt-1 px-1 flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:underline",
+              isOwn ? "self-end" : "self-start"
+            )}
+          >
+            <MessageSquare className="h-3 w-3" />
+            {replyCount} {replyCount === 1 ? "reply" : "replies"}
+          </button>
+        )}
+
         {message.reactions && Object.keys(message.reactions).length > 0 && (
           <div className={cn("flex flex-wrap gap-1 mt-1 px-1", isOwn ? "justify-end" : "justify-start")}>
             {Object.entries(message.reactions).map(([emoji, userIds]) => {
@@ -284,6 +301,9 @@ export function ChatBubble({
             <div className="relative flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-visible">
               <button onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply">
                 <Reply className="h-3.5 w-3.5" />
+              </button>
+              <button onClick={onOpenThread} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Open thread" aria-label="Open thread">
+                <MessageSquare className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={handlePinToggle}
