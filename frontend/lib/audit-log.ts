@@ -2,7 +2,7 @@ import { db } from "./db";
 import { auditLogs } from "./db/schema";
 import { logger } from "./logger";
 
-export type AuditAction =
+type AuditAction =
   | "user.login"
   | "user.logout"
   | "user.signup"

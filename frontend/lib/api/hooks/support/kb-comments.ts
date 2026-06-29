@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface KbArticleComment {
+interface KbArticleComment {
   id: number;
   articleId: number;
   body: string;

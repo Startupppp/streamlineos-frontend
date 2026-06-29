@@ -7,9 +7,7 @@ import type {
   Contact,
   PaginatedContacts,
   ContactFilters,
-  ContactSearchResult,
   CreateContactInput,
-  UpdateContactInput,
 } from "@/types/crm";
 
 export function useContacts(filters?: ContactFilters) {
@@ -17,15 +15,6 @@ export function useContacts(filters?: ContactFilters) {
     queryKey: queryKeys.contacts.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedContacts>("/contacts", filters as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useContactDetail(id: number) {
-  return useQuery({
-    queryKey: queryKeys.contacts.detail(id),
-    queryFn: () => apiClient.get<Contact>(`/contacts/${id}`),
-    enabled: id > 0,
     staleTime: 2 * 60_000,
   });
 }
@@ -41,18 +30,6 @@ export function useCreateContact() {
   });
 }
 
-export function useUpdateContact() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...data }: UpdateContactInput) =>
-      apiClient.patch<Contact>(`/contacts/${id}`, data),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
-      qc.invalidateQueries({ queryKey: queryKeys.contacts.detail(vars.id) });
-    },
-  });
-}
-
 export function useDeleteContact() {
   const qc = useQueryClient();
   return useMutation({
@@ -64,12 +41,3 @@ export function useDeleteContact() {
   });
 }
 
-export function useContactSearch(q: string) {
-  return useQuery({
-    queryKey: queryKeys.contacts.search(q),
-    queryFn: () =>
-      apiClient.get<ContactSearchResult[]>("/contacts/search", { q }),
-    enabled: q.length >= 2,
-    staleTime: 30_000,
-  });
-}

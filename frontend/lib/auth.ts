@@ -212,7 +212,7 @@ const oauthProviders = [googleProvider, microsoftProvider].filter(
   (p): p is NonNullable<typeof p> => p !== null,
 );
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth } = NextAuth({
   adapter: DrizzleAdapter(db, {
     usersTable: users,
     accountsTable: accounts,

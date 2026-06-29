@@ -17,7 +17,7 @@ export interface ApiToken {
   createdAt: string;
 }
 
-export interface ApiTokenPage {
+interface ApiTokenPage {
   data: ApiToken[];
   meta: {
     page: number;

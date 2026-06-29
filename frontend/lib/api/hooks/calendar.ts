@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface CalendarOrgMember {
+interface CalendarOrgMember {
   id: string;
   firstName: string | null;
   lastName: string | null;
@@ -39,7 +39,7 @@ export function useCreateMeetLink() {
   });
 }
 
-export interface CalendarEvent {
+interface CalendarEvent {
   id: number;
   orgId: string;
   title: string;
@@ -88,7 +88,7 @@ export function extractEventNumericId(id: string): number | null {
   return match ? parseInt(match[1], 10) : null;
 }
 
-export interface CreateCalendarEventPayload {
+interface CreateCalendarEventPayload {
   title: string;
   description?: string;
   location?: string;
@@ -104,7 +104,7 @@ export interface CreateCalendarEventPayload {
   recurringRule?: string;
 }
 
-export interface UpdateCalendarEventPayload extends Partial<CreateCalendarEventPayload> {
+interface UpdateCalendarEventPayload extends Partial<CreateCalendarEventPayload> {
   id: number;
 }
 
@@ -149,9 +149,9 @@ export function useDeleteCalendarEvent() {
   });
 }
 
-export type RsvpStatus = "accepted" | "declined" | "tentative";
+type RsvpStatus = "accepted" | "declined" | "tentative";
 
-export interface EventAttendee {
+interface EventAttendee {
   id: number;
   eventId: number;
   userId: string;

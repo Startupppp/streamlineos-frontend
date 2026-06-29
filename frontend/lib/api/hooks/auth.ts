@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface SessionData {
+interface SessionData {
   id: string;
   userId: string;
   userAgent: string | null;
@@ -15,7 +15,7 @@ export interface SessionData {
   createdAt: string;
 }
 
-export interface DeviceData {
+interface DeviceData {
   id: string;
   userId: string;
   fingerprint: string;
@@ -27,7 +27,7 @@ export interface DeviceData {
   createdAt: string;
 }
 
-export interface LoginHistoryEntry {
+interface LoginHistoryEntry {
   id: string;
   userId: string;
   orgId: string | null;
@@ -39,7 +39,7 @@ export interface LoginHistoryEntry {
   createdAt: string;
 }
 
-export interface LoginHistoryPage {
+interface LoginHistoryPage {
   data: LoginHistoryEntry[];
   total: number;
   page: number;

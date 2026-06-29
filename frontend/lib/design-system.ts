@@ -1,10 +1,3 @@
-import { cn } from "@/lib/utils";
-
-/**
- * Centralised design-system tokens for the dashboard.
- * All color slots flip between light and dark via CSS variables defined in
- * `globals.css`. Avoid adding hardcoded `slate-*` colors here.
- */
 export const DS = {
   card: "rounded-xl border border-border bg-card shadow-noir",
   cardElevated:
@@ -49,9 +42,3 @@ export const DS = {
   tableResponsive: "w-full -mx-4 sm:mx-0 px-4 sm:px-0",
   flexResponsive: "flex flex-col sm:flex-row sm:items-center gap-3",
 } as const;
-
-export type DSKey = keyof typeof DS;
-
-export function ds(...keys: DSKey[]): string {
-  return cn(...keys.map((k) => DS[k]));
-}

@@ -247,7 +247,7 @@ export function useMeetingPrep() {
 
 
 
-export interface GenerateJdInput {
+interface GenerateJdInput {
   title: string;
   requirements?: string;
   location?: string;

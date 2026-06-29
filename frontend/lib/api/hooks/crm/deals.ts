@@ -29,7 +29,7 @@ export type {
   SalesQuota,
 };
 
-export interface DealApproval {
+interface DealApproval {
   id: number;
   dealId: number;
   dealName: string | null;
@@ -42,7 +42,7 @@ export interface DealApproval {
   resolvedAt: string | null;
 }
 
-export interface AgingDeal {
+interface AgingDeal {
   id: number;
   name: string;
   value: string | null;
@@ -53,7 +53,7 @@ export interface AgingDeal {
   assigneeName: string | null;
 }
 
-export interface AgingResponse {
+interface AgingResponse {
   summary: { total: number; stale: number; critical: number };
   deals: AgingDeal[];
 }
@@ -220,17 +220,6 @@ export function useCreateDealMeeting(dealId: number) {
   });
 }
 
-export function useUpdateDealMeeting(dealId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ meetingId, ...data }: Partial<CreateDealMeetingInput> & { meetingId: number }) =>
-      apiClient.patch<DealMeeting>(`/deals/${dealId}/meetings/${meetingId}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.meetings(dealId) });
-    },
-  });
-}
-
 export function useDeleteDealMeeting(dealId: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -267,32 +256,6 @@ export function useDealAging() {
   });
 }
 
-export function useDealApprovalRules() {
-  return useQuery({
-    queryKey: [...queryKeys.deals.all, "approvalRules"] as const,
-    queryFn: () => apiClient.get<Array<{ id: number; minValue: string; approverRole: string; isActive: boolean; createdAt: string | null }>>("/deals/approval-rules"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCreateDealApprovalRule() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: { minValue: string; approverRole?: string }) =>
-      apiClient.post("/deals/approval-rules", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "approvalRules"] }),
-  });
-}
-
-export function useRequestDealApproval() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: { dealId: number; requestedStage: string }) =>
-      apiClient.post("/deals/approvals", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "approvals"] }),
-  });
-}
-
 export function useResolveDealApproval() {
   const qc = useQueryClient();
   return useMutation({
@@ -300,20 +263,6 @@ export function useResolveDealApproval() {
       apiClient.post("/deals/approvals", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "approvals"] });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
-    },
-  });
-}
-
-export function useUpdateDealCustomData() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, customData }: { id: number; customData: Record<string, unknown> }) =>
-      apiClient.patch<{ customData: Record<string, unknown> }>(`/deals/${id}/custom-data`, {
-        customData,
-      }),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
     },
   });

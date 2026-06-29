@@ -57,12 +57,12 @@ export interface ChangelogEntry {
   updatedAt: string;
 }
 
-export interface RoadmapItemFilters {
+interface RoadmapItemFilters {
   status?: RoadmapStatus;
   search?: string;
 }
 
-export interface CreateRoadmapItemInput {
+interface CreateRoadmapItemInput {
   title: string;
   description?: string;
   status?: RoadmapStatus;
@@ -74,7 +74,7 @@ export interface CreateRoadmapItemInput {
   sortOrder?: number;
 }
 
-export interface UpdateRoadmapItemInput {
+interface UpdateRoadmapItemInput {
   title?: string;
   description?: string | null;
   status?: RoadmapStatus;
@@ -86,12 +86,12 @@ export interface UpdateRoadmapItemInput {
   sortOrder?: number;
 }
 
-export interface FeedbackPostFilters {
+interface FeedbackPostFilters {
   status?: FeedbackStatus;
   search?: string;
 }
 
-export interface CreateFeedbackPostInput {
+interface CreateFeedbackPostInput {
   title: string;
   description?: string;
   status?: FeedbackStatus;
@@ -101,7 +101,7 @@ export interface CreateFeedbackPostInput {
   linkedRoadmapItemId?: number;
 }
 
-export interface UpdateFeedbackPostInput {
+interface UpdateFeedbackPostInput {
   title?: string;
   description?: string | null;
   status?: FeedbackStatus;
@@ -109,11 +109,11 @@ export interface UpdateFeedbackPostInput {
   linkedRoadmapItemId?: number | null;
 }
 
-export interface ChangelogFilters {
+interface ChangelogFilters {
   type?: ChangelogType;
 }
 
-export interface CreateChangelogEntryInput {
+interface CreateChangelogEntryInput {
   title: string;
   content?: string;
   version?: string;
@@ -122,7 +122,7 @@ export interface CreateChangelogEntryInput {
   linkedRoadmapItemId?: number;
 }
 
-export interface UpdateChangelogEntryInput {
+interface UpdateChangelogEntryInput {
   title?: string;
   content?: string;
   version?: string | null;
@@ -159,7 +159,7 @@ export interface PublicChangelogEntry {
   publishedAt: string | null;
 }
 
-export interface PublicRoadmapBoard {
+interface PublicRoadmapBoard {
   orgName: string;
   roadmap: {
     planned: PublicRoadmapItem[];
@@ -170,20 +170,20 @@ export interface PublicRoadmapBoard {
   changelog: PublicChangelogEntry[];
 }
 
-export interface PublicVoteInput {
+interface PublicVoteInput {
   type: "roadmap" | "feedback";
   id: number;
   voterKey: string;
 }
 
-export interface PublicVoteResult {
+interface PublicVoteResult {
   id: number;
   type: "roadmap" | "feedback";
   votes: number;
   voted: boolean;
 }
 
-export interface SubmitPublicFeedbackInput {
+interface SubmitPublicFeedbackInput {
   title: string;
   description?: string;
   name?: string;

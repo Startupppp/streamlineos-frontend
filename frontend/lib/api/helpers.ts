@@ -27,10 +27,6 @@ interface UserSessionRedisCache {
 
 type RouteResponse = NextResponse | Response;
 
-export function ok<T>(data: T, status = 200) {
-  return NextResponse.json(data, { status });
-}
-
 export function err(message: string, status = 400): NextResponse<never> {
   return NextResponse.json({ error: message }, { status }) as NextResponse<never>;
 }

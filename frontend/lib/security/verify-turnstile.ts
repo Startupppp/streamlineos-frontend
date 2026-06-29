@@ -2,7 +2,7 @@ import { logger } from "@/lib/logger";
 
 const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
-export type TurnstileResult =
+type TurnstileResult =
   | { ok: true }
   | { ok: false; reason: "missing-token" | "invalid-token" | "misconfigured" | "network-error" };
 

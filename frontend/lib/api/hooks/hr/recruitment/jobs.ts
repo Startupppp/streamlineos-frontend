@@ -12,19 +12,19 @@ import type {
 
 export type JobBoardPlatform = "LINKEDIN" | "NAUKRI" | "INDEED";
 
-export interface SyncResult {
+interface SyncResult {
   platform: string;
   status: "SYNC_INITIATED" | string;
   lastSyncedAt: string;
   message: string;
 }
 
-export interface PublishResult {
+interface PublishResult {
   platform: string;
   status: "PUBLISHED" | "NO_INTEGRATION" | "INACTIVE" | "NO_TOKEN";
 }
 
-export interface PublishJobResult {
+interface PublishJobResult {
   results: PublishResult[];
   publishedCount: number;
   externalIds: Record<string, string>;

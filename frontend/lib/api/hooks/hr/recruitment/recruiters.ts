@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -56,18 +56,3 @@ export function useRecruiterActivity(params?: { recruiterId?: string; limit?: nu
   });
 }
 
-export function useLogRecruiterActivity() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: {
-      action: RecruiterActivityAction;
-      candidateId?: number;
-      jobPostingId?: number;
-      notes?: string;
-    }) => apiClient.post("/hr/recruitment/recruiters/activity", data),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruiterActivity() });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruiters() });
-    },
-  });
-}

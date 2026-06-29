@@ -22,7 +22,7 @@ export interface WhiteboardSummary {
   updatedAt: string | null;
 }
 
-export interface Whiteboard {
+interface Whiteboard {
   id: number;
   projectId: number;
   orgId: string;
@@ -33,7 +33,7 @@ export interface Whiteboard {
   updatedAt: string | null;
 }
 
-export interface UpdateWhiteboardInput {
+interface UpdateWhiteboardInput {
   id: number;
   name?: string;
   data?: WhiteboardElement[];

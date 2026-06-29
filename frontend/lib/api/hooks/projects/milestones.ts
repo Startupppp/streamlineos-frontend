@@ -17,21 +17,21 @@ export interface ProjectMilestone {
   updatedAt: string | null;
 }
 
-export interface CreateMilestoneInput {
+interface CreateMilestoneInput {
   name: string;
   description?: string;
   targetDate: string;
   status?: "PENDING" | "ACHIEVED" | "MISSED";
 }
 
-export interface UpdateMilestoneInput {
+interface UpdateMilestoneInput {
   name?: string;
   description?: string;
   targetDate?: string;
   status?: "PENDING" | "ACHIEVED" | "MISSED";
 }
 
-export interface ProjectBudget {
+interface ProjectBudget {
   projectId: number;
   plannedBudget: number;
   actualCost: number;
@@ -41,7 +41,7 @@ export interface ProjectBudget {
   memberBreakdown: { userId: string; hours: number; cost: number }[];
 }
 
-export interface ResourceAllocationEntry {
+interface ResourceAllocationEntry {
   user: { id: string; name: string | null; email: string; image: string | null };
   totalOpen: number;
   byProject: { projectId: number; projectName: string; projectKey: string; open: number }[];

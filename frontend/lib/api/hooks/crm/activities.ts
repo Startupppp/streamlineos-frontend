@@ -6,11 +6,8 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   Target,
   TargetHistory,
-  TargetFilters,
   TargetLeaderboardEntry,
   CreateTargetInput,
-  UpdateTargetInput,
-  LogTargetProgressInput,
 } from "@/types/crm";
 
 export interface Territory {
@@ -35,7 +32,7 @@ export interface CreateTerritoryInput {
   isActive?: boolean;
 }
 
-export interface UpdateTerritoryInput extends Partial<CreateTerritoryInput> {
+interface UpdateTerritoryInput extends Partial<CreateTerritoryInput> {
   id: number;
 }
 
@@ -64,7 +61,7 @@ export interface CreateCustomFieldInput {
   sortOrder?: number;
 }
 
-export interface UpdateCustomFieldInput {
+interface UpdateCustomFieldInput {
   id: number;
   entityType: "lead" | "deal" | "contact";
   label?: string;
@@ -97,7 +94,7 @@ export interface WebLeadForm {
   updatedAt: string;
 }
 
-export interface CreateWebLeadFormInput {
+interface CreateWebLeadFormInput {
   name: string;
   description?: string;
   fields?: WebLeadFormField[];
@@ -106,7 +103,7 @@ export interface CreateWebLeadFormInput {
   isActive?: boolean;
 }
 
-export interface UpdateWebLeadFormInput extends Partial<CreateWebLeadFormInput> {
+interface UpdateWebLeadFormInput extends Partial<CreateWebLeadFormInput> {
   id: number;
 }
 

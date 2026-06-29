@@ -37,7 +37,7 @@ export function useEpics(
   });
 }
 
-export type CreateEpicInput = {
+type CreateEpicInput = {
   projectId: number;
   title: string;
   description?: string;

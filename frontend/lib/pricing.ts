@@ -127,10 +127,6 @@ export const PRICING_TIERS: PricingTier[] = [
   },
 ];
 
-export function getTierById(id: PricingTier["id"]): PricingTier | undefined {
-  return PRICING_TIERS.find((t) => t.id === id);
-}
-
 export const COMPETITOR_PRICES = {
   odooStandard: 580,
   odooCustom: 890,
@@ -143,7 +139,7 @@ export const COMPETITOR_PRICES = {
   pipedrive: 1160,
 } as const;
 
-export type SavingsBreakdown = {
+type SavingsBreakdown = {
   odooAnnual: number;
   streamlineAnnual: number;
   savings: number;
