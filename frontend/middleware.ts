@@ -10,14 +10,35 @@ import { redis } from "@/lib/redis";
 import { PLATFORM_OWNER_ROLE, OWNER_HOME } from "@/lib/platform/role";
 import { ROLES } from "@/lib/constants/roles";
 
-function buildCsp(nonce: string): string {
+function buildCsp(nonce: string, apiUrl?: string): string {
+  const apiOrigin = apiUrl
+    ? (() => {
+        try {
+          const u = new URL(apiUrl);
+          return `${u.protocol}//${u.host}`;
+        } catch {
+          return "";
+        }
+      })()
+    : "";
+
+  const connectSrc = [
+    "'self'",
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+    "https://*.r2.cloudflarestorage.com",
+    "https://www.googletagmanager.com",
+    "https://www.clarity.ms",
+    ...(apiOrigin ? [apiOrigin] : []),
+  ].join(" ");
+
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com https://www.clarity.ms`,
+    `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com https://www.clarity.ms`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://lh3.googleusercontent.com https://streamlineos.app https://images.unsplash.com https://www.googletagmanager.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://*.r2.cloudflarestorage.com https://www.googletagmanager.com https://www.clarity.ms",
+    `connect-src ${connectSrc}`,
     "frame-src https://www.googletagmanager.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -362,10 +383,10 @@ export default async function middleware(req: NextRequest) {
     isAuthenticated &&
     token?.orgId === null &&
     startsWithAny(pathname, PROTECTED_ROUTES) &&
-    !pathname.startsWith("/onboarding")
+    !pathname.startsWith("/org-setup")
   ) {
     const url = req.nextUrl.clone();
-    url.pathname = "/onboarding";
+    url.pathname = "/org-setup";
     url.search = "";
     return NextResponse.redirect(url);
   }
@@ -416,7 +437,7 @@ export default async function middleware(req: NextRequest) {
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
-  response.headers.set("Content-Security-Policy", buildCsp(nonce));
+  response.headers.set("Content-Security-Policy", buildCsp(nonce, process.env.NEXT_PUBLIC_API_URL));
   return response;
 }
 
