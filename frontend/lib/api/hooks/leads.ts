@@ -275,7 +275,7 @@ export function useCheckLeadDuplicates(params: { email?: string; phone?: string 
   });
 }
 
-export interface ScoreExplanation {
+interface ScoreExplanation {
   score: number;
   totalRules: number;
   firedRules: { name: string; field: string; operator: string; value: string; points: number }[];

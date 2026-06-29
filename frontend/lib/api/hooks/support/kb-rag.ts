@@ -19,24 +19,24 @@ export interface KbAnswer {
   hasContext: boolean;
 }
 
-export interface KbIndexStatus {
+interface KbIndexStatus {
   chunks: number;
   lastIndexedAt: string | null;
 }
 
-export interface ReindexResult {
+interface ReindexResult {
   chunks: number;
   warnings: string[];
 }
 
-export interface IndexAllResult {
+interface IndexAllResult {
   total: number;
   indexed: number;
   totalChunks: number;
   failures: { articleId: number; error: string }[];
 }
 
-export interface AskKbInput {
+interface AskKbInput {
   question: string;
   articleId?: number;
 }
@@ -48,7 +48,7 @@ export function useAskKb() {
   });
 }
 
-export interface PublicAskKbInput {
+interface PublicAskKbInput {
   orgId: string;
   question: string;
 }

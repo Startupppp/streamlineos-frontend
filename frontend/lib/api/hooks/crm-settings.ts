@@ -10,7 +10,7 @@ export interface AssignmentRuleCondition {
   value: string;
 }
 
-export interface AssignmentRule {
+interface AssignmentRule {
   id: number;
   orgId: string;
   name: string;
@@ -24,7 +24,7 @@ export interface AssignmentRule {
   updatedAt: string | null;
 }
 
-export interface CreateAssignmentRuleInput {
+interface CreateAssignmentRuleInput {
   name: string;
   assignmentType: "assign_user" | "round_robin";
   assignToUserId?: string;
@@ -33,7 +33,7 @@ export interface CreateAssignmentRuleInput {
   priority?: number;
 }
 
-export interface UpdateAssignmentRuleInput {
+interface UpdateAssignmentRuleInput {
   id: number;
   name?: string;
   assignmentType?: "assign_user" | "round_robin";
@@ -44,7 +44,7 @@ export interface UpdateAssignmentRuleInput {
   isActive?: boolean;
 }
 
-export interface ReorderAssignmentRulesInput {
+interface ReorderAssignmentRulesInput {
   rules: { id: number; priority: number }[];
 }
 
@@ -100,7 +100,7 @@ export function useReorderAssignmentRules() {
   });
 }
 
-export interface EmailTemplate {
+interface EmailTemplate {
   id: number;
   orgId: string;
   name: string;
@@ -110,13 +110,13 @@ export interface EmailTemplate {
   updatedAt: string | null;
 }
 
-export interface CreateEmailTemplateInput {
+interface CreateEmailTemplateInput {
   name: string;
   subject: string;
   body: string;
 }
 
-export interface UpdateEmailTemplateInput {
+interface UpdateEmailTemplateInput {
   id: number;
   name?: string;
   subject?: string;
@@ -165,7 +165,7 @@ export function useDeleteEmailTemplate() {
   });
 }
 
-export interface ScoringRule {
+interface ScoringRule {
   id: number;
   orgId: string;
   field: string;
@@ -175,14 +175,14 @@ export interface ScoringRule {
   createdAt: string | null;
 }
 
-export interface CreateScoringRuleInput {
+interface CreateScoringRuleInput {
   field: string;
   operator: string;
   value: string;
   points: number;
 }
 
-export interface UpdateScoringRuleInput {
+interface UpdateScoringRuleInput {
   id: number;
   field?: string;
   operator?: string;
@@ -231,7 +231,7 @@ export function useDeleteScoringRule() {
   });
 }
 
-export interface SlaPolicy {
+interface SlaPolicy {
   id: number;
   orgId: string;
   name: string;
@@ -243,21 +243,21 @@ export interface SlaPolicy {
   updatedAt: string | null;
 }
 
-export interface SlaReport {
+interface SlaReport {
   total: number;
   compliant: number;
   breached: number;
   complianceRate: number;
 }
 
-export interface SlaBreachedLead {
+interface SlaBreachedLead {
   id: number;
   name: string;
   status: string;
   slaDeadline: string | null;
 }
 
-export interface CreateSlaPolicyInput {
+interface CreateSlaPolicyInput {
   name: string;
   appliesTo: "lead" | "deal" | "both";
   priority: "low" | "medium" | "high" | "urgent";
@@ -265,7 +265,7 @@ export interface CreateSlaPolicyInput {
   resolutionHours: number;
 }
 
-export interface UpdateSlaPolicyInput {
+interface UpdateSlaPolicyInput {
   id: number;
   name?: string;
   appliesTo?: "lead" | "deal" | "both";

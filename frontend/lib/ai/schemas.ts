@@ -45,14 +45,6 @@ const ChurnRiskSchema = z.object({
 });
 export type ChurnRiskResult = z.infer<typeof ChurnRiskSchema>;
 
-const ConversationSummarySchema = z.object({
-  summary: z.string().describe("1-2 sentence summary"),
-  keyPoints: z.array(z.string()),
-  actionItems: z.array(z.string()),
-  sentiment: z.enum(["positive", "neutral", "negative"]),
-});
-export type ConversationSummaryResult = z.infer<typeof ConversationSummarySchema>;
-
 const LeadEnrichmentSchema = z.object({
   companyInsight: z.string(),
   estimatedCompanySize: z.string(),

@@ -4,9 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export type LocationType = "ZONE" | "AISLE" | "RACK" | "BIN";
+type LocationType = "ZONE" | "AISLE" | "RACK" | "BIN";
 
-export interface WarehouseLocation {
+interface WarehouseLocation {
   id: number;
   orgId: string;
   warehouseId: number;
@@ -20,7 +20,7 @@ export interface WarehouseLocation {
   children?: WarehouseLocation[];
 }
 
-export interface Warehouse {
+interface Warehouse {
   id: number;
   orgId: string;
   name: string;
@@ -37,7 +37,7 @@ export interface Warehouse {
   locations?: WarehouseLocation[];
 }
 
-export interface CreateWarehouseInput {
+interface CreateWarehouseInput {
   name: string;
   code: string;
   address?: string;
@@ -47,11 +47,11 @@ export interface CreateWarehouseInput {
   isDefault?: boolean;
 }
 
-export interface UpdateWarehouseInput extends Partial<CreateWarehouseInput> {
+interface UpdateWarehouseInput extends Partial<CreateWarehouseInput> {
   warehouseId: number;
 }
 
-export interface CreateLocationInput {
+interface CreateLocationInput {
   warehouseId: number;
   name: string;
   code: string;

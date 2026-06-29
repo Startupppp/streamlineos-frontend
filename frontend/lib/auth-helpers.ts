@@ -1,17 +1,11 @@
-
 import { db } from "@/lib/db";
 import { organizationMembers, organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import type { AuthResult } from "@/lib/auth-types";
-import { ADMIN_ROLES, ROLES } from "@/lib/constants/roles";
+import { ADMIN_ROLES } from "@/lib/constants/roles";
 
-export function isCEO(role: string | undefined | null): boolean {
-  return role === ROLES.CEO;
-}
-
-
-export async function ensureOrgMembership(
+async function ensureOrgMembership(
   userId: string,
   role?: string
 ): Promise<{ orgId: string; role: string } | null> {

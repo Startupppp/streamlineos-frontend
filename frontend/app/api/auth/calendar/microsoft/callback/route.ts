@@ -1,10 +1,10 @@
 import { withAuth } from "@/lib/api/helpers";
-import { exchangeMicrosoftCode, upsertCalendarConnection } from "@/lib/services/hr/calendar";
+import { exchangeCalendarOAuthCode } from "@/lib/services/hr/calendar";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
-  return withAuth(async (session) => {
+  return withAuth(async () => {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
     const error = url.searchParams.get("error");
@@ -16,12 +16,10 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-      const { tokens, email } = await exchangeMicrosoftCode(code);
-      await upsertCalendarConnection({
-        userId: session.user.id,
+      await exchangeCalendarOAuthCode({
         provider: "MICROSOFT",
-        tokens,
-        email,
+        code,
+        redirectUri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/calendar/microsoft/callback`,
       });
 
       return NextResponse.redirect(

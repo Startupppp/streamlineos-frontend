@@ -13,14 +13,14 @@ import type {
   BlogPost,
 } from "@/types/blog";
 
-export const blogKeys = {
+const blogKeys = {
   all: ["blog"] as const,
   posts: () => [...blogKeys.all, "posts"] as const,
   post: (id: string) => [...blogKeys.all, "post", id] as const,
   categories: () => [...blogKeys.all, "categories"] as const,
 };
 
-export interface BlogFeedParams {
+interface BlogFeedParams {
   category?: string;
   tag?: string;
   search?: string;

@@ -14,7 +14,7 @@ import type {
 } from "@/types/hr";
 import type { CandidateSlaRecord, InterviewScorecard } from "./interviews";
 
-export interface AiScoreBreakdown {
+interface AiScoreBreakdown {
   technicalSkills: number;
   experience: number;
   communication: number;
@@ -52,7 +52,7 @@ export interface BulkRejectInput {
   sendRejectionEmail?: boolean;
 }
 
-export interface BulkRejectResult {
+interface BulkRejectResult {
   rejected: number;
   alreadyRejected: number;
   emailsSent: number;
@@ -66,7 +66,7 @@ export interface SourceEffectivenessRow {
   hireRate: number;
 }
 
-export interface RecruitmentFunnelStage {
+interface RecruitmentFunnelStage {
   stage: string;
   count: number;
   avgDaysInStage: number | null;

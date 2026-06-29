@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 
-export interface ProjectTemplateTicket {
+interface ProjectTemplateTicket {
   id: number;
   templateId: number;
   title: string;
@@ -28,7 +28,7 @@ export interface ProjectTemplate {
   tickets: ProjectTemplateTicket[];
 }
 
-export interface CreateProjectTemplateInput {
+interface CreateProjectTemplateInput {
   name: string;
   description?: string;
   category?: string;
@@ -43,7 +43,7 @@ export interface CreateProjectTemplateInput {
   }>;
 }
 
-export interface ApplyProjectTemplateInput {
+interface ApplyProjectTemplateInput {
   name: string;
   description?: string;
   managerId?: string;

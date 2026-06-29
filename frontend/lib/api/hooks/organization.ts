@@ -176,3 +176,121 @@ export const useUpdateOrgSecuritySettings = () => {
     },
   });
 };
+
+interface OrgHoliday {
+  id: string;
+  name: string;
+  date: string;
+  recurring: boolean;
+  createdAt: string;
+}
+
+interface OrgCustomDomain {
+  id: string;
+  domain: string;
+  verificationToken: string;
+  verifiedAt: string | null;
+  createdAt: string;
+}
+
+export const useOrgHolidays = (
+  options?: Omit<UseQueryOptions<OrgHoliday[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<OrgHoliday[], Error>({
+    queryKey: [...queryKeys.organization.all, "holidays"],
+    queryFn: () => apiClient.get<OrgHoliday[]>("/organization/holidays"),
+    staleTime: 60_000,
+    ...options,
+  });
+
+export const useCreateOrgHoliday = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ id: string }, Error, { name: string; date: string; recurring?: boolean }>({
+    mutationFn: (data) => apiClient.post<{ id: string }>("/organization/holidays", data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.organization.all, "holidays"] });
+    },
+  });
+};
+
+export const useDeleteOrgHoliday = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, string>({
+    mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/organization/holidays/${id}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.organization.all, "holidays"] });
+    },
+  });
+};
+
+export const useOrgCustomDomains = (
+  options?: Omit<UseQueryOptions<OrgCustomDomain[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<OrgCustomDomain[], Error>({
+    queryKey: [...queryKeys.organization.all, "custom-domains"],
+    queryFn: () => apiClient.get<OrgCustomDomain[]>("/organization/custom-domains"),
+    staleTime: 60_000,
+    ...options,
+  });
+
+export const useAddCustomDomain = () => {
+  const queryClient = useQueryClient();
+  return useMutation<OrgCustomDomain, Error, { domain: string }>({
+    mutationFn: (data) => apiClient.post<OrgCustomDomain>("/organization/custom-domains", data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.organization.all, "custom-domains"] });
+    },
+  });
+};
+
+export const useVerifyCustomDomain = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ verified: boolean }, Error, string>({
+    mutationFn: (domainId) =>
+      apiClient.post<{ verified: boolean }>(`/organization/custom-domains/${domainId}/verify`, {}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.organization.all, "custom-domains"] });
+    },
+  });
+};
+
+export const useRemoveCustomDomain = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, string>({
+    mutationFn: (domainId) => apiClient.delete<{ success: boolean }>(`/organization/custom-domains/${domainId}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.organization.all, "custom-domains"] });
+    },
+  });
+};
+
+export const useArchiveOrg = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, void>({
+    mutationFn: () => apiClient.post<{ success: boolean }>("/organization/archive", {}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organization.settings() });
+    },
+  });
+};
+
+export const useRestoreOrg = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, void>({
+    mutationFn: () => apiClient.post<{ success: boolean }>("/organization/restore", {}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organization.settings() });
+    },
+  });
+};
+
+export const useTransferOwnership = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { newOwnerUserId: string }>({
+    mutationFn: (data) =>
+      apiClient.post<{ success: boolean }>("/organization/transfer-ownership", data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organization.all });
+    },
+  });
+};

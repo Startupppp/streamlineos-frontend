@@ -8,7 +8,7 @@ export type GoalLevel = "company" | "team" | "individual";
 export type GoalStatus = "not_started" | "on_track" | "at_risk" | "off_track" | "completed";
 export type KeyResultMetric = "number" | "percentage" | "currency" | "boolean";
 
-export interface GoalOwner {
+interface GoalOwner {
   id: string;
   name: string | null;
   email: string | null;
@@ -50,7 +50,7 @@ export interface KeyResult {
   updatedAt: string;
 }
 
-export interface GoalUpdate {
+interface GoalUpdate {
   id: number;
   keyResultId: number | null;
   note: string | null;
@@ -62,7 +62,7 @@ export interface GoalUpdate {
   userImage: string | null;
 }
 
-export interface GoalLink {
+interface GoalLink {
   id: number;
   ticketId: number | null;
   projectId: number | null;
@@ -80,7 +80,7 @@ export interface GoalDetail extends Omit<GoalListItem, "keyResultCount"> {
   links: GoalLink[];
 }
 
-export interface GoalStats {
+interface GoalStats {
   total: number;
   byStatus: Record<GoalStatus, number>;
   avgProgress: number;
@@ -88,7 +88,7 @@ export interface GoalStats {
   completed: number;
 }
 
-export interface GoalsParams {
+interface GoalsParams {
   status?: GoalStatus;
   level?: GoalLevel;
   ownerId?: string;
@@ -118,7 +118,7 @@ export interface CreateGoalInput {
   keyResults?: KeyResultInput[];
 }
 
-export interface UpdateGoalInput {
+interface UpdateGoalInput {
   title?: string;
   description?: string | null;
   ownerId?: string | null;
@@ -130,13 +130,13 @@ export interface UpdateGoalInput {
   projectId?: number | null;
 }
 
-export interface CheckInInput {
+interface CheckInInput {
   keyResultId: number;
   newValue: number;
   note?: string;
 }
 
-export interface AddGoalLinkInput {
+interface AddGoalLinkInput {
   ticketId?: number;
   projectId?: number;
 }

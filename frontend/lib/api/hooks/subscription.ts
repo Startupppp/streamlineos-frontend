@@ -4,9 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 export type SubscriptionPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
-export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "PAST_DUE" | "CANCELLED" | "EXPIRED";
+type SubscriptionStatus = "TRIAL" | "ACTIVE" | "PAST_DUE" | "CANCELLED" | "EXPIRED";
 
-export interface SubscriptionPayment {
+interface SubscriptionPayment {
   id: number;
   orgId: string;
   subscriptionId: number;
@@ -19,7 +19,7 @@ export interface SubscriptionPayment {
   createdAt: string;
 }
 
-export interface Subscription {
+interface Subscription {
   id: number;
   orgId: string;
   plan: SubscriptionPlan;
@@ -43,12 +43,15 @@ interface SubscriptionResponse {
   isConfigured: boolean;
 }
 
+export type BillingCycle = "monthly" | "annual";
+
 interface CreateOrderResponse {
   orderId: string;
   amount: number;
   currency: string;
   keyId: string | null;
   plan: SubscriptionPlan;
+  billingCycle: BillingCycle;
 }
 
 interface VerifySubscriptionInput {
@@ -65,6 +68,7 @@ interface VerifySubscriptionResponse {
 }
 
 const SUBSCRIPTION_QUERY_KEY = ["subscription"] as const;
+const BILLING_SUMMARY_QUERY_KEY = ["billing", "summary"] as const;
 
 export function useSubscription() {
   return useQuery<SubscriptionResponse, Error>({
@@ -75,7 +79,7 @@ export function useSubscription() {
 }
 
 export function useCreateSubscriptionOrder() {
-  return useMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan }>({
+  return useMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle; couponId?: number }>({
     mutationFn: (data) => apiClient.post<CreateOrderResponse>("/billing/razorpay", data),
   });
 }
@@ -86,6 +90,76 @@ export function useVerifySubscription() {
     mutationFn: (data) => apiClient.patch<VerifySubscriptionResponse>("/billing/razorpay", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: BILLING_SUMMARY_QUERY_KEY });
     },
+  });
+}
+
+export interface CouponValidationResult {
+  valid: boolean;
+  couponId: number | null;
+  type: "PERCENTAGE" | "FIXED" | null;
+  value: number | null;
+  discountAmount: number | null;
+  message: string;
+}
+
+export interface PlanDefinition {
+  id: SubscriptionPlan;
+  name: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  features: string[];
+  maxEmployees: number | null;
+}
+
+export interface BillingSummary {
+  subscription: {
+    plan: SubscriptionPlan;
+    status: string;
+    trialEndsAt: string | null;
+    trialDaysRemaining: number | null;
+    currentPeriodEnd: string | null;
+    isActive: boolean;
+    isTrial: boolean;
+  } | null;
+  invoiceStats: {
+    totalPaid: string;
+    totalOutstanding: string;
+    draft: number;
+    sent: number;
+    paid: number;
+    overdue: number;
+    cancelled: number;
+  };
+  isConfigured: boolean;
+}
+
+export function useBillingPlans() {
+  return useQuery<{ plans: PlanDefinition[] }, Error>({
+    queryKey: ["billing", "plans"],
+    queryFn: () => apiClient.get<{ plans: PlanDefinition[] }>("/billing/plans"),
+    staleTime: 60 * 60_000,
+  });
+}
+
+export function useBillingSummary() {
+  return useQuery<BillingSummary, Error>({
+    queryKey: BILLING_SUMMARY_QUERY_KEY,
+    queryFn: () => apiClient.get<BillingSummary>("/billing/summary"),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
+  return useQuery<CouponValidationResult, Error>({
+    queryKey: ["billing", "coupon", code, plan],
+    queryFn: () =>
+      apiClient.get<CouponValidationResult>(
+        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`,
+      ),
+    enabled: code.trim().length >= 3 && plan !== null,
+    staleTime: 30_000,
+    retry: false,
   });
 }

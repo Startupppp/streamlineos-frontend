@@ -1,14 +1,12 @@
 import { format } from "date-fns";
 
-export { generateSlug as slugify } from "./utils";
-
 export interface TocItem {
   id: string;
   text: string;
   level: 2 | 3;
 }
 
-export function stripHtml(html: string): string {
+function stripHtml(html: string): string {
   return html
     .replace(/<[^>]*>/g, " ")
     .replace(/&nbsp;/g, " ")
@@ -19,19 +17,6 @@ export function stripHtml(html: string): string {
     .replace(/&#39;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-export function calcReadingTime(content: string): number {
-  const words = stripHtml(content).split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 200));
-}
-
-export function makeExcerpt(html: string, maxLength = 160): string {
-  const text = stripHtml(html);
-  if (text.length <= maxLength) return text;
-  const sliced = text.slice(0, maxLength);
-  const lastSpace = sliced.lastIndexOf(" ");
-  return `${sliced.slice(0, lastSpace > 0 ? lastSpace : maxLength).trimEnd()}…`;
 }
 
 export function formatBlogDate(date: Date | string | null | undefined): string {

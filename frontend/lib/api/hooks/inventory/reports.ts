@@ -15,9 +15,9 @@ export type MovementType =
   | "RETURN_OUT"
   | "GRN";
 
-export type ReorderUrgency = "critical" | "high" | "medium";
+type ReorderUrgency = "critical" | "high" | "medium";
 
-export interface MovementsFilters {
+interface MovementsFilters {
   warehouseId?: number;
   type?: string;
   dateFrom?: string;
@@ -25,7 +25,7 @@ export interface MovementsFilters {
   limit?: number;
 }
 
-export interface InventoryDashboardMovement {
+interface InventoryDashboardMovement {
   id: number;
   transactionType: MovementType;
   quantityChange: number;
@@ -37,7 +37,7 @@ export interface InventoryDashboardMovement {
   performedBy: string | null;
 }
 
-export interface InventoryDashboard {
+interface InventoryDashboard {
   totalSkus: number;
   totalOnHand: number;
   totalCommitted: number;
@@ -63,7 +63,7 @@ export interface StockSummaryRow {
   totalValue: number;
 }
 
-export interface ReorderReportRow {
+interface ReorderReportRow {
   productId: number;
   productName: string;
   sku: string;
@@ -80,7 +80,7 @@ export interface ReorderReportRow {
   urgency: ReorderUrgency;
 }
 
-export interface MovementReportRow {
+interface MovementReportRow {
   id: number;
   type: MovementType;
   productName: string;

@@ -6,7 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 
 export type SalesOrderStatus = "DRAFT" | "CONFIRMED" | "SHIPPED" | "INVOICED" | "CANCELLED";
 
-export interface SalesOrderFilters {
+interface SalesOrderFilters {
   clientId?: number;
   status?: SalesOrderStatus;
   dateFrom?: string;
@@ -15,7 +15,7 @@ export interface SalesOrderFilters {
   limit?: number;
 }
 
-export interface SalesOrderListItem {
+interface SalesOrderListItem {
   id: number;
   soNumber: string;
   customerName: string | null;
@@ -25,14 +25,14 @@ export interface SalesOrderListItem {
   status: SalesOrderStatus;
 }
 
-export interface SalesOrdersListResponse {
+interface SalesOrdersListResponse {
   items: SalesOrderListItem[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-export interface SalesOrderLine {
+interface SalesOrderLine {
   id: number;
   productId: number;
   productName: string | null;
@@ -44,7 +44,7 @@ export interface SalesOrderLine {
   lineTotal: string;
 }
 
-export interface SalesOrderDetail {
+interface SalesOrderDetail {
   id: number;
   soNumber: string;
   customerName: string | null;
@@ -69,7 +69,7 @@ export interface AtpEntry {
   available: number;
 }
 
-export interface CreateSalesOrderLineInput {
+interface CreateSalesOrderLineInput {
   productId: number;
   quantity: number;
   unitPrice: number;
@@ -77,7 +77,7 @@ export interface CreateSalesOrderLineInput {
   discount?: number;
 }
 
-export interface CreateSalesOrderInput {
+interface CreateSalesOrderInput {
   customerId?: number;
   warehouseId: number;
   orderDate?: string;
@@ -88,21 +88,21 @@ export interface CreateSalesOrderInput {
   lines: CreateSalesOrderLineInput[];
 }
 
-export interface CreatedSalesOrder {
+interface CreatedSalesOrder {
   id: number;
   soNumber: string;
 }
 
-export interface CreatedInvoice {
+interface CreatedInvoice {
   id: number;
   invoiceNumber: string;
 }
 
-export interface ConfirmSalesOrderInput {
+interface ConfirmSalesOrderInput {
   soId: number;
 }
 
-export interface ShipSalesOrderInput {
+interface ShipSalesOrderInput {
   soId: number;
   shippedLines: Array<{ productId: number; shippedQty: number; locationId?: number }>;
   shipDate?: string;
@@ -110,7 +110,7 @@ export interface ShipSalesOrderInput {
   notes?: string;
 }
 
-export interface InvoiceSalesOrderInput {
+interface InvoiceSalesOrderInput {
   soId: number;
 }
 

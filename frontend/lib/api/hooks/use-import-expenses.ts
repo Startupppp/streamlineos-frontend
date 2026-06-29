@@ -8,7 +8,7 @@ interface ImportVariables {
   autoApprove: boolean;
 }
 
-export interface ImportExpensesResult {
+interface ImportExpensesResult {
   success: boolean;
   count?: number;
   skipped?: number;
@@ -16,16 +16,11 @@ export interface ImportExpensesResult {
   error?: string;
 }
 
-async function importExpensesRequest({
-  file,
-  autoApprove,
-}: ImportVariables): Promise<ImportExpensesResult> {
-  const content = await file.text();
-  const result = await apiClient.post<ImportExpensesResult>("/hr/expenses/import", {
-    fileName: file.name,
-    content,
-    autoApprove,
-  });
+async function importExpensesRequest({ file, autoApprove }: ImportVariables): Promise<ImportExpensesResult> {
+  const form = new FormData();
+  form.append("file", file, file.name);
+  form.append("autoApprove", String(autoApprove));
+  const result = await apiClient.upload<ImportExpensesResult>("/hr/expenses/import", form);
   if (!result.success) {
     throw new Error(result.error ?? "Failed to import expenses");
   }

@@ -39,7 +39,7 @@ export interface InterviewScorecard {
   updatedAt: string | null;
 }
 
-export interface ScorecardSummary {
+interface ScorecardSummary {
   interviewId: number;
   totalScorecards: number;
   submittedCount: number;
@@ -134,7 +134,7 @@ export interface CreateQuestionInput {
   keywords?: string[];
 }
 
-export interface InterviewerPerformanceStat {
+interface InterviewerPerformanceStat {
   interviewerId: string;
   interviewerName: string | null;
   interviewerEmail: string | null;
@@ -145,7 +145,7 @@ export interface InterviewerPerformanceStat {
   recommendations: Record<string, number>;
 }
 
-export interface InterviewerPerformanceResponse {
+interface InterviewerPerformanceResponse {
   stats: InterviewerPerformanceStat[];
   period: { days: number; since: string };
 }

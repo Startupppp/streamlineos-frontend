@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface HrDashboardMetrics {
+interface HrDashboardMetrics {
   totalEmployees: number;
   activeEmployees: number;
   onLeaveToday: number;
@@ -22,11 +22,7 @@ export interface HrDashboardMetrics {
   }[];
 }
 
-export interface HrHeadcountTrends {
-  trends: { month: string; count: number }[];
-}
-
-export interface HrLeaveCalendarEntry {
+interface HrLeaveCalendarEntry {
   id: number;
   userId: string;
   userName: string;
@@ -37,24 +33,11 @@ export interface HrLeaveCalendarEntry {
   status: string;
 }
 
-export interface HrHeadcountGroup {
-  label: string;
-  count: number;
-}
-
 export function useHrDashboardMetrics() {
   return useQuery({
     queryKey: queryKeys.hr.dashboardMetrics(),
     queryFn: () => apiClient.get<HrDashboardMetrics>("/hr/dashboard/metrics"),
     staleTime: 60_000,
-  });
-}
-
-export function useHrHeadcountTrends() {
-  return useQuery({
-    queryKey: queryKeys.hr.headcountTrends(),
-    queryFn: () => apiClient.get<HrHeadcountTrends>("/hr/dashboard/headcount-trends"),
-    staleTime: 120_000,
   });
 }
 
@@ -72,16 +55,7 @@ export function useHrLeaveCalendar(month?: number, year?: number) {
   });
 }
 
-export function useHrHeadcount(groupBy: "department" | "role" | "branch" = "department") {
-  return useQuery({
-    queryKey: queryKeys.hr.headcount(groupBy),
-    queryFn: () =>
-      apiClient.get<HrHeadcountGroup[]>(`/hr/headcount?groupBy=${groupBy}`),
-    staleTime: 120_000,
-  });
-}
-
-export interface HrOnboardingStatus {
+interface HrOnboardingStatus {
   inProgress: number;
   completed: number;
   total: number;
@@ -102,67 +76,3 @@ export function useHrOnboardingStatus() {
     staleTime: 60_000,
   });
 }
-
-export interface HrDiversityMetrics {
-  genderBreakdown: { gender: string; count: number }[];
-  ageDistribution: { range: string; count: number }[];
-}
-
-export function useHrDiversityMetrics() {
-  return useQuery({
-    queryKey: queryKeys.hr.dashboardDiversity(),
-    queryFn: () => apiClient.get<HrDiversityMetrics>("/hr/dashboard/diversity"),
-    staleTime: 300_000,
-  });
-}
-
-export interface HrTimeToFill {
-  avgDaysOverall: number | null;
-  byDepartment: { department: string; avgDays: number; filledCount: number }[];
-}
-
-export function useHrTimeToFill() {
-  return useQuery({
-    queryKey: queryKeys.hr.dashboardTimeToFill(),
-    queryFn: () => apiClient.get<HrTimeToFill>("/hr/dashboard/time-to-fill"),
-    staleTime: 300_000,
-  });
-}
-
-export interface HrPayrollSummary {
-  month: string;
-  totalGross: number;
-  totalNet: number;
-  totalDeductions: number;
-  employeeCount: number;
-  prevMonthNet: number;
-  momChangePct: number | null;
-}
-
-export function useHrPayrollSummary() {
-  return useQuery({
-    queryKey: queryKeys.hr.dashboardPayrollSummary(),
-    queryFn: () => apiClient.get<HrPayrollSummary>("/hr/dashboard/payroll-summary"),
-    staleTime: 120_000,
-  });
-}
-
-export interface HrSalaryBands {
-  byDepartment: {
-    department: string;
-    avgAnnual: number;
-    minAnnual: number;
-    maxAnnual: number;
-    employeeCount: number;
-  }[];
-  bandDistribution: { label: string; count: number }[];
-}
-
-export function useHrSalaryBands() {
-  return useQuery({
-    queryKey: queryKeys.hr.dashboardSalaryBands(),
-    queryFn: () => apiClient.get<HrSalaryBands>("/hr/dashboard/salary-bands"),
-    staleTime: 300_000,
-  });
-}
-

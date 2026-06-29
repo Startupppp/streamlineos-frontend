@@ -9,13 +9,9 @@ import type {
   ClientActivity,
   ClientAccountFilters,
   PaginatedClientAccounts,
-  UpdateClientAccountStatusInput,
   LogClientActivityInput,
-  ClientAccountStats,
-  CrmAssignmentMember,
   CrmAssignmentStats,
   UpdateRenewalInput,
-  ClientHealth,
   ClientTimelineEvent,
   SimpleClient,
   ClientOpportunity,
@@ -28,19 +24,13 @@ import type {
 } from "@/types/crm";
 
 export type {
-  CrmAssignmentMember,
   CrmAssignmentStats,
   UpdateRenewalInput,
-  ClientHealth,
   ClientTimelineEvent,
-  SimpleClient,
   ClientOpportunity,
   CreateClientOpportunityInput,
-  OnboardingTemplate,
-  OnboardingItem,
   CsatSurvey,
   CsatResponse,
-  SlaStats,
 };
 
 export function useClientAccounts(filters?: ClientAccountFilters) {
@@ -58,42 +48,6 @@ export function useClientAccount(id: number) {
     queryFn: () => apiClient.get<ClientAccountWithActivities>(`/clients/${id}`),
     enabled: id > 0,
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useClientActivities(clientId: number) {
-  return useQuery({
-    queryKey: queryKeys.clients.activities(clientId),
-    queryFn: () => apiClient.get<ClientActivity[]>(`/clients/${clientId}/activities`),
-    enabled: clientId > 0,
-    staleTime: 60_000,
-  });
-}
-
-export function useCreateClientAccount() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: Partial<ClientAccount>) =>
-      apiClient.post<ClientAccount>("/clients", input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.clients.all });
-      qc.invalidateQueries({ queryKey: queryKeys.clientStats.stats() });
-      qc.invalidateQueries({ queryKey: queryKeys.clients.crmStats() });
-    },
-  });
-}
-
-export function useUpdateClientAccount() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...data }: UpdateClientAccountStatusInput) =>
-      apiClient.patch<ClientAccount>(`/clients/${id}`, data),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.clients.all });
-      qc.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.clientStats.stats() });
-      qc.invalidateQueries({ queryKey: queryKeys.clients.crmStats() });
-    },
   });
 }
 
@@ -156,33 +110,6 @@ export function useUpdateRenewal() {
       qc.invalidateQueries({ queryKey: queryKeys.clients.all });
       qc.invalidateQueries({ queryKey: queryKeys.clientStats.stats() });
     },
-  });
-}
-
-export function useClientAccountStats() {
-  return useQuery({
-    queryKey: queryKeys.clientStats.stats(),
-    queryFn: () => apiClient.get<ClientAccountStats>("/clients/stats"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useClientHealth(params?: { status?: string }) {
-  return useQuery({
-    queryKey: [...queryKeys.clients.all, "health", params] as const,
-    queryFn: () => apiClient.get<{ items: ClientHealth[]; summary: { healthy: number; at_risk: number; critical: number } }>("/clients/health", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useChurnAlerts() {
-  return useQuery({
-    queryKey: [...queryKeys.clients.all, "churnAlerts"] as const,
-    queryFn: () => apiClient.get<{
-      alerts: ClientHealth[];
-      summary: { critical: number; atRisk: number; total: number };
-    }>("/clients/churn-alerts"),
-    staleTime: 2 * 60_000,
   });
 }
 

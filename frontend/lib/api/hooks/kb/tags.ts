@@ -21,14 +21,6 @@ export function useCreateKbTag() {
   });
 }
 
-export function useDeleteKbTag() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (tagId: number) => apiClient.delete<void>(`/kb/tags/${tagId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.tags() }),
-  });
-}
-
 export function useKbArticleTags(articleId: number) {
   return useQuery({
     queryKey: queryKeys.kb.articleTags(articleId),

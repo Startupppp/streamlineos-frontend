@@ -20,15 +20,6 @@ export function useHiringFlows() {
   });
 }
 
-export function useHiringFlow(id: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.hiringFlow(id),
-    queryFn: () => apiClient.get<HiringFlow>(`/hr/recruitment/hiring-flows/${id}`),
-    staleTime: 2 * 60_000,
-    enabled: id > 0,
-  });
-}
-
 export function useCreateHiringFlow() {
   const qc = useQueryClient();
   return useMutation({

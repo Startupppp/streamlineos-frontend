@@ -10,7 +10,7 @@ const MIGRATED_PREFIXES = [
   "/ai",
   "/audit-log",
   "/careers",
-  "/billing/razorpay",
+  "/billing",
   "/blog",
   "/branches",
   "/calendar",

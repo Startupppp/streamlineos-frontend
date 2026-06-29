@@ -5,7 +5,6 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 export type GitProvider = "github" | "gitlab" | "bitbucket";
-export type GitRefType = "commit" | "pull_request" | "branch";
 
 export interface GitConnection {
   id: number;
@@ -31,29 +30,17 @@ export interface CreatedGitConnection {
   updatedAt: string | null;
 }
 
-export interface CreateGitConnectionInput {
+interface CreateGitConnectionInput {
   provider: GitProvider;
   repoUrl: string;
   repoName?: string;
 }
 
-export interface UpdateGitConnectionInput {
+interface UpdateGitConnectionInput {
   id: number;
   isActive?: boolean;
   repoUrl?: string;
   repoName?: string | null;
-}
-
-export interface TicketGitLink {
-  id: number;
-  provider: GitProvider;
-  refType: GitRefType;
-  externalId: string;
-  title: string | null;
-  url: string | null;
-  author: string | null;
-  status: string | null;
-  createdAt: string | null;
 }
 
 export function useGitConnections() {
@@ -91,12 +78,3 @@ export function useDeleteGitConnection() {
   });
 }
 
-export function useTicketGitLinks(ticketId: number, projectId: number) {
-  return useQuery({
-    queryKey: queryKeys.gitIntegration.ticketLinks(ticketId),
-    queryFn: () =>
-      apiClient.get<TicketGitLink[]>(`/projects/${projectId}/tickets/${ticketId}/git-links`),
-    enabled: !!ticketId && !!projectId,
-    staleTime: 30_000,
-  });
-}

@@ -16,14 +16,14 @@ export interface PlaybookEntry {
   updatedAt: string | null;
 }
 
-export interface CreatePlaybookEntryInput {
+interface CreatePlaybookEntryInput {
   title: string;
   category?: string;
   content?: string;
   sortOrder?: number;
 }
 
-export interface UpdatePlaybookEntryInput {
+interface UpdatePlaybookEntryInput {
   title?: string;
   category?: string | null;
   content?: string;

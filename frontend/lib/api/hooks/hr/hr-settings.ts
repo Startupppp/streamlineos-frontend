@@ -10,7 +10,6 @@ import type {
   Goal,
   HelpdeskTicket,
   WfhRequest,
-  Device,
   Incentive,
   IncentivesResult,
   IncentiveStats,
@@ -25,9 +24,6 @@ import type {
   CreateHelpdeskTicketInput,
   CreateWfhRequestInput,
   ProcessWfhRequestInput,
-  CreateDeviceInput,
-  UpdateDeviceInput,
-  DeleteDeviceInput,
   GetIncentivesInput,
   ApproveIncentiveInput,
   RejectIncentiveInput,
@@ -42,12 +38,6 @@ export interface NotificationPreferences {
   quietHoursStart: string | null;
   quietHoursEnd: string | null;
   categories: Record<string, boolean>;
-}
-
-interface DocumentStats {
-  total: number;
-  byType: Record<string, number>;
-  expiringIn30Days: number;
 }
 
 interface ChangePasswordInput {
@@ -141,14 +131,6 @@ export function useDeleteDocument() {
         queryKey: [...queryKeys.hr.all, "documentStats"],
       });
     },
-  });
-}
-
-export function useHrDocumentStats() {
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "documentStats"] as const,
-    queryFn: () => apiClient.get<DocumentStats>("/hr/documents/stats"),
-    staleTime: 60_000,
   });
 }
 
@@ -257,41 +239,6 @@ export function useProcessWfhRequest() {
   });
 }
 
-export function useHrDevices(params?: Record<string, unknown>) {
-  return useQuery({
-    queryKey: queryKeys.hr.devices(params),
-    queryFn: () => apiClient.get<Device[]>("/hr/devices", params),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCreateDevice() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateDeviceInput) =>
-      apiClient.post<Device>("/hr/devices", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
-  });
-}
-
-export function useUpdateDevice() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ deviceId, ...data }: UpdateDeviceInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/devices/${deviceId}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
-  });
-}
-
-export function useDeleteDevice() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ deviceId }: DeleteDeviceInput) =>
-      apiClient.delete<{ success: boolean }>(`/hr/devices/${deviceId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
-  });
-}
-
 export function useHrIncentives(params?: GetIncentivesInput) {
   return useQuery({
     queryKey: queryKeys.hr.incentives(
@@ -386,10 +333,3 @@ export function useChangePassword() {
   });
 }
 
-export function useHrDirectory() {
-  return useQuery({
-    queryKey: queryKeys.hr.directory(),
-    queryFn: () => apiClient.get<unknown[]>("/hr/directory"),
-    staleTime: 2 * 60_000,
-  });
-}
