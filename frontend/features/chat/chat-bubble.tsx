@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { ArrowDown, CheckCheck, Copy, FileText, Pencil, Reply, Smile, Trash2 } from "lucide-react";
+import { ArrowDown, Bookmark, CheckCheck, Copy, FileText, Pencil, Reply, Smile, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,6 +28,7 @@ export function ChatBubble({
   isEditing,
   editInput,
   currentUserId,
+  isPinned,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
@@ -35,6 +36,8 @@ export function ChatBubble({
   onReply,
   onDelete,
   onReact,
+  onPin,
+  onUnpin,
 }: {
   message: Message;
   isOwn: boolean;
@@ -42,6 +45,7 @@ export function ChatBubble({
   isEditing: boolean;
   editInput: string;
   currentUserId: string;
+  isPinned?: boolean;
   onEditInputChange: (v: string) => void;
   onStartEdit: () => void;
   onCancelEdit: () => void;
@@ -49,6 +53,8 @@ export function ChatBubble({
   onReply: () => void;
   onDelete: () => void;
   onReact: (emoji: string) => void;
+  onPin: () => void;
+  onUnpin: () => void;
 }) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
 
@@ -66,6 +72,10 @@ export function ChatBubble({
     onReact(emoji);
     setShowReactionPicker(false);
   }, [onReact]);
+  const handlePinToggle = useCallback(() => {
+    if (isPinned) onUnpin();
+    else onPin();
+  }, [isPinned, onPin, onUnpin]);
 
   if (message.isDeleted) {
     return (
@@ -274,6 +284,14 @@ export function ChatBubble({
             <div className="relative flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-visible">
               <button onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply">
                 <Reply className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={handlePinToggle}
+                className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isPinned ? "text-amber-500" : "text-muted-foreground")}
+                title={isPinned ? "Unpin" : "Pin"}
+                aria-label={isPinned ? "Unpin message" : "Pin message"}
+              >
+                <Bookmark className={cn("h-3.5 w-3.5", isPinned && "fill-amber-500")} />
               </button>
               <button
                 onClick={handleToggleReactionPicker}

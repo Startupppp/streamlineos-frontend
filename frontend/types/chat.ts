@@ -214,3 +214,13 @@ export interface VotePollInput {
 export interface UnreadTotalResponse {
   total: number;
 }
+
+export interface PinnedMessage {
+  id: number;
+  channelId: number;
+  messageId: number;
+  pinnedBy: string;
+  pinnedAt: Date | string;
+  message: Message & { sender: { id: string; name: string | null; image: string | null } | null };
+  pinnedByUser: { id: string; name: string | null } | null;
+}

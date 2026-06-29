@@ -8,11 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
+import { Bookmark, Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
-import { useChatChannel, useChatOnlineUsers, useUpdateChannel } from "@/lib/api/hooks";
+import { useChatChannel, useChatOnlineUsers, useUpdateChannel, useChatPins, useUnpinMessage } from "@/lib/api/hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
@@ -29,6 +29,8 @@ export function ChannelInfoPanel({
   const { data: channel } = useChatChannel(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
   const updateChannel = useUpdateChannel();
+  const { data: pins } = useChatPins(channelId);
+  const unpinMessage = useUnpinMessage();
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers]
@@ -180,6 +182,44 @@ export function ChannelInfoPanel({
                   </p>
                 )
               )}
+            </div>
+          )}
+
+          {pins && pins.length > 0 && (
+            <div className="mb-6">
+              <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
+                <Bookmark className="h-3 w-3" />
+                Pinned Messages ({pins.length})
+              </h5>
+              <div className="space-y-1.5">
+                {pins.map((pin) => (
+                  <div
+                    key={pin.id}
+                    className="flex items-start gap-2.5 px-2 py-2 rounded-lg bg-muted/20 border border-border/20 hover:bg-muted/30 transition-colors"
+                  >
+                    <Avatar className="h-6 w-6 shrink-0 mt-0.5">
+                      <AvatarImage src={resolveImageUrl(pin.message.sender?.image)} />
+                      <AvatarFallback className="text-[8px] font-bold">
+                        {getInitials(pin.message.sender?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold truncate">{pin.message.sender?.name}</p>
+                      <p className="text-[12px] text-muted-foreground line-clamp-2 break-words">
+                        {pin.message.content ?? (pin.message.attachments.length > 0 ? `${pin.message.attachments.length} attachment(s)` : "")}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => unpinMessage.mutate({ channelId, messageId: pin.messageId })}
+                      className="shrink-0 p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+                      title="Unpin"
+                      aria-label="Unpin message"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

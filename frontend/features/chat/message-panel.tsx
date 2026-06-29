@@ -30,6 +30,9 @@ import {
   useChatOnlineUsers,
   useChatOrgUsers,
   useToggleReaction,
+  useChatPins,
+  usePinMessage,
+  useUnpinMessage,
 } from "@/lib/api/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
@@ -71,6 +74,9 @@ export function MessagePanel({
   const deleteMessage = useDeleteMessage();
   const editMessage = useEditMessage();
   const toggleReaction = useToggleReaction(channelId);
+  const pinMessage = usePinMessage();
+  const unpinMessage = useUnpinMessage();
+  const { data: pins } = useChatPins(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
   const lastTypingSent = useRef(0);
   const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
@@ -271,9 +277,22 @@ export function MessagePanel({
     } catch (error) { toast.error(getErrorMessage(error)); }
   }, [editInput, editMessage, channelId]);
 
+  const pinnedMessageIds = useMemo(
+    () => new Set((pins ?? []).map((p) => p.messageId)),
+    [pins]
+  );
+
   const handleReact = useCallback((messageId: number, emoji: string) => {
     toggleReaction.mutate({ messageId, emoji });
   }, [toggleReaction]);
+
+  const handlePin = useCallback((messageId: number) => {
+    pinMessage.mutate({ channelId, messageId });
+  }, [pinMessage, channelId]);
+
+  const handleUnpin = useCallback((messageId: number) => {
+    unpinMessage.mutate({ channelId, messageId });
+  }, [unpinMessage, channelId]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (showMentions && filteredMentions.length > 0) {
@@ -420,6 +439,7 @@ export function MessagePanel({
         channelType={channel?.type}
         editingMessage={editingMessage}
         editInput={editInput}
+        pinnedMessageIds={pinnedMessageIds}
         onEditInputChange={setEditInput}
         onStartEdit={(msg) => { setEditingMessage(msg); setEditInput(msg.content ?? ""); }}
         onCancelEdit={() => { setEditingMessage(null); setEditInput(""); }}
@@ -427,6 +447,8 @@ export function MessagePanel({
         onReply={(msg) => { setReplyTo(msg); inputRef.current?.focus(); }}
         onDelete={(messageId) => deleteMessage.mutate({ channelId, messageId })}
         onReact={handleReact}
+        onPin={handlePin}
+        onUnpin={handleUnpin}
         showScrollBtn={showScrollBtn}
         scrollToBottom={scrollToBottom}
         messagesEndRef={messagesEndRef}

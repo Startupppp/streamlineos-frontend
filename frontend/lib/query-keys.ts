@@ -202,6 +202,7 @@ export const queryKeys = {
     orgUsers: () => [...base, "chat", "orgUsers"] as const,
     search: (query: string) => [...base, "chat", "search", query] as const,
     typing: (channelId: number) => [...base, "chat", "typing", channelId] as const,
+    pins: (channelId: number) => [...base, "chat", "pins", channelId] as const,
   },
 
   dashboard: {

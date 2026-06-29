@@ -19,6 +19,7 @@ interface MessageItemProps {
   currentUserId: string;
   editingMessageId: number | undefined;
   editInput: string;
+  pinnedMessageIds: Set<number>;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
   onCancelEdit: () => void;
@@ -26,6 +27,8 @@ interface MessageItemProps {
   onReply: (msg: Message) => void;
   onDelete: (messageId: number) => void;
   onReact: (messageId: number, emoji: string) => void;
+  onPin: (messageId: number) => void;
+  onUnpin: (messageId: number) => void;
 }
 
 function MessageItem({
@@ -35,6 +38,7 @@ function MessageItem({
   currentUserId,
   editingMessageId,
   editInput,
+  pinnedMessageIds,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
@@ -42,12 +46,16 @@ function MessageItem({
   onReply,
   onDelete,
   onReact,
+  onPin,
+  onUnpin,
 }: MessageItemProps) {
   const handleStartEdit = useCallback(() => onStartEdit(msg), [msg, onStartEdit]);
   const handleSaveEdit = useCallback(() => onSaveEdit(msg.id), [msg.id, onSaveEdit]);
   const handleReply = useCallback(() => onReply(msg), [msg, onReply]);
   const handleDelete = useCallback(() => onDelete(msg.id), [msg.id, onDelete]);
   const handleReact = useCallback((emoji: string) => onReact(msg.id, emoji), [msg.id, onReact]);
+  const handlePin = useCallback(() => onPin(msg.id), [msg.id, onPin]);
+  const handleUnpin = useCallback(() => onUnpin(msg.id), [msg.id, onUnpin]);
   return (
     <ChatBubble
       message={msg}
@@ -56,6 +64,7 @@ function MessageItem({
       currentUserId={currentUserId}
       isEditing={editingMessageId === msg.id}
       editInput={editingMessageId === msg.id ? editInput : ""}
+      isPinned={pinnedMessageIds.has(msg.id)}
       onEditInputChange={onEditInputChange}
       onStartEdit={handleStartEdit}
       onCancelEdit={onCancelEdit}
@@ -63,6 +72,8 @@ function MessageItem({
       onReply={handleReply}
       onDelete={handleDelete}
       onReact={handleReact}
+      onPin={handlePin}
+      onUnpin={handleUnpin}
     />
   );
 }
@@ -80,6 +91,7 @@ interface MessageListProps {
   channelType: string | undefined;
   editingMessage: Message | null;
   editInput: string;
+  pinnedMessageIds: Set<number>;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
   onCancelEdit: () => void;
@@ -87,6 +99,8 @@ interface MessageListProps {
   onReply: (msg: Message) => void;
   onDelete: (messageId: number) => void;
   onReact: (messageId: number, emoji: string) => void;
+  onPin: (messageId: number) => void;
+  onUnpin: (messageId: number) => void;
   showScrollBtn: boolean;
   scrollToBottom: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -107,6 +121,7 @@ export function MessageList({
   channelType,
   editingMessage,
   editInput,
+  pinnedMessageIds,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
@@ -114,6 +129,8 @@ export function MessageList({
   onReply,
   onDelete,
   onReact,
+  onPin,
+  onUnpin,
   showScrollBtn,
   scrollToBottom,
   messagesEndRef,
@@ -191,6 +208,7 @@ export function MessageList({
                     currentUserId={currentUserId}
                     editingMessageId={editingMessage?.id}
                     editInput={editInput}
+                    pinnedMessageIds={pinnedMessageIds}
                     onEditInputChange={onEditInputChange}
                     onStartEdit={onStartEdit}
                     onCancelEdit={onCancelEdit}
@@ -198,6 +216,8 @@ export function MessageList({
                     onReply={onReply}
                     onDelete={onDelete}
                     onReact={onReact}
+                    onPin={onPin}
+                    onUnpin={onUnpin}
                   />
                 );
               })}

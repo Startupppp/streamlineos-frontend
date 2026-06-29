@@ -23,6 +23,7 @@ import type {
   UpdateChannelInput,
   SendMessageInput,
   EditMessageInput,
+  PinnedMessage,
 } from "@/types/chat";
 
 export function useChatChannels(enabled = true) {
@@ -271,6 +272,37 @@ export function useToggleReaction(channelId: number) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.messages(channelId),
       });
+    },
+  });
+}
+
+export function useChatPins(channelId: number) {
+  return useQuery({
+    queryKey: queryKeys.chat.pins(channelId),
+    queryFn: () => apiClient.get<PinnedMessage[]>(`/chat/channels/${channelId}/pins`),
+    staleTime: 2 * 60_000,
+    enabled: channelId > 0,
+  });
+}
+
+export function usePinMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ channelId, messageId }: { channelId: number; messageId: number }) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/pins`, { messageId }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.pins(variables.channelId) });
+    },
+  });
+}
+
+export function useUnpinMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ channelId, messageId }: { channelId: number; messageId: number }) =>
+      apiClient.delete<{ ok: boolean }>(`/chat/channels/${channelId}/pins/${messageId}`),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.pins(variables.channelId) });
     },
   });
 }
