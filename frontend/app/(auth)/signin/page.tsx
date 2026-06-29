@@ -66,6 +66,7 @@ export default function SignInPage() {
         OAuthSignin: "Could not start Google sign-in. Please try again.",
         OAuthCallback: "Google sign-in failed. Please try again or use email and password.",
         OAuthCreateAccount: "Account setup failed. Please use email and password instead.",
+        OAuthAccountNotLinked: "This email is already registered. Sign in with your password, then link Google in settings.",
         Configuration: "Authentication is misconfigured. Please contact support.",
       };
       const message = oauthMessages[errorParam] ?? "Authentication failed. Please try again.";

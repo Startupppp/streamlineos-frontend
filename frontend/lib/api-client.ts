@@ -144,11 +144,26 @@ const MIGRATED_PREFIXES = [
   "/users",
 ] as const;
 
+const PUBLIC_AUTH_PATHS = new Set([
+  "/auth/register",
+  "/auth/login",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/magic-link",
+  "/auth/magic-link/verify",
+  "/auth/verify-email",
+]);
+
 function isMigrated(path: string): boolean {
   if (!EXTERNAL_API) return false;
   return MIGRATED_PREFIXES.some(
     (p) => path === p || path.startsWith(`${p}/`) || path.startsWith(`${p}?`),
   );
+}
+
+function isPublicPath(path: string): boolean {
+  const clean = path.split("?")[0];
+  return PUBLIC_AUTH_PATHS.has(clean);
 }
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
@@ -160,26 +175,35 @@ export function clearBackendTokenCache(): void {
 async function getBackendToken(): Promise<string | null> {
   const now = Date.now();
   if (cachedToken && cachedToken.expiresAt - 30_000 > now) return cachedToken.value;
-  const res = await fetch(`${SAME_ORIGIN}/auth/backend-token`, { credentials: "include" });
-  if (!res.ok) return null;
-  const data = (await res.json()) as { token: string; expiresIn: number };
-  cachedToken = { value: data.token, expiresAt: now + data.expiresIn * 1000 };
-  return data.token;
+  try {
+    const res = await fetch(`${SAME_ORIGIN}/auth/backend-token`, { credentials: "include" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { token: string; expiresIn: number };
+    cachedToken = { value: data.token, expiresAt: now + data.expiresIn * 1000 };
+    return data.token;
+  } catch {
+    return null;
+  }
 }
 
-async function authedFetch(url: string, init: RequestInit, useBackend: boolean): Promise<Response> {
+async function authedFetch(url: string, init: RequestInit, useBackend: boolean, path: string): Promise<Response> {
   const headers = new Headers(init.headers);
-  if (useBackend) {
+  const isPublic = isPublicPath(path);
+
+  if (useBackend && !isPublic) {
     const token = await getBackendToken();
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
-  let res = await fetch(url, { ...init, headers, credentials: "include" });
-  if (useBackend && res.status === 401) {
+
+  const credentials: RequestCredentials = useBackend ? "omit" : "include";
+  let res = await fetch(url, { ...init, headers, credentials });
+
+  if (useBackend && !isPublic && res.status === 401) {
     cachedToken = null;
     const token = await getBackendToken();
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
-      res = await fetch(url, { ...init, headers, credentials: "include" });
+      res = await fetch(url, { ...init, headers, credentials });
     }
   }
   return res;
@@ -201,7 +225,7 @@ async function parseResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let message = `${res.status} ${res.statusText}`;
     try {
-      const body = await res.json() as Record<string, unknown>;
+      const body = (await res.json()) as Record<string, unknown>;
       if (typeof body?.message === "string" && body.message) message = body.message;
       else if (typeof body?.error === "string" && body.error) message = body.error;
     } catch {
@@ -209,7 +233,11 @@ async function parseResponse<T>(res: Response): Promise<T> {
     throw new Error(message);
   }
   if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+  const body = (await res.json()) as Record<string, unknown>;
+  if (body !== null && typeof body === "object" && body.success === true && "data" in body) {
+    return body.data as T;
+  }
+  return body as T;
 }
 
 async function get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
@@ -217,6 +245,7 @@ async function get<T>(url: string, params?: Record<string, unknown>): Promise<T>
     buildUrl(url, params),
     { method: "GET", headers: { "Content-Type": "application/json" } },
     isMigrated(url),
+    url,
   );
   return parseResponse<T>(res);
 }
@@ -230,6 +259,7 @@ async function post<T>(url: string, data?: unknown, config?: { headers?: Record<
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     isMigrated(url),
+    url,
   );
   return parseResponse<T>(res);
 }
@@ -243,6 +273,7 @@ async function put<T>(url: string, data?: unknown): Promise<T> {
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     isMigrated(url),
+    url,
   );
   return parseResponse<T>(res);
 }
@@ -256,6 +287,7 @@ async function patch<T>(url: string, data?: unknown): Promise<T> {
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     isMigrated(url),
+    url,
   );
   return parseResponse<T>(res);
 }
@@ -269,17 +301,18 @@ async function del<T>(url: string, data?: unknown): Promise<T> {
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     isMigrated(url),
+    url,
   );
   return parseResponse<T>(res);
 }
 
 async function upload<T>(url: string, formData: FormData): Promise<T> {
-  const res = await authedFetch(buildUrl(url), { method: "POST", body: formData }, isMigrated(url));
+  const res = await authedFetch(buildUrl(url), { method: "POST", body: formData }, isMigrated(url), url);
   return parseResponse<T>(res);
 }
 
 async function download(url: string, params?: Record<string, unknown>): Promise<Blob> {
-  const res = await authedFetch(buildUrl(url, params), { method: "GET" }, isMigrated(url));
+  const res = await authedFetch(buildUrl(url, params), { method: "GET" }, isMigrated(url), url);
   if (!res.ok) {
     let message = `${res.status} ${res.statusText}`;
     try {

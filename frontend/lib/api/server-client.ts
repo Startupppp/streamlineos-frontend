@@ -38,6 +38,25 @@ function buildUrl(path: string, params?: Record<string, unknown>): string {
   return url.toString();
 }
 
+async function parseBackendResponse<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    let message = `${res.status} ${res.statusText}`;
+    try {
+      const data = (await res.json()) as Record<string, unknown>;
+      if (typeof data?.message === "string" && data.message) message = data.message;
+      else if (typeof data?.error === "string" && data.error) message = data.error;
+    } catch {
+    }
+    throw new Error(message);
+  }
+  if (res.status === 204) return undefined as T;
+  const body = (await res.json()) as Record<string, unknown>;
+  if (body !== null && typeof body === "object" && body.success === true && "data" in body) {
+    return body.data as T;
+  }
+  return body as T;
+}
+
 async function request<T>(method: string, path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
   const token = await mintBackendToken();
   if (!token) throw new Error("Unauthorized: no backend session");
@@ -47,17 +66,7 @@ async function request<T>(method: string, path: string, body?: unknown, params?:
     body: body !== undefined ? JSON.stringify(body) : undefined,
     cache: "no-store",
   });
-  if (!res.ok) {
-    let message = `${res.status} ${res.statusText}`;
-    try {
-      const data = await res.json();
-      if (typeof data?.error === "string") message = data.error;
-    } catch {
-    }
-    throw new Error(message);
-  }
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+  return parseBackendResponse<T>(res);
 }
 
 async function uploadRequest<T>(path: string, body: FormData): Promise<T> {
@@ -69,17 +78,7 @@ async function uploadRequest<T>(path: string, body: FormData): Promise<T> {
     body,
     cache: "no-store",
   });
-  if (!res.ok) {
-    let message = `${res.status} ${res.statusText}`;
-    try {
-      const data = await res.json();
-      if (typeof data?.error === "string") message = data.error;
-    } catch {
-    }
-    throw new Error(message);
-  }
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+  return parseBackendResponse<T>(res);
 }
 
 async function publicRequest<T>(method: string, path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
@@ -89,17 +88,7 @@ async function publicRequest<T>(method: string, path: string, body?: unknown, pa
     body: body !== undefined ? JSON.stringify(body) : undefined,
     cache: "no-store",
   });
-  if (!res.ok) {
-    let message = `${res.status} ${res.statusText}`;
-    try {
-      const data = await res.json();
-      if (typeof data?.error === "string") message = data.error;
-    } catch {
-    }
-    throw new Error(message);
-  }
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+  return parseBackendResponse<T>(res);
 }
 
 export const serverApiClient = {

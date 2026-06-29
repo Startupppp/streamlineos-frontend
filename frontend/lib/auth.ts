@@ -114,7 +114,7 @@ const credentialsProvider = Credentials({
   async authorize(credentials) {
     if (credentials?.magicToken) {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/auth/magic-link/verify`, {
+        const res = await fetch(`${BACKEND_URL}/auth/magic-link/verify`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token: credentials.magicToken }),
@@ -145,7 +145,7 @@ const credentialsProvider = Credentials({
     if (!credentials?.email || !credentials?.password) return null;
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+      const res = await fetch(`${BACKEND_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -209,6 +209,7 @@ const googleProvider =
     ? Google({
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        allowDangerousEmailAccountLinking: true,
       })
     : null;
 
@@ -220,6 +221,7 @@ const microsoftProvider =
         clientId: process.env.MICROSOFT_CLIENT_ID,
         clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
         issuer: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/v2.0`,
+        allowDangerousEmailAccountLinking: true,
       })
     : null;
 
@@ -250,56 +252,53 @@ export const { handlers, auth } = NextAuth({
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google" || account?.provider === "microsoft-entra-id") {
-        const email = (user.email ?? "").toLowerCase();
-        const existingUser = await db.query.users.findFirst({
-          where: sql`lower(${users.email}) = ${email}`,
-        });
+        const userId = user.id;
+        if (!userId) return true;
 
-        if (!existingUser) {
-          const newUser = await db.query.users.findFirst({
-            where: sql`lower(${users.email}) = ${email}`,
-            columns: { id: true, name: true },
-          });
-          if (newUser) {
-            const orgId = randomUUID();
-            const orgName = ((user.name ?? newUser.name ?? "My Organization") as string).trim();
-            const slug =
-              orgName
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, "-")
-                .replace(/^-|-$/g, "")
-                .substring(0, 50) +
-              "-" +
-              Date.now().toString(36);
-            const trialEnd = new Date();
-            trialEnd.setDate(trialEnd.getDate() + 14);
-            await db.transaction(async (tx) => {
-              await tx.insert(organizations).values({ id: orgId, name: orgName, slug });
-              await tx.insert(organizationMembers).values({ orgId, userId: newUser.id, role: "owner", isOwner: true });
-              await tx.insert(subscriptions).values({
-                orgId,
-                plan: "STARTER",
-                status: "TRIAL",
-                trialEndsAt: trialEnd,
-                currentPeriodStart: new Date(),
-                currentPeriodEnd: trialEnd,
-              });
-            });
-            createAuditLog({
-              action: account.provider === "microsoft-entra-id" ? "oauth.signup.microsoft" : "oauth.signup.google",
-              userId: newUser.id,
+        const isGoogle = account.provider === "google";
+        const membership = await db.query.organizationMembers.findFirst({
+          where: eq(organizationMembers.userId, userId),
+          columns: { orgId: true },
+        }).catch(() => null);
+
+        if (!membership) {
+          const orgId = randomUUID();
+          const orgName = ((user.name ?? user.email?.split("@")[0] ?? "My Organization") as string).trim();
+          const slug =
+            orgName
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-|-$/g, "")
+              .substring(0, 50) +
+            "-" +
+            Date.now().toString(36);
+          const trialEnd = new Date();
+          trialEnd.setDate(trialEnd.getDate() + 14);
+          await db.transaction(async (tx) => {
+            await tx.insert(organizations).values({ id: orgId, name: orgName, slug });
+            await tx.insert(organizationMembers).values({ orgId, userId, role: "owner", isOwner: true });
+            await tx.insert(subscriptions).values({
               orgId,
-              metadata: { email },
-            }).catch(() => {});
-          }
-          return true;
+              plan: "STARTER",
+              status: "TRIAL",
+              trialEndsAt: trialEnd,
+              currentPeriodStart: new Date(),
+              currentPeriodEnd: trialEnd,
+            });
+          }).catch(() => {});
+          createAuditLog({
+            action: isGoogle ? "oauth.signup.google" : "oauth.signup.microsoft",
+            userId,
+            orgId,
+            metadata: { email: user.email },
+          }).catch(() => {});
+        } else {
+          createAuditLog({
+            action: isGoogle ? "oauth.login.google" : "oauth.login.microsoft",
+            userId,
+            metadata: { email: user.email },
+          }).catch(() => {});
         }
-
-        createAuditLog({
-          action: account.provider === "microsoft-entra-id" ? "oauth.login.microsoft" : "oauth.login.google",
-          userId: existingUser.id,
-          metadata: { email: user.email },
-        }).catch(() => {});
       }
       return true;
     },
