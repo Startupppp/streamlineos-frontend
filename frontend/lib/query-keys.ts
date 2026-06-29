@@ -194,6 +194,7 @@ export const queryKeys = {
   chat: {
     all: [...base, "chat"] as const,
     myChannels: () => [...base, "chat", "myChannels"] as const,
+    publicChannels: () => [...base, "chat", "publicChannels"] as const,
     channel: (id: number) => [...base, "chat", "channel", id] as const,
     messages: (channelId: number, cursor?: number) => [...base, "chat", "messages", channelId, cursor] as const,
     poll: (channelId: number, since: string) => [...base, "chat", "poll", channelId, since] as const,

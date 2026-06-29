@@ -14,13 +14,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Check, ChevronRight, Hash, Loader2, Search, Users, X } from "lucide-react";
+import { Camera, Check, ChevronRight, Globe, Hash, Lock, Loader2, Search, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useChatOrgUsers, useCreateGroupChannel } from "@/lib/api/hooks";
+import { useChatOrgUsers, useCreateGroupChannel, useCreatePublicChannel, useCreatePrivateChannel } from "@/lib/api/hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
+
+type ChannelKind = "GROUP" | "PUBLIC" | "PRIVATE";
 
 type OrgUserItem = { id: string; name?: string | null; email?: string | null; image?: string | null };
 
@@ -54,11 +56,11 @@ function UserSelectItem({ user, selected, onToggle }: UserSelectItemProps) {
     <button
       onClick={handleClick}
       className={cn(
-"w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
-        selected &&"bg-blue-500/5"
+        "w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
+        selected && "bg-blue-500/5"
       )}
     >
-      <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all", selected ?"bg-blue-500 border-blue-500 text-white" :"border-border/60")}>
+      <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all", selected ? "bg-blue-500 border-blue-500 text-white" : "border-border/60")}>
         {selected && <Check className="h-3 w-3" />}
       </div>
       <Avatar className="h-7 w-7 shrink-0">
@@ -69,6 +71,27 @@ function UserSelectItem({ user, selected, onToggle }: UserSelectItemProps) {
     </button>
   );
 }
+
+const CHANNEL_KINDS: { value: ChannelKind; label: string; description: string; icon: React.ReactNode }[] = [
+  {
+    value: "GROUP",
+    label: "Group",
+    description: "Private group for invited members only",
+    icon: <Users className="h-4 w-4" />,
+  },
+  {
+    value: "PUBLIC",
+    label: "Public",
+    description: "Anyone in the org can find and join",
+    icon: <Globe className="h-4 w-4" />,
+  },
+  {
+    value: "PRIVATE",
+    label: "Private",
+    description: "Invite-only, hidden from directory",
+    icon: <Lock className="h-4 w-4" />,
+  },
+];
 
 export function NewGroupDialog({
   open,
@@ -83,6 +106,9 @@ export function NewGroupDialog({
 }) {
   const { data: orgUsers } = useChatOrgUsers();
   const createGroup = useCreateGroupChannel();
+  const createPublic = useCreatePublicChannel();
+  const createPrivate = useCreatePrivateChannel();
+  const [channelKind, setChannelKind] = useState<ChannelKind>("GROUP");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -90,11 +116,11 @@ export function NewGroupDialog({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
-  const [step, setStep] = useState<"info" |"members">("info");
+  const [step, setStep] = useState<"info" | "members">("info");
 
   const handleOpenAvatarInput = useCallback(() => { avatarInputRef.current?.click(); }, []);
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,""));
+    setName(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""));
   }, []);
   const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value), []);
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
@@ -127,23 +153,33 @@ export function NewGroupDialog({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder","chat-avatars");
+      formData.append("folder", "chat-avatars");
       const data = await apiClient.upload<{ url?: string }>("/storage/upload", formData);
       if (data.url) setAvatarUrl(data.url);
       else toast.error("Upload failed");
     } catch (error) { toast.error(getErrorMessage(error)); }
-    finally { setUploadingAvatar(false); if (avatarInputRef.current) avatarInputRef.current.value =""; }
+    finally { setUploadingAvatar(false); if (avatarInputRef.current) avatarInputRef.current.value = ""; }
   };
+
+  const isPending = createGroup.isPending || createPublic.isPending || createPrivate.isPending;
 
   const handleCreate = async () => {
     if (!name.trim() || selectedIds.size === 0) return;
+    const payload = {
+      name: name.trim(),
+      description: description.trim() || undefined,
+      avatarUrl: avatarUrl || undefined,
+      memberIds: Array.from(selectedIds),
+    };
     try {
-      const channel = await createGroup.mutateAsync({
-        name: name.trim(),
-        description: description.trim() || undefined,
-        avatarUrl: avatarUrl || undefined,
-        memberIds: Array.from(selectedIds),
-      });
+      let channel;
+      if (channelKind === "PUBLIC") {
+        channel = await createPublic.mutateAsync(payload);
+      } else if (channelKind === "PRIVATE") {
+        channel = await createPrivate.mutateAsync(payload);
+      } else {
+        channel = await createGroup.mutateAsync(payload);
+      }
       onCreated(channel.id);
       onOpenChange(false);
       setName("");
@@ -152,6 +188,7 @@ export function NewGroupDialog({
       setSelectedIds(new Set());
       setSearch("");
       setStep("info");
+      setChannelKind("GROUP");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -165,6 +202,7 @@ export function NewGroupDialog({
       setAvatarUrl("");
       setSelectedIds(new Set());
       setSearch("");
+      setChannelKind("GROUP");
     }
     onOpenChange(open);
   };
@@ -181,12 +219,32 @@ export function NewGroupDialog({
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-4 pt-4 pb-3">
           <DialogTitle className="text-[16px]">
-            {step ==="info" ?"Create Channel" :"Add Members"}
+            {step === "info" ? "Create Channel" : "Add Members"}
           </DialogTitle>
         </DialogHeader>
 
-        {step ==="info" ? (
+        {step === "info" ? (
           <div className="px-4 pb-4 space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              {CHANNEL_KINDS.map((kind) => (
+                <button
+                  key={kind.value}
+                  type="button"
+                  onClick={() => setChannelKind(kind.value)}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center",
+                    channelKind === kind.value
+                      ? "border-blue-500 bg-blue-500/5 text-blue-600"
+                      : "border-border/40 text-muted-foreground hover:border-border hover:bg-muted/30"
+                  )}
+                >
+                  {kind.icon}
+                  <span className="text-[12px] font-semibold">{kind.label}</span>
+                  <span className="text-[10px] leading-tight opacity-70">{kind.description}</span>
+                </button>
+              ))}
+            </div>
+
             <div className="flex justify-center">
               <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
               <button
@@ -197,7 +255,7 @@ export function NewGroupDialog({
               >
                 {avatarUrl ? (
                   <div className="relative h-16 w-16 rounded-xl overflow-hidden border-2 border-border/40">
-                    <Image src={resolveImageUrl(avatarUrl) ??""} alt="Channel avatar" fill unoptimized className="object-cover" />
+                    <Image src={resolveImageUrl(avatarUrl) ?? ""} alt="Channel avatar" fill unoptimized className="object-cover" />
                   </div>
                 ) : (
                   <div className="h-16 w-16 rounded-xl bg-muted/40 border-2 border-dashed border-border/60 flex items-center justify-center">
@@ -295,16 +353,16 @@ export function NewGroupDialog({
               </Button>
               <Button
                 onClick={handleCreate}
-                disabled={selectedIds.size === 0 || createGroup.isPending}
+                disabled={selectedIds.size === 0 || isPending}
                 className="flex-1 h-9"
               >
-                {createGroup.isPending ? (
+                {isPending ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
                     Creating...
                   </>
                 ) : (
-                  `Create with ${selectedIds.size} member${selectedIds.size !== 1 ?"s" :""}`
+                  `Create with ${selectedIds.size} member${selectedIds.size !== 1 ? "s" : ""}`
                 )}
               </Button>
             </div>

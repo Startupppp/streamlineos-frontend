@@ -1,6 +1,6 @@
 
 
-export type ChannelType = "DIRECT" | "GROUP";
+export type ChannelType = "DIRECT" | "GROUP" | "PUBLIC" | "PRIVATE";
 
 export type ChannelMemberRole = "ADMIN" | "MEMBER";
 
@@ -40,12 +40,25 @@ export interface Channel {
   avatarUrl: string | null;
   createdBy: string;
   isArchived: boolean;
+  isPrivate: boolean;
   lastMessageAt: Date | string | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
   members: ChannelMember[];
   unreadCount: number;
   lastMessage: LastMessage | null;
+}
+
+export interface PublicChannel {
+  id: number;
+  name: string;
+  description: string | null;
+  avatarUrl: string | null;
+  type: ChannelType;
+  memberCount: number;
+  isMember: boolean;
+  createdAt: Date | string | null;
+  lastMessageAt: Date | string | null;
 }
 
 export interface MessageAttachment {
@@ -119,6 +132,20 @@ export interface CreateDMInput {
 }
 
 export interface CreateGroupChannelInput {
+  name: string;
+  description?: string;
+  avatarUrl?: string;
+  memberIds: string[];
+}
+
+export interface CreatePublicChannelInput {
+  name: string;
+  description?: string;
+  avatarUrl?: string;
+  memberIds: string[];
+}
+
+export interface CreatePrivateChannelInput {
   name: string;
   description?: string;
   avatarUrl?: string;

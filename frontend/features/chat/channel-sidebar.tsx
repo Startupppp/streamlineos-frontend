@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageSquareText, PanelLeftClose, Search, X } from "lucide-react";
+import { Compass, MessageSquareText, PanelLeftClose, Search, X } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { useChatChannels, useChatOnlineUsers } from "@/lib/api/hooks";
 import type { Channel } from "./chat-types";
@@ -12,6 +12,7 @@ import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelItem } from "./channel-item";
 import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
+import { BrowseChannelsDialog } from "./browse-channels-dialog";
 
 interface ChannelListEntryProps {
   channel: Channel;
@@ -55,14 +56,18 @@ export function ChannelSidebar({
   const [search, setSearch] = useState("");
   const [newDMOpen, setNewDMOpen] = useState(false);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
+  const [browseOpen, setBrowseOpen] = useState(false);
   const [dmsCollapsed, setDmsCollapsed] = useState(false);
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
+  const [publicCollapsed, setPublicCollapsed] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
   const handleClearSearch = useCallback(() => setSearch(""), []);
   const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
+  const handleTogglePublic = useCallback(() => setPublicCollapsed((p) => !p), []);
+  const handleOpenBrowse = useCallback(() => setBrowseOpen(true), []);
 
   useEffect(() => {
     if (autoFocusSearch && searchInputRef.current) {
@@ -91,8 +96,14 @@ export function ChannelSidebar({
     () => filteredChannels.filter((c) => c.type === "DIRECT"),
     [filteredChannels]
   );
+
   const groups = useMemo(
-    () => filteredChannels.filter((c) => c.type === "GROUP"),
+    () => filteredChannels.filter((c) => c.type === "GROUP" || c.type === "PRIVATE"),
+    [filteredChannels]
+  );
+
+  const publicChannels = useMemo(
+    () => filteredChannels.filter((c) => c.type === "PUBLIC"),
     [filteredChannels]
   );
 
@@ -112,6 +123,14 @@ export function ChannelSidebar({
             </div>
           </div>
           <div className="flex items-center gap-0.5">
+            <button
+              onClick={handleOpenBrowse}
+              className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              aria-label="Browse public channels"
+              title="Browse Channels"
+            >
+              <Compass className="h-3.5 w-3.5" />
+            </button>
             <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
             <NewGroupDialog open={newGroupOpen} onOpenChange={setNewGroupOpen} onCreated={onSelectChannel} />
             {onCollapse && (
@@ -162,9 +181,29 @@ export function ChannelSidebar({
           </div>
         ) : (
           <div className="py-1">
+            {publicChannels.length > 0 && (
+              <ChannelSidebarSection
+                title="Public Channels"
+                count={publicChannels.reduce((a, c) => a + c.unreadCount, 0)}
+                collapsed={publicCollapsed}
+                onToggle={handleTogglePublic}
+              >
+                {publicChannels.map((ch) => (
+                  <ChannelListEntry
+                    key={ch.id}
+                    channel={ch}
+                    activeChannelId={activeChannelId}
+                    currentUserId={currentUserId}
+                    onlineUserIds={onlineUserIds}
+                    onSelectChannel={onSelectChannel}
+                  />
+                ))}
+              </ChannelSidebarSection>
+            )}
+
             {groups.length > 0 && (
               <ChannelSidebarSection
-                title="Channels"
+                title="Groups"
                 count={groups.reduce((a, c) => a + c.unreadCount, 0)}
                 collapsed={groupsCollapsed}
                 onToggle={handleToggleGroups}
@@ -216,6 +255,12 @@ export function ChannelSidebar({
           </div>
         )}
       </ScrollArea>
+
+      <BrowseChannelsDialog
+        open={browseOpen}
+        onOpenChange={setBrowseOpen}
+        onSelectChannel={onSelectChannel}
+      />
     </>
   );
 }

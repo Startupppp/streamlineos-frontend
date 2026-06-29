@@ -20,16 +20,28 @@ import type {
   OrgUser,
   CreateDMInput,
   CreateGroupChannelInput,
+  CreatePublicChannelInput,
+  CreatePrivateChannelInput,
   UpdateChannelInput,
   SendMessageInput,
   EditMessageInput,
   PinnedMessage,
+  PublicChannel,
 } from "@/types/chat";
 
 export function useChatChannels(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.myChannels(),
     queryFn: () => apiClient.get<Channel[]>("/chat/channels"),
+    staleTime: 2 * 60_000,
+    enabled,
+  });
+}
+
+export function usePublicChannels(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.chat.publicChannels(),
+    queryFn: () => apiClient.get<PublicChannel[]>("/chat/channels/public"),
     staleTime: 2 * 60_000,
     enabled,
   });
@@ -236,6 +248,76 @@ export function useCreateGroupChannel() {
   });
 }
 
+export function useCreatePublicChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreatePublicChannelInput) =>
+      apiClient.post<Channel>("/chat/channels", { type: "PUBLIC", ...input }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.publicChannels() });
+    },
+  });
+}
+
+export function useCreatePrivateChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreatePrivateChannelInput) =>
+      apiClient.post<Channel>("/chat/channels", { type: "PRIVATE", ...input }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export function useJoinChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/join`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.publicChannels() });
+    },
+  });
+}
+
+export function useLeaveChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/leave`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.publicChannels() });
+    },
+  });
+}
+
+export function useAddChannelMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ channelId, userId }: { channelId: number; userId: string }) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/members`, { userId }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(variables.channelId) });
+    },
+  });
+}
+
+export function useRemoveChannelMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ channelId, userId }: { channelId: number; userId: string }) =>
+      apiClient.delete<{ ok: boolean }>(`/chat/channels/${channelId}/members/${userId}`),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
 export function useUpdateChannel() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -306,4 +388,3 @@ export function useUnpinMessage() {
     },
   });
 }
-
