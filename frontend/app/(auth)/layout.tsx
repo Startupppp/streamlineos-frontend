@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         Skip to content
       </a>
 
-      <div className="relative flex flex-1 flex-col overflow-y-auto scrollbar-hide">
+      <div className="relative flex flex-1 flex-col min-h-0 overflow-hidden">
         <header className="shrink-0 flex items-center justify-between px-6 sm:px-10 py-5">
           <Link
             href="/"
@@ -37,7 +37,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <main
           id="main-content"
           aria-label="Authentication"
-          className="flex flex-1 flex-col items-center justify-center py-8 px-4 sm:px-8"
+          className="flex w-full flex-1 flex-col items-center min-h-0 py-3 px-4 sm:px-6 lg:px-8"
         >
           {children}
         </main>

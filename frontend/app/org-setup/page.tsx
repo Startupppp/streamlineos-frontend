@@ -59,10 +59,7 @@ type WizardData = {
   companySize: string;
   country: string;
   website: string;
-  firstName: string;
-  lastName: string;
-  jobTitle: string;
-  phone: string;
+  name: string;
   logo: string;
   primaryColor: string;
   supportEmail: string;
@@ -86,10 +83,7 @@ const DEFAULT_DATA: WizardData = {
   companySize: "",
   country: "",
   website: "",
-  firstName: "",
-  lastName: "",
-  jobTitle: "",
-  phone: "",
+  name: "",
   logo: "",
   primaryColor: "#2563eb",
   supportEmail: "",
@@ -135,10 +129,9 @@ export default function OrgSetupPage() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>(() => {
     const draft = loadDraft();
-    if (session?.user) {
-      const parts = session.user.name?.split(" ") ?? [];
-      if (!draft.firstName && parts[0]) draft.firstName = parts[0];
-      if (!draft.lastName && parts[1]) draft.lastName = parts[1];
+    if (!draft.name && session?.user?.email) {
+      const username = session.user.email.split("@")[0] ?? "";
+      draft.name = username.charAt(0).toUpperCase() + username.slice(1);
     }
     return draft;
   });
@@ -188,7 +181,10 @@ export default function OrgSetupPage() {
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      await apiClient.patch("/org/setup", { ...data, website: data.website || undefined, logo: data.logo || undefined, supportEmail: data.supportEmail || undefined });
+      const nameParts = data.name.trim().split(/\s+/);
+      const firstName = nameParts[0] ?? data.name;
+      const lastName = nameParts.slice(1).join(" ") || "";
+      await apiClient.patch("/org/setup", { ...data, firstName, lastName, name: undefined, website: data.website || undefined, logo: data.logo || undefined, supportEmail: data.supportEmail || undefined });
       localStorage.removeItem("org-setup-draft");
       setShowCelebration(true);
     } catch (error) {
@@ -282,26 +278,12 @@ export default function OrgSetupPage() {
         {step === 2 && (
           <div className="space-y-4">
             <p className="text-[13px] text-slate-500">A few details about you, the admin.</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-[12px] font-medium text-slate-700">First name *</Label>
-                <Input value={data.firstName} onChange={(e) => patch({ firstName: e.target.value })} placeholder="Aditya" className="h-10" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[12px] font-medium text-slate-700">Last name *</Label>
-                <Input value={data.lastName} onChange={(e) => patch({ lastName: e.target.value })} placeholder="Sharma" className="h-10" />
-              </div>
-            </div>
             <div className="space-y-1">
-              <Label className="text-[12px] font-medium text-slate-700">Job title *</Label>
-              <Input value={data.jobTitle} onChange={(e) => patch({ jobTitle: e.target.value })} placeholder="CEO, Founder, HR Director…" className="h-10" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[12px] font-medium text-slate-700">Phone <span className="text-slate-400 font-normal">(optional)</span></Label>
-              <Input type="tel" value={data.phone} onChange={(e) => patch({ phone: e.target.value })} placeholder="+91 98765 43210" className="h-10" />
+              <Label className="text-[12px] font-medium text-slate-700">Your name *</Label>
+              <Input value={data.name} onChange={(e) => patch({ name: e.target.value })} placeholder="Aditya Sharma" className="h-10" />
             </div>
             <NavButtons onBack={goBack} onNext={() => {
-              if (!data.firstName || !data.lastName || !data.jobTitle) { toast.error("Please fill in the required fields"); return; }
+              if (!data.name.trim()) { toast.error("Please enter your name"); return; }
               goNext();
             }} />
           </div>
@@ -499,7 +481,7 @@ export default function OrgSetupPage() {
               <ReviewRow label="Organization" value={data.companyName} />
               <ReviewRow label="Industry" value={`${data.industry} · ${data.companySize}`} />
               <ReviewRow label="Country" value={data.country} />
-              <ReviewRow label="Admin" value={`${data.firstName} ${data.lastName} (${data.jobTitle})`} />
+              <ReviewRow label="Admin" value={data.name} />
               <ReviewRow label="Timezone" value={`${data.timezone} · ${data.currency}`} />
               <ReviewRow label="Business hours" value={`${Object.values(data.businessHours).filter((h) => h.enabled).length} days/week`} />
               <ReviewRow label="Holidays" value={`${data.holidays.length} selected`} />

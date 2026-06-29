@@ -2,10 +2,11 @@ import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { Adapter } from "next-auth/adapters";
 import { randomUUID } from "crypto";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
+import axios, { AxiosError } from "axios";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions, subscriptions, userPermissions, rolePermissions, roles } from "./db/schema";
 import type { Plan } from "@/lib/billing/feature-gates";
@@ -31,6 +32,15 @@ function isPlatformAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
   return PLATFORM_ADMIN_EMAILS.has(email.toLowerCase());
 }
+
+function unwrapBackend<T>(body: unknown): T {
+  if (body !== null && typeof body === "object") {
+    const b = body as Record<string, unknown>;
+    if (b.success === true && "data" in b) return b.data as T;
+  }
+  return body as T;
+}
+
 async function getUserPermissions(userId: string, orgId: string): Promise<string[]> {
   const userRow = await db.query.users.findFirst({
     where: eq(users.id, userId),
@@ -113,13 +123,12 @@ const credentialsProvider = Credentials({
   async authorize(credentials) {
     if (credentials?.magicToken) {
       try {
-        const res = await fetch(`${BACKEND_URL}/auth/magic-link/verify`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: credentials.magicToken }),
-        });
-        if (!res.ok) return null;
-        const data = await res.json() as { userId: string; orgId: string; forceChangePassword: boolean };
+        const { data: raw } = await axios.post<unknown>(
+          `${BACKEND_URL}/auth/magic-link/verify`,
+          { token: credentials.magicToken },
+        );
+        if (!raw) return null;
+        const data = unwrapBackend<{ userId: string; orgId: string; forceChangePassword: boolean }>(raw);
         const user = await db.query.users.findFirst({
           where: eq(users.id, data.userId),
           columns: { id: true, email: true, name: true, image: true, role: true, isActive: true, hasDashboardAccess: true, firstName: true, lastName: true, isPasswordChangeRequired: true },
@@ -144,20 +153,24 @@ const credentialsProvider = Credentials({
     if (!credentials?.email || !credentials?.password) return null;
 
     try {
-      const res = await fetch(`${BACKEND_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: credentials.email, password: credentials.password }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({})) as Record<string, unknown>;
-        const msg = (data.message as string) ?? "Invalid credentials";
-        if (msg.startsWith("ACCOUNT_LOCKED:") || msg === "SUBSCRIPTION_INACTIVE") throw new Error(msg);
+      let raw: unknown = null;
+      try {
+        const response = await axios.post<unknown>(
+          `${BACKEND_URL}/auth/login`,
+          { email: credentials.email, password: credentials.password },
+        );
+        raw = response.data;
+      } catch (loginErr: unknown) {
+        if (loginErr instanceof AxiosError) {
+          const errData = loginErr.response?.data as Record<string, unknown> | undefined;
+          const msgStr = typeof errData?.message === "string" ? errData.message : "Invalid credentials";
+          if (msgStr.startsWith("ACCOUNT_LOCKED:") || msgStr === "SUBSCRIPTION_INACTIVE") throw new Error(msgStr);
+        }
         return null;
       }
 
-      const data = await res.json() as { userId: string; orgId: string; forceChangePassword: boolean; daysUntilExpiry?: number };
+      if (!raw) return null;
+      const data = unwrapBackend<{ userId: string; orgId: string; forceChangePassword: boolean; daysUntilExpiry?: number }>(raw);
 
       const user = await db.query.users.findFirst({
         where: eq(users.id, data.userId),

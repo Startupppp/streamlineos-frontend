@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 
 export async function GET(): Promise<NextResponse> {
   const session = await auth();
-  if (!session?.user?.id || (!session.orgId && !session.user.isPlatformAdmin)) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -195,7 +195,7 @@ export default function SignInPage() {
 
   return (
     <div className="w-full max-w-sm animate-fade-up">
-      <div className="mb-5 sm:mb-8 text-center">
+      <div className="mb-4 sm:mb-6 text-center">
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
           Sign in to your account
         </h1>
@@ -238,12 +238,12 @@ export default function SignInPage() {
         </div>
       )}
 
-      <div className="rounded-xl p-4 sm:p-6 space-y-4 sm:space-y-4">
+      <div className="rounded-xl p-4 sm:p-6 space-y-3">
         <form
           onSubmit={form.handleSubmit((v) => signInMutation.mutate(v))}
           aria-busy={isPending}
           noValidate
-          className="space-y-4"
+          className="space-y-3"
         >
           <div className="space-y-1.5">
             <Label htmlFor="email" className="text-[13px] font-medium">
