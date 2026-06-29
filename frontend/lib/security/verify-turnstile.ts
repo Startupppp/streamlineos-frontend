@@ -1,5 +1,3 @@
-import { logger } from "@/lib/logger";
-
 const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
 type TurnstileResult =
@@ -13,7 +11,7 @@ export async function verifyTurnstileToken(
   const secret = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secret) {
-    logger.error("[turnstile] TURNSTILE_SECRET_KEY is not set — refusing to verify (fail closed)");
+    console.error("[turnstile] TURNSTILE_SECRET_KEY is not set — refusing to verify (fail closed)");
     return { ok: false, reason: "misconfigured" };
   }
 
@@ -32,10 +30,10 @@ export async function verifyTurnstileToken(
     });
     const json = (await res.json()) as { success: boolean; "error-codes"?: string[] };
     if (json.success) return { ok: true };
-    logger.warn("[turnstile] verification rejected", { errorCodes: json["error-codes"] });
+    console.warn("[turnstile] verification rejected", { errorCodes: json["error-codes"] });
     return { ok: false, reason: "invalid-token" };
   } catch (error) {
-    logger.error("[turnstile] siteverify network error", { error });
+    console.error("[turnstile] siteverify network error", { error });
     return { ok: false, reason: "network-error" };
   }
 }

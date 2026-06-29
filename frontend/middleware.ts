@@ -1,12 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import {
-  checkRateLimit,
-  resolveTier,
-  isSuspiciousBot,
-} from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
-import { redis } from "@/lib/redis";
 import { PLATFORM_OWNER_ROLE, OWNER_HOME } from "@/lib/platform/role";
 import { ROLES } from "@/lib/constants/roles";
 
@@ -183,58 +176,11 @@ function canAccessRoute(
   return required.some((perm) => granted.has(perm));
 }
 
-const BOT_BLOCKED_PREFIXES = [
-  "/api/auth/",
-  "/api/chat",
-];
-
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
   const nonceBytes = new Uint8Array(16);
   crypto.getRandomValues(nonceBytes);
   const nonce = btoa(String.fromCharCode(...nonceBytes));
-
-  const tier = resolveTier(pathname);
-  const loadTestSecret = process.env.LOAD_TEST_SECRET;
-  const isLoadTestBypass =
-    process.env.NODE_ENV !== "production" &&
-    loadTestSecret &&
-    loadTestSecret.length > 0 &&
-    req.headers.get("x-load-test-secret") === loadTestSecret;
-
-  if (tier && !isLoadTestBypass) {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    const result = await checkRateLimit(tier, ip);
-
-    if (!result.allowed) {
-      logger.warn("Rate limit exceeded", { ip, path: pathname, tier, retryAfterSecs: result.retryAfterSecs });
-      return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(result.retryAfterSecs),
-          },
-        },
-      );
-    }
-  }
-
-  if (BOT_BLOCKED_PREFIXES.some((p) => pathname.startsWith(p))) {
-    const ua = req.headers.get("user-agent");
-    if (isSuspiciousBot(ua)) {
-      logger.warn("Blocked suspicious bot", {
-        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown",
-        path: pathname,
-        userAgent: ua?.slice(0, 200),
-      });
-      return NextResponse.json(
-        { error: "Forbidden" },
-        { status: 403 },
-      );
-    }
-  }
 
   if (
     process.env.NODE_ENV === "production" &&
@@ -391,30 +337,6 @@ export default async function middleware(req: NextRequest) {
     url.pathname = "/org-setup";
     url.search = "";
     return NextResponse.redirect(url);
-  }
-
-  if (isAuthenticated && token?.orgId && redis) {
-    try {
-      const allowlistRaw = await redis.get<string>(`org:ip-allowlist:${token.orgId as string}`);
-      if (allowlistRaw) {
-        const allowlist: string[] = typeof allowlistRaw === "string"
-          ? (JSON.parse(allowlistRaw) as string[])
-          : (allowlistRaw as unknown as string[]);
-        if (allowlist.length > 0) {
-          const clientIp =
-            req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-          const allowed = allowlist.some((entry) => clientIp === entry || clientIp.startsWith(entry));
-          if (!allowed) {
-            logger.warn("IP not in org allowlist", { ip: clientIp, orgId: token.orgId });
-            return NextResponse.json(
-              { error: "Access denied: your IP is not permitted for this organization." },
-              { status: 403 }
-            );
-          }
-        }
-      }
-    } catch {
-    }
   }
 
   if (

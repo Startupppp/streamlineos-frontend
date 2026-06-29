@@ -1,5 +1,3 @@
-import { logger } from "./logger";
-
 type AuditAction =
   | "user.login"
   | "user.logout"
@@ -102,15 +100,16 @@ interface AuditLogEntry {
   ipAddress?: string;
 }
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
+const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
+
 export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
-  const secret = process.env.INTERNAL_API_SECRET ?? "";
   try {
-    await fetch(`${backendUrl}/internal/audit`, {
+    await fetch(`${BACKEND_URL}/internal/audit`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-internal-secret": secret,
+        "x-internal-secret": INTERNAL_SECRET,
       },
       body: JSON.stringify({
         action: entry.action,
@@ -123,10 +122,9 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
       }),
     });
   } catch (error) {
-    logger.error("AUDIT_FAILURE: Failed to create audit log — investigate immediately", {
+    console.error("AUDIT_FAILURE", {
       action: entry.action,
       userId: entry.userId,
-      targetId: entry.targetId,
       error,
     });
   }

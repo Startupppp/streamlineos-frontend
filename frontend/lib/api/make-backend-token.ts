@@ -1,8 +1,11 @@
 import { SignJWT } from "jose";
 import type { Session } from "next-auth";
 
-export async function makeBackendToken(session: Session): Promise<string | null> {
-  if (!session.user?.id || (!session.orgId && !session.user.isPlatformAdmin)) return null;
+export async function makeBackendToken(
+  session: Session,
+): Promise<string | null> {
+  if (!session.user?.id || (!session.orgId && !session.user.isPlatformAdmin))
+    return null;
   const secret = process.env.BACKEND_JWT_SECRET;
   if (!secret) return null;
   return new SignJWT({

@@ -1,32 +1,47 @@
 import NextAuth from "next-auth";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
-import { eq, and } from "drizzle-orm";
-import { Adapter } from "next-auth/adapters";
-import { randomUUID } from "crypto";
-import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import axios, { AxiosError } from "axios";
-import { db } from "./db";
-import {
-  accounts,
-  sessions,
-  users,
-  verificationTokens,
-  organizationMembers,
-  organizations,
-  userSessions,
-  subscriptions,
-  userPermissions,
-  rolePermissions,
-  roles,
-} from "./db/schema";
+import { randomUUID } from "crypto";
 import type { Plan } from "@/lib/billing/feature-gates";
-import { resolveEnabledModules, type Module } from "@/lib/billing/plan-modules";
-import { ROLE_DEFAULT_PERMISSIONS } from "@/lib/rbac/permissions";
-import { logger } from "./logger";
-import { redis } from "./redis";
-import { createAuditLog } from "./audit-log";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
+const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
+
+interface SessionData {
+  userId: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  name: string | null;
+  image: string | null;
+  role: string | null;
+  isActive: boolean;
+  hasDashboardAccess: boolean;
+  isPasswordChangeRequired: boolean;
+  branchId: number | null;
+  totpEnabled: boolean;
+  orgId: string | null;
+  isOrgOwner: boolean;
+  mfaEnforced: boolean;
+  enabledModules: string[];
+  orgOnboardingCompletedAt: string | null;
+  userOnboardingCompletedAt: string | null;
+  permissions: string[];
+  plan: Plan | null;
+}
+
+async function fetchSessionData(userId: string): Promise<SessionData | null> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/auth/session-data/${userId}`, {
+      headers: { "x-internal-secret": INTERNAL_SECRET },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return res.json() as Promise<SessionData>;
+  } catch {
+    return null;
+  }
+}
 
 function parsePlatformAdminEmails(): ReadonlySet<string> {
   const raw = process.env.PLATFORM_ADMIN_EMAILS ?? "";
@@ -53,273 +68,113 @@ function unwrapBackend<T>(body: unknown): T {
   return body as T;
 }
 
-async function getUserPermissions(
-  userId: string,
-  orgId: string,
-): Promise<string[]> {
-  const userRow = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: { role: true },
-  });
-  const role = userRow?.role;
-
-  const [userPerms, rolePerms, customRole] = await Promise.all([
-    db.query.userPermissions.findMany({
-      where: and(
-        eq(userPermissions.userId, userId),
-        eq(userPermissions.orgId, orgId),
-        eq(userPermissions.granted, true),
-      ),
-      with: { permission: true },
-    }),
-    role
-      ? db.query.rolePermissions.findMany({
-          where: and(
-            eq(rolePermissions.role, role),
-            eq(rolePermissions.orgId, orgId),
-          ),
-          with: { permission: true },
-        })
-      : Promise.resolve([]),
-    role
-      ? db.query.roles.findFirst({
-          where: and(eq(roles.slug, role), eq(roles.orgId, orgId)),
-          columns: { permissions: true },
-        })
-      : Promise.resolve(null),
-  ]);
-
-  const permissionSet = new Set<string>();
-  for (const up of userPerms) {
-    if (up.permission?.name) permissionSet.add(up.permission.name);
-  }
-  for (const rp of rolePerms) {
-    if (rp.permission?.name) permissionSet.add(rp.permission.name);
-  }
-  if (customRole?.permissions && Array.isArray(customRole.permissions)) {
-    for (const p of customRole.permissions as string[]) permissionSet.add(p);
-  }
-  const defaultPerms = role ? (ROLE_DEFAULT_PERMISSIONS[role] ?? []) : [];
-  defaultPerms.forEach((p) => permissionSet.add(p));
-  return Array.from(permissionSet);
-}
-
-interface UserSessionCache {
-  isActive: boolean | null;
-  hasDashboardAccess: boolean | null;
-  isPasswordChangeRequired: boolean | null;
-  image: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  name: string | null;
-  role: string | null;
-  orgId: string | null;
-  branchId: number | null;
-  totpEnabled: boolean | null;
-  mfaEnforced: boolean | null;
-  permissions: string[];
-  plan: Plan | null;
-  isOrgOwner: boolean;
-  enabledModules: Module[];
-  orgOnboardingCompletedAt: string | null;
-  userOnboardingCompletedAt: string | null;
-}
-
-const USER_SESSION_TTL = 300;
-
-function userSessionKey(userId: string): string {
-  return `user:session:${userId}`;
-}
-
-export async function invalidateUserSession(userId: string): Promise<void> {
-  if (redis) {
-    await redis.del(userSessionKey(userId));
-  }
-}
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-
-const credentialsProvider = Credentials({
-  credentials: {
-    email: { label: "Email", type: "email" },
-    password: { label: "Password", type: "password" },
-    rememberMe: { label: "Remember me", type: "text" },
-    magicToken: { label: "Magic token", type: "text" },
-    totpCode: { label: "MFA code", type: "text" },
-  },
-  async authorize(credentials) {
-    if (credentials?.magicToken) {
-      try {
-        const { data: raw } = await axios.post<unknown>(
-          `${BACKEND_URL}/auth/magic-link/verify`,
-          { token: credentials.magicToken },
-        );
-        if (!raw) return null;
-        const data = unwrapBackend<{
-          userId: string;
-          orgId: string;
-          forceChangePassword: boolean;
-        }>(raw);
-        const user = await db.query.users.findFirst({
-          where: eq(users.id, data.userId),
-          columns: {
-            id: true,
-            email: true,
-            name: true,
-            image: true,
-            role: true,
-            isActive: true,
-            hasDashboardAccess: true,
-            firstName: true,
-            lastName: true,
-            isPasswordChangeRequired: true,
-          },
-        });
-        if (!user) return null;
-        const fullName =
-          user.firstName && user.lastName
-            ? `${user.firstName} ${user.lastName}`
-            : (user.name ?? user.email);
-        return {
-          id: user.id,
-          email: user.email,
-          name: fullName,
-          image: user.image,
-          role: user.role,
-          forceChangePassword: data.forceChangePassword,
-          isActive: user.isActive,
-          hasDashboardAccess: user.hasDashboardAccess ?? true,
-        };
-      } catch {
-        return null;
-      }
-    }
-
-    if (!credentials?.email || !credentials?.password) return null;
-
-    try {
-      let raw: unknown = null;
-      try {
-        const response = await axios.post<unknown>(
-          `${BACKEND_URL}/auth/login`,
-          { email: credentials.email, password: credentials.password },
-        );
-        raw = response.data;
-      } catch (loginErr: unknown) {
-        if (loginErr instanceof AxiosError) {
-          const errData = loginErr.response?.data as
-            | Record<string, unknown>
-            | undefined;
-          const msgStr =
-            typeof errData?.message === "string"
-              ? errData.message
-              : "Invalid credentials";
-          if (
-            msgStr.startsWith("ACCOUNT_LOCKED:") ||
-            msgStr === "SUBSCRIPTION_INACTIVE"
-          )
-            throw new Error(msgStr);
-        }
-        return null;
-      }
-
-      if (!raw) return null;
-      const data = unwrapBackend<{
-        userId: string;
-        orgId: string;
-        forceChangePassword: boolean;
-        daysUntilExpiry?: number;
-      }>(raw);
-
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, data.userId),
-        columns: {
-          id: true,
-          email: true,
-          name: true,
-          image: true,
-          role: true,
-          isActive: true,
-          hasDashboardAccess: true,
-          firstName: true,
-          lastName: true,
-          isPasswordChangeRequired: true,
-        },
-      });
-
-      if (!user) return null;
-
-      const fullName =
-        user.firstName && user.lastName
-          ? `${user.firstName} ${user.lastName}`
-          : (user.name ?? user.email);
-
-      logger.info("Auth: successful login via backend", { userId: user.id });
-      return {
-        id: user.id,
-        email: user.email,
-        name: fullName,
-        image: user.image,
-        role: user.role,
-        forceChangePassword: data.forceChangePassword,
-        isActive: user.isActive,
-        hasDashboardAccess: user.hasDashboardAccess ?? true,
-        daysUntilExpiry: data.daysUntilExpiry,
-        rememberMe: credentials?.rememberMe === "true",
-      };
-    } catch (err) {
-      if (
-        err instanceof Error &&
-        (err.message.startsWith("ACCOUNT_LOCKED:") ||
-          err.message === "SUBSCRIPTION_INACTIVE" ||
-          err.message === "REQUIRES_MFA" ||
-          err.message === "INVALID_MFA_CODE")
-      )
-        throw err;
-      logger.error("Auth: backend login error", { error: err });
-      return null;
-    }
-  },
-});
-
-const googleProvider =
-  process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-    ? Google({
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        allowDangerousEmailAccountLinking: true,
-      })
-    : null;
-
-const microsoftProvider =
-  process.env.MICROSOFT_CLIENT_ID &&
-  process.env.MICROSOFT_CLIENT_SECRET &&
-  process.env.MICROSOFT_TENANT_ID
-    ? MicrosoftEntraID({
-        clientId: process.env.MICROSOFT_CLIENT_ID,
-        clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-        issuer: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/v2.0`,
-        allowDangerousEmailAccountLinking: true,
-      })
-    : null;
-
-const oauthProviders = [googleProvider, microsoftProvider].filter(
-  (p): p is NonNullable<typeof p> => p !== null,
-);
-
 export const { handlers, auth } = NextAuth({
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }) as Adapter,
   trustHost: true,
   basePath: "/api/auth",
-  providers:
-    oauthProviders.length > 0
-      ? [credentialsProvider, ...oauthProviders]
-      : [credentialsProvider],
+  providers: [
+    Credentials({
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        rememberMe: { label: "Remember me", type: "text" },
+        magicToken: { label: "Magic token", type: "text" },
+        totpCode: { label: "MFA code", type: "text" },
+      },
+      async authorize(credentials) {
+        if (credentials?.magicToken) {
+          try {
+            const { data: raw } = await axios.post<unknown>(
+              `${BACKEND_URL}/auth/magic-link/verify`,
+              { token: credentials.magicToken },
+            );
+            if (!raw) return null;
+            const data = unwrapBackend<{ userId: string; forceChangePassword: boolean }>(raw);
+            const sessionData = await fetchSessionData(data.userId);
+            if (!sessionData) return null;
+            return {
+              id: data.userId,
+              email: sessionData.email,
+              name:
+                sessionData.firstName && sessionData.lastName
+                  ? `${sessionData.firstName} ${sessionData.lastName}`
+                  : (sessionData.name ?? sessionData.email),
+              image: sessionData.image,
+              role: sessionData.role ?? undefined,
+              forceChangePassword: data.forceChangePassword,
+              isActive: sessionData.isActive,
+              hasDashboardAccess: sessionData.hasDashboardAccess,
+            };
+          } catch {
+            return null;
+          }
+        }
+
+        if (!credentials?.email || !credentials?.password) return null;
+
+        try {
+          let raw: unknown = null;
+          try {
+            const response = await axios.post<unknown>(`${BACKEND_URL}/auth/login`, {
+              email: credentials.email,
+              password: credentials.password,
+              totpCode: credentials.totpCode ?? undefined,
+              rememberMe: credentials.rememberMe === "true",
+            });
+            raw = response.data;
+          } catch (loginErr: unknown) {
+            if (loginErr instanceof AxiosError) {
+              const errData = loginErr.response?.data as Record<string, unknown> | undefined;
+              const msgStr =
+                typeof errData?.message === "string" ? errData.message : "Invalid credentials";
+              if (msgStr.startsWith("ACCOUNT_LOCKED:") || msgStr === "SUBSCRIPTION_INACTIVE")
+                throw new Error(msgStr);
+            }
+            return null;
+          }
+
+          if (!raw) return null;
+          const data = unwrapBackend<{
+            userId: string;
+            orgId: string;
+            forceChangePassword: boolean;
+            daysUntilExpiry?: number;
+            requiresMfa?: boolean;
+          }>(raw);
+
+          if (data.requiresMfa) throw new Error("REQUIRES_MFA");
+
+          const sessionData = await fetchSessionData(data.userId);
+          if (!sessionData) return null;
+
+          return {
+            id: data.userId,
+            email: sessionData.email,
+            name:
+              sessionData.firstName && sessionData.lastName
+                ? `${sessionData.firstName} ${sessionData.lastName}`
+                : (sessionData.name ?? sessionData.email),
+            image: sessionData.image,
+            role: sessionData.role ?? undefined,
+            forceChangePassword: data.forceChangePassword,
+            isActive: sessionData.isActive,
+            hasDashboardAccess: sessionData.hasDashboardAccess,
+            daysUntilExpiry: data.daysUntilExpiry,
+            rememberMe: credentials.rememberMe === "true",
+          };
+        } catch (err) {
+          if (
+            err instanceof Error &&
+            (err.message.startsWith("ACCOUNT_LOCKED:") ||
+              err.message === "SUBSCRIPTION_INACTIVE" ||
+              err.message === "REQUIRES_MFA" ||
+              err.message === "INVALID_MFA_CODE")
+          )
+            throw err;
+          return null;
+        }
+      },
+    }),
+  ],
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
@@ -329,290 +184,84 @@ export const { handlers, auth } = NextAuth({
     error: "/signin",
   },
   callbacks: {
-    async signIn({ user, account }) {
-      if (
-        account?.provider === "google" ||
-        account?.provider === "microsoft-entra-id"
-      ) {
-        const userId = user.id;
-        if (!userId) return true;
-
-        const isGoogle = account.provider === "google";
-        const membership = await db.query.organizationMembers
-          .findFirst({
-            where: eq(organizationMembers.userId, userId),
-            columns: { orgId: true },
-          })
-          .catch(() => null);
-
-        if (!membership) {
-          const orgId = randomUUID();
-          const orgName = (
-            (user.name ??
-              user.email?.split("@")[0] ??
-              "My Organization") as string
-          ).trim();
-          const slug =
-            orgName
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, "-")
-              .replace(/^-|-$/g, "")
-              .substring(0, 50) +
-            "-" +
-            Date.now().toString(36);
-          const trialEnd = new Date();
-          trialEnd.setDate(trialEnd.getDate() + 14);
-          await db
-            .transaction(async (tx) => {
-              await tx
-                .insert(organizations)
-                .values({ id: orgId, name: orgName, slug });
-              await tx
-                .insert(organizationMembers)
-                .values({ orgId, userId, role: "owner", isOwner: true });
-              await tx.insert(subscriptions).values({
-                orgId,
-                plan: "STARTER",
-                status: "TRIAL",
-                trialEndsAt: trialEnd,
-                currentPeriodStart: new Date(),
-                currentPeriodEnd: trialEnd,
-              });
-            })
-            .catch(() => {});
-          createAuditLog({
-            action: isGoogle ? "oauth.signup.google" : "oauth.signup.microsoft",
-            userId,
-            orgId,
-            metadata: { email: user.email },
-          }).catch(() => {});
-        } else {
-          createAuditLog({
-            action: isGoogle ? "oauth.login.google" : "oauth.login.microsoft",
-            userId,
-            metadata: { email: user.email },
-          }).catch(() => {});
-        }
-      }
-      return true;
-    },
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.role = user.role;
-        token.image = user.image;
-        token.forceChangePassword = user.forceChangePassword;
-        token.isActive = user.isActive;
+        token.image = user.image ?? null;
+        token.forceChangePassword = user.forceChangePassword ?? false;
+        token.isActive = user.isActive ?? true;
         token.hasDashboardAccess = user.hasDashboardAccess ?? true;
         token.orgId = null;
         token.sessionId = randomUUID();
         token.rememberMe = user.rememberMe ?? false;
         if (user.daysUntilExpiry !== undefined)
           token.daysUntilExpiry = user.daysUntilExpiry;
-
-        const deviceId = token.sessionId as string;
-
-        db.insert(userSessions)
-          .values({
-            id: token.sessionId,
-            userId: user.id as string,
-            deviceId,
-          })
-          .catch(() => {});
-
-        createAuditLog({
-          action: "user.login",
-          userId: user.id as string,
-          orgId: (token.orgId as string | null) ?? undefined,
-          targetId: user.id as string,
-          targetType: "user",
-          metadata: { email: user.email },
-        }).catch(() => {});
       }
 
       if (token.id) {
-        try {
-          const userId = token.id as string;
-          let dbUser: UserSessionCache | null = null;
-
-          if (redis) {
-            dbUser = await redis.get<UserSessionCache>(userSessionKey(userId));
+        const data = await fetchSessionData(token.id as string);
+        if (data) {
+          token.email = data.email;
+          token.isActive = data.isActive;
+          token.hasDashboardAccess = data.hasDashboardAccess;
+          token.forceChangePassword = data.isPasswordChangeRequired;
+          token.role = data.role ?? (token.role as string | undefined);
+          token.image = data.image ?? null;
+          token.orgId = data.orgId ?? null;
+          token.branchId = data.branchId ?? null;
+          token.totpEnabled = data.totpEnabled;
+          token.mfaEnforced = data.mfaEnforced;
+          token.permissions = data.permissions;
+          token.plan = data.plan ?? null;
+          token.isOrgOwner = data.isOrgOwner;
+          token.enabledModules = data.enabledModules;
+          token.orgOnboardingCompletedAt = data.orgOnboardingCompletedAt ?? null;
+          token.userOnboardingCompletedAt = data.userOnboardingCompletedAt ?? null;
+          token.isPlatformAdmin = isPlatformAdminEmail(data.email);
+          if (data.firstName && data.lastName) {
+            token.name = `${data.firstName} ${data.lastName}`;
+          } else if (data.name) {
+            token.name = data.name;
           }
-
-          if (!dbUser) {
-            const [fresh, membership] = await Promise.all([
-              db.query.users.findFirst({
-                where: eq(users.id, userId),
-                columns: {
-                  isActive: true,
-                  hasDashboardAccess: true,
-                  isPasswordChangeRequired: true,
-                  image: true,
-                  firstName: true,
-                  lastName: true,
-                  name: true,
-                  role: true,
-                  branchId: true,
-                  totpEnabled: true,
-                  onboardingCompletedAt: true,
-                },
-              }),
-              db.query.organizationMembers.findFirst({
-                where: eq(organizationMembers.userId, userId),
-                columns: { orgId: true, isOwner: true },
-              }),
-            ]);
-
-            let mfaEnforcedValue = false;
-            let orgEnabledModulesOverride: string[] | null = null;
-            let orgOnboardingCompletedAt: string | null = null;
-            if (membership?.orgId) {
-              const orgRow = await db.query.organizations.findFirst({
-                where: eq(organizations.id, membership.orgId),
-                columns: {
-                  mfaEnforced: true,
-                  enabledModules: true,
-                  onboardingCompletedAt: true,
-                },
-              });
-              mfaEnforcedValue = orgRow?.mfaEnforced ?? false;
-              orgEnabledModulesOverride = orgRow?.enabledModules ?? null;
-              orgOnboardingCompletedAt =
-                orgRow?.onboardingCompletedAt?.toISOString() ?? null;
-            }
-
-            let permissions: string[] = [];
-            if (fresh && membership?.orgId) {
-              permissions = await getUserPermissions(
-                userId,
-                membership.orgId,
-              ).catch(() => []);
-            }
-
-            let plan: Plan | null = null;
-            if (membership?.orgId) {
-              const sub = await db.query.subscriptions
-                .findFirst({
-                  where: eq(subscriptions.orgId, membership.orgId),
-                  columns: { plan: true, status: true },
-                })
-                .catch(() => null);
-              if (sub && (sub.status === "ACTIVE" || sub.status === "TRIAL")) {
-                plan = sub.plan as Plan;
-              } else {
-                plan = "FREE";
-              }
-            }
-
-            const enabledModules = resolveEnabledModules(
-              plan,
-              orgEnabledModulesOverride,
-            );
-
-            const cacheValue: UserSessionCache | null = fresh
-              ? {
-                  ...fresh,
-                  orgId: membership?.orgId ?? null,
-                  branchId: fresh.branchId ?? null,
-                  totpEnabled: fresh.totpEnabled ?? false,
-                  mfaEnforced: mfaEnforcedValue,
-                  permissions,
-                  plan,
-                  isOrgOwner: membership?.isOwner ?? false,
-                  enabledModules: [...enabledModules],
-                  orgOnboardingCompletedAt,
-                  userOnboardingCompletedAt: fresh.onboardingCompletedAt
-                    ? fresh.onboardingCompletedAt.toISOString()
-                    : null,
-                }
-              : null;
-            if (cacheValue && redis) {
-              await redis.set(userSessionKey(userId), cacheValue, {
-                ex: USER_SESSION_TTL,
-              });
-            }
-            dbUser = cacheValue;
-          }
-
-          if (dbUser) {
-            token.isActive = dbUser.isActive ?? undefined;
-            token.hasDashboardAccess = dbUser.hasDashboardAccess ?? true;
-            token.forceChangePassword =
-              dbUser.isPasswordChangeRequired || false;
-            token.role = dbUser.role || token.role;
-            token.image = dbUser.image || null;
-            token.orgId = dbUser.orgId ?? null;
-            token.branchId = dbUser.branchId ?? null;
-            token.totpEnabled = dbUser.totpEnabled ?? false;
-            token.mfaEnforced = dbUser.mfaEnforced ?? false;
-            token.permissions = dbUser.permissions ?? [];
-            token.plan = dbUser.plan ?? null;
-            token.isOrgOwner = dbUser.isOrgOwner ?? false;
-            token.enabledModules = dbUser.enabledModules ?? [];
-            token.orgOnboardingCompletedAt =
-              dbUser.orgOnboardingCompletedAt ?? null;
-            token.userOnboardingCompletedAt =
-              dbUser.userOnboardingCompletedAt ?? null;
-            token.isPlatformAdmin = isPlatformAdminEmail(
-              token.email as string | null | undefined,
-            );
-            if (dbUser.firstName && dbUser.lastName) {
-              token.name = `${dbUser.firstName} ${dbUser.lastName}`;
-            } else if (dbUser.name) {
-              token.name = dbUser.name;
-            }
-          }
-
-          if (redis && token.sessionId) {
-            await redis
-              .set(
-                `session:activity:${token.sessionId as string}`,
-                Date.now(),
-                { ex: 7200 },
-              )
-              .catch(() => {});
-          }
-        } catch {}
+        }
       }
 
       if (trigger === "update") {
         if (session?.forceChangePassword !== undefined) {
-          token.forceChangePassword = session.forceChangePassword;
+          token.forceChangePassword = session.forceChangePassword as boolean;
         }
         if (session?.orgId !== undefined) {
-          token.orgId = session.orgId;
-          if (redis) {
-            await redis.del(userSessionKey(token.id as string)).catch(() => {});
-          }
+          token.orgId = session.orgId as string | null;
         }
       }
 
       return token;
     },
+
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.role = token.role as string;
-        session.user.image = (token.image as string) || null;
+        session.user.image = (token.image as string | null) ?? null;
         session.user.forceChangePassword = token.forceChangePassword as boolean;
         session.user.isActive = token.isActive as boolean;
         session.user.hasDashboardAccess = token.hasDashboardAccess as boolean;
+        session.user.isPlatformAdmin = (token.isPlatformAdmin as boolean | undefined) ?? false;
+        session.user.isOrgOwner = (token.isOrgOwner as boolean | undefined) ?? false;
       }
-      session.orgId = token.orgId ?? null;
-      session.branchId = token.branchId ?? null;
-      session.sessionId = token.sessionId;
-      session.plan = token.plan ?? null;
-      session.permissions = token.permissions ?? [];
-      session.enabledModules = token.enabledModules ?? [];
-      session.orgOnboardingCompletedAt = token.orgOnboardingCompletedAt ?? null;
+      session.orgId = (token.orgId as string | null | undefined) ?? null;
+      session.branchId = (token.branchId as number | null | undefined) ?? null;
+      session.sessionId = token.sessionId as string | undefined;
+      session.plan = (token.plan as Plan | null | undefined) ?? null;
+      session.permissions = (token.permissions as string[] | undefined) ?? [];
+      session.enabledModules = (token.enabledModules as string[] | undefined) ?? [];
+      session.orgOnboardingCompletedAt =
+        (token.orgOnboardingCompletedAt as string | null | undefined) ?? null;
       if (token.daysUntilExpiry !== undefined)
-        session.daysUntilExpiry = token.daysUntilExpiry;
-      if (session.user) {
-        session.user.isPlatformAdmin = token.isPlatformAdmin ?? false;
-        session.user.isOrgOwner = token.isOrgOwner ?? false;
-      }
+        session.daysUntilExpiry = token.daysUntilExpiry as number;
       return session;
     },
   },
