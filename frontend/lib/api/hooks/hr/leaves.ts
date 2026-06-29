@@ -4,10 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
-  LeavesResult,
-  LeaveBalance,
   RequestLeaveInput,
-  ApproveLeaveInput,
   AddHolidayInput,
   DeleteHolidayInput,
   UpdateHolidayInput,
@@ -15,7 +12,7 @@ import type {
 } from "@/types/hr";
 
 
-export interface HrLeaveAnalytics {
+interface HrLeaveAnalytics {
   year: number;
   byDepartment: {
     department: string;
@@ -59,22 +56,6 @@ interface LeaveApprovalsResult {
   all: unknown[];
 }
 
-export function useHrLeaves() {
-  return useQuery({
-    queryKey: queryKeys.hr.leaves(),
-    queryFn: () => apiClient.get<LeavesResult>("/hr/leaves"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useHrLeaveBalance() {
-  return useQuery({
-    queryKey: queryKeys.hr.leaveBalance(),
-    queryFn: () => apiClient.get<LeaveBalance[]>("/hr/leaves/balance"),
-    staleTime: 2 * 60_000,
-  });
-}
-
 export function useRequestLeave() {
   const qc = useQueryClient();
   return useMutation({
@@ -84,35 +65,6 @@ export function useRequestLeave() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
     },
-  });
-}
-
-export function useApproveLeave() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ requestId, ...data }: ApproveLeaveInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/leaves/${requestId}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
-  });
-}
-
-export function useHrMyLeaves() {
-  return useQuery({
-    queryKey: queryKeys.hr.leavesMyOwn(),
-    queryFn: () =>
-      apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
-        "/hr/leaves/my",
-      ),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useHrTeamLeaves() {
-  return useQuery({
-    queryKey: queryKeys.hr.leavesTeam(),
-    queryFn: () =>
-      apiClient.get<{ pending: unknown[]; all: unknown[] }>("/hr/leaves/team"),
-    staleTime: 2 * 60_000,
   });
 }
 

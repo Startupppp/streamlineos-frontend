@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { canUseFeature, minPlanFor, type Feature, type Plan } from "./feature-gates";
 
-export interface UseFeatureResult {
+interface UseFeatureResult {
   enabled: boolean;
   plan: Plan | null;
   requiredPlan: Plan | null;

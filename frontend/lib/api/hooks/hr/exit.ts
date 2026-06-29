@@ -34,7 +34,7 @@ export interface Resignation {
   checklists?: { id: number; item: string; status: string | null; completedAt: Date | string | null }[];
 }
 
-export interface ResignationProgressStep {
+interface ResignationProgressStep {
   step: string;
   label: string;
   status: "completed" | "current" | "pending";
@@ -50,60 +50,17 @@ export interface ResignationProgress {
   steps: ResignationProgressStep[];
 }
 
-export interface ResignationDetail extends Resignation {
-  progress: ResignationProgress[];
-}
-
-export interface ResignationAnalytics {
-  totalEmployees: number;
-  totalResignations: number;
-  attritionRate: number;
-  averageTenureMonths: number;
-  reasonBreakdown: { category: string; count: number }[];
-  monthlyTrend: { month: string; count: number }[];
-  statusCounts: Record<string, number>;
-}
-
 const exitKeys = {
   all: [...queryKeys.hr.all, "exit"] as const,
   list: () => [...exitKeys.all, "list"] as const,
-  detail: (id: number) => [...exitKeys.all, "detail", id] as const,
-  letter: (id: number) => [...exitKeys.all, "letter", id] as const,
-  analytics: () => [...exitKeys.all, "analytics"] as const,
   progress: (id: number) => [...exitKeys.all, "progress", id] as const,
 };
-
-export function useResignationAnalytics() {
-  return useQuery({
-    queryKey: exitKeys.analytics(),
-    queryFn: () => apiClient.get<ResignationAnalytics>("/hr/exit/analytics"),
-    staleTime: 5 * 60_000,
-  });
-}
 
 export function useResignations() {
   return useQuery({
     queryKey: exitKeys.list(),
     queryFn: () => apiClient.get<Resignation[]>("/hr/exit"),
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useResignationDetail(id: number | null) {
-  return useQuery({
-    queryKey: exitKeys.detail(id ?? 0),
-    queryFn: () => apiClient.get<ResignationDetail>(`/hr/exit/${id}`),
-    staleTime: 2 * 60_000,
-    enabled: !!id,
-  });
-}
-
-export function useResignationLetter(id: number | null) {
-  return useQuery({
-    queryKey: exitKeys.letter(id ?? 0),
-    queryFn: () => apiClient.get<{ html: string }>(`/hr/exit/${id}/letter`),
-    staleTime: 2 * 60_000,
-    enabled: !!id,
   });
 }
 
@@ -120,24 +77,6 @@ export function useCreateResignation() {
       resignationLetterUrl?: string;
     }) => apiClient.post<Resignation>("/hr/exit", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
-  });
-}
-
-export function useUpdateResignation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...data }: {
-      id: number;
-      status?: string;
-      remarks?: string;
-      exitInterviewNotes?: string;
-      exitInterviewDate?: string;
-      feedback?: { question: string; answer: string }[];
-      checklistItems?: string[];
-    }) => apiClient.patch<{ success: boolean }>(`/hr/exit/${id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: exitKeys.all });
-    },
   });
 }
 

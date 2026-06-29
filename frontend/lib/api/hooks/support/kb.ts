@@ -44,7 +44,7 @@ export interface KbArticleDetail extends KbArticleListItem {
   category: { id: number; name: string; slug: string } | null;
 }
 
-export interface KbArticleFeedbackItem {
+interface KbArticleFeedbackItem {
   id: number;
   articleId: number;
   helpful: boolean;
@@ -53,7 +53,7 @@ export interface KbArticleFeedbackItem {
   createdAt: string | null;
 }
 
-export interface CreateKbCategoryInput {
+interface CreateKbCategoryInput {
   name: string;
   description?: string;
   icon?: string;
@@ -61,7 +61,7 @@ export interface CreateKbCategoryInput {
   isPublished?: boolean;
 }
 
-export interface UpdateKbCategoryInput {
+interface UpdateKbCategoryInput {
   name?: string;
   description?: string | null;
   icon?: string | null;
@@ -69,14 +69,14 @@ export interface UpdateKbCategoryInput {
   isPublished?: boolean;
 }
 
-export interface KbArticlesParams {
+interface KbArticlesParams {
   status?: KbArticleStatus;
   visibility?: KbArticleVisibility;
   categoryId?: number;
   search?: string;
 }
 
-export interface CreateKbArticleInput {
+interface CreateKbArticleInput {
   title: string;
   categoryId?: number | null;
   excerpt?: string;
@@ -86,7 +86,7 @@ export interface CreateKbArticleInput {
   tags?: string[];
 }
 
-export interface UpdateKbArticleInput {
+interface UpdateKbArticleInput {
   title?: string;
   categoryId?: number | null;
   excerpt?: string | null;
@@ -96,7 +96,7 @@ export interface UpdateKbArticleInput {
   tags?: string[] | null;
 }
 
-export interface PublicKbCategory {
+interface PublicKbCategory {
   id: number;
   name: string;
   slug: string;
@@ -105,7 +105,7 @@ export interface PublicKbCategory {
   sortOrder: number;
 }
 
-export interface PublicKbArticleListItem {
+interface PublicKbArticleListItem {
   id: number;
   categoryId: number | null;
   title: string;
@@ -118,12 +118,12 @@ export interface PublicKbArticleListItem {
   publishedAt: string | null;
 }
 
-export interface PublicKbResponse {
+interface PublicKbResponse {
   categories: PublicKbCategory[];
   articles: PublicKbArticleListItem[];
 }
 
-export interface PublicKbArticle {
+interface PublicKbArticle {
   id: number;
   title: string;
   slug: string;
@@ -139,12 +139,12 @@ export interface PublicKbArticle {
   publishedAt: string | null;
 }
 
-export interface PublicKbParams {
+interface PublicKbParams {
   categoryId?: number;
   search?: string;
 }
 
-export interface SubmitKbFeedbackInput {
+interface SubmitKbFeedbackInput {
   orgId: string;
   slug: string;
   helpful: boolean;

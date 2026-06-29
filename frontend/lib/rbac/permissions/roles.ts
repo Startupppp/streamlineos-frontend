@@ -41,7 +41,7 @@ export const SYSTEM_ROLES = [
   ROLES.BRANCH_HR,
 ] as const;
 
-export type SystemRole = (typeof SYSTEM_ROLES)[number];
+type SystemRole = (typeof SYSTEM_ROLES)[number];
 
 const ALL_PERMISSIONS = PERMISSIONS.map((p) => p.name);
 

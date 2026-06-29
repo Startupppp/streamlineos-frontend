@@ -1,6 +1,4 @@
-import { z } from "zod";
-
-export const PASSWORD_RULES = {
+const PASSWORD_RULES = {
   minLength: 12,
   maxLength: 128,
   requireUppercase: true,
@@ -60,17 +58,3 @@ export function validatePasswordStrength(password: string): {
   const passed = checks - Math.min(missing.length, checks);
   return { valid: missing.length === 0, score: Math.round((passed / checks) * 100), missing };
 }
-
-export const PASSWORD_ZOD_SCHEMA = z
-  .string()
-  .min(PASSWORD_RULES.minLength, `Password must be at least ${PASSWORD_RULES.minLength} characters`)
-  .max(PASSWORD_RULES.maxLength, `Password must not exceed ${PASSWORD_RULES.maxLength} characters`)
-  .superRefine((val, ctx) => {
-    const result = validatePasswordStrength(val);
-    if (!result.valid) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: result.missing[0] ?? "Password does not meet requirements",
-      });
-    }
-  });

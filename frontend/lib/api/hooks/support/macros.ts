@@ -5,9 +5,9 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-export type RoutingConditionOp = "eq" | "neq" | "contains";
+type RoutingConditionOp = "eq" | "neq" | "contains";
 
-export interface RoutingCondition {
+interface RoutingCondition {
   field: string;
   op: RoutingConditionOp;
   value: string;
@@ -38,24 +38,24 @@ export interface SupportRoutingRule {
   updatedAt: string | null;
 }
 
-export interface MacrosParams {
+interface MacrosParams {
   category?: string;
   search?: string;
 }
 
-export interface CreateMacroInput {
+interface CreateMacroInput {
   title: string;
   body: string;
   category?: string;
 }
 
-export interface UpdateMacroInput {
+interface UpdateMacroInput {
   title?: string;
   body?: string;
   category?: string | null;
 }
 
-export interface CreateRoutingRuleInput {
+interface CreateRoutingRuleInput {
   name: string;
   conditions: RoutingCondition[];
   assigneeId?: string;
@@ -64,7 +64,7 @@ export interface CreateRoutingRuleInput {
   sortOrder?: number;
 }
 
-export interface UpdateRoutingRuleInput {
+interface UpdateRoutingRuleInput {
   name?: string;
   conditions?: RoutingCondition[];
   assigneeId?: string | null;

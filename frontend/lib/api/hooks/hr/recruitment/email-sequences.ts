@@ -17,15 +17,6 @@ export function useEmailSequences() {
   });
 }
 
-export function useEmailSequence(id: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.emailSequence(id),
-    queryFn: () => apiClient.get<EmailSequence>(`/hr/recruitment/email-sequences/${id}`),
-    staleTime: 2 * 60_000,
-    enabled: id > 0,
-  });
-}
-
 export function useCreateEmailSequence() {
   const qc = useQueryClient();
   return useMutation({
@@ -60,14 +51,3 @@ export function useDeleteEmailSequence() {
   });
 }
 
-export function useEnrollInEmailSequence(sequenceId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (candidateIds: number[]) =>
-      apiClient.post<{ enrolled: number }>(`/hr/recruitment/email-sequences/${sequenceId}/enroll`, { candidateIds }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.emailSequence(sequenceId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.emailSequences() });
-    },
-  });
-}

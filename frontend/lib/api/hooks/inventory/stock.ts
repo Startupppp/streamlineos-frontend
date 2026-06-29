@@ -29,7 +29,7 @@ export type AdjustmentType = "IN" | "OUT" | "SET";
 
 export type TransferStatus = "PENDING" | "IN_TRANSIT" | "COMPLETED" | "CANCELLED";
 
-export type StockLevelFilters = {
+type StockLevelFilters = {
   warehouseId?: number;
   productId?: number;
   lowStock?: boolean;
@@ -37,7 +37,7 @@ export type StockLevelFilters = {
   limit?: number;
 };
 
-export type StockTransactionFilters = {
+type StockTransactionFilters = {
   productVariantId?: number;
   locationId?: number;
   transactionType?: TransactionType;
@@ -60,7 +60,7 @@ export interface StockLevelRow {
   minStockLevel: number | null;
 }
 
-export interface StockLevelsResult {
+interface StockLevelsResult {
   items: StockLevelRow[];
   page: number;
   limit: number;
@@ -88,7 +88,7 @@ export interface StockTransaction {
   creator: { id: string; name: string | null } | null;
 }
 
-export interface StockTransactionsResult {
+interface StockTransactionsResult {
   items: StockTransaction[];
   total: number;
   page: number;
@@ -106,7 +106,7 @@ export interface AdjustmentListItem {
   lineCount: number;
 }
 
-export interface AdjustmentsResult {
+interface AdjustmentsResult {
   items: AdjustmentListItem[];
   total: number;
   page: number;
@@ -126,7 +126,7 @@ export interface TransferListItem {
   notes: string | null;
 }
 
-export interface TransferDetailLine {
+interface TransferDetailLine {
   id: number;
   productName: string;
   sku: string;
@@ -135,7 +135,7 @@ export interface TransferDetailLine {
   notes: string | null;
 }
 
-export interface TransferLocationRef {
+interface TransferLocationRef {
   id: number;
   name: string;
   code: string;
@@ -155,7 +155,7 @@ export interface TransferDetail {
   lines: TransferDetailLine[];
 }
 
-export interface CreateAdjustmentInput {
+interface CreateAdjustmentInput {
   warehouseId?: number;
   productId: number;
   locationId?: number;
@@ -165,12 +165,12 @@ export interface CreateAdjustmentInput {
   notes?: string;
 }
 
-export interface CreateTransferLineInput {
+interface CreateTransferLineInput {
   productId: number;
   quantity: number;
 }
 
-export interface CreateTransferInput {
+interface CreateTransferInput {
   fromWarehouseId?: number;
   toWarehouseId?: number;
   fromLocationId?: number;
@@ -179,17 +179,17 @@ export interface CreateTransferInput {
   notes?: string;
 }
 
-export interface CompleteTransferLineInput {
+interface CompleteTransferLineInput {
   transferLineId: number;
   quantityReceived: number;
 }
 
-export interface CompleteTransferInput {
+interface CompleteTransferInput {
   transferId: number;
   lines: CompleteTransferLineInput[];
 }
 
-export interface CreatedTransfer {
+interface CreatedTransfer {
   id: number;
   referenceNumber: string;
   status: TransferStatus;

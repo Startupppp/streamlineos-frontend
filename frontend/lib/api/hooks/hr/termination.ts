@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface TerminationEmployee {
+interface TerminationEmployee {
   id: string;
   name: string | null;
   email: string;
@@ -47,7 +47,7 @@ export interface Termination {
   ceoReviewer?: { id: string; name: string | null } | null;
 }
 
-export interface CreateTerminationInput {
+interface CreateTerminationInput {
   userId: string;
   reasons: string[];
   detailedExplanation: string;
@@ -61,7 +61,6 @@ const terminationKeys = {
   all: [...queryKeys.hr.all, "termination"] as const,
   list: () => [...terminationKeys.all, "list"] as const,
   detail: (id: number) => [...terminationKeys.all, "detail", id] as const,
-  letter: (id: number) => [...terminationKeys.all, "letter", id] as const,
 };
 
 export function useTerminations() {
@@ -69,33 +68,6 @@ export function useTerminations() {
     queryKey: terminationKeys.list(),
     queryFn: () => apiClient.get<Termination[]>("/hr/termination"),
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useTerminationDetail(id: number | null) {
-  return useQuery({
-    queryKey: terminationKeys.detail(id ?? 0),
-    queryFn: () => apiClient.get<Termination>(`/hr/termination/${id}`),
-    staleTime: 2 * 60_000,
-    enabled: !!id,
-  });
-}
-
-export function useTermination(id: number) {
-  return useQuery({
-    queryKey: terminationKeys.detail(id),
-    queryFn: () => apiClient.get<Termination>(`/hr/termination/${id}`),
-    staleTime: 2 * 60_000,
-    enabled: id > 0,
-  });
-}
-
-export function useTerminationLetter(id: number | null) {
-  return useQuery({
-    queryKey: terminationKeys.letter(id ?? 0),
-    queryFn: () => apiClient.get<{ html: string }>(`/hr/termination/${id}/letter`),
-    staleTime: 2 * 60_000,
-    enabled: !!id,
   });
 }
 

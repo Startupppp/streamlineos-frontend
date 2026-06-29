@@ -10,5 +10,3 @@ export function resolveImageUrl(image: string | null | undefined): string | unde
   if (image.startsWith("/")) return image;
   return `${process.env.NEXT_PUBLIC_API_URL ?? ""}/storage/image?key=${encodeURIComponent(image)}`;
 }
-
-export { slugify as generateSlug } from "./format-utils";

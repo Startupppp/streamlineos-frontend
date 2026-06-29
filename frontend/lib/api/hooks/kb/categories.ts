@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { KbCategory, CreateCategoryInput, UpdateCategoryInput } from "@/types/kb";
+import type { KbCategory, CreateCategoryInput } from "@/types/kb";
 
 export function useKbCategories(spaceId: number) {
   return useQuery({
@@ -21,28 +21,6 @@ export function useCreateKbCategory(spaceId: number) {
       apiClient.post<KbCategory>(`/kb/spaces/${spaceId}/categories`, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.spaceCategories(spaceId) });
-    },
-  });
-}
-
-export function useUpdateKbCategory() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ categoryId, ...data }: UpdateCategoryInput) =>
-      apiClient.patch<KbCategory>(`/kb/categories/${categoryId}`, data),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.spaceCategories(variables.spaceId) });
-    },
-  });
-}
-
-export function useDeleteKbCategory() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ categoryId }: { categoryId: number; spaceId: number }) =>
-      apiClient.delete<{ success: boolean }>(`/kb/categories/${categoryId}`),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.spaceCategories(variables.spaceId) });
     },
   });
 }

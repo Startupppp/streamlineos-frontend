@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck2, Plus, Star, Unplug } from "lucide-react";
-import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,24 +13,20 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  useCalendarConnections,
+  useDisconnectCalendar,
+  useSetPrimaryCalendar,
+  type CalendarConnection,
+  type CalendarConnectionProvider,
+} from "@/lib/api/hooks/calendar";
 
-type CalendarProvider = "GOOGLE" | "MICROSOFT";
-
-interface CalendarConnection {
-  id: number;
-  provider: CalendarProvider;
-  providerEmail: string | null;
-  isPrimary: boolean;
-  expiresAt: string | null;
-  updatedAt: string;
-}
-
-const PROVIDER_LABELS: Record<CalendarProvider, string> = {
+const PROVIDER_LABELS: Record<CalendarConnectionProvider, string> = {
   GOOGLE: "Google Calendar",
   MICROSOFT: "Microsoft Outlook",
 };
 
-const CONNECT_OPTIONS: { provider: CalendarProvider; label: string; href: string }[] = [
+const CONNECT_OPTIONS: { provider: CalendarConnectionProvider; label: string; href: string }[] = [
   { provider: "GOOGLE", label: "Google Calendar", href: "/api/auth/calendar/google" },
   { provider: "MICROSOFT", label: "Microsoft Outlook", href: "/api/auth/calendar/microsoft" },
 ];
@@ -50,11 +44,11 @@ function ConnectionRow({
 }) {
   const handleDisconnect = useCallback(
     () => onDisconnect(connection.id),
-    [onDisconnect, connection.id]
+    [onDisconnect, connection.id],
   );
   const handleSetPrimary = useCallback(
     () => onSetPrimary(connection.id),
-    [onSetPrimary, connection.id]
+    [onSetPrimary, connection.id],
   );
 
   return (
@@ -69,7 +63,9 @@ function ConnectionRow({
               {connection.providerEmail ?? PROVIDER_LABELS[connection.provider]}
             </p>
             {connection.isPrimary && (
-              <Badge variant="default" className="shrink-0 text-[10px]">Default</Badge>
+              <Badge variant="default" className="shrink-0 text-[10px]">
+                Default
+              </Badge>
             )}
           </div>
           <p className="truncate text-xs text-muted-foreground">
@@ -101,45 +97,36 @@ function ConnectionRow({
 }
 
 export default function CalendarIntegrationsPage() {
-  const qc = useQueryClient();
   const searchParams = useSearchParams();
 
-  const { data: connections = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["calendarConnections"],
-    queryFn: () => apiClient.get<CalendarConnection[]>("/auth/calendar/status"),
-    staleTime: 60_000,
-  });
+  const { data: connections = [], isLoading, isError, refetch } = useCalendarConnections();
 
-  const disconnect = useMutation({
-    mutationFn: (connectionId: number) =>
-      apiClient.post("/auth/calendar/disconnect", { connectionId }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["calendarConnections"] });
-      toast.success("Calendar disconnected");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-
-  const setPrimary = useMutation({
-    mutationFn: (connectionId: number) =>
-      apiClient.post("/auth/calendar/primary", { connectionId }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["calendarConnections"] });
-      toast.success("Default calendar updated");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
+  const disconnect = useDisconnectCalendar();
+  const setPrimary = useSetPrimaryCalendar();
 
   const handleDisconnect = useCallback(
-    (connectionId: number) => disconnect.mutate(connectionId),
-    [disconnect]
-  );
-  const handleSetPrimary = useCallback(
-    (connectionId: number) => setPrimary.mutate(connectionId),
-    [setPrimary]
+    (connectionId: number) => {
+      disconnect.mutate(connectionId, {
+        onSuccess: () => toast.success("Calendar disconnected"),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [disconnect],
   );
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleSetPrimary = useCallback(
+    (connectionId: number) => {
+      setPrimary.mutate(connectionId, {
+        onSuccess: () => toast.success("Default calendar updated"),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [setPrimary],
+  );
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   useEffect(() => {
     const success = searchParams.get("success");
@@ -155,7 +142,10 @@ export default function CalendarIntegrationsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Calendar Integration" subtitle="Connect your calendars for interview scheduling">
+      <PageWrapper
+        title="Calendar Integration"
+        subtitle="Connect your calendars for interview scheduling"
+      >
         <div className="max-w-2xl space-y-3">
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-16 w-full" />
@@ -167,14 +157,21 @@ export default function CalendarIntegrationsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Calendar Integration" subtitle="Connect your calendars for interview scheduling">
+      <PageWrapper
+        title="Calendar Integration"
+        subtitle="Connect your calendars for interview scheduling"
+      >
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
           <CalendarCheck2 className="h-10 w-10 text-muted-foreground" />
           <div>
             <p className="text-sm font-medium">Failed to load calendars</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Unable to fetch your calendar connections.</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Unable to fetch your calendar connections.
+            </p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleRetry}>Try again</Button>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
+            Try again
+          </Button>
         </div>
       </PageWrapper>
     );
@@ -222,7 +219,13 @@ export default function CalendarIntegrationsPage() {
           <CardContent>
             <div className="flex flex-col gap-2 sm:flex-row">
               {CONNECT_OPTIONS.map((option) => (
-                <Button key={option.provider} variant="outline" size="sm" asChild className="sm:flex-1">
+                <Button
+                  key={option.provider}
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className="sm:flex-1"
+                >
                   <a href={option.href}>
                     <Plus className="mr-1.5 h-3.5 w-3.5" />
                     {option.label}
@@ -238,9 +241,9 @@ export default function CalendarIntegrationsPage() {
           </CardContent>
         </Card>
 
-        <div className="rounded-lg border bg-muted/30 px-4 py-3 text-xs text-muted-foreground space-y-1">
+        <div className="space-y-1 rounded-lg border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
           <p className="font-medium text-foreground">What this enables</p>
-          <ul className="list-disc list-inside space-y-0.5">
+          <ul className="list-inside list-disc space-y-0.5">
             <li>Real-time interviewer availability across every connected calendar</li>
             <li>Automatic event creation on your default calendar with panel members invited</li>
             <li>Meeting link and location included in calendar invites</li>

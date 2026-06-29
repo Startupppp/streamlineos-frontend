@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface LeadSourceStat {
+interface LeadSourceStat {
   source: string;
   count: number;
   converted: number;
@@ -12,7 +12,7 @@ export interface LeadSourceStat {
   totalValue: number;
 }
 
-export interface LeadSourceReport {
+interface LeadSourceReport {
   sources: LeadSourceStat[];
   total: number;
 }
@@ -25,7 +25,7 @@ export function useLeadSourceReport() {
   });
 }
 
-export interface DuplicateLeadEntry {
+interface DuplicateLeadEntry {
   id: number;
   name: string;
   email: string | null;
@@ -50,7 +50,7 @@ export function useDuplicateLeads() {
   });
 }
 
-export interface MergeLeadInput {
+interface MergeLeadInput {
   keepLeadId: number;
   mergeLeadId: number;
 }
@@ -71,16 +71,3 @@ export function useMergeLead() {
   });
 }
 
-export function useUpdateLeadCustomData() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, customData }: { id: number; customData: Record<string, unknown> }) =>
-      apiClient.patch<{ customData: Record<string, unknown> }>(`/leads/${id}/custom-data`, {
-        customData,
-      }),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.detail(vars.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
-    },
-  });
-}

@@ -1,7 +1,6 @@
 import { Resend } from "resend";
 import sgMail from "@sendgrid/mail";
 import { logger } from "../logger";
-import { appUrl } from "../app-url";
 import { getFromAddress } from "./recipients";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -19,8 +18,6 @@ import { getFromAddress } from "./recipients";
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
-
-export { appUrl };
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
@@ -41,13 +38,13 @@ function resolveProvider(): Provider {
 
 const activeProvider: Provider = resolveProvider();
 
-export interface EmailAttachment {
+interface EmailAttachment {
   filename: string;
   content: Buffer | string;
   type: string;
 }
 
-export interface EmailOptions {
+interface EmailOptions {
   to: string | string[];
   subject: string;
   html: string;

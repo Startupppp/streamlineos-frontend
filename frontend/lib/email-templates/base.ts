@@ -13,7 +13,7 @@ export function escapeHtml(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
-export interface EmailTemplateProps {
+interface EmailTemplateProps {
   title: string;
   preheader?: string;
   content: string;

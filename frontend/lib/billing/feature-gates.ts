@@ -1,7 +1,7 @@
-export const PLANS = ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"] as const;
+const PLANS = ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"] as const;
 export type Plan = (typeof PLANS)[number];
 
-export const FEATURES = [
+const FEATURES = [
   "ai.lead-scoring",
   "ai.email-drafting",
   "ai.enrichment",
@@ -76,15 +76,6 @@ const PLAN_FEATURES: Record<Plan, ReadonlySet<Feature>> = {
 export function canUseFeature(plan: Plan | null | undefined, feature: Feature): boolean {
   if (!plan) return false;
   return PLAN_FEATURES[plan]?.has(feature) ?? false;
-}
-
-export function planRank(plan: Plan): number {
-  return PLANS.indexOf(plan);
-}
-
-export function meetsPlan(currentPlan: Plan | null | undefined, requiredPlan: Plan): boolean {
-  if (!currentPlan) return false;
-  return planRank(currentPlan) >= planRank(requiredPlan);
 }
 
 export function minPlanFor(feature: Feature): Plan | null {

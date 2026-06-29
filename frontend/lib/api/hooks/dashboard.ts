@@ -182,13 +182,13 @@ export interface BirthdayEntry {
   yearsCompleted?: number;
 }
 
-export interface PendingApprovalsCount {
+interface PendingApprovalsCount {
   pendingLeaves: number;
   pendingResignations: number;
   total: number;
 }
 
-export interface TeamAttendance {
+interface TeamAttendance {
   total: number;
   present: number;
   clockedIn: number;
@@ -280,7 +280,7 @@ export interface Announcement {
   authorLastName: string | null;
 }
 
-export interface PersonalDashboard {
+interface PersonalDashboard {
   myTasks: { id: number; title: string; status: string; priority: string | null; dueDate: string | null; projectName: string | null }[];
   timesheetStatus: { submitted: boolean; weekLabel: string; hoursLogged: number };
   leaveBalance: { type: string; remaining: number; total: number }[];
@@ -288,7 +288,7 @@ export interface PersonalDashboard {
   unreadNotifications: number;
 }
 
-export interface ExecutiveDashboard {
+interface ExecutiveDashboard {
   mrr: number;
   pipelineValue: number;
   headcount: number;

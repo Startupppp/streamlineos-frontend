@@ -30,7 +30,7 @@ export function useAddSkill() {
 }
 
 
-export interface SkillsMatrixData {
+interface SkillsMatrixData {
   employees: {
     userId: string;
     name: string | null;

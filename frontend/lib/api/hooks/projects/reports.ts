@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface VelocitySprint {
+interface VelocitySprint {
   sprintId: number;
   name: string;
   startDate: string;
@@ -15,13 +15,13 @@ export interface VelocitySprint {
   completedCount: number;
 }
 
-export interface BurnupPoint {
+interface BurnupPoint {
   date: string;
   scope: number;
   completed: number;
 }
 
-export interface CfdSeriesPoint {
+interface CfdSeriesPoint {
   date: string;
   backlog: number;
   unstarted: number;
@@ -30,17 +30,17 @@ export interface CfdSeriesPoint {
   cancelled: number;
 }
 
-export interface CfdReport {
+interface CfdReport {
   dates: string[];
   groups: string[];
   series: CfdSeriesPoint[];
 }
 
-export interface CaptureSnapshotResult {
+interface CaptureSnapshotResult {
   captured: number;
 }
 
-export interface CriticalPathNode {
+interface CriticalPathNode {
   ticketId: number;
   title: string;
   estimate: number;
@@ -48,7 +48,7 @@ export interface CriticalPathNode {
   earliestFinish: number;
 }
 
-export interface CriticalPathReport {
+interface CriticalPathReport {
   criticalPath: CriticalPathNode[];
   totalDuration: number;
   nodeCount: number;

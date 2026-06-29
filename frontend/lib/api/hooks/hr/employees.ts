@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -66,16 +65,6 @@ export function useTerminateEmployee() {
   });
 }
 
-export function useToggleDashboardAccess() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ userId, hasDashboardAccess }: { userId: string; hasDashboardAccess: boolean }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, { hasDashboardAccess }),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.employees() }),
-  });
-}
-
 export function useHrOrgChart() {
   return useQuery({
     queryKey: queryKeys.hr.orgChart(),
@@ -125,9 +114,9 @@ export function useOnboardEmployee() {
 }
 
 
-export type AvailabilityStatus = "ON_LEAVE" | "HALF_DAY" | "AVAILABLE";
+type AvailabilityStatus = "ON_LEAVE" | "HALF_DAY" | "AVAILABLE";
 
-export interface AvailabilityEntry {
+interface AvailabilityEntry {
   userId: string;
   status: AvailabilityStatus;
   leaveType?: string;
@@ -156,7 +145,7 @@ export interface ExpertResult {
   matchedLevel: number;
 }
 
-export interface FindExpertParams {
+interface FindExpertParams {
   skill: string;
   department?: string;
   role?: string;
@@ -172,7 +161,7 @@ export function useFindExpert(params: FindExpertParams) {
 }
 
 
-export interface DirectReport {
+interface DirectReport {
   id: string;
   name: string | null;
   image: string | null;
@@ -190,7 +179,7 @@ export function useDirectReports(employeeId: string) {
 }
 
 
-export interface ManagerScorecard {
+interface ManagerScorecard {
   managerId: string;
   teamSize: number;
   avgPerformanceRating: number | null;

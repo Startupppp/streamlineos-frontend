@@ -76,13 +76,3 @@ export function useSendCandidateMessage() {
   });
 }
 
-export function useMarkMessageRead() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (messageId: number) =>
-      apiClient.patch(`/hr/recruitment/messages/${messageId}`, {}),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.messageThreads() });
-    },
-  });
-}

@@ -9,13 +9,13 @@ import type {
   CustomerExecutiveDashboard,
 } from "@/types/crm";
 
-export interface SalesDashboardFilters {
+interface SalesDashboardFilters {
   from?: string;
   to?: string;
   repId?: number;
 }
 
-export interface SalesDashboardKPIsResult {
+interface SalesDashboardKPIsResult {
   totalRevenue: number;
   pipelineValue: number;
   closeRate: number;
@@ -83,7 +83,7 @@ export interface LostAnalysisResult {
   reasons: { reason: string; count: number; totalValue: number; pct: number }[];
 }
 
-export interface CohortRow {
+interface CohortRow {
   cohortMonth: string;
   created: number;
   converted: number;
@@ -91,13 +91,13 @@ export interface CohortRow {
   avgDaysToConvert: number | null;
 }
 
-export interface RepMonthStat {
+interface RepMonthStat {
   month: string;
   dealsWon: number;
   revenue: number;
 }
 
-export interface RepComparisonData {
+interface RepComparisonData {
   repId: number;
   name: string;
   initials: string;

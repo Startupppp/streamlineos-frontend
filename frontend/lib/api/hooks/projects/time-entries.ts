@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -89,7 +89,7 @@ export function useDeleteTimeEntry(options?: Parameters<typeof useMutation>[0]) 
   });
 }
 
-export interface TeamTimesheetFilters {
+interface TeamTimesheetFilters {
   userId?: string;
   projectId?: number;
   startDate?: string;
@@ -130,22 +130,5 @@ export function useRejectTimesheet(options?: Parameters<typeof useMutation>[0]) 
       queryClient.invalidateQueries({ queryKey: [...queryKeys.projects.all, "timeEntries"] });
     },
     ...options,
-  });
-}
-
-export interface BillingSummaryItem {
-  projectId: number;
-  projectName: string;
-  totalHours: number | null;
-}
-
-export function useBillingSummary(params: { startDate: Date; endDate: Date }) {
-  return useQuery<BillingSummaryItem[]>({
-    queryKey: [...queryKeys.projects.all, "billingSummary", params.startDate, params.endDate] as const,
-    queryFn: () =>
-      apiClient.get<BillingSummaryItem[]>("/projects/billing-summary", {
-        startDate: params.startDate.toISOString(),
-        endDate: params.endDate.toISOString(),
-      }),
   });
 }

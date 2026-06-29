@@ -2,7 +2,7 @@ import { db } from "./db";
 import { auditLogs } from "./db/schema";
 import { logger } from "./logger";
 
-export type AuditAction =
+type AuditAction =
   | "user.login"
   | "user.logout"
   | "user.signup"
@@ -87,6 +87,8 @@ export type AuditAction =
   | "org.ownership_transferred"
   | "oauth.login.google"
   | "oauth.login.microsoft"
+  | "oauth.signup.google"
+  | "oauth.signup.microsoft"
   | "service_account.created"
   | "service_account.updated"
   | "service_account.deleted"

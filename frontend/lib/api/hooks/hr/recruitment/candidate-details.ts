@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface VaultDocument {
+interface VaultDocument {
   id: number;
   candidateId: number;
   orgId: string;
@@ -43,18 +43,18 @@ export interface RolloutDocumentsInput {
   sendEmail: boolean;
 }
 
-export interface RolloutDocumentsResult {
+interface RolloutDocumentsResult {
   documents: RolloutDocumentRecord[];
   count: number;
 }
 
-export interface UpdateBgvInput {
+interface UpdateBgvInput {
   bgvStatus: BgvStatus;
   bgvAgency?: string;
   bgvNotes?: string;
 }
 
-export interface VaultAccessLog {
+interface VaultAccessLog {
   id: number;
   action: string;
   accessedAt: string | null;
@@ -75,7 +75,7 @@ export interface BgvComplianceRow {
   clearedPct: number;
 }
 
-export interface CandidateReferral {
+interface CandidateReferral {
   id: number;
   orgId: string;
   candidateId: number;
@@ -88,7 +88,7 @@ export interface CandidateReferral {
   createdAt: string;
 }
 
-export interface CalibrationSession {
+interface CalibrationSession {
   id: number;
   orgId: string;
   candidateId: number;
@@ -103,7 +103,7 @@ export interface CalibrationSession {
   updatedAt: string;
 }
 
-export interface ReferenceCheck {
+interface ReferenceCheck {
   id: number;
   candidateId: number;
   orgId: string;
@@ -121,7 +121,7 @@ export interface ReferenceCheck {
   createdAt: string | null;
 }
 
-export interface CreateReferenceCheckInput {
+interface CreateReferenceCheckInput {
   referenceName: string;
   referenceDesignation?: string;
   referenceCompany?: string;

@@ -28,15 +28,6 @@ export function usePolicyAcknowledgments() {
   });
 }
 
-export function useSendPolicyAck() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: { documentId: number; userIds: string[] }) =>
-      apiClient.post<{ success: boolean; sent: number }>("/hr/compliance", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: complianceKeys.list() }),
-  });
-}
-
 export function useAcknowledgePolicy() {
   const qc = useQueryClient();
   return useMutation({

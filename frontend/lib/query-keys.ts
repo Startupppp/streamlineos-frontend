@@ -580,6 +580,7 @@ export const queryKeys = {
     attendees: (eventId: number) => [...base, "calendar", "attendees", eventId] as const,
     orgMembers: () => [...base, "calendar", "orgMembers"] as const,
     googleMeetStatus: () => [...base, "calendar", "googleMeetStatus"] as const,
+    connections: () => [...base, "calendar", "connections"] as const,
   },
 
   settings: {

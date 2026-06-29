@@ -70,7 +70,7 @@ export interface AutomationRule {
 
 export type AutomationRunStatus = "success" | "failed" | "skipped";
 
-export interface AutomationRun {
+interface AutomationRun {
   id: number;
   triggerEvent: string;
   status: AutomationRunStatus;
@@ -80,7 +80,7 @@ export interface AutomationRun {
   createdAt: string;
 }
 
-export interface AutomationActionResult {
+interface AutomationActionResult {
   type: AutomationActionType;
   ok: boolean;
   error?: string;
@@ -93,7 +93,7 @@ export interface AutomationTestResult {
   actionResults: AutomationActionResult[];
 }
 
-export interface CreateAutomationInput {
+interface CreateAutomationInput {
   name: string;
   description?: string;
   triggerEvent: AutomationTrigger;
@@ -102,7 +102,7 @@ export interface CreateAutomationInput {
   isEnabled: boolean;
 }
 
-export interface UpdateAutomationInput {
+interface UpdateAutomationInput {
   name?: string;
   description?: string | null;
   triggerEvent?: AutomationTrigger;

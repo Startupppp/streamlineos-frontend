@@ -1,6 +1,6 @@
 import type { Plan } from "./feature-gates";
 
-export const MODULES = [
+const MODULES = [
   "self",
   "dashboard",
   "hr",
@@ -37,7 +37,7 @@ const PLAN_MODULES: Record<Plan, ReadonlySet<Module>> = {
   ENTERPRISE: new Set<Module>(MODULES),
 };
 
-export function getEnabledModulesForPlan(plan: Plan | null | undefined): ReadonlySet<Module> {
+function getEnabledModulesForPlan(plan: Plan | null | undefined): ReadonlySet<Module> {
   if (!plan) return PLAN_MODULES.FREE;
   return PLAN_MODULES[plan] ?? PLAN_MODULES.FREE;
 }
@@ -53,14 +53,3 @@ export function resolveEnabledModules(
   return [...planModules];
 }
 
-export function isModuleEnabled(
-  enabledModules: readonly string[],
-  module: string,
-): boolean {
-  return enabledModules.includes(module);
-}
-
-export function moduleFromPermission(permission: string): string | null {
-  const [domain] = permission.split(":");
-  return domain || null;
-}
