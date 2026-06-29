@@ -53,6 +53,7 @@ import { HrDashboard } from "@/features/dashboard/hr-dashboard";
 import { SalesDashboard } from "@/features/dashboard/sales-dashboard";
 import { EmployeeDashboard } from "@/features/dashboard/employee-dashboard";
 import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
+import { GettingStartedChecklist } from "@/features/dashboard/getting-started-checklist";
 
 const SALES_ROLES = ["SALES"] as const;
 const HR_ROLES = ["HR", "BRANCH_HR"] as const;
@@ -330,6 +331,8 @@ export function DashboardClient() {
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <QuickActions />
         </motion.div>
+
+        <GettingStartedChecklist />
 
         {isAdmin ? (
           <CeoDashboard />

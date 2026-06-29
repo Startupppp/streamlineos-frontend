@@ -11,6 +11,7 @@ declare module "next-auth" {
     permissions?: string[];
     enabledModules?: string[];
     daysUntilExpiry?: number;
+    orgOnboardingCompletedAt?: string | null;
     user: {
       id: string;
       role: string;

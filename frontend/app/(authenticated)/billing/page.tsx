@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Plus,
   RefreshCw,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +28,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { useInvoiceStats, useInvoices } from "@/lib/api/hooks/invoice";
+import { useSubscription } from "@/lib/api/hooks/subscription";
 import type { InvoiceStatus } from "@/types/invoice";
+
+const PLAN_LABELS: Record<string, string> = {
+  STARTER: "Starter",
+  PROFESSIONAL: "Professional",
+  ENTERPRISE: "Enterprise",
+};
+
+const SUB_STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  TRIAL: { label: "Trial", variant: "secondary" },
+  ACTIVE: { label: "Active", variant: "default" },
+  PAST_DUE: { label: "Past Due", variant: "destructive" },
+  CANCELLED: { label: "Cancelled", variant: "outline" },
+  EXPIRED: { label: "Expired", variant: "outline" },
+};
 
 const STATUS_BADGE: Record<InvoiceStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   DRAFT: { label: "Draft", variant: "secondary" },
@@ -45,6 +61,7 @@ export default function BillingPage() {
   const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useInvoiceStats();
   const { data: recentData, isLoading: recentLoading } = useInvoices({ limit: 5 });
   const { data: overdueData } = useInvoices({ status: "OVERDUE", limit: 5 });
+  const { data: subData } = useSubscription();
 
   function handleRetryStats() {
     void refetchStats();
@@ -52,6 +69,13 @@ export default function BillingPage() {
 
   const recentInvoices = recentData?.items ?? [];
   const overdueInvoices = overdueData?.items ?? [];
+
+  const sub = subData?.subscription;
+  const subStatusInfo = sub ? SUB_STATUS_BADGE[sub.status] : null;
+  const trialDaysRemaining =
+    sub?.status === "TRIAL" && sub.trialEndsAt
+      ? Math.max(0, Math.ceil((new Date(sub.trialEndsAt).getTime() - Date.now()) / 86_400_000))
+      : null;
 
   return (
     <PageWrapper
@@ -67,6 +91,41 @@ export default function BillingPage() {
       }
     >
       <div className="space-y-4">
+        {sub && (
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
+            <CreditCard className="h-5 w-5 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">
+                {PLAN_LABELS[sub.plan] ?? sub.plan} Plan
+              </p>
+              {sub.status === "TRIAL" && trialDaysRemaining !== null && (
+                <p className="text-xs text-amber-600 mt-0.5">
+                  Trial ends in {trialDaysRemaining === 0 ? "today" : `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""}`}
+                  {sub.trialEndsAt && (
+                    <> · {new Date(sub.trialEndsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</>
+                  )}
+                </p>
+              )}
+              {sub.status === "ACTIVE" && sub.currentPeriodEnd && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Renews {new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {subStatusInfo && (
+                <Badge variant={subStatusInfo.variant} className="text-xs">
+                  {subStatusInfo.label}
+                </Badge>
+              )}
+              <Link href="/settings/subscription">
+                <Button variant="outline" size="sm" className="text-xs">
+                  Manage
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
 
         {statsError ? (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 flex flex-col items-center gap-3 text-center">

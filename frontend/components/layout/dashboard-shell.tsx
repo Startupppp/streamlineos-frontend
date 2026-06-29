@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
 import Image from "next/image";
+import { TrialBanner } from "@/components/billing/trial-banner";
 
 const ChatUnreadNotifications = dynamic(
   () => import("@/components/chat/chat-unread-notifications").then((m) => m.ChatUnreadNotifications),
@@ -111,6 +112,7 @@ export function DashboardShell({
               </header>
             )}
 
+            <TrialBanner />
             <div className="flex-1 min-h-0 overflow-auto flex flex-col">
               {children}
             </div>

@@ -26,7 +26,7 @@ interface SprintPlanningPanelProps {
 }
 
 export function SprintPlanningPanel({ sprint, backlogTickets, onDragEnd, onDone }: SprintPlanningPanelProps) {
-  const handleDone = useCallback(onDone, [onDone]);
+  const handleDone = useCallback(() => onDone(), [onDone]);
 
   return (
     <Card className="border-primary/50">

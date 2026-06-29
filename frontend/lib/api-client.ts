@@ -11,6 +11,7 @@ const MIGRATED_PREFIXES = [
   "/audit-log",
   "/careers",
   "/billing/razorpay",
+  "/billing/summary",
   "/blog",
   "/branches",
   "/calendar",

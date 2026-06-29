@@ -303,7 +303,7 @@ function SimulateErrorState({ onRetry }: SimulateErrorStateProps) {
           <AlertCircle className="h-6 w-6 text-destructive" />
         </div>
         <p className="text-sm font-medium text-foreground">Failed to load permissions</p>
-        <p className="text-xs text-muted-foreground mt-1">Something went wrong while fetching this employee's access</p>
+        <p className="text-xs text-muted-foreground mt-1">Something went wrong while fetching this employee&apos;s access</p>
         <Button variant="outline" size="sm" onClick={onRetry} className="mt-3 gap-1.5">
           <RefreshCw className="h-3.5 w-3.5" />
           Retry

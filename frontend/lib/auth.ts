@@ -436,6 +436,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.plan = token.plan ?? null;
       session.permissions = token.permissions ?? [];
       session.enabledModules = token.enabledModules ?? [];
+      session.orgOnboardingCompletedAt = token.orgOnboardingCompletedAt ?? null;
       if (token.daysUntilExpiry !== undefined) session.daysUntilExpiry = token.daysUntilExpiry;
       if (session.user) {
         session.user.isPlatformAdmin = token.isPlatformAdmin ?? false;
