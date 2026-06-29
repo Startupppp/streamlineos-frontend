@@ -39,7 +39,7 @@ export function getFromEmail(): string {
   return fromEmail && EMAIL_RE.test(fromEmail) ? fromEmail : BRAND_SUPPORT_EMAIL;
 }
 
-export function getFromName(): string | undefined {
+function getFromName(): string | undefined {
   return process.env.EMAIL_FROM_NAME?.trim() || undefined;
 }
 

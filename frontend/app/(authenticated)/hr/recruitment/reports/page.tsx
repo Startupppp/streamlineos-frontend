@@ -319,11 +319,21 @@ export default function ReportsPage() {
 
   const handleExportXlsx = useCallback(async () => {
     if (!result) return;
-    const XLSX = await import("xlsx");
-    const ws = XLSX.utils.json_to_sheet(result.rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, entity);
-    XLSX.writeFile(wb, `${entity}-report.xlsx`);
+    const ExcelJS = (await import("exceljs")).default;
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet(entity);
+    if (result.rows.length > 0) {
+      ws.columns = Object.keys(result.rows[0]).map((key) => ({ header: key, key }));
+      result.rows.forEach((row) => ws.addRow(row));
+    }
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${entity}-report.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
   }, [result, entity]);
 
   function handleEntitySelectChange(v: string) { handleEntityChange(v as ReportEntity); }

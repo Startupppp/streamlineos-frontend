@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { DataScope } from "@/types/access";
 
-export interface SimulateAccessResult {
+interface SimulateAccessResult {
   userId: string;
   permissions: string[];
   scopes: Record<string, DataScope>;

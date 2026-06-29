@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export type RecruiterActivityAction =
+type RecruiterActivityAction =
   | "CALL_MADE"
   | "EMAIL_SENT"
   | "CANDIDATE_ADDED"
@@ -19,16 +19,6 @@ export interface RecruiterSummary {
   role: string;
   assignedJobsCount: number;
   activitySummary: Partial<Record<RecruiterActivityAction, number>>;
-}
-
-export interface JobRecruiter {
-  id: number;
-  userId: string;
-  assignedBy: string;
-  assignedAt: string;
-  name: string | null;
-  email: string;
-  image: string | null;
 }
 
 export interface RecruiterActivityEntry {
@@ -50,38 +40,6 @@ export function useRecruiters() {
     queryKey: queryKeys.hr.recruiters(),
     queryFn: () => apiClient.get<RecruiterSummary[]>("/hr/recruitment/recruiters"),
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useJobRecruiters(jobId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.jobRecruiters(jobId),
-    queryFn: () => apiClient.get<JobRecruiter[]>(`/hr/recruitment/jobs/${jobId}/recruiters`),
-    staleTime: 60_000,
-  });
-}
-
-export function useAssignRecruiter(jobId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (userId: string) =>
-      apiClient.post(`/hr/recruitment/jobs/${jobId}/recruiters`, { userId }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.jobRecruiters(jobId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruiters() });
-    },
-  });
-}
-
-export function useUnassignRecruiter(jobId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (userId: string) =>
-      apiClient.delete(`/hr/recruitment/jobs/${jobId}/recruiters`, { userId }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.jobRecruiters(jobId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruiters() });
-    },
   });
 }
 
