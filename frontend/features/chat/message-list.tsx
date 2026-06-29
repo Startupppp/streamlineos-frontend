@@ -20,6 +20,7 @@ interface MessageItemProps {
   editingMessageId: number | undefined;
   editInput: string;
   pinnedMessageIds: Set<number>;
+  savedMessageIds: Set<number>;
   replyCountMap: Map<number, number>;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
@@ -31,6 +32,9 @@ interface MessageItemProps {
   onReact: (messageId: number, emoji: string) => void;
   onPin: (messageId: number) => void;
   onUnpin: (messageId: number) => void;
+  onSave: (messageId: number) => void;
+  onUnsaveMsg: (messageId: number) => void;
+  onForward: (msg: Message) => void;
 }
 
 function MessageItem({
@@ -41,6 +45,7 @@ function MessageItem({
   editingMessageId,
   editInput,
   pinnedMessageIds,
+  savedMessageIds,
   replyCountMap,
   onEditInputChange,
   onStartEdit,
@@ -52,6 +57,9 @@ function MessageItem({
   onReact,
   onPin,
   onUnpin,
+  onSave,
+  onUnsaveMsg,
+  onForward,
 }: MessageItemProps) {
   const handleStartEdit = useCallback(() => onStartEdit(msg), [msg, onStartEdit]);
   const handleSaveEdit = useCallback(() => onSaveEdit(msg.id), [msg.id, onSaveEdit]);
@@ -61,6 +69,9 @@ function MessageItem({
   const handleReact = useCallback((emoji: string) => onReact(msg.id, emoji), [msg.id, onReact]);
   const handlePin = useCallback(() => onPin(msg.id), [msg.id, onPin]);
   const handleUnpin = useCallback(() => onUnpin(msg.id), [msg.id, onUnpin]);
+  const handleSave = useCallback(() => onSave(msg.id), [msg.id, onSave]);
+  const handleUnsaveMsg = useCallback(() => onUnsaveMsg(msg.id), [msg.id, onUnsaveMsg]);
+  const handleForward = useCallback(() => onForward(msg), [msg, onForward]);
   return (
     <ChatBubble
       message={msg}
@@ -70,6 +81,7 @@ function MessageItem({
       isEditing={editingMessageId === msg.id}
       editInput={editingMessageId === msg.id ? editInput : ""}
       isPinned={pinnedMessageIds.has(msg.id)}
+      isSaved={savedMessageIds.has(msg.id)}
       replyCount={replyCountMap.get(msg.id)}
       onEditInputChange={onEditInputChange}
       onStartEdit={handleStartEdit}
@@ -81,6 +93,9 @@ function MessageItem({
       onReact={handleReact}
       onPin={handlePin}
       onUnpin={handleUnpin}
+      onSave={handleSave}
+      onUnsaveMsg={handleUnsaveMsg}
+      onForward={handleForward}
     />
   );
 }
@@ -99,6 +114,7 @@ interface MessageListProps {
   editingMessage: Message | null;
   editInput: string;
   pinnedMessageIds: Set<number>;
+  savedMessageIds: Set<number>;
   replyCountMap: Map<number, number>;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
@@ -110,6 +126,9 @@ interface MessageListProps {
   onReact: (messageId: number, emoji: string) => void;
   onPin: (messageId: number) => void;
   onUnpin: (messageId: number) => void;
+  onSave: (messageId: number) => void;
+  onUnsaveMsg: (messageId: number) => void;
+  onForward: (msg: Message) => void;
   showScrollBtn: boolean;
   scrollToBottom: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -131,6 +150,7 @@ export function MessageList({
   editingMessage,
   editInput,
   pinnedMessageIds,
+  savedMessageIds,
   replyCountMap,
   onEditInputChange,
   onStartEdit,
@@ -142,6 +162,9 @@ export function MessageList({
   onReact,
   onPin,
   onUnpin,
+  onSave,
+  onUnsaveMsg,
+  onForward,
   showScrollBtn,
   scrollToBottom,
   messagesEndRef,
@@ -220,6 +243,7 @@ export function MessageList({
                     editingMessageId={editingMessage?.id}
                     editInput={editInput}
                     pinnedMessageIds={pinnedMessageIds}
+                    savedMessageIds={savedMessageIds}
                     replyCountMap={replyCountMap}
                     onEditInputChange={onEditInputChange}
                     onStartEdit={onStartEdit}
@@ -231,6 +255,9 @@ export function MessageList({
                     onReact={onReact}
                     onPin={onPin}
                     onUnpin={onUnpin}
+                    onSave={onSave}
+                    onUnsaveMsg={onUnsaveMsg}
+                    onForward={onForward}
                   />
                 );
               })}

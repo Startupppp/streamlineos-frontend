@@ -206,6 +206,7 @@ export const queryKeys = {
     pins: (channelId: number) => [...base, "chat", "pins", channelId] as const,
     thread: (channelId: number, messageId: number) => [...base, "chat", "thread", channelId, messageId] as const,
     huddle: (channelId: number) => [...base, "chat", "huddle", channelId] as const,
+    savedMessages: () => [...base, "chat", "savedMessages"] as const,
   },
 
   dashboard: {

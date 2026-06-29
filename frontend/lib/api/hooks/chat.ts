@@ -32,6 +32,8 @@ import type {
   SearchMessagesResult,
   SearchChannelResult,
   SearchUserResult,
+  SavedMessage,
+  SavedMessagesPage,
 } from "@/types/chat";
 
 export function useChatChannels(enabled = true) {
@@ -448,5 +450,48 @@ export function useSearchUsers(query: string, enabled: boolean) {
     queryFn: () => apiClient.get<SearchUserResult[]>("/chat/search/users", { q: query }),
     enabled: enabled && query.trim().length >= 1,
     staleTime: 30_000,
+  });
+}
+
+export function useSavedMessages() {
+  return useInfiniteQuery({
+    queryKey: queryKeys.chat.savedMessages(),
+    queryFn: ({ pageParam }) =>
+      apiClient.get<SavedMessagesPage>("/chat/saved", pageParam ? { cursor: pageParam } : undefined),
+    getNextPageParam: (last) => last.nextCursor,
+    initialPageParam: undefined as number | undefined,
+    staleTime: 60_000,
+  });
+}
+
+export function useSaveMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (messageId: number) => apiClient.post<{ ok: boolean }>(`/chat/saved/${messageId}`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.savedMessages() }); },
+  });
+}
+
+export function useUnsaveMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (messageId: number) => apiClient.delete<{ ok: boolean }>(`/chat/saved/${messageId}`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.savedMessages() }); },
+  });
+}
+
+export function useArchiveChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) => apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/archive`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() }); },
+  });
+}
+
+export function useUnarchiveChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) => apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unarchive`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() }); },
   });
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { ArrowDown, Bookmark, CheckCheck, Copy, FileText, MessageSquare, Pencil, Reply, Smile, Trash2 } from "lucide-react";
+import { ArrowDown, Bookmark, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, MessageSquare, Pencil, Reply, Smile, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,6 +40,10 @@ export function ChatBubble({
   onReact,
   onPin,
   onUnpin,
+  isSaved,
+  onSave,
+  onUnsaveMsg,
+  onForward,
 }: {
   message: Message;
   isOwn: boolean;
@@ -59,6 +63,10 @@ export function ChatBubble({
   onReact: (emoji: string) => void;
   onPin: () => void;
   onUnpin: () => void;
+  isSaved?: boolean;
+  onSave?: () => void;
+  onUnsaveMsg?: () => void;
+  onForward?: () => void;
 }) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
 
@@ -329,6 +337,26 @@ export function ChatBubble({
                   aria-label="Copy"
                 >
                   <Copy className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {onForward && (
+                <button
+                  onClick={onForward}
+                  className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                  title="Forward"
+                  aria-label="Forward message"
+                >
+                  <Forward className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {onSave && (
+                <button
+                  onClick={isSaved ? onUnsaveMsg : onSave}
+                  className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isSaved ? "text-amber-500" : "text-muted-foreground")}
+                  title={isSaved ? "Unsave" : "Save message"}
+                  aria-label={isSaved ? "Unsave message" : "Save message"}
+                >
+                  {isSaved ? <BookmarkCheck className="h-3.5 w-3.5 fill-amber-500" /> : <BookmarkPlus className="h-3.5 w-3.5" />}
                 </button>
               )}
               {isOwn && (

@@ -13,6 +13,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
+  Bell,
+  Bookmark,
   Hash,
   Mic,
   PanelLeftOpen,
@@ -36,6 +38,9 @@ import {
   useChatPins,
   usePinMessage,
   useUnpinMessage,
+  useSavedMessages,
+  useSaveMessage,
+  useUnsaveMessage,
 } from "@/lib/api/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
@@ -49,6 +54,9 @@ import type { Message } from "./chat-types";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
 import { ThreadPanel } from "./thread-panel";
+import { SavedMessagesPanel } from "./saved-messages-panel";
+import { ForwardMessageDialog } from "./forward-message-dialog";
+import { NotificationCenter } from "./notification-center";
 
 export function MessagePanel({
   channelId,
@@ -85,6 +93,9 @@ export function MessagePanel({
   const pinMessage = usePinMessage();
   const unpinMessage = useUnpinMessage();
   const { data: pins } = useChatPins(channelId);
+  const { data: savedData } = useSavedMessages();
+  const saveMessage = useSaveMessage();
+  const unsaveMessage = useUnsaveMessage();
   const { data: onlineUsers } = useChatOnlineUsers();
   const lastTypingSent = useRef(0);
   const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
@@ -122,6 +133,9 @@ export function MessagePanel({
 
   const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
   const [showMeeting, setShowMeeting] = useState(false);
+  const [showSavedPanel, setShowSavedPanel] = useState(false);
+  const [forwardMessage, setForwardMessage] = useState<{ content: string | null } | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const [pendingAttachments, setPendingAttachments] = useState<
     { fileName: string; fileUrl: string; fileKey: string; fileSize: number; mimeType: string }[]
@@ -300,6 +314,23 @@ export function MessagePanel({
     () => new Set((pins ?? []).map((p) => p.messageId)),
     [pins]
   );
+
+  const savedMessageIds = useMemo(
+    () => new Set(savedData?.pages.flatMap(p => p.items.map(i => i.messageId)) ?? []),
+    [savedData]
+  );
+
+  const handleSave = useCallback((messageId: number) => {
+    saveMessage.mutate(messageId);
+  }, [saveMessage]);
+
+  const handleUnsaveMsg = useCallback((messageId: number) => {
+    unsaveMessage.mutate(messageId);
+  }, [unsaveMessage]);
+
+  const handleForward = useCallback((msg: Message) => {
+    setForwardMessage({ content: msg.content });
+  }, []);
 
   const handleReact = useCallback((messageId: number, emoji: string) => {
     toggleReaction.mutate({ messageId, emoji });
@@ -493,6 +524,22 @@ export function MessagePanel({
           >
             <Video className={cn("h-4 w-4", activeHuddle?.hasVideo ? "text-blue-500" : "")} />
           </button>
+          <button
+            onClick={() => { setShowSavedPanel(p => !p); setShowNotifications(false); }}
+            className={cn("h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors", showSavedPanel ? "bg-muted text-amber-500" : "text-muted-foreground hover:text-foreground")}
+            title="Saved messages"
+            aria-label="Saved messages"
+          >
+            <Bookmark className={cn("h-4 w-4", showSavedPanel && "fill-amber-500")} />
+          </button>
+          <button
+            onClick={() => { setShowNotifications(p => !p); setShowSavedPanel(false); }}
+            className={cn("h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors", showNotifications ? "bg-muted" : "text-muted-foreground hover:text-foreground")}
+            title="Notifications"
+            aria-label="Notifications"
+          >
+            <Bell className="h-4 w-4" />
+          </button>
           <Button
             variant="ghost"
             size="icon"
@@ -519,6 +566,7 @@ export function MessagePanel({
         editingMessage={editingMessage}
         editInput={editInput}
         pinnedMessageIds={pinnedMessageIds}
+        savedMessageIds={savedMessageIds}
         replyCountMap={replyCountMap}
         onEditInputChange={setEditInput}
         onStartEdit={(msg) => { setEditingMessage(msg); setEditInput(msg.content ?? ""); }}
@@ -530,6 +578,9 @@ export function MessagePanel({
         onReact={handleReact}
         onPin={handlePin}
         onUnpin={handleUnpin}
+        onSave={handleSave}
+        onUnsaveMsg={handleUnsaveMsg}
+        onForward={handleForward}
         showScrollBtn={showScrollBtn}
         scrollToBottom={scrollToBottom}
         messagesEndRef={messagesEndRef}
@@ -604,6 +655,46 @@ export function MessagePanel({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {showSavedPanel && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <SavedMessagesPanel
+              onClose={() => setShowSavedPanel(false)}
+              onJumpToChannel={() => setShowSavedPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showNotifications && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <NotificationCenter
+              onClose={() => setShowNotifications(false)}
+              onSelectChannel={() => setShowNotifications(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ForwardMessageDialog
+        message={forwardMessage}
+        open={Boolean(forwardMessage)}
+        onOpenChange={(o) => { if (!o) setForwardMessage(null); }}
+      />
     </div>
   );
 }

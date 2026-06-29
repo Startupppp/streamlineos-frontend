@@ -293,6 +293,19 @@ export interface SearchMessagesResult {
   nextCursor?: number;
 }
 
+export interface SavedMessage {
+  id: number;
+  userId: string;
+  messageId: number;
+  savedAt: string | Date;
+  message: Message & { channel?: { id: number; name: string | null; type: string } | null };
+}
+
+export interface SavedMessagesPage {
+  items: SavedMessage[];
+  nextCursor?: number;
+}
+
 export interface SearchChannelResult {
   id: number;
   name: string | null;

@@ -12,7 +12,7 @@ import { Bookmark, Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-re
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
-import { useChatChannel, useChatOnlineUsers, useUpdateChannel, useChatPins, useUnpinMessage } from "@/lib/api/hooks";
+import { useChatChannel, useChatOnlineUsers, useUpdateChannel, useChatPins, useUnpinMessage, useArchiveChannel, useUnarchiveChannel } from "@/lib/api/hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
@@ -31,6 +31,8 @@ export function ChannelInfoPanel({
   const updateChannel = useUpdateChannel();
   const { data: pins } = useChatPins(channelId);
   const unpinMessage = useUnpinMessage();
+  const archiveChannel = useArchiveChannel();
+  const unarchiveChannel = useUnarchiveChannel();
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers]
@@ -272,6 +274,34 @@ export function ChannelInfoPanel({
                   ? `Created ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`
                   : `Started ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`}
               </p>
+            </div>
+          )}
+
+          {isAdmin && channel?.type !== "DIRECT" && (
+            <div className="mt-4 pt-4 border-t border-border/30">
+              {channel?.isArchived ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-[12px]"
+                  onClick={() => unarchiveChannel.mutate(channelId)}
+                  disabled={unarchiveChannel.isPending}
+                >
+                  {unarchiveChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : null}
+                  Unarchive Channel
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-[12px] border-destructive/40 text-destructive hover:bg-destructive/10"
+                  onClick={() => archiveChannel.mutate(channelId)}
+                  disabled={archiveChannel.isPending}
+                >
+                  {archiveChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : null}
+                  Archive Channel
+                </Button>
+              )}
             </div>
           )}
         </div>
