@@ -1,19 +1,42 @@
 import { OwnerPage } from "@/components/owner/owner-page";
 import { AlertCircle, CheckCircle2, Mail, Send, Users } from "lucide-react";
-import { getEmailProvider } from "@/lib/email/sender";
-import {
-  getAdminRecipients,
-  getFromAddress,
-  getFromEmail,
-} from "@/lib/email/recipients";
 
 export const dynamic = "force-dynamic";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function parseEmailList(value: string | undefined): string[] {
+  if (!value) return [];
+  return value.split(/[,;\s]+/).map(s => s.trim()).filter(s => s && EMAIL_RE.test(s));
+}
+
+function resolveEmailProvider(): "resend" | "sendgrid" | "none" {
+  const pref = process.env.EMAIL_PROVIDER?.toLowerCase().trim();
+  const hasResend = !!process.env.RESEND_API_KEY;
+  const hasSendgrid = !!process.env.SENDGRID_API_KEY;
+  if (pref === "sendgrid" && hasSendgrid) return "sendgrid";
+  if (pref === "resend" && hasResend) return "resend";
+  if (hasResend) return "resend";
+  if (hasSendgrid) return "sendgrid";
+  return "none";
+}
+
+const BRAND_SUPPORT_EMAIL = "support@streamlineos.in";
+
 export default function SettingsPage() {
-  const emailProvider = getEmailProvider();
-  const fromAddress = getFromAddress();
-  const fromEmail = getFromEmail();
-  const adminRecipients = getAdminRecipients();
+  const emailProvider = resolveEmailProvider();
+  const fromEmailRaw = process.env.EMAIL_FROM_ADDRESS?.trim();
+  const fromEmail = fromEmailRaw && EMAIL_RE.test(fromEmailRaw) ? fromEmailRaw : BRAND_SUPPORT_EMAIL;
+  const fromName = process.env.EMAIL_FROM_NAME?.trim() || undefined;
+  const fromAddress = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
+  const adminRecipientsList = [
+    ...parseEmailList(process.env.ADMIN_NOTIFICATION_EMAILS),
+    ...parseEmailList(process.env.ADMIN_NOTIFICATION_EMAIL),
+    ...parseEmailList(process.env.OWNER_EMAIL),
+  ];
+  const adminRecipients = Array.from(new Set(adminRecipientsList));
+  const effectiveAdminRecipients = adminRecipients.length > 0 ? adminRecipients : [BRAND_SUPPORT_EMAIL];
+
   const razorpay = !!process.env.RAZORPAY_KEY_ID;
   const googleVerification = !!process.env.GOOGLE_SITE_VERIFICATION;
 
@@ -80,7 +103,6 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      {/* ─── Email routing detail ────────────────────────────────────────── */}
       <div className="mt-6">
         <div className="flex items-center gap-2 mb-2">
           <Mail className="h-4 w-4 text-slate-500" />
@@ -113,7 +135,7 @@ export default function SettingsPage() {
           <Row
             icon={<Users className="h-4 w-4 text-slate-400" />}
             label="Contact-form recipients"
-            value={adminRecipients.join(", ")}
+            value={effectiveAdminRecipients.join(", ")}
             tone="ok"
             hint="Edit ADMIN_NOTIFICATION_EMAILS in .env (comma-separated) to change who gets pinged."
           />

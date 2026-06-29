@@ -1,5 +1,3 @@
-import { db } from "./db";
-import { auditLogs } from "./db/schema";
 import { logger } from "./logger";
 
 type AuditAction =
@@ -105,18 +103,26 @@ interface AuditLogEntry {
 }
 
 export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
+  const secret = process.env.INTERNAL_API_SECRET ?? "";
   try {
-    await db.insert(auditLogs).values({
-      action: entry.action,
-      userId: entry.userId,
-      orgId: entry.orgId ?? null,
-      targetId: entry.targetId ?? null,
-      targetType: entry.targetType ?? null,
-      metadata: entry.metadata ?? null,
-      ipAddress: entry.ipAddress ?? null,
+    await fetch(`${backendUrl}/internal/audit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": secret,
+      },
+      body: JSON.stringify({
+        action: entry.action,
+        userId: entry.userId,
+        orgId: entry.orgId ?? null,
+        targetId: entry.targetId ?? null,
+        targetType: entry.targetType ?? null,
+        metadata: entry.metadata ?? null,
+        ipAddress: entry.ipAddress ?? null,
+      }),
     });
   } catch (error) {
-
     logger.error("AUDIT_FAILURE: Failed to create audit log — investigate immediately", {
       action: entry.action,
       userId: entry.userId,
