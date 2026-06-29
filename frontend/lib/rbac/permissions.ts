@@ -9,7 +9,5 @@ export {
   PERMISSIONS,
   SYSTEM_ROLES,
   ROLE_DEFAULT_PERMISSIONS,
-  getPermissionName,
-  parsePermission,
 } from "./permissions/roles";
 export type { SystemRole } from "./permissions/roles";

@@ -117,8 +117,6 @@ export const queryKeys = {
     timeline: (leadId: number) => [...base, "leads", "timeline", leadId] as const,
     slaAlerts: () => [...base, "leads", "slaAlerts"] as const,
     analyticsSummary: (params?: Record<string, unknown>) => [...base, "leads", "analyticsSummary", params] as const,
-    dashboardMetrics: () => [...base, "leads", "dashboardMetrics"] as const,
-    unverified: () => [...base, "leads", "unverified"] as const,
     duplicates: () => [...base, "leads", "duplicates"] as const,
     sourceReport: () => [...base, "leads", "sourceReport"] as const,
   },
@@ -256,12 +254,6 @@ export const queryKeys = {
     settings: () => [...base, "organization", "settings"] as const,
   },
 
-  rbac: {
-    all: [...base, "rbac"] as const,
-    userPermissions: () => [...base, "rbac", "userPermissions"] as const,
-    allPermissions: () => [...base, "rbac", "allPermissions"] as const,
-  },
-
   access: {
     all: [...base, "access"] as const,
     me: () => [...base, "access", "me"] as const,
@@ -356,11 +348,6 @@ export const queryKeys = {
     list: () => [...base, "sessions", "list"] as const,
   },
 
-  globalSearch: {
-    all: [...base, "globalSearch"] as const,
-    results: (query: string) => [...base, "globalSearch", query] as const,
-  },
-
   webLeadForms: {
     all: [...base, "webLeadForms"] as const,
     list: () => [...base, "webLeadForms", "list"] as const,
@@ -386,10 +373,6 @@ export const queryKeys = {
   blog: {
     all: [...base, "blog"] as const,
     feed: <P extends object>(params?: P) => [...base, "blog", "feed", params] as const,
-  },
-
-  landing: {
-    all: [...base, "landing"] as const,
   },
 
   publicBooking: {

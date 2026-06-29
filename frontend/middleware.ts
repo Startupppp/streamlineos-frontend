@@ -162,11 +162,7 @@ function canAccessRoute(
 
 const BOT_BLOCKED_PREFIXES = [
   "/api/auth/",
-  "/api/trpc/auth.",
-  "/api/trpc/organization.",
   "/api/chat",
-  "/api/ai/",
-  "/api/expenses/",
 ];
 
 export default async function middleware(req: NextRequest) {

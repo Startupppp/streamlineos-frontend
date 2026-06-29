@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   LeadScoreResult, EmailTone, GeneratedEmail, DealPredictionResult,
-  NextActionResult, ChurnRiskResult, ConversationSummaryResult, LeadEnrichmentResult,
+  NextActionResult, ChurnRiskResult, LeadEnrichmentResult,
   CandidateScoreResult, ReviewDraftResult, HelpdeskReplyResult, AttritionRiskResult,
 } from "@/lib/ai/schemas";
 
@@ -46,23 +46,12 @@ interface GenerateEmailInput {
   potentialValue?: string;
   tone?: EmailTone;
   context?: string;
-  allVariations?: boolean;
 }
 
 export function useGenerateEmail() {
   return useMutation({
     mutationFn: (input: GenerateEmailInput) =>
       apiClient.post<GeneratedEmail>("/ai/generate-email", input),
-  });
-}
-
-export function useGenerateEmailVariations() {
-  return useMutation({
-    mutationFn: (input: Omit<GenerateEmailInput, "tone">) =>
-      apiClient.post<{ variations: Record<EmailTone, GeneratedEmail> }>(
-        "/ai/generate-email",
-        { ...input, allVariations: true },
-      ),
   });
 }
 
@@ -93,13 +82,6 @@ export function useAnalyzeChurnRisk() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.clients.all });
     },
-  });
-}
-
-export function useSummarizeConversation() {
-  return useMutation({
-    mutationFn: (input: { activityType: string; subject?: string; notes: string; leadName?: string; dealName?: string }) =>
-      apiClient.post<ConversationSummaryResult>("/ai/summarize", input),
   });
 }
 

@@ -13,9 +13,7 @@ import type {
   LeadBoard,
   SlaAlertResponse,
   LeadAnalyticsSummary,
-  LeadDashboardMetrics,
   SalesLeaderboardEntry,
-  LeadClient,
   SalesTeamCapacityEntry,
   LeadFilters,
   CreateLeadInput,
@@ -27,11 +25,8 @@ import type {
   BulkDeleteLeadsInput,
   BulkImportLeadsInput,
   BulkImportResult,
-  VerifyLeadInput,
-  RejectLeadInput,
   DistributeLeadsInput,
   DistributeResult,
-  LeadImportBatch,
 } from "@/types/leads";
 
 export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {
@@ -70,16 +65,6 @@ export function useLeadStats(filters?: { dateFrom?: string; dateTo?: string }) {
   });
 }
 
-export function useLeadActivities(leadId: number, limit?: number) {
-  return useQuery({
-    queryKey: queryKeys.leads.activities(leadId),
-    queryFn: () =>
-      apiClient.get<LeadActivity[]>(`/leads/${leadId}/activities`, limit ? { limit } : undefined),
-    staleTime: 2 * 60_000,
-    enabled: leadId > 0,
-  });
-}
-
 export function useLeadTimeline(leadId: number, limit?: number) {
   return useQuery({
     queryKey: queryKeys.leads.timeline(leadId),
@@ -106,22 +91,6 @@ export function useLeadAnalyticsSummary(filters?: {
     queryKey: queryKeys.leads.analyticsSummary(filters),
     queryFn: () =>
       apiClient.get<LeadAnalyticsSummary>("/leads/analytics", filters as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useLeadDashboardMetrics() {
-  return useQuery({
-    queryKey: queryKeys.leads.dashboardMetrics(),
-    queryFn: () => apiClient.get<LeadDashboardMetrics>("/leads/dashboard-metrics"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useUnverifiedLeads() {
-  return useQuery({
-    queryKey: queryKeys.leads.unverified(),
-    queryFn: () => apiClient.get<Lead[]>("/leads/unverified"),
     staleTime: 2 * 60_000,
   });
 }
@@ -233,30 +202,6 @@ export function useBulkImportLeads() {
   });
 }
 
-export function useVerifyLead() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ leadId, ...data }: VerifyLeadInput) =>
-      apiClient.patch<Lead>(`/leads/${leadId}/verify`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
-      qc.invalidateQueries({ queryKey: queryKeys.leads.unverified() });
-    },
-  });
-}
-
-export function useRejectLead() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ leadId, ...data }: RejectLeadInput) =>
-      apiClient.patch<Lead>(`/leads/${leadId}/reject`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
-      qc.invalidateQueries({ queryKey: queryKeys.leads.unverified() });
-    },
-  });
-}
-
 export function useDistributeLeads() {
   const qc = useQueryClient();
   return useMutation({
@@ -308,32 +253,6 @@ export function useSalesTeamCapacity() {
   });
 }
 
-interface FollowUpLead {
-  id: number;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  company: string | null;
-  status: string;
-  priority: string | null;
-  followUpDate: string | null;
-  followUpNotes: string | null;
-  assignedToId: string | null;
-  assigneeName: string | null;
-}
-
-export function useOverdueFollowUps(limit?: number) {
-  return useQuery({
-    queryKey: [...queryKeys.leads.all, "followUps", "overdue"] as const,
-    queryFn: () =>
-      apiClient.get<{ items: FollowUpLead[]; total: number }>(
-        "/leads/follow-ups",
-        { overdue: "true", limit: limit ?? 10 } as Record<string, unknown>,
-      ),
-    staleTime: 2 * 60_000,
-  });
-}
-
 interface DuplicateCheckResult {
   duplicates: Array<{
     id: number;
@@ -355,17 +274,6 @@ export function useCheckLeadDuplicates(params: { email?: string; phone?: string 
     staleTime: 30_000,
   });
 }
-
-export function useLeadImportStatus(batchId: number | null) {
-  return useQuery({
-    queryKey: [...queryKeys.leads.all, "importBatch", batchId] as const,
-    queryFn: () => apiClient.get<LeadImportBatch>(`/leads/import/${batchId}`),
-    staleTime: 2 * 60_000,
-    enabled: batchId !== null,
-    refetchInterval: 3000,
-  });
-}
-
 
 export interface ScoreExplanation {
   score: number;

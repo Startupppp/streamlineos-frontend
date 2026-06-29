@@ -157,17 +157,6 @@ export interface LeaveToday {
   employeeImage: string | null;
 }
 
-export interface UpcomingLeave {
-  id: number;
-  userId: string;
-  startDate: string;
-  endDate: string;
-  leaveType: string | null;
-  userName: string | null;
-  userImage: string | null;
-  userDesignation: string | null;
-}
-
 export interface UpcomingHoliday {
   id: number;
   name: string;
@@ -199,16 +188,6 @@ export interface PendingApprovalsCount {
   total: number;
 }
 
-export interface PendingRequest {
-  id: number;
-  startDate: string;
-  endDate: string;
-  status: string;
-  reason: string | null;
-  createdAt: string | null;
-  leaveTypeName: string;
-}
-
 export interface TeamAttendance {
   total: number;
   present: number;
@@ -227,10 +206,8 @@ export interface TeamAttendance {
 
 const hrWidgetKeys = {
   leavesToday: [...queryKeys.dashboard.all, "leavesToday"] as const,
-  upcomingLeaves: [...queryKeys.dashboard.all, "upcomingLeaves"] as const,
   upcomingHolidays: [...queryKeys.dashboard.all, "upcomingHolidays"] as const,
   myLeaveBalance: [...queryKeys.dashboard.all, "myLeaveBalance"] as const,
-  pendingRequests: [...queryKeys.dashboard.all, "pendingRequests"] as const,
   birthdays: [...queryKeys.dashboard.all, "birthdays"] as const,
   pendingApprovals: [...queryKeys.dashboard.all, "pendingApprovals"] as const,
   teamAttendance: [...queryKeys.dashboard.all, "teamAttendance"] as const,
@@ -242,17 +219,6 @@ export const useLeavesToday = (
   useQuery<LeaveToday[], Error>({
     queryKey: hrWidgetKeys.leavesToday,
     queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
-    staleTime: 60_000,
-    refetchInterval: 60_000,
-    ...options,
-  });
-
-export const useUpcomingLeaves = (
-  options?: Omit<UseQueryOptions<UpcomingLeave[], Error>, "queryKey" | "queryFn">
-) =>
-  useQuery<UpcomingLeave[], Error>({
-    queryKey: hrWidgetKeys.upcomingLeaves,
-    queryFn: () => apiClient.get<UpcomingLeave[]>("/dashboard/upcoming-leaves"),
     staleTime: 60_000,
     refetchInterval: 60_000,
     ...options,
@@ -279,17 +245,6 @@ export const useBirthdays = (
     queryKey: hrWidgetKeys.birthdays,
     queryFn: () => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays"),
     staleTime: 5 * 60_000,
-    refetchInterval: 60_000,
-    ...options,
-  });
-
-export const usePendingRequests = (
-  options?: Omit<UseQueryOptions<PendingRequest[], Error>, "queryKey" | "queryFn">
-) =>
-  useQuery<PendingRequest[], Error>({
-    queryKey: hrWidgetKeys.pendingRequests,
-    queryFn: () => apiClient.get<PendingRequest[]>("/dashboard/pending-requests"),
-    staleTime: 60_000,
     refetchInterval: 60_000,
     ...options,
   });
@@ -343,13 +298,6 @@ export interface ExecutiveDashboard {
   conversionRate: number;
 }
 
-export interface ManagerDashboard {
-  teamAttendanceToday: { userId: string; name: string; status: "present" | "absent" | "leave" }[];
-  pendingLeaveApprovals: number;
-  pendingExpenseApprovals: number;
-  teamOverdueTasks: number;
-}
-
 export const useAnnouncements = (
   options?: Omit<UseQueryOptions<Announcement[], Error>, "queryKey" | "queryFn">
 ) =>
@@ -399,17 +347,6 @@ export const useExecutiveDashboard = (
     queryKey: queryKeys.dashboard.executive(),
     queryFn: () => apiClient.get<ExecutiveDashboard>("/dashboard/executive"),
     staleTime: 5 * 60_000,
-    ...options,
-  });
-
-export const useManagerDashboard = (
-  options?: Omit<UseQueryOptions<ManagerDashboard, Error>, "queryKey" | "queryFn">
-) =>
-  useQuery<ManagerDashboard, Error>({
-    queryKey: queryKeys.dashboard.manager(),
-    queryFn: () => apiClient.get<ManagerDashboard>("/dashboard/manager"),
-    staleTime: 60_000,
-    refetchInterval: 60_000,
     ...options,
   });
 

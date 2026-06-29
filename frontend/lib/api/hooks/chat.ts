@@ -18,13 +18,11 @@ import type {
   MessagesPage,
   OnlineUser,
   OrgUser,
-  TypingIndicator,
   CreateDMInput,
   CreateGroupChannelInput,
   UpdateChannelInput,
   SendMessageInput,
   EditMessageInput,
-  MessageWithChannel,
 } from "@/types/chat";
 
 export function useChatChannels(enabled = true) {
@@ -99,23 +97,6 @@ export function useChatOrgUsers(enabled = true) {
     staleTime: 2 * 60_000,
     enabled,
   });
-}
-
-export function useChatSearchMessages(query: string, channelId?: number) {
-  return useQuery({
-    queryKey: queryKeys.chat.search(query),
-    queryFn: () =>
-      apiClient.get<MessageWithChannel[]>("/chat/search", {
-        query,
-        ...(channelId ? { channelId } : {}),
-      }),
-    staleTime: 2 * 60_000,
-    enabled: query.length >= 2,
-  });
-}
-
-export function useChatTyping(_channelId: number, _enabled: boolean) {
-  return { data: undefined as TypingIndicator[] | undefined };
 }
 
 export function useSendMessage() {
@@ -278,39 +259,6 @@ export function useChatHeartbeat() {
   });
 }
 
-export function useSetTyping() {
-  return { mutate: (_input: { channelId: number }) => {} };
-}
-
-export function useCreatePoll() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (input: { channelId: number; question: string; options: string[]; endsAt?: string }) =>
-      apiClient.post<Message>(`/chat/channels/${input.channelId}/polls`, input),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(variables.channelId),
-      });
-    },
-  });
-}
-
-export function useVotePoll() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (input: { pollId: number; optionId: number; channelId: number }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/polls/${input.pollId}/vote`, {
-        optionId: input.optionId,
-      }),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(variables.channelId),
-      });
-    },
-  });
-}
-
-
 export function useToggleReaction(channelId: number) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -327,9 +275,3 @@ export function useToggleReaction(channelId: number) {
   });
 }
 
-export function useUpdatePresenceStatus() {
-  return useMutation({
-    mutationFn: ({ status }: { status: "ONLINE" | "AWAY" | "OFFLINE" }) =>
-      apiClient.put<{ ok: boolean }>("/chat/status", { status }),
-  });
-}
