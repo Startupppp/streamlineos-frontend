@@ -4,9 +4,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSendMeetingSignal } from "@/lib/api/hooks";
 import type { HuddleParticipant } from "@/types/chat";
 
-const STUN: RTCIceServer[] = [
-  { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
-];
+function getIceServers(): RTCIceServer[] {
+  const servers: RTCIceServer[] = [
+    { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
+  ];
+  if (process.env.NEXT_PUBLIC_TURN_URL) {
+    servers.push({
+      urls: process.env.NEXT_PUBLIC_TURN_URL,
+      username: process.env.NEXT_PUBLIC_TURN_USERNAME ?? "",
+      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL ?? "",
+    });
+  }
+  return servers;
+}
 
 export type MediaMode = "audio" | "video" | "screenshare";
 
@@ -37,7 +47,7 @@ export function useWebRTCMeeting(
   const sendSignal = useSendMeetingSignal();
 
   const createPC = useCallback((peerId: string): RTCPeerConnection => {
-    const pc = new RTCPeerConnection({ iceServers: STUN });
+    const pc = new RTCPeerConnection({ iceServers: getIceServers(), iceTransportPolicy: "all" });
     localStreamRef.current?.getTracks().forEach(t => pc.addTrack(t, localStreamRef.current!));
     screenStreamRef.current?.getTracks().forEach(t => pc.addTrack(t, screenStreamRef.current!));
     pc.onicecandidate = e => {
@@ -56,7 +66,20 @@ export function useWebRTCMeeting(
       });
     };
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "failed") pc.restartIce();
+      if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+        setTimeout(async () => {
+          if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+            pc.restartIce();
+            if (pc.signalingState === "stable" && huddleId) {
+              try {
+                const offer = await pc.createOffer({ iceRestart: true });
+                await pc.setLocalDescription(offer);
+                sendSignal.mutate({ huddleId, type: "offer", targetUserId: peerId, payload: offer });
+              } catch (_err) {}
+            }
+          }
+        }, 2000);
+      }
     };
     peerConnections.current.set(peerId, pc);
     return pc;
@@ -126,9 +149,23 @@ export function useWebRTCMeeting(
     if (track) { track.enabled = !track.enabled; setIsCameraOff(!track.enabled); }
   }, []);
 
+  const stopScreenShare = useCallback(() => {
+    screenStreamRef.current?.getTracks().forEach(t => t.stop());
+    screenStreamRef.current = null;
+    setScreenStream(null);
+    setIsSharingScreen(false);
+  }, []);
+
   const startScreenShare = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          sampleRate: 44100,
+        },
+      });
       screenStreamRef.current = stream;
       setScreenStream(stream);
       setIsSharingScreen(true);
@@ -142,14 +179,17 @@ export function useWebRTCMeeting(
       });
       stream.getVideoTracks()[0]?.addEventListener("ended", () => stopScreenShare());
     } catch (_err) {}
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [stopScreenShare]);
 
-  const stopScreenShare = useCallback(() => {
-    screenStreamRef.current?.getTracks().forEach(t => t.stop());
-    screenStreamRef.current = null;
-    setScreenStream(null);
-    setIsSharingScreen(false);
+  const pauseScreenShare = useCallback(() => {
+    const track = screenStreamRef.current?.getVideoTracks()[0];
+    if (track) { track.enabled = false; setIsSharingScreen(false); }
   }, []);
 
-  return { localStream, screenStream, participantStreams, isMuted, isCameraOff, isSharingScreen, micError, toggleMute, toggleCamera, startScreenShare, stopScreenShare };
+  const resumeScreenShare = useCallback(() => {
+    const track = screenStreamRef.current?.getVideoTracks()[0];
+    if (track) { track.enabled = true; setIsSharingScreen(true); }
+  }, []);
+
+  return { localStream, screenStream, participantStreams, isMuted, isCameraOff, isSharingScreen, micError, toggleMute, toggleCamera, startScreenShare, stopScreenShare, pauseScreenShare, resumeScreenShare };
 }

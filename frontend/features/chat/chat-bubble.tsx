@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { ArrowDown, Bookmark, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, MessageSquare, Pencil, Reply, Smile, Trash2 } from "lucide-react";
+import { ArrowDown, Bookmark, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, Link, MessageSquare, Pencil, Reply, Smile, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -138,6 +138,12 @@ export function ChatBubble({
     navigator.clipboard.writeText(message.content!);
     toast.success("Copied");
   }, [message.content]);
+  const handleCopyLink = useCallback(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("message", String(message.id));
+    navigator.clipboard.writeText(url.toString());
+    toast.success("Link copied");
+  }, [message.id]);
   const handleToggleReactionPicker = useCallback(() => setShowReactionPicker((p) => !p), []);
   const handleQuickReact = useCallback((emoji: string) => {
     onReact(emoji);
@@ -399,6 +405,14 @@ export function ChatBubble({
                   <Copy className="h-3.5 w-3.5" />
                 </button>
               )}
+              <button
+                onClick={handleCopyLink}
+                className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                title="Copy link"
+                aria-label="Copy message link"
+              >
+                <Link className="h-3.5 w-3.5" />
+              </button>
               {onForward && (
                 <button
                   onClick={onForward}

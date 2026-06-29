@@ -147,6 +147,8 @@ export function MessagePanel({
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiRef = useRef<HTMLDivElement>(null);
+  const [isOnline, setIsOnline] = useState(true);
+  const messageQueue = useRef<{ content: string; replyToId?: number; attachments?: { fileName: string; fileUrl: string; fileKey: string; fileSize: number; mimeType: string }[] }[]>([]);
 
   const { data: orgUsers } = useChatOrgUsers();
   const [showMentions, setShowMentions] = useState(false);
@@ -177,6 +179,37 @@ export function MessagePanel({
     if (showEmojiPicker) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
+
+  useEffect(() => {
+    const goOnline = async () => {
+      setIsOnline(true);
+      const queued = [...messageQueue.current];
+      messageQueue.current = [];
+      for (const msg of queued) {
+        try {
+          await sendMessage.mutateAsync({ channelId, content: msg.content, replyToId: msg.replyToId, attachments: msg.attachments });
+        } catch (_err) {}
+      }
+    };
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    setIsOnline(navigator.onLine);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("joinHuddle") === "1" && activeHuddle && !isInHuddle) {
+      joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
+      const url = new URL(window.location.href);
+      url.searchParams.delete("joinHuddle");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [activeHuddle, channelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const messages: Message[] = useMemo(() => {
     const all = (messagesData?.pages.flatMap((p) => p.messages) as Message[]) ?? [];
@@ -340,6 +373,11 @@ export function MessagePanel({
     setMessageInput("");
     setReplyTo(null);
     setPendingAttachments([]);
+    if (!isOnline) {
+      messageQueue.current.push({ content: content || "", replyToId: replyId, attachments: attachments.length > 0 ? attachments : undefined });
+      toast.info("You're offline — message will be sent when you reconnect");
+      return;
+    }
     try {
       await sendMessage.mutateAsync({ channelId, content: content || undefined, replyToId: replyId, attachments: attachments.length > 0 ? attachments : undefined });
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -348,7 +386,7 @@ export function MessagePanel({
       setPendingAttachments(attachments);
       toast.error(getErrorMessage(error));
     }
-  }, [messageInput, channelId, replyTo, sendMessage, pendingAttachments]);
+  }, [messageInput, channelId, replyTo, sendMessage, pendingAttachments, isOnline]);
 
   const handleEdit = useCallback(async (messageId: number) => {
     const content = editInput.trim();
@@ -620,6 +658,12 @@ export function MessagePanel({
         </div>
       </div>
 
+      {!isOnline && (
+        <div className="shrink-0 px-4 py-1.5 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2 text-[12px] text-amber-600 font-medium">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+          You&apos;re offline — messages will be sent when you reconnect
+        </div>
+      )}
       <MessageList
         groupedMessages={groupedMessages}
         messages={messages}

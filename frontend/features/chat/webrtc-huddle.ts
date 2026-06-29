@@ -7,11 +7,19 @@ import type { InboundMessage } from "ably";
 import { useSendHuddleSignal } from "@/lib/api/hooks/chat-huddles";
 import type { HuddleParticipant } from "@/types/chat";
 
-const STUN_SERVERS = ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"];
-
-const RTC_CONFIG: RTCConfiguration = {
-  iceServers: [{ urls: STUN_SERVERS }],
-};
+function getIceServers(): RTCIceServer[] {
+  const servers: RTCIceServer[] = [
+    { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
+  ];
+  if (process.env.NEXT_PUBLIC_TURN_URL) {
+    servers.push({
+      urls: process.env.NEXT_PUBLIC_TURN_URL,
+      username: process.env.NEXT_PUBLIC_TURN_USERNAME ?? "",
+      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL ?? "",
+    });
+  }
+  return servers;
+}
 
 interface IncomingSignalData {
   fromUserId: string;
@@ -28,6 +36,7 @@ export function useWebRTCHuddle(
   channelId: number,
   participants: HuddleParticipant[],
   currentUserId: string,
+  deviceIds?: { audioInput?: string; videoInput?: string; audioOutput?: string },
 ) {
   const ably = useAbly();
   const { data: session } = useSession();
@@ -39,6 +48,7 @@ export function useWebRTCHuddle(
   const [isMuted, setIsMuted] = useState(false);
   const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [isSharingScreen, setIsSharingScreen] = useState(false);
+  const [micError, setMicError] = useState<string | null>(null);
 
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -66,7 +76,10 @@ export function useWebRTCHuddle(
 
   const createPeerConnection = useCallback(
     (targetUserId: string): RTCPeerConnection => {
-      const pc = new RTCPeerConnection(RTC_CONFIG);
+      const pc = new RTCPeerConnection({
+        iceServers: getIceServers(),
+        iceTransportPolicy: "all",
+      });
 
       const stream = localStreamRef.current;
       if (stream) {
@@ -94,6 +107,28 @@ export function useWebRTCHuddle(
         });
       };
 
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+          setTimeout(async () => {
+            if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+              pc.restartIce();
+              if (pc.signalingState === "stable" && huddleId) {
+                try {
+                  const offer = await pc.createOffer({ iceRestart: true });
+                  await pc.setLocalDescription(offer);
+                  sendSignalRef.current({
+                    huddleId,
+                    type: "offer",
+                    targetUserId,
+                    payload: { sdp: offer.sdp, fromUserId: currentUserId },
+                  });
+                } catch (_err) {}
+              }
+            }
+          }, 2000);
+        }
+      };
+
       peerConnections.current.set(targetUserId, pc);
       return pc;
     },
@@ -103,12 +138,28 @@ export function useWebRTCHuddle(
   useEffect(() => {
     if (!huddleId) return;
 
+    const bc = new BroadcastChannel(`huddle-${huddleId}`);
+    bc.postMessage("claim");
+    let isActive = true;
+    bc.onmessage = (e) => {
+      if (e.data === "claim" && isActive) {
+        bc.postMessage("yield");
+      }
+    };
+
     let mounted = true;
 
+    const audioConstraints: MediaTrackConstraints = {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+    };
+    if (deviceIds?.audioInput) {
+      audioConstraints.deviceId = { exact: deviceIds.audioInput };
+    }
+
     navigator.mediaDevices
-      .getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      })
+      .getUserMedia({ audio: audioConstraints })
       .then((stream) => {
         if (!mounted) {
           stream.getTracks().forEach((t) => t.stop());
@@ -117,11 +168,18 @@ export function useWebRTCHuddle(
         localStreamRef.current = stream;
         streamReady.current = true;
         setLocalStream(stream);
+        setMicError(null);
       })
-      .catch(() => {});
+      .catch((err: unknown) => {
+        if (mounted) {
+          setMicError(err instanceof Error ? err.message : "Microphone access denied");
+        }
+      });
 
     return () => {
       mounted = false;
+      isActive = false;
+      bc.close();
       const stream = localStreamRef.current;
       if (stream) {
         stream.getTracks().forEach((t) => t.stop());
@@ -130,7 +188,7 @@ export function useWebRTCHuddle(
       streamReady.current = false;
       setLocalStream(null);
     };
-  }, [huddleId]);
+  }, [huddleId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!orgId || !channelId || channelId <= 0 || !huddleId) return;
@@ -231,6 +289,35 @@ export function useWebRTCHuddle(
     }
   }, []);
 
+  const switchAudioDevice = useCallback(async (deviceId: string) => {
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        audio: { deviceId: { exact: deviceId }, echoCancellation: true, noiseSuppression: true },
+      });
+      const newTrack = newStream.getAudioTracks()[0];
+      if (!newTrack) return;
+      peerConnections.current.forEach((pc) => {
+        const sender = pc.getSenders().find((s) => s.track?.kind === "audio");
+        if (sender) sender.replaceTrack(newTrack).catch(() => {});
+      });
+      localStreamRef.current?.getAudioTracks().forEach((t) => {
+        t.stop();
+        localStreamRef.current?.removeTrack(t);
+      });
+      localStreamRef.current?.addTrack(newTrack);
+      setLocalStream((prev) => {
+        const s = prev ?? new MediaStream();
+        s.getAudioTracks().forEach((t) => s.removeTrack(t));
+        s.addTrack(newTrack);
+        return s;
+      });
+    } catch (_err) {}
+  }, []);
+
+  const getPeerConnection = useCallback((userId: string): RTCPeerConnection | undefined => {
+    return peerConnections.current.get(userId);
+  }, []);
+
   const stopScreenShare = useCallback(() => {
     screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     screenStreamRef.current = null;
@@ -240,7 +327,14 @@ export function useWebRTCHuddle(
 
   const startScreenShare = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          sampleRate: 44100,
+        },
+      });
       screenStreamRef.current = stream;
       setScreenStream(stream);
       setIsSharingScreen(true);
@@ -250,6 +344,22 @@ export function useWebRTCHuddle(
       stream.getVideoTracks()[0]?.addEventListener("ended", () => stopScreenShare());
     } catch (_err) {}
   }, [stopScreenShare]);
+
+  const pauseScreenShare = useCallback(() => {
+    const track = screenStreamRef.current?.getVideoTracks()[0];
+    if (track) {
+      track.enabled = false;
+      setIsSharingScreen(false);
+    }
+  }, []);
+
+  const resumeScreenShare = useCallback(() => {
+    const track = screenStreamRef.current?.getVideoTracks()[0];
+    if (track) {
+      track.enabled = true;
+      setIsSharingScreen(true);
+    }
+  }, []);
 
   const cleanup = useCallback(() => {
     for (const userId of Array.from(peerConnections.current.keys())) {
@@ -269,11 +379,27 @@ export function useWebRTCHuddle(
     setIsMuted(false);
     setScreenStream(null);
     setIsSharingScreen(false);
+    setMicError(null);
   }, [closePeerConnection]);
 
   useEffect(() => {
     return cleanup;
   }, [cleanup]);
 
-  return { localStream, remoteStreams, screenStream, isMuted, isSharingScreen, toggleMute, startScreenShare, stopScreenShare, cleanup };
+  return {
+    localStream,
+    remoteStreams,
+    screenStream,
+    isMuted,
+    isSharingScreen,
+    micError,
+    toggleMute,
+    switchAudioDevice,
+    getPeerConnection,
+    startScreenShare,
+    stopScreenShare,
+    pauseScreenShare,
+    resumeScreenShare,
+    cleanup,
+  };
 }

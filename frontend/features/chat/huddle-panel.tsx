@@ -1,19 +1,21 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown, CameraOff, Monitor, MonitorOff, Settings, UserMinus } from "lucide-react";
+import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown, CameraOff, Monitor, MonitorOff, Settings, UserMinus, VolumeX, Volume2, MessageSquare, UserPlus, Smile, PauseCircle, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant, useSetHuddleScreenShare } from "@/lib/api/hooks/chat-huddles";
+import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant, useSetHuddleScreenShare, useSetHuddleDeafen, useInviteToHuddle } from "@/lib/api/hooks/chat-huddles";
 import type { Huddle, HuddleParticipant } from "@/types/chat";
 import { getInitials } from "./chat-helpers";
 import { useWebRTCHuddle } from "./webrtc-huddle";
-import { DeviceSelector } from "./device-selector";
+import { DeviceSelector, useMediaDevices } from "./device-selector";
 import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { useNetworkQuality } from "./use-network-quality";
+import { HuddleChatPanel } from "./huddle-chat-panel";
 
 interface AudioLevelMap {
   [userId: string]: number;
@@ -77,7 +79,6 @@ function useAudioLevels(
           source.connect(analyzer);
           analyzersRef.current.set(userId, { context, analyzer, source });
         } catch {
-          // AudioContext not supported or stream has no audio
         }
       }
     }
@@ -120,26 +121,44 @@ interface HuddlePanelProps {
 export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelProps) {
   const [expanded, setExpanded] = useState(false);
   const [showDeviceSelector, setShowDeviceSelector] = useState(false);
+  const [showHuddleChat, setShowHuddleChat] = useState(false);
+  const [isDeafened, setIsDeafened] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [inviteQuery, setInviteQuery] = useState("");
+  const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+
   const leaveHuddle = useLeaveHuddle();
   const setMuteMutation = useSetHuddleMute();
   const raiseHandMutation = useRaiseHand();
   const kickParticipant = useKickParticipant();
   const setScreenShareMutation = useSetHuddleScreenShare();
+  const setDeafenMutation = useSetHuddleDeafen();
+  const inviteToHuddle = useInviteToHuddle();
   const ably = useAbly();
   const { data: session } = useSession();
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const elapsed = useElapsedTime(huddle.startedAt);
 
+  const { selectedAudioInput, setSelectedAudioInput } = useMediaDevices();
+
   const myParticipant = huddle.participants.find((p) => p.userId === currentUserId);
   const isHandRaised = myParticipant?.handRaised ?? false;
   const isHost = huddle.startedBy === currentUserId;
 
-  const { localStream, remoteStreams, isMuted, isSharingScreen, toggleMute, startScreenShare, stopScreenShare, cleanup } = useWebRTCHuddle(
+  const { localStream, remoteStreams, screenStream, isMuted, isSharingScreen, micError, toggleMute, switchAudioDevice, getPeerConnection, startScreenShare, stopScreenShare, pauseScreenShare, resumeScreenShare, cleanup } = useWebRTCHuddle(
     huddle.id,
     channelId,
     huddle.participants,
     currentUserId,
+    { audioInput: selectedAudioInput !== "default" ? selectedAudioInput : undefined },
   );
+
+  useEffect(() => {
+    if (selectedAudioInput && selectedAudioInput !== "default") {
+      switchAudioDevice(selectedAudioInput);
+    }
+  }, [selectedAudioInput]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const audioLevels = useAudioLevels(remoteStreams, localStream, currentUserId);
 
@@ -214,6 +233,20 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
     setScreenShareMutation.mutate({ huddleId: huddle.id, channelId, isScreenSharing: false });
   }, [stopScreenShare, setScreenShareMutation, huddle.id, channelId]);
 
+  const handleToggleDeafen = useCallback(() => {
+    const next = !isDeafened;
+    setIsDeafened(next);
+    setDeafenMutation.mutate({ huddleId: huddle.id, channelId, deafened: next });
+    audioElementsRef.current.forEach((el) => { el.muted = next; });
+  }, [isDeafened, setDeafenMutation, huddle.id, channelId]);
+
+  const sendReaction = useCallback(async (emoji: string) => {
+    if (!orgId) return;
+    setShowEmojiPicker(false);
+    const ch = ably.channels.get(`huddle:${orgId}:${channelId}`);
+    await ch.publish("huddle:reaction", { userId: currentUserId, emoji });
+  }, [ably, channelId, orgId, currentUserId]);
+
   const participantCount = huddle.participants.length;
 
   return (
@@ -245,6 +278,13 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
       {expanded && (
         <div className="px-4 pb-3">
+          {micError && (
+            <div className="px-3 py-2 text-[11px] text-red-500 bg-red-500/10 rounded-lg mb-2 flex items-center gap-2">
+              <MicOff className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex-1">{micError}</span>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
             {huddle.participants.map((participant) => (
               <ParticipantCard
@@ -254,11 +294,12 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
                 isCurrentUser={participant.userId === currentUserId}
                 isHost={isHost}
                 onKick={isHost && participant.userId !== currentUserId ? () => handleKick(participant.userId) : undefined}
+                peerConnection={participant.userId !== currentUserId ? getPeerConnection(participant.userId) ?? null : null}
               />
             ))}
           </div>
 
-          <div className="relative flex items-center justify-center gap-2">
+          <div className="relative flex items-center justify-center gap-2 flex-wrap">
             <Button
               variant="ghost"
               size="sm"
@@ -298,6 +339,84 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               {isSharingScreen ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
             </Button>
 
+            {isSharingScreen && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 w-9 rounded-full p-0"
+                onClick={pauseScreenShare}
+                aria-label="Pause screen share"
+              >
+                <PauseCircle className="h-4 w-4" />
+              </Button>
+            )}
+
+            {screenStream && !isSharingScreen && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 w-9 rounded-full p-0 text-blue-500"
+                onClick={resumeScreenShare}
+                aria-label="Resume screen share"
+              >
+                <PlayCircle className="h-4 w-4" />
+              </Button>
+            )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-9 w-9 rounded-full p-0",
+                isDeafened && "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 hover:text-purple-500",
+              )}
+              onClick={handleToggleDeafen}
+              aria-label={isDeafened ? "Undeafen" : "Deafen"}
+            >
+              {isDeafened ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn("h-9 w-9 rounded-full p-0", showHuddleChat && "bg-muted/60")}
+              onClick={() => setShowHuddleChat((p) => !p)}
+              aria-label="Huddle chat"
+            >
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn("h-9 w-9 rounded-full p-0", showEmojiPicker && "bg-muted/60")}
+                onClick={() => setShowEmojiPicker((p) => !p)}
+                aria-label="Send reaction"
+              >
+                <Smile className="h-4 w-4" />
+              </Button>
+              {showEmojiPicker && (
+                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 flex gap-1 bg-background border border-border/60 rounded-xl p-2 shadow-xl z-50">
+                  {["👍", "❤️", "😂", "🎉", "👏", "🔥"].map((emoji) => (
+                    <button key={emoji} onClick={() => sendReaction(emoji)} className="text-lg hover:scale-125 transition-transform">
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 w-9 rounded-full p-0"
+              onClick={() => setShowInviteDialog((p) => !p)}
+              aria-label="Invite users"
+            >
+              <UserPlus className="h-4 w-4" />
+            </Button>
+
             <Button
               variant="ghost"
               size="sm"
@@ -324,6 +443,42 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
             <DeviceSelector show={showDeviceSelector} onClose={() => setShowDeviceSelector(false)} />
           </div>
+
+          {showInviteDialog && (
+            <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
+              <p className="text-[11px] font-semibold mb-2">Invite to huddle</p>
+              <input
+                value={inviteQuery}
+                onChange={(e) => setInviteQuery(e.target.value)}
+                placeholder="Enter user ID to invite..."
+                className="w-full text-[12px] bg-background border border-border/50 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500/40 mb-2"
+              />
+              <Button
+                size="sm"
+                className="h-7 text-[11px]"
+                onClick={() => {
+                  if (inviteQuery.trim()) {
+                    inviteToHuddle.mutate({ huddleId: huddle.id, userIds: [inviteQuery.trim()] });
+                    toast.success("Invited to the huddle");
+                    setInviteQuery("");
+                    setShowInviteDialog(false);
+                  }
+                }}
+              >
+                Invite
+              </Button>
+            </div>
+          )}
+
+          {showHuddleChat && (
+            <div className="mt-3 border-t border-border/40 pt-3">
+              <HuddleChatPanel
+                channelId={channelId}
+                currentUserId={currentUserId}
+                onClose={() => setShowHuddleChat(false)}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -375,14 +530,27 @@ interface ParticipantCardProps {
   isCurrentUser: boolean;
   isHost: boolean;
   onKick?: () => void;
+  peerConnection: RTCPeerConnection | null;
 }
 
-function ParticipantCard({ participant, audioLevel, isCurrentUser, isHost, onKick }: ParticipantCardProps) {
+function ParticipantCard({ participant, audioLevel, isCurrentUser, isHost, onKick, peerConnection }: ParticipantCardProps) {
   const isSpeaking = audioLevel > 0.05;
+  const networkQuality = useNetworkQuality(peerConnection);
+  const qualityColor =
+    networkQuality === "excellent"
+      ? "bg-emerald-500"
+      : networkQuality === "good"
+        ? "bg-yellow-400"
+        : networkQuality === "poor"
+          ? "bg-red-500"
+          : "bg-zinc-400";
 
   return (
     <div className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-muted/30">
       <div className="relative">
+        {!isCurrentUser && (
+          <span className={cn("absolute -top-1 -right-1 h-2 w-2 rounded-full z-10", qualityColor)} />
+        )}
         <Avatar
           className={cn(
             "h-10 w-10 border-2 transition-colors",

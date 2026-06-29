@@ -128,3 +128,21 @@ export function useKickParticipant() {
     },
   });
 }
+
+export function useSetHuddleDeafen() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ huddleId, deafened }: { huddleId: number; channelId: number; deafened: boolean }) =>
+      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/deafen`, { deafened }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+    },
+  });
+}
+
+export function useInviteToHuddle() {
+  return useMutation({
+    mutationFn: ({ huddleId, userIds }: { huddleId: number; userIds: string[] }) =>
+      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/invite`, { userIds }),
+  });
+}

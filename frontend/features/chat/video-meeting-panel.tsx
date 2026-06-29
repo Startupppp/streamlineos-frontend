@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Camera, CameraOff, Hand, Mic, MicOff, Monitor, MonitorOff, PhoneOff } from "lucide-react";
+import { Camera, CameraOff, Hand, Loader2, Maximize2, Mic, MicOff, Monitor, MonitorOff, PauseCircle, PhoneOff, PictureInPicture2, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -19,6 +19,9 @@ function VideoTile({
   isCameraOff,
   isScreenShare,
   isSelf,
+  connectionState,
+  videoRef: externalVideoRef,
+  onClick,
 }: {
   stream: MediaStream | null;
   label: string;
@@ -26,19 +29,29 @@ function VideoTile({
   isCameraOff?: boolean;
   isScreenShare?: boolean;
   isSelf?: boolean;
+  connectionState?: RTCPeerConnectionState;
+  videoRef?: React.RefObject<HTMLVideoElement>;
+  onClick?: () => void;
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const internalVideoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = externalVideoRef ?? internalVideoRef;
+  const isReconnecting = connectionState === "disconnected" || connectionState === "failed";
+
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
-  }, [stream]);
+  }, [stream, videoRef]);
 
   return (
-    <div className={cn(
-      "relative rounded-xl overflow-hidden bg-zinc-900 flex items-center justify-center",
-      isScreenShare ? "col-span-2 row-span-2" : "aspect-video",
-    )}>
+    <div
+      className={cn(
+        "relative rounded-xl overflow-hidden bg-zinc-900 flex items-center justify-center",
+        isScreenShare ? "col-span-2 row-span-2" : "aspect-video",
+        onClick && "cursor-pointer",
+      )}
+      onClick={onClick}
+    >
       {stream && !isCameraOff ? (
         <video ref={videoRef} autoPlay playsInline muted={isSelf} className="w-full h-full object-cover" />
       ) : (
@@ -49,6 +62,12 @@ function VideoTile({
             </AvatarFallback>
           </Avatar>
           <span className="text-xs text-white/60">{label}</span>
+        </div>
+      )}
+      {isReconnecting && (
+        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
+          <Loader2 className="h-6 w-6 text-white animate-spin" />
+          <span className="text-[12px] text-white/80">Reconnecting…</span>
         </div>
       )}
       <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
@@ -87,6 +106,11 @@ export function VideoMeetingPanel({
   const [inMeeting, setInMeeting] = useState(false);
   const [handRaised, setHandRaised] = useState(false);
   const [layout, setLayout] = useState<"grid" | "speaker">("grid");
+  const [participantStates, setParticipantStates] = useState<Map<string, RTCPeerConnectionState>>(new Map());
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const screenShareRef = useRef<HTMLVideoElement>(null);
 
   const activeParticipants: HuddleParticipant[] = huddle?.participants?.filter(p => !p.leftAt) ?? [];
   const myParticipant = activeParticipants.find(p => p.userId === currentUserId);
@@ -102,6 +126,7 @@ export function VideoMeetingPanel({
   const {
     localStream, participantStreams, isMuted, isCameraOff, isSharingScreen,
     micError, toggleMute, toggleCamera, startScreenShare, stopScreenShare,
+    pauseScreenShare, resumeScreenShare,
   } = useWebRTCMeeting(
     inMeeting ? (huddle?.id ?? null) : null,
     inMeeting ? channelId : null,
@@ -159,6 +184,50 @@ export function VideoMeetingPanel({
     await raiseHand.mutateAsync({ huddleId: huddle.id, channelId, raised: next }).catch(() => setHandRaised(!next));
   }, [huddle, handRaised, raiseHand, channelId]);
 
+  const handlePiP = useCallback(async () => {
+    const video = localVideoRef.current;
+    if (!video) return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else {
+        await video.requestPictureInPicture();
+      }
+    } catch (_err) {}
+  }, []);
+
+  const handleFullscreen = useCallback(async () => {
+    const el = containerRef.current;
+    if (!el) return;
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await el.requestFullscreen();
+      }
+    } catch (_err) {}
+  }, []);
+
+  const handleScreenShareFullscreen = useCallback(async () => {
+    const video = screenShareRef.current;
+    if (!video) return;
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await video.requestFullscreen();
+      }
+    } catch (_err) {}
+  }, []);
+
+  useEffect(() => {
+    const newStates = new Map<string, RTCPeerConnectionState>();
+    for (const { userId } of participantStreams.values()) {
+      newStates.set(userId, "connected");
+    }
+    setParticipantStates(newStates);
+  }, [participantStreams]);
+
   if (!huddle || huddle.status !== "active") return null;
 
   const participantList = [...participantStreams.values()];
@@ -166,7 +235,7 @@ export function VideoMeetingPanel({
   const videoTiles = participantList.filter(p => !p.isScreenShare);
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col">
+    <div ref={containerRef} className="fixed inset-0 z-50 bg-zinc-950 flex flex-col">
       <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-2">
           <Camera className="h-4 w-4 text-blue-400" />
@@ -179,6 +248,22 @@ export function VideoMeetingPanel({
             className="h-8 px-3 rounded-lg text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           >
             {layout === "grid" ? "Speaker view" : "Grid view"}
+          </button>
+          <button
+            onClick={handlePiP}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            title="Picture in Picture"
+            aria-label="Picture in Picture"
+          >
+            <PictureInPicture2 className="h-4 w-4" />
+          </button>
+          <button
+            onClick={handleFullscreen}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            title="Fullscreen"
+            aria-label="Fullscreen"
+          >
+            <Maximize2 className="h-4 w-4" />
           </button>
           <button onClick={onClose} className="h-8 px-3 rounded-lg text-xs text-white/60 hover:text-white hover:bg-white/10">
             Minimize
@@ -201,6 +286,8 @@ export function VideoMeetingPanel({
               stream={screenShareTile.stream}
               label={activeParticipants.find(p => p.userId === screenShareTile.userId)?.user?.name ?? "User"}
               isScreenShare
+              videoRef={screenShareRef}
+              onClick={handleScreenShareFullscreen}
             />
           </div>
         )}
@@ -211,6 +298,7 @@ export function VideoMeetingPanel({
           isMuted={isMuted}
           isCameraOff={isCameraOff}
           isSelf
+          videoRef={localVideoRef}
         />
 
         {videoTiles.map(({ userId, stream }) => {
@@ -222,6 +310,7 @@ export function VideoMeetingPanel({
               label={participant?.user?.name ?? "User"}
               isMuted={participant?.isMuted}
               isCameraOff={participant?.isCameraOff}
+              connectionState={participantStates.get(userId)}
             />
           );
         })}
@@ -264,6 +353,24 @@ export function VideoMeetingPanel({
           >
             {isSharingScreen ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
           </button>
+          {isSharingScreen && (
+            <button
+              onClick={pauseScreenShare}
+              className="h-11 w-11 rounded-full flex items-center justify-center transition-colors bg-white/10 text-white hover:bg-white/20"
+              title="Pause screen share"
+            >
+              <PauseCircle className="h-5 w-5" />
+            </button>
+          )}
+          {!isSharingScreen && (
+            <button
+              onClick={resumeScreenShare}
+              className="h-11 w-11 rounded-full flex items-center justify-center transition-colors bg-white/10 text-white hover:bg-white/20"
+              title="Resume screen share"
+            >
+              <PlayCircle className="h-5 w-5" />
+            </button>
+          )}
           <button
             onClick={handleRaiseHand}
             className={cn("h-11 w-11 rounded-full flex items-center justify-center transition-colors", handRaised ? "bg-amber-400 text-white" : "bg-white/10 text-white hover:bg-white/20")}
