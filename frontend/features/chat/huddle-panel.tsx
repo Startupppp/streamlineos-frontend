@@ -5,7 +5,7 @@ import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown, CameraOff, Monitor
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant } from "@/lib/api/hooks/chat-huddles";
+import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant, useSetHuddleScreenShare } from "@/lib/api/hooks/chat-huddles";
 import type { Huddle, HuddleParticipant } from "@/types/chat";
 import { getInitials } from "./chat-helpers";
 import { useWebRTCHuddle } from "./webrtc-huddle";
@@ -122,6 +122,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const setMuteMutation = useSetHuddleMute();
   const raiseHandMutation = useRaiseHand();
   const kickParticipant = useKickParticipant();
+  const setScreenShareMutation = useSetHuddleScreenShare();
   const ably = useAbly();
   const { data: session } = useSession();
   const orgId = (session as { orgId?: string } | null)?.orgId;
@@ -131,7 +132,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const isHandRaised = myParticipant?.handRaised ?? false;
   const isHost = huddle.startedBy === currentUserId;
 
-  const { localStream, remoteStreams, isMuted, toggleMute, cleanup } = useWebRTCHuddle(
+  const { localStream, remoteStreams, isMuted, isSharingScreen, toggleMute, startScreenShare, stopScreenShare, cleanup } = useWebRTCHuddle(
     huddle.id,
     channelId,
     huddle.participants,
@@ -200,6 +201,16 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
     },
     [kickParticipant, huddle.id, channelId],
   );
+
+  const handleStartScreenShare = useCallback(async () => {
+    await startScreenShare();
+    setScreenShareMutation.mutate({ huddleId: huddle.id, channelId, isScreenSharing: true });
+  }, [startScreenShare, setScreenShareMutation, huddle.id, channelId]);
+
+  const handleStopScreenShare = useCallback(() => {
+    stopScreenShare();
+    setScreenShareMutation.mutate({ huddleId: huddle.id, channelId, isScreenSharing: false });
+  }, [stopScreenShare, setScreenShareMutation, huddle.id, channelId]);
 
   const participantCount = huddle.participants.length;
 
@@ -270,6 +281,19 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               aria-label={isHandRaised ? "Lower hand" : "Raise hand"}
             >
               <Hand className="h-4 w-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-9 w-9 rounded-full p-0",
+                isSharingScreen && "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 hover:text-blue-500",
+              )}
+              onClick={isSharingScreen ? handleStopScreenShare : handleStartScreenShare}
+              aria-label={isSharingScreen ? "Stop sharing screen" : "Share screen"}
+            >
+              {isSharingScreen ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
             </Button>
 
             <Button
