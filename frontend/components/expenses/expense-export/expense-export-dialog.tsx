@@ -33,16 +33,54 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import {
-  exportExpenses,
-  emailExpenseReport,
-  type ExportFilters,
-} from "@/server/expense-export";
+import { apiClient } from "@/lib/api-client";
 import type { ExpenseFilters } from "@/types/hr/expenses";
 import { useHrEmployees } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
-import { usePdfRenderer } from "./pdf-renderer";
-import { downloadCSV, downloadXLSX } from "./xlsx-renderer";
+import { usePdfRenderer, type PdfData } from "./pdf-renderer";
+import { downloadCSV, downloadXLSX, type XlsxData } from "./xlsx-renderer";
+
+type ExportPayload =
+  | { format: "csv"; data: string; filename: string }
+  | { format: "xlsx"; data: XlsxData; filename: string }
+  | { format: "pdf"; data: PdfData; filename: string };
+
+type ExportResult =
+  | { success: false; error: string }
+  | ({ success: true } & ExportPayload);
+
+async function exportExpenses(params: {
+  format: ExportFormat;
+  filters: ExpenseFilters;
+  includeHeader: boolean;
+  includeTotals: boolean;
+  title: string;
+}): Promise<ExportResult> {
+  try {
+    const payload = await apiClient.post<ExportPayload>("/hr/expenses/export", params);
+    if (payload.format === "csv") {
+      return { success: true, format: "csv", data: payload.data, filename: payload.filename };
+    }
+    if (payload.format === "xlsx") {
+      return { success: true, format: "xlsx", data: payload.data, filename: payload.filename };
+    }
+    return { success: true, format: "pdf", data: payload.data, filename: payload.filename };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Export failed" };
+  }
+}
+
+async function emailExpenseReport(
+  filters: ExpenseFilters,
+  emailTarget: "CEO" | "HR" | "BOTH",
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await apiClient.post("/hr/expenses/email-report", { filters, emailTarget });
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Failed to send email" };
+  }
+}
 
 export interface ExpenseExportDialogProps {
   filters: ExpenseFilters;
@@ -140,7 +178,7 @@ export function ExpenseExportDialog({
 
   const { downloadPDF, pdfPortal } = usePdfRenderer();
 
-  const exportFilters: ExportFilters = {
+  const exportFilters: ExpenseFilters = {
     startDate: dateFrom || filters.startDate,
     endDate: dateTo || filters.endDate,
     month: filters.month,

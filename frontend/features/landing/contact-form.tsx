@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { submitContactForm } from "@/server/contact-submission";
 import {
   TurnstileWidget,
   isTurnstileEnabled,
@@ -31,6 +30,34 @@ type FormState = {
   topic: ContactTopic;
   message: string;
 };
+
+type ContactResult =
+  | { ok: true }
+  | { ok: false; error: string; fieldErrors?: Partial<Record<keyof FormState, string>> };
+
+async function submitContactForm(
+  data: FormState & { cfTurnstileToken?: string },
+): Promise<ContactResult> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/contact`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) return { ok: true };
+    let body: { error?: string; fieldErrors?: Partial<Record<keyof FormState, string>> } = {};
+    try {
+      body = (await res.json()) as typeof body;
+    } catch {}
+    return {
+      ok: false,
+      error: body.error ?? "Failed to send message. Please try again.",
+      fieldErrors: body.fieldErrors,
+    };
+  } catch {
+    return { ok: false, error: "Failed to send message. Please try again." };
+  }
+}
 
 const initialState: FormState = {
   name: "",

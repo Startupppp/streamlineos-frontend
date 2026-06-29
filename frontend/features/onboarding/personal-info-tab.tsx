@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { updatePersonalDetails } from "@/server/onboarding-actions";
+import { apiClient } from "@/lib/api-client";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useOnboardingSubmit } from "@/hooks/common/use-onboarding-submit";
@@ -45,6 +45,17 @@ const personalSchema = z.object({
 });
 
 type PersonalFormValues = z.infer<typeof personalSchema>;
+
+type ActionResult = { success: true } | { success: false; error: string };
+
+async function updatePersonalDetails(formData: FormData): Promise<ActionResult> {
+  try {
+    await apiClient.upload("/onboarding/personal-info", formData);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Failed to save personal details" };
+  }
+}
 
 interface PersonalInfoTabProps {
   onComplete: (values: Record<string, string | undefined>) => void;

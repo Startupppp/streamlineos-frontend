@@ -16,9 +16,18 @@ import {
   Shield,
   type LucideIcon,
 } from "lucide-react";
-import { submitOnboarding } from "@/server/onboarding-actions";
+import { apiClient } from "@/lib/api-client";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+
+async function submitOnboarding(): Promise<{ success: boolean; error?: string }> {
+  try {
+    await apiClient.post("/onboarding/submit");
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Failed to submit onboarding" };
+  }
+}
 
 const ROLE_LABELS: Record<string, string> = {
   CEO: "CEO",

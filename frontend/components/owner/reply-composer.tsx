@@ -5,7 +5,22 @@ import { Send, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { replyToMessage } from "@/server/owner/actions/reply-message";
+import { apiClient } from "@/lib/api-client";
+
+async function sendReply(
+  publicCode: string,
+  body: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await apiClient.post(`/api/owner/inbox/${publicCode}/reply`, { body });
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to send reply.",
+    };
+  }
+}
 
 export function ReplyComposer({
   publicCode,
@@ -18,13 +33,19 @@ export function ReplyComposer({
   const [done, setDone] = useState(replied);
   const [pending, startTransition] = useTransition();
 
+  const handleBodyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setBody(e.target.value);
+  };
+
+  const handleSendAnother = () => setDone(false);
+
   const submit = () => {
     if (!body.trim()) {
       toast.error("Write something before sending.");
       return;
     }
     startTransition(async () => {
-      const result = await replyToMessage({ publicCode, body });
+      const result = await sendReply(publicCode, body);
       if (result.ok) {
         setDone(true);
         setBody("");
@@ -41,7 +62,7 @@ export function ReplyComposer({
         <CheckCircle2 className="h-5 w-5 text-emerald-600 mx-auto mb-2" />
         <p className="text-[13px] font-medium text-slate-800">Reply sent.</p>
         <button
-          onClick={() => setDone(false)}
+          onClick={handleSendAnother}
           className="text-[11px] font-medium text-blue-600 hover:underline mt-3"
         >
           Send another →
@@ -52,12 +73,10 @@ export function ReplyComposer({
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
-      <p className="text-[11px] font-medium text-slate-500 mb-2">
-        Reply
-      </p>
+      <p className="text-[11px] font-medium text-slate-500 mb-2">Reply</p>
       <Textarea
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={handleBodyChange}
         rows={6}
         placeholder="Write a thoughtful reply — the customer receives this as a branded email."
         className="resize-y"

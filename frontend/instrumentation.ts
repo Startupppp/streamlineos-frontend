@@ -1,26 +1,13 @@
-/**
- * Next.js instrumentation hook.
- * Runs once when the server starts (before any route is handled).
- *
- * Patches global setTimeout to suppress the Node.js TimeoutNegativeWarning
- * that occurs in Turbopack dev mode when server component revalidation
- * timers go negative (e.g., stale cached ProjectLayout).
- *
- * @see https://github.com/vercel/next.js/issues/61888
- */
 export async function register() {
-  if (process.env.NODE_ENV === "development") {
-    const origSetTimeout = globalThis.setTimeout;
-    // @ts-expect-error — overriding the global with a patched version
-    globalThis.setTimeout = function patchedSetTimeout(
-      callback: (...args: unknown[]) => void,
-      ms?: number,
-      ...args: unknown[]
-    ) {
-      const safeMs = typeof ms === "number" && ms < 0 ? 0 : ms;
-      return origSetTimeout(callback, safeMs, ...args);
-    };
-    // Preserve the original's properties (e.g., __promisify__)
-    Object.setPrototypeOf(globalThis.setTimeout, origSetTimeout);
-  }
+  if (process.env.NODE_ENV !== "development") return;
+  const orig = globalThis.setTimeout;
+  // @ts-expect-error — generic overloads on globalThis.setTimeout can't be matched without a cast
+  globalThis.setTimeout = function patchedSetTimeout(
+    callback: (...args: unknown[]) => void,
+    ms?: number,
+    ...args: unknown[]
+  ) {
+    return orig(callback, typeof ms === "number" && ms < 0 ? 0 : ms, ...args);
+  };
+  Object.setPrototypeOf(globalThis.setTimeout, orig);
 }

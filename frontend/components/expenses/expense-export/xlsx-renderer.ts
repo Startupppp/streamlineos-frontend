@@ -1,7 +1,8 @@
 import ExcelJS from "exceljs";
-import type { ExportResult } from "@/server/expense-export";
 
-type XlsxData = NonNullable<Extract<ExportResult, { format: "xlsx" }>["data"]>;
+export type XlsxData = {
+  sheets: { name: string; data: (string | number | null)[][] }[];
+};
 
 export function downloadCSV(content: string, filename: string): void {
   const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });

@@ -1,7 +1,8 @@
 import { EmployeeDetailsView } from "./employee-details-view";
-import { getEmployeeById } from "@/server/hr-actions";
+import type { EmployeeData } from "./edit-employee-form";
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/rbac/require-permission";
+import { serverApiClient } from "@/lib/api/server-client";
 
 export default async function EditEmployeePage({
   params,
@@ -10,10 +11,16 @@ export default async function EditEmployeePage({
 }) {
   await requirePermission("hr:employees:view");
   const { employeeId } = await params;
-  const employee = await getEmployeeById(employeeId);
+
+  let employee: EmployeeData | null = null;
+  try {
+    employee = await serverApiClient.get<EmployeeData>(`/hr/employees/${employeeId}`);
+  } catch {
+    return notFound();
+  }
 
   if (!employee) {
-    notFound();
+    return notFound();
   }
 
   return <EmployeeDetailsView employee={employee} />;

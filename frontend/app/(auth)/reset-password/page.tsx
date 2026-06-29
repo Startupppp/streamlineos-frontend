@@ -16,8 +16,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { resetPassword } from "@/server/auth-actions";
 import { useResetPassword } from "@/hooks/common/auth-hooks";
+import { apiClient } from "@/lib/api-client";
 import {
   Loader2,
   Rocket,
@@ -317,16 +317,14 @@ function ForceChangePasswordForm() {
   async function onSubmit(values: FormValues) {
     setLoading(true);
     try {
-      const result = await resetPassword(values.password);
-      if (result.success) {
-        toast.success("Password updated successfully!");
-        await update({ forceChangePassword: false });
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        router.push("/dashboard");
-        router.refresh();
-      } else {
-        toast.error(result.error ?? "Failed to update password");
-      }
+      await apiClient.post<{ success: boolean }>("/auth/force-change-password", {
+        password: values.password,
+      });
+      toast.success("Password updated successfully!");
+      await update({ forceChangePassword: false });
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      router.push("/dashboard");
+      router.refresh();
     } catch {
       toast.error("An error occurred. Please try again.");
     } finally {

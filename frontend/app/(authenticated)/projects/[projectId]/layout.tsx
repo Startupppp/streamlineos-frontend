@@ -1,8 +1,7 @@
-import { getProjectById } from "@/server/project-actions";
 import { notFound } from "next/navigation";
 import { ProjectSidebar } from "@/components/layout/project-sidebar";
-import { auth } from "@/lib/auth";
-import { getProjectAccessForUser } from "@/server/queries/projects";
+import { serverApiClient } from "@/lib/api/server-client";
+import type { ProjectWithDetails } from "@/types/projects";
 import { AccessDeniedView } from "./access-denied-view";
 
 export default async function ProjectLayout({
@@ -16,16 +15,14 @@ export default async function ProjectLayout({
   const numId = Number(projectId);
   if (isNaN(numId)) return notFound();
 
-  const session = await auth();
-  if (!session?.user?.id) return notFound();
-
-  const projectCheck = await getProjectAccessForUser(numId, session.user.id);
-  if (!projectCheck) return notFound();
-
-  const project = await getProjectById(numId);
-  if (!project) {
-    return <AccessDeniedView projectName={projectCheck.name} />;
+  let project: ProjectWithDetails | null = null;
+  try {
+    project = await serverApiClient.get<ProjectWithDetails>(`/projects/${numId}`);
+  } catch {
+    return <AccessDeniedView projectName="this project" />;
   }
+
+  if (!project) return notFound();
 
   return (
     <div className="flex flex-col md:flex-row h-full w-full">
@@ -34,7 +31,6 @@ export default async function ProjectLayout({
         projectName={project.name}
         projectKey={project.key}
       />
-
       <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-y-auto">
         {children}
       </div>

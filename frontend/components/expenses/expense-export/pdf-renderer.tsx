@@ -2,11 +2,33 @@
 
 import { useRef, useState, useCallback } from "react";
 import { formatCurrencyFull } from "@/lib/format-utils";
-import type { ExportResult } from "@/server/expense-export";
-
-export type PdfData = NonNullable<
-  Extract<ExportResult, { format: "pdf" }>["data"]
->;
+export type PdfData = {
+  title: string;
+  generatedAt: string;
+  filters: {
+    period: string;
+    status: string;
+    category: string;
+  };
+  summary: {
+    totalCount: number;
+    totalAmount: number;
+    pendingAmount: number;
+    approvedAmount: number;
+    paidAmount: number;
+    rejectedAmount: number;
+  };
+  byCategory: { category: string; count: number; amount: number; percentage: number }[];
+  expenses: {
+    date: string;
+    category: string;
+    description: string;
+    merchant: string;
+    employee: string;
+    amount: number;
+    status: string;
+  }[];
+};
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   PENDING: { bg: "#fef3c7", color: "#92400e" },

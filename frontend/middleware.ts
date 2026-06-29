@@ -149,9 +149,6 @@ function startsWithAny(pathname: string, routes: string[]): boolean {
   return routes.some((route) => pathname.startsWith(route));
 }
 
-// The public blog lives at /blogs and /blogs/[slug]; only the /blogs/admin CMS is
-// gated. Match it exactly (or as a sub-path) so a post slug like "admin-tips"
-// stays public.
 function isBlogAdminPath(pathname: string): boolean {
   return pathname === "/blogs/admin" || pathname.startsWith("/blogs/admin/");
 }

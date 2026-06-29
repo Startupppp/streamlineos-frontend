@@ -2,13 +2,24 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Label } from "@/components/ui/label";
-import { uploadOnboardingDocument } from "@/server/onboarding-actions";
+import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { CheckCircle, Upload, Loader2 } from "lucide-react";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 import { Button } from "@/components/ui/button";
+
+type ActionResult = { success: true } | { success: false; error: string };
+
+async function uploadOnboardingDocument(formData: FormData): Promise<ActionResult> {
+  try {
+    await apiClient.upload("/onboarding/documents", formData);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Upload failed" };
+  }
+}
 
 const DOCUMENT_TYPES = [
   {

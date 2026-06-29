@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { updateBankDetails } from "@/server/onboarding-actions";
+import { apiClient } from "@/lib/api-client";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useOnboardingSubmit } from "@/hooks/common/use-onboarding-submit";
@@ -31,6 +31,17 @@ const bankSchema = z.object({
 });
 
 type BankFormValues = z.infer<typeof bankSchema>;
+
+type ActionResult = { success: true } | { success: false; error: string };
+
+async function updateBankDetails(formData: FormData): Promise<ActionResult> {
+  try {
+    await apiClient.upload("/onboarding/bank-details", formData);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Failed to save bank details" };
+  }
+}
 
 interface BankDetailsTabProps {
   onComplete: (values: Record<string, string | undefined>) => void;
