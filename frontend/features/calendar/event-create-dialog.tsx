@@ -20,8 +20,8 @@ import {
   useCreateMeetLink,
   useEventAttendees,
   extractEventNumericId,
-} from "@/lib/api/hooks/calendar";
-import type { CalendarListItem } from "@/lib/api/hooks/calendar";
+} from "@/hooks/api/calendar";
+import type { CalendarListItem } from "@/hooks/api/calendar";
 import { toast } from "sonner";
 import { EventFormFields } from "./event-form-fields";
 import { EventAttendeesPicker } from "./event-attendees-picker";
@@ -156,9 +156,12 @@ export function EventCreateDialog({
     onOpenChange(false);
   }, [onOpenChange]);
 
-  const set = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const set = useCallback(
+    <K extends keyof FormState>(key: K, value: FormState[K]) => {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const toggleAttendee = useCallback((memberId: string) => {
     setForm((prev) => ({
@@ -256,40 +259,63 @@ export function EventCreateDialog({
 
   const handleSave = useCallback(async () => {
     const trimmedTitle = form.title.trim();
-    if (!trimmedTitle) { toast.error("Event title is required"); return; }
+    if (!trimmedTitle) {
+      toast.error("Event title is required");
+      return;
+    }
     if (!/^[a-zA-Z0-9]/.test(trimmedTitle)) {
-      toast.error("Event title must start with a letter or number"); return;
+      toast.error("Event title must start with a letter or number");
+      return;
     }
     if (!/[a-zA-Z0-9]/.test(trimmedTitle)) {
-      toast.error("Event title must contain at least one letter or number"); return;
+      toast.error("Event title must contain at least one letter or number");
+      return;
     }
     if (trimmedTitle.length < 2) {
-      toast.error("Event title must be at least 2 characters"); return;
+      toast.error("Event title must be at least 2 characters");
+      return;
     }
     if (trimmedTitle.length > 100) {
-      toast.error("Event title must be at most 100 characters"); return;
+      toast.error("Event title must be at most 100 characters");
+      return;
     }
     if (/\s{2,}/.test(form.title)) {
-      toast.error("Event title cannot have consecutive spaces"); return;
+      toast.error("Event title cannot have consecutive spaces");
+      return;
     }
     if (form.description) {
       if (form.description.trim().length < 5) {
-        toast.error("Description must be at least 5 characters"); return;
+        toast.error("Description must be at least 5 characters");
+        return;
       }
       if (form.description.length > 2000) {
-        toast.error("Description must be at most 2000 characters"); return;
+        toast.error("Description must be at most 2000 characters");
+        return;
       }
     }
     if (form.location) {
       const loc = form.location.trim();
       if (/^https?:\/\//i.test(loc) && !isValidUrl(loc)) {
-        toast.error("Location contains an invalid URL"); return;
+        toast.error("Location contains an invalid URL");
+        return;
       }
     }
-    if (!form.startDate) { toast.error("Start date is required"); return; }
-    if (!form.allDay && !form.startTime) { toast.error("Start time is required"); return; }
-    if (!form.endDate) { toast.error("End date is required"); return; }
-    if (!form.allDay && !form.endTime) { toast.error("End time is required"); return; }
+    if (!form.startDate) {
+      toast.error("Start date is required");
+      return;
+    }
+    if (!form.allDay && !form.startTime) {
+      toast.error("Start time is required");
+      return;
+    }
+    if (!form.endDate) {
+      toast.error("End date is required");
+      return;
+    }
+    if (!form.allDay && !form.endTime) {
+      toast.error("End time is required");
+      return;
+    }
 
     const startDate = form.allDay
       ? parseISO(`${form.startDate}T12:00:00`)
@@ -298,9 +324,13 @@ export function EventCreateDialog({
       ? parseISO(`${form.endDate}T12:00:00`)
       : parseISO(`${form.endDate}T${form.endTime}`);
 
-    if (endDate <= startDate) { toast.error("End time must be after start time"); return; }
+    if (endDate <= startDate) {
+      toast.error("End time must be after start time");
+      return;
+    }
     if (!form.allDay && differenceInMinutes(endDate, startDate) < 15) {
-      toast.error("Event duration must be at least 15 minutes"); return;
+      toast.error("Event duration must be at least 15 minutes");
+      return;
     }
 
     const payload = {

@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useBulkImportLeads } from "@/lib/api/hooks/leads";
+import { useBulkImportLeads } from "@/hooks/api/leads";
 import { toast } from "sonner";
 import { CsvFieldMapper } from "./csv-field-mapper";
 import { CsvUploadPreview } from "./csv-upload-preview";
@@ -24,10 +24,10 @@ const VALID_SOURCES = [
   "walk_in",
   "other",
 ] as const;
-type ValidSource = typeof VALID_SOURCES[number];
+type ValidSource = (typeof VALID_SOURCES)[number];
 
 const VALID_PRIORITIES = ["HOT", "WARM", "COLD"] as const;
-type ValidPriority = typeof VALID_PRIORITIES[number];
+type ValidPriority = (typeof VALID_PRIORITIES)[number];
 
 const ACCEPTED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
 
@@ -75,7 +75,13 @@ const HEADER_ALIASES: Record<string, string[]> = {
   city: ["city", "location", "area"],
   designation: ["designation", "title", "role", "position", "job title"],
   referredBy: ["referred by", "referral", "referred", "referrer"],
-  potentialValue: ["potential value", "value", "deal value", "amount", "budget"],
+  potentialValue: [
+    "potential value",
+    "value",
+    "deal value",
+    "amount",
+    "budget",
+  ],
   investmentInterest: ["investment interest", "investment", "interest"],
   whatsappNumber: ["whatsapp", "whatsapp number", "wa number"],
   website: ["website", "url", "web"],
@@ -104,9 +110,7 @@ function extractCSV(text: string): { headers: string[]; rows: string[][] } {
   const headers = lines[0].split(",").map((h) => h.trim().replace(/['"]/g, ""));
   const rows = lines
     .slice(1)
-    .map((l) =>
-      l.split(",").map((c) => c.trim().replace(/^["']|["']$/g, "")),
-    );
+    .map((l) => l.split(",").map((c) => c.trim().replace(/^["']|["']$/g, "")));
   return { headers, rows };
 }
 
@@ -179,7 +183,8 @@ function applyMapping(
       investmentInterest: get(row, "investmentInterest"),
       whatsappNumber: get(row, "whatsappNumber"),
       website: get(row, "website"),
-      priority: rawPriority && isValidPriority(rawPriority) ? rawPriority : undefined,
+      priority:
+        rawPriority && isValidPriority(rawPriority) ? rawPriority : undefined,
       tags: get(row, "tags"),
     });
   });
@@ -193,7 +198,9 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
 
   const [rawHeaders, setRawHeaders] = useState<string[]>([]);
   const [rawRows, setRawRows] = useState<string[][]>([]);
-  const [fieldMappings, setFieldMappings] = useState<Record<number, string>>({});
+  const [fieldMappings, setFieldMappings] = useState<Record<number, string>>(
+    {},
+  );
   const [fileName, setFileName] = useState("");
   const [isParsing, setIsParsing] = useState(false);
 
@@ -350,19 +357,25 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
     setAutoDistribute(true);
   }, []);
 
-  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) void handleFile(file);
-  }, [handleFile]);
+  const handleFileInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) void handleFile(file);
+    },
+    [handleFile],
+  );
 
   const handleBrowseClick = useCallback(() => {
     document.getElementById("lead-file-upload")?.click();
   }, []);
 
-  const handleDialogClose = useCallback((v: boolean) => {
-    setOpen(v);
-    if (!v) reset();
-  }, [reset]);
+  const handleDialogClose = useCallback(
+    (v: boolean) => {
+      setOpen(v);
+      if (!v) reset();
+    },
+    [reset],
+  );
 
   const handleCloseAfterImport = useCallback(() => {
     setOpen(false);
@@ -438,9 +451,9 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
             </div>
             <div className="flex items-center justify-between px-1">
               <p className="text-xs text-muted-foreground">
-                Required:{" "}
-                <code className="text-foreground">name</code>. Optional: email,
-                phone, company, source, city, designation, priority, notes
+                Required: <code className="text-foreground">name</code>.
+                Optional: email, phone, company, source, city, designation,
+                priority, notes
               </p>
               <Button variant="ghost" size="sm" onClick={downloadTemplate}>
                 <Download className="h-3.5 w-3.5 mr-1" />

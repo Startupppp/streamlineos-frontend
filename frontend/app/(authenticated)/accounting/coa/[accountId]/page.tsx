@@ -30,9 +30,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { EntityFormDialog } from "@/components/shared";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { useAccounts, useJournal, useUpdateAccount } from "@/lib/api/hooks/accounting";
+import {@/hooks/api/accounting
+  useAccounts,
+  useJournal,
+  useUpdateAccount,
+} from "@/hooks/hooks/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { AccountType, Account, JournalEntryStatus } from "@/types/accounting";
+import type {
+  AccountType,
+  Account,
+  JournalEntryStatus,
+} from "@/types/accounting";
 
 interface AccountDetailPageProps {
   params: Promise<{ accountId: string }>;
@@ -46,7 +54,10 @@ const TYPE_BADGE_CLASSES: Record<AccountType, string> = {
   EXPENSE: "border-red-500/30 text-red-700 bg-red-500/5",
 };
 
-const STATUS_VARIANT: Record<JournalEntryStatus, "default" | "secondary" | "destructive"> = {
+const STATUS_VARIANT: Record<
+  JournalEntryStatus,
+  "default" | "secondary" | "destructive"
+> = {
   POSTED: "default",
   DRAFT: "secondary",
   VOID: "destructive",
@@ -76,7 +87,11 @@ interface EditAccountDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function EditAccountDialog({ account, open, onOpenChange }: EditAccountDialogProps) {
+function EditAccountDialog({
+  account,
+  open,
+  onOpenChange,
+}: EditAccountDialogProps) {
   const update = useUpdateAccount(account.id);
 
   const defaultValues: EditAccountValues = {
@@ -184,7 +199,9 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
     : undefined;
 
   const parentAccount = account?.parentAccountId
-    ? accountsQuery.data?.items.find((item) => item.id === account.parentAccountId)
+    ? accountsQuery.data?.items.find(
+        (item) => item.id === account.parentAccountId,
+      )
     : undefined;
 
   const handleOpenEdit = useCallback(() => {
@@ -235,7 +252,9 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
           />
         ) : !account || !Number.isInteger(accountId) ? (
           <div className="flex flex-1 h-full flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-16 px-6 text-center">
-            <h3 className="text-sm font-semibold text-foreground">Account not found</h3>
+            <h3 className="text-sm font-semibold text-foreground">
+              Account not found
+            </h3>
             <p className="mt-1 text-sm text-muted-foreground max-w-xs">
               This account does not exist or you do not have access to it.
             </p>
@@ -351,8 +370,15 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                 ) : journalEntries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
                     <BookOpen className="h-8 w-8 text-muted-foreground/40 mb-2" />
-                    <p className="text-sm text-muted-foreground">No journal entries yet.</p>
-                    <Button variant="outline" size="sm" className="mt-3" asChild>
+                    <p className="text-sm text-muted-foreground">
+                      No journal entries yet.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3"
+                      asChild
+                    >
                       <Link href="/accounting/journal/new">New entry</Link>
                     </Button>
                   </div>
@@ -361,7 +387,9 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                     <Table className="min-w-[560px]">
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[120px] pl-5">Entry #</TableHead>
+                          <TableHead className="w-[120px] pl-5">
+                            Entry #
+                          </TableHead>
                           <TableHead className="w-[120px]">Date</TableHead>
                           <TableHead>Description</TableHead>
                           <TableHead className="w-[100px]">Status</TableHead>

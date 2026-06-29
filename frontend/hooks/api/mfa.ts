@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { invalidateCurrentUserSession } from "@/server/actions/invalidate-session";
+import { invalidateCurrentUserSession } from "@/server/invalidate-session";
 
 export function useMfaStatus() {
   return useQuery({
@@ -63,7 +63,10 @@ export function useResendInvitation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { invitationId: string }) =>
-      apiClient.post<{ success: boolean }>("/organization/invitations/resend", data),
+      apiClient.post<{ success: boolean }>(
+        "/organization/invitations/resend",
+        data,
+      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.organization.invitations() });
     },

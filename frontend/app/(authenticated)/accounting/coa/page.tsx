@@ -6,11 +6,7 @@ import { Plus, Calculator } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -20,11 +16,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ListToolbar, LoadingState, ErrorState } from "@/components/shared";
-import { useAccounts } from "@/lib/api/hooks/accounting";
+import { useAccounts } from "@/hooks/hooks/accounting";
 import type { AccountType } from "@/types/accounting";
 import { CreateAccountDialog } from "@/features/accounting/create-account-dialog";
 
-type TabValue = "ALL" | AccountType;
+type TabValue = "ALL" | Accou@/hooks/api/accounting
 
 const TAB_VALUES: ReadonlyArray<TabValue> = [
   "ALL",
@@ -144,11 +140,7 @@ export default function ChartOfAccountsPage() {
                 ? "Try a different filter or search term."
                 : "Create your first ledger account to get started."}
             </p>
-            <Button
-              size="sm"
-              className="mt-4"
-              onClick={handleOpenCreate}
-            >
+            <Button size="sm" className="mt-4" onClick={handleOpenCreate}>
               <Plus className="mr-2 h-4 w-4" />
               New account
             </Button>
@@ -201,10 +193,7 @@ export default function ChartOfAccountsPage() {
         )}
       </div>
 
-      <CreateAccountDialog
-        open={createOpen}
-        onOpenChange={handleCloseCreate}
-      />
+      <CreateAccountDialog open={createOpen} onOpenChange={handleCloseCreate} />
     </PageWrapper>
   );
 }

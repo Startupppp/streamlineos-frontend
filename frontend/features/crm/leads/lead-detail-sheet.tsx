@@ -12,16 +12,26 @@ import {
   Edit3,
   AlarmClock,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";@/hooks/api
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { useLeadDetail, useLogLeadActivity } from "@/lib/api/hooks";
+import { useLeadDetail, useLogLeadActivity } from "@/hooks/hooks";
 import { toast } from "sonner";
-import { STATUSES, STATUS_CONFIG, isActivityType, getInitials } from "./leads-constants";
+import {
+  STATUSES,
+  STATUS_CONFIG,
+  isActivityType,
+  getInitials,
+} from "./leads-constants";
 import type { LeadStatus } from "./leads-types";
 import { ActivityForm } from "./activity-form";
 import { AIScoreButton } from "./ai-score-button";
@@ -45,13 +55,24 @@ interface StatusMoveButtonProps {
   onMoveStatus: (leadId: number, status: LeadStatus) => void;
 }
 
-function StatusMoveButton({ status: s, leadId, onMoveStatus }: StatusMoveButtonProps) {
-  const handleClick = useCallback(() => onMoveStatus(leadId, s), [leadId, s, onMoveStatus]);
+function StatusMoveButton({
+  status: s,
+  leadId,
+  onMoveStatus,
+}: StatusMoveButtonProps) {
+  const handleClick = useCallback(
+    () => onMoveStatus(leadId, s),
+    [leadId, s, onMoveStatus],
+  );
   return (
     <Button
       size="sm"
       variant="outline"
-      className={cn("text-xs h-8 gap-1.5", STATUS_CONFIG[s].border, "hover:bg-muted/50")}
+      className={cn(
+        "text-xs h-8 gap-1.5",
+        STATUS_CONFIG[s].border,
+        "hover:bg-muted/50",
+      )}
       onClick={handleClick}
     >
       <ArrowRight className="h-3 w-3" />
@@ -97,7 +118,8 @@ export function LeadDetailSheet({
           notes: (formData.get("activityNotes") as string) || undefined,
           outcome: (formData.get("outcome") as string) || undefined,
           location: (formData.get("location") as string) || undefined,
-          messageSummary: (formData.get("messageSummary") as string) || undefined,
+          messageSummary:
+            (formData.get("messageSummary") as string) || undefined,
         });
         toast.success("Activity logged");
       } catch {
@@ -107,7 +129,12 @@ export function LeadDetailSheet({
     [leadId, logActivity],
   );
 
-  const handleSheetClose = useCallback((o: boolean) => { if (!o) onClose(); }, [onClose]);
+  const handleSheetClose = useCallback(
+    (o: boolean) => {
+      if (!o) onClose();
+    },
+    [onClose],
+  );
 
   return (
     <Sheet open={open} onOpenChange={handleSheetClose}>
@@ -124,7 +151,9 @@ export function LeadDetailSheet({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <SheetHeader className="p-0">
-                    <SheetTitle className="text-xl font-semibold">{lead.name}</SheetTitle>
+                    <SheetTitle className="text-xl font-semibold">
+                      {lead.name}
+                    </SheetTitle>
                   </SheetHeader>
                   {lead.company && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1.5">
@@ -169,7 +198,11 @@ export function LeadDetailSheet({
                   AI Tools
                 </p>
                 <div className="flex gap-2 flex-wrap items-center">
-                  <AIScoreButton leadId={lead.id} currentScore={lead.score} compact />
+                  <AIScoreButton
+                    leadId={lead.id}
+                    currentScore={lead.score}
+                    compact
+                  />
                   <AINextActionButton leadId={lead.id} compact />
                   <AIEmailDialog
                     leadName={lead.name}
@@ -228,7 +261,10 @@ export function LeadDetailSheet({
                       <div className="h-7 w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
                         <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
-                      <a href={`tel:${lead.phone}`} className="hover:underline text-sm">
+                      <a
+                        href={`tel:${lead.phone}`}
+                        className="hover:underline text-sm"
+                      >
                         {lead.phone}
                       </a>
                     </div>
@@ -276,7 +312,10 @@ export function LeadDetailSheet({
                           Investment Interest
                         </p>
                         <p className="text-lg font-bold text-blue-600">
-                          ₹{Number(lead.investmentInterest).toLocaleString("en-IN")}
+                          ₹
+                          {Number(lead.investmentInterest).toLocaleString(
+                            "en-IN",
+                          )}
                         </p>
                       </div>
                     )}
@@ -291,13 +330,17 @@ export function LeadDetailSheet({
                   </p>
                   <div className="flex items-center gap-3 p-3.5 rounded-xl bg-muted/30 border border-border/50">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src={resolveImageUrl(lead.assignedTo.image)} />
+                      <AvatarImage
+                        src={resolveImageUrl(lead.assignedTo.image)}
+                      />
                       <AvatarFallback className="text-xs">
                         {getInitials(lead.assignedTo.name ?? "")}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium">{lead.assignedTo.name}</p>
+                      <p className="text-sm font-medium">
+                        {lead.assignedTo.name}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         {lead.assignedTo.email}
                       </p>
@@ -326,10 +369,16 @@ export function LeadDetailSheet({
                     <TabsTrigger value="activity" className="flex-1 text-xs">
                       Activity
                     </TabsTrigger>
-                    <TabsTrigger value="new-activity" className="flex-1 text-xs">
+                    <TabsTrigger
+                      value="new-activity"
+                      className="flex-1 text-xs"
+                    >
                       Log
                     </TabsTrigger>
-                    <TabsTrigger value="follow-up" className="flex-1 text-xs gap-1">
+                    <TabsTrigger
+                      value="follow-up"
+                      className="flex-1 text-xs gap-1"
+                    >
                       <AlarmClock className="h-3 w-3 shrink-0" />
                       Follow-up
                     </TabsTrigger>

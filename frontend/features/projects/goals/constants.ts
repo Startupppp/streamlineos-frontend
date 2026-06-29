@@ -1,4 +1,8 @@
-import type { GoalLevel, GoalStatus, KeyResultMetric } from "@/lib/api/hooks/goals";
+import type {@/hooks/api/goals
+  GoalLevel,
+  GoalStatus,
+  KeyResultMetric,
+} from "@/hooks/hooks/goals";
 
 interface StatusConfig {
   value: GoalStatus;
@@ -8,11 +12,36 @@ interface StatusConfig {
 }
 
 export const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
-  not_started: { value: "not_started", label: "Not Started", variant: "secondary", dot: "bg-muted-foreground" },
-  on_track: { value: "on_track", label: "On Track", variant: "default", dot: "bg-emerald-500" },
-  at_risk: { value: "at_risk", label: "At Risk", variant: "outline", dot: "bg-amber-500" },
-  off_track: { value: "off_track", label: "Off Track", variant: "destructive", dot: "bg-red-500" },
-  completed: { value: "completed", label: "Completed", variant: "default", dot: "bg-blue-500" },
+  not_started: {
+    value: "not_started",
+    label: "Not Started",
+    variant: "secondary",
+    dot: "bg-muted-foreground",
+  },
+  on_track: {
+    value: "on_track",
+    label: "On Track",
+    variant: "default",
+    dot: "bg-emerald-500",
+  },
+  at_risk: {
+    value: "at_risk",
+    label: "At Risk",
+    variant: "outline",
+    dot: "bg-amber-500",
+  },
+  off_track: {
+    value: "off_track",
+    label: "Off Track",
+    variant: "destructive",
+    dot: "bg-red-500",
+  },
+  completed: {
+    value: "completed",
+    label: "Completed",
+    variant: "default",
+    dot: "bg-blue-500",
+  },
 };
 
 export const STATUS_OPTIONS: { value: GoalStatus; label: string }[] = [
@@ -63,12 +92,18 @@ export function keyResultPercent(kr: {
   return Math.min(Math.max(Math.round(pct), 0), 100);
 }
 
-export function formatMetricValue(value: string, metricType: KeyResultMetric, unit: string | null): string {
+export function formatMetricValue(
+  value: string,
+  metricType: KeyResultMetric,
+  unit: string | null,
+): string {
   const num = parseFloat(value);
   if (metricType === "boolean") {
     return num >= 1 ? "Done" : "Not done";
   }
-  const formatted = Number.isInteger(num) ? num.toLocaleString() : num.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const formatted = Number.isInteger(num)
+    ? num.toLocaleString()
+    : num.toLocaleString(undefined, { maximumFractionDigits: 2 });
   if (metricType === "percentage") return `${formatted}%`;
   if (metricType === "currency") return `${unit ?? "₹"}${formatted}`;
   return unit ? `${formatted} ${unit}` : formatted;

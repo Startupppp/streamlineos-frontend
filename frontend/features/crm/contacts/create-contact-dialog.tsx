@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { useCreateContact } from "@/lib/api/hooks/crm";
+import { useCreateContact } from "@/hooks/api/crm";
 import { toast } from "sonner";
 
 const createContactSchema = z.object({
@@ -112,7 +112,11 @@ export function CreateContactDialog({
                 <FormItem>
                   <FormLabel>Name *</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Full name" className="capitalize" />
+                    <Input
+                      {...field}
+                      placeholder="Full name"
+                      className="capitalize"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -126,7 +130,11 @@ export function CreateContactDialog({
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input {...field} type="email" placeholder="email@example.com" />
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="email@example.com"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -208,7 +216,12 @@ export function CreateContactDialog({
               <FormItem>
                 <FormLabel>Linked Lead ID (optional)</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" min={1} placeholder="e.g. 42" />
+                  <Input
+                    {...field}
+                    type="number"
+                    min={1}
+                    placeholder="e.g. 42"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -221,7 +234,12 @@ export function CreateContactDialog({
               <FormItem>
                 <FormLabel>Linked Deal ID (optional)</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" min={1} placeholder="e.g. 7" />
+                  <Input
+                    {...field}
+                    type="number"
+                    min={1}
+                    placeholder="e.g. 7"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -29,7 +29,7 @@ import {
   useCreateTask,
   useCompleteTask,
   type TaskType,
-} from "@/lib/api/hooks/tasks";
+} from "@/hooks/api/tasks";
 import { toast } from "sonner";
 
 const FOLLOW_UP_TYPES: { value: TaskType; label: string }[] = [
@@ -66,8 +66,15 @@ interface CompleteTaskButtonProps {
   isPending: boolean;
 }
 
-function CompleteTaskButton({ taskId, onComplete, isPending }: CompleteTaskButtonProps) {
-  const handleClick = useCallback(() => onComplete(taskId), [taskId, onComplete]);
+function CompleteTaskButton({
+  taskId,
+  onComplete,
+  isPending,
+}: CompleteTaskButtonProps) {
+  const handleClick = useCallback(
+    () => onComplete(taskId),
+    [taskId, onComplete],
+  );
   return (
     <Button
       size="sm"
@@ -95,15 +102,29 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
 
   const createTask = useCreateTask();
   const completeTask = useCompleteTask();
-  const { data: leadTasksData } = useTasks({ entityType: "LEAD", entityId: leadId, limit: 20 });
+  const { data: leadTasksData } = useTasks({
+    entityType: "LEAD",
+    entityId: leadId,
+    limit: 20,
+  });
 
-  const pendingTasks = (leadTasksData?.tasks ?? []).filter((t) => t.status === "pending");
-  const doneTasks = (leadTasksData?.tasks ?? []).filter((t) => t.status === "completed");
+  const pendingTasks = (leadTasksData?.tasks ?? []).filter(
+    (t) => t.status === "pending",
+  );
+  const doneTasks = (leadTasksData?.tasks ?? []).filter(
+    (t) => t.status === "completed",
+  );
 
   const handleScheduleFollowUp = useCallback(async () => {
     const title = fuTitle.trim();
-    if (!title) { toast.error("Follow-up title is required"); return; }
-    if (!fuDate) { toast.error("Please pick a date"); return; }
+    if (!title) {
+      toast.error("Follow-up title is required");
+      return;
+    }
+    if (!fuDate) {
+      toast.error("Please pick a date");
+      return;
+    }
 
     const time = fuTime || "09:00";
     const dueDate = new Date(`${fuDate}T${time}:00`).toISOString();
@@ -140,10 +161,22 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
     [completeTask],
   );
 
-  const handleFuTypeChange = useCallback((v: string) => setFuType(v as TaskType), []);
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFuTitle(e.target.value), []);
-  const handleTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFuTime(e.target.value), []);
-  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setFuNotes(e.target.value), []);
+  const handleFuTypeChange = useCallback(
+    (v: string) => setFuType(v as TaskType),
+    [],
+  );
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setFuTitle(e.target.value),
+    [],
+  );
+  const handleTimeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setFuTime(e.target.value),
+    [],
+  );
+  const handleNotesChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setFuNotes(e.target.value),
+    [],
+  );
 
   return (
     <div className="space-y-5">
@@ -267,7 +300,9 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium leading-tight">{task.title}</p>
+                    <p className="text-xs font-medium leading-tight">
+                      {task.title}
+                    </p>
                     <p
                       className={cn(
                         "text-[10px] mt-0.5",

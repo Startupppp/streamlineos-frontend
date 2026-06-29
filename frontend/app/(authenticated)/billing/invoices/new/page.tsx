@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useCreateInvoice } from "@/lib/api/hooks/invoice";
+import { useCreateInvoice } from "@/hooks/api/invoice";
 import { INDIAN_STATES } from "@/lib/accounting/indian-states";
 import { splitTaxPool } from "@/lib/accounting/posting-rules";
 
@@ -33,25 +33,43 @@ const lineItemSchema = z.object({
   hsnSacCode: z.string().optional(),
   quantity: z.number().positive("Qty must be > 0"),
   rate: z.number().nonnegative("Rate must be >= 0"),
-  gstRate: z.number().refine((v) => GST_RATE_OPTIONS.includes(v), "Invalid GST rate"),
+  gstRate: z
+    .number()
+    .refine((v) => GST_RATE_OPTIONS.includes(v), "Invalid GST rate"),
 });
 
-const invoiceFormSchema = z.object({
-  items: z.array(lineItemSchema).min(1, "Add at least one line item"),
-  discount: z.number().min(0),
-  currency: z.string().min(1),
-  dueDate: z.string().optional(),
-  notes: z.string().optional(),
-  placeOfSupply: z.string().regex(/^\d{2}$/).optional().or(z.literal("")),
-  customerGstin: z.string().regex(GSTIN_REGEX, "Invalid GSTIN").optional().or(z.literal("")),
-  supplierGstin: z.string().regex(GSTIN_REGEX, "Invalid GSTIN").optional().or(z.literal("")),
-  reverseCharge: z.boolean(),
-}).refine((v) => v.discount <= grossTotal(v.items), {
-  message: "Discount cannot exceed the invoice subtotal plus tax",
-  path: ["discount"],
-});
+const invoiceFormSchema = z
+  .object({
+    items: z.array(lineItemSchema).min(1, "Add at least one line item"),
+    discount: z.number().min(0),
+    currency: z.string().min(1),
+    dueDate: z.string().optional(),
+    notes: z.string().optional(),
+    placeOfSupply: z
+      .string()
+      .regex(/^\d{2}$/)
+      .optional()
+      .or(z.literal("")),
+    customerGstin: z
+      .string()
+      .regex(GSTIN_REGEX, "Invalid GSTIN")
+      .optional()
+      .or(z.literal("")),
+    supplierGstin: z
+      .string()
+      .regex(GSTIN_REGEX, "Invalid GSTIN")
+      .optional()
+      .or(z.literal("")),
+    reverseCharge: z.boolean(),
+  })
+  .refine((v) => v.discount <= grossTotal(v.items), {
+    message: "Discount cannot exceed the invoice subtotal plus tax",
+    path: ["discount"],
+  });
 
-function grossTotal(items: { quantity: number; rate: number; gstRate: number }[]): number {
+function grossTotal(
+  items: { quantity: number; rate: number; gstRate: number }[],
+): number {
   return items.reduce((acc, it) => {
     const qty = Number(it.quantity) || 0;
     const rate = Number(it.rate) || 0;
@@ -69,7 +87,13 @@ function fmt(amount: number) {
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
-const DEFAULT_ITEM = { description: "", hsnSacCode: "", quantity: 1, rate: 0, gstRate: 0 } as const;
+const DEFAULT_ITEM = {
+  description: "",
+  hsnSacCode: "",
+  quantity: 1,
+  rate: 0,
+  gstRate: 0,
+} as const;
 
 export default function NewInvoicePage() {
   const router = useRouter();
@@ -78,7 +102,9 @@ export default function NewInvoicePage() {
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
-      items: [{ description: "", hsnSacCode: "", quantity: 1, rate: 0, gstRate: 0 }],
+      items: [
+        { description: "", hsnSacCode: "", quantity: 1, rate: 0, gstRate: 0 },
+      ],
       discount: 0,
       currency: "INR",
       dueDate: "",
@@ -116,9 +142,10 @@ export default function NewInvoicePage() {
     });
 
     const placeOfSupplyStateCode = watchedPlaceOfSupply ?? "";
-    const supplierStateCode = (watchedSupplierGstin && watchedSupplierGstin.length >= 2)
-      ? watchedSupplierGstin.slice(0, 2)
-      : placeOfSupplyStateCode;
+    const supplierStateCode =
+      watchedSupplierGstin && watchedSupplierGstin.length >= 2
+        ? watchedSupplierGstin.slice(0, 2)
+        : placeOfSupplyStateCode;
 
     const split = splitTaxPool(taxPool, {
       supplierStateCode,
@@ -129,77 +156,122 @@ export default function NewInvoicePage() {
     const total = round2(subtotal + taxPool - discount);
 
     return { lines, subtotal, taxPool, split, total, discount };
-  }, [watchedItems, watchedDiscount, watchedPlaceOfSupply, watchedSupplierGstin]);
+  }, [
+    watchedItems,
+    watchedDiscount,
+    watchedPlaceOfSupply,
+    watchedSupplierGstin,
+  ]);
 
   const handleAddLine = useCallback(() => {
     itemsArray.append({ ...DEFAULT_ITEM });
   }, [itemsArray]);
 
-  const handleRemoveLine = useCallback((index: number) => {
-    if (itemsArray.fields.length <= 1) return;
-    itemsArray.remove(index);
-  }, [itemsArray]);
+  const handleRemoveLine = useCallback(
+    (index: number) => {
+      if (itemsArray.fields.length <= 1) return;
+      itemsArray.remove(index);
+    },
+    [itemsArray],
+  );
 
-  const handleGstRateChange = useCallback((index: number, value: string) => {
-    setValue(`items.${index}.gstRate`, Number(value), { shouldValidate: true, shouldDirty: true });
-  }, [setValue]);
+  const handleGstRateChange = useCallback(
+    (index: number, value: string) => {
+      setValue(`items.${index}.gstRate`, Number(value), {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    },
+    [setValue],
+  );
 
-  const handlePlaceOfSupplyChange = useCallback((value: string) => {
-    setValue("placeOfSupply", value, { shouldValidate: true, shouldDirty: true });
-  }, [setValue]);
+  const handlePlaceOfSupplyChange = useCallback(
+    (value: string) => {
+      setValue("placeOfSupply", value, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    },
+    [setValue],
+  );
 
-  const handleDueDateChange = useCallback((value: string) => {
-    setValue("dueDate", value, { shouldDirty: true });
-  }, [setValue]);
+  const handleDueDateChange = useCallback(
+    (value: string) => {
+      setValue("dueDate", value, { shouldDirty: true });
+    },
+    [setValue],
+  );
 
-  const handleReverseChargeChange = useCallback((checked: boolean | "indeterminate") => {
-    setValue("reverseCharge", checked === true, { shouldDirty: true });
-  }, [setValue]);
+  const handleReverseChargeChange = useCallback(
+    (checked: boolean | "indeterminate") => {
+      setValue("reverseCharge", checked === true, { shouldDirty: true });
+    },
+    [setValue],
+  );
 
-  const onSubmit = useCallback((values: InvoiceFormValues) => {
-    const itemsPayload = values.items.map((item) => ({
-      description: item.description,
-      hsnSacCode: item.hsnSacCode && item.hsnSacCode.length > 0 ? item.hsnSacCode : undefined,
-      quantity: Number(item.quantity),
-      rate: Number(item.rate),
-      gstRate: Number(item.gstRate),
-    }));
+  const onSubmit = useCallback(
+    (values: InvoiceFormValues) => {
+      const itemsPayload = values.items.map((item) => ({
+        description: item.description,
+        hsnSacCode:
+          item.hsnSacCode && item.hsnSacCode.length > 0
+            ? item.hsnSacCode
+            : undefined,
+        quantity: Number(item.quantity),
+        rate: Number(item.rate),
+        gstRate: Number(item.gstRate),
+      }));
 
-    const legacyLineItems = values.items.map((item) => ({
-      description: item.description,
-      quantity: Number(item.quantity),
-      rate: Number(item.rate),
-      amount: round2(Number(item.quantity) * Number(item.rate)),
-    }));
+      const legacyLineItems = values.items.map((item) => ({
+        description: item.description,
+        quantity: Number(item.quantity),
+        rate: Number(item.rate),
+        amount: round2(Number(item.quantity) * Number(item.rate)),
+      }));
 
-    const placeOfSupply = values.placeOfSupply && values.placeOfSupply.length > 0 ? values.placeOfSupply : undefined;
-    const customerGstin = values.customerGstin && values.customerGstin.length > 0 ? values.customerGstin : undefined;
-    const supplierGstin = values.supplierGstin && values.supplierGstin.length > 0 ? values.supplierGstin : undefined;
-    const dueDate = values.dueDate && values.dueDate.length > 0 ? values.dueDate : undefined;
-    const notes = values.notes && values.notes.length > 0 ? values.notes : undefined;
+      const placeOfSupply =
+        values.placeOfSupply && values.placeOfSupply.length > 0
+          ? values.placeOfSupply
+          : undefined;
+      const customerGstin =
+        values.customerGstin && values.customerGstin.length > 0
+          ? values.customerGstin
+          : undefined;
+      const supplierGstin =
+        values.supplierGstin && values.supplierGstin.length > 0
+          ? values.supplierGstin
+          : undefined;
+      const dueDate =
+        values.dueDate && values.dueDate.length > 0
+          ? values.dueDate
+          : undefined;
+      const notes =
+        values.notes && values.notes.length > 0 ? values.notes : undefined;
 
-    createInvoice.mutate(
-      {
-        items: itemsPayload,
-        lineItems: legacyLineItems,
-        discount: Number(values.discount) || 0,
-        currency: values.currency,
-        dueDate,
-        notes,
-        placeOfSupply,
-        customerGstin,
-        supplierGstin,
-        reverseCharge: values.reverseCharge,
-      },
-      {
-        onSuccess: (inv) => {
-          toast.success("Invoice created");
-          router.push(`/billing/invoices/${inv.id}`);
+      createInvoice.mutate(
+        {
+          items: itemsPayload,
+          lineItems: legacyLineItems,
+          discount: Number(values.discount) || 0,
+          currency: values.currency,
+          dueDate,
+          notes,
+          placeOfSupply,
+          customerGstin,
+          supplierGstin,
+          reverseCharge: values.reverseCharge,
         },
-        onError: (apiError) => toast.error(apiError.message),
-      }
-    );
-  }, [createInvoice, router]);
+        {
+          onSuccess: (inv) => {
+            toast.success("Invoice created");
+            router.push(`/billing/invoices/${inv.id}`);
+          },
+          onError: (apiError) => toast.error(apiError.message),
+        },
+      );
+    },
+    [createInvoice, router],
+  );
 
   const onInvalid = useCallback(() => {
     toast.error("Please fix the form errors before submitting");
@@ -220,8 +292,10 @@ export default function NewInvoicePage() {
         </Link>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="max-w-3xl space-y-6">
-
+      <form
+        onSubmit={handleSubmit(onSubmit, onInvalid)}
+        className="max-w-3xl space-y-6"
+      >
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <p className="text-sm font-semibold">Line Items</p>
@@ -243,7 +317,9 @@ export default function NewInvoicePage() {
                   className="grid grid-cols-1 gap-3 rounded-lg border border-border p-3 md:grid-cols-12 md:gap-2 md:items-center md:rounded-none md:border-0 md:p-0"
                 >
                   <div className="space-y-1 md:col-span-3 md:space-y-0">
-                    <Label className="text-xs text-muted-foreground md:hidden">Description</Label>
+                    <Label className="text-xs text-muted-foreground md:hidden">
+                      Description
+                    </Label>
                     <Input
                       className="h-8 text-sm"
                       placeholder="Description"
@@ -252,7 +328,9 @@ export default function NewInvoicePage() {
                     />
                   </div>
                   <div className="space-y-1 md:col-span-2 md:space-y-0">
-                    <Label className="text-xs text-muted-foreground md:hidden">HSN/SAC</Label>
+                    <Label className="text-xs text-muted-foreground md:hidden">
+                      HSN/SAC
+                    </Label>
                     <Input
                       className="h-8 text-sm"
                       placeholder="HSN/SAC"
@@ -261,18 +339,24 @@ export default function NewInvoicePage() {
                     />
                   </div>
                   <div className="space-y-1 md:col-span-1 md:space-y-0">
-                    <Label className="text-xs text-muted-foreground md:hidden">Qty</Label>
+                    <Label className="text-xs text-muted-foreground md:hidden">
+                      Qty
+                    </Label>
                     <Input
                       className="h-8 text-sm md:text-right"
                       type="number"
                       min={1}
                       placeholder="1"
                       aria-label={`Quantity for item ${idx + 1}`}
-                      {...register(`items.${idx}.quantity`, { valueAsNumber: true })}
+                      {...register(`items.${idx}.quantity`, {
+                        valueAsNumber: true,
+                      })}
                     />
                   </div>
                   <div className="space-y-1 md:col-span-2 md:space-y-0">
-                    <Label className="text-xs text-muted-foreground md:hidden">Rate</Label>
+                    <Label className="text-xs text-muted-foreground md:hidden">
+                      Rate
+                    </Label>
                     <Input
                       className="h-8 text-sm md:text-right"
                       type="number"
@@ -280,20 +364,29 @@ export default function NewInvoicePage() {
                       step="0.01"
                       placeholder="0"
                       aria-label={`Rate for item ${idx + 1}`}
-                      {...register(`items.${idx}.rate`, { valueAsNumber: true })}
+                      {...register(`items.${idx}.rate`, {
+                        valueAsNumber: true,
+                      })}
                     />
                   </div>
                   <div className="space-y-1 md:col-span-2 md:space-y-0">
-                    <Label className="text-xs text-muted-foreground md:hidden">GST %</Label>
+                    <Label className="text-xs text-muted-foreground md:hidden">
+                      GST %
+                    </Label>
                     <Controller
                       control={control}
                       name={`items.${idx}.gstRate`}
                       render={({ field: gstField }) => (
                         <Select
                           value={String(gstField.value ?? 0)}
-                          onValueChange={(value) => handleGstRateChange(idx, value)}
+                          onValueChange={(value) =>
+                            handleGstRateChange(idx, value)
+                          }
                         >
-                          <SelectTrigger className="h-8 text-sm" aria-label={`GST rate for item ${idx + 1}`}>
+                          <SelectTrigger
+                            className="h-8 text-sm"
+                            aria-label={`GST rate for item ${idx + 1}`}
+                          >
                             <SelectValue placeholder="0%" />
                           </SelectTrigger>
                           <SelectContent>
@@ -308,8 +401,12 @@ export default function NewInvoicePage() {
                     />
                   </div>
                   <div className="flex items-center justify-between md:col-span-1 md:block md:text-right md:pr-1">
-                    <span className="text-xs text-muted-foreground md:hidden">Amount</span>
-                    <span className="text-sm font-medium">{fmt(lineAmount)}</span>
+                    <span className="text-xs text-muted-foreground md:hidden">
+                      Amount
+                    </span>
+                    <span className="text-sm font-medium">
+                      {fmt(lineAmount)}
+                    </span>
                   </div>
                   <div className="flex justify-end md:col-span-12 md:-mt-1">
                     <LineItemRemoveButton
@@ -340,7 +437,9 @@ export default function NewInvoicePage() {
           <p className="text-sm font-semibold">GST</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label htmlFor="place-of-supply" className="text-xs">Place of Supply</Label>
+              <Label htmlFor="place-of-supply" className="text-xs">
+                Place of Supply
+              </Label>
               <Controller
                 control={control}
                 name="placeOfSupply"
@@ -363,7 +462,9 @@ export default function NewInvoicePage() {
                 )}
               />
               {errors.placeOfSupply?.message && (
-                <p className="text-xs text-destructive">{errors.placeOfSupply.message}</p>
+                <p className="text-xs text-destructive">
+                  {errors.placeOfSupply.message}
+                </p>
               )}
             </div>
             <div className="space-y-1 flex items-end pb-1">
@@ -383,7 +484,9 @@ export default function NewInvoicePage() {
               </label>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="customer-gstin" className="text-xs">Customer GSTIN</Label>
+              <Label htmlFor="customer-gstin" className="text-xs">
+                Customer GSTIN
+              </Label>
               <Input
                 id="customer-gstin"
                 className="h-8 text-sm"
@@ -391,11 +494,15 @@ export default function NewInvoicePage() {
                 {...register("customerGstin")}
               />
               {errors.customerGstin?.message && (
-                <p className="text-xs text-destructive">{errors.customerGstin.message}</p>
+                <p className="text-xs text-destructive">
+                  {errors.customerGstin.message}
+                </p>
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="supplier-gstin" className="text-xs">Supplier GSTIN</Label>
+              <Label htmlFor="supplier-gstin" className="text-xs">
+                Supplier GSTIN
+              </Label>
               <Input
                 id="supplier-gstin"
                 className="h-8 text-sm"
@@ -403,12 +510,15 @@ export default function NewInvoicePage() {
                 {...register("supplierGstin")}
               />
               {errors.supplierGstin?.message && (
-                <p className="text-xs text-destructive">{errors.supplierGstin.message}</p>
+                <p className="text-xs text-destructive">
+                  {errors.supplierGstin.message}
+                </p>
               )}
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Supplier state is inferred from supplier GSTIN; when blank, intra-state is assumed and the server resolves authoritatively.
+            Supplier state is inferred from supplier GSTIN; when blank,
+            intra-state is assumed and the server resolves authoritatively.
           </p>
         </div>
 
@@ -451,7 +561,9 @@ export default function NewInvoicePage() {
           <p className="text-sm font-semibold">Invoice Settings</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label htmlFor="discount" className="text-xs">Discount (₹)</Label>
+              <Label htmlFor="discount" className="text-xs">
+                Discount (₹)
+              </Label>
               <Input
                 id="discount"
                 type="number"
@@ -461,11 +573,15 @@ export default function NewInvoicePage() {
                 {...register("discount", { valueAsNumber: true })}
               />
               {errors.discount?.message && (
-                <p className="text-xs text-destructive">{errors.discount.message}</p>
+                <p className="text-xs text-destructive">
+                  {errors.discount.message}
+                </p>
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="due-date" className="text-xs">Due Date</Label>
+              <Label htmlFor="due-date" className="text-xs">
+                Due Date
+              </Label>
               <Controller
                 control={control}
                 name="dueDate"
@@ -480,7 +596,9 @@ export default function NewInvoicePage() {
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="currency" className="text-xs">Currency</Label>
+              <Label htmlFor="currency" className="text-xs">
+                Currency
+              </Label>
               <Input
                 id="currency"
                 className="h-8 text-sm"
@@ -490,7 +608,9 @@ export default function NewInvoicePage() {
             </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="notes" className="text-xs">Notes / Payment Terms</Label>
+            <Label htmlFor="notes" className="text-xs">
+              Notes / Payment Terms
+            </Label>
             <Input
               id="notes"
               placeholder="e.g. Payment due within 30 days. Bank: HDFC, A/C: 1234567890"
@@ -502,7 +622,9 @@ export default function NewInvoicePage() {
 
         <div className="flex justify-end gap-2">
           <Link href="/billing/invoices">
-            <Button type="button" variant="outline" size="sm">Cancel</Button>
+            <Button type="button" variant="outline" size="sm">
+              Cancel
+            </Button>
           </Link>
           <Button type="submit" size="sm" disabled={createInvoice.isPending}>
             {createInvoice.isPending ? (
@@ -524,7 +646,11 @@ interface LineItemRemoveButtonProps {
   onRemove: (idx: number) => void;
 }
 
-function LineItemRemoveButton({ idx, disabled, onRemove }: LineItemRemoveButtonProps) {
+function LineItemRemoveButton({
+  idx,
+  disabled,
+  onRemove,
+}: LineItemRemoveButtonProps) {
   function handleClick() {
     onRemove(idx);
   }

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useHrDepartments, useCreateDepartment } from "@/lib/api/hooks/hr";
+import { useHrDepartments, useCreateDepartment } from "@/hooks/api/hr";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
@@ -25,32 +25,37 @@ interface DepartmentComboboxProps {
   className?: string;
 }
 
-
 interface DepartmentOptionProps {
   dept: { id: number; name: string };
   isSelected: boolean;
   onSelect: (id: number) => void;
 }
 
-const DepartmentOption = memo(function DepartmentOption({ dept, isSelected, onSelect }: DepartmentOptionProps) {
+const DepartmentOption = memo(function DepartmentOption({
+  dept,
+  isSelected,
+  onSelect,
+}: DepartmentOptionProps) {
   const handleClick = useCallback(() => onSelect(dept.id), [onSelect, dept.id]);
   return (
     <button
       type="button"
       className={cn(
         "flex w-full cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
-        isSelected && "bg-accent text-accent-foreground"
+        isSelected && "bg-accent text-accent-foreground",
       )}
       onClick={handleClick}
     >
       <Check
-        className={cn("h-4 w-4 shrink-0", isSelected ? "opacity-100" : "opacity-0")}
+        className={cn(
+          "h-4 w-4 shrink-0",
+          isSelected ? "opacity-100" : "opacity-0",
+        )}
       />
       <span className="truncate">{dept.name}</span>
     </button>
   );
 });
-
 
 export function DepartmentCombobox({
   value,
@@ -70,7 +75,7 @@ export function DepartmentCombobox({
 
   const selectedDept = useMemo(
     () => departments.find((d) => d.id === value),
-    [departments, value]
+    [departments, value],
   );
 
   const filtered = useMemo(() => {
@@ -82,9 +87,9 @@ export function DepartmentCombobox({
   const exactMatch = useMemo(
     () =>
       departments.some(
-        (d) => d.name.toLowerCase() === search.trim().toLowerCase()
+        (d) => d.name.toLowerCase() === search.trim().toLowerCase(),
       ),
-    [departments, search]
+    [departments, search],
   );
   const canAdd =
     allowCreate &&
@@ -99,18 +104,27 @@ export function DepartmentCombobox({
     }
   }, [open]);
 
-  const handleSelect = useCallback((id: number) => {
-    onValueChange(id);
-    setOpen(false);
-  }, [onValueChange]);
+  const handleSelect = useCallback(
+    (id: number) => {
+      onValueChange(id);
+      setOpen(false);
+    },
+    [onValueChange],
+  );
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-  }, []);
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
+    },
+    [],
+  );
 
-  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Escape") setOpen(false);
-  }, []);
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Escape") setOpen(false);
+    },
+    [],
+  );
 
   const handleAdd = useCallback(() => {
     const name = search.trim();
@@ -123,11 +137,15 @@ export function DepartmentCombobox({
           const list = await qc.fetchQuery({
             queryKey: queryKeys.hr.departments(),
             queryFn: async () => {
-              const result = await qc.getQueryData<{ id: number; name: string }[]>(queryKeys.hr.departments());
+              const result = await qc.getQueryData<
+                { id: number; name: string }[]
+              >(queryKeys.hr.departments());
               return result ?? [];
             },
           });
-          const found = list?.find((d: { id: number; name: string }) => d.name === name);
+          const found = list?.find(
+            (d: { id: number; name: string }) => d.name === name,
+          );
           if (found) {
             onValueChange(found.id);
           }
@@ -138,7 +156,7 @@ export function DepartmentCombobox({
         onError: (err) => {
           toast.error(err.message || "Failed to add department");
         },
-      }
+      },
     );
   }, [search, createDepartment, qc, onValueChange]);
 
@@ -154,7 +172,7 @@ export function DepartmentCombobox({
           className={cn(
             "w-full justify-between font-normal border-input data-[placeholder]:text-muted-foreground",
             !selectedDept && "text-muted-foreground",
-            className
+            className,
           )}
         >
           <span className="truncate">
@@ -163,7 +181,10 @@ export function DepartmentCombobox({
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+      >
         <div className="flex flex-col gap-1 p-2">
           <Input
             ref={inputRef}

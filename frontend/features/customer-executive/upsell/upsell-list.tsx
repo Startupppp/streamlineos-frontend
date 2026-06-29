@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import type { ClientOpportunity } from "@/lib/api/hooks/crm";
+import type { ClientOpportunity } from "@/hooks/api/crm";
 
 type OppStage = "identified" | "proposed" | "negotiating" | "won" | "lost";
 
@@ -95,8 +95,7 @@ interface OppCardProps {
 function OppCard({ opp, onStageChange, onDelete, isPending }: OppCardProps) {
   const stageCfg = STAGES.find((s) => s.id === opp.stage) ?? STAGES[0];
 
-  const handleStageChange = (v: string) =>
-    onStageChange(opp.id, v as OppStage);
+  const handleStageChange = (v: string) => onStageChange(opp.id, v as OppStage);
   const handleDelete = () => onDelete(opp.id);
 
   return (
@@ -118,13 +117,13 @@ function OppCard({ opp, onStageChange, onDelete, isPending }: OppCardProps) {
               variant="outline"
               className={cn(
                 "text-[10px] shrink-0 capitalize whitespace-nowrap",
-                stageCfg.badgeClass
+                stageCfg.badgeClass,
               )}
             >
               <span
                 className={cn(
                   "w-1.5 h-1.5 rounded-full mr-1 inline-block",
-                  stageCfg.dot
+                  stageCfg.dot,
                 )}
               />
               {stageCfg.label}
@@ -138,7 +137,7 @@ function OppCard({ opp, onStageChange, onDelete, isPending }: OppCardProps) {
                 "text-[10px]",
                 opp.type === "upsell"
                   ? "bg-blue-100 text-blue-700"
-                  : "bg-purple-100 text-purple-700"
+                  : "bg-purple-100 text-purple-700",
               )}
             >
               <Tag className="h-2.5 w-2.5 mr-1" />
@@ -214,7 +213,7 @@ function KanbanColumn({
         <div
           className={cn(
             "px-3 py-2 flex items-center justify-between",
-            stage.headerBg
+            stage.headerBg,
           )}
         >
           <span className="text-white font-semibold text-sm">

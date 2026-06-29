@@ -16,7 +16,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { useCashFlow, type CashFlowSection } from "@/lib/api/hooks/accounting";
+import { useCashFlow, type CashFlowSection } from "@/hooks/api/accounting";
 
 const inrFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -53,7 +53,9 @@ interface SummaryCardProps {
 function SummaryCard({ label, value, emphasis = false }: SummaryCardProps) {
   return (
     <Card className="px-4 py-3">
-      <p className="text-[11px] font-medium text-muted-foreground leading-none">{label}</p>
+      <p className="text-[11px] font-medium text-muted-foreground leading-none">
+        {label}
+      </p>
       <p
         className={
           emphasis
@@ -75,7 +77,9 @@ function SectionCard({ section }: SectionCardProps) {
   return (
     <Card className="overflow-hidden">
       <div className="px-4 py-2.5 border-b bg-muted/40">
-        <h3 className="text-sm font-semibold tracking-tight">{section.label}</h3>
+        <h3 className="text-sm font-semibold tracking-tight">
+          {section.label}
+        </h3>
       </div>
       {section.items.length === 0 ? (
         <div className="px-6 py-8 text-center text-sm text-muted-foreground">
@@ -86,13 +90,17 @@ function SectionCard({ section }: SectionCardProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Account</TableHead>
-              <TableHead className="w-[180px] text-right">Net Cash Flow</TableHead>
+              <TableHead className="w-[180px] text-right">
+                Net Cash Flow
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {section.items.map((item) => (
               <TableRow key={item.label}>
-                <TableCell className="text-sm text-foreground">{item.label}</TableCell>
+                <TableCell className="text-sm text-foreground">
+                  {item.label}
+                </TableCell>
                 <TableCell className="text-sm text-right tabular-nums font-mono">
                   {formatInr(item.amount)}
                 </TableCell>
@@ -101,7 +109,9 @@ function SectionCard({ section }: SectionCardProps) {
           </TableBody>
           <TableFooter>
             <TableRow>
-              <TableCell className="text-sm font-semibold">Net {section.label}</TableCell>
+              <TableCell className="text-sm font-semibold">
+                Net {section.label}
+              </TableCell>
               <TableCell className="text-sm text-right tabular-nums font-mono font-semibold">
                 {formatInr(section.total)}
               </TableCell>
@@ -147,7 +157,10 @@ export default function CashFlowPage() {
       <div className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
           <div className="flex flex-col gap-1">
-            <label htmlFor="cash-flow-from" className="text-[11px] font-medium text-slate-500 leading-none">
+            <label
+              htmlFor="cash-flow-from"
+              className="text-[11px] font-medium text-slate-500 leading-none"
+            >
               From
             </label>
             <Input
@@ -159,7 +172,10 @@ export default function CashFlowPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor="cash-flow-to" className="text-[11px] font-medium text-slate-500 leading-none">
+            <label
+              htmlFor="cash-flow-to"
+              className="text-[11px] font-medium text-slate-500 leading-none"
+            >
               To
             </label>
             <Input
@@ -172,7 +188,8 @@ export default function CashFlowPage() {
           </div>
           {report && !report.reconciled && (
             <div className="ml-auto self-end text-xs text-amber-600">
-              Section totals differ from the net change in cash — review unbalanced entries.
+              Section totals differ from the net change in cash — review
+              unbalanced entries.
             </div>
           )}
         </div>
@@ -196,7 +213,11 @@ export default function CashFlowPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <SummaryCard label="Opening Cash" value={report.openingCash} />
               <SummaryCard label="Net Change" value={report.netChange} />
-              <SummaryCard label="Closing Cash" value={report.closingCash} emphasis />
+              <SummaryCard
+                label="Closing Cash"
+                value={report.closingCash}
+                emphasis
+              />
             </div>
 
             <div className="space-y-4">
@@ -206,7 +227,9 @@ export default function CashFlowPage() {
             </div>
 
             <Card className="px-5 py-4 flex items-center justify-between gap-4 bg-muted/40">
-              <span className="text-sm font-semibold text-foreground">Net change in cash</span>
+              <span className="text-sm font-semibold text-foreground">
+                Net change in cash
+              </span>
               <span className="font-mono tabular-nums text-base font-semibold text-foreground">
                 {formatInr(report.netChange)}
               </span>

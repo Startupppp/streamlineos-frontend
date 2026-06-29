@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useNextBestAction } from "@/lib/api/hooks/ai";
+import { useNextBestAction } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
@@ -20,14 +20,23 @@ interface AINextActionButtonProps {
   compact?: boolean;
 }
 
-export function AINextActionButton({ leadId, compact }: AINextActionButtonProps) {
+export function AINextActionButton({
+  leadId,
+  compact,
+}: AINextActionButtonProps) {
   const [open, setOpen] = useState(false);
   const actionMutation = useNextBestAction();
   const result = actionMutation.data;
-  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.next-action");
+  const { enabled: featureEnabled, requiredPlan } =
+    useFeature("ai.next-action");
 
   const handleSuggest = useCallback(() => {
-    if (!featureEnabled) { toast.error(`AI next-action suggestion requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
+    if (!featureEnabled) {
+      toast.error(
+        `AI next-action suggestion requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`,
+      );
+      return;
+    }
     actionMutation.mutate(leadId, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -82,9 +91,15 @@ export function AINextActionButton({ leadId, compact }: AINextActionButtonProps)
         className="w-full"
       >
         {actionMutation.isPending ? (
-          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Thinking...</>
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Thinking...
+          </>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />Suggest Next Action</>
+          <>
+            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+            Suggest Next Action
+          </>
         )}
       </Button>
       {result && <ActionDetails result={result} urgencyColor={urgencyColor} />}
@@ -109,21 +124,38 @@ function ActionDetails({
   return (
     <div className="space-y-2">
       <div className="flex items-start gap-2">
-        <Zap className={cn("h-4 w-4 mt-0.5 shrink-0", urgencyColor(result.urgency))} />
+        <Zap
+          className={cn(
+            "h-4 w-4 mt-0.5 shrink-0",
+            urgencyColor(result.urgency),
+          )}
+        />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium leading-snug">{result.action}</p>
           <div className="flex items-center gap-1.5 mt-1">
-            <Badge variant="secondary" className={cn("text-[9px] h-4 px-1 capitalize", urgencyColor(result.urgency))}>
+            <Badge
+              variant="secondary"
+              className={cn(
+                "text-[9px] h-4 px-1 capitalize",
+                urgencyColor(result.urgency),
+              )}
+            >
               {result.urgency}
             </Badge>
           </div>
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground leading-snug">{result.reasoning}</p>
+      <p className="text-[11px] text-muted-foreground leading-snug">
+        {result.reasoning}
+      </p>
       {result.template && (
         <div className="rounded-md border border-border bg-muted/40 p-2">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Template</p>
-          <p className="text-[11px] leading-snug whitespace-pre-wrap">{result.template}</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+            Template
+          </p>
+          <p className="text-[11px] leading-snug whitespace-pre-wrap">
+            {result.template}
+          </p>
         </div>
       )}
     </div>

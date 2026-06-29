@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { submitContactForm } from "@/server/actions/contact-submission";
-import { TurnstileWidget, isTurnstileEnabled } from "@/features/security/turnstile-widget";
+import { submitContactForm } from "@/server/contact-submission";
+import {
+  TurnstileWidget,
+  isTurnstileEnabled,
+} from "@/features/security/turnstile-widget";
 
 type ContactTopic = "sales" | "support" | "partnership" | "press" | "other";
 
@@ -241,7 +244,8 @@ export function ContactForm() {
             </Button>
 
             <p className="text-[12px] font-medium text-slate-400 text-center">
-              Your message is encrypted in transit. We&apos;ll never share your email.
+              Your message is encrypted in transit. We&apos;ll never share your
+              email.
             </p>
           </motion.form>
         )}

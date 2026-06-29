@@ -1,6 +1,13 @@
 "use client";
 
-import { use, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import {
+  use,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -17,12 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -70,27 +72,27 @@ import {
   type KbCategory,
   type KbArticleStatus,
   type KbArticleVisibility,
-} from "@/lib/api/hooks/support/kb";
+} from "@/hooks/api/support/kb";
 import {
   useKbComments,
   useAddKbComment,
   useDeleteKbComment,
-} from "@/lib/api/hooks/support/kb-comments";
+} from "@/hooks/api/support/kb-comments";
 import {
   useKbAttachments,
   useUploadKbAttachment,
   useDeleteKbAttachment,
   useKbAttachmentDownloadUrl,
   type KbAttachment,
-} from "@/lib/api/hooks/support/kb-attachments";
+} from "@/hooks/api/support/kb-attachments";
 import {
   useKbIndexStatus,
   useReindexKbArticle,
-} from "@/lib/api/hooks/support/kb-rag";
+} from "@/hooks/api/support/kb-rag";
 import { getApiError } from "@/lib/api-client";
 import { resolveImageUrl } from "@/lib/utils";
 import { formatFileSize } from "@/lib/format-utils";
-import { useDebouncedValue } from "@/hooks/use-debounce";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -133,7 +135,8 @@ function asArticleVisibility(v: string): KbArticleVisibility | undefined {
 function parseDraft(value: unknown): ArticleDraft | null {
   if (typeof value !== "object" || value === null) return null;
   const record: Record<string, unknown> = { ...value };
-  const { title, categoryId, excerpt, content, status, visibility, tagsInput } = record;
+  const { title, categoryId, excerpt, content, status, visibility, tagsInput } =
+    record;
   if (
     typeof title !== "string" ||
     typeof categoryId !== "string" ||
@@ -185,7 +188,9 @@ function ArticleFeedbackPanel({ article }: { article: KbArticleDetail }) {
       <CardContent className="space-y-3">
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg border border-border py-2">
-            <p className="text-base font-semibold tabular-nums">{article.views}</p>
+            <p className="text-base font-semibold tabular-nums">
+              {article.views}
+            </p>
             <p className="text-[11px] text-muted-foreground flex items-center justify-center gap-1">
               <Eye className="h-3 w-3" /> Views
             </p>
@@ -220,7 +225,10 @@ function ArticleFeedbackPanel({ article }: { article: KbArticleDetail }) {
         ) : (
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
             {feedback.map((item) => (
-              <div key={item.id} className="rounded-lg border border-border px-3 py-2">
+              <div
+                key={item.id}
+                className="rounded-lg border border-border px-3 py-2"
+              >
                 <div className="flex items-center justify-between">
                   <Badge
                     variant={item.helpful ? "default" : "secondary"}
@@ -235,7 +243,9 @@ function ArticleFeedbackPanel({ article }: { article: KbArticleDetail }) {
                   )}
                 </div>
                 {item.comment && (
-                  <p className="text-xs text-muted-foreground mt-1">{item.comment}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {item.comment}
+                  </p>
                 )}
               </div>
             ))}
@@ -287,7 +297,9 @@ function CommentItem({ comment, isPendingDelete, onDelete }: CommentItemProps) {
           </span>
           {comment.createdAt && (
             <span className="text-[10px] text-muted-foreground shrink-0">
-              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+              {formatDistanceToNow(new Date(comment.createdAt), {
+                addSuffix: true,
+              })}
             </span>
           )}
         </div>
@@ -491,7 +503,9 @@ function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
   function handleReindex() {
     reindex.mutate(article.id, {
       onSuccess: (result) => {
-        toast.success(`Indexed ${result.chunks} passage${result.chunks === 1 ? "" : "s"} for AI search`);
+        toast.success(
+          `Indexed ${result.chunks} passage${result.chunks === 1 ? "" : "s"} for AI search`,
+        );
         result.warnings.forEach((warning) => toast.warning(warning));
       },
       onError: (e) => toast.error(getApiError(e)),
@@ -518,7 +532,8 @@ function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
 
   function handleDownload(attachment: KbAttachment) {
     downloadUrl.mutate(attachment.id, {
-      onSuccess: (data) => window.open(data.url, "_blank", "noopener,noreferrer"),
+      onSuccess: (data) =>
+        window.open(data.url, "_blank", "noopener,noreferrer"),
       onError: (e) => toast.error(getApiError(e)),
     });
   }
@@ -610,7 +625,9 @@ function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
           <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium leading-none">AI search index</p>
+              <p className="text-xs font-medium leading-none">
+                AI search index
+              </p>
               <p className="text-[11px] text-muted-foreground mt-1">
                 {indexStatus.isLoading
                   ? "Checking…"
@@ -682,18 +699,30 @@ function ArticleEditor({
   const [excerpt, setExcerpt] = useState(article.excerpt ?? "");
   const [content, setContent] = useState(article.content ?? "");
   const [status, setStatus] = useState<KbArticleStatus>(article.status);
-  const [visibility, setVisibility] = useState<KbArticleVisibility>(article.visibility);
+  const [visibility, setVisibility] = useState<KbArticleVisibility>(
+    article.visibility,
+  );
   const [tagsInput, setTagsInput] = useState((article.tags ?? []).join(", "));
 
   const baseline = useMemo(() => articleToDraft(article), [article]);
   const [pendingDraft, setPendingDraft] = useState<ArticleDraft | null>(() => {
     const stored = readDraft(article.id);
     if (!stored) return null;
-    return JSON.stringify(stored) === JSON.stringify(articleToDraft(article)) ? null : stored;
+    return JSON.stringify(stored) === JSON.stringify(articleToDraft(article))
+      ? null
+      : stored;
   });
 
   const currentDraft = useMemo<ArticleDraft>(
-    () => ({ title, categoryId, excerpt, content, status, visibility, tagsInput }),
+    () => ({
+      title,
+      categoryId,
+      excerpt,
+      content,
+      status,
+      visibility,
+      tagsInput,
+    }),
     [title, categoryId, excerpt, content, status, visibility, tagsInput],
   );
   const debouncedDraft = useDebouncedValue(currentDraft, 1000);
@@ -836,7 +865,11 @@ function ArticleEditor({
         <div className="lg:col-span-2 space-y-4">
           <div className="space-y-1">
             <Label>Title *</Label>
-            <Input value={title} onChange={handleTitleChange} placeholder="Article title" />
+            <Input
+              value={title}
+              onChange={handleTitleChange}
+              placeholder="Article title"
+            />
           </div>
           <div className="space-y-1">
             <Label>Excerpt</Label>
@@ -869,9 +902,13 @@ function ArticleEditor({
               <Card>
                 <CardContent className="py-4">
                   {content.trim() ? (
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{content}</p>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                      {content}
+                    </p>
                   ) : (
-                    <p className="text-sm text-muted-foreground">Nothing to preview yet.</p>
+                    <p className="text-sm text-muted-foreground">
+                      Nothing to preview yet.
+                    </p>
                   )}
                 </CardContent>
               </Card>

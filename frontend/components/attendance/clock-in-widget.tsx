@@ -7,7 +7,7 @@ import {
   useHrAttendanceStatus,
   useHrCheckIn,
   useHrCheckOut,
-} from "@/lib/api/hooks";
+} from "@/hooks/api";
 import { toast } from "sonner";
 import { Clock, Loader2, Timer } from "lucide-react";
 
@@ -80,7 +80,8 @@ export function ClockInWidget() {
   };
 
   const sessionTime = useMemo(() => {
-    if (!statusData?.todayLog?.checkIn || statusData?.todayLog?.checkOut) return null;
+    if (!statusData?.todayLog?.checkIn || statusData?.todayLog?.checkOut)
+      return null;
     const checkInTime = new Date(statusData.todayLog.checkIn);
     const diffMs = now.getTime() - checkInTime.getTime();
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -113,22 +114,29 @@ export function ClockInWidget() {
           {dailyStats && parseFloat(dailyStats.workHours) > 0 && (
             <div className="text-xs text-muted-foreground">
               {parseFloat(dailyStats.workHours).toFixed(1)}h worked
-              {parseFloat(dailyStats.breakHours) > 0 && ` · ${parseFloat(dailyStats.breakHours).toFixed(1)}h break`}
+              {parseFloat(dailyStats.breakHours) > 0 &&
+                ` · ${parseFloat(dailyStats.breakHours).toFixed(1)}h break`}
             </div>
           )}
         </div>
       </div>
 
       <Button
-        variant={isCheckedIn || isOnBreak ? "outline" : isInCooldown ? "secondary" : "destructive"}
+        variant={
+          isCheckedIn || isOnBreak
+            ? "outline"
+            : isInCooldown
+              ? "secondary"
+              : "destructive"
+        }
         disabled={isPending || isInCooldown}
         onClick={handleClockAction}
         className={`font-bold px-6 py-2 h-auto text-xs tracking-wider rounded-sm shadow-lg ${
           isCheckedIn || isOnBreak
             ? "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
             : isInCooldown
-            ? "bg-muted text-muted-foreground cursor-not-allowed"
-            : "bg-red-600 hover:bg-red-700 text-white shadow-red-900/20"
+              ? "bg-muted text-muted-foreground cursor-not-allowed"
+              : "bg-red-600 hover:bg-red-700 text-white shadow-red-900/20"
         }`}
       >
         {isPending ? (

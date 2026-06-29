@@ -15,7 +15,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTimeIllustration } from "@/components/illustrations";
-import { useProfitLoss } from "@/lib/api/hooks/accounting";
+import { useProfitLoss } from "@/hooks/api/accounting";
 import type { ProfitLossRow } from "@/types/accounting";
 
 function pad2(n: number): string {
@@ -41,7 +41,13 @@ interface ReportCardProps {
   totalAmount: string;
 }
 
-function ReportCard({ title, tint, rows, totalLabel, totalAmount }: ReportCardProps) {
+function ReportCard({
+  title,
+  tint,
+  rows,
+  totalLabel,
+  totalAmount,
+}: ReportCardProps) {
   const tintClass =
     tint === "income"
       ? "bg-emerald-50 text-emerald-800 border-emerald-200/70"
@@ -58,38 +64,40 @@ function ReportCard({ title, tint, rows, totalLabel, totalAmount }: ReportCardPr
         </div>
       ) : (
         <div className="overflow-x-auto">
-        <Table className="min-w-[420px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[120px]">Code</TableHead>
-              <TableHead>Account</TableHead>
-              <TableHead className="w-[140px] text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.accountId}>
-                <TableCell className="font-mono text-xs text-foreground">
-                  {row.code}
+          <Table className="min-w-[420px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[120px]">Code</TableHead>
+                <TableHead>Account</TableHead>
+                <TableHead className="w-[140px] text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.accountId}>
+                  <TableCell className="font-mono text-xs text-foreground">
+                    {row.code}
+                  </TableCell>
+                  <TableCell className="text-sm text-foreground">
+                    {row.name}
+                  </TableCell>
+                  <TableCell className="text-sm text-right tabular-nums">
+                    {row.amount}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={2} className="text-sm font-semibold">
+                  {totalLabel}
                 </TableCell>
-                <TableCell className="text-sm text-foreground">{row.name}</TableCell>
-                <TableCell className="text-sm text-right tabular-nums">
-                  {row.amount}
+                <TableCell className="text-sm text-right tabular-nums font-semibold">
+                  {totalAmount}
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TableCell colSpan={2} className="text-sm font-semibold">
-                {totalLabel}
-              </TableCell>
-              <TableCell className="text-sm text-right tabular-nums font-semibold">
-                {totalAmount}
-              </TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
+            </TableFooter>
+          </Table>
         </div>
       )}
     </div>
@@ -192,7 +200,9 @@ export default function ProfitLossPage() {
               />
             </div>
             <div className="rounded-xl border border-border/60 bg-card px-5 py-4 flex items-center justify-between gap-4">
-              <span className="text-sm font-semibold text-foreground">Net income</span>
+              <span className="text-sm font-semibold text-foreground">
+                Net income
+              </span>
               <span className="font-mono tabular-nums text-base font-semibold text-foreground">
                 {pnl.netIncome}
               </span>

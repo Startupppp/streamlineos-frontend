@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { DS } from "@/lib/design-system";
-import { useCustomerLedger } from "@/lib/api/hooks/accounting";
+import { useCustomerLedger } from "@/hooks/api/accounting";
 
 interface CustomerLedgerDetailPageProps {
   params: Promise<{ clientId: string }>;
@@ -127,9 +127,7 @@ export default function CustomerLedgerDetailPage({
             label="Outstanding"
             value={summary ? formatCurrency(summary.outstanding) : "—"}
             icon={AlertCircle}
-            color={
-              summary && Number(summary.outstanding) > 0 ? "red" : "green"
-            }
+            color={summary && Number(summary.outstanding) > 0 ? "red" : "green"}
             index={2}
           />
         </div>
@@ -236,7 +234,9 @@ export default function CustomerLedgerDetailPage({
                       {line.description ?? ""}
                     </TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
-                      {Number(line.debit) > 0 ? formatCurrency(line.debit) : "—"}
+                      {Number(line.debit) > 0
+                        ? formatCurrency(line.debit)
+                        : "—"}
                     </TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       {Number(line.credit) > 0

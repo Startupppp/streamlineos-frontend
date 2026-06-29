@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { ShieldOff, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSignOut } from "@/hooks/auth-hooks";
+import { useSignOut } from "@/hooks/common/auth-hooks";
 
 export function NotActivatedPage() {
   const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
@@ -15,7 +15,6 @@ export function NotActivatedPage() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="flex flex-col items-center text-center max-w-md px-6"
       >
-
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

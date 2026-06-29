@@ -9,7 +9,7 @@ import {
   useProject,
   useSprints,
   useSubtasks,
-} from "@/lib/api/hooks";
+} from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ import { ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
-import { getSignedFileUrl, viewFile } from "@/hooks/use-file-url";
+import { getSignedFileUrl, viewFile } from "@/hooks/common/use-file-url";
 import { TicketHeader } from "./ticket-header";
 import { TicketSidebar } from "./ticket-sidebar";
 import { TicketSubtasks } from "./ticket-subtasks";
@@ -43,7 +43,9 @@ interface ProjectManager {
   email?: string | null;
 }
 
-function isProjectWithManager(data: unknown): data is { manager?: ProjectManager } {
+function isProjectWithManager(
+  data: unknown,
+): data is { manager?: ProjectManager } {
   return typeof data === "object" && data !== null && "manager" in data;
 }
 
@@ -124,13 +126,13 @@ export function TicketDetailsDialog({
         image: m.user!.image || null,
         email: m.user!.email || "",
       }));
-    const mgr = isProjectWithManager(projectData) ? projectData.manager : undefined;
+    const mgr = isProjectWithManager(projectData)
+      ? projectData.manager
+      : undefined;
     if (mgr && !list.some((m) => m.id === mgr.id)) {
       list.unshift({
         id: mgr.id,
-        name:
-          mgr.name ||
-          `${mgr.firstName || ""} ${mgr.lastName || ""}`.trim(),
+        name: mgr.name || `${mgr.firstName || ""} ${mgr.lastName || ""}`.trim(),
         firstName: mgr.firstName || undefined,
         lastName: mgr.lastName || undefined,
         image: mgr.image || null,
@@ -177,7 +179,7 @@ export function TicketDetailsDialog({
       setSaving(true);
       updateTicketMutation.mutate({ ticketId, ...field });
     },
-    [ticketId, updateTicketMutation]
+    [ticketId, updateTicketMutation],
   );
 
   const debouncedSave = useCallback(
@@ -189,7 +191,7 @@ export function TicketDetailsDialog({
         updateTicketMutation.mutate({ ticketId, ...field });
       }, 500);
     },
-    [ticketId, updateTicketMutation]
+    [ticketId, updateTicketMutation],
   );
 
   useEffect(() => {
@@ -215,7 +217,9 @@ export function TicketDetailsDialog({
     debouncedSave({ title: e.target.value });
   };
 
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleDescriptionChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
     setLocalDescription(e.target.value);
     debouncedSave({ description: e.target.value });
   };
@@ -250,7 +254,9 @@ export function TicketDetailsDialog({
               <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="h-6 w-6 text-muted-foreground" />
               </div>
-              <p className="font-medium text-foreground mb-1">Restricted Access</p>
+              <p className="font-medium text-foreground mb-1">
+                Restricted Access
+              </p>
               <p className="text-sm text-muted-foreground">
                 You can only view details of tickets assigned to you.
               </p>
@@ -304,7 +310,10 @@ export function TicketDetailsDialog({
                           className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
                         >
                           {att.mimeType?.startsWith("image/") ? (
-                            <AttachmentImage fileUrl={att.fileUrl} fileName={att.fileName} />
+                            <AttachmentImage
+                              fileUrl={att.fileUrl}
+                              fileName={att.fileName}
+                            />
                           ) : (
                             <div className="flex items-center justify-center h-full text-muted-foreground text-[10px] p-1 text-center">
                               {att.fileName}
@@ -319,10 +328,7 @@ export function TicketDetailsDialog({
                   </div>
                 )}
 
-                <TicketRelations
-                  ticketId={ticketId!}
-                  projectId={projectId}
-                />
+                <TicketRelations ticketId={ticketId!} projectId={projectId} />
 
                 <TicketTimeTracker
                   ticketId={ticketId!}
@@ -343,7 +349,10 @@ export function TicketDetailsDialog({
                 />
 
                 {ticketId ? (
-                  <TicketActivityLog ticketId={ticketId} projectId={projectId} />
+                  <TicketActivityLog
+                    ticketId={ticketId}
+                    projectId={projectId}
+                  />
                 ) : null}
               </div>
             </>

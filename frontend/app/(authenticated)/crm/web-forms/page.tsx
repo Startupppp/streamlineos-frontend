@@ -1,7 +1,17 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Globe, Plus, Copy, Check, Trash2, Pencil, FormInput, FileText, BarChart3 } from "lucide-react";
+import {
+  Globe,
+  Plus,
+  Copy,
+  Check,
+  Trash2,
+  Pencil,
+  FormInput,
+  FileText,
+  BarChart3,
+} from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
@@ -12,27 +22,55 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Sheet,
+  SheetContent,
+  SheetH@/hooks/api/crm
+  SheetTitle,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import {
-  useWebLeadForms, useCreateWebLeadForm, useUpdateWebLeadForm, useDeleteWebLeadForm,
-  type WebLeadForm, type WebLeadFormField,
-} from "@/lib/api/hooks/crm";
+  useWebLeadForms,
+  useCreateWebLeadForm,
+  useUpdateWebLeadForm,
+  useDeleteWebLeadForm,
+  type WebLeadForm,
+  type WebLeadFormField,
+} from "@/hooks/hooks/crm";
 
 const FIELD_TYPES = [
   { value: "text", label: "Text" },
@@ -49,11 +87,21 @@ function toSnakeCase(str: string): string {
     .replace(/^_+|_+$/g, "");
 }
 
-
-function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean; onClose: () => void }) {
+function EmbedDialog({
+  form,
+  open,
+  onClose,
+}: {
+  form: WebLeadForm;
+  open: boolean;
+  onClose: () => void;
+}) {
   const [copiedIframe, setCopiedIframe] = useState(false);
   const [copiedJs, setCopiedJs] = useState(false);
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://yourapp.com";
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://yourapp.com";
 
   const iframeSnippet = `<iframe src="${origin}/lead-form/${form.publicToken}" width="100%" height="600" frameborder="0"></iframe>`;
   const jsSnippet = `<script src="${origin}/lead-form/${form.publicToken}/embed.js"></script>\n<div id="streamlineos-form-${form.publicToken}"></div>`;
@@ -77,15 +125,24 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="truncate">Embed &quot;{form.name}&quot;</DialogTitle>
+          <DialogTitle className="truncate">
+            Embed &quot;{form.name}&quot;
+          </DialogTitle>
           <DialogDescription>
-            Copy a snippet below and paste it into your website. URLs are pre-filled with <span className="font-medium text-foreground break-all">{origin}</span> — update the domain if you embed on a different site.
+            Copy a snippet below and paste it into your website. URLs are
+            pre-filled with{" "}
+            <span className="font-medium text-foreground break-all">
+              {origin}
+            </span>{" "}
+            — update the domain if you embed on a different site.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">iFrame Snippet</Label>
+            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">
+              iFrame Snippet
+            </Label>
             <div className="relative">
               <pre className="bg-muted rounded-md p-3 pr-12 text-xs whitespace-pre-wrap break-all">
                 {iframeSnippet}
@@ -96,13 +153,19 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
                 className="absolute top-2 right-2"
                 onClick={handleCopyIframe}
               >
-                {copiedIframe ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                {copiedIframe ? (
+                  <Check className="h-4 w-4 text-emerald-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>
 
           <div>
-            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">JavaScript Snippet</Label>
+            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">
+              JavaScript Snippet
+            </Label>
             <div className="relative">
               <pre className="bg-muted rounded-md p-3 pr-12 text-xs whitespace-pre-wrap break-all">
                 {jsSnippet}
@@ -113,7 +176,11 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
                 className="absolute top-2 right-2"
                 onClick={handleCopyJs}
               >
-                {copiedJs ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                {copiedJs ? (
+                  <Check className="h-4 w-4 text-emerald-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>
@@ -122,7 +189,6 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
     </Dialog>
   );
 }
-
 
 interface FormBuilderProps {
   open: boolean;
@@ -134,10 +200,12 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
   const [name, setName] = useState(existing?.name ?? "");
   const [description, setDescription] = useState(existing?.description ?? "");
   const [submitMessage, setSubmitMessage] = useState(
-    existing?.submitMessage ?? "Thank you! We'll be in touch soon."
+    existing?.submitMessage ?? "Thank you! We'll be in touch soon.",
   );
   const [isActive, setIsActive] = useState(existing?.isActive ?? true);
-  const [fields, setFields] = useState<WebLeadFormField[]>(existing?.fields ?? []);
+  const [fields, setFields] = useState<WebLeadFormField[]>(
+    existing?.fields ?? [],
+  );
 
   const create = useCreateWebLeadForm();
   const update = useUpdateWebLeadForm();
@@ -146,20 +214,29 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
   const addField = useCallback(() => {
     setFields((prev) => [
       ...prev,
-      { name: `field_${prev.length + 1}`, label: "", type: "text", required: false },
+      {
+        name: `field_${prev.length + 1}`,
+        label: "",
+        type: "text",
+        required: false,
+      },
     ]);
   }, []);
 
-  const updateField = useCallback((index: number, patch: Partial<WebLeadFormField>) => {
-    setFields((prev) =>
-      prev.map((f, i) => {
-        if (i !== index) return f;
-        const updated = { ...f, ...patch };
-        if (patch.label !== undefined) updated.name = toSnakeCase(patch.label) || `field_${i}`;
-        return updated;
-      })
-    );
-  }, []);
+  const updateField = useCallback(
+    (index: number, patch: Partial<WebLeadFormField>) => {
+      setFields((prev) =>
+        prev.map((f, i) => {
+          if (i !== index) return f;
+          const updated = { ...f, ...patch };
+          if (patch.label !== undefined)
+            updated.name = toSnakeCase(patch.label) || `field_${i}`;
+          return updated;
+        }),
+      );
+    },
+    [],
+  );
 
   const removeField = useCallback((index: number) => {
     setFields((prev) => prev.filter((_, i) => i !== index));
@@ -171,7 +248,13 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
       return;
     }
 
-    const payload = { name: name.trim(), description: description || undefined, fields, submitMessage, isActive };
+    const payload = {
+      name: name.trim(),
+      description: description || undefined,
+      fields,
+      submitMessage,
+      isActive,
+    };
     try {
       if (existing) {
         await update.mutateAsync({ id: existing.id, ...payload });
@@ -184,11 +267,24 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
     } catch {
       toast.error("Failed to save form");
     }
-  }, [name, description, fields, submitMessage, isActive, existing, update, create, onClose]);
+  }, [
+    name,
+    description,
+    fields,
+    submitMessage,
+    isActive,
+    existing,
+    update,
+    create,
+    onClose,
+  ]);
 
-  const handleOpenChange = useCallback((o: boolean) => {
-    if (!o) onClose();
-  }, [onClose]);
+  const handleOpenChange = useCallback(
+    (o: boolean) => {
+      if (!o) onClose();
+    },
+    [onClose],
+  );
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -199,13 +295,26 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
 
         <div className="space-y-4 py-4">
           <div className="space-y-1">
-            <Label htmlFor="form-name">Form Name <span className="text-destructive">*</span></Label>
-            <Input id="form-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Contact Us" />
+            <Label htmlFor="form-name">
+              Form Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="form-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Contact Us"
+            />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="form-desc">Description</Label>
-            <Textarea id="form-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Optional description..." />
+            <Textarea
+              id="form-desc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              placeholder="Optional description..."
+            />
           </div>
 
           <div className="space-y-2">
@@ -224,28 +333,41 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
 
             <div className="space-y-3">
               {fields.map((field, i) => (
-                <div key={i} className="border rounded-md p-3 space-y-2 bg-muted/30">
+                <div
+                  key={i}
+                  className="border rounded-md p-3 space-y-2 bg-muted/30"
+                >
                   <div className="flex items-center gap-2">
                     <Input
                       placeholder="Field label"
                       value={field.label}
-                      onChange={(e) => updateField(i, { label: e.target.value })}
+                      onChange={(e) =>
+                        updateField(i, { label: e.target.value })
+                      }
                       className="flex-1"
                     />
                     <Select
                       value={field.type}
-                      onValueChange={(v) => updateField(i, { type: v as WebLeadFormField["type"] })}
+                      onValueChange={(v) =>
+                        updateField(i, { type: v as WebLeadFormField["type"] })
+                      }
                     >
                       <SelectTrigger className="w-32">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {FIELD_TYPES.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                          <SelectItem key={t.value} value={t.value}>
+                            {t.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button size="icon" variant="ghost" onClick={() => removeField(i)}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => removeField(i)}
+                    >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -256,8 +378,12 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
                       checked={field.required}
                       onCheckedChange={(v) => updateField(i, { required: v })}
                     />
-                    <Label htmlFor={`req-${i}`} className="text-xs">Required</Label>
-                    <span className="text-xs text-muted-foreground ml-auto">key: {field.name || "—"}</span>
+                    <Label htmlFor={`req-${i}`} className="text-xs">
+                      Required
+                    </Label>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      key: {field.name || "—"}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -275,22 +401,35 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Switch id="is-active" checked={isActive} onCheckedChange={setIsActive} />
+            <Switch
+              id="is-active"
+              checked={isActive}
+              onCheckedChange={setIsActive}
+            />
             <Label htmlFor="is-active">Active (accepts submissions)</Label>
           </div>
         </div>
 
         <SheetFooter className="flex-row gap-2 border-t pt-4">
-          <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button className="flex-1" onClick={handleSubmit} disabled={isPending}>
-            {isPending ? "Saving..." : existing ? "Save Changes" : "Create Form"}
+          <Button variant="outline" className="flex-1" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={handleSubmit}
+            disabled={isPending}
+          >
+            {isPending
+              ? "Saving..."
+              : existing
+                ? "Save Changes"
+                : "Create Form"}
           </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
   );
 }
-
 
 function WebFormCard({ form }: { form: WebLeadForm }) {
   const [embedOpen, setEmbedOpen] = useState(false);
@@ -314,20 +453,37 @@ function WebFormCard({ form }: { form: WebLeadForm }) {
       <Card className="flex flex-col">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-base leading-snug">{form.name}</CardTitle>
-            <Badge variant={form.isActive ? "default" : "secondary"} className="shrink-0">
+            <CardTitle className="text-base leading-snug">
+              {form.name}
+            </CardTitle>
+            <Badge
+              variant={form.isActive ? "default" : "secondary"}
+              className="shrink-0"
+            >
               {form.isActive ? "Active" : "Inactive"}
             </Badge>
           </div>
           {form.description && (
-            <CardDescription className="line-clamp-2">{form.description}</CardDescription>
+            <CardDescription className="line-clamp-2">
+              {form.description}
+            </CardDescription>
           )}
         </CardHeader>
 
         <CardContent className="flex-1 space-y-3">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span><span className="font-medium text-foreground">{form.fields?.length ?? 0}</span> fields</span>
-            <span><span className="font-medium text-foreground">{form.totalSubmissions ?? 0}</span> submissions</span>
+            <span>
+              <span className="font-medium text-foreground">
+                {form.fields?.length ?? 0}
+              </span>{" "}
+              fields
+            </span>
+            <span>
+              <span className="font-medium text-foreground">
+                {form.totalSubmissions ?? 0}
+              </span>{" "}
+              submissions
+            </span>
           </div>
 
           <div className="flex flex-wrap gap-2 pt-1">
@@ -339,7 +495,11 @@ function WebFormCard({ form }: { form: WebLeadForm }) {
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                >
                   <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
                 </Button>
               </AlertDialogTrigger>
@@ -347,12 +507,16 @@ function WebFormCard({ form }: { form: WebLeadForm }) {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Form</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete &quot;{form.name}&quot;? This cannot be undone.
+                    Are you sure you want to delete &quot;{form.name}&quot;?
+                    This cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
                     Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -363,11 +527,14 @@ function WebFormCard({ form }: { form: WebLeadForm }) {
       </Card>
 
       <EmbedDialog form={form} open={embedOpen} onClose={handleCloseEmbed} />
-      <FormBuilderSheet open={editOpen} onClose={handleCloseEdit} existing={form} />
+      <FormBuilderSheet
+        open={editOpen}
+        onClose={handleCloseEdit}
+        existing={form}
+      />
     </>
   );
 }
-
 
 function WebFormsLoadingSkeleton() {
   return (
@@ -408,11 +575,16 @@ export default function WebFormsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const { data: forms = [], isLoading, isError, refetch } = useWebLeadForms();
 
-  const totalSubmissions = forms.reduce((sum, f) => sum + (f.totalSubmissions ?? 0), 0);
+  const totalSubmissions = forms.reduce(
+    (sum, f) => sum + (f.totalSubmissions ?? 0),
+    0,
+  );
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <PageWrapper
@@ -429,8 +601,18 @@ export default function WebFormsPage() {
       ) : isError ? (
         <>
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <StatCard label="Total Forms" value={0} icon={FormInput} color="blue" />
-            <StatCard label="Total Submissions" value={0} icon={BarChart3} color="amber" />
+            <StatCard
+              label="Total Forms"
+              value={0}
+              icon={FormInput}
+              color="blue"
+            />
+            <StatCard
+              label="Total Submissions"
+              value={0}
+              icon={BarChart3}
+              color="amber"
+            />
           </div>
           <ErrorState
             title="Failed to load forms"
@@ -442,13 +624,25 @@ export default function WebFormsPage() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <StatCard label="Total Forms" value={forms.length} icon={FormInput} color="blue" />
-            <StatCard label="Total Submissions" value={totalSubmissions} icon={BarChart3} color="amber" />
+            <StatCard
+              label="Total Forms"
+              value={forms.length}
+              icon={FormInput}
+              color="blue"
+            />
+            <StatCard
+              label="Total Submissions"
+              value={totalSubmissions}
+              icon={BarChart3}
+              color="amber"
+            />
           </div>
 
           {forms.length === 0 ? (
             <EmptyState
-              illustration={<FileText className="h-12 w-12 text-muted-foreground" />}
+              illustration={
+                <FileText className="h-12 w-12 text-muted-foreground" />
+              }
               title="No forms yet"
               description="Create your first web form to start capturing leads from your website."
               action={{ label: "Create Form", onClick: handleOpenCreate }}

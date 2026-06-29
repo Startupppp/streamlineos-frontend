@@ -4,12 +4,19 @@ import { useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,@/hooks/api/accounting
+  TableRow,
+} from "@/components/ui/table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { useGstr3B } from "@/lib/api/hooks/accounting";
+import { useGstr3B } from "@/hooks/hooks/accounting";
 import type { Gstr3BTaxBlock } from "@/types/accounting";
 
 function firstOfMonth(): string {
@@ -31,10 +38,18 @@ function BlockRow({ label, block }: { label: string; block: Gstr3BTaxBlock }) {
   return (
     <TableRow>
       <TableCell>{label}</TableCell>
-      <TableCell className="text-right tabular-nums">{fmt(block.taxableValue)}</TableCell>
-      <TableCell className="text-right tabular-nums">{fmt(block.cgst)}</TableCell>
-      <TableCell className="text-right tabular-nums">{fmt(block.sgst)}</TableCell>
-      <TableCell className="text-right tabular-nums">{fmt(block.igst)}</TableCell>
+      <TableCell className="text-right tabular-nums">
+        {fmt(block.taxableValue)}
+      </TableCell>
+      <TableCell className="text-right tabular-nums">
+        {fmt(block.cgst)}
+      </TableCell>
+      <TableCell className="text-right tabular-nums">
+        {fmt(block.sgst)}
+      </TableCell>
+      <TableCell className="text-right tabular-nums">
+        {fmt(block.igst)}
+      </TableCell>
     </TableRow>
   );
 }
@@ -65,12 +80,32 @@ export default function Gstr3BPage() {
     >
       <div className="flex flex-col sm:flex-row gap-3 mb-4 items-end">
         <div>
-          <label htmlFor="gstr3b-from" className="text-sm text-muted-foreground block mb-1">From</label>
-          <Input id="gstr3b-from" type="date" value={from} onChange={handleFromChange} />
+          <label
+            htmlFor="gstr3b-from"
+            className="text-sm text-muted-foreground block mb-1"
+          >
+            From
+          </label>
+          <Input
+            id="gstr3b-from"
+            type="date"
+            value={from}
+            onChange={handleFromChange}
+          />
         </div>
         <div>
-          <label htmlFor="gstr3b-to" className="text-sm text-muted-foreground block mb-1">To</label>
-          <Input id="gstr3b-to" type="date" value={to} onChange={handleToChange} />
+          <label
+            htmlFor="gstr3b-to"
+            className="text-sm text-muted-foreground block mb-1"
+          >
+            To
+          </label>
+          <Input
+            id="gstr3b-to"
+            type="date"
+            value={to}
+            onChange={handleToChange}
+          />
         </div>
       </div>
 
@@ -88,10 +123,30 @@ export default function Gstr3BPage() {
         <div className="space-y-4">
           <Card className="p-4 bg-muted/40">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm tabular-nums">
-              <div><div className="text-muted-foreground">Net CGST</div><div className="font-mono text-base">{fmt(report.netTaxPayable.cgst)}</div></div>
-              <div><div className="text-muted-foreground">Net SGST</div><div className="font-mono text-base">{fmt(report.netTaxPayable.sgst)}</div></div>
-              <div><div className="text-muted-foreground">Net IGST</div><div className="font-mono text-base">{fmt(report.netTaxPayable.igst)}</div></div>
-              <div><div className="text-muted-foreground">Net tax payable</div><div className="font-mono text-base font-medium">{fmt(report.netTaxPayable.total)}</div></div>
+              <div>
+                <div className="text-muted-foreground">Net CGST</div>
+                <div className="font-mono text-base">
+                  {fmt(report.netTaxPayable.cgst)}
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Net SGST</div>
+                <div className="font-mono text-base">
+                  {fmt(report.netTaxPayable.sgst)}
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Net IGST</div>
+                <div className="font-mono text-base">
+                  {fmt(report.netTaxPayable.igst)}
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Net tax payable</div>
+                <div className="font-mono text-base font-medium">
+                  {fmt(report.netTaxPayable.total)}
+                </div>
+              </div>
             </div>
           </Card>
 
@@ -110,14 +165,27 @@ export default function Gstr3BPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <BlockRow label="(a) Taxable outward supplies" block={report.outward.taxable} />
-                <BlockRow label="(b) Zero-rated supplies" block={report.outward.zeroRated} />
-                <BlockRow label="(c) Nil-rated / exempted" block={report.outward.nilExempted} />
-                <BlockRow label="(d) Reverse charge" block={report.outward.reverseCharge} />
+                <BlockRow
+                  label="(a) Taxable outward supplies"
+                  block={report.outward.taxable}
+                />
+                <BlockRow
+                  label="(b) Zero-rated supplies"
+                  block={report.outward.zeroRated}
+                />
+                <BlockRow
+                  label="(c) Nil-rated / exempted"
+                  block={report.outward.nilExempted}
+                />
+                <BlockRow
+                  label="(d) Reverse charge"
+                  block={report.outward.reverseCharge}
+                />
               </TableBody>
             </Table>
             <div className="px-4 py-2 text-xs text-muted-foreground border-t border-slate-200/60">
-              {report.invoiceCount} invoice{report.invoiceCount === 1 ? "" : "s"} in period
+              {report.invoiceCount} invoice
+              {report.invoiceCount === 1 ? "" : "s"} in period
             </div>
           </Card>
 
@@ -136,13 +204,23 @@ export default function Gstr3BPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <BlockRow label="(A) ITC available" block={report.itc.available} />
-                <BlockRow label="(B) ITC reversed" block={report.itc.reversed} />
-                <BlockRow label="(C) Net ITC available" block={report.itc.net} />
+                <BlockRow
+                  label="(A) ITC available"
+                  block={report.itc.available}
+                />
+                <BlockRow
+                  label="(B) ITC reversed"
+                  block={report.itc.reversed}
+                />
+                <BlockRow
+                  label="(C) Net ITC available"
+                  block={report.itc.net}
+                />
               </TableBody>
             </Table>
             <div className="px-4 py-2 text-xs text-muted-foreground border-t border-slate-200/60">
-              {report.billCount} purchase bill{report.billCount === 1 ? "" : "s"} in period
+              {report.billCount} purchase bill
+              {report.billCount === 1 ? "" : "s"} in period
             </div>
           </Card>
         </div>

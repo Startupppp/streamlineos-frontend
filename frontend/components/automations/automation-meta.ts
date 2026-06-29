@@ -1,4 +1,8 @@
-import type { AutomationTrigger, AutomationActionType, AutomationConditionOp } from "@/lib/api/hooks/automations";
+import type {@/hooks/api/automations
+  AutomationTrigger,
+  AutomationActionType,
+  AutomationConditionOp,
+} from "@/hooks/hooks/automations";
 
 export interface TriggerMeta {
   value: AutomationTrigger;
@@ -163,9 +167,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "scorecard.submitted",
     label: "Scorecard submitted",
     description: "Runs when an interviewer submits an evaluation scorecard",
-    fields: [
-      { value: "recommendation", label: "Recommendation" },
-    ],
+    fields: [{ value: "recommendation", label: "Recommendation" }],
     samplePayload: {
       interviewId: 1,
       candidateId: 1,
@@ -196,9 +198,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "offer.accepted",
     label: "Offer accepted",
     description: "Runs when a candidate accepts a job offer",
-    fields: [
-      { value: "decision", label: "Decision" },
-    ],
+    fields: [{ value: "decision", label: "Decision" }],
     samplePayload: {
       offerId: 1,
       candidateId: 1,
@@ -213,9 +213,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "offer.rejected",
     label: "Offer declined",
     description: "Runs when a candidate declines a job offer",
-    fields: [
-      { value: "decision", label: "Decision" },
-    ],
+    fields: [{ value: "decision", label: "Decision" }],
     samplePayload: {
       offerId: 1,
       candidateId: 1,
@@ -229,10 +227,9 @@ export const TRIGGER_META: TriggerMeta[] = [
   {
     value: "candidate.bgv_status_changed",
     label: "BGV status changed",
-    description: "Runs when a candidate's background verification status changes",
-    fields: [
-      { value: "newBgvStatus", label: "New BGV status" },
-    ],
+    description:
+      "Runs when a candidate's background verification status changes",
+    fields: [{ value: "newBgvStatus", label: "New BGV status" }],
     samplePayload: {
       candidateId: 1,
       candidateName: "Jane Smith",
@@ -245,7 +242,8 @@ export const TRIGGER_META: TriggerMeta[] = [
   {
     value: "sla.breached",
     label: "Recruitment SLA breached",
-    description: "Runs when a candidate has been in a stage beyond the allowed time",
+    description:
+      "Runs when a candidate has been in a stage beyond the allowed time",
     fields: [
       { value: "stage", label: "Stage" },
       { value: "hoursInStage", label: "Hours in stage" },
@@ -276,7 +274,8 @@ export const TRIGGER_META: TriggerMeta[] = [
   {
     value: "onboarding.task_overdue",
     label: "Onboarding task overdue",
-    description: "Runs when an onboarding task passes its due date without completion",
+    description:
+      "Runs when an onboarding task passes its due date without completion",
     fields: [
       { value: "ownerRole", label: "Task owner role" },
       { value: "daysOverdue", label: "Days overdue" },
@@ -385,10 +384,9 @@ export const TRIGGER_META: TriggerMeta[] = [
   {
     value: "attendance.anomaly",
     label: "Attendance anomaly",
-    description: "Runs when an employee has missed check-ins beyond a threshold",
-    fields: [
-      { value: "missedDays", label: "Missed days" },
-    ],
+    description:
+      "Runs when an employee has missed check-ins beyond a threshold",
+    fields: [{ value: "missedDays", label: "Missed days" }],
     samplePayload: {
       userId: "",
       employeeName: "Jane Smith",
@@ -444,10 +442,9 @@ export const TRIGGER_META: TriggerMeta[] = [
   {
     value: "certification.expiring",
     label: "Certification expiring",
-    description: "Runs when an employee certification is within 30 days of expiry",
-    fields: [
-      { value: "daysUntilExpiry", label: "Days until expiry" },
-    ],
+    description:
+      "Runs when an employee certification is within 30 days of expiry",
+    fields: [{ value: "daysUntilExpiry", label: "Days until expiry" }],
     samplePayload: {
       certificationId: 1,
       userId: "",
@@ -504,9 +501,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "reimbursement.approved",
     label: "Reimbursement approved",
     description: "Runs when a reimbursement request is approved",
-    fields: [
-      { value: "decision", label: "Decision" },
-    ],
+    fields: [{ value: "decision", label: "Decision" }],
     samplePayload: {
       reimbursementId: 1,
       userId: "",
@@ -520,9 +515,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "reimbursement.rejected",
     label: "Reimbursement rejected",
     description: "Runs when a reimbursement request is rejected",
-    fields: [
-      { value: "decision", label: "Decision" },
-    ],
+    fields: [{ value: "decision", label: "Decision" }],
     samplePayload: {
       reimbursementId: 1,
       userId: "",
@@ -534,21 +527,46 @@ export const TRIGGER_META: TriggerMeta[] = [
   },
 ];
 
-export const CONDITION_OPS: { value: AutomationConditionOp; label: string }[] = [
-  { value: "eq", label: "equals" },
-  { value: "neq", label: "not equals" },
-  { value: "contains", label: "contains" },
-  { value: "gt", label: "greater than" },
-  { value: "lt", label: "less than" },
-  { value: "exists", label: "exists" },
-];
+export const CONDITION_OPS: { value: AutomationConditionOp; label: string }[] =
+  [
+    { value: "eq", label: "equals" },
+    { value: "neq", label: "not equals" },
+    { value: "contains", label: "contains" },
+    { value: "gt", label: "greater than" },
+    { value: "lt", label: "less than" },
+    { value: "exists", label: "exists" },
+  ];
 
-export const ACTION_TYPES: { value: AutomationActionType; label: string; description: string }[] = [
-  { value: "notify_roles", label: "Notify roles", description: "In-app notification to members with given roles" },
-  { value: "notify_all", label: "Notify everyone", description: "In-app notification to all org members" },
-  { value: "email", label: "Send email", description: "Send an email to a fixed address" },
-  { value: "create_task", label: "Create task", description: "Create a follow-up task" },
-  { value: "webhook", label: "Fire webhook", description: "Dispatch an outbound webhook event" },
+export const ACTION_TYPES: {
+  value: AutomationActionType;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "notify_roles",
+    label: "Notify roles",
+    description: "In-app notification to members with given roles",
+  },
+  {
+    value: "notify_all",
+    label: "Notify everyone",
+    description: "In-app notification to all org members",
+  },
+  {
+    value: "email",
+    label: "Send email",
+    description: "Send an email to a fixed address",
+  },
+  {
+    value: "create_task",
+    label: "Create task",
+    description: "Create a follow-up task",
+  },
+  {
+    value: "webhook",
+    label: "Fire webhook",
+    description: "Dispatch an outbound webhook event",
+  },
 ];
 
 export function getTriggerMeta(trigger: AutomationTrigger): TriggerMeta {

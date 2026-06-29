@@ -3,9 +3,20 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  FileDown, FileSpreadsheet, Filter, TrendingUp, Users,
-  Target, UserCheck, Calendar, BarChart3, ArrowDown, X, AlertTriangle, Clock,
-} from "lucide-react";
+  FileDown,
+  FileSpreadsheet,
+  Filter,
+  TrendingUp,
+  Users,
+  Target,
+  UserCheck,
+  Calendar,
+  BarChart3,
+  ArrowDown,
+  X,
+  AlertTriangle,
+  Clock,
+} from "lucide-react";@/hooks/api/leads
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp, scaleIn } from "@/lib/motion-variants";
-import { useLeadStats, useLeadSlaAlerts } from "@/lib/api/hooks/leads";
+import { useLeadStats, useLeadSlaAlerts } from "@/hooks/hooks/leads";
 import { toast } from "sonner";
 
 const PIPELINE_COLORS: Record<string, { color: string; bg: string }> = {
@@ -45,7 +56,9 @@ export default function CrmReportsPage() {
   const { data: stats, isLoading, isError, refetch } = useLeadStats(statsInput);
   const { data: slaData } = useLeadSlaAlerts();
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleApplyFilter = useCallback(() => {
     setAppliedFrom(dateFrom);
@@ -72,7 +85,10 @@ export default function CrmReportsPage() {
       ws1.addRows([
         { metric: "Total Leads", value: stats.total },
         { metric: "Conversion Rate", value: `${stats.conversionRate}%` },
-        { metric: "Total Potential Value", value: `₹${stats.totalPotentialValue.toLocaleString("en-IN")}` },
+        {
+          metric: "Total Potential Value",
+          value: `₹${stats.totalPotentialValue.toLocaleString("en-IN")}`,
+        },
         { metric: "Unassigned Leads", value: stats.unassigned },
         { metric: "New This Month", value: stats.thisMonth },
       ]);
@@ -87,12 +103,17 @@ export default function CrmReportsPage() {
         Object.entries(stats.byStatus).map(([status, count]) => ({
           status,
           count,
-          percentage: stats.total > 0 ? `${((count / stats.total) * 100).toFixed(1)}%` : "0%",
-        }))
+          percentage:
+            stats.total > 0
+              ? `${((count / stats.total) * 100).toFixed(1)}%`
+              : "0%",
+        })),
       );
 
       const buffer = await wb.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -122,7 +143,11 @@ export default function CrmReportsPage() {
       doc.setFontSize(11);
       doc.text(`Total Leads: ${stats.total}`, 20, 60);
       doc.text(`Conversion Rate: ${stats.conversionRate}%`, 20, 68);
-      doc.text(`Total Potential Value: INR ${stats.totalPotentialValue.toLocaleString("en-IN")}`, 20, 76);
+      doc.text(
+        `Total Potential Value: INR ${stats.totalPotentialValue.toLocaleString("en-IN")}`,
+        20,
+        76,
+      );
       doc.text(`Unassigned: ${stats.unassigned}`, 20, 84);
       doc.text(`New This Month: ${stats.thisMonth}`, 20, 92);
 
@@ -131,7 +156,8 @@ export default function CrmReportsPage() {
       doc.setFontSize(11);
       let y = 120;
       for (const [status, count] of Object.entries(stats.byStatus)) {
-        const pct = stats.total > 0 ? ((count / stats.total) * 100).toFixed(1) : "0";
+        const pct =
+          stats.total > 0 ? ((count / stats.total) * 100).toFixed(1) : "0";
         doc.text(`${status}: ${count} (${pct}%)`, 20, y);
         y += 8;
       }
@@ -157,7 +183,10 @@ export default function CrmReportsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="CRM Reports" subtitle="Analytics, pipeline insights, and exportable reports">
+      <PageWrapper
+        title="CRM Reports"
+        subtitle="Analytics, pipeline insights, and exportable reports"
+      >
         <div className="space-y-6">
           <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -170,14 +199,22 @@ export default function CrmReportsPage() {
             ))}
           </div>
           <Card className="shadow-sm">
-            <CardHeader className="pb-2"><Skeleton className="h-4 w-40" /></CardHeader>
+            <CardHeader className="pb-2">
+              <Skeleton className="h-4 w-40" />
+            </CardHeader>
             <CardContent className="space-y-3">
-              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-full" />
+              ))}
             </CardContent>
           </Card>
           <Card className="shadow-sm">
-            <CardHeader className="pb-2"><Skeleton className="h-4 w-36" /></CardHeader>
-            <CardContent><Skeleton className="h-64 w-full" /></CardContent>
+            <CardHeader className="pb-2">
+              <Skeleton className="h-4 w-36" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-64 w-full" />
+            </CardContent>
           </Card>
         </div>
       </PageWrapper>
@@ -186,12 +223,19 @@ export default function CrmReportsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="CRM Reports" subtitle="Analytics, pipeline insights, and exportable reports">
+      <PageWrapper
+        title="CRM Reports"
+        subtitle="Analytics, pipeline insights, and exportable reports"
+      >
         <div className="flex flex-1 h-full flex-col items-center justify-center gap-3 text-center py-16">
           <AlertTriangle className="h-10 w-10 text-destructive/60" />
           <p className="text-sm font-medium">Failed to load report data</p>
-          <p className="text-xs text-muted-foreground">Check your connection and try again.</p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
+          <p className="text-xs text-muted-foreground">
+            Check your connection and try again.
+          </p>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
+            Retry
+          </Button>
         </div>
       </PageWrapper>
     );
@@ -204,11 +248,19 @@ export default function CrmReportsPage() {
       filters={
         <>
           <div>
-            <Label htmlFor="dateFrom" className="text-xs text-muted-foreground">From</Label>
-            <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="From date" />
+            <Label htmlFor="dateFrom" className="text-xs text-muted-foreground">
+              From
+            </Label>
+            <DatePicker
+              value={dateFrom}
+              onChange={setDateFrom}
+              placeholder="From date"
+            />
           </div>
           <div>
-            <Label htmlFor="dateTo" className="text-xs text-muted-foreground">To</Label>
+            <Label htmlFor="dateTo" className="text-xs text-muted-foreground">
+              To
+            </Label>
             <DatePicker
               value={dateTo}
               onChange={setDateTo}
@@ -259,16 +311,32 @@ export default function CrmReportsPage() {
               <CardContent>
                 <div className="space-y-2 max-h-[200px] overflow-y-auto">
                   {slaData.leads.slice(0, 10).map((lead) => (
-                    <div key={lead.leadId} className="flex items-center justify-between p-2 rounded-lg bg-red-500/5 border border-red-500/10">
+                    <div
+                      key={lead.leadId}
+                      className="flex items-center justify-between p-2 rounded-lg bg-red-500/5 border border-red-500/10"
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 text-sm font-medium">{lead.leadName}</div>
-                        <Badge variant="outline" className="text-[10px]">{lead.status}</Badge>
+                        <div className="flex items-center gap-1.5 text-sm font-medium">
+                          {lead.leadName}
+                        </div>
+                        <Badge variant="outline" className="text-[10px]">
+                          {lead.status}
+                        </Badge>
                         {lead.priority && (
-                          <Badge variant="outline" className={cn("text-[10px]",
-                            lead.priority === "HOT" && "border-red-500/50 text-red-500",
-                            lead.priority === "WARM" && "border-amber-500/50 text-amber-500",
-                            lead.priority === "COLD" && "border-blue-400/50 text-blue-400",
-                          )}>{lead.priority}</Badge>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px]",
+                              lead.priority === "HOT" &&
+                                "border-red-500/50 text-red-500",
+                              lead.priority === "WARM" &&
+                                "border-amber-500/50 text-amber-500",
+                              lead.priority === "COLD" &&
+                                "border-blue-400/50 text-blue-400",
+                            )}
+                          >
+                            {lead.priority}
+                          </Badge>
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -288,20 +356,57 @@ export default function CrmReportsPage() {
           <motion.div variants={fadeUp}>
             <div className="flex flex-1 h-full flex-col items-center justify-center gap-3 text-center py-20">
               <BarChart3 className="h-10 w-10 text-muted-foreground/40" />
-              <p className="text-sm font-medium text-muted-foreground">No report data available</p>
-              <p className="text-xs text-muted-foreground">Apply a date filter or wait for data to load.</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                No report data available
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Apply a date filter or wait for data to load.
+              </p>
             </div>
           </motion.div>
         )}
 
         {stats && (
           <>
-            <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-              <StatCard label="Total Leads" value={stats.total} icon={Users} color="blue" index={0} />
-              <StatCard label="Conversion Rate" value={`${stats.conversionRate}%`} icon={TrendingUp} color="green" index={1} />
-              <StatCard label="Potential Value" value={`₹${(stats.totalPotentialValue / 100000).toFixed(1)}L`} icon={Target} color="cyan" index={2} />
-              <StatCard label="Unassigned" value={stats.unassigned} icon={UserCheck} color="red" index={3} />
-              <StatCard label="New This Month" value={stats.thisMonth} icon={Calendar} color="violet" index={4} />
+            <motion.div
+              variants={fadeUp}
+              className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+            >
+              <StatCard
+                label="Total Leads"
+                value={stats.total}
+                icon={Users}
+                color="blue"
+                index={0}
+              />
+              <StatCard
+                label="Conversion Rate"
+                value={`${stats.conversionRate}%`}
+                icon={TrendingUp}
+                color="green"
+                index={1}
+              />
+              <StatCard
+                label="Potential Value"
+                value={`₹${(stats.totalPotentialValue / 100000).toFixed(1)}L`}
+                icon={Target}
+                color="cyan"
+                index={2}
+              />
+              <StatCard
+                label="Unassigned"
+                value={stats.unassigned}
+                icon={UserCheck}
+                color="red"
+                index={3}
+              />
+              <StatCard
+                label="New This Month"
+                value={stats.thisMonth}
+                icon={Calendar}
+                color="violet"
+                index={4}
+              />
             </motion.div>
 
             <motion.div variants={fadeUp}>
@@ -315,19 +420,30 @@ export default function CrmReportsPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {Object.entries(stats.byStatus).map(([status, count]) => {
-                      const pct = stats.total > 0 ? (count / stats.total) * 100 : 0;
-                      const config = PIPELINE_COLORS[status] || PIPELINE_COLORS.NEW;
+                      const pct =
+                        stats.total > 0 ? (count / stats.total) * 100 : 0;
+                      const config =
+                        PIPELINE_COLORS[status] || PIPELINE_COLORS.NEW;
 
                       return (
                         <motion.div key={status} variants={scaleIn}>
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: config.color }} />
-                              <span className="text-sm font-medium">{status}</span>
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: config.color }}
+                              />
+                              <span className="text-sm font-medium">
+                                {status}
+                              </span>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-sm font-bold tabular-nums">{count}</span>
-                              <span className="text-xs text-muted-foreground w-12 text-right">{pct.toFixed(1)}%</span>
+                              <span className="text-sm font-bold tabular-nums">
+                                {count}
+                              </span>
+                              <span className="text-xs text-muted-foreground w-12 text-right">
+                                {pct.toFixed(1)}%
+                              </span>
                             </div>
                           </div>
                           <div
@@ -342,7 +458,9 @@ export default function CrmReportsPage() {
                               className="h-full rounded-full"
                               style={{ backgroundColor: config.color }}
                               initial={{ width: 0 }}
-                              animate={{ width: `${(count / maxPipelineCount) * 100}%` }}
+                              animate={{
+                                width: `${(count / maxPipelineCount) * 100}%`,
+                              }}
                               transition={{ duration: 0.6, delay: 0.3 }}
                             />
                           </div>
@@ -364,8 +482,16 @@ export default function CrmReportsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col items-center gap-2 py-4">
-                    {["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED"].map((status, i, arr) => {
-                      const count = stats.byStatus[status as keyof typeof stats.byStatus] ?? 0;
+                    {[
+                      "NEW",
+                      "CONTACTED",
+                      "INTERESTED",
+                      "QUALIFIED",
+                      "CONVERTED",
+                    ].map((status, i, arr) => {
+                      const count =
+                        stats.byStatus[status as keyof typeof stats.byStatus] ??
+                        0;
                       const maxCount = stats.byStatus.NEW || 1;
                       const widthPct = Math.max(20, (count / maxCount) * 100);
                       const config = PIPELINE_COLORS[status];
@@ -386,10 +512,15 @@ export default function CrmReportsPage() {
                               borderLeft: `3px solid ${config.color}`,
                             }}
                           >
-                            <span className="text-sm font-semibold" style={{ color: config.color }}>
+                            <span
+                              className="text-sm font-semibold"
+                              style={{ color: config.color }}
+                            >
                               {status}
                             </span>
-                            <Badge variant="secondary" className="text-xs">{count}</Badge>
+                            <Badge variant="secondary" className="text-xs">
+                              {count}
+                            </Badge>
                           </div>
                           {i < arr.length - 1 && (
                             <ArrowDown className="h-4 w-4 text-muted-foreground/30 my-1" />

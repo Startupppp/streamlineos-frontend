@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { usePurchaseBill, usePostPurchaseBill } from "@/lib/api/hooks/accounting";
+import { usePurchaseBill, usePostPurchaseBill } from "@/hooks/api/accounting";
 import { RecordVendorPaymentDialog } from "@/features/accounting/record-vendor-payment-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { PurchaseBillStatus } from "@/types/accounting";
@@ -56,17 +56,26 @@ function formatDate(value: string | null | undefined): string {
   const d = new Date(value);
   return Number.isNaN(d.getTime())
     ? value
-    : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+    : d.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+      });
 }
 
 function formatNum(value: string | number): string {
   const n = typeof value === "string" ? Number(value) : value;
   return Number.isFinite(n)
-    ? n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    ? n.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
     : "—";
 }
 
-export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPageProps) {
+export default function PurchaseBillDetailPage({
+  params,
+}: PurchaseBillDetailPageProps) {
   const { billId } = use(params);
   const id = Number(billId);
 
@@ -83,7 +92,8 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
   const total = Number(bill?.total ?? 0);
   const outstanding = total - amountPaid;
   const canRecordPayment =
-    (bill?.status === "POSTED" || bill?.status === "PARTIALLY_PAID") && outstanding > 0.005;
+    (bill?.status === "POSTED" || bill?.status === "PARTIALLY_PAID") &&
+    outstanding > 0.005;
 
   const handleOpenPostDialog = useCallback(() => {
     setPostDialogOpen(true);
@@ -129,13 +139,21 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
       actions={
         <div className="flex items-center gap-2">
           {canPost && (
-            <Button size="sm" onClick={handleOpenPostDialog} disabled={postMutation.isPending}>
+            <Button
+              size="sm"
+              onClick={handleOpenPostDialog}
+              disabled={postMutation.isPending}
+            >
               <Send className="mr-1 h-4 w-4" />
               Post bill
             </Button>
           )}
           {canRecordPayment && (
-            <Button size="sm" variant="outline" onClick={handleOpenPaymentDialog}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleOpenPaymentDialog}
+            >
               <CreditCard className="mr-1 h-4 w-4" />
               Record payment
             </Button>
@@ -169,7 +187,9 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
               <CardContent className="p-5">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4 text-sm">
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Status</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                      Status
+                    </p>
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${STATUS_CLASS[bill.status]}`}
                     >
@@ -177,45 +197,85 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
                     </span>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor</p>
-                    <p className="text-sm text-foreground">{bill.vendorName ?? "—"}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                      Vendor
+                    </p>
+                    <p className="text-sm text-foreground">
+                      {bill.vendorName ?? "—"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor bill #</p>
-                    <p className="text-sm text-foreground">{bill.vendorBillNumber ?? "—"}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                      Vendor bill #
+                    </p>
+                    <p className="text-sm text-foreground">
+                      {bill.vendorBillNumber ?? "—"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Bill date</p>
-                    <p className="text-sm tabular-nums text-foreground">{formatDate(bill.billDate)}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                      Bill date
+                    </p>
+                    <p className="text-sm tabular-nums text-foreground">
+                      {formatDate(bill.billDate)}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Due date</p>
-                    <p className="text-sm tabular-nums text-foreground">{formatDate(bill.dueDate)}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                      Due date
+                    </p>
+                    <p className="text-sm tabular-nums text-foreground">
+                      {formatDate(bill.dueDate)}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Place of supply</p>
-                    <p className="text-sm text-foreground">{bill.placeOfSupply ?? "—"}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                      Place of supply
+                    </p>
+                    <p className="text-sm text-foreground">
+                      {bill.placeOfSupply ?? "—"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor GSTIN</p>
-                    <p className="text-sm font-mono text-foreground">{bill.vendorGstin ?? "—"}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                      Vendor GSTIN
+                    </p>
+                    <p className="text-sm font-mono text-foreground">
+                      {bill.vendorGstin ?? "—"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Supplier GSTIN</p>
-                    <p className="text-sm font-mono text-foreground">{bill.supplierGstin ?? "—"}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                      Supplier GSTIN
+                    </p>
+                    <p className="text-sm font-mono text-foreground">
+                      {bill.supplierGstin ?? "—"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Reverse charge</p>
-                    <p className="text-sm text-foreground">{bill.reverseCharge ? "Yes" : "No"}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                      Reverse charge
+                    </p>
+                    <p className="text-sm text-foreground">
+                      {bill.reverseCharge ? "Yes" : "No"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Expense account</p>
-                    <p className="text-sm font-mono text-foreground">{bill.expenseAccountCode ?? "—"}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                      Expense account
+                    </p>
+                    <p className="text-sm font-mono text-foreground">
+                      {bill.expenseAccountCode ?? "—"}
+                    </p>
                   </div>
                   {bill.notes && (
                     <div className="col-span-2 sm:col-span-4">
-                      <p className="text-[11px] font-medium text-muted-foreground mb-1">Notes</p>
-                      <p className="text-sm text-foreground leading-relaxed">{bill.notes}</p>
+                      <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                        Notes
+                      </p>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {bill.notes}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -239,30 +299,47 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
                 <TableBody>
                   {bill.items.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
+                      <TableCell
+                        colSpan={8}
+                        className="text-center text-sm text-muted-foreground py-8"
+                      >
                         No line items
                       </TableCell>
                     </TableRow>
                   ) : (
                     bill.items.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="text-sm text-foreground">{item.description}</TableCell>
+                        <TableCell className="text-sm text-foreground">
+                          {item.description}
+                        </TableCell>
                         <TableCell className="text-sm font-mono text-muted-foreground">
                           {item.hsnSacCode ?? "—"}
                         </TableCell>
-                        <TableCell className="text-right text-sm tabular-nums">{formatNum(item.quantity)}</TableCell>
-                        <TableCell className="text-right text-sm tabular-nums">{formatNum(item.rate)}</TableCell>
-                        <TableCell className="text-right text-sm tabular-nums">{formatNum(item.gstRate)}%</TableCell>
-                        <TableCell className="text-right text-sm tabular-nums">{formatNum(item.amount)}</TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">
+                          {formatNum(item.quantity)}
+                        </TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">
+                          {formatNum(item.rate)}
+                        </TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">
+                          {formatNum(item.gstRate)}%
+                        </TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">
+                          {formatNum(item.amount)}
+                        </TableCell>
                         <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
                           {formatNum(
-                            (Number(item.quantity) * Number(item.rate) * Number(item.gstRate)) / 100,
+                            (Number(item.quantity) *
+                              Number(item.rate) *
+                              Number(item.gstRate)) /
+                              100,
                           )}
                         </TableCell>
                         <TableCell className="text-right text-sm tabular-nums font-medium">
                           {formatNum(
-                            Number(item.quantity) * Number(item.rate) *
-                            (1 + Number(item.gstRate) / 100),
+                            Number(item.quantity) *
+                              Number(item.rate) *
+                              (1 + Number(item.gstRate) / 100),
                           )}
                         </TableCell>
                       </TableRow>
@@ -313,7 +390,13 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
                   </div>
                   <div className="flex justify-between font-medium">
                     <span>Outstanding</span>
-                    <span className={outstanding > 0.005 ? "text-amber-600" : "text-emerald-600"}>
+                    <span
+                      className={
+                        outstanding > 0.005
+                          ? "text-amber-600"
+                          : "text-emerald-600"
+                      }
+                    >
                       {formatNum(outstanding)}
                     </span>
                   </div>
@@ -323,7 +406,9 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
 
             {bill.payments && bill.payments.length > 0 && (
               <div className="space-y-2">
-                <h2 className="text-sm font-semibold text-foreground">Payments</h2>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Payments
+                </h2>
                 <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
                   <Table>
                     <TableHeader>
@@ -337,9 +422,12 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
                     <TableBody>
                       {bill.payments.map((payment) => (
                         <TableRow key={payment.id}>
-                          <TableCell className="text-sm tabular-nums">{formatDate(payment.paymentDate)}</TableCell>
+                          <TableCell className="text-sm tabular-nums">
+                            {formatDate(payment.paymentDate)}
+                          </TableCell>
                           <TableCell className="text-sm">
-                            {PAYMENT_METHOD_LABEL[payment.paymentMethod] ?? payment.paymentMethod}
+                            {PAYMENT_METHOD_LABEL[payment.paymentMethod] ??
+                              payment.paymentMethod}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground font-mono">
                             {payment.referenceNumber ?? "—"}

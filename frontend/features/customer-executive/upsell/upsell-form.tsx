@@ -29,7 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useSimpleClientsList } from "@/lib/api/hooks/crm";
+import { useSimpleClientsList } from "@/hooks/api/crm";
 import { STAGES } from "./upsell-list";
 import type { OppStage } from "./upsell-list";
 
@@ -76,38 +76,43 @@ export function UpsellFormSheet({
 
   const handleClientChange = useCallback(
     (v: string) => onFormChange({ clientId: v }),
-    [onFormChange]
+    [onFormChange],
   );
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) =>
       onFormChange({ title: e.target.value }),
-    [onFormChange]
+    [onFormChange],
   );
   const handleTypeChange = useCallback(
     (v: string) => onFormChange({ type: v as OppType }),
-    [onFormChange]
+    [onFormChange],
   );
   const handleStageChange = useCallback(
     (v: string) => onFormChange({ stage: v as OppStage }),
-    [onFormChange]
+    [onFormChange],
   );
   const handleValueChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) =>
       onFormChange({ value: e.target.value }),
-    [onFormChange]
+    [onFormChange],
   );
   const handleDateChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) =>
       onFormChange({ expectedCloseDate: e.target.value }),
-    [onFormChange]
+    [onFormChange],
   );
   const handleNotesChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) =>
       onFormChange({ notes: e.target.value }),
-    [onFormChange]
+    [onFormChange],
   );
 
-  const handleOpenChange = useCallback((v: boolean) => { if (!v) onCancel(); }, [onCancel]);
+  const handleOpenChange = useCallback(
+    (v: boolean) => {
+      if (!v) onCancel();
+    },
+    [onCancel],
+  );
   const handleCancel = useCallback(() => onCancel(), [onCancel]);
   const handleSubmit = useCallback(() => onSubmit(), [onSubmit]);
 
@@ -241,7 +246,7 @@ export function DeleteOpportunityDialog({
     (v: boolean) => {
       if (!v) onCancel();
     },
-    [onCancel]
+    [onCancel],
   );
 
   return (

@@ -15,7 +15,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTimeIllustration } from "@/components/illustrations";
-import { useTrialBalance } from "@/lib/api/hooks/accounting";
+import { useTrialBalance } from "@/hooks/api/accounting";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -102,7 +102,9 @@ export default function TrialBalancePage() {
                   <TableHead className="w-[140px]">Type</TableHead>
                   <TableHead className="w-[140px] text-right">Debit</TableHead>
                   <TableHead className="w-[140px] text-right">Credit</TableHead>
-                  <TableHead className="w-[140px] text-right">Balance</TableHead>
+                  <TableHead className="w-[140px] text-right">
+                    Balance
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

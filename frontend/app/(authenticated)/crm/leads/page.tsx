@@ -9,13 +9,20 @@ import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
 import { LeadTableView } from "@/features/crm/leads/lead-table-view";
 import { LeadExportDialog } from "@/features/crm/leads/lead-export-dialog";
 import {
-  useLeadBoard, useLeadStats, useCreateLead, useUpdateLeadStatus,
-  useLeads, useSalesTeamCapacity, useUpdateLead, useAssignLead,
-  useBulkUpdateLeads, useBulkDeleteLeads,
-} from "@/lib/api/hooks/leads";
-import { useCreateDeal } from "@/lib/api/hooks/crm";
-import { useDebouncedValue } from "@/hooks/use-debounce";
-import { useLeadsFilters } from "@/hooks/use-leads-filters";
+  useLeadBoard,
+  useLeadStats,
+  useCreateLead,
+  useUpdateLeadStatus,
+  useLeads,
+  useSalesTeamCapacity,
+  useUpdateLead,
+  useAssignLead,
+  useBulkUpdateLeads,
+  useBulkDeleteLeads,
+} from "@/hooks/api/leads";
+import { useCreateDeal } from "@/hooks/api/crm";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
 import { useSession } from "next-auth/react";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { toast } from "sonner";
@@ -24,7 +31,11 @@ import { LeadsToolbar } from "@/features/crm/leads/leads-toolbar";
 import { LeadsKanban } from "@/features/crm/leads/leads-kanban";
 import { LeadDetailSheet } from "@/features/crm/leads/lead-detail-sheet";
 import { CreateLeadSheet } from "@/features/crm/leads/create-lead-sheet";
-import { isLeadSource, isLeadPriority, STATUS_CONFIG } from "@/features/crm/leads/leads-constants";
+import {
+  isLeadSource,
+  isLeadPriority,
+  STATUS_CONFIG,
+} from "@/features/crm/leads/leads-constants";
 import type { BoardLead, LeadStatus } from "@/features/crm/leads/leads-types";
 
 export default function LeadsPipelinePage() {
@@ -58,18 +69,47 @@ export default function LeadsPipelinePage() {
 
   const { data: tableData, isLoading: tableLoading } = useLeads({
     search: debouncedSearchQuery || undefined,
-    sortBy: sortColumn as "name" | "email" | "company" | "status" | "priority" | "source" | "score" | "potentialValue" | "createdAt",
+    sortBy: sortColumn as
+      | "name"
+      | "email"
+      | "company"
+      | "status"
+      | "priority"
+      | "source"
+      | "score"
+      | "potentialValue"
+      | "createdAt",
     sortOrder: sortDirection,
     page: tablePage,
     limit: pageSize,
-    status: statusFilter as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" | undefined,
+    status: statusFilter as
+      | "NEW"
+      | "CONTACTED"
+      | "INTERESTED"
+      | "QUALIFIED"
+      | "CONVERTED"
+      | "LOST"
+      | undefined,
     priority: priorityFilter as "HOT" | "WARM" | "COLD" | undefined,
-    source: sourceFilter as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
+    source: sourceFilter as
+      | "referral"
+      | "campaign"
+      | "cold_call"
+      | "website"
+      | "social_media"
+      | "walk_in"
+      | "other"
+      | undefined,
   });
 
   const { data: teamCapacity } = useSalesTeamCapacity();
   const teamMembers = useMemo(
-    () => (teamCapacity || []).map(m => ({ id: m.id, name: m.name, image: m.image })),
+    () =>
+      (teamCapacity || []).map((m) => ({
+        id: m.id,
+        name: m.name,
+        image: m.image,
+      })),
     [teamCapacity],
   );
 
@@ -87,181 +127,287 @@ export default function LeadsPipelinePage() {
 
   const handleCloseDetail = useCallback(() => setSelectedLeadId(null), []);
 
-  const handleSort = useCallback((col: string) => {
-    const newDir = sortColumn === col
-      ? (sortDirection === "asc" ? "desc" : "asc")
-      : "desc";
-    setSort(col, newDir);
-  }, [sortColumn, sortDirection, setSort]);
+  const handleSort = useCallback(
+    (col: string) => {
+      const newDir =
+        sortColumn === col
+          ? sortDirection === "asc"
+            ? "desc"
+            : "asc"
+          : "desc";
+      setSort(col, newDir);
+    },
+    [sortColumn, sortDirection, setSort],
+  );
 
-  const handleViewChange = useCallback((v: "table" | "kanban") => {
-    setView(v);
-  }, [setView]);
+  const handleViewChange = useCallback(
+    (v: "table" | "kanban") => {
+      setView(v);
+    },
+    [setView],
+  );
 
   const filteredBoard = useMemo(() => {
     if (!board) return null;
     if (!debouncedSearchQuery) return board;
     const q = debouncedSearchQuery.toLowerCase();
-    const filtered: Record<string, typeof board[keyof typeof board]> = {};
+    const filtered: Record<string, (typeof board)[keyof typeof board]> = {};
     for (const [status, leads] of Object.entries(board)) {
-      filtered[status] = leads.filter((l: BoardLead) =>
-        l.name.toLowerCase().includes(q) ||
-        l.email?.toLowerCase().includes(q) ||
-        l.phone?.includes(q) ||
-        l.company?.toLowerCase().includes(q)
+      filtered[status] = leads.filter(
+        (l: BoardLead) =>
+          l.name.toLowerCase().includes(q) ||
+          l.email?.toLowerCase().includes(q) ||
+          l.phone?.includes(q) ||
+          l.company?.toLowerCase().includes(q),
       );
     }
     return filtered;
   }, [board, debouncedSearchQuery]);
 
-  const handleCreateLead = useCallback(async (formData: FormData) => {
-    const name = (formData.get("name") as string)?.trim();
-    if (!name) { toast.error("Name is required"); return; }
+  const handleCreateLead = useCallback(
+    async (formData: FormData) => {
+      const name = (formData.get("name") as string)?.trim();
+      if (!name) {
+        toast.error("Name is required");
+        return;
+      }
 
-    const potentialValueRaw = (formData.get("potentialValue") as string)?.trim();
-    const investmentInterestRaw = (formData.get("investmentInterest") as string)?.trim();
+      const potentialValueRaw = (
+        formData.get("potentialValue") as string
+      )?.trim();
+      const investmentInterestRaw = (
+        formData.get("investmentInterest") as string
+      )?.trim();
 
-    if (potentialValueRaw && (isNaN(Number(potentialValueRaw)) || Number(potentialValueRaw) < 0)) {
-      toast.error("Potential value must be a valid positive number"); return;
-    }
-    if (investmentInterestRaw && (isNaN(Number(investmentInterestRaw)) || Number(investmentInterestRaw) < 0)) {
-      toast.error("Investment interest must be a valid positive number"); return;
-    }
+      if (
+        potentialValueRaw &&
+        (isNaN(Number(potentialValueRaw)) || Number(potentialValueRaw) < 0)
+      ) {
+        toast.error("Potential value must be a valid positive number");
+        return;
+      }
+      if (
+        investmentInterestRaw &&
+        (isNaN(Number(investmentInterestRaw)) ||
+          Number(investmentInterestRaw) < 0)
+      ) {
+        toast.error("Investment interest must be a valid positive number");
+        return;
+      }
 
-    const data = {
-      name,
-      email: (formData.get("email") as string)?.trim() || undefined,
-      phone: (formData.get("phone") as string)?.trim() || undefined,
-      company: (formData.get("company") as string)?.trim() || undefined,
-      source: isLeadSource(formData.get("source")) ? formData.get("source") as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" : "other",
-      potentialValue: potentialValueRaw || undefined,
-      investmentInterest: investmentInterestRaw || undefined,
-      priority: isLeadPriority(formData.get("priority")) ? formData.get("priority") as "HOT" | "WARM" | "COLD" : "WARM" as const,
-      notes: (formData.get("notes") as string)?.trim() || undefined,
-      city: (formData.get("city") as string)?.trim() || undefined,
-      referredBy: (formData.get("referredBy") as string)?.trim() || undefined,
-    };
+      const data = {
+        name,
+        email: (formData.get("email") as string)?.trim() || undefined,
+        phone: (formData.get("phone") as string)?.trim() || undefined,
+        company: (formData.get("company") as string)?.trim() || undefined,
+        source: isLeadSource(formData.get("source"))
+          ? (formData.get("source") as
+              | "referral"
+              | "campaign"
+              | "cold_call"
+              | "website"
+              | "social_media"
+              | "walk_in"
+              | "other")
+          : "other",
+        potentialValue: potentialValueRaw || undefined,
+        investmentInterest: investmentInterestRaw || undefined,
+        priority: isLeadPriority(formData.get("priority"))
+          ? (formData.get("priority") as "HOT" | "WARM" | "COLD")
+          : ("WARM" as const),
+        notes: (formData.get("notes") as string)?.trim() || undefined,
+        city: (formData.get("city") as string)?.trim() || undefined,
+        referredBy: (formData.get("referredBy") as string)?.trim() || undefined,
+      };
 
-    try {
-      await createLead.mutateAsync(data);
-      toast.success("Lead created successfully");
-      setCreateOpen(false);
-    } catch {
-      toast.error("Failed to create lead");
-    }
-  }, [createLead]);
+      try {
+        await createLead.mutateAsync(data);
+        toast.success("Lead created successfully");
+        setCreateOpen(false);
+      } catch {
+        toast.error("Failed to create lead");
+      }
+    },
+    [createLead],
+  );
 
-  const handleMoveStatus = useCallback(async (leadId: number, status: LeadStatus, expectedStatus?: LeadStatus) => {
-    try {
-      await updateStatus.mutateAsync({ leadId, status, expectedStatus });
-      toast.success(`Lead moved to ${STATUS_CONFIG[status].label}`);
-    } catch (err: unknown) {
-      toast.error((err as { message?: string })?.message || "Failed to update status");
-    }
-  }, [updateStatus]);
-
-  const handleDragEnd = useCallback((result: DropResult) => {
-    const { destination, source, draggableId } = result;
-    if (!destination) return;
-    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
-
-    const leadId = parseInt(draggableId);
-    const newStatus = destination.droppableId as LeadStatus;
-    if (source.droppableId !== destination.droppableId) {
-      void handleMoveStatus(leadId, newStatus, source.droppableId as LeadStatus);
-    }
-  }, [handleMoveStatus]);
-
-  const handleStatusChange = useCallback((
-    id: number,
-    status: string,
-    extra?: { conversionNotes?: string; lostReason?: string; estimatedAmount?: string; investmentInterest?: string; createDeal?: boolean; dealName?: string },
-  ) => {
-    if (status === "CONVERTED" && extra) {
-      updateStatus.mutate(
-        {
-          leadId: id,
-          status: "CONVERTED",
-          estimatedInvestment: extra.estimatedAmount || extra.investmentInterest || undefined,
-          conversionNotes: extra.conversionNotes,
-        },
-        {
-          onSuccess: () => toast.success("Lead converted — client account created"),
-          onError: (err) => toast.error(`Conversion failed: ${err.message}`),
-        },
-      );
-
-      if (extra.createDeal && extra.dealName) {
-        createDealMutation.mutate(
-          {
-            name: extra.dealName,
-            value: extra.estimatedAmount || undefined,
-            stage: "LEAD",
-            notes: extra.conversionNotes,
-            leadId: id,
-          },
-          {
-            onSuccess: () => toast.success("Deal created from converted lead"),
-            onError: (err) => toast.error(`Deal creation failed: ${err.message}`),
-          },
+  const handleMoveStatus = useCallback(
+    async (leadId: number, status: LeadStatus, expectedStatus?: LeadStatus) => {
+      try {
+        await updateStatus.mutateAsync({ leadId, status, expectedStatus });
+        toast.success(`Lead moved to ${STATUS_CONFIG[status].label}`);
+      } catch (err: unknown) {
+        toast.error(
+          (err as { message?: string })?.message || "Failed to update status",
         );
       }
-    } else if (status === "LOST" && extra) {
-      updateStatus.mutate({ leadId: id, status: "LOST", lostReason: extra.lostReason });
-    } else {
-      updateStatus.mutate({ leadId: id, status: status as LeadStatus });
-    }
-  }, [updateStatus, createDealMutation]);
+    },
+    [updateStatus],
+  );
 
-  const handlePriorityChange = useCallback((id: number, priority: string) => {
-    updateLeadMutation.mutate({ id, priority: priority as "HOT" | "WARM" | "COLD" });
-  }, [updateLeadMutation]);
+  const handleDragEnd = useCallback(
+    (result: DropResult) => {
+      const { destination, source, draggableId } = result;
+      if (!destination) return;
+      if (
+        destination.droppableId === source.droppableId &&
+        destination.index === source.index
+      )
+        return;
 
-  const handleAssign = useCallback((id: number, userId: string) => {
-    assignLeadMutation.mutate(
-      { leadId: id, assignedToId: userId },
-      {
-        onSuccess: () => toast.success("Lead assigned"),
-        onError: (err) => toast.error(err.message),
+      const leadId = parseInt(draggableId);
+      const newStatus = destination.droppableId as LeadStatus;
+      if (source.droppableId !== destination.droppableId) {
+        void handleMoveStatus(
+          leadId,
+          newStatus,
+          source.droppableId as LeadStatus,
+        );
+      }
+    },
+    [handleMoveStatus],
+  );
+
+  const handleStatusChange = useCallback(
+    (
+      id: number,
+      status: string,
+      extra?: {
+        conversionNotes?: string;
+        lostReason?: string;
+        estimatedAmount?: string;
+        investmentInterest?: string;
+        createDeal?: boolean;
+        dealName?: string;
       },
-    );
-  }, [assignLeadMutation]);
+    ) => {
+      if (status === "CONVERTED" && extra) {
+        updateStatus.mutate(
+          {
+            leadId: id,
+            status: "CONVERTED",
+            estimatedInvestment:
+              extra.estimatedAmount || extra.investmentInterest || undefined,
+            conversionNotes: extra.conversionNotes,
+          },
+          {
+            onSuccess: () =>
+              toast.success("Lead converted — client account created"),
+            onError: (err) => toast.error(`Conversion failed: ${err.message}`),
+          },
+        );
 
-  const handleBulkUpdate = useCallback((
-    ids: number[],
-    update: { status?: string; priority?: string; assignedToId?: string },
-  ) => {
-    bulkUpdateMutation.mutate(
-      { leadIds: ids, update: update as { status?: "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST"; priority?: "HOT" | "WARM" | "COLD"; assignedToId?: string } },
-      {
-        onSuccess: (data) => toast.success(`${data.updated} leads updated`),
-        onError: (err) => toast.error(err.message),
-      },
-    );
-  }, [bulkUpdateMutation]);
+        if (extra.createDeal && extra.dealName) {
+          createDealMutation.mutate(
+            {
+              name: extra.dealName,
+              value: extra.estimatedAmount || undefined,
+              stage: "LEAD",
+              notes: extra.conversionNotes,
+              leadId: id,
+            },
+            {
+              onSuccess: () =>
+                toast.success("Deal created from converted lead"),
+              onError: (err) =>
+                toast.error(`Deal creation failed: ${err.message}`),
+            },
+          );
+        }
+      } else if (status === "LOST" && extra) {
+        updateStatus.mutate({
+          leadId: id,
+          status: "LOST",
+          lostReason: extra.lostReason,
+        });
+      } else {
+        updateStatus.mutate({ leadId: id, status: status as LeadStatus });
+      }
+    },
+    [updateStatus, createDealMutation],
+  );
 
-  const handleBulkDelete = useCallback((ids: number[]) => {
-    bulkDeleteMutation.mutate(
-      { leadIds: ids },
-      {
-        onSuccess: (data) => {
-          toast.success(`${data.deleted} leads deleted`);
-          if (tablePage > 1) setTablePage(1);
+  const handlePriorityChange = useCallback(
+    (id: number, priority: string) => {
+      updateLeadMutation.mutate({
+        id,
+        priority: priority as "HOT" | "WARM" | "COLD",
+      });
+    },
+    [updateLeadMutation],
+  );
+
+  const handleAssign = useCallback(
+    (id: number, userId: string) => {
+      assignLeadMutation.mutate(
+        { leadId: id, assignedToId: userId },
+        {
+          onSuccess: () => toast.success("Lead assigned"),
+          onError: (err) => toast.error(err.message),
         },
-        onError: (err) => toast.error(err.message),
-      },
-    );
-  }, [bulkDeleteMutation, tablePage, setTablePage]);
+      );
+    },
+    [assignLeadMutation],
+  );
+
+  const handleBulkUpdate = useCallback(
+    (
+      ids: number[],
+      update: { status?: string; priority?: string; assignedToId?: string },
+    ) => {
+      bulkUpdateMutation.mutate(
+        {
+          leadIds: ids,
+          update: update as {
+            status?:
+              | "NEW"
+              | "CONTACTED"
+              | "INTERESTED"
+              | "QUALIFIED"
+              | "CONVERTED"
+              | "LOST";
+            priority?: "HOT" | "WARM" | "COLD";
+            assignedToId?: string;
+          },
+        },
+        {
+          onSuccess: (data) => toast.success(`${data.updated} leads updated`),
+          onError: (err) => toast.error(err.message),
+        },
+      );
+    },
+    [bulkUpdateMutation],
+  );
+
+  const handleBulkDelete = useCallback(
+    (ids: number[]) => {
+      bulkDeleteMutation.mutate(
+        { leadIds: ids },
+        {
+          onSuccess: (data) => {
+            toast.success(`${data.deleted} leads deleted`);
+            if (tablePage > 1) setTablePage(1);
+          },
+          onError: (err) => toast.error(err.message),
+        },
+      );
+    },
+    [bulkDeleteMutation, tablePage, setTablePage],
+  );
 
   if (boardLoading || statsLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-64" />
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-24" />)}
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
         </div>
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-96" />)}
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-96" />
+          ))}
         </div>
       </div>
     );
@@ -271,7 +417,9 @@ export default function LeadsPipelinePage() {
     <PageWrapper
       title="Lead Pipeline"
       subtitle="Track and manage leads through the conversion funnel"
-      badge={view === "table" && tableData ? String(tableData.totalCount) : undefined}
+      badge={
+        view === "table" && tableData ? String(tableData.totalCount) : undefined
+      }
       noInternalScroll
       actions={
         <div className="flex items-center gap-2">
@@ -336,7 +484,9 @@ export default function LeadsPipelinePage() {
         {view === "kanban" && (
           <div className="flex-1 min-h-0 mt-2 overflow-auto">
             <LeadsKanban
-              filteredBoard={filteredBoard as Record<string, BoardLead[]> | null}
+              filteredBoard={
+                filteredBoard as Record<string, BoardLead[]> | null
+              }
               onDragEnd={handleDragEnd}
               onOpenLead={setSelectedLeadId}
               onMoveStatus={handleMoveStatus}

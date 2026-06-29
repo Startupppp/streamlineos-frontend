@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { AccessDenied } from "./access-denied";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAccess } from "@/lib/api/hooks/access";
+import { useAccess } from "@/hooks/api/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 interface DashboardGateProps {
@@ -12,7 +12,11 @@ interface DashboardGateProps {
   children: React.ReactNode;
 }
 
-export function DashboardGate({ allowedRoles, permission, children }: DashboardGateProps) {
+export function DashboardGate({
+  allowedRoles,
+  permission,
+  children,
+}: DashboardGateProps) {
   const { data: session, status } = useSession();
   const { data: access } = useAccess();
 
@@ -52,10 +56,7 @@ export function DashboardGate({ allowedRoles, permission, children }: DashboardG
     const granted = perms.some((p) => access?.permissions.includes(p) ?? false);
     if (granted) return <>{children}</>;
     return (
-      <AccessDenied
-        currentRole={userRole}
-        requiredRoles={allowedRoles ?? []}
-      />
+      <AccessDenied currentRole={userRole} requiredRoles={allowedRoles ?? []} />
     );
   }
 
@@ -64,9 +65,6 @@ export function DashboardGate({ allowedRoles, permission, children }: DashboardG
   }
 
   return (
-    <AccessDenied
-      currentRole={userRole}
-      requiredRoles={allowedRoles ?? []}
-    />
+    <AccessDenied currentRole={userRole} requiredRoles={allowedRoles ?? []} />
   );
 }

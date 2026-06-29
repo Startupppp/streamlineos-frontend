@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
-import { useCreateRole, useRoles, useRoleTemplates } from "@/lib/api/hooks/roles";
+import { useCreateRole, useRoles, useRoleTemplates } from "@/hooks/api/roles";
 
 const CLONE_NONE = "none";
 
@@ -39,14 +39,20 @@ const createRoleSchema = z.object({
     .string()
     .min(1, "Slug is required")
     .max(60, "Slug must be 60 characters or fewer")
-    .regex(/^[A-Z0-9_]+$/, "Slug must only contain uppercase letters, digits, or underscores"),
+    .regex(
+      /^[A-Z0-9_]+$/,
+      "Slug must only contain uppercase letters, digits, or underscores",
+    ),
   cloneFrom: z.string(),
 });
 
 type FormValues = z.infer<typeof createRoleSchema>;
 
 function slugify(value: string): string {
-  return value.toUpperCase().replace(/\s+/g, "_").replace(/[^A-Z0-9_]/g, "");
+  return value
+    .toUpperCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^A-Z0-9_]/g, "");
 }
 
 interface CreateRoleDialogProps {
@@ -54,7 +60,10 @@ interface CreateRoleDialogProps {
   onOpenChange: (value: boolean) => void;
 }
 
-export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) {
+export function CreateRoleDialog({
+  open,
+  onOpenChange,
+}: CreateRoleDialogProps) {
   const create = useCreateRole();
   const { data: roles } = useRoles();
   const { data: templates } = useRoleTemplates();
@@ -97,9 +106,13 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
 
   const handleSlugChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      setValue("slug", event.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ""), {
-        shouldValidate: true,
-      });
+      setValue(
+        "slug",
+        event.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ""),
+        {
+          shouldValidate: true,
+        },
+      );
     },
     [setValue],
   );
@@ -119,12 +132,19 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
     [onOpenChange, reset],
   );
 
-  const handleClose = useCallback(() => handleOpenChange(false), [handleOpenChange]);
+  const handleClose = useCallback(
+    () => handleOpenChange(false),
+    [handleOpenChange],
+  );
 
   const onSubmit = useCallback(
     (values: FormValues) => {
-      const existingNames = (roles ?? []).map((role) => role.name.trim().toLowerCase());
-      const existingSlugs = (roles ?? []).map((role) => role.slug.trim().toLowerCase());
+      const existingNames = (roles ?? []).map((role) =>
+        role.name.trim().toLowerCase(),
+      );
+      const existingSlugs = (roles ?? []).map((role) =>
+        role.slug.trim().toLowerCase(),
+      );
 
       if (existingNames.includes(values.name.trim().toLowerCase())) {
         toast.error("A role with this name already exists");
@@ -139,7 +159,8 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
         {
           name: values.name.trim(),
           slug: values.slug.trim(),
-          permissions: clonedPermissions.length > 0 ? clonedPermissions : undefined,
+          permissions:
+            clonedPermissions.length > 0 ? clonedPermissions : undefined,
         },
         {
           onSuccess: () => {
@@ -160,10 +181,15 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
         <DialogHeader>
           <DialogTitle>Create new role</DialogTitle>
           <DialogDescription className="text-xs">
-            Start from scratch or clone the permissions of an existing role or template.
+            Start from scratch or clone the permissions of an existing role or
+            template.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-4"
+        >
           <div className="space-y-1.5">
             <Label htmlFor="role-name" className="text-xs">
               Role name
@@ -210,7 +236,11 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
               Clone from
             </Label>
             <Select value={cloneFrom} onValueChange={handleCloneChange}>
-              <SelectTrigger id="role-clone" className="w-full" aria-label="Clone permissions from">
+              <SelectTrigger
+                id="role-clone"
+                className="w-full"
+                aria-label="Clone permissions from"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -219,7 +249,10 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
                   <SelectGroup>
                     <SelectLabel>Existing roles</SelectLabel>
                     {roles.map((role) => (
-                      <SelectItem key={`role:${role.id}`} value={`role:${role.id}`}>
+                      <SelectItem
+                        key={`role:${role.id}`}
+                        value={`role:${role.id}`}
+                      >
                         {role.name}
                       </SelectItem>
                     ))}
@@ -229,7 +262,10 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
                   <SelectGroup>
                     <SelectLabel>Templates</SelectLabel>
                     {templates.map((template) => (
-                      <SelectItem key={`template:${template.id}`} value={`template:${template.id}`}>
+                      <SelectItem
+                        key={`template:${template.id}`}
+                        value={`template:${template.id}`}
+                      >
                         {template.name}
                       </SelectItem>
                     ))}
@@ -240,8 +276,8 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
             {clonedPermissions.length > 0 && (
               <p className="text-xs text-muted-foreground">
                 {clonedPermissions.length} permission
-                {clonedPermissions.length === 1 ? "" : "s"} will be copied. You can adjust
-                permissions and scopes after creating.
+                {clonedPermissions.length === 1 ? "" : "s"} will be copied. You
+                can adjust permissions and scopes after creating.
               </p>
             )}
           </div>

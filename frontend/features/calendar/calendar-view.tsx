@@ -50,8 +50,8 @@ const MONTHS = [
   "December",
 ];
 import { toast } from "sonner";
-import { useCalendarEvents } from "@/lib/api/hooks/calendar";
-import type { CalendarListItem } from "@/lib/api/hooks/calendar";
+import { useCalendarEvents } from "@/hooks/api/calendar";
+import type { CalendarListItem } from "@/hooks/api/calendar";
 import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";

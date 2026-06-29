@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { useJournal } from "@/lib/api/hooks/accounting";
+import { useJournal } from "@/hooks/api/accounting";
 import type { JournalEntryStatus } from "@/types/accounting";
 
 type SourceFilter = "ALL" | "invoice" | "payment" | "manual";
@@ -35,21 +35,33 @@ const SOURCE_OPTIONS: ReadonlyArray<{ value: SourceFilter; label: string }> = [
   { value: "manual", label: "Manual" },
 ];
 
-const STATUS_VARIANT: Record<JournalEntryStatus, "default" | "secondary" | "destructive"> = {
+const STATUS_VARIANT: Record<
+  JournalEntryStatus,
+  "default" | "secondary" | "destructive"
+> = {
   POSTED: "default",
   DRAFT: "secondary",
   VOID: "destructive",
 };
 
 function isSourceFilter(value: string): value is SourceFilter {
-  return value === "ALL" || value === "invoice" || value === "payment" || value === "manual";
+  return (
+    value === "ALL" ||
+    value === "invoice" ||
+    value === "payment" ||
+    value === "manual"
+  );
 }
 
 function formatDate(value: string): string {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
 }
 
 function formatSource(sourceType: string, sourceEvent: string | null): string {
@@ -174,7 +186,8 @@ export default function JournalListPage() {
               No journal entries yet.
             </h3>
             <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-              Entries appear here once invoices, payments, or manual journals post.
+              Entries appear here once invoices, payments, or manual journals
+              post.
             </p>
             <Button size="sm" className="mt-4" asChild>
               <Link href="/accounting/journal/new">

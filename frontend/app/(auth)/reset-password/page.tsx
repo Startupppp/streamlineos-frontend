@@ -16,9 +16,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { resetPassword } from "@/server/actions/auth-actions";
-import { useResetPassword } from "@/hooks/auth-hooks";
-import { Loader2, Rocket, Shield, Eye, EyeOff, ArrowRight, ArrowLeft, AlertCircle } from "lucide-react";
+import { resetPassword } from "@/server/auth-actions";
+import { useResetPassword } from "@/hooks/common/auth-hooks";
+import {
+  Loader2,
+  Rocket,
+  Shield,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ArrowLeft,
+  AlertCircle,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PASSWORD_REGEX } from "@/lib/password-utils";
@@ -33,7 +42,7 @@ const formSchema = z
       .max(128, "Password must be at most 128 characters")
       .regex(
         PASSWORD_REGEX,
-        "Must include uppercase, lowercase, number, and special character"
+        "Must include uppercase, lowercase, number, and special character",
       ),
     confirmPassword: z.string(),
   })
@@ -73,7 +82,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
             key={level}
             className={cn(
               "h-1 flex-1 rounded-full transition-colors",
-              level <= strength.score ? strength.color : "bg-muted"
+              level <= strength.score ? strength.color : "bg-muted",
             )}
           />
         ))}
@@ -85,7 +94,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
             ? "text-red-500"
             : strength.score <= 2
               ? "text-yellow-500"
-              : "text-green-500"
+              : "text-green-500",
         )}
       >
         {strength.label}
@@ -94,7 +103,13 @@ function PasswordStrengthBar({ password }: { password: string }) {
   );
 }
 
-function PasswordFields({ control, watch }: { control: ReturnType<typeof useForm<FormValues>>["control"]; watch: ReturnType<typeof useForm<FormValues>>["watch"] }) {
+function PasswordFields({
+  control,
+  watch,
+}: {
+  control: ReturnType<typeof useForm<FormValues>>["control"];
+  watch: ReturnType<typeof useForm<FormValues>>["watch"];
+}) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const password = watch("password");
@@ -109,7 +124,9 @@ function PasswordFields({ control, watch }: { control: ReturnType<typeof useForm
         name="password"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-[13px] font-medium">New Password</FormLabel>
+            <FormLabel className="text-[13px] font-medium">
+              New Password
+            </FormLabel>
             <FormControl>
               <div className="relative">
                 <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -126,7 +143,11 @@ function PasswordFields({ control, watch }: { control: ReturnType<typeof useForm
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </FormControl>
@@ -141,7 +162,9 @@ function PasswordFields({ control, watch }: { control: ReturnType<typeof useForm
         name="confirmPassword"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-[13px] font-medium">Confirm Password</FormLabel>
+            <FormLabel className="text-[13px] font-medium">
+              Confirm Password
+            </FormLabel>
             <FormControl>
               <div className="relative">
                 <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -155,10 +178,18 @@ function PasswordFields({ control, watch }: { control: ReturnType<typeof useForm
                   type="button"
                   onClick={handleToggleConfirmPassword}
                   tabIndex={-1}
-                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </FormControl>
@@ -182,12 +213,18 @@ function TokenResetForm({ token }: { token: string }) {
 
   async function onSubmit(values: FormValues) {
     try {
-      await resetPasswordMutation.mutateAsync({ token, password: values.password });
+      await resetPasswordMutation.mutateAsync({
+        token,
+        password: values.password,
+      });
       setDone(true);
       toast.success("Password reset successfully!");
       setTimeout(() => router.push("/signin"), 2000);
     } catch (error) {
-      toast.error(getErrorMessage(error) || "Failed to reset password. The link may have expired.");
+      toast.error(
+        getErrorMessage(error) ||
+          "Failed to reset password. The link may have expired.",
+      );
     }
   }
 
@@ -350,7 +387,8 @@ function InvalidTokenState() {
           Invalid Reset Link
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          This password reset link is invalid or has expired. Please request a new one.
+          This password reset link is invalid or has expired. Please request a
+          new one.
         </p>
       </div>
       <Link href="/forgot-password">
@@ -378,18 +416,20 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="w-full max-w-sm">
-        <div className="h-10 w-10 rounded-xl bg-muted animate-pulse mb-4" />
-        <div className="h-6 bg-muted rounded animate-pulse mb-2" />
-        <div className="h-4 bg-muted/60 rounded animate-pulse mb-6 w-3/4" />
-        <div className="rounded-xl border bg-card p-6 space-y-4">
-          <div className="h-9 bg-muted rounded animate-pulse" />
-          <div className="h-9 bg-muted rounded animate-pulse" />
-          <div className="h-9 bg-muted rounded animate-pulse" />
+    <Suspense
+      fallback={
+        <div className="w-full max-w-sm">
+          <div className="h-10 w-10 rounded-xl bg-muted animate-pulse mb-4" />
+          <div className="h-6 bg-muted rounded animate-pulse mb-2" />
+          <div className="h-4 bg-muted/60 rounded animate-pulse mb-6 w-3/4" />
+          <div className="rounded-xl border bg-card p-6 space-y-4">
+            <div className="h-9 bg-muted rounded animate-pulse" />
+            <div className="h-9 bg-muted rounded animate-pulse" />
+            <div className="h-9 bg-muted rounded animate-pulse" />
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <ResetPasswordContent />
     </Suspense>
   );

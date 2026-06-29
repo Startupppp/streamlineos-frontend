@@ -1,1 +1,1 @@
-export type { EmailTemplatePreview } from "@/lib/api/hooks/email-templates";
+export type { EmailTemplatePreview } from "@/hooks/api/email-templates";

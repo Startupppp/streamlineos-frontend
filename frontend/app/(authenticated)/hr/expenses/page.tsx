@@ -10,7 +10,7 @@ import {
   useUpdateExpenseStatus,
   useDeleteExpense,
   useHrEmployees,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { CreateExpenseDialog } from "./create-expense-dialog";
 import { ImportExpenseSheet } from "./import-expense-sheet";
@@ -19,7 +19,7 @@ import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog
 import {
   useExpenseFilters,
   useDebouncedValue,
-} from "@/hooks/use-expense-filters";
+} from "@/hooks/common/use-expense-filters";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -42,7 +42,7 @@ import {
 } from "@/features/hr/expenses/expense-list";
 import type { ExpenseToEdit } from "./create-expense-dialog";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 export default function ExpensesPage() {
   const { data: session } = useSession();
@@ -239,10 +239,16 @@ export default function ExpensesPage() {
       <PageWrapper title="Expenses" subtitle="Manage your expense claims">
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="text-center">
-            <p className="text-sm font-semibold text-foreground">Failed to load expenses</p>
-            <p className="text-xs text-muted-foreground mt-1">Something went wrong. Please try again.</p>
+            <p className="text-sm font-semibold text-foreground">
+              Failed to load expenses
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Something went wrong. Please try again.
+            </p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleRetryLoad}>Try Again</Button>
+          <Button variant="outline" size="sm" onClick={handleRetryLoad}>
+            Try Again
+          </Button>
         </div>
       </PageWrapper>
     );
@@ -309,13 +315,21 @@ export default function ExpensesPage() {
               filters={filters}
               categories={expenseCategories}
               trigger={
-                <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-1.5 text-sm"
+                >
                   <Download className="h-4 w-4" />
                   Export
                 </Button>
               }
             />
-            <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenAdminCreate}>
+            <Button
+              size="sm"
+              className="h-9 gap-1.5 text-sm"
+              onClick={handleOpenAdminCreate}
+            >
               <Plus className="h-4 w-4" />
               Add Expense
             </Button>
@@ -386,7 +400,11 @@ export default function ExpensesPage() {
       title="My Expenses"
       subtitle="Track, manage, and submit your expense claims for reimbursement."
       actions={
-        <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenMemberCreate}>
+        <Button
+          size="sm"
+          className="h-9 gap-1.5 text-sm"
+          onClick={handleOpenMemberCreate}
+        >
           <Plus className="h-4 w-4" />
           Submit New Claim
         </Button>

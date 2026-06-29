@@ -6,12 +6,15 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
-import { EmptySearchIllustration, EmptyTeamIllustration } from "@/components/illustrations";
+import {
+  EmptySearchIllustration,
+  EmptyTeamIllustration,
+} from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { useDebouncedValue } from "@/hooks/use-debounce";
-import { useHrEmployees, useTerminateEmployee } from "@/lib/api/hooks/hr";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useHrEmployees, useTerminateEmployee } from "@/hooks/api/hr";
 
 import {
   type Employee,
@@ -37,7 +40,9 @@ export default function HRDashboardPage() {
   const pathname = usePathname();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
+    null,
+  );
 
   const searchTerm = searchParams.get("q") || "";
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
@@ -45,12 +50,19 @@ export default function HRDashboardPage() {
   const statusFilter = (searchParams.get("status") as StatusFilter) || "Active";
   const roleFilter = (searchParams.get("role") as RoleFilter) || "All";
   const page = Number(searchParams.get("page")) || 1;
-  const pageSize = (Number(searchParams.get("size")) || PAGE_SIZE) as PageSizeOption;
+  const pageSize = (Number(searchParams.get("size")) ||
+    PAGE_SIZE) as PageSizeOption;
 
   const { data: rawEmployees, isLoading } = useHrEmployees();
   const terminateMutation = useTerminateEmployee();
 
-  const employees = useMemo(() => (Array.isArray(rawEmployees) ? rawEmployees : []) as unknown as Employee[], [rawEmployees]);
+  const employees = useMemo(
+    () =>
+      (Array.isArray(rawEmployees)
+        ? rawEmployees
+        : []) as unknown as Employee[],
+    [rawEmployees],
+  );
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -64,11 +76,28 @@ export default function HRDashboardPage() {
     [searchParams, router, pathname],
   );
 
-  const setSearchTerm = useCallback((q: string) => updateParams({ q: q || null, page: null }), [updateParams]);
-  const setDeptFilter = useCallback((d: string) => updateParams({ dept: d === "All" ? null : d, page: null }), [updateParams]);
-  const setStatusFilter = useCallback((s: StatusFilter) => updateParams({ status: s === "Active" ? null : s, page: null }), [updateParams]);
-  const setRoleFilter = useCallback((r: RoleFilter) => updateParams({ role: r === "All" ? null : r, page: null }), [updateParams]);
-  const setPage = useCallback((p: number) => updateParams({ page: p === 1 ? null : String(p) }), [updateParams]);
+  const setSearchTerm = useCallback(
+    (q: string) => updateParams({ q: q || null, page: null }),
+    [updateParams],
+  );
+  const setDeptFilter = useCallback(
+    (d: string) => updateParams({ dept: d === "All" ? null : d, page: null }),
+    [updateParams],
+  );
+  const setStatusFilter = useCallback(
+    (s: StatusFilter) =>
+      updateParams({ status: s === "Active" ? null : s, page: null }),
+    [updateParams],
+  );
+  const setRoleFilter = useCallback(
+    (r: RoleFilter) =>
+      updateParams({ role: r === "All" ? null : r, page: null }),
+    [updateParams],
+  );
+  const setPage = useCallback(
+    (p: number) => updateParams({ page: p === 1 ? null : String(p) }),
+    [updateParams],
+  );
 
   const departments = useMemo(() => {
     const deptSet = new Map<string, string>();
@@ -85,7 +114,9 @@ export default function HRDashboardPage() {
       const term = debouncedSearchTerm.trim().toLowerCase();
       if (term) {
         result = result.filter((e) => {
-          const name = `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim().toLowerCase();
+          const name = `${e.firstName ?? ""} ${e.lastName ?? ""}`
+            .trim()
+            .toLowerCase();
           const email = e.email.toLowerCase();
           const first = e.firstName?.toLowerCase() ?? "";
           const last = e.lastName?.toLowerCase() ?? "";
@@ -93,32 +124,47 @@ export default function HRDashboardPage() {
           const roleRaw = e.role.toLowerCase();
           const roleLabel = ROLE_LABELS[e.role]?.toLowerCase() ?? "";
           return (
-            name.includes(term) || email.includes(term) || first.includes(term) ||
-            last.includes(term) || designation.includes(term) || roleRaw.includes(term) ||
+            name.includes(term) ||
+            email.includes(term) ||
+            first.includes(term) ||
+            last.includes(term) ||
+            designation.includes(term) ||
+            roleRaw.includes(term) ||
             roleLabel.includes(term)
           );
         });
       }
     }
 
-    if (deptFilter !== "All") result = result.filter((e) => e.department?.name === deptFilter);
+    if (deptFilter !== "All")
+      result = result.filter((e) => e.department?.name === deptFilter);
 
-    if (statusFilter === "Active") result = result.filter((e) => e.isActive !== false);
-    else if (statusFilter === "Inactive") result = result.filter((e) => e.isActive === false);
+    if (statusFilter === "Active")
+      result = result.filter((e) => e.isActive !== false);
+    else if (statusFilter === "Inactive")
+      result = result.filter((e) => e.isActive === false);
 
-    if (roleFilter !== "All") result = result.filter((e) => e.role === roleFilter);
+    if (roleFilter !== "All")
+      result = result.filter((e) => e.role === roleFilter);
 
     return result;
   }, [employees, debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / pageSize));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredEmployees.length / pageSize),
+  );
   const paginatedEmployees = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredEmployees.slice(start, start + pageSize);
   }, [filteredEmployees, page, pageSize]);
 
   const handlePageSizeChange = useCallback(
-    (size: PageSizeOption) => updateParams({ size: size === PAGE_SIZE ? null : String(size), page: null }),
+    (size: PageSizeOption) =>
+      updateParams({
+        size: size === PAGE_SIZE ? null : String(size),
+        page: null,
+      }),
     [updateParams],
   );
 
@@ -143,24 +189,34 @@ export default function HRDashboardPage() {
       department: e.department?.name ?? "",
       status: e.isActive !== false ? "Active" : "Inactive",
     }));
-    await downloadXlsx(`employees-${new Date().toISOString().slice(0, 10)}.xlsx`, [
-      {
-        name: "Employees",
-        columns: [
-          { header: "Name", key: "name", width: 25 },
-          { header: "Email", key: "email", width: 30 },
-          { header: "Role", key: "role", width: 20 },
-          { header: "Department", key: "department", width: 20 },
-          { header: "Status", key: "status", width: 12 },
-        ],
-        rows,
-      },
-    ]);
+    await downloadXlsx(
+      `employees-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      [
+        {
+          name: "Employees",
+          columns: [
+            { header: "Name", key: "name", width: 25 },
+            { header: "Email", key: "email", width: 30 },
+            { header: "Role", key: "role", width: 20 },
+            { header: "Department", key: "department", width: 20 },
+            { header: "Status", key: "status", width: 12 },
+          ],
+          rows,
+        },
+      ],
+    );
     toast.success("Employees exported");
   }, [filteredEmployees]);
 
   const handleClearFilters = useCallback(
-    () => updateParams({ q: null, dept: null, status: null, role: null, page: null }),
+    () =>
+      updateParams({
+        q: null,
+        dept: null,
+        status: null,
+        role: null,
+        page: null,
+      }),
     [updateParams],
   );
 
@@ -173,7 +229,11 @@ export default function HRDashboardPage() {
 
   const showFrom = filteredEmployees.length > 0 ? (page - 1) * pageSize + 1 : 0;
   const showTo = Math.min(page * pageSize, filteredEmployees.length);
-  const hasActiveFilters = !!searchTerm || deptFilter !== "All" || statusFilter !== "Active" || roleFilter !== "All";
+  const hasActiveFilters =
+    !!searchTerm ||
+    deptFilter !== "All" ||
+    statusFilter !== "Active" ||
+    roleFilter !== "All";
   return (
     <PageWrapper
       title="Employees"
@@ -181,7 +241,12 @@ export default function HRDashboardPage() {
       badge={String(filteredEmployees.length)}
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={handleExport}
+          >
             <Download className="h-4 w-4" aria-hidden="true" />
             Export
           </Button>

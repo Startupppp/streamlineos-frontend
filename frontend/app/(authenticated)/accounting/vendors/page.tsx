@@ -5,25 +5,39 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,@/hooks/api/accounting
+} from "@/components/ui/table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useVendorsOutstanding } from "@/lib/api/hooks/accounting";
+import { useVendorsOutstanding } from "@/hooks/hooks/accounting";
 
 export default function VendorsListPage() {
   const [search, setSearch] = useState<string>("");
   const [onlyOutstanding, setOnlyOutstanding] = useState<boolean>(true);
-  const query = useVendorsOutstanding({ page: 1, pageSize: 100, q: search || undefined, onlyOutstanding });
+  const query = useVendorsOutstanding({
+    page: 1,
+    pageSize: 100,
+    q: search || undefined,
+    onlyOutstanding,
+  });
   const items = query.data?.items ?? [];
 
   function handleSearchChange(event: ChangeEvent<HTMLInputElement>): void {
     setSearch(event.target.value);
   }
 
-  function handleOnlyOutstandingChange(checked: boolean | "indeterminate"): void {
+  function handleOnlyOutstandingChange(
+    checked: boolean | "indeterminate",
+  ): void {
     setOnlyOutstanding(checked === true);
   }
 
@@ -45,7 +59,10 @@ export default function VendorsListPage() {
           className="sm:max-w-xs"
         />
         <label className="flex items-center gap-2 text-sm">
-          <Checkbox checked={onlyOutstanding} onCheckedChange={handleOnlyOutstandingChange} />
+          <Checkbox
+            checked={onlyOutstanding}
+            onCheckedChange={handleOnlyOutstandingChange}
+          />
           Only with outstanding balance
         </label>
       </div>
@@ -83,14 +100,23 @@ export default function VendorsListPage() {
               {items.map((v) => (
                 <TableRow key={v.vendorId}>
                   <TableCell>
-                    <Link href={`/accounting/vendors/${v.vendorId}`} className="text-sm font-medium text-foreground hover:text-blue-600 hover:underline">
+                    <Link
+                      href={`/accounting/vendors/${v.vendorId}`}
+                      className="text-sm font-medium text-foreground hover:text-blue-600 hover:underline"
+                    >
                       {v.vendorName}
                     </Link>
                   </TableCell>
                   <TableCell>{v.state ?? "—"}</TableCell>
-                  <TableCell className="font-mono text-xs">{v.gstin ?? "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{v.billCount}</TableCell>
-                  <TableCell className="text-right tabular-nums font-medium">{Number(v.outstanding).toFixed(2)}</TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {v.gstin ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {v.billCount}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-medium">
+                    {Number(v.outstanding).toFixed(2)}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

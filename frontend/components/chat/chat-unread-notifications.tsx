@@ -3,10 +3,14 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { useChatChannels } from "@/lib/api/hooks/chat";
+import { useChatChannels } from "@/hooks/api/chat";
 import type { Channel } from "@/types/chat";
 
-export function ChatUnreadNotifications({ currentUserId }: { currentUserId: string }) {
+export function ChatUnreadNotifications({
+  currentUserId,
+}: {
+  currentUserId: string;
+}) {
   const pathname = usePathname();
 
   const isChatPage = pathname === "/chat";
@@ -28,7 +32,6 @@ export function ChatUnreadNotifications({ currentUserId }: { currentUserId: stri
     if (!channels || channels.length === 0) return;
 
     if (isFirstLoadRef.current) {
-
       const initial = new Map<number, number>();
       for (const ch of channels) {
         initial.set(ch.id, ch.unreadCount);
@@ -58,7 +61,7 @@ export function ChatUnreadNotifications({ currentUserId }: { currentUserId: stri
             : `#${ch.name}`;
         const body =
           delta === 1
-            ? ch.lastMessage?.content?.slice(0, 80) ?? "New message"
+            ? (ch.lastMessage?.content?.slice(0, 80) ?? "New message")
             : `${delta} new messages`;
 
         toast(title, { description: body, duration: 5_000 });

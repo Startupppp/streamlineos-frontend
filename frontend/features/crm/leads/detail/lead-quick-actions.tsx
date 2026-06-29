@@ -2,7 +2,15 @@
 
 import { useCallback, useState } from "react";
 import { type UseFormReturn } from "react-hook-form";
-import { Phone, Mail, StickyNote, ListTodo, Wand2, Loader2, FileText } from "lucide-react";
+import {
+  Phone,
+  Mail,
+  StickyNote,
+  ListTodo,
+  Wand2,
+  Loader2,
+  FileText,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,16 +24,16 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
+import {@/hooks/api/ai
+  Select,@/hooks/api/crm-settings
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useGenerateEmail } from "@/lib/api/hooks/ai";
-import { useEmailTemplates } from "@/lib/api/hooks/crm-settings";
+import { useGenerateEmail } from "@/hooks/hooks/ai";
+import { useEmailTemplates } from "@/hooks/hooks/crm-settings";
 import {
   type QuickAction,
   type NoteForm,
@@ -61,34 +69,34 @@ interface LeadQuickActionsProps {
 
 const ACTION_BUTTONS = [
   {
-    key:"call" as const,
-    label:"Log Call",
+    key: "call" as const,
+    label: "Log Call",
     icon: Phone,
-    color:"bg-blue-500/10 text-blue-400 hover:bg-blue-500/20",
+    color: "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20",
   },
   {
-    key:"email" as const,
-    label:"Send Email",
+    key: "email" as const,
+    label: "Send Email",
     icon: Mail,
-    color:"bg-purple-500/10 text-purple-400 hover:bg-purple-500/20",
+    color: "bg-purple-500/10 text-purple-400 hover:bg-purple-500/20",
   },
   {
-    key:"note" as const,
-    label:"Add Note",
+    key: "note" as const,
+    label: "Add Note",
     icon: StickyNote,
-    color:"bg-amber-500/10 text-amber-400 hover:bg-amber-500/20",
+    color: "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20",
   },
   {
-    key:"task" as const,
-    label:"New Task",
+    key: "task" as const,
+    label: "New Task",
     icon: ListTodo,
-    color:"bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20",
+    color: "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20",
   },
   {
-    key:"draft" as const,
-    label:"Draft Email",
+    key: "draft" as const,
+    label: "Draft Email",
     icon: Wand2,
-    color:"bg-violet-500/10 text-violet-400 hover:bg-violet-500/20",
+    color: "bg-violet-500/10 text-violet-400 hover:bg-violet-500/20",
   },
 ] as const;
 
@@ -100,13 +108,20 @@ interface ActionToggleButtonProps {
   onSetActiveAction: (action: QuickAction) => void;
 }
 
-function ActionToggleButton({ action, isActive, onSetActiveAction }: ActionToggleButtonProps) {
-  const handleClick = useCallback(() => onSetActiveAction(isActive ? null : action.key), [isActive, action.key, onSetActiveAction]);
+function ActionToggleButton({
+  action,
+  isActive,
+  onSetActiveAction,
+}: ActionToggleButtonProps) {
+  const handleClick = useCallback(
+    () => onSetActiveAction(isActive ? null : action.key),
+    [isActive, action.key, onSetActiveAction],
+  );
   return (
     <Button
       variant="ghost"
       size="sm"
-      className={cn(action.color, isActive &&"ring-2 ring-current/30")}
+      className={cn(action.color, isActive && "ring-2 ring-current/30")}
       onClick={handleClick}
     >
       <action.icon className="h-4 w-4 mr-1.5" />
@@ -135,18 +150,27 @@ export function LeadQuickActions({
   leadContext,
   onDraftEmail,
 }: LeadQuickActionsProps) {
-  const handleCancelAction = useCallback(() => onSetActiveAction(null), [onSetActiveAction]);
+  const handleCancelAction = useCallback(
+    () => onSetActiveAction(null),
+    [onSetActiveAction],
+  );
   const generateEmailMutation = useGenerateEmail();
   const { data: emailTemplates } = useEmailTemplates({ limit: 50 });
 
-  const handleApplyTemplate = useCallback((templateId: string) => {
-    const template = emailTemplates?.find((t) => String(t.id) === templateId);
-    if (!template) return;
-    const subject = template.subject.replace(/\{\{lead_name\}\}/gi, leadName ??"");
-    const body = template.body.replace(/\{\{lead_name\}\}/gi, leadName ??"");
-    emailForm.setValue("subject", subject);
-    emailForm.setValue("body", body);
-  }, [emailTemplates, leadName, emailForm]);
+  const handleApplyTemplate = useCallback(
+    (templateId: string) => {
+      const template = emailTemplates?.find((t) => String(t.id) === templateId);
+      if (!template) return;
+      const subject = template.subject.replace(
+        /\{\{lead_name\}\}/gi,
+        leadName ?? "",
+      );
+      const body = template.body.replace(/\{\{lead_name\}\}/gi, leadName ?? "");
+      emailForm.setValue("subject", subject);
+      emailForm.setValue("body", body);
+    },
+    [emailTemplates, leadName, emailForm],
+  );
 
   const handleGenerateDraft = useCallback(() => {
     if (!leadName) return;
@@ -154,7 +178,7 @@ export function LeadQuickActions({
       {
         leadName,
         context: leadContext,
-        tone:"formal",
+        tone: "formal",
       },
       {
         onSuccess: (result) => {
@@ -172,7 +196,6 @@ export function LeadQuickActions({
         <CardTitle className="text-base">Quick Actions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-
         <div className="flex flex-wrap gap-2">
           {ACTION_BUTTONS.map((action) => (
             <ActionToggleButton
@@ -184,15 +207,19 @@ export function LeadQuickActions({
           ))}
         </div>
 
-        {activeAction ==="draft" && (
+        {activeAction === "draft" && (
           <div className="space-y-3 p-4 rounded-lg bg-muted/20 border border-border/30">
             <div className="flex items-start gap-3">
               <div className="flex-1">
                 <p className="text-sm font-medium mb-1">AI Email Draft</p>
                 <p className="text-xs text-muted-foreground">
                   Generate a professional email for{""}
-                  <span className="font-medium text-foreground">{leadName ??"this lead"}</span>{""}
-                  using AI. The draft will pre-fill the email form for your review.
+                  <span className="font-medium text-foreground">
+                    {leadName ?? "this lead"}
+                  </span>
+                  {""}
+                  using AI. The draft will pre-fill the email form for your
+                  review.
                 </p>
               </div>
             </div>
@@ -228,7 +255,7 @@ export function LeadQuickActions({
           </div>
         )}
 
-        {activeAction ==="note" && (
+        {activeAction === "note" && (
           <Form {...noteForm}>
             <form
               onSubmit={noteForm.handleSubmit(onNoteSubmit)}
@@ -260,19 +287,15 @@ export function LeadQuickActions({
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                                    disabled={isNotePending}
-                >
-                  {isNotePending ?"Saving..." :"Save Note"}
+                <Button type="submit" size="sm" disabled={isNotePending}>
+                  {isNotePending ? "Saving..." : "Save Note"}
                 </Button>
               </div>
             </form>
           </Form>
         )}
 
-        {activeAction ==="task" && (
+        {activeAction === "task" && (
           <Form {...taskForm}>
             <form
               onSubmit={taskForm.handleSubmit(onTaskSubmit)}
@@ -298,7 +321,11 @@ export function LeadQuickActions({
                   <FormItem>
                     <FormLabel>Due Date</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ||""} onChange={field.onChange} placeholder="Select due date" />
+                      <DatePicker
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        placeholder="Select due date"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -313,19 +340,15 @@ export function LeadQuickActions({
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                                    disabled={isTaskPending}
-                >
-                  {isTaskPending ?"Creating..." :"Create Task"}
+                <Button type="submit" size="sm" disabled={isTaskPending}>
+                  {isTaskPending ? "Creating..." : "Create Task"}
                 </Button>
               </div>
             </form>
           </Form>
         )}
 
-        {activeAction ==="email" && (
+        {activeAction === "email" && (
           <Form {...emailForm}>
             <form
               onSubmit={emailForm.handleSubmit(onEmailSubmit)}
@@ -400,19 +423,15 @@ export function LeadQuickActions({
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                                    disabled={isEmailPending}
-                >
-                  {isEmailPending ?"Sending..." :"Send Email"}
+                <Button type="submit" size="sm" disabled={isEmailPending}>
+                  {isEmailPending ? "Sending..." : "Send Email"}
                 </Button>
               </div>
             </form>
           </Form>
         )}
 
-        {activeAction ==="call" && (
+        {activeAction === "call" && (
           <Form {...callForm}>
             <form
               onSubmit={callForm.handleSubmit(onCallSubmit)}
@@ -481,12 +500,8 @@ export function LeadQuickActions({
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                                    disabled={isCallPending}
-                >
-                  {isCallPending ?"Logging..." :"Log Call"}
+                <Button type="submit" size="sm" disabled={isCallPending}>
+                  {isCallPending ? "Logging..." : "Log Call"}
                 </Button>
               </div>
             </form>

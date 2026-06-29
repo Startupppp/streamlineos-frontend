@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useSignOut } from "@/hooks/auth-hooks";
+import { useSignOut } from "@/hooks/common/auth-hooks";
 import Link from "next/link";
 import { Settings, LogOut, ChevronUp } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,7 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { resolveImageUrl } from "@/lib/utils";
 
@@ -46,7 +50,7 @@ export function SidebarUserMenu({ isCollapsed }: SidebarUserMenuProps) {
       className={cn(
         "group flex items-center gap-2.5 w-full rounded-lg outline-none transition-colors duration-150",
         "hover:bg-sidebar-accent focus-visible:ring-1 focus-visible:ring-sidebar-ring",
-        isCollapsed ? "justify-center p-2" : "px-2.5 py-2"
+        isCollapsed ? "justify-center p-2" : "px-2.5 py-2",
       )}
     >
       {avatarEl}
@@ -76,7 +80,9 @@ export function SidebarUserMenu({ isCollapsed }: SidebarUserMenuProps) {
     >
       <div className="px-2 py-1.5">
         <p className="text-xs font-semibold text-foreground truncate">{name}</p>
-        <p className="text-[11px] text-muted-foreground truncate mt-0.5">{email}</p>
+        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+          {email}
+        </p>
       </div>
       <DropdownMenuSeparator />
       <DropdownMenuItem asChild>
@@ -119,9 +125,5 @@ export function SidebarUserMenu({ isCollapsed }: SidebarUserMenuProps) {
     );
   }
 
-  return (
-    <div className="border-t border-sidebar-border px-2 py-2">
-      {menu}
-    </div>
-  );
+  return <div className="border-t border-sidebar-border px-2 py-2">{menu}</div>;
 }

@@ -1,11 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { Calculator, BookOpen, ScrollText, BarChart3, Users, FileText, Scale, Clock, Receipt, FileBarChart } from "lucide-react";
+import {
+  Calculator,
+  BookOpen,
+  ScrollText,
+  BarChart3,@/hooks/api/accounting
+  Users,
+  FileText,
+  Scale,
+  Clock,
+  Receipt,
+  FileBarChart,
+} from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { DS } from "@/lib/design-system";
-import { useAccounts, useJournal, useTrialBalance } from "@/lib/api/hooks/accounting";
+import {
+  useAccounts,
+  useJournal,
+  useTrialBalance,
+} from "@/hooks/hooks/accounting";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -180,7 +195,9 @@ export function AccountingHubClient() {
                 className="group relative rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-blue-300/40 hover:shadow-sm"
               >
                 <div className="flex items-start gap-3">
-                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 ${card.accent}`}>
+                  <div
+                    className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 ${card.accent}`}
+                  >
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -207,7 +224,9 @@ export function AccountingHubClient() {
                 className="group relative rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-blue-300/40 hover:shadow-sm"
               >
                 <div className="flex items-start gap-3">
-                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 ${card.accent}`}>
+                  <div
+                    className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 ${card.accent}`}
+                  >
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">

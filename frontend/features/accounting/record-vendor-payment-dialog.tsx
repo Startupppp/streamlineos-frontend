@@ -4,19 +4,41 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { EntityFormDialog } from "@/components/shared";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,@/hooks/api/accounting
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useRecordVendorPayment } from "@/lib/api/hooks/accounting";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useRecordVendorPayment } from "@/hooks/hooks/accounting";
 
-const PAYMENT_METHODS = ["bank_transfer", "upi", "cheque", "cash", "card", "other"] as const;
+const PAYMENT_METHODS = [
+  "bank_transfer",
+  "upi",
+  "cheque",
+  "cash",
+  "card",
+  "other",
+] as const;
 
 const schema = z.object({
   amount: z
     .string()
     .min(1, "Amount required")
-    .refine((v) => Number.isFinite(Number(v)) && Number(v) > 0, "Amount must be > 0")
+    .refine(
+      (v) => Number.isFinite(Number(v)) && Number(v) > 0,
+      "Amount must be > 0",
+    )
     .refine((v) => Number(v) <= 999999999.99, "Amount too large"),
   paymentDate: z.string().min(1, "Payment date required"),
   paymentMethod: z.enum(PAYMENT_METHODS),
@@ -38,7 +60,7 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-const PAYMENT_METHOD_LABEL: Record<typeof PAYMENT_METHODS[number], string> = {
+const PAYMENT_METHOD_LABEL: Record<(typeof PAYMENT_METHODS)[number], string> = {
   bank_transfer: "Bank transfer",
   upi: "UPI",
   cheque: "Cheque",
@@ -47,7 +69,13 @@ const PAYMENT_METHOD_LABEL: Record<typeof PAYMENT_METHODS[number], string> = {
   other: "Other",
 };
 
-export function RecordVendorPaymentDialog({ billId, billNumber, remaining, open, onOpenChange }: Props) {
+export function RecordVendorPaymentDialog({
+  billId,
+  billNumber,
+  remaining,
+  open,
+  onOpenChange,
+}: Props) {
   const mutation = useRecordVendorPayment(billId);
 
   const defaultValues: RecordVendorPaymentValues = {
@@ -58,20 +86,25 @@ export function RecordVendorPaymentDialog({ billId, billNumber, remaining, open,
     notes: "",
   };
 
-  async function handleSubmit(values: RecordVendorPaymentValues): Promise<void> {
+  async function handleSubmit(
+    values: RecordVendorPaymentValues,
+  ): Promise<void> {
     try {
       const payload = {
         amount: Number(values.amount),
         paymentDate: values.paymentDate,
         paymentMethod: values.paymentMethod,
-        referenceNumber: values.referenceNumber ? values.referenceNumber : undefined,
+        referenceNumber: values.referenceNumber
+          ? values.referenceNumber
+          : undefined,
         notes: values.notes ? values.notes : undefined,
       };
       await mutation.mutateAsync(payload);
       toast.success(`Payment recorded for ${billNumber}`);
       onOpenChange(false);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to record payment";
+      const message =
+        error instanceof Error ? error.message : "Failed to record payment";
       toast.error(message);
     }
   }
@@ -97,7 +130,13 @@ export function RecordVendorPaymentDialog({ billId, billNumber, remaining, open,
               <FormItem>
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" min="0" {...field} value={field.value ?? ""} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -130,7 +169,9 @@ export function RecordVendorPaymentDialog({ billId, billNumber, remaining, open,
                   </FormControl>
                   <SelectContent>
                     {PAYMENT_METHODS.map((m) => (
-                      <SelectItem key={m} value={m}>{PAYMENT_METHOD_LABEL[m]}</SelectItem>
+                      <SelectItem key={m} value={m}>
+                        {PAYMENT_METHOD_LABEL[m]}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -145,7 +186,11 @@ export function RecordVendorPaymentDialog({ billId, billNumber, remaining, open,
               <FormItem>
                 <FormLabel>Reference #</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value ?? ""} placeholder="UTR, cheque #, txn id" />
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    placeholder="UTR, cheque #, txn id"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -11,9 +11,16 @@ import {
   AlertTriangle,
   Ticket,
 } from "lucide-react";
-import { useCrmPeopleSlugs } from "@/lib/api/hooks";
+import { useCrmPeopleSlugs } from "@/hooks/api";
 
-type ActivityType = "deal_won" | "meeting" | "proposal" | "call" | "email" | "ticket" | "escalation";
+type ActivityType =
+  | "deal_won"
+  | "meeting"
+  | "proposal"
+  | "call"
+  | "email"
+  | "ticket"
+  | "escalation";
 
 interface ActivityItem {
   type: ActivityType;
@@ -26,14 +33,49 @@ interface ActivityFeedProps {
   items: ActivityItem[];
 }
 
-const typeConfig: Record<ActivityType, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string }> = {
-  deal_won: { icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
-  meeting: { icon: Calendar, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
-  proposal: { icon: FileText, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-500/10" },
-  call: { icon: Phone, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
-  email: { icon: Mail, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-500/10" },
-  ticket: { icon: Ticket, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
-  escalation: { icon: AlertTriangle, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
+const typeConfig: Record<
+  ActivityType,
+  {
+    icon: React.ComponentType<{ className?: string }>;
+    color: string;
+    bg: string;
+  }
+> = {
+  deal_won: {
+    icon: CheckCircle2,
+    color: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-500/10",
+  },
+  meeting: {
+    icon: Calendar,
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-500/10",
+  },
+  proposal: {
+    icon: FileText,
+    color: "text-violet-600 dark:text-violet-400",
+    bg: "bg-violet-500/10",
+  },
+  call: {
+    icon: Phone,
+    color: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-500/10",
+  },
+  email: {
+    icon: Mail,
+    color: "text-slate-600 dark:text-slate-400",
+    bg: "bg-slate-500/10",
+  },
+  ticket: {
+    icon: Ticket,
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-500/10",
+  },
+  escalation: {
+    icon: AlertTriangle,
+    color: "text-red-600 dark:text-red-400",
+    bg: "bg-red-500/10",
+  },
 };
 
 export function ActivityFeed({ items }: ActivityFeedProps) {
@@ -44,7 +86,8 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
       {items.map((item, i) => {
         const config = typeConfig[item.type];
         const Icon = config.icon;
-        const personSlug = item.person && slugMap ? slugMap[item.person] ?? null : null;
+        const personSlug =
+          item.person && slugMap ? (slugMap[item.person] ?? null) : null;
 
         return (
           <motion.div
@@ -54,9 +97,10 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: i * 0.06 }}
           >
-
             <div className="flex flex-col items-center">
-              <div className={`w-8 h-8 rounded-full ${config.bg} flex items-center justify-center shrink-0`}>
+              <div
+                className={`w-8 h-8 rounded-full ${config.bg} flex items-center justify-center shrink-0`}
+              >
                 <Icon className={`h-3.5 w-3.5 ${config.color}`} />
               </div>
               {i < items.length - 1 && (
@@ -65,7 +109,9 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
             </div>
 
             <div className="flex-1 min-w-0 pb-1">
-              <p className="text-sm text-foreground leading-snug">{item.message}</p>
+              <p className="text-sm text-foreground leading-snug">
+                {item.message}
+              </p>
               {item.person && (
                 <div className="flex items-center gap-2 mt-0.5">
                   {personSlug ? (
@@ -76,15 +122,21 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
                       {item.person}
                     </Link>
                   ) : (
-                    <span className="text-xs text-muted-foreground">{item.person}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {item.person}
+                    </span>
                   )}
                   <span className="text-xs text-muted-foreground/50">·</span>
-                  <span className="text-xs text-muted-foreground">{item.time}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {item.time}
+                  </span>
                 </div>
               )}
               {!item.person && (
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-muted-foreground">{item.time}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {item.time}
+                  </span>
                 </div>
               )}
             </div>

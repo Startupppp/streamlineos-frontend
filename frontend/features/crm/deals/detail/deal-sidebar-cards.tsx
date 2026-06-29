@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ActivityTimeline } from "./activity-timeline";
 import { MeetingsCard } from "./meetings-card";
-import type { DealActivity, DealMeeting } from "@/lib/api/hooks/crm";
+import type { DealActivity, DealMeeting } from "@/hooks/api/crm";
 
 interface AssignedTo {
   name?: string | null;
@@ -82,7 +82,10 @@ export function DealSidebarCards({
             <CardTitle className="text-base">Linked Lead</CardTitle>
           </CardHeader>
           <CardContent>
-            <Link href={`/crm/leads/${lead.id}`} className="flex items-center gap-3 group">
+            <Link
+              href={`/crm/leads/${lead.id}`}
+              className="flex items-center gap-3 group"
+            >
               <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-400">
                 {lead.name?.[0] ?? "?"}
               </div>
@@ -126,7 +129,10 @@ export function DealSidebarCards({
           {keyDates
             .filter((d) => d.value)
             .map((d) => (
-              <div key={d.label} className="flex items-center justify-between text-sm">
+              <div
+                key={d.label}
+                className="flex items-center justify-between text-sm"
+              >
                 <span className="text-muted-foreground">{d.label}</span>
                 <span>{new Date(d.value!).toLocaleDateString("en-IN")}</span>
               </div>

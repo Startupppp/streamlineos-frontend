@@ -3,7 +3,7 @@
 import { WidgetCard } from "@/components/ui/widget-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
-import { usePersonalDashboard } from "@/lib/api/hooks/dashboard";
+import { usePersonalDashboard } from "@/hooks/api/dashboard";
 import { Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,9 +46,15 @@ export function TimesheetWidget() {
               )}
             >
               {ts.submitted ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                <CheckCircle2
+                  className="h-4 w-4 text-emerald-600"
+                  aria-hidden="true"
+                />
               ) : (
-                <AlertTriangle className="h-4 w-4 text-red-600" aria-hidden="true" />
+                <AlertTriangle
+                  className="h-4 w-4 text-red-600"
+                  aria-hidden="true"
+                />
               )}
             </div>
           </div>

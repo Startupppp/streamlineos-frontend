@@ -3,37 +3,73 @@
 import { use, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Edit2, Trophy, XCircle, ChevronRight, Copy, FolderKanban } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit2,
+  Trophy,
+  XCircle,
+  ChevronRight,
+  Copy,
+  FolderKanban,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {@/hooks/api/crmcomponents/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
-  useDealDetail, useUpdateDeal, useUpdateDealStage, useDealActivities, useLogDealActivity,
-  useDealMeetings, useCreateDealMeeting, useDeleteDealMeeting, useCloneDeal,
-} from "@/lib/api/hooks/crm";
+  useDealDetail,
+  useUpdateDeal,
+  useUpdateDealStage,
+  useDealActivities,
+  useLogDealActivity,
+  useDealMeetings,
+  useCreateDealMeeting,
+  useDeleteDealMeeting,
+  useCloneDeal,
+} from "@/hooks/hooks/crm";
 import { formatDealId } from "@/lib/format-utils";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { DealEditForm, type EditFormValues } from "@/features/crm/deals/detail/deal-edit-form";
+import {
+  DealEditForm,
+  type EditFormValues,
+} from "@/features/crm/deals/detail/deal-edit-form";
 import { LogActivityDialog } from "@/features/crm/deals/detail/log-activity-dialog";
 import { AIPredictDealButton } from "@/features/crm/deals/ai-predict-deal-button";
-import { MeetingDialog, CreateProjectDialog } from "@/features/crm/deals/detail/deal-dialogs";
+import {
+  MeetingDialog,
+  CreateProjectDialog,
+} from "@/features/crm/deals/detail/deal-dialogs";
 import { DealInfoCard } from "@/features/crm/deals/detail/deal-info-card";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
 
 const STAGES = [
   { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },
-  { key: "CONTACTED", label: "Contacted", color: "#0EA5E9", bg: "bg-sky-500/10" },
-  { key: "PROPOSAL", label: "Proposal", color: "#F59E0B", bg: "bg-amber-500/10" },
-  { key: "NEGOTIATION", label: "Negotiation", color: "#8B5CF6", bg: "bg-purple-500/10" },
+  {
+    key: "CONTACTED",
+    label: "Contacted",
+    color: "#0EA5E9",
+    bg: "bg-sky-500/10",
+  },
+  {
+    key: "PROPOSAL",
+    label: "Proposal",
+    color: "#F59E0B",
+    bg: "bg-amber-500/10",
+  },
+  {
+    key: "NEGOTIATION",
+    label: "Negotiation",
+    color: "#8B5CF6",
+    bg: "bg-purple-500/10",
+  },
   { key: "WON", label: "Won", color: "#10B981", bg: "bg-emerald-500/10" },
   { key: "LOST", label: "Lost", color: "#EF4444", bg: "bg-red-500/10" },
 ] as const;
 
-type DealStage = typeof STAGES[number]["key"];
+type DealStage = (typeof STAGES)[number]["key"];
 
 function formatINR(v: number) {
   if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
@@ -126,11 +162,20 @@ export default function DealDetailPage({
     [dealId, updateDeal],
   );
 
-  const handleBackToDeals = useCallback(() => router.push("/crm/deals"), [router]);
+  const handleBackToDeals = useCallback(
+    () => router.push("/crm/deals"),
+    [router],
+  );
   const handleToggleEdit = useCallback(() => setIsEditing((v) => !v), []);
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
-  const handleMarkWon = useCallback(() => handleStageChange("WON"), [handleStageChange]);
-  const handleMarkLost = useCallback(() => handleStageChange("LOST"), [handleStageChange]);
+  const handleMarkWon = useCallback(
+    () => handleStageChange("WON"),
+    [handleStageChange],
+  );
+  const handleMarkLost = useCallback(
+    () => handleStageChange("LOST"),
+    [handleStageChange],
+  );
 
   const handleStagePipelineClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -140,17 +185,29 @@ export default function DealDetailPage({
     [handleStageChange],
   );
 
-  const handleQuickActionClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const type = e.currentTarget.dataset.actionType as "call" | "note" | "email" | "meeting";
-    const label = e.currentTarget.dataset.actionLabel ?? "";
-    setPendingAction({ type, label });
-  }, []);
+  const handleQuickActionClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const type = e.currentTarget.dataset.actionType as
+        | "call"
+        | "note"
+        | "email"
+        | "meeting";
+      const label = e.currentTarget.dataset.actionLabel ?? "";
+      setPendingAction({ type, label });
+    },
+    [],
+  );
 
   const handleLogActivity = useCallback(
     (notes: string) => {
       if (!pendingAction) return;
       logActivity.mutate(
-        { dealId, type: pendingAction.type, subject: pendingAction.label, notes },
+        {
+          dealId,
+          type: pendingAction.type,
+          subject: pendingAction.label,
+          notes,
+        },
         {
           onSuccess: () => {
             toast.success("Activity logged");
@@ -209,12 +266,15 @@ export default function DealDetailPage({
       }
       setIsCreatingProject(true);
       try {
-        const newProject = await apiClient.post<{ id: number }>("/projects/from-deal", {
-          dealId,
-          name: data.name.trim(),
-          startDate: data.startDate,
-          endDate: data.endDate,
-        });
+        const newProject = await apiClient.post<{ id: number }>(
+          "/projects/from-deal",
+          {
+            dealId,
+            name: data.name.trim(),
+            startDate: data.startDate,
+            endDate: data.endDate,
+          },
+        );
         toast.success("Project created successfully");
         setCreateProjectOpen(false);
         router.push(`/projects/${newProject.id}`);
@@ -227,8 +287,14 @@ export default function DealDetailPage({
     [dealId, router],
   );
 
-  const handleOpenMeetingDialog = useCallback(() => setMeetingDialogOpen(true), []);
-  const handleOpenCreateProject = useCallback(() => setCreateProjectOpen(true), []);
+  const handleOpenMeetingDialog = useCallback(
+    () => setMeetingDialogOpen(true),
+    [],
+  );
+  const handleOpenCreateProject = useCallback(
+    () => setCreateProjectOpen(true),
+    [],
+  );
 
   if (isLoading) {
     return (
@@ -278,14 +344,22 @@ export default function DealDetailPage({
       badge={
         <Badge
           className="text-sm px-3 py-1"
-          style={{ backgroundColor: `${stageConfig.color}20`, color: stageConfig.color }}
+          style={{
+            backgroundColor: `${stageConfig.color}20`,
+            color: stageConfig.color,
+          }}
         >
           {stageConfig.label}
         </Badge>
       }
       actions={
         <>
-          <Button variant="ghost" size="icon" onClick={handleBackToDeals} aria-label="Back to deals">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBackToDeals}
+            aria-label="Back to deals"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           {deal.probability !== null && (
@@ -294,7 +368,12 @@ export default function DealDetailPage({
             </Badge>
           )}
           <AIPredictDealButton dealId={dealId} compact />
-          <Button variant="outline" size="sm" onClick={handleClone} disabled={cloneDeal.isPending}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClone}
+            disabled={cloneDeal.isPending}
+          >
             <Copy className="h-4 w-4 mr-1" />
             Clone
           </Button>
@@ -331,7 +410,12 @@ export default function DealDetailPage({
         </>
       }
     >
-      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
+      <motion.div
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
         <motion.div
           variants={fadeUp}
           className="flex flex-wrap items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50"
@@ -349,8 +433,8 @@ export default function DealDetailPage({
                   isActive
                     ? cn(stage.bg, "ring-1 ring-current/20")
                     : isPast
-                    ? "bg-muted/50 text-muted-foreground"
-                    : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30",
+                      ? "bg-muted/50 text-muted-foreground"
+                      : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30",
                 )}
                 style={isActive ? { color: stage.color } : undefined}
               >

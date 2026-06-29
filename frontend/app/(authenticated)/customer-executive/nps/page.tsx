@@ -61,12 +61,15 @@ import {
   useDeleteNpsSurvey,
   type NpsSurvey,
   type NpsSurveyStatus,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/api/crm";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-const STATUS_CONFIG: Record<NpsSurveyStatus, { label: string; variant: "secondary" | "default" | "outline" }> = {
+const STATUS_CONFIG: Record<
+  NpsSurveyStatus,
+  { label: string; variant: "secondary" | "default" | "outline" }
+> = {
   draft: { label: "Draft", variant: "secondary" },
   active: { label: "Active", variant: "default" },
   closed: { label: "Closed", variant: "outline" },
@@ -90,9 +93,17 @@ function npsColor(score: number): string {
   return "text-red-600";
 }
 
-function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function CreateSurveyDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const [title, setTitle] = useState("");
-  const [question, setQuestion] = useState("How likely are you to recommend us to a friend or colleague?");
+  const [question, setQuestion] = useState(
+    "How likely are you to recommend us to a friend or colleague?",
+  );
   const create = useCreateNpsSurvey();
 
   const handleClose = useCallback(() => {
@@ -115,7 +126,12 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
     );
   }, [title, question, create, handleClose]);
 
-  const handleDialogOpenChange = useCallback((o: boolean) => { if (!o) handleClose(); }, [handleClose]);
+  const handleDialogOpenChange = useCallback(
+    (o: boolean) => {
+      if (!o) handleClose();
+    },
+    [handleClose],
+  );
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
@@ -134,14 +150,21 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
           </div>
           <div className="space-y-1">
             <Label>Question *</Label>
-            <Textarea rows={3} value={question} onChange={(e) => setQuestion(e.target.value)} />
+            <Textarea
+              rows={3}
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+            />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={create.isPending || !title.trim() || !question.trim()}>
+          <Button
+            onClick={handleSave}
+            disabled={create.isPending || !title.trim() || !question.trim()}
+          >
             {create.isPending ? "Creating…" : "Create Survey"}
           </Button>
         </DialogFooter>
@@ -150,10 +173,21 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
   );
 }
 
-function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: () => void }) {
+function SurveyDetailSheet({
+  surveyId,
+  onClose,
+}: {
+  surveyId: number;
+  onClose: () => void;
+}) {
   const { data, isLoading, isError, refetch } = useNpsSurvey(surveyId);
 
-  const handleSheetOpenChange = useCallback((o: boolean) => { if (!o) onClose(); }, [onClose]);
+  const handleSheetOpenChange = useCallback(
+    (o: boolean) => {
+      if (!o) onClose();
+    },
+    [onClose],
+  );
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
   const chartData = useMemo(() => {
@@ -183,19 +217,40 @@ function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: (
           <div className="space-y-5 py-2">
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <p className={cn("text-3xl font-bold tabular-nums", npsColor(data.nps))}>{data.nps}</p>
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">NPS</p>
+                <p
+                  className={cn(
+                    "text-3xl font-bold tabular-nums",
+                    npsColor(data.nps),
+                  )}
+                >
+                  {data.nps}
+                </p>
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  NPS
+                </p>
               </div>
               {chartData.length > 0 && (
                 <ResponsiveContainer width={120} height={120}>
                   <PieChart>
-                    <Pie data={chartData} cx="50%" cy="50%" innerRadius={32} outerRadius={50} paddingAngle={2} dataKey="value">
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={32}
+                      outerRadius={50}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
                       {chartData.map((d) => (
                         <Cell key={d.key} fill={CATEGORY_COLORS[d.key]} />
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ borderRadius: "0.5rem", border: "1px solid hsl(var(--border))", fontSize: "0.75rem" }}
+                      contentStyle={{
+                        borderRadius: "0.5rem",
+                        border: "1px solid hsl(var(--border))",
+                        fontSize: "0.75rem",
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -203,10 +258,19 @@ function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: (
               <div className="space-y-1 text-xs">
                 {(["promoter", "passive", "detractor"] as const).map((key) => (
                   <div key={key} className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[key] }} />
-                    <span className="text-muted-foreground">{CATEGORY_LABELS[key]}</span>
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: CATEGORY_COLORS[key] }}
+                    />
+                    <span className="text-muted-foreground">
+                      {CATEGORY_LABELS[key]}
+                    </span>
                     <span className="font-medium tabular-nums">
-                      {key === "promoter" ? data.breakdown.promoters : key === "passive" ? data.breakdown.passives : data.breakdown.detractors}
+                      {key === "promoter"
+                        ? data.breakdown.promoters
+                        : key === "passive"
+                          ? data.breakdown.passives
+                          : data.breakdown.detractors}
                     </span>
                   </div>
                 ))}
@@ -214,7 +278,9 @@ function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: (
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Responses ({data.responses.length})</h3>
+              <h3 className="text-sm font-semibold">
+                Responses ({data.responses.length})
+              </h3>
               {data.responses.length === 0 ? (
                 <EmptyState
                   illustration={<EmptyMailIllustration />}
@@ -225,12 +291,17 @@ function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: (
               ) : (
                 <div className="space-y-2">
                   {data.responses.map((r) => (
-                    <div key={r.id} className="rounded-lg border border-border/60 p-3">
+                    <div
+                      key={r.id}
+                      className="rounded-lg border border-border/60 p-3"
+                    >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           <span
                             className="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-white shrink-0"
-                            style={{ backgroundColor: CATEGORY_COLORS[r.category] }}
+                            style={{
+                              backgroundColor: CATEGORY_COLORS[r.category],
+                            }}
                           >
                             {r.score}
                           </span>
@@ -239,10 +310,16 @@ function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: (
                           </span>
                         </div>
                         <span className="text-[11px] text-muted-foreground shrink-0">
-                          {r.createdAt ? format(new Date(r.createdAt), "MMM d, yyyy") : ""}
+                          {r.createdAt
+                            ? format(new Date(r.createdAt), "MMM d, yyyy")
+                            : ""}
                         </span>
                       </div>
-                      {r.comment && <p className="text-xs text-muted-foreground mt-1.5">{r.comment}</p>}
+                      {r.comment && (
+                        <p className="text-xs text-muted-foreground mt-1.5">
+                          {r.comment}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -275,21 +352,41 @@ function SurveyRow({
   const cfg = STATUS_CONFIG[survey.status];
 
   const handleView = useCallback(() => onView(survey), [onView, survey]);
-  const handleCopyLinkSurvey = useCallback(() => onCopyLink(survey), [onCopyLink, survey]);
-  const handleActivate = useCallback(() => onToggleStatus(survey, "active"), [onToggleStatus, survey]);
-  const handleCloseSurvey = useCallback(() => onToggleStatus(survey, "closed"), [onToggleStatus, survey]);
-  const handleDeleteSurvey = useCallback(() => onDelete(survey), [onDelete, survey]);
+  const handleCopyLinkSurvey = useCallback(
+    () => onCopyLink(survey),
+    [onCopyLink, survey],
+  );
+  const handleActivate = useCallback(
+    () => onToggleStatus(survey, "active"),
+    [onToggleStatus, survey],
+  );
+  const handleCloseSurvey = useCallback(
+    () => onToggleStatus(survey, "closed"),
+    [onToggleStatus, survey],
+  );
+  const handleDeleteSurvey = useCallback(
+    () => onDelete(survey),
+    [onDelete, survey],
+  );
 
   return (
     <Card>
       <CardContent className="pt-4">
         <div className="flex items-start justify-between gap-3">
-          <button type="button" onClick={handleView} className="min-w-0 flex-1 text-left">
+          <button
+            type="button"
+            onClick={handleView}
+            className="min-w-0 flex-1 text-left"
+          >
             <div className="flex items-center gap-2">
               <p className="font-medium text-sm truncate">{survey.title}</p>
-              <Badge variant={cfg.variant} className="text-[10px]">{cfg.label}</Badge>
+              <Badge variant={cfg.variant} className="text-[10px]">
+                {cfg.label}
+              </Badge>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{survey.question}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+              {survey.question}
+            </p>
             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <ThumbsUp className="h-3 w-3 text-emerald-600" />
@@ -308,7 +405,12 @@ function SurveyRow({
           </button>
 
           <div className="flex flex-col items-end gap-2 shrink-0">
-            <span className={cn("text-xl font-bold tabular-nums", npsColor(survey.nps))}>
+            <span
+              className={cn(
+                "text-xl font-bold tabular-nums",
+                npsColor(survey.nps),
+              )}
+            >
               {survey.responseCount > 0 ? survey.nps : "—"}
             </span>
             <div className="flex items-center gap-1">
@@ -320,7 +422,11 @@ function SurveyRow({
                 aria-label="Copy public link"
                 title="Copy public link"
               >
-                {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Link2 className="h-3.5 w-3.5" />}
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                ) : (
+                  <Link2 className="h-3.5 w-3.5" />
+                )}
               </Button>
               {survey.status !== "active" ? (
                 <Button
@@ -376,7 +482,12 @@ export default function NpsPage() {
   const [deleteTarget, setDeleteTarget] = useState<NpsSurvey | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const overall = stats?.breakdown ?? { promoters: 0, passives: 0, detractors: 0, total: 0 };
+  const overall = stats?.breakdown ?? {
+    promoters: 0,
+    passives: 0,
+    detractors: 0,
+    total: 0,
+  };
   const overallNps = stats?.nps ?? 0;
 
   const overallChart = useMemo(
@@ -393,11 +504,13 @@ export default function NpsPage() {
 
   const handleCopyLink = useCallback((survey: NpsSurvey) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    navigator.clipboard.writeText(`${origin}/nps/${survey.publicToken}`).then(() => {
-      setCopiedId(survey.id);
-      toast.success("Public link copied");
-      setTimeout(() => setCopiedId(null), 2000);
-    });
+    navigator.clipboard
+      .writeText(`${origin}/nps/${survey.publicToken}`)
+      .then(() => {
+        setCopiedId(survey.id);
+        toast.success("Public link copied");
+        setTimeout(() => setCopiedId(null), 2000);
+      });
   }, []);
 
   const handleToggleStatus = useCallback(
@@ -405,7 +518,10 @@ export default function NpsPage() {
       updateSurvey.mutate(
         { id: survey.id, status },
         {
-          onSuccess: () => toast.success(status === "active" ? "Survey activated" : "Survey closed"),
+          onSuccess: () =>
+            toast.success(
+              status === "active" ? "Survey activated" : "Survey closed",
+            ),
           onError: () => toast.error("Failed to update survey"),
         },
       );
@@ -426,10 +542,18 @@ export default function NpsPage() {
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
-  const handleViewDetail = useCallback((s: NpsSurvey) => setDetailTarget(s), []);
-  const handleDeleteTarget = useCallback((s: NpsSurvey) => setDeleteTarget(s), []);
+  const handleViewDetail = useCallback(
+    (s: NpsSurvey) => setDetailTarget(s),
+    [],
+  );
+  const handleDeleteTarget = useCallback(
+    (s: NpsSurvey) => setDeleteTarget(s),
+    [],
+  );
   const handleCloseDetail = useCallback(() => setDetailTarget(null), []);
-  const handleDeleteAlertChange = useCallback((o: boolean) => { if (!o) setDeleteTarget(null); }, []);
+  const handleDeleteAlertChange = useCallback((o: boolean) => {
+    if (!o) setDeleteTarget(null);
+  }, []);
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
   return (
@@ -461,23 +585,41 @@ export default function NpsPage() {
               <CardContent>
                 <div className="flex items-center gap-5">
                   <div className="text-center shrink-0">
-                    <p className={cn("text-5xl font-bold tabular-nums leading-none", npsColor(overallNps))}>
+                    <p
+                      className={cn(
+                        "text-5xl font-bold tabular-nums leading-none",
+                        npsColor(overallNps),
+                      )}
+                    >
                       {overall.total > 0 ? overallNps : "—"}
                     </p>
                     <p className="text-[11px] uppercase tracking-wide text-muted-foreground mt-1">
-                      {stats?.activeSurveys ?? 0} active {(stats?.activeSurveys ?? 0) === 1 ? "survey" : "surveys"}
+                      {stats?.activeSurveys ?? 0} active{" "}
+                      {(stats?.activeSurveys ?? 0) === 1 ? "survey" : "surveys"}
                     </p>
                   </div>
                   {overallChart.length > 0 ? (
                     <ResponsiveContainer width={130} height={130}>
                       <PieChart>
-                        <Pie data={overallChart} cx="50%" cy="50%" innerRadius={38} outerRadius={58} paddingAngle={2} dataKey="value">
+                        <Pie
+                          data={overallChart}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={38}
+                          outerRadius={58}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
                           {overallChart.map((d) => (
                             <Cell key={d.key} fill={CATEGORY_COLORS[d.key]} />
                           ))}
                         </Pie>
                         <Tooltip
-                          contentStyle={{ borderRadius: "0.5rem", border: "1px solid hsl(var(--border))", fontSize: "0.75rem" }}
+                          contentStyle={{
+                            borderRadius: "0.5rem",
+                            border: "1px solid hsl(var(--border))",
+                            fontSize: "0.75rem",
+                          }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
@@ -488,20 +630,45 @@ export default function NpsPage() {
                   )}
                 </div>
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-                  {(["promoter", "passive", "detractor"] as const).map((key) => (
-                    <div key={key} className="flex items-center gap-1.5">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[key] }} />
-                      <span className="text-xs text-muted-foreground">{CATEGORY_LABELS[key]}</span>
-                    </div>
-                  ))}
+                  {(["promoter", "passive", "detractor"] as const).map(
+                    (key) => (
+                      <div key={key} className="flex items-center gap-1.5">
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: CATEGORY_COLORS[key] }}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {CATEGORY_LABELS[key]}
+                        </span>
+                      </div>
+                    ),
+                  )}
                 </div>
               </CardContent>
             </Card>
 
             <div className="lg:col-span-7 grid grid-cols-2 gap-3 sm:grid-cols-3 content-start">
-              <StatCard label="Promoters" value={overall.promoters} icon={ThumbsUp} color="green" index={0} />
-              <StatCard label="Passives" value={overall.passives} icon={Minus} color="amber" index={1} />
-              <StatCard label="Detractors" value={overall.detractors} icon={ThumbsDown} color="red" index={2} />
+              <StatCard
+                label="Promoters"
+                value={overall.promoters}
+                icon={ThumbsUp}
+                color="green"
+                index={0}
+              />
+              <StatCard
+                label="Passives"
+                value={overall.passives}
+                icon={Minus}
+                color="amber"
+                index={1}
+              />
+              <StatCard
+                label="Detractors"
+                value={overall.detractors}
+                icon={ThumbsDown}
+                color="red"
+                index={2}
+              />
             </div>
           </div>
 
@@ -536,7 +703,10 @@ export default function NpsPage() {
       <CreateSurveyDialog open={createOpen} onClose={handleCloseCreate} />
 
       {detailTarget && (
-        <SurveyDetailSheet surveyId={detailTarget.id} onClose={handleCloseDetail} />
+        <SurveyDetailSheet
+          surveyId={detailTarget.id}
+          onClose={handleCloseDetail}
+        />
       )}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteAlertChange}>
@@ -544,7 +714,8 @@ export default function NpsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete survey?</AlertDialogTitle>
             <AlertDialogDescription>
-              &ldquo;{deleteTarget?.title}&rdquo; and all its responses will be permanently deleted.
+              &ldquo;{deleteTarget?.title}&rdquo; and all its responses will be
+              permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

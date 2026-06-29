@@ -30,8 +30,8 @@ import {
   type GoalStatus,
   type KeyResultMetric,
   type KeyResultInput,
-} from "@/lib/api/hooks/goals";
-import { useChatOrgUsers } from "@/lib/api/hooks/chat";
+} from "@/hooks/api/goals";
+import { useChatOrgUsers } from "@/hooks/api/chat";
 import { LEVEL_OPTIONS, STATUS_OPTIONS, METRIC_OPTIONS } from "./constants";
 
 interface GoalFormSheetProps {
@@ -140,12 +140,18 @@ function KeyResultRow({ kr, index, onUpdate, onRemove }: KeyResultRowProps) {
   );
 }
 
-export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) {
+export function GoalFormSheet({
+  open,
+  onOpenChange,
+  goal,
+}: GoalFormSheetProps) {
   const isEdit = !!goal;
   const [title, setTitle] = useState(goal?.title ?? "");
   const [description, setDescription] = useState(goal?.description ?? "");
   const [level, setLevel] = useState<GoalLevel>(goal?.level ?? "company");
-  const [status, setStatus] = useState<GoalStatus>(goal?.status ?? "not_started");
+  const [status, setStatus] = useState<GoalStatus>(
+    goal?.status ?? "not_started",
+  );
   const [ownerId, setOwnerId] = useState<string>(goal?.ownerId ?? "unassigned");
   const [startDate, setStartDate] = useState(goal?.startDate ?? "");
   const [dueDate, setDueDate] = useState(goal?.dueDate ?? "");
@@ -187,7 +193,9 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
   }
 
   function updateKeyResult(index: number, patch: Partial<DraftKeyResult>) {
-    setKeyResults((prev) => prev.map((kr, i) => (i === index ? { ...kr, ...patch } : kr)));
+    setKeyResults((prev) =>
+      prev.map((kr, i) => (i === index ? { ...kr, ...patch } : kr)),
+    );
   }
 
   function buildKeyResults(): KeyResultInput[] {
@@ -264,7 +272,9 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
                 {isEdit ? "Edit Goal" : "New Goal"}
               </SheetTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {isEdit ? "Update objective details" : "Define an objective and its key results"}
+                {isEdit
+                  ? "Update objective details"
+                  : "Define an objective and its key results"}
               </p>
             </div>
           </div>
@@ -290,7 +300,10 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="goal-description" className="text-xs font-medium">
+                <Label
+                  htmlFor="goal-description"
+                  className="text-xs font-medium"
+                >
                   Description
                 </Label>
                 <Textarea
@@ -391,7 +404,13 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
                     <ListChecks className="h-4 w-4" />
                     <span>Key Results</span>
                   </div>
-                  <Button type="button" variant="outline" size="sm" className="h-7" onClick={handleAddKeyResult}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7"
+                    onClick={handleAddKeyResult}
+                  >
                     <Plus className="h-3.5 w-3.5 mr-1" /> Add
                   </Button>
                 </div>
@@ -419,7 +438,12 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
         </ScrollArea>
 
         <SheetFooter className="px-6 py-3 border-t shrink-0">
-          <Button type="button" variant="outline" className="flex-1 h-9" onClick={handleClose}>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 h-9"
+            onClick={handleClose}
+          >
             Cancel
           </Button>
           <Button

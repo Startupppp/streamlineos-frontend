@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useAssignCrmReps, useCrmAssignmentStats } from "@/lib/api/hooks/crm";
+import { useAssignCrmReps, useCrmAssignmentStats } from "@/hooks/api/crm";
 
 export function AssignCrmDialog() {
   const [open, setOpen] = useState(false);
@@ -28,7 +28,9 @@ export function AssignCrmDialog() {
   const handleAssign = useCallback(async () => {
     try {
       await mutation.mutateAsync();
-      toast.success("CRM representatives assigned successfully via round-robin");
+      toast.success(
+        "CRM representatives assigned successfully via round-robin",
+      );
       setOpen(false);
     } catch {
       toast.error("Failed to assign CRM representatives. Please try again.");
@@ -60,7 +62,8 @@ export function AssignCrmDialog() {
               CRM Assignment Overview
             </DialogTitle>
             <DialogDescription>
-              Round-robin assigns unassigned clients to CRM reps with the fewest active accounts.
+              Round-robin assigns unassigned clients to CRM reps with the fewest
+              active accounts.
             </DialogDescription>
           </DialogHeader>
 
@@ -68,7 +71,8 @@ export function AssignCrmDialog() {
             <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
               <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
               <p className="text-sm text-amber-600 dark:text-amber-400">
-                <span className="font-semibold">{unassignedCount}</span> client{unassignedCount !== 1 ? "s" : ""} unassigned
+                <span className="font-semibold">{unassignedCount}</span> client
+                {unassignedCount !== 1 ? "s" : ""} unassigned
               </p>
             </div>
           )}
@@ -103,7 +107,9 @@ export function AssignCrmDialog() {
             ) : members.length === 0 ? (
               <div className="rounded-lg border border-dashed p-6 text-center">
                 <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-                <p className="text-sm font-medium">No CRM representatives found</p>
+                <p className="text-sm font-medium">
+                  No CRM representatives found
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Add members with CUSTOMER_SUPPORT role to enable assignment.
                 </p>
@@ -129,13 +135,16 @@ export function AssignCrmDialog() {
                           {member.name ?? "Unknown"}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {member.totalCount} total client{member.totalCount !== 1 ? "s" : ""}
+                          {member.totalCount} total client
+                          {member.totalCount !== 1 ? "s" : ""}
                         </p>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge
-                          variant={member.activeCount === 0 ? "secondary" : "default"}
+                          variant={
+                            member.activeCount === 0 ? "secondary" : "default"
+                          }
                           className="text-xs tabular-nums"
                         >
                           {member.activeCount} active
@@ -148,7 +157,9 @@ export function AssignCrmDialog() {
 
             {!statsLoading && members.length > 0 && (
               <div className="flex items-center justify-between px-1 pt-1 text-xs text-muted-foreground">
-                <span>{totalActive} active across {members.length} reps</span>
+                <span>
+                  {totalActive} active across {members.length} reps
+                </span>
                 {members.length > 0 && (
                   <span>
                     Avg: {(totalActive / members.length).toFixed(1)} per rep
@@ -164,9 +175,15 @@ export function AssignCrmDialog() {
             </Button>
             <Button
               onClick={handleAssign}
-              disabled={mutation.isPending || members.length === 0 || unassignedCount === 0}
+              disabled={
+                mutation.isPending ||
+                members.length === 0 ||
+                unassignedCount === 0
+              }
             >
-              {mutation.isPending ? "Assigning..." : `Assign ${unassignedCount} Client${unassignedCount !== 1 ? "s" : ""}`}
+              {mutation.isPending
+                ? "Assigning..."
+                : `Assign ${unassignedCount} Client${unassignedCount !== 1 ? "s" : ""}`}
             </Button>
           </DialogFooter>
         </DialogContent>

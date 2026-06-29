@@ -36,9 +36,14 @@ import {
   type GoalListItem,
   type GoalLevel,
   type GoalStatus,
-} from "@/lib/api/hooks/goals";
+} from "@/hooks/api/goals";
 import { GoalFormSheet } from "@/features/projects/goals/goal-form-sheet";
-import { STATUS_CONFIG, LEVEL_LABEL, STATUS_OPTIONS, LEVEL_OPTIONS } from "@/features/projects/goals/constants";
+import {
+  STATUS_CONFIG,
+  LEVEL_LABEL,
+  STATUS_OPTIONS,
+  LEVEL_OPTIONS,
+} from "@/features/projects/goals/constants";
 
 const LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
 
@@ -56,7 +61,9 @@ function StatCard({
   return (
     <Card>
       <CardContent className="p-4 flex items-center gap-3">
-        <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${tone}`}>
+        <div
+          className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${tone}`}
+        >
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0">
@@ -77,7 +84,9 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
       <Card className="transition-colors group-hover:border-primary/40">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-start justify-between gap-2">
-            <p className="font-medium text-sm leading-snug line-clamp-2">{goal.title}</p>
+            <p className="font-medium text-sm leading-snug line-clamp-2">
+              {goal.title}
+            </p>
             <Badge variant={cfg.variant} className="text-[10px] shrink-0">
               {cfg.label}
             </Badge>
@@ -213,7 +222,12 @@ export default function GoalsPage() {
       }
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-4">
-        <StatCard icon={Target} label="Total Goals" value={stats?.total ?? 0} tone="bg-blue-500/10 text-blue-600" />
+        <StatCard
+          icon={Target}
+          label="Total Goals"
+          value={stats?.total ?? 0}
+          tone="bg-blue-500/10 text-blue-600"
+        />
         <StatCard
           icon={TrendingUp}
           label="On Track"
@@ -259,7 +273,9 @@ export default function GoalsPage() {
             return (
               <div key={level} className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-semibold text-foreground">{LEVEL_LABEL[level]}</h2>
+                  <h2 className="text-sm font-semibold text-foreground">
+                    {LEVEL_LABEL[level]}
+                  </h2>
                   <Badge variant="secondary" className="text-[10px]">
                     {levelGoals.length}
                   </Badge>

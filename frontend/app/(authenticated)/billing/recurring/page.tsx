@@ -3,7 +3,13 @@
 import { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { Repeat, IndianRupee, CalendarClock, Loader2, RefreshCw } from "lucide-react";
+import {
+  Repeat,
+  IndianRupee,
+  CalendarClock,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,13 +25,13 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyTimeIllustration } from "@/components/illustrations";
+import {@/hooks/api/invoicen } from "@/components/illustrations";
 import { toast } from "sonner";
 import {
   useRecurringInvoices,
   useRunRecurringInvoices,
   type RecurringInvoice,
-} from "@/lib/api/hooks/invoice";
+} from "@/hooks/hooks/invoice";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
 const MONTHLY_FACTOR: Record<string, number> = {
@@ -55,7 +61,10 @@ function intervalLabel(interval: string | null): string {
 }
 
 function monthlyValue(invoice: RecurringInvoice): number {
-  const factor = MONTHLY_FACTOR[(invoice.recurringInterval ?? "monthly").trim().toLowerCase()] ?? 1;
+  const factor =
+    MONTHLY_FACTOR[
+      (invoice.recurringInterval ?? "monthly").trim().toLowerCase()
+    ] ?? 1;
   return Number(invoice.total) * factor;
 }
 
@@ -64,7 +73,10 @@ export default function RecurringInvoicesPage() {
   const runMutation = useRunRecurringInvoices();
   const recurring = useMemo(() => query.data ?? [], [query.data]);
 
-  const dueCount = useMemo(() => recurring.filter((inv) => inv.overdue).length, [recurring]);
+  const dueCount = useMemo(
+    () => recurring.filter((inv) => inv.overdue).length,
+    [recurring],
+  );
   const monthlyTotal = useMemo(
     () => recurring.reduce((sum, inv) => sum + monthlyValue(inv), 0),
     [recurring],
@@ -90,7 +102,10 @@ export default function RecurringInvoicesPage() {
   }, [runMutation]);
 
   const generateButton = (
-    <Button onClick={handleGenerate} disabled={runMutation.isPending || query.isLoading}>
+    <Button
+      onClick={handleGenerate}
+      disabled={runMutation.isPending || query.isLoading}
+    >
       {runMutation.isPending ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
@@ -126,12 +141,16 @@ export default function RecurringInvoicesPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active recurring</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Active recurring
+                </CardTitle>
                 <Repeat className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{recurring.length}</div>
-                <p className="text-xs text-muted-foreground">Invoices on a schedule</p>
+                <p className="text-xs text-muted-foreground">
+                  Invoices on a schedule
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -140,18 +159,28 @@ export default function RecurringInvoicesPage() {
                 <CalendarClock className="h-4 w-4 text-amber-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-amber-600">{dueCount}</div>
-                <p className="text-xs text-muted-foreground">Ready to generate</p>
+                <div className="text-2xl font-bold text-amber-600">
+                  {dueCount}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Ready to generate
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Monthly value</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Monthly value
+                </CardTitle>
                 <IndianRupee className="h-4 w-4 text-emerald-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrencyFull(monthlyTotal)}</div>
-                <p className="text-xs text-muted-foreground">Estimated recurring revenue</p>
+                <div className="text-2xl font-bold">
+                  {formatCurrencyFull(monthlyTotal)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Estimated recurring revenue
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -183,11 +212,20 @@ export default function RecurringInvoicesPage() {
                     <TableCell className="text-right tabular-nums">
                       {formatCurrencyFull(invoice.total, invoice.currency)}
                     </TableCell>
-                    <TableCell>{intervalLabel(invoice.recurringInterval)}</TableCell>
+                    <TableCell>
+                      {intervalLabel(invoice.recurringInterval)}
+                    </TableCell>
                     <TableCell>
                       {invoice.nextRecurringDate ? (
-                        <Badge variant={invoice.overdue ? "destructive" : "secondary"}>
-                          {format(new Date(invoice.nextRecurringDate), "MMM d, yyyy")}
+                        <Badge
+                          variant={
+                            invoice.overdue ? "destructive" : "secondary"
+                          }
+                        >
+                          {format(
+                            new Date(invoice.nextRecurringDate),
+                            "MMM d, yyyy",
+                          )}
                           {invoice.overdue ? " · Due" : ""}
                         </Badge>
                       ) : (

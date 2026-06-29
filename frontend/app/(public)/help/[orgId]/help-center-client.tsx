@@ -9,11 +9,17 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPublicDocsIllustration } from "@/components/illustrations";
-import { BookOpen, Search, FileText, FolderTree, ArrowRight } from "lucide-react";
-import { usePublicKb } from "@/lib/api/hooks/support/kb";
+import {
+  BookOpen,
+  Search,
+  FileText,
+  FolderTree,
+  ArrowRight,
+} from "lucide-react";
+import { usePublicKb } from "@/hooks/api/support/kb";
 import { KbAskPanel } from "@/components/support/kb-ask-panel";
 import { getApiError } from "@/lib/api-client";
-import { useDebouncedValue } from "@/hooks/use-debounce";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 const CATEGORY_ALL = "all";
 
@@ -28,7 +34,8 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
 
   const queryParams = useMemo(
     () => ({
-      categoryId: activeCategory === CATEGORY_ALL ? undefined : Number(activeCategory),
+      categoryId:
+        activeCategory === CATEGORY_ALL ? undefined : Number(activeCategory),
       search: debouncedSearch || undefined,
     }),
     [activeCategory, debouncedSearch],
@@ -58,7 +65,9 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 mb-4">
             <BookOpen className="h-6 w-6" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">How can we help?</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            How can we help?
+          </h1>
           <p className="text-white/80 text-sm mt-2">
             Search our help center or browse articles by category.
           </p>
@@ -79,13 +88,18 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
         {isLoading ? (
           <LoadingState variant="cards" />
         ) : error ? (
-          <ErrorState description={getApiError(error)} onRetry={() => refetch()} />
+          <ErrorState
+            description={getApiError(error)}
+            onRetry={() => refetch()}
+          />
         ) : (
           <>
             {categories.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-6">
                 <Button
-                  variant={activeCategory === CATEGORY_ALL ? "default" : "outline"}
+                  variant={
+                    activeCategory === CATEGORY_ALL ? "default" : "outline"
+                  }
                   size="sm"
                   onClick={handleSelectAllCategories}
                   className="w-full"
@@ -95,7 +109,11 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
                 {categories.map((category) => (
                   <Button
                     key={category.id}
-                    variant={activeCategory === String(category.id) ? "default" : "outline"}
+                    variant={
+                      activeCategory === String(category.id)
+                        ? "default"
+                        : "outline"
+                    }
                     size="sm"
                     onClick={() => handleSelectCategory(category.id)}
                     className="w-full justify-start min-w-0"
@@ -121,7 +139,11 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
             ) : (
               <div className="space-y-3">
                 {articles.map((article) => (
-                  <Link key={article.id} href={`/help/${orgId}/${article.slug}`} className="block">
+                  <Link
+                    key={article.id}
+                    href={`/help/${orgId}/${article.slug}`}
+                    className="block"
+                  >
                     <Card className="hover:border-primary/40 transition-colors">
                       <CardContent className="py-4 flex items-start gap-3">
                         <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">

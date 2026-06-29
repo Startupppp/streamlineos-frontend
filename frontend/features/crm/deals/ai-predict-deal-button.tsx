@@ -1,16 +1,22 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Sparkles, Loader2, TrendingUp, AlertTriangle, Lightbulb } from "lucide-react";
+import {
+  Sparkles,
+  Loader2,
+  TrendingUp,
+  AlertTriangle,
+  Lightbulb,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
+  Popover,@/hooks/api/ai
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { usePredictDeal } from "@/lib/api/hooks/ai";
+import { usePredictDeal } from "@/hooks/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
@@ -20,14 +26,23 @@ interface AIPredictDealButtonProps {
   compact?: boolean;
 }
 
-export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProps) {
+export function AIPredictDealButton({
+  dealId,
+  compact,
+}: AIPredictDealButtonProps) {
   const [open, setOpen] = useState(false);
   const predictMutation = usePredictDeal();
   const result = predictMutation.data;
-  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.deal-prediction");
+  const { enabled: featureEnabled, requiredPlan } =
+    useFeature("ai.deal-prediction");
 
   const handlePredict = useCallback(() => {
-    if (!featureEnabled) { toast.error(`AI deal prediction requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
+    if (!featureEnabled) {
+      toast.error(
+        `AI deal prediction requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`,
+      );
+      return;
+    }
     predictMutation.mutate(dealId, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -51,7 +66,9 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
     return "bg-red-500/10";
   };
 
-  const confidenceVariant = (c: string): "default" | "secondary" | "outline" => {
+  const confidenceVariant = (
+    c: string,
+  ): "default" | "secondary" | "outline" => {
     if (c === "high") return "default";
     if (c === "medium") return "secondary";
     return "outline";
@@ -73,12 +90,25 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
             ) : (
               <Sparkles className="h-3 w-3 text-blue-600" />
             )}
-            {result ? <span className={cn("font-bold", probColor(result.winProbability))}>{result.winProbability}%</span> : "Predict"}
+            {result ? (
+              <span
+                className={cn("font-bold", probColor(result.winProbability))}
+              >
+                {result.winProbability}%
+              </span>
+            ) : (
+              "Predict"
+            )}
           </Button>
         </PopoverTrigger>
         {result && (
           <PopoverContent className="w-80 p-3" align="end">
-            <PredictDetails result={result} probColor={probColor} probBg={probBg} confidenceVariant={confidenceVariant} />
+            <PredictDetails
+              result={result}
+              probColor={probColor}
+              probBg={probBg}
+              confidenceVariant={confidenceVariant}
+            />
           </PopoverContent>
         )}
       </Popover>
@@ -95,12 +125,25 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
         className="w-full"
       >
         {predictMutation.isPending ? (
-          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Predicting...</>
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Predicting...
+          </>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />AI Predict Win Probability</>
+          <>
+            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+            AI Predict Win Probability
+          </>
         )}
       </Button>
-      {result && <PredictDetails result={result} probColor={probColor} probBg={probBg} confidenceVariant={confidenceVariant} />}
+      {result && (
+        <PredictDetails
+          result={result}
+          probColor={probColor}
+          probBg={probBg}
+          confidenceVariant={confidenceVariant}
+        />
+      )}
     </div>
   );
 }
@@ -128,22 +171,41 @@ function PredictDetails({
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-2">
-        <div className={cn("h-12 w-12 rounded-lg flex flex-col items-center justify-center font-bold", probBg(result.winProbability), probColor(result.winProbability))}>
-          <span className="text-base leading-none">{result.winProbability}%</span>
-          <span className="text-[8px] uppercase tracking-wider mt-0.5">win</span>
+        <div
+          className={cn(
+            "h-12 w-12 rounded-lg flex flex-col items-center justify-center font-bold",
+            probBg(result.winProbability),
+            probColor(result.winProbability),
+          )}
+        >
+          <span className="text-base leading-none">
+            {result.winProbability}%
+          </span>
+          <span className="text-[8px] uppercase tracking-wider mt-0.5">
+            win
+          </span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="text-xs font-medium">AI Prediction</p>
-            <Badge variant={confidenceVariant(result.confidence)} className="text-[9px] h-4 px-1">{result.confidence}</Badge>
+            <Badge
+              variant={confidenceVariant(result.confidence)}
+              className="text-[9px] h-4 px-1"
+            >
+              {result.confidence}
+            </Badge>
           </div>
-          <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{result.reasoning}</p>
+          <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+            {result.reasoning}
+          </p>
         </div>
       </div>
 
       {result.positiveSignals.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Positive Signals</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+            Positive Signals
+          </p>
           {result.positiveSignals.map((s, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
               <TrendingUp className="h-3 w-3 text-emerald-500 mt-0.5 shrink-0" />
@@ -155,7 +217,9 @@ function PredictDetails({
 
       {result.riskFactors.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Risk Factors</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+            Risk Factors
+          </p>
           {result.riskFactors.map((r, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
               <AlertTriangle className="h-3 w-3 text-red-400 mt-0.5 shrink-0" />
@@ -167,7 +231,9 @@ function PredictDetails({
 
       {result.recommendedActions.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Recommended Actions</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+            Recommended Actions
+          </p>
           {result.recommendedActions.map((a, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
               <Lightbulb className="h-3 w-3 text-blue-400 mt-0.5 shrink-0" />

@@ -2,9 +2,11 @@
 
 import { useRef, useState, useCallback } from "react";
 import { formatCurrencyFull } from "@/lib/format-utils";
-import type { ExportResult } from "@/server/actions/expense-export";
+import type { ExportResult } from "@/server/expense-export";
 
-export type PdfData = NonNullable<Extract<ExportResult, { format: "pdf" }>["data"]>;
+export type PdfData = NonNullable<
+  Extract<ExportResult, { format: "pdf" }>["data"]
+>;
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   PENDING: { bg: "#fef3c7", color: "#92400e" },
@@ -57,9 +59,15 @@ function SummaryCard({
         borderLeft: `4px solid ${borderColor}`,
       }}
     >
-      <div style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}>{label}</div>
+      <div style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}>
+        {label}
+      </div>
       <div style={{ fontSize: "22px", fontWeight: 700 }}>{value}</div>
-      {count && <div style={{ fontSize: "12px", color: "#888", marginTop: "4px" }}>{count}</div>}
+      {count && (
+        <div style={{ fontSize: "12px", color: "#888", marginTop: "4px" }}>
+          {count}
+        </div>
+      )}
     </div>
   );
 }
@@ -68,16 +76,25 @@ function ExpensePdfContent({ data }: { data: PdfData }) {
   return (
     <div
       style={{
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         padding: "40px",
         color: "#1a1a1a",
         width: "800px",
         background: "#ffffff",
       }}
     >
-      <div style={{ borderBottom: "2px solid #333", paddingBottom: "20px", marginBottom: "30px" }}>
+      <div
+        style={{
+          borderBottom: "2px solid #333",
+          paddingBottom: "20px",
+          marginBottom: "30px",
+        }}
+      >
         <h1 style={{ fontSize: "28px", marginBottom: "8px" }}>{data.title}</h1>
-        <p style={{ color: "#666", fontSize: "14px" }}>Generated on {data.generatedAt}</p>
+        <p style={{ color: "#666", fontSize: "14px" }}>
+          Generated on {data.generatedAt}
+        </p>
       </div>
 
       <div
@@ -97,7 +114,9 @@ function ExpensePdfContent({ data }: { data: PdfData }) {
             { label: "Total Records", value: String(data.summary.totalCount) },
           ].map((f) => (
             <div key={f.label}>
-              <div style={{ color: "#666", marginBottom: "2px" }}>{f.label}</div>
+              <div style={{ color: "#666", marginBottom: "2px" }}>
+                {f.label}
+              </div>
               <div style={{ fontWeight: 600 }}>{f.value}</div>
             </div>
           ))}
@@ -166,10 +185,20 @@ function ExpensePdfContent({ data }: { data: PdfData }) {
               {data.byCategory.map((cat) => (
                 <tr key={cat.category}>
                   <td style={cellStyle}>{cat.category}</td>
-                  <td style={{ ...cellStyle, textAlign: "right" }}>{cat.count}</td>
-                  <td style={{ ...cellStyle, textAlign: "right" }}>{formatInr(cat.amount)}</td>
+                  <td style={{ ...cellStyle, textAlign: "right" }}>
+                    {cat.count}
+                  </td>
+                  <td style={{ ...cellStyle, textAlign: "right" }}>
+                    {formatInr(cat.amount)}
+                  </td>
                   <td style={cellStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
                       <div
                         style={{
                           height: "8px",
@@ -214,15 +243,21 @@ function ExpensePdfContent({ data }: { data: PdfData }) {
           </thead>
           <tbody>
             {data.expenses.map((exp, idx) => {
-              const statusColor = STATUS_COLORS[exp.status] ?? STATUS_COLORS.PENDING;
+              const statusColor =
+                STATUS_COLORS[exp.status] ?? STATUS_COLORS.PENDING;
               return (
-                <tr key={idx} style={idx % 2 === 1 ? { background: "#fafafa" } : undefined}>
+                <tr
+                  key={idx}
+                  style={idx % 2 === 1 ? { background: "#fafafa" } : undefined}
+                >
                   <td style={cellStyle}>{exp.date}</td>
                   <td style={cellStyle}>{exp.category}</td>
                   <td style={cellStyle}>{exp.description}</td>
                   <td style={cellStyle}>{exp.merchant}</td>
                   <td style={cellStyle}>{exp.employee}</td>
-                  <td style={{ ...cellStyle, textAlign: "right" }}>{formatInr(exp.amount)}</td>
+                  <td style={{ ...cellStyle, textAlign: "right" }}>
+                    {formatInr(exp.amount)}
+                  </td>
                   <td style={cellStyle}>
                     <span
                       style={{
@@ -255,7 +290,10 @@ function ExpensePdfContent({ data }: { data: PdfData }) {
           textAlign: "center",
         }}
       >
-        <p>This report was generated automatically. For questions, please contact your administrator.</p>
+        <p>
+          This report was generated automatically. For questions, please contact
+          your administrator.
+        </p>
       </div>
     </div>
   );

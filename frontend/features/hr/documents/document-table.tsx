@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { viewFile, downloadFile } from "@/hooks/use-file-url";
+import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import type { Document } from "@/types/hr";
 
 const DOCUMENT_TYPES = [
@@ -53,29 +53,84 @@ const DOCUMENT_TYPES = [
   { value: "OTHER", label: "Other" },
 ] as const;
 
-const FILE_ICON_CONFIG: Record<string, { bg: string; text: string; icon: React.ComponentType<{ className?: string }> }> = {
-  pdf:  { bg: "bg-rose-100 dark:bg-rose-950/40",      text: "text-rose-600 dark:text-rose-400",      icon: FileText },
-  docx: { bg: "bg-blue-100 dark:bg-blue-950/40",      text: "text-blue-600 dark:text-blue-400",      icon: FileText },
-  doc:  { bg: "bg-blue-100 dark:bg-blue-950/40",      text: "text-blue-600 dark:text-blue-400",      icon: FileText },
-  xlsx: { bg: "bg-emerald-100 dark:bg-emerald-950/40", text: "text-emerald-600 dark:text-emerald-400", icon: FileSpreadsheet },
-  xls:  { bg: "bg-emerald-100 dark:bg-emerald-950/40", text: "text-emerald-600 dark:text-emerald-400", icon: FileSpreadsheet },
-  csv:  { bg: "bg-emerald-100 dark:bg-emerald-950/40", text: "text-emerald-600 dark:text-emerald-400", icon: FileSpreadsheet },
-  png:  { bg: "bg-amber-100 dark:bg-amber-950/40",    text: "text-amber-600 dark:text-amber-400",    icon: FileImage },
-  jpg:  { bg: "bg-amber-100 dark:bg-amber-950/40",    text: "text-amber-600 dark:text-amber-400",    icon: FileImage },
-  jpeg: { bg: "bg-amber-100 dark:bg-amber-950/40",    text: "text-amber-600 dark:text-amber-400",    icon: FileImage },
+const FILE_ICON_CONFIG: Record<
+  string,
+  {
+    bg: string;
+    text: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }
+> = {
+  pdf: {
+    bg: "bg-rose-100 dark:bg-rose-950/40",
+    text: "text-rose-600 dark:text-rose-400",
+    icon: FileText,
+  },
+  docx: {
+    bg: "bg-blue-100 dark:bg-blue-950/40",
+    text: "text-blue-600 dark:text-blue-400",
+    icon: FileText,
+  },
+  doc: {
+    bg: "bg-blue-100 dark:bg-blue-950/40",
+    text: "text-blue-600 dark:text-blue-400",
+    icon: FileText,
+  },
+  xlsx: {
+    bg: "bg-emerald-100 dark:bg-emerald-950/40",
+    text: "text-emerald-600 dark:text-emerald-400",
+    icon: FileSpreadsheet,
+  },
+  xls: {
+    bg: "bg-emerald-100 dark:bg-emerald-950/40",
+    text: "text-emerald-600 dark:text-emerald-400",
+    icon: FileSpreadsheet,
+  },
+  csv: {
+    bg: "bg-emerald-100 dark:bg-emerald-950/40",
+    text: "text-emerald-600 dark:text-emerald-400",
+    icon: FileSpreadsheet,
+  },
+  png: {
+    bg: "bg-amber-100 dark:bg-amber-950/40",
+    text: "text-amber-600 dark:text-amber-400",
+    icon: FileImage,
+  },
+  jpg: {
+    bg: "bg-amber-100 dark:bg-amber-950/40",
+    text: "text-amber-600 dark:text-amber-400",
+    icon: FileImage,
+  },
+  jpeg: {
+    bg: "bg-amber-100 dark:bg-amber-950/40",
+    text: "text-amber-600 dark:text-amber-400",
+    icon: FileImage,
+  },
 };
 
-const DEFAULT_FILE_ICON = { bg: "bg-slate-100 dark:bg-slate-800/40", text: "text-slate-500 dark:text-slate-400", icon: File };
+const DEFAULT_FILE_ICON = {
+  bg: "bg-slate-100 dark:bg-slate-800/40",
+  text: "text-slate-500 dark:text-slate-400",
+  icon: File,
+};
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
-  Contract:       "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
-  Certificate:    "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-800",
-  "ID Proof":     "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800",
-  Payslip:        "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800",
-  Policy:         "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
-  "Offer Letter": "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-800",
-  Resume:         "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700",
-  General:        "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700",
+  Contract:
+    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+  Certificate:
+    "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-800",
+  "ID Proof":
+    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800",
+  Payslip:
+    "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800",
+  Policy:
+    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+  "Offer Letter":
+    "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-800",
+  Resume:
+    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700",
+  General:
+    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700",
 };
 
 const FOLDER_COLORS = [
@@ -125,17 +180,25 @@ interface DocumentRowProps {
   onEdit: (doc: Document) => void;
 }
 
-const DocumentRow = memo(function DocumentRow({ doc, onDelete, onEdit }: DocumentRowProps) {
+const DocumentRow = memo(function DocumentRow({
+  doc,
+  onDelete,
+  onEdit,
+}: DocumentRowProps) {
   const fileConfig = getFileIconConfig(doc.fileName ?? doc.name);
   const FileIcon = fileConfig.icon;
-  const typeLabel = DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label ?? "General";
+  const typeLabel =
+    DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label ?? "General";
   const badgeColor = TYPE_BADGE_COLORS[typeLabel] ?? TYPE_BADGE_COLORS.General;
   const hasFileUrl = !!doc.fileUrl;
 
   const handleView = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!hasFileUrl) { toast.error("No file attached to this document."); return; }
+      if (!hasFileUrl) {
+        toast.error("No file attached to this document.");
+        return;
+      }
       viewFile(doc.fileUrl);
     },
     [hasFileUrl, doc.fileUrl],
@@ -144,7 +207,10 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete, onEdit }: Documen
   const handleDownload = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!hasFileUrl) { toast.error("No file attached to this document."); return; }
+      if (!hasFileUrl) {
+        toast.error("No file attached to this document.");
+        return;
+      }
       downloadFile(doc.fileUrl, doc.fileName ?? doc.name);
     },
     [hasFileUrl, doc.fileUrl, doc.fileName, doc.name],
@@ -167,17 +233,28 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete, onEdit }: Documen
   );
 
   const handleEdit = useCallback(
-    (e: React.MouseEvent) => { e.stopPropagation(); onEdit(doc); },
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onEdit(doc);
+    },
     [onEdit, doc],
   );
 
-  const handleMenuTriggerClick = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+  const handleMenuTriggerClick = useCallback(
+    (e: React.MouseEvent) => e.stopPropagation(),
+    [],
+  );
 
   return (
     <TableRow className="group hover:bg-muted/30 transition-colors duration-200 border-b border-border/50">
       <TableCell className="px-5 py-3">
         <div className="flex items-center gap-3">
-          <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center shrink-0", fileConfig.bg)}>
+          <div
+            className={cn(
+              "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+              fileConfig.bg,
+            )}
+          >
             <FileIcon className={cn("h-3.5 w-3.5", fileConfig.text)} />
           </div>
           <div className="min-w-0">
@@ -206,7 +283,12 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete, onEdit }: Documen
       </TableCell>
 
       <TableCell className="px-5 py-3">
-        <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", badgeColor)}>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            badgeColor,
+          )}
+        >
           {typeLabel}
         </span>
       </TableCell>
@@ -324,10 +406,11 @@ export function DocumentTable({
       const results = await Promise.allSettled(
         filesWithUrl.map(async (doc) => {
           const response = await fetch(doc.fileUrl);
-          if (!response.ok) throw new Error(`Failed to fetch ${doc.fileName ?? doc.name}`);
+          if (!response.ok)
+            throw new Error(`Failed to fetch ${doc.fileName ?? doc.name}`);
           const blob = await response.blob();
           zip.file(doc.fileName ?? `${doc.name}.bin`, blob);
-        })
+        }),
       );
       const failed = results.filter((r) => r.status === "rejected").length;
       const zipBlob = await zip.generateAsync({ type: "blob" });
@@ -338,7 +421,9 @@ export function DocumentTable({
       anchor.click();
       URL.revokeObjectURL(url);
       if (failed > 0) {
-        toast.warning(`${filesWithUrl.length - failed} downloaded; ${failed} failed.`);
+        toast.warning(
+          `${filesWithUrl.length - failed} downloaded; ${failed} failed.`,
+        );
       } else {
         toast.success(`${filesWithUrl.length} file(s) packaged into ZIP`);
       }
@@ -349,10 +434,17 @@ export function DocumentTable({
     }
   }, [filesWithUrl]);
 
-  const handlePrev = useCallback(() => onPageChange(page - 1), [onPageChange, page]);
-  const handleNext = useCallback(() => onPageChange(page + 1), [onPageChange, page]);
+  const handlePrev = useCallback(
+    () => onPageChange(page - 1),
+    [onPageChange, page],
+  );
+  const handleNext = useCallback(
+    () => onPageChange(page + 1),
+    [onPageChange, page],
+  );
 
-  const showFolders = page === 1 && selectedCategory === "All Files" && searchTerm === "";
+  const showFolders =
+    page === 1 && selectedCategory === "All Files" && searchTerm === "";
 
   return (
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
@@ -368,12 +460,21 @@ export function DocumentTable({
                   key={folder.name}
                   className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border bg-background hover:bg-muted/40 transition-colors duration-200 text-left"
                 >
-                  <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center shrink-0", FOLDER_COLORS[folder.colorIdx])}>
+                  <div
+                    className={cn(
+                      "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+                      FOLDER_COLORS[folder.colorIdx],
+                    )}
+                  >
                     <Folder className="h-3.5 w-3.5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">{folder.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{folder.count} files</p>
+                    <p className="text-xs font-medium text-foreground truncate">
+                      {folder.name}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {folder.count} files
+                    </p>
                   </div>
                 </button>
               ))}
@@ -393,16 +494,28 @@ export function DocumentTable({
                       <ArrowUpDown className="h-3 w-3 text-muted-foreground/60" />
                     </div>
                   </TableHead>
-                  <TableHead scope="col" className="px-5 py-2.5 text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">
+                  <TableHead
+                    scope="col"
+                    className="px-5 py-2.5 text-[11px] font-semibold text-foreground/80 uppercase tracking-wider"
+                  >
                     Type
                   </TableHead>
-                  <TableHead scope="col" className="px-5 py-2.5 text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">
+                  <TableHead
+                    scope="col"
+                    className="px-5 py-2.5 text-[11px] font-semibold text-foreground/80 uppercase tracking-wider"
+                  >
                     Date
                   </TableHead>
-                  <TableHead scope="col" className="px-5 py-2.5 text-[11px] font-semibold text-foreground/80 uppercase tracking-wider text-right">
+                  <TableHead
+                    scope="col"
+                    className="px-5 py-2.5 text-[11px] font-semibold text-foreground/80 uppercase tracking-wider text-right"
+                  >
                     Size
                   </TableHead>
-                  <TableHead scope="col" className="px-5 py-2.5 text-[11px] font-semibold text-foreground/80 uppercase tracking-wider text-right">
+                  <TableHead
+                    scope="col"
+                    className="px-5 py-2.5 text-[11px] font-semibold text-foreground/80 uppercase tracking-wider text-right"
+                  >
                     Actions
                   </TableHead>
                 </TableRow>
@@ -412,16 +525,26 @@ export function DocumentTable({
                   <TableRow>
                     <TableCell colSpan={5} className="py-0">
                       <EmptyState
-                        illustration={<Upload className="h-8 w-8 text-muted-foreground" />}
+                        illustration={
+                          <Upload className="h-8 w-8 text-muted-foreground" />
+                        }
                         title="No documents found"
                         description="Upload your first document to get started"
-                        action={{ label: "Upload Document", onClick: onOpenUpload }}
+                        action={{
+                          label: "Upload Document",
+                          onClick: onOpenUpload,
+                        }}
                       />
                     </TableCell>
                   </TableRow>
                 ) : (
                   paginatedDocuments.map((doc) => (
-                    <DocumentRow key={doc.id} doc={doc} onDelete={onDelete} onEdit={onEdit} />
+                    <DocumentRow
+                      key={doc.id}
+                      doc={doc}
+                      onDelete={onDelete}
+                      onEdit={onEdit}
+                    />
                   ))
                 )}
               </TableBody>
@@ -434,10 +557,13 @@ export function DocumentTable({
             <div className="flex items-center gap-2.5">
               <span className="text-xs text-muted-foreground">
                 <span className="font-medium text-foreground tabular-nums">
-                  {Math.min((page - 1) * pageSize + 1, totalFiltered)}–{Math.min(page * pageSize, totalFiltered)}
+                  {Math.min((page - 1) * pageSize + 1, totalFiltered)}–
+                  {Math.min(page * pageSize, totalFiltered)}
                 </span>
                 {" of "}
-                <span className="font-medium text-foreground tabular-nums">{totalFiltered}</span>
+                <span className="font-medium text-foreground tabular-nums">
+                  {totalFiltered}
+                </span>
               </span>
               {filesWithUrl.length > 0 && (
                 <Button

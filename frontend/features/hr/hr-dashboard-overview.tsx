@@ -7,10 +7,17 @@ import {
   useHrDashboardMetrics,
   useHrLeaveCalendar,
   useHrOnboardingStatus,
-} from "@/lib/api/hooks/hr/dashboard";
+} from "@/hooks/api/hr/dashboard";
 import {
-  Users, UserCheck, CalendarOff, ClipboardList, CheckCircle2,
-  Clock, ArrowRight, TrendingUp, AlertCircle,
+  Users,
+  UserCheck,
+  CalendarOff,
+  ClipboardList,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  TrendingUp,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -23,11 +30,17 @@ function formatDateLabel(dateStr: string) {
 
 function LeaveCalendarWidget() {
   const now = new Date();
-  const { data, isLoading } = useHrLeaveCalendar(now.getMonth() + 1, now.getFullYear());
+  const { data, isLoading } = useHrLeaveCalendar(
+    now.getMonth() + 1,
+    now.getFullYear(),
+  );
   const today = now.toISOString().slice(0, 10);
-  const next7 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const next7 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
   const thisWeekLeaves = (data ?? []).filter(
-    (l) => l.status === "APPROVED" && l.startDate <= next7 && l.endDate >= today,
+    (l) =>
+      l.status === "APPROVED" && l.startDate <= next7 && l.endDate >= today,
   );
 
   return (
@@ -38,9 +51,14 @@ function LeaveCalendarWidget() {
             <CalendarOff className="h-3.5 w-3.5 text-amber-600" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-foreground leading-tight">On Leave This Week</h3>
+            <h3 className="text-sm font-semibold text-foreground leading-tight">
+              On Leave This Week
+            </h3>
             {!isLoading && (
-              <p className="text-[10px] text-muted-foreground">{thisWeekLeaves.length} employee{thisWeekLeaves.length !== 1 ? "s" : ""}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {thisWeekLeaves.length} employee
+                {thisWeekLeaves.length !== 1 ? "s" : ""}
+              </p>
             )}
           </div>
         </div>
@@ -71,24 +89,33 @@ function LeaveCalendarWidget() {
             <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
               <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
             </div>
-            <p className="text-xs text-muted-foreground">Everyone is in this week</p>
+            <p className="text-xs text-muted-foreground">
+              Everyone is in this week
+            </p>
           </div>
         ) : (
           <div className="px-5 divide-y divide-border/40">
             {thisWeekLeaves.map((leave) => (
               <div key={leave.id} className="flex items-center gap-3 py-3">
                 <Avatar className="h-8 w-8 shrink-0">
-                  {leave.userImage && <AvatarImage src={leave.userImage} alt={leave.userName} />}
+                  {leave.userImage && (
+                    <AvatarImage src={leave.userImage} alt={leave.userName} />
+                  )}
                   <AvatarFallback className="text-[10px] bg-amber-100 text-amber-700 font-semibold">
                     {leave.userName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-foreground truncate">{leave.userName}</p>
+                  <p className="text-xs font-semibold text-foreground truncate">
+                    {leave.userName}
+                  </p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {formatDateLabel(leave.startDate)} – {formatDateLabel(leave.endDate)}
+                    {formatDateLabel(leave.startDate)} –{" "}
+                    {formatDateLabel(leave.endDate)}
                     <span className="mx-1">·</span>
-                    <span className="capitalize">{leave.leaveType?.toLowerCase().replace(/_/g, " ")}</span>
+                    <span className="capitalize">
+                      {leave.leaveType?.toLowerCase().replace(/_/g, " ")}
+                    </span>
                   </p>
                 </div>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 font-semibold shrink-0 uppercase tracking-wide">
@@ -114,9 +141,13 @@ function OnboardingStatusWidget() {
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-foreground leading-tight">Onboarding Progress</h3>
+            <h3 className="text-sm font-semibold text-foreground leading-tight">
+              Onboarding Progress
+            </h3>
             {!isLoading && data && (
-              <p className="text-[10px] text-muted-foreground">{data.total} total · {data.completed} complete</p>
+              <p className="text-[10px] text-muted-foreground">
+                {data.total} total · {data.completed} complete
+              </p>
             )}
           </div>
         </div>
@@ -154,7 +185,9 @@ function OnboardingStatusWidget() {
             <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </div>
-            <p className="text-xs text-muted-foreground">No onboarding in progress</p>
+            <p className="text-xs text-muted-foreground">
+              No onboarding in progress
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -168,7 +201,9 @@ function OnboardingStatusWidget() {
                     <CheckCircle2 className="h-3 w-3" /> {data.completed} done
                   </span>
                 </div>
-                <span className="font-bold text-foreground tabular-nums">{data.completionPct}%</span>
+                <span className="font-bold text-foreground tabular-nums">
+                  {data.completionPct}%
+                </span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
@@ -181,12 +216,17 @@ function OnboardingStatusWidget() {
             {data.newHires.length > 0 && (
               <div className="space-y-3">
                 {data.newHires.map((hire) => (
-                  <div key={hire.userId} className="flex items-center gap-3 group">
+                  <div
+                    key={hire.userId}
+                    className="flex items-center gap-3 group"
+                  >
                     <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary">
                       {hire.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-xs font-medium text-foreground truncate">{hire.name}</p>
+                      <p className="text-xs font-medium text-foreground truncate">
+                        {hire.name}
+                      </p>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                           <div
@@ -194,7 +234,9 @@ function OnboardingStatusWidget() {
                             style={{ width: `${hire.pct}%` }}
                           />
                         </div>
-                        <span className="text-[10px] text-muted-foreground tabular-nums w-7 text-right shrink-0">{hire.pct}%</span>
+                        <span className="text-[10px] text-muted-foreground tabular-nums w-7 text-right shrink-0">
+                          {hire.pct}%
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -249,7 +291,11 @@ const METRIC_CARDS = [
     href: "/hr/leaves",
   },
 ] satisfies Array<{
-  key: "totalEmployees" | "activeEmployees" | "onLeaveToday" | "pendingLeaveRequests";
+  key:
+    | "totalEmployees"
+    | "activeEmployees"
+    | "onLeaveToday"
+    | "pendingLeaveRequests";
   label: string;
   icon: React.ElementType;
   accent: string;
@@ -273,41 +319,73 @@ export function HrDashboardOverview() {
   return (
     <div className="mb-6 space-y-3">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {METRIC_CARDS.map(({ key, label, icon: Icon, accent, iconBg, iconColor, valueColor, href }) => {
-          const value = isLoading ? null : (metrics?.[key] ?? 0);
-          const card = (
-            <div
-              className={`relative rounded-2xl border border-border border-l-4 ${accent} bg-card p-4 overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${href ? "cursor-pointer" : ""}`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2 truncate">{label}</p>
-                  {isLoading ? (
-                    <Skeleton className="h-8 w-16" />
-                  ) : (
-                    <p className={`text-3xl font-bold tabular-nums ${valueColor}`}>{value}</p>
-                  )}
-                  {key === "activeEmployees" && !isLoading && (
-                    <div className="flex items-center gap-1 mt-1.5">
-                      <TrendingUp className="h-3 w-3 text-emerald-500" />
-                      <span className="text-[11px] text-emerald-600 font-semibold">{activeRate}% rate</span>
-                    </div>
-                  )}
-                  {key === "pendingLeaveRequests" && !isLoading && value !== null && value > 0 && (
-                    <div className="flex items-center gap-1 mt-1.5">
-                      <AlertCircle className="h-3 w-3 text-rose-500" />
-                      <span className="text-[11px] text-rose-600 font-semibold">Needs attention</span>
-                    </div>
-                  )}
-                </div>
-                <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
-                  <Icon className={`h-5 w-5 ${iconColor}`} />
+        {METRIC_CARDS.map(
+          ({
+            key,
+            label,
+            icon: Icon,
+            accent,
+            iconBg,
+            iconColor,
+            valueColor,
+            href,
+          }) => {
+            const value = isLoading ? null : (metrics?.[key] ?? 0);
+            const card = (
+              <div
+                className={`relative rounded-2xl border border-border border-l-4 ${accent} bg-card p-4 overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${href ? "cursor-pointer" : ""}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2 truncate">
+                      {label}
+                    </p>
+                    {isLoading ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <p
+                        className={`text-3xl font-bold tabular-nums ${valueColor}`}
+                      >
+                        {value}
+                      </p>
+                    )}
+                    {key === "activeEmployees" && !isLoading && (
+                      <div className="flex items-center gap-1 mt-1.5">
+                        <TrendingUp className="h-3 w-3 text-emerald-500" />
+                        <span className="text-[11px] text-emerald-600 font-semibold">
+                          {activeRate}% rate
+                        </span>
+                      </div>
+                    )}
+                    {key === "pendingLeaveRequests" &&
+                      !isLoading &&
+                      value !== null &&
+                      value > 0 && (
+                        <div className="flex items-center gap-1 mt-1.5">
+                          <AlertCircle className="h-3 w-3 text-rose-500" />
+                          <span className="text-[11px] text-rose-600 font-semibold">
+                            Needs attention
+                          </span>
+                        </div>
+                      )}
+                  </div>
+                  <div
+                    className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}
+                  >
+                    <Icon className={`h-5 w-5 ${iconColor}`} />
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-          return href ? <Link key={key} href={href}>{card}</Link> : <div key={key}>{card}</div>;
-        })}
+            );
+            return href ? (
+              <Link key={key} href={href}>
+                {card}
+              </Link>
+            ) : (
+              <div key={key}>{card}</div>
+            );
+          },
+        )}
       </div>
 
       <div className="grid sm:grid-cols-2 gap-3">

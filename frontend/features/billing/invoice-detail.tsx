@@ -4,7 +4,19 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, Download, Send, Check, Ban, Plus, Loader2, Pencil, Trash2, AlertCircle, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  Send,
+  Check,
+  Ban,
+  Plus,
+  Loader2,
+  Pencil,
+  Trash2,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  AlertDialog,
+  AlertDialog,@/hooks/api/invoice
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
@@ -29,7 +41,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
-import { useInvoice, useUpdateInvoice, useDeleteInvoice } from "@/lib/api/hooks/invoice";
+import {
+  useInvoice,
+  useUpdateInvoice,
+  useDeleteInvoice,
+} from "@/hooks/hooks/invoice";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { InvoiceStatus } from "@/types/invoice";
 import { InvoiceLineItems } from "./invoice-line-items";
@@ -39,11 +55,26 @@ const STATUS_BADGE: Record<
   InvoiceStatus,
   { label: string; className: string }
 > = {
-  DRAFT: { label: "Draft", className: "bg-slate-100 text-slate-700 border-slate-200" },
-  SENT: { label: "Sent", className: "bg-blue-50 text-blue-700 border-blue-200" },
-  PAID: { label: "Paid", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  OVERDUE: { label: "Overdue", className: "bg-red-50 text-red-700 border-red-200" },
-  CANCELLED: { label: "Cancelled", className: "bg-muted text-muted-foreground border-border" },
+  DRAFT: {
+    label: "Draft",
+    className: "bg-slate-100 text-slate-700 border-slate-200",
+  },
+  SENT: {
+    label: "Sent",
+    className: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  PAID: {
+    label: "Paid",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  OVERDUE: {
+    label: "Overdue",
+    className: "bg-red-50 text-red-700 border-red-200",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    className: "bg-muted text-muted-foreground border-border",
+  },
 };
 
 function fmt(amount: string | number) {
@@ -96,7 +127,10 @@ function InvoiceDetailSkeleton() {
           </div>
           <div className="divide-y divide-border">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="px-4 py-3 grid grid-cols-12 gap-3 items-center">
+              <div
+                key={i}
+                className="px-4 py-3 grid grid-cols-12 gap-3 items-center"
+              >
                 <Skeleton className="col-span-6 h-4" />
                 <Skeleton className="col-span-2 h-4" />
                 <Skeleton className="col-span-2 h-4" />
@@ -151,7 +185,8 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
       updateInvoice.mutate(
         { id: invoiceId, status },
         {
-          onSuccess: () => toast.success(`Invoice marked as ${status.toLowerCase()}`),
+          onSuccess: () =>
+            toast.success(`Invoice marked as ${status.toLowerCase()}`),
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
@@ -159,9 +194,18 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
     [invoiceId, updateInvoice],
   );
 
-  const handleMarkSent = useCallback(() => handleStatusUpdate("SENT"), [handleStatusUpdate]);
-  const handleMarkPaid = useCallback(() => handleStatusUpdate("PAID"), [handleStatusUpdate]);
-  const handleCancel = useCallback(() => handleStatusUpdate("CANCELLED"), [handleStatusUpdate]);
+  const handleMarkSent = useCallback(
+    () => handleStatusUpdate("SENT"),
+    [handleStatusUpdate],
+  );
+  const handleMarkPaid = useCallback(
+    () => handleStatusUpdate("PAID"),
+    [handleStatusUpdate],
+  );
+  const handleCancel = useCallback(
+    () => handleStatusUpdate("CANCELLED"),
+    [handleStatusUpdate],
+  );
 
   const handleOpenPayment = useCallback(() => setPaymentOpen(true), []);
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
@@ -187,9 +231,17 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
       doc.setTextColor(100);
       doc.text("StreamlineOS — Capital Advisors LLP", 20, 33);
       doc.text(`Invoice #: ${invoice.invoiceNumber}`, 20, 40);
-      doc.text(`Date: ${format(new Date(invoice.createdAt), "dd MMM yyyy")}`, 20, 47);
+      doc.text(
+        `Date: ${format(new Date(invoice.createdAt), "dd MMM yyyy")}`,
+        20,
+        47,
+      );
       if (invoice.dueDate) {
-        doc.text(`Due: ${format(new Date(invoice.dueDate), "dd MMM yyyy")}`, 20, 54);
+        doc.text(
+          `Due: ${format(new Date(invoice.dueDate), "dd MMM yyyy")}`,
+          20,
+          54,
+        );
       }
       doc.setDrawColor(189, 136, 44);
       doc.line(20, 60, 190, 60);
@@ -220,7 +272,11 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
       doc.text(`Subtotal: ${fmt(invoice.subtotal)}`, 130, y);
       y += 7;
       if (Number(invoice.taxRate)) {
-        doc.text(`Tax (${invoice.taxRate}%): ${fmt(invoice.taxAmount ?? 0)}`, 130, y);
+        doc.text(
+          `Tax (${invoice.taxRate}%): ${fmt(invoice.taxAmount ?? 0)}`,
+          130,
+          y,
+        );
         y += 7;
       }
       doc.setFontSize(13);
@@ -254,7 +310,9 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
               {error ? "Failed to load invoice" : "Invoice not found"}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              {error ? getErrorMessage(error) : "The invoice you are looking for does not exist."}
+              {error
+                ? getErrorMessage(error)
+                : "The invoice you are looking for does not exist."}
             </p>
           </div>
           <div className="flex gap-2">
@@ -364,8 +422,10 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                 <AlertDialogTitle>Delete invoice?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This will permanently delete invoice{" "}
-                  <span className="font-mono font-medium">{invoice.invoiceNumber}</span>. This
-                  action cannot be undone.
+                  <span className="font-mono font-medium">
+                    {invoice.invoiceNumber}
+                  </span>
+                  . This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -494,14 +554,18 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
 
         {invoice.notes && (
           <div className="rounded-lg border border-border bg-card px-4 py-3">
-            <p className="text-xs font-semibold text-muted-foreground mb-1">Notes</p>
+            <p className="text-xs font-semibold text-muted-foreground mb-1">
+              Notes
+            </p>
             <p className="text-sm text-muted-foreground">{invoice.notes}</p>
           </div>
         )}
 
         {invoice.terms && (
           <div className="rounded-lg border border-border bg-card px-4 py-3">
-            <p className="text-xs font-semibold text-muted-foreground mb-1">Terms</p>
+            <p className="text-xs font-semibold text-muted-foreground mb-1">
+              Terms
+            </p>
             <p className="text-sm text-muted-foreground">{invoice.terms}</p>
           </div>
         )}

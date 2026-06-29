@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useUpdateCrmOrganization } from "@/lib/api/hooks/crm";
+import { useUpdateCrmOrganization } from "@/hooks/api/crm";
 import { toast } from "sonner";
 
 interface AccountNotesProps {
@@ -14,9 +14,12 @@ interface AccountNotesProps {
   initialNotes: string | null;
 }
 
-export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps) {
+export function AccountNotes({
+  organizationId,
+  initialNotes,
+}: AccountNotesProps) {
   const [editing, setEditing] = useState(false);
-  const [notes, setNotes] = useState(initialNotes ??"");
+  const [notes, setNotes] = useState(initialNotes ?? "");
 
   const updateMutation = useUpdateCrmOrganization();
 
@@ -34,13 +37,16 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
   }, [organizationId, notes, updateMutation]);
 
   const handleCancel = useCallback(() => {
-    setNotes(initialNotes ??"");
+    setNotes(initialNotes ?? "");
     setEditing(false);
   }, [initialNotes]);
 
   const handleStartEdit = useCallback(() => setEditing(true), []);
 
-  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+  const handleNotesChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value),
+    [],
+  );
 
   if (!editing) {
     return (
@@ -48,7 +54,11 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
         {notes ? (
           <p className="text-sm text-foreground whitespace-pre-wrap">{notes}</p>
         ) : (
-          <EmptyState illustration={<EmptyDocumentsIllustration />} title="No notes yet" compact />
+          <EmptyState
+            illustration={<EmptyDocumentsIllustration />}
+            title="No notes yet"
+            compact
+          />
         )}
         <Button
           variant="ghost"
@@ -57,7 +67,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
           onClick={handleStartEdit}
         >
           <Pencil className="h-3 w-3" />
-          {notes ?"Edit notes" :"Add notes"}
+          {notes ? "Edit notes" : "Add notes"}
         </Button>
       </div>
     );

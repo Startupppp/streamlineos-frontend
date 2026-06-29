@@ -41,7 +41,7 @@ import {
   useAccounts,
   useCreateJournalEntry,
   type CreateJournalEntryInput,
-} from "@/lib/api/hooks/accounting";
+} from "@/hooks/api/accounting";
 import type { Account } from "@/types/accounting";
 
 function todayIso(): string {
@@ -186,7 +186,11 @@ function LineRow({
 
 export default function NewJournalEntryPage() {
   const router = useRouter();
-  const accountsQuery = useAccounts({ page: 1, pageSize: 500, activeOnly: true });
+  const accountsQuery = useAccounts({
+    page: 1,
+    pageSize: 500,
+    activeOnly: true,
+  });
   const createMutation = useCreateJournalEntry();
 
   const form = useForm<FormValues>({
@@ -211,9 +215,17 @@ export default function NewJournalEntryPage() {
   const watchedStatus = form.watch("status");
 
   const totals = useMemo(() => {
-    const debit = round2(watchedLines.reduce((acc, line) => acc + parseAmount(line.debit), 0));
-    const credit = round2(watchedLines.reduce((acc, line) => acc + parseAmount(line.credit), 0));
-    return { debit, credit, balanced: Math.abs(debit - credit) < 0.005 && debit > 0 };
+    const debit = round2(
+      watchedLines.reduce((acc, line) => acc + parseAmount(line.debit), 0),
+    );
+    const credit = round2(
+      watchedLines.reduce((acc, line) => acc + parseAmount(line.credit), 0),
+    );
+    return {
+      debit,
+      credit,
+      balanced: Math.abs(debit - credit) < 0.005 && debit > 0,
+    };
   }, [watchedLines]);
 
   function handleAccountChange(index: number, value: string): void {
@@ -264,12 +276,16 @@ export default function NewJournalEntryPage() {
       const debit = parseAmount(line.debit);
       const credit = parseAmount(line.credit);
       if ((debit > 0 && credit > 0) || (debit === 0 && credit === 0)) {
-        toast.error(`Line for ${line.accountCode}: must have exactly one of debit or credit > 0`);
+        toast.error(
+          `Line for ${line.accountCode}: must have exactly one of debit or credit > 0`,
+        );
         return;
       }
     }
     if (!totals.balanced) {
-      toast.error(`Unbalanced: debit ${totals.debit.toFixed(2)} ≠ credit ${totals.credit.toFixed(2)}`);
+      toast.error(
+        `Unbalanced: debit ${totals.debit.toFixed(2)} ≠ credit ${totals.credit.toFixed(2)}`,
+      );
       return;
     }
 
@@ -290,7 +306,8 @@ export default function NewJournalEntryPage() {
       toast.success(`Entry ${result.entryNumber} created`);
       router.push(`/accounting/journal/${result.id}`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create entry";
+      const message =
+        error instanceof Error ? error.message : "Failed to create entry";
       toast.error(message);
     }
   }
@@ -411,12 +428,17 @@ export default function NewJournalEntryPage() {
                   </TableCell>
                   <TableCell>
                     {totals.debit === 0 && totals.credit === 0 ? (
-                      <span className="text-sm text-muted-foreground">Enter amounts</span>
+                      <span className="text-sm text-muted-foreground">
+                        Enter amounts
+                      </span>
                     ) : totals.balanced ? (
-                      <span className="text-sm text-emerald-600">Balanced ✓</span>
+                      <span className="text-sm text-emerald-600">
+                        Balanced ✓
+                      </span>
                     ) : (
                       <span className="text-sm text-rose-600">
-                        Off by {Math.abs(totals.debit - totals.credit).toFixed(2)}
+                        Off by{" "}
+                        {Math.abs(totals.debit - totals.credit).toFixed(2)}
                       </span>
                     )}
                   </TableCell>
@@ -425,7 +447,12 @@ export default function NewJournalEntryPage() {
               </TableBody>
             </Table>
             <div className="p-3 border-t border-slate-200/60">
-              <Button type="button" variant="outline" size="sm" onClick={handleAddLine}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddLine}
+              >
                 <Plus className="size-4 mr-1" />
                 Add line
               </Button>
@@ -443,8 +470,8 @@ export default function NewJournalEntryPage() {
               {createMutation.isPending
                 ? "Saving…"
                 : watchedStatus === "POSTED"
-                ? "Create and post"
-                : "Save as draft"}
+                  ? "Create and post"
+                  : "Save as draft"}
             </Button>
           </div>
         </form>

@@ -8,14 +8,17 @@ import { AppSidebar } from "./app-sidebar";
 import { CommandPalette } from "./command-palette";
 import { NotActivatedPage } from "../auth/not-activated-page";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { usePushSubscription } from "@/hooks/use-push-subscription";
+import { useIsMobile } from "@/hooks/common/use-mobile";
+import { usePushSubscription } from "@/hooks/common/use-push-subscription";
 import Image from "next/image";
 import { TrialBanner } from "@/components/billing/trial-banner";
 
 const ChatUnreadNotifications = dynamic(
-  () => import("@/components/chat/chat-unread-notifications").then((m) => m.ChatUnreadNotifications),
-  { ssr: false }
+  () =>
+    import("@/components/chat/chat-unread-notifications").then(
+      (m) => m.ChatUnreadNotifications,
+    ),
+  { ssr: false },
 );
 
 const SIDEBAR_COOKIE = "sidebar-collapsed";
@@ -39,7 +42,8 @@ export function DashboardShell({
   defaultCollapsed,
   children,
 }: DashboardShellProps) {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(defaultCollapsed);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] =
+    useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   usePushSubscription(userId);
@@ -54,7 +58,9 @@ export function DashboardShell({
 
   const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
-  const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W;
+  const sidebarW = isSidebarCollapsed
+    ? SIDEBAR_COLLAPSED_W
+    : SIDEBAR_EXPANDED_W;
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
@@ -89,7 +95,11 @@ export function DashboardShell({
 
             {isMobile && (
               <header className="md:hidden sticky top-0 z-40 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/95 backdrop-blur-sm px-3">
-                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
+                <Sheet
+                  open={mobileMenuOpen}
+                  onOpenChange={setMobileMenuOpen}
+                  modal
+                >
                   <button
                     type="button"
                     onClick={() => setMobileMenuOpen(true)}
@@ -98,16 +108,27 @@ export function DashboardShell({
                   >
                     <Menu className="h-4 w-4" />
                   </button>
-                  <SheetContent side="left" className="z-[100] p-0 w-[17rem] border-r-sidebar-border">
+                  <SheetContent
+                    side="left"
+                    className="z-[100] p-0 w-[17rem] border-r-sidebar-border"
+                  >
                     <SheetTitle className="sr-only">Navigation</SheetTitle>
                     <AppSidebar onNavigate={handleCloseMobileMenu} />
                   </SheetContent>
                 </Sheet>
                 <div className="flex items-center gap-2">
                   <div className="h-7 w-7 rounded-lg overflow-hidden bg-blue-500/15 ring-1 ring-blue-500/20 flex items-center justify-center">
-                    <Image src="/logo.svg" alt="StreamlineOS" width={20} height={20} className="object-contain" />
+                    <Image
+                      src="/logo.svg"
+                      alt="StreamlineOS"
+                      width={20}
+                      height={20}
+                      className="object-contain"
+                    />
                   </div>
-                  <span className="text-sm font-bold text-foreground">StreamlineOS</span>
+                  <span className="text-sm font-bold text-foreground">
+                    StreamlineOS
+                  </span>
                 </div>
               </header>
             )}

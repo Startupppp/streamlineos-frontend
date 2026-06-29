@@ -2,7 +2,15 @@
 
 import { useMemo, useCallback } from "react";
 import Link from "next/link";
-import { Clock, AlertTriangle, TrendingDown, IndianRupee, ArrowLeft, ExternalLink, AlertCircle } from "lucide-react";
+import {
+  Clock,
+  AlertTriangle,
+  TrendingDown,
+  IndianRupee,
+  ArrowLeft,
+  ExternalLink,
+  AlertCircle,
+} from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +20,7 @@ import {
   TableBody,
   TableRow,
   TableHead,
-  TableCell,
+  TableCell,@/hooks/api/crm
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,19 +28,38 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
-import { useDealAging } from "@/lib/api/hooks/crm";
+import { useDealAging } from "@/hooks/hooks/crm";
 import { formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 
 const STAGE_BADGE: Record<string, { label: string; className: string }> = {
-  LEAD:        { label: "Lead",        className: "bg-muted text-muted-foreground border-border" },
-  CONTACTED:   { label: "Contacted",   className: "bg-blue/10 text-blue border-blue/20" },
-  PROPOSAL:    { label: "Proposal",    className: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20" },
-  NEGOTIATION: { label: "Negotiation", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
+  LEAD: {
+    label: "Lead",
+    className: "bg-muted text-muted-foreground border-border",
+  },
+  CONTACTED: {
+    label: "Contacted",
+    className: "bg-blue/10 text-blue border-blue/20",
+  },
+  PROPOSAL: {
+    label: "Proposal",
+    className:
+      "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20",
+  },
+  NEGOTIATION: {
+    label: "Negotiation",
+    className:
+      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  },
 };
 
 function getStageBadge(stage: string) {
-  return STAGE_BADGE[stage] ?? { label: stage, className: "bg-muted text-muted-foreground" };
+  return (
+    STAGE_BADGE[stage] ?? {
+      label: stage,
+      className: "bg-muted text-muted-foreground",
+    }
+  );
 }
 
 function getDayColor(days: number) {
@@ -73,18 +100,25 @@ export default function DealAgingPage() {
   }, [data?.deals]);
 
   const stats = useMemo(() => {
-    if (!data) return { totalStale: 0, avgDays: 0, oldestDays: 0, totalValue: 0 };
+    if (!data)
+      return { totalStale: 0, avgDays: 0, oldestDays: 0, totalValue: 0 };
     const deals = data.deals;
     const stale = deals.filter((d) => d.daysInStage > 14);
     const totalValue = deals.reduce((sum, d) => sum + Number(d.value || 0), 0);
-    const avgDays = deals.length > 0
-      ? Math.round(deals.reduce((sum, d) => sum + d.daysInStage, 0) / deals.length)
-      : 0;
-    const oldestDays = deals.length > 0 ? Math.max(...deals.map((d) => d.daysInStage)) : 0;
+    const avgDays =
+      deals.length > 0
+        ? Math.round(
+            deals.reduce((sum, d) => sum + d.daysInStage, 0) / deals.length,
+          )
+        : 0;
+    const oldestDays =
+      deals.length > 0 ? Math.max(...deals.map((d) => d.daysInStage)) : 0;
     return { totalStale: stale.length, avgDays, oldestDays, totalValue };
   }, [data]);
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const backAction = (
     <Button variant="outline" size="sm" asChild>
@@ -123,8 +157,12 @@ export default function DealAgingPage() {
       >
         <div className="flex flex-col items-center justify-center flex-1 gap-3 py-20 text-center">
           <AlertCircle className="h-10 w-10 text-destructive" />
-          <p className="text-sm text-muted-foreground">Failed to load aging data.</p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
+          <p className="text-sm text-muted-foreground">
+            Failed to load aging data.
+          </p>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
+            Retry
+          </Button>
         </div>
       </PageWrapper>
     );
@@ -217,31 +255,47 @@ export default function DealAgingPage() {
 
                             <TableCell className="text-sm text-muted-foreground">
                               {deal.assigneeName ?? (
-                                <span className="italic text-muted-foreground/60">Unassigned</span>
+                                <span className="italic text-muted-foreground/60">
+                                  Unassigned
+                                </span>
                               )}
                             </TableCell>
 
                             <TableCell>
-                              <span className={cn("text-sm tabular-nums", getDayColor(deal.daysInStage))}>
+                              <span
+                                className={cn(
+                                  "text-sm tabular-nums",
+                                  getDayColor(deal.daysInStage),
+                                )}
+                              >
                                 {deal.daysInStage}d
                               </span>
                             </TableCell>
 
-                            <TableCell>{getSeverityChip(deal.daysInStage)}</TableCell>
+                            <TableCell>
+                              {getSeverityChip(deal.daysInStage)}
+                            </TableCell>
 
                             <TableCell className="text-sm tabular-nums">
-                              {deal.value ? formatINR(deal.value) : (
-                                <span className="text-muted-foreground/60">—</span>
+                              {deal.value ? (
+                                formatINR(deal.value)
+                              ) : (
+                                <span className="text-muted-foreground/60">
+                                  —
+                                </span>
                               )}
                             </TableCell>
 
                             <TableCell className="text-sm text-muted-foreground tabular-nums">
                               {deal.createdAt
-                                ? new Date(deal.createdAt).toLocaleDateString("en-IN", {
-                                    day: "2-digit",
-                                    month: "short",
-                                    year: "numeric",
-                                  })
+                                ? new Date(deal.createdAt).toLocaleDateString(
+                                    "en-IN",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    },
+                                  )
                                 : "—"}
                             </TableCell>
 

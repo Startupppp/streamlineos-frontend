@@ -1,4 +1,4 @@
-import { useAccess } from "../api/hooks/access";
+import { useAccess } from "../../hooks/api/access";
 
 export function usePermissions() {
   const { data: access, isLoading } = useAccess();

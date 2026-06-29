@@ -9,16 +9,34 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@/hooks/api/accessch";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { CheckSquare, Square, Plus, Trash2, CalendarDays, User, ClipboardList } from "lucide-react";
-import { useCan } from "@/lib/api/hooks/access";
+import {@/hooks/api/crm
+  CheckSquare,
+  Square,
+  Plus,
+  Trash2,
+  CalendarDays,
+  User,
+  ClipboardList,
+} from "lucide-react";
+import { useCan } from "@/hooks/hooks/access";
 import {
   useClientAccounts,
   useClientOnboardingItems,
@@ -27,9 +45,8 @@ import {
   useDeleteOnboardingItem,
   useOnboardingTemplates,
   useCreateOnboardingTemplate,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/hooks/crm";
 import type { ClientAccount, OnboardingItem } from "@/types/crm";
-
 
 interface ChecklistItemProps {
   item: OnboardingItem;
@@ -38,7 +55,12 @@ interface ChecklistItemProps {
   onDelete: (id: number, clientId: number) => void;
 }
 
-function ChecklistItem({ item, selectedClientId, onToggle, onDelete }: ChecklistItemProps) {
+function ChecklistItem({
+  item,
+  selectedClientId,
+  onToggle,
+  onDelete,
+}: ChecklistItemProps) {
   const isDone = item.completedAt !== null;
 
   const handleToggle = useCallback(() => {
@@ -100,7 +122,6 @@ function ChecklistItem({ item, selectedClientId, onToggle, onDelete }: Checklist
   );
 }
 
-
 function ChecklistTab() {
   const [selectedClientId, setSelectedClientId] = useState<number>(0);
   const [newTitle, setNewTitle] = useState("");
@@ -108,7 +129,8 @@ function ChecklistTab() {
   const { data: clientsData } = useClientAccounts();
   const clients = (clientsData?.accounts ?? []) as ClientAccount[];
 
-  const { data: items = [], isLoading } = useClientOnboardingItems(selectedClientId);
+  const { data: items = [], isLoading } =
+    useClientOnboardingItems(selectedClientId);
   const createItem = useCreateOnboardingItem();
   const toggleItem = useToggleOnboardingItem();
   const deleteItem = useDeleteOnboardingItem();
@@ -124,26 +146,43 @@ function ChecklistTab() {
     setNewTitle("");
   }, [newTitle, selectedClientId, createItem]);
 
-  const handleToggleItem = useCallback((id: number, completed: boolean, clientId: number) => {
-    toggleItem.mutate({ id, completed, clientId });
-  }, [toggleItem]);
+  const handleToggleItem = useCallback(
+    (id: number, completed: boolean, clientId: number) => {
+      toggleItem.mutate({ id, completed, clientId });
+    },
+    [toggleItem],
+  );
 
-  const handleDeleteItem = useCallback((id: number, clientId: number) => {
-    deleteItem.mutate({ id, clientId });
-  }, [deleteItem]);
+  const handleDeleteItem = useCallback(
+    (id: number, clientId: number) => {
+      deleteItem.mutate({ id, clientId });
+    },
+    [deleteItem],
+  );
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleAdd();
-  }, [handleAdd]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") handleAdd();
+    },
+    [handleAdd],
+  );
 
-  const handleClientChange = useCallback((v: string) => setSelectedClientId(Number(v)), []);
-  const handleNewTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setNewTitle(e.target.value), []);
+  const handleClientChange = useCallback(
+    (v: string) => setSelectedClientId(Number(v)),
+    [],
+  );
+  const handleNewTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setNewTitle(e.target.value),
+    [],
+  );
 
   return (
     <div className="space-y-4">
       <Card>
         <CardContent className="pt-4">
-          <Label className="mb-2 block text-sm font-medium">Select Client</Label>
+          <Label className="mb-2 block text-sm font-medium">
+            Select Client
+          </Label>
           <Select
             value={selectedClientId > 0 ? String(selectedClientId) : ""}
             onValueChange={handleClientChange}
@@ -238,7 +277,6 @@ function ChecklistTab() {
   );
 }
 
-
 function TemplatesTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [name, setName] = useState("");
@@ -251,7 +289,11 @@ function TemplatesTab() {
   const handleCreate = useCallback(() => {
     if (!name.trim()) return;
     createTemplate.mutate(
-      { name: name.trim(), description: description.trim() || undefined, isDefault },
+      {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        isDefault,
+      },
       {
         onSuccess: () => {
           setSheetOpen(false);
@@ -259,16 +301,29 @@ function TemplatesTab() {
           setDescription("");
           setIsDefault(false);
         },
-      }
+      },
     );
   }, [name, description, isDefault, createTemplate]);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
   const handleCloseSheet = useCallback(() => setSheetOpen(false), []);
-  const handleSheetOpenChange = useCallback((v: boolean) => setSheetOpen(v), []);
-  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
-  const handleDescChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
-  const handleIsDefaultChange = useCallback((v: boolean) => setIsDefault(v), []);
+  const handleSheetOpenChange = useCallback(
+    (v: boolean) => setSheetOpen(v),
+    [],
+  );
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value),
+    [],
+  );
+  const handleDescChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+      setDescription(e.target.value),
+    [],
+  );
+  const handleIsDefaultChange = useCallback(
+    (v: boolean) => setIsDefault(v),
+    [],
+  );
 
   return (
     <div className="space-y-4">
@@ -299,7 +354,9 @@ function TemplatesTab() {
                 <div>
                   <p className="font-medium text-sm">{t.name}</p>
                   {t.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t.description}
+                    </p>
                   )}
                 </div>
                 {t.isDefault && (
@@ -348,7 +405,11 @@ function TemplatesTab() {
             </div>
           </div>
           <SheetFooter>
-            <Button variant="outline" onClick={handleCloseSheet} className="flex-1">
+            <Button
+              variant="outline"
+              onClick={handleCloseSheet}
+              className="flex-1"
+            >
               Cancel
             </Button>
             <Button
@@ -364,7 +425,6 @@ function TemplatesTab() {
     </div>
   );
 }
-
 
 export default function ClientOnboardingPage() {
   const isAdmin = useCan("settings:manage");

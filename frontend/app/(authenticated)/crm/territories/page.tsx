@@ -2,7 +2,15 @@
 
 import { useState, useCallback, useRef, type KeyboardEvent } from "react";
 import {
-  Map, Plus, Pencil, Trash2, MapPin, Users, Building2, CheckCircle2, AlertCircle,
+  Map,
+  Plus,
+  Pencil,
+  Trash2,
+  MapPin,
+  Users,
+  Building2,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -32,7 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/hooks/api/crmlert-dialog";
 import {
   useTerritories,
   useCreateTerritory,
@@ -40,9 +48,8 @@ import {
   useDeleteTerritory,
   type Territory,
   type CreateTerritoryInput,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/hooks/crm";
 import { cn } from "@/lib/utils";
-
 
 interface TagInputProps {
   label: string;
@@ -64,7 +71,7 @@ function TagInput({ label, tags, onChange, placeholder }: TagInputProps) {
       }
       setInputValue("");
     },
-    [tags, onChange]
+    [tags, onChange],
   );
 
   const handleKeyDown = useCallback(
@@ -76,33 +83,39 @@ function TagInput({ label, tags, onChange, placeholder }: TagInputProps) {
         onChange(tags.slice(0, -1));
       }
     },
-    [inputValue, addTag, tags, onChange]
+    [inputValue, addTag, tags, onChange],
   );
 
   const removeTag = useCallback(
     (idx: number) => {
       onChange(tags.filter((_, i) => i !== idx));
     },
-    [tags, onChange]
+    [tags, onChange],
   );
 
   const handleContainerClick = useCallback(() => {
     inputRef.current?.focus();
   }, []);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  }, []);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInputValue(e.target.value);
+    },
+    [],
+  );
 
   const handleBlur = useCallback(() => {
     if (inputValue.trim()) addTag(inputValue);
   }, [inputValue, addTag]);
 
-  const handleRemoveClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    const idx = Number(e.currentTarget.dataset.idx);
-    removeTag(idx);
-  }, [removeTag]);
+  const handleRemoveClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      const idx = Number(e.currentTarget.dataset.idx);
+      removeTag(idx);
+    },
+    [removeTag],
+  );
 
   return (
     <div className="space-y-1.5">
@@ -139,11 +152,12 @@ function TagInput({ label, tags, onChange, placeholder }: TagInputProps) {
           className="flex-1 min-w-[80px] text-sm bg-transparent outline-none placeholder:text-muted-foreground"
         />
       </div>
-      <p className="text-xs text-muted-foreground">Press Enter to add each item</p>
+      <p className="text-xs text-muted-foreground">
+        Press Enter to add each item
+      </p>
     </div>
   );
 }
-
 
 interface FormState {
   name: string;
@@ -167,7 +181,6 @@ function fromTerritory(t: Territory): FormState {
   };
 }
 
-
 interface TerritoryCardProps {
   territory: Territory;
   onEdit: (t: Territory) => void;
@@ -175,7 +188,12 @@ interface TerritoryCardProps {
   isDeleting: boolean;
 }
 
-function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: TerritoryCardProps) {
+function TerritoryCard({
+  territory: t,
+  onEdit,
+  onDelete,
+  isDeleting,
+}: TerritoryCardProps) {
   const MAX_CITIES = 5;
   const visibleCities = (t.cities ?? []).slice(0, MAX_CITIES);
   const extraCities = (t.cities ?? []).length - MAX_CITIES;
@@ -188,7 +206,9 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
       <CardHeader className="pb-2 pt-4 px-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="font-semibold text-sm text-foreground truncate">{t.name}</p>
+            <p className="font-semibold text-sm text-foreground truncate">
+              {t.name}
+            </p>
           </div>
           <Badge
             variant="outline"
@@ -196,7 +216,7 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
               "text-[10px] shrink-0",
               t.isActive
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                : "bg-slate-100 text-slate-500 border-slate-200"
+                : "bg-slate-100 text-slate-500 border-slate-200",
             )}
           >
             {t.isActive ? "Active" : "Inactive"}
@@ -218,12 +238,19 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
             <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
             <div className="flex flex-wrap gap-1">
               {visibleCities.map((city) => (
-                <Badge key={city} variant="outline" className="text-[10px] h-4 px-1.5">
+                <Badge
+                  key={city}
+                  variant="outline"
+                  className="text-[10px] h-4 px-1.5"
+                >
                   {city}
                 </Badge>
               ))}
               {extraCities > 0 && (
-                <Badge variant="outline" className="text-[10px] h-4 px-1.5 text-muted-foreground">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] h-4 px-1.5 text-muted-foreground"
+                >
                   +{extraCities} more
                 </Badge>
               )}
@@ -233,11 +260,16 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Users className="h-3.5 w-3.5" />
-          <span>{(t.assignedReps ?? []).length} assigned rep{(t.assignedReps ?? []).length !== 1 ? "s" : ""}</span>
+          <span>
+            {(t.assignedReps ?? []).length} assigned rep
+            {(t.assignedReps ?? []).length !== 1 ? "s" : ""}
+          </span>
         </div>
 
         {t.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>
+          <p className="text-xs text-muted-foreground line-clamp-2">
+            {t.description}
+          </p>
         )}
 
         <div className="flex gap-2 pt-1">
@@ -268,7 +300,8 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Territory</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to delete <strong>{t.name}</strong>? This action cannot be undone.
+                  Are you sure you want to delete <strong>{t.name}</strong>?
+                  This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -288,12 +321,19 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
   );
 }
 
-
 export default function TerritoriesPage() {
-  const { data: territories = [], isLoading, isError, refetch } = useTerritories();
-  const { mutate: createTerritory, isPending: isCreating } = useCreateTerritory();
-  const { mutate: updateTerritory, isPending: isUpdating } = useUpdateTerritory();
-  const { mutate: deleteTerritory, variables: deletingVars } = useDeleteTerritory();
+  const {
+    data: territories = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useTerritories();
+  const { mutate: createTerritory, isPending: isCreating } =
+    useCreateTerritory();
+  const { mutate: updateTerritory, isPending: isUpdating } =
+    useUpdateTerritory();
+  const { mutate: deleteTerritory, variables: deletingVars } =
+    useDeleteTerritory();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Territory | null>(null);
@@ -329,7 +369,7 @@ export default function TerritoriesPage() {
             toast.success("Territory updated");
           },
           onError: () => toast.error("Failed to update territory"),
-        }
+        },
       );
     } else {
       createTerritory(payload, {
@@ -342,22 +382,33 @@ export default function TerritoriesPage() {
     }
   }, [form, editTarget, createTerritory, updateTerritory]);
 
-  const handleDelete = useCallback((id: number) => {
-    deleteTerritory(id, {
-      onSuccess: () => toast.success("Territory deleted"),
-      onError: () => toast.error("Failed to delete territory"),
-    });
-  }, [deleteTerritory]);
+  const handleDelete = useCallback(
+    (id: number) => {
+      deleteTerritory(id, {
+        onSuccess: () => toast.success("Territory deleted"),
+        onError: () => toast.error("Failed to delete territory"),
+      });
+    },
+    [deleteTerritory],
+  );
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
-  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((f) => ({ ...f, name: e.target.value }));
-  }, []);
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setForm((f) => ({ ...f, name: e.target.value }));
+    },
+    [],
+  );
 
-  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setForm((f) => ({ ...f, description: e.target.value }));
-  }, []);
+  const handleDescriptionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setForm((f) => ({ ...f, description: e.target.value }));
+    },
+    [],
+  );
 
   const handleActiveChange = useCallback((v: boolean) => {
     setForm((f) => ({ ...f, isActive: v }));
@@ -375,7 +426,10 @@ export default function TerritoriesPage() {
 
   const totalTerritories = territories.length;
   const activeTerritories = territories.filter((t) => t.isActive).length;
-  const totalCities = territories.reduce((sum, t) => sum + (t.cities ?? []).length, 0);
+  const totalCities = territories.reduce(
+    (sum, t) => sum + (t.cities ?? []).length,
+    0,
+  );
 
   if (isLoading) {
     return (
@@ -385,10 +439,14 @@ export default function TerritoriesPage() {
       >
         <div className="space-y-6">
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28" />)}
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-28" />
+            ))}
           </div>
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-52" />)}
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-52" />
+            ))}
           </div>
         </div>
       </PageWrapper>
@@ -404,10 +462,16 @@ export default function TerritoriesPage() {
         <div className="flex flex-1 flex-col items-center justify-center min-h-[400px] gap-4 text-center">
           <AlertCircle className="h-12 w-12 text-destructive/60" />
           <div>
-            <p className="font-medium text-foreground">Failed to load territories</p>
-            <p className="text-sm text-muted-foreground mt-1">Something went wrong. Please try again.</p>
+            <p className="font-medium text-foreground">
+              Failed to load territories
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Something went wrong. Please try again.
+            </p>
           </div>
-          <Button variant="outline" onClick={handleRetry}>Retry</Button>
+          <Button variant="outline" onClick={handleRetry}>
+            Retry
+          </Button>
         </div>
       </PageWrapper>
     );
@@ -452,7 +516,8 @@ export default function TerritoriesPage() {
             <div>
               <p className="font-medium text-foreground">No territories yet</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Create your first territory to start assigning sales reps to geographic regions.
+                Create your first territory to start assigning sales reps to
+                geographic regions.
               </p>
             </div>
             <Button onClick={openCreate} aria-label="Create first territory">
@@ -478,7 +543,9 @@ export default function TerritoriesPage() {
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{editTarget ? "Edit Territory" : "Create Territory"}</SheetTitle>
+            <SheetTitle>
+              {editTarget ? "Edit Territory" : "Create Territory"}
+            </SheetTitle>
           </SheetHeader>
 
           <div className="space-y-5 py-4">
@@ -540,7 +607,11 @@ export default function TerritoriesPage() {
               disabled={!form.name.trim() || isCreating || isUpdating}
               onClick={handleSubmit}
             >
-              {isCreating || isUpdating ? "Saving…" : editTarget ? "Save Changes" : "Create"}
+              {isCreating || isUpdating
+                ? "Saving…"
+                : editTarget
+                  ? "Save Changes"
+                  : "Create"}
             </Button>
           </SheetFooter>
         </SheetContent>

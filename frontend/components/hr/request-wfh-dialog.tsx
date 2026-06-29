@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Home } from "lucide-react";
 import { format, addDays } from "date-fns";
-import { useHrEmployees, useCreateWfhRequest } from "@/lib/api/hooks/hr";
+import { useHrEmployees, useCreateWfhRequest } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { EntityFormSheet } from "@/components/shared";
 import {
@@ -49,7 +49,7 @@ export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
     () =>
       (Array.isArray(employeesRaw)
         ? employeesRaw
-        : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
+        : ((employeesRaw as { data?: Employee[] })?.data ?? [])) as Employee[],
     [employeesRaw],
   );
 

@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
-import { useOrgMembers } from "@/lib/api/hooks/organization";
-import { useSubscription } from "@/lib/api/hooks/subscription";
-import { useInvoices } from "@/lib/api/hooks/invoice";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { useSubscription } from "@/hooks/api/subscription";
+import { useInvoices } from "@/hooks/api/invoice";
 
 interface ChecklistStep {
   id: string;

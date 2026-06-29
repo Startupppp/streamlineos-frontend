@@ -15,11 +15,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Users } from "lucide-react";
 import { toast } from "sonner";
-import { useChatOrgUsers, useChatOnlineUsers, useCreateDMChannel } from "@/lib/api/hooks";
+import {@/hooks/api
+  useChatOrgUsers,
+  useChatOnlineUsers,
+  useCreateDMChannel,
+} from "@/hooks/hooks";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 
-type OrgUser = { id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null };
+type OrgUser = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string | null;
+};
 
 interface DMUserItemProps {
   user: OrgUser;
@@ -39,7 +49,9 @@ function DMUserItem({ user, isOnline, isPending, onSelect }: DMUserItemProps) {
       <div className="relative shrink-0">
         <Avatar className="h-9 w-9">
           <AvatarImage src={resolveImageUrl(user.image)} />
-          <AvatarFallback className="text-[10px] font-medium">{getInitials(user.name)}</AvatarFallback>
+          <AvatarFallback className="text-[10px] font-medium">
+            {getInitials(user.name)}
+          </AvatarFallback>
         </Avatar>
         {isOnline && (
           <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
@@ -47,9 +59,14 @@ function DMUserItem({ user, isOnline, isPending, onSelect }: DMUserItemProps) {
       </div>
       <div className="flex-1 text-left min-w-0">
         <p className="text-[13px] font-medium truncate">{user.name}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+        <p className="text-[11px] text-muted-foreground truncate">
+          {user.email}
+        </p>
       </div>
-      <Badge variant="outline" className="text-[10px] shrink-0 border-border/40">
+      <Badge
+        variant="outline"
+        className="text-[10px] shrink-0 border-border/40"
+      >
         {user.role}
       </Badge>
     </button>
@@ -74,27 +91,34 @@ export function NewDMDialog({
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
-    [onlineUsers]
+    [onlineUsers],
   );
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
-  const handleSelectUser = useCallback(async (userId: string) => {
-    try {
-      const channel = await createDM.mutateAsync({ targetUserId: userId });
-      onCreated(channel.id);
-      onOpenChange(false);
-      setSearch("");
-    } catch {
-      toast.error("Failed to create conversation");
-    }
-  }, [createDM, onCreated, onOpenChange]);
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    [],
+  );
+  const handleSelectUser = useCallback(
+    async (userId: string) => {
+      try {
+        const channel = await createDM.mutateAsync({ targetUserId: userId });
+        onCreated(channel.id);
+        onOpenChange(false);
+        setSearch("");
+      } catch {
+        toast.error("Failed to create conversation");
+      }
+    },
+    [createDM, onCreated, onOpenChange],
+  );
 
   const filteredUsers = useMemo(() => {
     if (!orgUsers) return [];
     if (!search) return orgUsers;
     const q = search.toLowerCase();
     return orgUsers.filter(
-      (u) => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
+      (u) =>
+        u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q),
     );
   }, [orgUsers, search]);
 
@@ -102,7 +126,13 @@ export function NewDMDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {!hideTrigger && (
         <DialogTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" title="New Direct Message" aria-label="New Direct Message">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 rounded-lg"
+            title="New Direct Message"
+            aria-label="New Direct Message"
+          >
             <Plus className="h-3.5 w-3.5" />
           </Button>
         </DialogTrigger>
@@ -137,7 +167,9 @@ export function NewDMDialog({
             {filteredUsers.length === 0 && !isLoading && (
               <div className="text-center py-10">
                 <Users className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-[13px] text-muted-foreground">No users found</p>
+                <p className="text-[13px] text-muted-foreground">
+                  No users found
+                </p>
               </div>
             )}
           </div>

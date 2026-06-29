@@ -12,15 +12,12 @@ import {
   useRoleStats,
   useTodayActivities,
   useMyIssues,
-} from "@/lib/api/hooks/dashboard";
+} from "@/hooks/api/dashboard";
 import {
   useNotifications,
   useUnreadNotificationCount,
-} from "@/lib/api/hooks/notifications";
-import {
-  RefreshCw,
-  AlertCircle,
-} from "lucide-react";
+} from "@/hooks/api/notifications";
+import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
@@ -47,10 +44,10 @@ import {
 import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
 import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/hooks/access";
 import { CeoDashboard } from "@/features/dashboard/ceo-dashboard";
 import { HrDashboard } from "@/features/dashboard/hr-dashboard";
-import { SalesDashboard } from "@/features/dashboard/sales-dashboard";
+import { SalesDashboard @/hooks/api/accessashboard/sales-dashboard";
 import { EmployeeDashboard } from "@/features/dashboard/employee-dashboard";
 import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
 import { GettingStartedChecklist } from "@/features/dashboard/getting-started-checklist";
@@ -303,29 +300,29 @@ export function DashboardClient() {
     >
       <div className="space-y-4">
         {statCards.length > 0 && (
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className={`grid gap-3 grid-cols-1 ${
-            statCards.length >= 4
-              ? "sm:grid-cols-2 lg:grid-cols-4"
-              : statCards.length >= 3
-                ? "sm:grid-cols-2 md:grid-cols-3"
-                : "sm:grid-cols-2"
-          }`}
-        >
-          {statCards.map((stat, i) => (
-            <StatCard
-              key={stat.id}
-              label={stat.label}
-              value={stat.value}
-              icon={stat.icon}
-              href={stat.href}
-              index={i}
-            />
-          ))}
-        </motion.div>
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className={`grid gap-3 grid-cols-1 ${
+              statCards.length >= 4
+                ? "sm:grid-cols-2 lg:grid-cols-4"
+                : statCards.length >= 3
+                  ? "sm:grid-cols-2 md:grid-cols-3"
+                  : "sm:grid-cols-2"
+            }`}
+          >
+            {statCards.map((stat, i) => (
+              <StatCard
+                key={stat.id}
+                label={stat.label}
+                value={stat.value}
+                icon={stat.icon}
+                href={stat.href}
+                index={i}
+              />
+            ))}
+          </motion.div>
         )}
 
         <motion.div variants={fadeUp} initial="hidden" animate="visible">

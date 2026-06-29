@@ -3,24 +3,44 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, ChevronsUpDown, Check, Search } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Check,
+  Search,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useGetOrganizations, useSwitchOrg } from "@/hooks/auth-hooks";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { useChatUnreadTotal } from "@/lib/api/hooks/chat";
-import { useUnreadNotificationCount } from "@/lib/api/hooks/notifications";
-import { usePendingApprovals } from "@/lib/api/hooks/dashboard";
-import { flattenNavRoutes, getNavGroupsForUser } from "./sidebar/sidebar-nav-items";
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { useChatUnreadTotal } from "@/hooks/api/chat";
+import { useUnreadNotificationCount } from "@/hooks/api/notifications";
+import { usePendingApprovals } from "@/hooks/api/dashboard";
+import {
+  flattenNavRoutes,
+  getNavGroupsForUser,
+} from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { SidebarUserMenu } from "./sidebar/sidebar-user-menu";
 import { NotificationBell } from "./notification-bell";
 import { usePermissions } from "@/lib/rbac/hooks";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
@@ -52,7 +72,7 @@ export function AppSidebar({
   const isAdmin = useCan("settings:manage");
   const navGroups = useMemo(
     () => getNavGroupsForUser(effectiveRole, permissions),
-    [effectiveRole, permissions]
+    [effectiveRole, permissions],
   );
 
   const activeGroupLabel = useMemo(() => {
@@ -66,13 +86,15 @@ export function AppSidebar({
     return null;
   }, [navGroups, pathname]);
 
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem("sidebar-groups");
       if (stored) setCollapsedGroups(JSON.parse(stored));
-    } catch { }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -80,7 +102,9 @@ export function AppSidebar({
     setCollapsedGroups((prev) => {
       if (prev[activeGroupLabel] === false) return prev;
       const next = { ...prev, [activeGroupLabel]: false };
-      try { localStorage.setItem("sidebar-groups", JSON.stringify(next)); } catch { }
+      try {
+        localStorage.setItem("sidebar-groups", JSON.stringify(next));
+      } catch {}
       return next;
     });
   }, [activeGroupLabel]);
@@ -88,7 +112,9 @@ export function AppSidebar({
   const toggleGroup = useCallback((label: string) => {
     setCollapsedGroups((prev) => {
       const next = { ...prev, [label]: !prev[label] };
-      try { localStorage.setItem("sidebar-groups", JSON.stringify(next)); } catch { }
+      try {
+        localStorage.setItem("sidebar-groups", JSON.stringify(next));
+      } catch {}
       return next;
     });
   }, []);
@@ -108,17 +134,22 @@ export function AppSidebar({
   useEffect(() => {
     const base = "StreamlineOS";
     const total = unreadChatCount + unreadNotifCount;
-    document.title = total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
+    document.title =
+      total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
   }, [unreadChatCount, unreadNotifCount]);
 
   const activeOrgId = session?.orgId as string | null | undefined;
-  const activeOrg = organizations?.find((o) => o.id === activeOrgId) ?? organizations?.[0];
+  const activeOrg =
+    organizations?.find((o) => o.id === activeOrgId) ?? organizations?.[0];
   const orgName = activeOrg?.name;
   const otherOrgs = organizations?.filter((o) => o.id !== activeOrg?.id) ?? [];
 
-  const handleSwitchOrg = useCallback((orgId: string) => {
-    switchOrg.mutate(orgId);
-  }, [switchOrg]);
+  const handleSwitchOrg = useCallback(
+    (orgId: string) => {
+      switchOrg.mutate(orgId);
+    },
+    [switchOrg],
+  );
 
   const handleSearchClick = useCallback(() => {
     document.dispatchEvent(
@@ -127,7 +158,7 @@ export function AppSidebar({
         metaKey: navigator.platform?.toUpperCase().includes("MAC") ?? true,
         ctrlKey: !(navigator.platform?.toUpperCase().includes("MAC") ?? true),
         bubbles: true,
-      })
+      }),
     );
   }, []);
 
@@ -163,13 +194,13 @@ export function AppSidebar({
       <div
         className={cn(
           "relative flex flex-col h-full bg-sidebar text-sidebar-foreground transition-[width] duration-300 ease-in-out",
-          isCollapsed ? "w-[3.5rem]" : "w-[17rem]"
+          isCollapsed ? "w-[3.5rem]" : "w-[17rem]",
         )}
       >
         <div
           className={cn(
             "relative flex items-center h-14 shrink-0 border-b border-sidebar-border",
-            isCollapsed ? "justify-center px-0" : "justify-between px-4"
+            isCollapsed ? "justify-center px-0" : "justify-between px-4",
           )}
         >
           {!isCollapsed && (
@@ -225,7 +256,11 @@ export function AppSidebar({
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Link href="/dashboard" onClick={onNavigate} className="min-w-0 group">
+                <Link
+                  href="/dashboard"
+                  onClick={onNavigate}
+                  className="min-w-0 group"
+                >
                   <span className="text-[17px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
                     StreamlineOS
                   </span>
@@ -279,14 +314,13 @@ export function AppSidebar({
         </div>
 
         <ScrollArea className="flex-1 min-h-0">
-          <nav
-            className={cn("py-2", isCollapsed ? "px-1.5" : "px-3")}
-          >
+          <nav className={cn("py-2", isCollapsed ? "px-1.5" : "px-3")}>
             {navGroups.map((group, i) => {
               const groupLabel = group.label;
-              const isGroupCollapsed = groupLabel in collapsedGroups
-                ? collapsedGroups[groupLabel]
-                : true;
+              const isGroupCollapsed =
+                groupLabel in collapsedGroups
+                  ? collapsedGroups[groupLabel]
+                  : true;
               return (
                 <SidebarSection
                   key={groupLabel}
@@ -307,7 +341,9 @@ export function AppSidebar({
         <div
           className={cn(
             "border-t border-sidebar-border shrink-0",
-            isCollapsed ? "px-1.5 py-2 flex flex-col items-center gap-1" : "px-3 py-2 flex items-center gap-1"
+            isCollapsed
+              ? "px-1.5 py-2 flex flex-col items-center gap-1"
+              : "px-3 py-2 flex items-center gap-1",
           )}
         >
           {isCollapsed ? (
@@ -323,7 +359,11 @@ export function AppSidebar({
                     <Search className="h-4 w-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10} className="text-xs">
+                <TooltipContent
+                  side="right"
+                  sideOffset={10}
+                  className="text-xs"
+                >
                   Search (⌘K)
                 </TooltipContent>
               </Tooltip>

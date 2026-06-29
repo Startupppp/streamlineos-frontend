@@ -17,19 +17,27 @@ import {
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { DS } from "@/lib/design-system";
-import { useVendorLedger } from "@/lib/api/hooks/accounting";
+import { useVendorLedger } from "@/hooks/api/accounting";
 
 function formatCurrency(value: string): string {
   const n = Number(value);
   if (!Number.isFinite(n)) return value;
-  return n.toLocaleString(undefined, { style: "currency", currency: "INR", maximumFractionDigits: 2 });
+  return n.toLocaleString(undefined, {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  });
 }
 
 function formatDate(value: string): string {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
 }
 
 function formatSource(sourceType: string, sourceEvent: string | null): string {
@@ -58,13 +66,19 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
     to: to || undefined,
   });
 
-  const handleFromChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-    setFrom(event.target.value);
-  }, []);
+  const handleFromChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>): void => {
+      setFrom(event.target.value);
+    },
+    [],
+  );
 
-  const handleToChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-    setTo(event.target.value);
-  }, []);
+  const handleToChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>): void => {
+      setTo(event.target.value);
+    },
+    [],
+  );
 
   const handleRetry = useCallback((): void => {
     void query.refetch();
@@ -76,17 +90,26 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
   const subtitleParts: string[] = [];
   if (summary?.state) subtitleParts.push(summary.state);
   if (summary?.gstin) subtitleParts.push(`GSTIN ${summary.gstin}`);
-  const subtitle = subtitleParts.length > 0 ? subtitleParts.join(" · ") : "Vendor ledger";
+  const subtitle =
+    subtitleParts.length > 0 ? subtitleParts.join(" · ") : "Vendor ledger";
 
   return (
     <PageWrapper
       eyebrow="Accounting · Vendors"
-      title={summary?.vendorName ?? (vendorId > 0 ? "Vendor ledger" : "Invalid vendor")}
+      title={
+        summary?.vendorName ??
+        (vendorId > 0 ? "Vendor ledger" : "Invalid vendor")
+      }
       subtitle={subtitle}
     >
       <div className="space-y-6">
         <div>
-          <Button variant="ghost" size="sm" asChild className="-ml-2 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="-ml-2 text-muted-foreground hover:text-foreground"
+          >
             <Link href="/accounting/vendors">
               <ArrowLeft className="h-4 w-4 mr-1.5" />
               Back to vendors
@@ -162,9 +185,12 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
         ) : lines.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
             <Receipt className="h-10 w-10 text-muted-foreground/40 mb-3" />
-            <h3 className="text-sm font-semibold text-foreground">No ledger entries</h3>
+            <h3 className="text-sm font-semibold text-foreground">
+              No ledger entries
+            </h3>
             <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-              No accounts-payable journal lines for this vendor in the selected range.
+              No accounts-payable journal lines for this vendor in the selected
+              range.
             </p>
           </div>
         ) : (
@@ -178,7 +204,9 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
                   <TableHead>Description</TableHead>
                   <TableHead className="w-[120px] text-right">Debit</TableHead>
                   <TableHead className="w-[120px] text-right">Credit</TableHead>
-                  <TableHead className="w-[140px] text-right">Running Balance</TableHead>
+                  <TableHead className="w-[140px] text-right">
+                    Running Balance
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -210,10 +238,14 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
                       {line.description ?? ""}
                     </TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
-                      {Number(line.debit) > 0 ? formatCurrency(line.debit) : "—"}
+                      {Number(line.debit) > 0
+                        ? formatCurrency(line.debit)
+                        : "—"}
                     </TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
-                      {Number(line.credit) > 0 ? formatCurrency(line.credit) : "—"}
+                      {Number(line.credit) > 0
+                        ? formatCurrency(line.credit)
+                        : "—"}
                     </TableCell>
                     <TableCell className="text-right text-sm font-medium tabular-nums">
                       {formatCurrency(line.runningBalance)}

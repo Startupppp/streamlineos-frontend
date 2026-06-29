@@ -13,8 +13,11 @@ import {
 import { cn } from "@/lib/utils";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
 import { STATUS_LABELS, type StatusFilter } from "./expense-constants";
-import type { ExpenseFilters, ExpenseCategoryRecord as ExpenseCategory } from "@/types/hr/expenses";
-import type { DatePreset } from "@/hooks/use-expense-filters";
+import type {
+  ExpenseFilters,
+  ExpenseCategoryRecord as ExpenseCategory,
+} from "@/types/hr/expenses";
+import type { DatePreset } from "@/hooks/common/use-expense-filters";
 
 function StatusFilterButton({
   filterKey,
@@ -29,7 +32,9 @@ function StatusFilterButton({
   isActive: boolean;
   onStatusChange: (status: StatusFilter) => void;
 }) {
-  function handleClick() { onStatusChange(filterKey); }
+  function handleClick() {
+    onStatusChange(filterKey);
+  }
   return (
     <button
       onClick={handleClick}
@@ -70,14 +75,19 @@ function MemberStatusTab({
   isActive: boolean;
   onStatusChange: (status: StatusFilter) => void;
 }) {
-  function handleClick() { onStatusChange(status); }
+  function handleClick() {
+    onStatusChange(status);
+  }
   function handleKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
     let nextIdx = index;
     if (e.key === "ArrowRight") nextIdx = (index + 1) % totalCount;
-    else if (e.key === "ArrowLeft") nextIdx = (index - 1 + totalCount) % totalCount;
+    else if (e.key === "ArrowLeft")
+      nextIdx = (index - 1 + totalCount) % totalCount;
     else return;
     e.preventDefault();
-    onStatusChange(["ALL", "PENDING", "APPROVED", "REJECTED"][nextIdx] as StatusFilter);
+    onStatusChange(
+      ["ALL", "PENDING", "APPROVED", "REJECTED"][nextIdx] as StatusFilter,
+    );
     (e.currentTarget.parentElement?.children[nextIdx] as HTMLElement)?.focus();
   }
   return (
@@ -128,12 +138,16 @@ export function AdminExpenseFilters({
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="flex items-center gap-1.5 flex-wrap">
-        {([
+        {[
           { key: "ALL" as StatusFilter, label: "All Claims", count: null },
-          { key: "PENDING" as StatusFilter, label: "Pending", count: pendingCount },
+          {
+            key: "PENDING" as StatusFilter,
+            label: "Pending",
+            count: pendingCount,
+          },
           { key: "APPROVED" as StatusFilter, label: "Approved", count: null },
           { key: "REJECTED" as StatusFilter, label: "Rejected", count: null },
-        ]).map((item) => (
+        ].map((item) => (
           <StatusFilterButton
             key={item.key}
             filterKey={item.key}
@@ -149,13 +163,18 @@ export function AdminExpenseFilters({
           value={selectedUserId || "all"}
           onValueChange={handleUserChange}
         >
-          <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Filter by employee">
+          <SelectTrigger
+            className="h-8 w-[180px] text-xs"
+            aria-label="Filter by employee"
+          >
             <SelectValue placeholder="All Employees" />
           </SelectTrigger>
           <SelectContent className="w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All Employees</SelectItem>
             {employees.map((e) => (
-              <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+              <SelectItem key={e.id} value={e.id}>
+                {e.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -183,7 +202,9 @@ export function MemberExpenseFilters({
 }: MemberExpenseFiltersProps) {
   const statuses = ["ALL", "PENDING", "APPROVED", "REJECTED"] as const;
 
-  function handleDatePresetChange(v: string) { onDatePresetChange(v as DatePreset); }
+  function handleDatePresetChange(v: string) {
+    onDatePresetChange(v as DatePreset);
+  }
 
   return (
     <div className="flex flex-wrap gap-3 items-center justify-between">
@@ -205,7 +226,10 @@ export function MemberExpenseFilters({
       </div>
       <div className="flex items-center gap-2">
         <Select value={datePreset} onValueChange={handleDatePresetChange}>
-          <SelectTrigger className="h-8 w-[150px] text-xs gap-1.5" aria-label="Filter expenses by date range">
+          <SelectTrigger
+            className="h-8 w-[150px] text-xs gap-1.5"
+            aria-label="Filter expenses by date range"
+          >
             <Filter className="h-3 w-3 shrink-0" />
             <SelectValue placeholder="All Time" />
           </SelectTrigger>
@@ -221,7 +245,12 @@ export function MemberExpenseFilters({
           filters={filters}
           categories={categories}
           trigger={
-            <Button variant="outline" size="icon" className="h-8 w-8" aria-label="Download report">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              aria-label="Download report"
+            >
               <Download className="h-3.5 w-3.5" />
             </Button>
           }

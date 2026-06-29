@@ -13,14 +13,25 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { CalendarIcon, MapPin, Trash2, Tag, Pencil, Download, Users, Check, X, HelpCircle } from "lucide-react";
+import {
+  CalendarIcon,
+  MapPin,
+  Trash2,
+  Tag,
+  Pencil,
+  Downlo@/hooks/api/calendar
+  Users,@/hooks/api/calendar
+  Check,
+  X,
+  HelpCircle,
+} from "lucide-react";
 import {
   useDeleteCalendarEvent,
   useRsvpCalendarEvent,
   useEventAttendees,
   extractEventNumericId,
-} from "@/lib/api/hooks/calendar";
-import type { CalendarListItem } from "@/lib/api/hooks/calendar";
+} from "@/hooks/hooks/calendar";
+import type { CalendarListItem } from "@/hooks/hooks/calendar";
 import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import { toast } from "sonner";
@@ -51,13 +62,17 @@ const RSVP_STATUS_LABELS: Record<string, string> = {
 export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const { mutateAsync: deleteEvent, isPending: deleteEventIsPending } = useDeleteCalendarEvent();
-  const { mutateAsync: rsvpMutation, isPending: rsvpMutationIsPending } = useRsvpCalendarEvent();
+  const { mutateAsync: deleteEvent, isPending: deleteEventIsPending } =
+    useDeleteCalendarEvent();
+  const { mutateAsync: rsvpMutation, isPending: rsvpMutationIsPending } =
+    useRsvpCalendarEvent();
 
   const numericEventId = event ? extractEventNumericId(event.id) : null;
   const isCalendarEvent = event?.source === "event";
 
-  const { data: attendees = [] } = useEventAttendees(isCalendarEvent ? numericEventId : null);
+  const { data: attendees = [] } = useEventAttendees(
+    isCalendarEvent ? numericEventId : null,
+  );
 
   const handleDelete = useCallback(async () => {
     if (!event || numericEventId === null) return;
@@ -80,7 +95,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
         toast.error("Failed to update RSVP");
       }
     },
-    [event, numericEventId, rsvpMutation]
+    [event, numericEventId, rsvpMutation],
   );
 
   const handleExportIcs = useCallback(async () => {
@@ -142,18 +157,24 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                   )}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Tag className="h-3.5 w-3.5 shrink-0" />
-                    <Badge variant="outline" className="text-xs capitalize">{event.category}</Badge>
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {event.category}
+                    </Badge>
                   </div>
                   {event.description && (
                     <>
                       <Separator />
-                      <p className="text-sm text-foreground">{event.description}</p>
+                      <p className="text-sm text-foreground">
+                        {event.description}
+                      </p>
                     </>
                   )}
                   {event.creatorName && (
                     <>
                       <Separator />
-                      <p className="text-xs text-muted-foreground">Created by {event.creatorName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Created by {event.creatorName}
+                      </p>
                     </>
                   )}
 
@@ -161,13 +182,17 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                     <>
                       <Separator />
                       <div className="space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your RSVP</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                          Your RSVP
+                        </p>
                         <div className="flex gap-2">
                           <Button
                             size="sm"
                             variant="outline"
                             className="flex-1 h-8 text-xs gap-1.5 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:border-green-900 dark:hover:bg-green-950"
-                            disabled={deleteEventIsPending || rsvpMutationIsPending}
+                            disabled={
+                              deleteEventIsPending || rsvpMutationIsPending
+                            }
                             onClick={() => handleRsvp("accepted")}
                             aria-label="Accept event"
                           >
@@ -211,11 +236,18 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                         </div>
                         <div className="space-y-1.5">
                           {attendees.map((a) => (
-                            <div key={a.id} className="flex items-center gap-2 text-sm">
+                            <div
+                              key={a.id}
+                              className="flex items-center gap-2 text-sm"
+                            >
                               <Avatar className="h-6 w-6">
-                                <AvatarImage src={resolveImageUrl(a.user?.image ?? null)} />
+                                <AvatarImage
+                                  src={resolveImageUrl(a.user?.image ?? null)}
+                                />
                                 <AvatarFallback className="text-[10px]">
-                                  {(a.user?.name ?? a.user?.email ?? "?").slice(0, 2).toUpperCase()}
+                                  {(a.user?.name ?? a.user?.email ?? "?")
+                                    .slice(0, 2)
+                                    .toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
                               <span className="flex-1 truncate text-xs">
@@ -270,12 +302,18 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                 .ics
               </Button>
               {isCalendarEvent && (
-                <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditOpen(true)}
+                >
                   <Pencil className="h-3.5 w-3.5 mr-1.5" />
                   Edit
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+              <Button variant="outline" size="sm" onClick={onClose}>
+                Close
+              </Button>
             </div>
           </div>
         </SheetContent>

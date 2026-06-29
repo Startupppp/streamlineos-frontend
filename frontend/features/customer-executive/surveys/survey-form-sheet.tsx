@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateCsatSurvey } from "@/lib/api/hooks/crm";
+import { useCreateCsatSurvey } from "@/hooks/api/crm";
 import { toast } from "sonner";
 
 interface CreateSurveySheetProps {
@@ -30,7 +30,7 @@ interface CreateSurveySheetProps {
 export function CreateSurveySheet({ open, onClose }: CreateSurveySheetProps) {
   const [title, setTitle] = useState("");
   const [question, setQuestion] = useState(
-    "How satisfied are you with our service?"
+    "How satisfied are you with our service?",
   );
   const [scaleMax, setScaleMax] = useState<"5" | "10">("5");
 
@@ -38,20 +38,25 @@ export function CreateSurveySheet({ open, onClose }: CreateSurveySheetProps) {
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value),
-    []
+    [],
   );
 
   const handleQuestionChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => setQuestion(e.target.value),
-    []
+    [],
   );
 
   const handleScaleChange = useCallback(
     (v: string) => setScaleMax(v as "5" | "10"),
-    []
+    [],
   );
 
-  const handleOpenChange = useCallback((v: boolean) => { if (!v) onClose(); }, [onClose]);
+  const handleOpenChange = useCallback(
+    (v: boolean) => {
+      if (!v) onClose();
+    },
+    [onClose],
+  );
 
   const handleSubmit = useCallback(async () => {
     if (!title.trim()) {

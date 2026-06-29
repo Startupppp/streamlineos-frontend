@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { useAcceptInvitation } from "@/hooks/auth-hooks";
+import { useAcceptInvitation } from "@/hooks/common/auth-hooks";
 import { getPasswordStrength, PASSWORD_REGEX } from "@/lib/password-utils";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
 import { PasswordConfirmField } from "@/components/auth/password-confirm-field";
@@ -76,10 +76,12 @@ export default function InvitationPage() {
   const { data: invitation, error: invitationError } = useQuery({
     queryKey: ["invitation", token],
     queryFn: () =>
-      apiClient.get<{ email: string; organizationName: string; role: string; userExists: boolean }>(
-        "/organization/invitations/validate",
-        { token },
-      ),
+      apiClient.get<{
+        email: string;
+        organizationName: string;
+        role: string;
+        userExists: boolean;
+      }>("/organization/invitations/validate", { token }),
     enabled: !!token,
     retry: false,
   });

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateAccount } from "@/lib/api/hooks/accounting";
+import { useCreateAccount } from "@/hooks/api/accounting";
 
 const ACCOUNT_TYPES = [
   "ASSET",

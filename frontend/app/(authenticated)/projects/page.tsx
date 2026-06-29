@@ -3,7 +3,7 @@
 import { useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { useProjects } from "@/lib/api/hooks/projects";
+import { useProjects } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { NewProjectDialog } from "./new-project-dialog";
 import { ProjectCard } from "./project-card";
@@ -13,7 +13,7 @@ import { ProjectPagination } from "./project-pagination";
 import { ProjectsEmptyState } from "./projects-empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useDebouncedValue } from "@/hooks/use-expense-filters";
+import { useDebouncedValue } from "@/hooks/common/use-expense-filters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -58,7 +58,8 @@ export default function ProjectsPage() {
     [updateParams],
   );
   const handleViewModeChange = useCallback(
-    (value: ViewMode) => updateParams({ view: value === "grid" ? null : value }),
+    (value: ViewMode) =>
+      updateParams({ view: value === "grid" ? null : value }),
     [updateParams],
   );
   const setPage = useCallback(

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { WidgetCard } from "@/components/ui/widget-card";
-import { usePersonalDashboard } from "@/lib/api/hooks/dashboard";
+import { usePersonalDashboard } from "@/hooks/api/dashboard";
 import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 
@@ -16,7 +16,11 @@ export function UpcomingEventsWidget() {
     <WidgetCard
       icon={CalendarDays}
       title="Upcoming Events"
-      link={{ href: "/calendar", label: "Calendar", ariaLabel: "View calendar" }}
+      link={{
+        href: "/calendar",
+        label: "Calendar",
+        ariaLabel: "View calendar",
+      }}
       isLoading={isLoading}
       error={error}
       isEmpty={!events.length}

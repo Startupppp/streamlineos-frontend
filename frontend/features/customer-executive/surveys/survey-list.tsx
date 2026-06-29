@@ -39,7 +39,7 @@ import {
   useUpdateCsatSurvey,
   useCsatSurveyResponses,
   type CsatSurvey,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/api/crm";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -76,10 +76,15 @@ interface ResultsSheetProps {
 
 function ResultsSheet({ survey, open, onClose }: ResultsSheetProps) {
   const { data: responses = [], isLoading } = useCsatSurveyResponses(
-    open ? survey.id : 0
+    open ? survey.id : 0,
   );
 
-  const handleOpenChange = useCallback((v: boolean) => { if (!v) onClose(); }, [onClose]);
+  const handleOpenChange = useCallback(
+    (v: boolean) => {
+      if (!v) onClose();
+    },
+    [onClose],
+  );
 
   const distribution = Array.from({ length: survey.scaleMax }, (_, i) => {
     const val = i + 1;
@@ -172,7 +177,10 @@ function ResultsSheet({ survey, open, onClose }: ResultsSheetProps) {
                               </span>
                             )}
                           </div>
-                          <StarDisplay rating={r.rating} max={survey.scaleMax} />
+                          <StarDisplay
+                            rating={r.rating}
+                            max={survey.scaleMax}
+                          />
                         </div>
                         {r.comment && (
                           <p className="text-sm text-muted-foreground">
@@ -182,7 +190,7 @@ function ResultsSheet({ survey, open, onClose }: ResultsSheetProps) {
                         <p className="text-[11px] text-muted-foreground">
                           {format(
                             new Date(r.submittedAt),
-                            "MMM d, yyyy 'at' h:mm a"
+                            "MMM d, yyyy 'at' h:mm a",
                           )}
                         </p>
                       </div>
@@ -245,12 +253,9 @@ function SurveyRow({ survey, onViewResults, onDelete }: SurveyRowProps) {
 
   const handleViewResults = useCallback(
     () => onViewResults(survey),
-    [onViewResults, survey]
+    [onViewResults, survey],
   );
-  const handleDelete = useCallback(
-    () => onDelete(survey),
-    [onDelete, survey]
-  );
+  const handleDelete = useCallback(() => onDelete(survey), [onDelete, survey]);
 
   return (
     <motion.div
@@ -378,7 +383,7 @@ export function SurveyList({
     (open: boolean) => {
       if (!open) onCloseDelete();
     },
-    [onCloseDelete]
+    [onCloseDelete],
   );
 
   if (isLoading) {

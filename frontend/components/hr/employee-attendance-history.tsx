@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useHrMonthlyAttendance } from "@/lib/api/hooks/hr";
+import { useHrMonthlyAttendance } from "@/hooks/api/hr";
 import { format } from "date-fns";
 import {
   Table,

@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -37,7 +44,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useDebouncedValue } from "@/hooks/use-debounce";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
@@ -48,7 +55,7 @@ import {
   useKbAiDraft,
   useKbAiImprove,
   useKbAiSummarize,
-} from "@/lib/api/hooks/kb";
+} from "@/hooks/api/kb";
 import type { KbArticle, KbArticleStatus } from "@/types/kb";
 import { ArticleSettingsSheet } from "./article-settings-sheet";
 
@@ -79,7 +86,8 @@ function extractPlainText(node: unknown): string {
   if ("text" in node && typeof node.text === "string") return node.text;
   if ("content" in node && Array.isArray(node.content)) {
     const inner = node.content.map(extractPlainText).join("");
-    const type = "type" in node && typeof node.type === "string" ? node.type : "";
+    const type =
+      "type" in node && typeof node.type === "string" ? node.type : "";
     return BLOCK_TYPES.has(type) ? `${inner}\n` : inner;
   }
   return "";
@@ -112,7 +120,10 @@ function buildDocFromText(text: string): unknown {
       ? { type: "paragraph", content: [{ type: "text", text: line }] }
       : { type: "paragraph" },
   );
-  return { type: "doc", content: blocks.length > 0 ? blocks : [{ type: "paragraph" }] };
+  return {
+    type: "doc",
+    content: blocks.length > 0 ? blocks : [{ type: "paragraph" }],
+  };
 }
 
 function handleAiError(error: unknown): void {
@@ -146,7 +157,10 @@ const STATUS_STYLES: Record<KbArticleStatus, string> = {
 
 function StatusPill({ status }: { status: KbArticleStatus }) {
   return (
-    <Badge variant="outline" className={cn("font-medium", STATUS_STYLES[status])}>
+    <Badge
+      variant="outline"
+      className={cn("font-medium", STATUS_STYLES[status])}
+    >
       {STATUS_LABELS[status]}
     </Badge>
   );
@@ -197,7 +211,11 @@ export function ArticleEditorSkeleton() {
   );
 }
 
-export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorProps) {
+export function ArticleEditor({
+  spaceId,
+  article,
+  initialTitle,
+}: ArticleEditorProps) {
   const router = useRouter();
   const createArticle = useCreateKbArticle();
   const updateArticle = useUpdateKbArticle();
@@ -207,12 +225,16 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
   const aiImprove = useKbAiImprove();
   const aiSummarize = useKbAiSummarize();
 
-  const [initialContent] = useState<unknown>(() => parseStoredContent(article?.content));
+  const [initialContent] = useState<unknown>(() =>
+    parseStoredContent(article?.content),
+  );
   const [title, setTitle] = useState(article?.title ?? initialTitle ?? "");
   const [contentJson, setContentJson] = useState<unknown>(initialContent);
   const [editorContent, setEditorContent] = useState<unknown>(initialContent);
   const [editorKey, setEditorKey] = useState(0);
-  const [articleId, setArticleId] = useState<number | null>(article?.id ?? null);
+  const [articleId, setArticleId] = useState<number | null>(
+    article?.id ?? null,
+  );
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [draftOpen, setDraftOpen] = useState(false);
@@ -329,9 +351,12 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
     performSave(debouncedSnapshot, key);
   }, [debouncedSnapshot, performSave]);
 
-  const handleTitleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value);
-  }, []);
+  const handleTitleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setTitle(event.target.value);
+    },
+    [],
+  );
 
   const handleEditorChange = useCallback((json: unknown) => {
     setContentJson(json);
@@ -344,11 +369,15 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
     setEditorKey((key) => key + 1);
   }, []);
 
-  const isAiBusy = aiDraft.isPending || aiImprove.isPending || aiSummarize.isPending;
+  const isAiBusy =
+    aiDraft.isPending || aiImprove.isPending || aiSummarize.isPending;
 
-  const handleDraftPromptChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>) => {
-    setDraftPrompt(event.target.value);
-  }, []);
+  const handleDraftPromptChange = useCallback(
+    (event: ChangeEvent<HTMLTextAreaElement>) => {
+      setDraftPrompt(event.target.value);
+    },
+    [],
+  );
 
   function handleOpenDraft() {
     setDraftPrompt("");
@@ -518,7 +547,9 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
             <DropdownMenuContent align="end" className="w-60">
               <DropdownMenuLabel className="flex items-center justify-between">
                 <span>AI authoring</span>
-                <span className="text-[10px] font-normal text-muted-foreground">1 credit</span>
+                <span className="text-[10px] font-normal text-muted-foreground">
+                  1 credit
+                </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={handleOpenDraft} disabled={isAiBusy}>
@@ -577,7 +608,8 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
           <DialogHeader>
             <DialogTitle>Draft from prompt</DialogTitle>
             <DialogDescription>
-              Describe what this article should cover. AI writes a first draft you can edit. Uses 1 credit.
+              Describe what this article should cover. AI writes a first draft
+              you can edit. Uses 1 credit.
             </DialogDescription>
           </DialogHeader>
           <Textarea
@@ -589,10 +621,17 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
             className="resize-none"
           />
           <DialogFooter>
-            <Button variant="outline" onClick={handleCloseDraft} disabled={aiDraft.isPending}>
+            <Button
+              variant="outline"
+              onClick={handleCloseDraft}
+              disabled={aiDraft.isPending}
+            >
               Cancel
             </Button>
-            <Button onClick={handleDraftSubmit} disabled={!draftPrompt.trim() || aiDraft.isPending}>
+            <Button
+              onClick={handleDraftSubmit}
+              disabled={!draftPrompt.trim() || aiDraft.isPending}
+            >
               {aiDraft.isPending ? (
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               ) : (

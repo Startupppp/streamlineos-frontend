@@ -4,20 +4,34 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
-  Contact2, Handshake, UserCheck, Briefcase, Ticket,
-  Search, Loader2, ArrowRight, Hash,
+  Contact2,
+  Handshake,
+  UserCheck,
+  Briefcase,
+  Ticket,
+  Search,
+  Loader2,
+  ArrowRight,
+  Hash,
 } from "lucide-react";
 import {
-  CommandDialog, CommandEmpty, CommandGroup, CommandInput,
-  CommandItem, CommandList, CommandSeparator,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
-import { useDebouncedValue } from "@/hooks/use-debounce";
-import { flattenNavRoutes, getNavGroupsForUser } from "./sidebar/sidebar-nav-items";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import {
+  flattenNavRoutes,
+  getNavGroupsForUser,
+} from "./sidebar/sidebar-nav-items";
 import { usePermissions } from "@/lib/rbac/hooks";
 import { cn } from "@/lib/utils";
-
 
 interface SearchResult {
   id: number;
@@ -44,22 +58,26 @@ const ENTITY_LABELS = {
   ticket: "Tickets",
 } as const;
 
-
-function ItemIcon({ icon: Icon }: { icon: React.ComponentType<{ className?: string }> }) {
+function ItemIcon({
+  icon: Icon,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+}) {
   return (
-    <span className={cn(
-      "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
-      "bg-muted text-foreground/50",
-      "transition-colors duration-150",
-      "group-data-[selected=true]:bg-white/20 group-data-[selected=true]:text-white",
-    )}>
+    <span
+      className={cn(
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
+        "bg-muted text-foreground/50",
+        "transition-colors duration-150",
+        "group-data-[selected=true]:bg-white/20 group-data-[selected=true]:text-white",
+      )}
+    >
       <span className="flex items-center justify-center [&_svg]:!h-4 [&_svg]:!w-4">
         <Icon />
       </span>
     </span>
   );
 }
-
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -81,7 +99,12 @@ export function CommandPalette() {
           seen.add(r.href);
           return true;
         })
-        .map((r) => ({ name: r.label, href: r.href, icon: r.icon, group: group.label }))
+        .map((r) => ({
+          name: r.label,
+          href: r.href,
+          icon: r.icon,
+          group: group.label,
+        })),
     );
   }, [role, permissions]);
 
@@ -107,18 +130,29 @@ export function CommandPalette() {
     setIsSearching(true);
     apiClient
       .get<{ results: SearchResult[] }>("/search", { q: debouncedQuery })
-      .then((data) => { if (!cancelled) setEntityResults(data.results); })
-      .catch(() => { if (!cancelled) setEntityResults([]); })
-      .finally(() => { if (!cancelled) setIsSearching(false); });
-    return () => { cancelled = true; };
+      .then((data) => {
+        if (!cancelled) setEntityResults(data.results);
+      })
+      .catch(() => {
+        if (!cancelled) setEntityResults([]);
+      })
+      .finally(() => {
+        if (!cancelled) setIsSearching(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [debouncedQuery]);
 
-  const handleSelect = useCallback((href: string) => {
-    setOpen(false);
-    setQuery("");
-    setEntityResults([]);
-    router.push(href);
-  }, [router]);
+  const handleSelect = useCallback(
+    (href: string) => {
+      setOpen(false);
+      setQuery("");
+      setEntityResults([]);
+      router.push(href);
+    },
+    [router],
+  );
 
   const handleOpenChange = useCallback((v: boolean) => {
     setOpen(v);
@@ -132,24 +166,30 @@ export function CommandPalette() {
     if (!query) return [];
     const q = query.toLowerCase();
     return pages.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.group.toLowerCase().includes(q)
+      (p) =>
+        p.name.toLowerCase().includes(q) || p.group.toLowerCase().includes(q),
     );
   }, [query, pages]);
 
-  const pageGroups = useMemo(() =>
-    filteredPages.reduce<Record<string, typeof filteredPages>>((acc, page) => {
-      (acc[page.group] ??= []).push(page);
-      return acc;
-    }, {}),
-    [filteredPages]
+  const pageGroups = useMemo(
+    () =>
+      filteredPages.reduce<Record<string, typeof filteredPages>>(
+        (acc, page) => {
+          (acc[page.group] ??= []).push(page);
+          return acc;
+        },
+        {},
+      ),
+    [filteredPages],
   );
 
-  const entityGroups = useMemo(() =>
-    entityResults.reduce<Record<string, SearchResult[]>>((acc, r) => {
-      (acc[r.type] ??= []).push(r);
-      return acc;
-    }, {}),
-    [entityResults]
+  const entityGroups = useMemo(
+    () =>
+      entityResults.reduce<Record<string, SearchResult[]>>((acc, r) => {
+        (acc[r.type] ??= []).push(r);
+        return acc;
+      }, {}),
+    [entityResults],
   );
 
   const quickNavGroups = useMemo(() => {
@@ -184,22 +224,27 @@ export function CommandPalette() {
       </div>
 
       <CommandList className="max-h-[420px] px-1 py-1">
-
         {showEmpty && (
           <CommandEmpty>
             <div className="flex flex-col items-center gap-2 py-6">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60">
                 <Search className="h-5 w-5 text-muted-foreground/50" />
               </div>
-              <p className="text-sm font-medium text-foreground">No results for &ldquo;{query}&rdquo;</p>
-              <p className="text-xs text-muted-foreground">Try a page name, lead, deal, or contact</p>
+              <p className="text-sm font-medium text-foreground">
+                No results for &ldquo;{query}&rdquo;
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Try a page name, lead, deal, or contact
+              </p>
             </div>
           </CommandEmpty>
         )}
 
         {Object.entries(entityGroups).map(([type, items]) => {
-          const Icon = ENTITY_ICONS[type as keyof typeof ENTITY_ICONS] ?? Search;
-          const label = ENTITY_LABELS[type as keyof typeof ENTITY_LABELS] ?? type;
+          const Icon =
+            ENTITY_ICONS[type as keyof typeof ENTITY_ICONS] ?? Search;
+          const label =
+            ENTITY_LABELS[type as keyof typeof ENTITY_LABELS] ?? type;
           return (
             <CommandGroup key={`entity-${type}`} heading={label}>
               {items.map((item) => (
@@ -211,11 +256,20 @@ export function CommandPalette() {
                 >
                   <ItemIcon icon={Icon} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate leading-tight">{item.title}</p>
-                    <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">{item.subtitle}</p>
+                    <p className="text-sm font-medium truncate leading-tight">
+                      {item.title}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+                      {item.subtitle}
+                    </p>
                   </div>
                   {item.status && (
-                    <Badge variant="secondary" className="text-[10px] h-4 shrink-0">{item.status}</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] h-4 shrink-0"
+                    >
+                      {item.status}
+                    </Badge>
                   )}
                   <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 group-data-[selected=true]:text-white/70 transition-colors" />
                 </CommandItem>
@@ -224,27 +278,30 @@ export function CommandPalette() {
           );
         })}
 
-        {entityResults.length > 0 && filteredPages.length > 0 && <CommandSeparator className="my-1" />}
+        {entityResults.length > 0 && filteredPages.length > 0 && (
+          <CommandSeparator className="my-1" />
+        )}
 
-        {query && Object.entries(pageGroups).map(([group, items]) => (
-          <CommandGroup key={group} heading={group}>
-            {items.map((page) => (
-              <CommandItem
-                key={page.href}
-                value={`${page.name} ${page.group}`}
-                onSelect={() => handleSelect(page.href)}
-                className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5"
-              >
-                <ItemIcon icon={page.icon} />
-                <span className="flex-1 text-sm truncate">{page.name}</span>
-                <span className="text-[11px] text-muted-foreground/50 shrink-0 hidden sm:block group-data-[selected=true]:text-muted-foreground transition-colors">
-                  {page.href}
-                </span>
-                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 group-data-[selected=true]:text-white/70 transition-colors" />
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        ))}
+        {query &&
+          Object.entries(pageGroups).map(([group, items]) => (
+            <CommandGroup key={group} heading={group}>
+              {items.map((page) => (
+                <CommandItem
+                  key={page.href}
+                  value={`${page.name} ${page.group}`}
+                  onSelect={() => handleSelect(page.href)}
+                  className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5"
+                >
+                  <ItemIcon icon={page.icon} />
+                  <span className="flex-1 text-sm truncate">{page.name}</span>
+                  <span className="text-[11px] text-muted-foreground/50 shrink-0 hidden sm:block group-data-[selected=true]:text-muted-foreground transition-colors">
+                    {page.href}
+                  </span>
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 group-data-[selected=true]:text-white/70 transition-colors" />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
 
         {!query && (
           <>
@@ -269,7 +326,7 @@ export function CommandPalette() {
                     </CommandItem>
                   ))}
                 </CommandGroup>
-              ) : null
+              ) : null,
             )}
           </>
         )}
@@ -289,10 +346,16 @@ export function CommandPalette() {
           )}
         </div>
         <div className="hidden sm:flex items-center gap-1.5">
-          <kbd className="inline-flex h-4 items-center rounded border bg-background px-1 font-mono text-[10px]">↑↓</kbd>
-          <kbd className="inline-flex h-4 items-center rounded border bg-background px-1 font-mono text-[10px]">↵</kbd>
+          <kbd className="inline-flex h-4 items-center rounded border bg-background px-1 font-mono text-[10px]">
+            ↑↓
+          </kbd>
+          <kbd className="inline-flex h-4 items-center rounded border bg-background px-1 font-mono text-[10px]">
+            ↵
+          </kbd>
           <span>open</span>
-          <kbd className="inline-flex h-4 items-center rounded border bg-background px-1 font-mono text-[10px]">esc</kbd>
+          <kbd className="inline-flex h-4 items-center rounded border bg-background px-1 font-mono text-[10px]">
+            esc
+          </kbd>
         </div>
       </div>
     </CommandDialog>

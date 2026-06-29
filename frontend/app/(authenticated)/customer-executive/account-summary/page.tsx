@@ -1,8 +1,23 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileText, Sparkles, Download, Copy, CheckCheck, RefreshCw, Loader2, User } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  FileText,
+  Sparkles,
+  Download,
+  Copy,
+  CheckCheck,
+  RefreshCw,
+  Loader2,
+  User,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,@/hooks/api/ai
+  CardTitle,@/hooks/api/crm
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,11 +29,9 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useAccountSummary, type AccountSummaryResult } from "@/lib/api/hooks/ai";
-import { useSimpleClientsList } from "@/lib/api/hooks/crm";
+import { useAccountSummary, type AccountSummaryResult } from "@/hooks/hooks/ai";
+import { useSimpleClientsList } from "@/hooks/hooks/crm";
 import { toast } from "sonner";
-
-
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -34,7 +47,12 @@ function CopyButton({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <Button variant="outline" size="sm" onClick={handleCopy} aria-label="Copy summary to clipboard">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleCopy}
+      aria-label="Copy summary to clipboard"
+    >
       {copied ? (
         <CheckCheck className="h-4 w-4 mr-2 text-green-500" />
       ) : (
@@ -45,9 +63,13 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-
-
-function DownloadButton({ text, clientName }: { text: string; clientName: string }) {
+function DownloadButton({
+  text,
+  clientName,
+}: {
+  text: string;
+  clientName: string;
+}) {
   const handleDownload = useCallback(() => {
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -61,14 +83,17 @@ function DownloadButton({ text, clientName }: { text: string; clientName: string
   }, [text, clientName]);
 
   return (
-    <Button variant="outline" size="sm" onClick={handleDownload} aria-label="Download summary as text file">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleDownload}
+      aria-label="Download summary as text file"
+    >
       <Download className="h-4 w-4 mr-2" />
       Download .txt
     </Button>
   );
 }
-
-
 
 interface ResultCardProps {
   result: AccountSummaryResult;
@@ -100,7 +125,10 @@ function ResultCard({ result, onRegenerate, isRegenerating }: ResultCardProps) {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <CopyButton text={result.summary} />
-            <DownloadButton text={result.summary} clientName={result.clientName} />
+            <DownloadButton
+              text={result.summary}
+              clientName={result.clientName}
+            />
             <Button
               variant="outline"
               size="sm"
@@ -131,13 +159,19 @@ function ResultCard({ result, onRegenerate, isRegenerating }: ResultCardProps) {
                     /^[A-Z][A-Z\s&]+:/.test(line);
                   if (isHeader) {
                     return (
-                      <p key={j} className="font-semibold text-sm text-foreground">
+                      <p
+                        key={j}
+                        className="font-semibold text-sm text-foreground"
+                      >
                         {line}
                       </p>
                     );
                   }
                   return (
-                    <p key={j} className="text-sm text-muted-foreground leading-relaxed">
+                    <p
+                      key={j}
+                      className="text-sm text-muted-foreground leading-relaxed"
+                    >
                       {line}
                     </p>
                   );
@@ -151,10 +185,9 @@ function ResultCard({ result, onRegenerate, isRegenerating }: ResultCardProps) {
   );
 }
 
-
-
 export default function AccountSummaryPage() {
-  const { data: clients = [], isLoading: isLoadingClients } = useSimpleClientsList();
+  const { data: clients = [], isLoading: isLoadingClients } =
+    useSimpleClientsList();
   const { mutateAsync: generateSummary, isPending } = useAccountSummary();
 
   const [selectedClientId, setSelectedClientId] = useState<string>("");
@@ -166,7 +199,8 @@ export default function AccountSummaryPage() {
       const data = await generateSummary(Number(selectedClientId));
       setResult(data);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to generate summary";
+      const msg =
+        error instanceof Error ? error.message : "Failed to generate summary";
       if (msg.toLowerCase().includes("not configured")) {
         toast.error("AI features require OPENAI_API_KEY to be configured");
       } else if (msg.toLowerCase().includes("not found")) {
@@ -201,7 +235,8 @@ export default function AccountSummaryPage() {
                 Select Client
               </CardTitle>
               <CardDescription>
-                Choose a client account to generate a comprehensive executive briefing summary.
+                Choose a client account to generate a comprehensive executive
+                briefing summary.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -210,8 +245,14 @@ export default function AccountSummaryPage() {
                 {isLoadingClients ? (
                   <Skeleton className="h-10 w-full" />
                 ) : (
-                  <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-                    <SelectTrigger id="client-select" aria-label="Select a client">
+                  <Select
+                    value={selectedClientId}
+                    onValueChange={setSelectedClientId}
+                  >
+                    <SelectTrigger
+                      id="client-select"
+                      aria-label="Select a client"
+                    >
                       <SelectValue placeholder="Select a client…" />
                     </SelectTrigger>
                     <SelectContent>
@@ -252,7 +293,8 @@ export default function AccountSummaryPage() {
 
               {result && !isPending && (
                 <p className="text-xs text-muted-foreground text-center">
-                  Summary generated successfully. Select another client to generate a new one.
+                  Summary generated successfully. Select another client to
+                  generate a new one.
                 </p>
               )}
             </CardContent>
@@ -260,7 +302,9 @@ export default function AccountSummaryPage() {
 
           <Card className="mt-4">
             <CardContent className="pt-4">
-              <p className="text-xs font-medium text-foreground mb-2">What&apos;s included</p>
+              <p className="text-xs font-medium text-foreground mb-2">
+                What&apos;s included
+              </p>
               <ul className="space-y-1.5 text-xs text-muted-foreground">
                 {[
                   "Executive overview & account health",
@@ -310,9 +354,12 @@ export default function AccountSummaryPage() {
           {!isPending && !result && (
             <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border h-64 text-center p-8">
               <FileText className="h-10 w-10 text-muted-foreground/40 mb-3" />
-              <p className="text-sm font-medium text-muted-foreground">No summary generated yet</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                No summary generated yet
+              </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Select a client from the panel on the left and click &quot;Generate Summary&quot;
+                Select a client from the panel on the left and click
+                &quot;Generate Summary&quot;
               </p>
             </div>
           )}

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useRecordPayment } from "@/lib/api/hooks/invoice";
+import { useRecordPayment } from "@/hooks/api/invoice";
 import type { PaymentMethod } from "@/types/invoice";
 import { useState } from "react";
 
@@ -154,8 +154,14 @@ export function RecordPaymentDialog({
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Payment Method</Label>
-            <Select value={form.paymentMethod} onValueChange={handleMethodChange}>
-              <SelectTrigger className="h-8 text-xs" aria-label="Payment method">
+            <Select
+              value={form.paymentMethod}
+              onValueChange={handleMethodChange}
+            >
+              <SelectTrigger
+                className="h-8 text-xs"
+                aria-label="Payment method"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -196,7 +202,11 @@ export function RecordPaymentDialog({
           <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button size="sm" onClick={handleSubmit} disabled={recordPayment.isPending}>
+          <Button
+            size="sm"
+            onClick={handleSubmit}
+            disabled={recordPayment.isPending}
+          >
             {recordPayment.isPending ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
             ) : (

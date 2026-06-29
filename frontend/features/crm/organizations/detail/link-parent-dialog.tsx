@@ -3,13 +3,20 @@
 import { useState, useCallback } from "react";
 import { Search, Check, X, Link2Off } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";@/hooks/api/crm
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCrmOrganizations, useUpdateCrmOrganization } from "@/lib/api/hooks/crm";
+import {
+  useCrmOrganizations,
+  useUpdateCrmOrganization,
+} from "@/hooks/hooks/crm";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +34,9 @@ function OrgSelectButton({ org, selected, onSelect }: OrgSelectButtonProps) {
       onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
-        selected ? "bg-blue-500/10 text-blue-600" : "hover:bg-accent text-foreground",
+        selected
+          ? "bg-blue-500/10 text-blue-600"
+          : "hover:bg-accent text-foreground",
       )}
     >
       <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0">
@@ -35,7 +44,9 @@ function OrgSelectButton({ org, selected, onSelect }: OrgSelectButtonProps) {
       </span>
       <span className="truncate">{org.name}</span>
       {org.industry && (
-        <span className="text-xs text-muted-foreground ml-auto shrink-0">{org.industry}</span>
+        <span className="text-xs text-muted-foreground ml-auto shrink-0">
+          {org.industry}
+        </span>
       )}
       {selected && <Check className="h-3.5 w-3.5 ml-2 shrink-0" />}
     </button>
@@ -58,12 +69,20 @@ export function LinkParentDialog({
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(currentParentId);
 
-  const { data, isLoading } = useCrmOrganizations({ search: search || undefined, limit: 30 });
+  const { data, isLoading } = useCrmOrganizations({
+    search: search || undefined,
+    limit: 30,
+  });
   const updateMutation = useUpdateCrmOrganization();
 
-  const candidates = (data?.organizations ?? []).filter((o) => o.id !== organizationId);
+  const candidates = (data?.organizations ?? []).filter(
+    (o) => o.id !== organizationId,
+  );
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    [],
+  );
   const handleSelectNone = useCallback(() => setSelectedId(null), []);
   const handleSelect = useCallback((id: number) => setSelectedId(id), []);
   const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -73,7 +92,9 @@ export function LinkParentDialog({
       { id: organizationId, parentId: selectedId },
       {
         onSuccess: () => {
-          toast.success(selectedId ?"Parent account linked" :"Parent account unlinked");
+          toast.success(
+            selectedId ? "Parent account linked" : "Parent account unlinked",
+          );
           onOpenChange(false);
         },
         onError: (e) => toast.error(e.message),
@@ -101,7 +122,9 @@ export function LinkParentDialog({
         <ScrollArea className="h-56">
           {isLoading ? (
             <div className="space-y-2 p-1">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-9 w-full" />)}
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-9 w-full" />
+              ))}
             </div>
           ) : (
             <div className="space-y-1 p-1">
@@ -109,15 +132,17 @@ export function LinkParentDialog({
                 type="button"
                 onClick={handleSelectNone}
                 className={cn(
-"w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
+                  "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
                   selectedId === null
-                    ?"bg-blue-500/10 text-blue-600"
-                    :"hover:bg-accent text-muted-foreground",
+                    ? "bg-blue-500/10 text-blue-600"
+                    : "hover:bg-accent text-muted-foreground",
                 )}
               >
                 <Link2Off className="h-3.5 w-3.5 shrink-0" />
                 <span>No parent (top-level account)</span>
-                {selectedId === null && <Check className="h-3.5 w-3.5 ml-auto shrink-0" />}
+                {selectedId === null && (
+                  <Check className="h-3.5 w-3.5 ml-auto shrink-0" />
+                )}
               </button>
 
               {candidates.map((org) => (
@@ -130,7 +155,9 @@ export function LinkParentDialog({
               ))}
 
               {candidates.length === 0 && !isLoading && (
-                <p className="text-center text-sm text-muted-foreground py-4">No organizations found</p>
+                <p className="text-center text-sm text-muted-foreground py-4">
+                  No organizations found
+                </p>
               )}
             </div>
           )}
@@ -146,7 +173,7 @@ export function LinkParentDialog({
             disabled={updateMutation.isPending}
           >
             <Check className="h-4 w-4 mr-1" />
-            {selectedId ?"Link Parent" :"Remove Parent"}
+            {selectedId ? "Link Parent" : "Remove Parent"}
           </Button>
         </DialogFooter>
       </DialogContent>

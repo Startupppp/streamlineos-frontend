@@ -26,8 +26,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { useJournalEntry, usePostJournalEntry, useReverseJournalEntry } from "@/lib/api/hooks/accounting";
-import { useCan } from "@/lib/api/hooks/access";
+import {@/hooks/api/accounting
+  useJournalEntry,@/hooks/api/access
+  usePostJournalEntry,
+  useReverseJournalEntry,
+} from "@/hooks/hooks/accounting";
+import { useCan } from "@/hooks/hooks/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { JournalEntryStatus, JournalLine } from "@/types/accounting";
 
@@ -55,7 +59,11 @@ function formatDate(value: string): string {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
 }
 
 function formatDateTime(value: Date): string {
@@ -76,14 +84,19 @@ function parseAmount(value: string): number {
 }
 
 function formatAmount(value: number): string {
-  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function sumColumn(lines: JournalLine[], key: "debit" | "credit"): number {
   return lines.reduce((total, line) => total + parseAmount(line[key]), 0);
 }
 
-export default function JournalEntryDetailPage({ params }: JournalEntryDetailPageProps) {
+export default function JournalEntryDetailPage({
+  params,
+}: JournalEntryDetailPageProps) {
   const { entryId: entryIdStr } = use(params);
   const entryId = Number.parseInt(entryIdStr, 10);
 
@@ -135,7 +148,9 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
     reverseMutation.mutate(undefined, {
       onSuccess: (result) => {
         setReverseDialogOpen(false);
-        const label = result.created ? "Reversing entry created" : "Reversing entry already existed";
+        const label = result.created
+          ? "Reversing entry created"
+          : "Reversing entry already existed";
         toast.success(`${label}: ${result.entryNumber}`);
       },
       onError: (error) => {
@@ -152,7 +167,11 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
       actions={
         <div className="flex items-center gap-2">
           {canManageJournal && isDraft && (
-            <Button size="sm" onClick={handlePostClick} disabled={postMutation.isPending}>
+            <Button
+              size="sm"
+              onClick={handlePostClick}
+              disabled={postMutation.isPending}
+            >
               <Send className="mr-1 h-4 w-4" />
               {postMutation.isPending ? "Posting…" : "Post entry"}
             </Button>
@@ -197,46 +216,70 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
               <CardContent className="p-5">
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-slate-500 leading-none">Date</p>
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
+                      Date
+                    </p>
                     <p className="mt-1 text-sm font-medium text-foreground tabular-nums">
                       {formatDate(entry.entryDate)}
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-slate-500 leading-none">Status</p>
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
+                      Status
+                    </p>
                     <div className="mt-1">
                       <StatusBadge status={entry.status} />
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-slate-500 leading-none">Source type</p>
-                    <p className="mt-1 text-sm text-foreground">{entry.sourceType}</p>
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
+                      Source type
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">
+                      {entry.sourceType}
+                    </p>
                   </div>
                   {entry.sourceId && (
                     <div className="min-w-0">
-                      <p className="text-[11px] font-medium text-slate-500 leading-none">Source ID</p>
-                      <p className="mt-1 text-sm font-mono text-foreground truncate">{entry.sourceId}</p>
+                      <p className="text-[11px] font-medium text-slate-500 leading-none">
+                        Source ID
+                      </p>
+                      <p className="mt-1 text-sm font-mono text-foreground truncate">
+                        {entry.sourceId}
+                      </p>
                     </div>
                   )}
                   {entry.sourceEvent && (
                     <div className="min-w-0">
-                      <p className="text-[11px] font-medium text-slate-500 leading-none">Source event</p>
-                      <p className="mt-1 text-sm text-foreground">{entry.sourceEvent}</p>
+                      <p className="text-[11px] font-medium text-slate-500 leading-none">
+                        Source event
+                      </p>
+                      <p className="mt-1 text-sm text-foreground">
+                        {entry.sourceEvent}
+                      </p>
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-slate-500 leading-none">Created by</p>
-                    <p className="mt-1 text-sm text-foreground truncate">{entry.createdBy}</p>
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
+                      Created by
+                    </p>
+                    <p className="mt-1 text-sm text-foreground truncate">
+                      {entry.createdBy}
+                    </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-slate-500 leading-none">Created at</p>
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
+                      Created at
+                    </p>
                     <p className="mt-1 text-sm text-foreground tabular-nums">
                       {formatDateTime(entry.createdAt)}
                     </p>
                   </div>
                   {entry.description && (
                     <div className="min-w-0 col-span-2 sm:col-span-3 lg:col-span-4">
-                      <p className="text-[11px] font-medium text-slate-500 leading-none">Description</p>
+                      <p className="text-[11px] font-medium text-slate-500 leading-none">
+                        Description
+                      </p>
                       <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                         {entry.description}
                       </p>
@@ -253,8 +296,12 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
                     <TableHead className="w-10">#</TableHead>
                     <TableHead className="w-[120px]">Code</TableHead>
                     <TableHead>Account name</TableHead>
-                    <TableHead className="w-[160px] text-right">Debit</TableHead>
-                    <TableHead className="w-[160px] text-right">Credit</TableHead>
+                    <TableHead className="w-[160px] text-right">
+                      Debit
+                    </TableHead>
+                    <TableHead className="w-[160px] text-right">
+                      Credit
+                    </TableHead>
                     <TableHead>Description</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -271,10 +318,14 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
                         {line.accountName}
                       </TableCell>
                       <TableCell className="text-right text-sm tabular-nums text-foreground">
-                        {parseAmount(line.debit) > 0 ? formatAmount(parseAmount(line.debit)) : ""}
+                        {parseAmount(line.debit) > 0
+                          ? formatAmount(parseAmount(line.debit))
+                          : ""}
                       </TableCell>
                       <TableCell className="text-right text-sm tabular-nums text-foreground">
-                        {parseAmount(line.credit) > 0 ? formatAmount(parseAmount(line.credit)) : ""}
+                        {parseAmount(line.credit) > 0
+                          ? formatAmount(parseAmount(line.credit))
+                          : ""}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {line.description ?? ""}
@@ -284,7 +335,9 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
                     <TableCell />
                     <TableCell />
-                    <TableCell className="font-medium text-foreground text-sm">Total</TableCell>
+                    <TableCell className="font-medium text-foreground text-sm">
+                      Total
+                    </TableCell>
                     <TableCell className="text-right font-medium tabular-nums text-foreground text-sm">
                       {formatAmount(debitTotal)}
                     </TableCell>
@@ -317,13 +370,18 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
           <AlertDialogHeader>
             <AlertDialogTitle>Post this entry?</AlertDialogTitle>
             <AlertDialogDescription>
-              Posting is irreversible. The entry will be locked and recorded in the ledger. You
-              will need to create a reversing entry to undo it.
+              Posting is irreversible. The entry will be locked and recorded in
+              the ledger. You will need to create a reversing entry to undo it.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={postMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handlePostConfirm} disabled={postMutation.isPending}>
+            <AlertDialogCancel disabled={postMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handlePostConfirm}
+              disabled={postMutation.isPending}
+            >
               {postMutation.isPending ? "Posting…" : "Post entry"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -335,14 +393,22 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
           <AlertDialogHeader>
             <AlertDialogTitle>Reverse this entry?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will create a new journal entry with debits and credits swapped. The original
-              entry will remain unchanged. This action cannot be undone.
+              This will create a new journal entry with debits and credits
+              swapped. The original entry will remain unchanged. This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={reverseMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleReverseConfirm} disabled={reverseMutation.isPending}>
-              {reverseMutation.isPending ? "Creating…" : "Create reversing entry"}
+            <AlertDialogCancel disabled={reverseMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReverseConfirm}
+              disabled={reverseMutation.isPending}
+            >
+              {reverseMutation.isPending
+                ? "Creating…"
+                : "Create reversing entry"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

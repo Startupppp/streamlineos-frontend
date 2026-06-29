@@ -4,10 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSubscription } from "@/lib/api/hooks/subscription";
+import { useSubscription } from "@/hooks/api/subscription";
 
 function getDaysRemaining(trialEndsAt: string): number {
-  return Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86_400_000));
+  return Math.max(
+    0,
+    Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86_400_000),
+  );
 }
 
 export function TrialBanner() {
@@ -21,7 +24,12 @@ export function TrialBanner() {
   if (isLoading || isError || dismissed) return null;
 
   const subscription = data?.subscription;
-  if (!subscription || subscription.status !== "TRIAL" || !subscription.trialEndsAt) return null;
+  if (
+    !subscription ||
+    subscription.status !== "TRIAL" ||
+    !subscription.trialEndsAt
+  )
+    return null;
 
   const daysLeft = getDaysRemaining(subscription.trialEndsAt);
   const label =
@@ -36,14 +44,19 @@ export function TrialBanner() {
       className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2 shrink-0"
     >
       <div className="flex items-center gap-2 min-w-0">
-        <Clock className="h-3.5 w-3.5 text-amber-600 shrink-0" aria-hidden="true" />
+        <Clock
+          className="h-3.5 w-3.5 text-amber-600 shrink-0"
+          aria-hidden="true"
+        />
         <p className="text-xs text-amber-800 truncate">
           {daysLeft === 0 ? (
             <strong>{label}</strong>
           ) : (
             <>
               Your trial ends in{" "}
-              <strong className="font-semibold">{daysLeft} day{daysLeft === 1 ? "" : "s"}</strong>
+              <strong className="font-semibold">
+                {daysLeft} day{daysLeft === 1 ? "" : "s"}
+              </strong>
             </>
           )}
           {" — upgrade to keep full access."}

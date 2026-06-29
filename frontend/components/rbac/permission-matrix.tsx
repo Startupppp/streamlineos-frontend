@@ -29,8 +29,8 @@ import { getApiError } from "@/lib/api-client";
 import {
   useRolePermissionGrants,
   useSetRolePermissions,
-} from "@/lib/api/hooks/roles";
-import { useAccess } from "@/lib/api/hooks/access";
+} from "@/hooks/api/roles";
+import { useAccess } from "@/hooks/api/access";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
 import type { Permission } from "@/lib/rbac/permissions";
 import type { Role } from "@/types/organization";
@@ -57,7 +57,14 @@ const MODULE_LABELS: Record<string, string> = {
   chat: "Chat",
 };
 
-const SCOPABLE_MODULES = new Set(["hr", "crm", "projects", "inventory", "support", "kb"]);
+const SCOPABLE_MODULES = new Set([
+  "hr",
+  "crm",
+  "projects",
+  "inventory",
+  "support",
+  "kb",
+]);
 const SCOPABLE_ACTIONS = new Set([
   "view",
   "read",
@@ -116,7 +123,10 @@ function resourceLabel(resource: string, moduleKey: string): string {
 }
 
 function isScopable(perm: Permission): boolean {
-  return SCOPABLE_MODULES.has(moduleOf(perm.name)) && SCOPABLE_ACTIONS.has(perm.action);
+  return (
+    SCOPABLE_MODULES.has(moduleOf(perm.name)) &&
+    SCOPABLE_ACTIONS.has(perm.action)
+  );
 }
 
 function isEditableScope(value: string): value is EditableScope {
@@ -144,7 +154,11 @@ function buildCatalog(): CatalogModule[] {
   for (const [moduleKey, resources] of modules) {
     const resourceList: CatalogResource[] = [];
     for (const [resource, perms] of resources) {
-      resourceList.push({ resource, label: resourceLabel(resource, moduleKey), perms });
+      resourceList.push({
+        resource,
+        label: resourceLabel(resource, moduleKey),
+        perms,
+      });
     }
     resourceList.sort((a, b) => a.label.localeCompare(b.label));
     result.push({
@@ -190,7 +204,10 @@ function PermissionRow({
   onToggle,
   onSetScope,
 }: PermissionRowProps) {
-  const handleToggle = useCallback(() => onToggle(perm.name), [perm.name, onToggle]);
+  const handleToggle = useCallback(
+    () => onToggle(perm.name),
+    [perm.name, onToggle],
+  );
   const handleScopeChange = useCallback(
     (value: string) => {
       if (isEditableScope(value)) onSetScope(perm.name, value);
@@ -209,7 +226,9 @@ function PermissionRow({
           aria-label={perm.description}
         />
         <span className="min-w-0">
-          <span className="block text-[13px] leading-tight truncate">{perm.description}</span>
+          <span className="block text-[13px] leading-tight truncate">
+            {perm.description}
+          </span>
           <span className="block text-[10px] text-muted-foreground font-mono truncate">
             {perm.name}
           </span>
@@ -227,7 +246,11 @@ function PermissionRow({
             </SelectTrigger>
             <SelectContent>
               {SCOPE_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="text-xs">
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="text-xs"
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -264,8 +287,11 @@ function ModuleSection({
   onTogglePermission,
   onSetScope,
 }: ModuleSectionProps) {
-  const enabledCount = module.perms.filter((perm) => effective[perm.name]).length;
-  const allEnabled = enabledCount === module.perms.length && module.perms.length > 0;
+  const enabledCount = module.perms.filter(
+    (perm) => effective[perm.name],
+  ).length;
+  const allEnabled =
+    enabledCount === module.perms.length && module.perms.length > 0;
   const controlsDisabled = locked || readOnly;
 
   const handleToggleExpand = useCallback(
@@ -347,13 +373,20 @@ interface PermissionMatrixProps {
   onOpenAssignments: () => void;
 }
 
-export function PermissionMatrix({ role, onOpenAssignments }: PermissionMatrixProps) {
+export function PermissionMatrix({
+  role,
+  onOpenAssignments,
+}: PermissionMatrixProps) {
   const grantsQuery = useRolePermissionGrants(role.id);
   const access = useAccess();
   const setRolePermissions = useSetRolePermissions();
 
-  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
-  const [draft, setDraft] = useState<{ roleId: number; map: ScopeMap } | null>(null);
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(
+    new Set(),
+  );
+  const [draft, setDraft] = useState<{ roleId: number; map: ScopeMap } | null>(
+    null,
+  );
 
   const isReadOnly = role.isSystem;
 
@@ -368,7 +401,9 @@ export function PermissionMatrix({ role, onOpenAssignments }: PermissionMatrixPr
 
   const effective = draft && draft.roleId === role.id ? draft.map : baseline;
   const dirty =
-    draft !== null && draft.roleId === role.id && !scopeMapsEqual(draft.map, baseline);
+    draft !== null &&
+    draft.roleId === role.id &&
+    !scopeMapsEqual(draft.map, baseline);
   const enabledTotal = Object.keys(effective).length;
 
   const setEffective = useCallback(
@@ -412,7 +447,9 @@ export function PermissionMatrix({ role, onOpenAssignments }: PermissionMatrixPr
   const handleToggleModule = useCallback(
     (moduleKey: string, enable: boolean) => {
       if (isReadOnly || isModuleLocked(moduleKey)) return;
-      const catalogModule = CATALOG.find((entry) => entry.moduleKey === moduleKey);
+      const catalogModule = CATALOG.find(
+        (entry) => entry.moduleKey === moduleKey,
+      );
       if (!catalogModule) return;
       const next = { ...effective };
       for (const perm of catalogModule.perms) {
@@ -471,7 +508,12 @@ export function PermissionMatrix({ role, onOpenAssignments }: PermissionMatrixPr
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" onClick={onOpenAssignments} className="gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpenAssignments}
+            className="gap-1.5"
+          >
             <Users className="h-3.5 w-3.5" /> Members
           </Button>
           {dirty && !isReadOnly && (
@@ -506,7 +548,8 @@ export function PermissionMatrix({ role, onOpenAssignments }: PermissionMatrixPr
       {isReadOnly && (
         <div className="mx-4 mb-2 flex items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
           <Lock className="h-3.5 w-3.5 shrink-0" />
-          System role permissions are managed automatically and cannot be edited.
+          System role permissions are managed automatically and cannot be
+          edited.
         </div>
       )}
 
@@ -515,7 +558,10 @@ export function PermissionMatrix({ role, onOpenAssignments }: PermissionMatrixPr
       {grantsQuery.isLoading ? (
         <div className="divide-y divide-border/30">
           {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="flex items-center justify-between px-3 py-3">
+            <div
+              key={index}
+              className="flex items-center justify-between px-3 py-3"
+            >
               <div className="flex items-center gap-2">
                 <div className="h-3.5 w-3.5 rounded bg-muted animate-pulse" />
                 <div className="h-4 w-40 rounded bg-muted animate-pulse" />
@@ -528,7 +574,9 @@ export function PermissionMatrix({ role, onOpenAssignments }: PermissionMatrixPr
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center">
           <AlertTriangle className="h-8 w-8 text-muted-foreground" />
           <div>
-            <p className="text-sm font-medium text-foreground">Couldn&apos;t load permissions</p>
+            <p className="text-sm font-medium text-foreground">
+              Couldn&apos;t load permissions
+            </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {getApiError(grantsQuery.error)}
             </p>
@@ -538,7 +586,10 @@ export function PermissionMatrix({ role, onOpenAssignments }: PermissionMatrixPr
           </Button>
         </div>
       ) : (
-        <ScrollArea className="max-h-[65vh] lg:max-h-none lg:flex-1 lg:min-h-0" type="auto">
+        <ScrollArea
+          className="max-h-[65vh] lg:max-h-none lg:flex-1 lg:min-h-0"
+          type="auto"
+        >
           <div className="divide-y divide-border/30">
             {CATALOG.map((module) => (
               <ModuleSection

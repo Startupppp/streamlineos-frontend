@@ -1,8 +1,8 @@
 "use client";
 
 import { WidgetCard } from "@/components/ui/widget-card";
-import { useExecutiveDashboard } from "@/lib/api/hooks/dashboard";
-import { useCan } from "@/lib/api/hooks/access";
+import { useExecutiveDashboard } from "@/hooks/api/dashboard";
+import { useCan } from "@/hooks/api/access";
 import { FolderKanban } from "lucide-react";
 
 export function BusinessPulseWidget() {
@@ -15,7 +15,11 @@ export function BusinessPulseWidget() {
     <WidgetCard
       icon={FolderKanban}
       title="Business Pulse"
-      link={{ href: "/crm/leads", label: "View pipeline", ariaLabel: "View CRM pipeline" }}
+      link={{
+        href: "/crm/leads",
+        label: "View pipeline",
+        ariaLabel: "View CRM pipeline",
+      }}
       isLoading={isLoading}
       error={error}
       loadingRows={2}
@@ -24,7 +28,9 @@ export function BusinessPulseWidget() {
         <p className="text-2xl font-bold tabular-nums text-emerald-600">
           {data?.conversionRate ?? 0}%
         </p>
-        <p className="text-xs text-muted-foreground mt-1">Lead Conversion Rate</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Lead Conversion Rate
+        </p>
       </div>
     </WidgetCard>
   );

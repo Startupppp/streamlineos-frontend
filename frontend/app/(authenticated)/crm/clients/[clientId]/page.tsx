@@ -50,12 +50,12 @@ import {
   useClientOpportunities,
   useLogClientActivity,
   useUpdateRenewal,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/api/crm";
 import { AIChurnRiskButton } from "@/features/crm/clients/ai-churn-risk-button";
 import type {
   ClientTimelineEvent,
   ClientOpportunity,
-} from "@/lib/api/hooks/crm/clients";
+} from "@/hooks/api/crm/clients";
 
 type RenewalStage = "upcoming" | "in_discussion" | "renewed" | "churned";
 
@@ -64,27 +64,68 @@ const RENEWAL_STAGE_CONFIG: Record<
   { label: string; bg: string; text: string }
 > = {
   upcoming: { label: "Upcoming", bg: "bg-blue-500/10", text: "text-blue-500" },
-  in_discussion: { label: "In Discussion", bg: "bg-amber-500/10", text: "text-amber-500" },
-  renewed: { label: "Renewed", bg: "bg-emerald-500/10", text: "text-emerald-500" },
+  in_discussion: {
+    label: "In Discussion",
+    bg: "bg-amber-500/10",
+    text: "text-amber-500",
+  },
+  renewed: {
+    label: "Renewed",
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-500",
+  },
   churned: { label: "Churned", bg: "bg-red-500/10", text: "text-red-500" },
 };
 
-const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-  ACCOUNT_OPENING: { label: "Account Opening", bg: "bg-blue-500/10", text: "text-blue-500" },
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; bg: string; text: string }
+> = {
+  ACCOUNT_OPENING: {
+    label: "Account Opening",
+    bg: "bg-blue-500/10",
+    text: "text-blue-500",
+  },
   QUERIES: { label: "Queries", bg: "bg-amber-500/10", text: "text-amber-500" },
-  PLAN_SELECTED: { label: "Plan Selected", bg: "bg-purple-500/10", text: "text-purple-500" },
-  INVESTED: { label: "Invested", bg: "bg-emerald-500/10", text: "text-emerald-500" },
+  PLAN_SELECTED: {
+    label: "Plan Selected",
+    bg: "bg-purple-500/10",
+    text: "text-purple-500",
+  },
+  INVESTED: {
+    label: "Invested",
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-500",
+  },
 };
 
-const OPPORTUNITY_STAGE_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-  identified: { label: "Identified", bg: "bg-blue-500/10", text: "text-blue-500" },
-  proposed: { label: "Proposed", bg: "bg-purple-500/10", text: "text-purple-500" },
-  negotiating: { label: "Negotiating", bg: "bg-amber-500/10", text: "text-amber-500" },
+const OPPORTUNITY_STAGE_CONFIG: Record<
+  string,
+  { label: string; bg: string; text: string }
+> = {
+  identified: {
+    label: "Identified",
+    bg: "bg-blue-500/10",
+    text: "text-blue-500",
+  },
+  proposed: {
+    label: "Proposed",
+    bg: "bg-purple-500/10",
+    text: "text-purple-500",
+  },
+  negotiating: {
+    label: "Negotiating",
+    bg: "bg-amber-500/10",
+    text: "text-amber-500",
+  },
   won: { label: "Won", bg: "bg-emerald-500/10", text: "text-emerald-500" },
   lost: { label: "Lost", bg: "bg-red-500/10", text: "text-red-500" },
 };
 
-const ACTIVITY_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const ACTIVITY_TYPE_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   call: Phone,
   email: Mail,
   meeting: CalendarClock,
@@ -139,7 +180,9 @@ function InfoRow({ label, value, icon: Icon }: InfoRowProps) {
         {label}
       </span>
       <div className="flex items-center gap-1.5 text-sm">
-        {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+        {Icon && (
+          <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        )}
         <span className="truncate text-foreground">{value ?? "—"}</span>
       </div>
     </div>
@@ -162,8 +205,15 @@ function LogActivityDialog({
   const [description, setDescription] = useState("");
   const mutation = useLogClientActivity();
 
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
-  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value),
+    [],
+  );
+  const handleDescriptionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+      setDescription(e.target.value),
+    [],
+  );
 
   const handleSubmit = useCallback(async () => {
     if (!title.trim()) {
@@ -185,7 +235,14 @@ function LogActivityDialog({
     } catch {
       toast.error("Failed to log activity. Please try again.");
     }
-  }, [mutation, clientAccountId, activityType, title, description, onOpenChange]);
+  }, [
+    mutation,
+    clientAccountId,
+    activityType,
+    title,
+    description,
+    onOpenChange,
+  ]);
 
   const handleCancel = useCallback(() => {
     setTitle("");
@@ -208,13 +265,20 @@ function LogActivityDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {["call", "email", "meeting", "query", "note", "document", "renewal", "payment"].map(
-                  (t) => (
-                    <SelectItem key={t} value={t} className="text-xs capitalize">
-                      {t.charAt(0).toUpperCase() + t.slice(1)}
-                    </SelectItem>
-                  ),
-                )}
+                {[
+                  "call",
+                  "email",
+                  "meeting",
+                  "query",
+                  "note",
+                  "document",
+                  "renewal",
+                  "payment",
+                ].map((t) => (
+                  <SelectItem key={t} value={t} className="text-xs capitalize">
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -270,7 +334,12 @@ function TimelineItem({ event }: { event: ClientTimelineEvent }) {
         )}
         <div className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span>{formatRelative(event.date)}</span>
-          {event.user && <><span>·</span><span>{event.user}</span></>}
+          {event.user && (
+            <>
+              <span>·</span>
+              <span>{event.user}</span>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -278,7 +347,8 @@ function TimelineItem({ event }: { event: ClientTimelineEvent }) {
 }
 
 function OpportunityItem({ opp }: { opp: ClientOpportunity }) {
-  const stage = OPPORTUNITY_STAGE_CONFIG[opp.stage] ?? OPPORTUNITY_STAGE_CONFIG.identified;
+  const stage =
+    OPPORTUNITY_STAGE_CONFIG[opp.stage] ?? OPPORTUNITY_STAGE_CONFIG.identified;
   return (
     <div className="flex items-start gap-3 rounded-lg border p-3">
       <div className="mt-0.5 shrink-0">
@@ -349,28 +419,35 @@ export default function ClientDetailPage() {
 
   const clientId = parseInt(params.clientId as string, 10);
 
-  const { data: account, isLoading: accountLoading } = useClientAccount(clientId);
-  const { data: timelineData, isLoading: timelineLoading } = useClientTimeline(clientId);
-  const { data: opportunitiesData, isLoading: oppsLoading } = useClientOpportunities(clientId);
+  const { data: account, isLoading: accountLoading } =
+    useClientAccount(clientId);
+  const { data: timelineData, isLoading: timelineLoading } =
+    useClientTimeline(clientId);
+  const { data: opportunitiesData, isLoading: oppsLoading } =
+    useClientOpportunities(clientId);
   const updateRenewal = useUpdateRenewal();
 
   const renewalStage = (account?.renewalStage ?? "upcoming") as RenewalStage;
   const renewalConfig =
     RENEWAL_STAGE_CONFIG[renewalStage] ?? RENEWAL_STAGE_CONFIG.upcoming;
   const statusConfig =
-    STATUS_CONFIG[account?.status ?? "ACCOUNT_OPENING"] ?? STATUS_CONFIG.ACCOUNT_OPENING;
+    STATUS_CONFIG[account?.status ?? "ACCOUNT_OPENING"] ??
+    STATUS_CONFIG.ACCOUNT_OPENING;
 
-  const handleRenewalStageChange = useCallback(async (stage: string) => {
-    try {
-      await updateRenewal.mutateAsync({
-        accountId: clientId,
-        renewalStage: stage as RenewalStage,
-      });
-      toast.success("Renewal stage updated.");
-    } catch {
-      toast.error("Failed to update renewal stage.");
-    }
-  }, [updateRenewal, clientId]);
+  const handleRenewalStageChange = useCallback(
+    async (stage: string) => {
+      try {
+        await updateRenewal.mutateAsync({
+          accountId: clientId,
+          renewalStage: stage as RenewalStage,
+        });
+        toast.success("Renewal stage updated.");
+      } catch {
+        toast.error("Failed to update renewal stage.");
+      }
+    },
+    [updateRenewal, clientId],
+  );
 
   const handleBack = useCallback(() => router.push("/crm/clients"), [router]);
 
@@ -403,16 +480,20 @@ export default function ClientDetailPage() {
   const clientOpportunities = opportunitiesData ?? [];
 
   const daysSinceLastActivity = timelineEvents[0]
-    ? Math.floor((Date.now() - new Date(timelineEvents[0].date).getTime()) / 86_400_000)
+    ? Math.floor(
+        (Date.now() - new Date(timelineEvents[0].date).getTime()) / 86_400_000,
+      )
     : null;
 
   return (
     <PageWrapper
-      title={accountLoading ? "Loading…" : (account?.clientName ?? "Client Account")}
+      title={
+        accountLoading ? "Loading…" : (account?.clientName ?? "Client Account")
+      }
       subtitle={
         accountLoading
           ? undefined
-          : account?.clientEmail ?? account?.lead?.name ?? undefined
+          : (account?.clientEmail ?? account?.lead?.name ?? undefined)
       }
       eyebrow="CRM / Clients"
       actions={
@@ -435,13 +516,21 @@ export default function ClientDetailPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Badge
               variant="outline"
-              className={cn("border-0 px-2 py-0.5", statusConfig.bg, statusConfig.text)}
+              className={cn(
+                "border-0 px-2 py-0.5",
+                statusConfig.bg,
+                statusConfig.text,
+              )}
             >
               {statusConfig.label}
             </Badge>
             <Badge
               variant="outline"
-              className={cn("border-0 px-2 py-0.5", renewalConfig.bg, renewalConfig.text)}
+              className={cn(
+                "border-0 px-2 py-0.5",
+                renewalConfig.bg,
+                renewalConfig.text,
+              )}
             >
               {renewalConfig.label}
             </Badge>
@@ -462,7 +551,9 @@ export default function ClientDetailPage() {
                   </span>
                 </div>
                 <p className="text-base font-semibold font-mono">
-                  {formatINR(account?.investmentAmount ?? account?.estimatedInvestment)}
+                  {formatINR(
+                    account?.investmentAmount ?? account?.estimatedInvestment,
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -475,7 +566,9 @@ export default function ClientDetailPage() {
                     Renewal Date
                   </span>
                 </div>
-                <p className="text-base font-semibold">{formatDate(account?.renewalDate)}</p>
+                <p className="text-base font-semibold">
+                  {formatDate(account?.renewalDate)}
+                </p>
               </CardContent>
             </Card>
 
@@ -496,13 +589,16 @@ export default function ClientDetailPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(Object.entries(RENEWAL_STAGE_CONFIG) as [RenewalStage, { label: string; bg: string; text: string }][]).map(
-                      ([value, config]) => (
-                        <SelectItem key={value} value={value} className="text-xs">
-                          {config.label}
-                        </SelectItem>
-                      ),
-                    )}
+                    {(
+                      Object.entries(RENEWAL_STAGE_CONFIG) as [
+                        RenewalStage,
+                        { label: string; bg: string; text: string },
+                      ][]
+                    ).map(([value, config]) => (
+                      <SelectItem key={value} value={value} className="text-xs">
+                        {config.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </CardContent>
@@ -527,12 +623,22 @@ export default function ClientDetailPage() {
             <div className="space-y-6 lg:col-span-2">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold">Contact Information</CardTitle>
+                  <CardTitle className="text-sm font-semibold">
+                    Contact Information
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <InfoRow label="Phone" value={account?.clientPhone} icon={Phone} />
-                    <InfoRow label="WhatsApp" value={account?.clientWhatsapp} icon={Phone} />
+                    <InfoRow
+                      label="Phone"
+                      value={account?.clientPhone}
+                      icon={Phone}
+                    />
+                    <InfoRow
+                      label="WhatsApp"
+                      value={account?.clientWhatsapp}
+                      icon={Phone}
+                    />
                     <InfoRow
                       label="Email"
                       icon={Mail}
@@ -547,8 +653,16 @@ export default function ClientDetailPage() {
                         ) : null
                       }
                     />
-                    <InfoRow label="Lead Source" value={account?.lead?.source} icon={Tag} />
-                    <InfoRow label="Plan" value={account?.planName} icon={Building2} />
+                    <InfoRow
+                      label="Lead Source"
+                      value={account?.lead?.source}
+                      icon={Tag}
+                    />
+                    <InfoRow
+                      label="Plan"
+                      value={account?.planName}
+                      icon={Building2}
+                    />
                     <InfoRow
                       label="Converted"
                       value={formatDate(account?.convertedAt)}
@@ -612,7 +726,9 @@ export default function ClientDetailPage() {
                           </span>
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
-                              <AvatarImage src={account.assignedCrm.image ?? ""} />
+                              <AvatarImage
+                                src={account.assignedCrm.image ?? ""}
+                              />
                               <AvatarFallback className="text-[9px]">
                                 {account.assignedCrm.name?.charAt(0)}
                               </AvatarFallback>
@@ -656,7 +772,9 @@ export default function ClientDetailPage() {
                   ) : clientOpportunities.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <TrendingUp className="h-8 w-8 text-muted-foreground/30 mb-2" />
-                      <p className="text-sm font-medium">No opportunities yet</p>
+                      <p className="text-sm font-medium">
+                        No opportunities yet
+                      </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Upsell and cross-sell opportunities will appear here.
                       </p>
@@ -676,7 +794,9 @@ export default function ClientDetailPage() {
               <Card>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-semibold">Activity Timeline</CardTitle>
+                    <CardTitle className="text-sm font-semibold">
+                      Activity Timeline
+                    </CardTitle>
                     <Button
                       variant="outline"
                       size="sm"
@@ -723,7 +843,9 @@ export default function ClientDetailPage() {
               {account?.renewalNotes && (
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-semibold">Renewal Notes</CardTitle>
+                    <CardTitle className="text-sm font-semibold">
+                      Renewal Notes
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
@@ -735,7 +857,9 @@ export default function ClientDetailPage() {
 
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-semibold">AI Churn Risk</CardTitle>
+                  <CardTitle className="text-sm font-semibold">
+                    AI Churn Risk
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <AIChurnRiskButton

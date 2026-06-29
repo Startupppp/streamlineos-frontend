@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPublicDocsIllustration } from "@/components/illustrations";
-import { usePublicDocuments, type PublicDoc } from "@/lib/api/hooks/dashboard";
+import { usePublicDocuments, type PublicDoc } from "@/hooks/api/dashboard";
 import { format } from "date-fns";
-import { viewFile, downloadFile } from "@/hooks/use-file-url";
+import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 
 const DOC_TYPE_LABELS: Record<string, string> = {
   CONTRACT: "Contract",
@@ -30,7 +30,10 @@ interface DocumentItemProps {
 
 function DocumentItem({ doc }: DocumentItemProps) {
   const handleView = () => viewFile(doc.fileUrl);
-  const handleViewClick = (e: React.MouseEvent) => { e.stopPropagation(); viewFile(doc.fileUrl); };
+  const handleViewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    viewFile(doc.fileUrl);
+  };
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
     downloadFile(doc.fileUrl, doc.fileName || doc.name);
@@ -45,13 +48,17 @@ function DocumentItem({ doc }: DocumentItemProps) {
         <FileText className="h-4 w-4 text-blue-600" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
+        <p className="text-sm font-medium text-foreground truncate">
+          {doc.name}
+        </p>
         <div className="flex items-center gap-2 mt-0.5">
           <Badge variant="outline" className="text-[10px] px-1.5 py-0">
             {DOC_TYPE_LABELS[doc.type] ?? doc.type}
           </Badge>
           <span className="text-[10px] text-muted-foreground">
-            {doc.createdAt ? format(new Date(doc.createdAt), "MMM dd, yyyy") : ""}
+            {doc.createdAt
+              ? format(new Date(doc.createdAt), "MMM dd, yyyy")
+              : ""}
           </span>
         </div>
       </div>
@@ -90,7 +97,12 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
           Public Documents
         </CardTitle>
         <Link href="/hr/documents">
-          <Button variant="ghost" size="sm" className="hover:bg-blue-500/10 hover:text-blue-600" aria-label="View all documents">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-blue-500/10 hover:text-blue-600"
+            aria-label="View all documents"
+          >
             View All
           </Button>
         </Link>

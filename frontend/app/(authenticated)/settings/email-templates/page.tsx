@@ -5,7 +5,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TemplateList } from "@/features/settings/email-templates/template-list";
 import { TemplateFormSheet } from "@/features/settings/email-templates/template-form-sheet";
-import { useEmailTemplatePreviews } from "@/lib/api/hooks/email-templates";
+import { useEmailTemplatePreviews } from "@/hooks/api/email-templates";
 
 export default function EmailTemplatesPage() {
   const { data: templates = [], isLoading } = useEmailTemplatePreviews();

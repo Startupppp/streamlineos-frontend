@@ -3,7 +3,7 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { WidgetCard } from "@/components/ui/widget-card";
-import { usePersonalDashboard } from "@/lib/api/hooks/dashboard";
+import { usePersonalDashboard } from "@/hooks/api/dashboard";
 import { Umbrella } from "lucide-react";
 
 export function LeaveBalanceWidget() {
@@ -29,7 +29,8 @@ export function LeaveBalanceWidget() {
     >
       <ul className="space-y-2">
         {balances.map((b) => {
-          const pct = b.total > 0 ? Math.round((b.remaining / b.total) * 100) : 0;
+          const pct =
+            b.total > 0 ? Math.round((b.remaining / b.total) * 100) : 0;
           return (
             <li key={b.type} className="space-y-1">
               <div className="flex items-center justify-between text-xs">

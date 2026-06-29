@@ -11,8 +11,8 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { SearchResultCard } from "@/components/kb/search-result-card";
-import { useKbSearch, useKbSpaces } from "@/lib/api/hooks/kb";
-import { useDebouncedValue } from "@/hooks/use-debounce";
+import { useKbSearch, useKbSpaces } from "@/hooks/api/kb";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getApiError } from "@/lib/api-client";
 
 export default function KnowledgeBaseSearchPage() {
@@ -36,7 +36,9 @@ export default function KnowledgeBaseSearchPage() {
     if (debouncedValue) params.set("q", debouncedValue);
     const queryString = params.toString();
     router.replace(
-      queryString ? `/knowledge-base/search?${queryString}` : "/knowledge-base/search",
+      queryString
+        ? `/knowledge-base/search?${queryString}`
+        : "/knowledge-base/search",
     );
   }, [debouncedValue, urlQuery, router]);
 
@@ -113,7 +115,11 @@ export default function KnowledgeBaseSearchPage() {
             <SearchResultCard
               key={result.id}
               result={result}
-              spaceName={result.spaceId !== null ? spaceNameById.get(result.spaceId) : undefined}
+              spaceName={
+                result.spaceId !== null
+                  ? spaceNameById.get(result.spaceId)
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -121,7 +127,8 @@ export default function KnowledgeBaseSearchPage() {
         {results.totalPages > 1 && (
           <div className="mt-3 flex shrink-0 items-center justify-between border-t border-border pt-3">
             <p className="text-xs text-muted-foreground">
-              Page {results.page} of {results.totalPages} · {results.total} results
+              Page {results.page} of {results.totalPages} · {results.total}{" "}
+              results
             </p>
             <div className="flex items-center gap-2">
               <Button

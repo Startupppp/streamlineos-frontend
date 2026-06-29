@@ -2,9 +2,18 @@
 
 import { useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Trophy, TrendingDown, TrendingUp, Target, BarChart3, IndianRupee, AlertCircle, BarChart2 } from "lucide-react";
+import {
+  Trophy,
+  TrendingDown,
+  TrendingUp,
+  Target,
+  BarChart3,
+  IndianRupee,
+  AlertCircle,
+  BarChart2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/@/hooks/api/crm
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
@@ -13,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useWinLossAnalysis } from "@/lib/api/hooks/crm";
+import { useWinLossAnalysis } from "@/hooks/hooks/crm";
 
 const REASON_COLORS = [
   "bg-red-500/20 text-red-400 border-red-500/30",
@@ -37,17 +46,24 @@ export default function WinLossAnalysisPage() {
 
   const maxReasonCount = useMemo(
     () => Math.max(1, ...(data?.lostByReason.map((r) => r.count) ?? [])),
-    [data]
+    [data],
   );
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (isLoading) {
     return (
-      <PageWrapper title="Win/Loss Analysis" subtitle="Deal outcome breakdown and lost reason attribution">
+      <PageWrapper
+        title="Win/Loss Analysis"
+        subtitle="Deal outcome breakdown and lost reason attribution"
+      >
         <div className="space-y-6">
           <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28" />)}
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-28" />
+            ))}
           </div>
           <div className="grid gap-6 md:grid-cols-2">
             <Skeleton className="h-64" />
@@ -60,23 +76,42 @@ export default function WinLossAnalysisPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Win/Loss Analysis" subtitle="Deal outcome breakdown and lost reason attribution">
+      <PageWrapper
+        title="Win/Loss Analysis"
+        subtitle="Deal outcome breakdown and lost reason attribution"
+      >
         <div className="flex flex-col items-center justify-center flex-1 gap-3 py-20 text-center">
           <AlertCircle className="h-10 w-10 text-destructive" />
-          <p className="text-sm text-muted-foreground">Failed to load win/loss data.</p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
+          <p className="text-sm text-muted-foreground">
+            Failed to load win/loss data.
+          </p>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
+            Retry
+          </Button>
         </div>
       </PageWrapper>
     );
   }
 
-  const s = data?.summary ?? { won: 0, wonValue: 0, lost: 0, lostValue: 0, total: 0, winRate: 0 };
+  const s = data?.summary ?? {
+    won: 0,
+    wonValue: 0,
+    lost: 0,
+    lostValue: 0,
+    total: 0,
+    winRate: 0,
+  };
 
   if (s.total === 0) {
     return (
-      <PageWrapper title="Win/Loss Analysis" subtitle="Deal outcome breakdown and lost reason attribution">
+      <PageWrapper
+        title="Win/Loss Analysis"
+        subtitle="Deal outcome breakdown and lost reason attribution"
+      >
         <EmptyState
-          illustration={<BarChart2 className="h-16 w-16 text-muted-foreground/40" />}
+          illustration={
+            <BarChart2 className="h-16 w-16 text-muted-foreground/40" />
+          }
           title="No closed deals yet"
           description="Win/loss data will appear once deals are marked as won or lost."
         />
@@ -98,7 +133,10 @@ export default function WinLossAnalysisPage() {
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <motion.div
+          variants={fadeUp}
+          className="grid gap-4 grid-cols-2 md:grid-cols-4"
+        >
           <StatCard
             label="Won Deals"
             value={s.won}
@@ -136,15 +174,23 @@ export default function WinLossAnalysisPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-center gap-8 py-4">
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-emerald-400">{s.won}</div>
+                  <div className="text-4xl font-bold text-emerald-400">
+                    {s.won}
+                  </div>
                   <div className="text-sm text-muted-foreground mt-1">Won</div>
-                  <div className="text-xs text-muted-foreground">{formatCurrency(s.wonValue)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {formatCurrency(s.wonValue)}
+                  </div>
                 </div>
                 <div className="h-16 w-px bg-border" />
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-red-400">{s.lost}</div>
+                  <div className="text-4xl font-bold text-red-400">
+                    {s.lost}
+                  </div>
                   <div className="text-sm text-muted-foreground mt-1">Lost</div>
-                  <div className="text-xs text-muted-foreground">{formatCurrency(s.lostValue)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {formatCurrency(s.lostValue)}
+                  </div>
                 </div>
               </div>
               <div>
@@ -169,11 +215,17 @@ export default function WinLossAnalysisPage() {
               </div>
               <div className="pt-2 border-t">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Total revenue at stake</span>
-                  <span className="font-semibold">{formatCurrency(s.wonValue + s.lostValue)}</span>
+                  <span className="text-muted-foreground">
+                    Total revenue at stake
+                  </span>
+                  <span className="font-semibold">
+                    {formatCurrency(s.wonValue + s.lostValue)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm mt-1">
-                  <span className="text-muted-foreground">Revenue captured</span>
+                  <span className="text-muted-foreground">
+                    Revenue captured
+                  </span>
                   <span className="font-semibold text-emerald-400">
                     {s.wonValue + s.lostValue > 0
                       ? `${Math.round((s.wonValue / (s.wonValue + s.lostValue)) * 100)}%`
@@ -192,7 +244,7 @@ export default function WinLossAnalysisPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {(!data?.lostByReason || data.lostByReason.length === 0) ? (
+              {!data?.lostByReason || data.lostByReason.length === 0 ? (
                 <div className="flex items-center justify-center h-40 text-sm text-muted-foreground">
                   No lost deals recorded yet
                 </div>
@@ -201,7 +253,8 @@ export default function WinLossAnalysisPage() {
                   <div className="space-y-3 pr-2">
                     {data.lostByReason.map((r, i) => {
                       const barPct = (r.count / maxReasonCount) * 100;
-                      const colorClass = REASON_COLORS[i % REASON_COLORS.length];
+                      const colorClass =
+                        REASON_COLORS[i % REASON_COLORS.length];
                       return (
                         <div key={r.reason}>
                           <div className="flex items-center justify-between mb-1">
@@ -214,7 +267,9 @@ export default function WinLossAnalysisPage() {
                               </Badge>
                             </div>
                             <div className="flex items-center gap-3 text-xs">
-                              <span className="font-semibold tabular-nums">{r.count}</span>
+                              <span className="font-semibold tabular-nums">
+                                {r.count}
+                              </span>
                               <span className="text-muted-foreground w-20 text-right">
                                 {formatCurrency(r.totalValue)}
                               </span>

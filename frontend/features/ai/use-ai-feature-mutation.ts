@@ -14,7 +14,7 @@ import {
   useAIAttritionRisk,
   useGenerateJobDescription,
   useMeetingPrep,
-} from "@/lib/api/hooks/ai";
+} from "@/hooks/api/ai";
 
 interface RunArgs {
   featureId: string;
@@ -63,7 +63,10 @@ export function useAiFeatureMutation() {
         case "score-lead":
           return scoreLead.mutate(Number(input), cb);
         case "generate-email":
-          return generateEmail.mutate({ leadName: input, tone: "friendly" }, cb);
+          return generateEmail.mutate(
+            { leadName: input, tone: "friendly" },
+            cb,
+          );
         case "predict-deal":
           return predictDeal.mutate(Number(input), cb);
         case "next-action":

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { WidgetCard } from "@/components/ui/widget-card";
-import { usePersonalDashboard } from "@/lib/api/hooks/dashboard";
+import { usePersonalDashboard } from "@/hooks/api/dashboard";
 import { ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -24,7 +24,11 @@ export function MyTasksWidget() {
     <WidgetCard
       icon={ListChecks}
       title="My Tasks"
-      link={{ href: "/projects", label: "View all", ariaLabel: "View all tasks" }}
+      link={{
+        href: "/projects",
+        label: "View all",
+        ariaLabel: "View all tasks",
+      }}
       isLoading={isLoading}
       error={error}
       isEmpty={!tasks.length}
@@ -70,7 +74,9 @@ export function MyTasksWidget() {
                     <span
                       className={cn(
                         "text-[10px] font-medium",
-                        isOverdue ? "text-destructive" : "text-muted-foreground",
+                        isOverdue
+                          ? "text-destructive"
+                          : "text-muted-foreground",
                       )}
                     >
                       {isOverdue ? "Overdue · " : "Due "}

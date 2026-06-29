@@ -6,27 +6,42 @@ import {
   useInviteUser,
   useCancelInvitation,
   useUpdateMemberRole,
-} from "@/lib/api/hooks/organization";
-import { useResetMfa, useResendInvitation } from "@/lib/api/hooks/mfa";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+} from "@/hooks/api/organization";
+import { useResetMfa, useResendInvitation } from "@/hooks/api/mfa";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { useState, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { Search, UserPlus, Shield } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useDebouncedValue } from "@/hooks/use-debounce";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,11 +80,12 @@ export default function MembersSettingsPage() {
     [searchParams, router, pathname],
   );
 
-  const { data: membersData, isLoading: membersLoading, isError: membersError, refetch: refetchMembers } = useOrgMembers(
-    page,
-    20,
-    debouncedSearch || undefined,
-  );
+  const {
+    data: membersData,
+    isLoading: membersLoading,
+    isError: membersError,
+    refetch: refetchMembers,
+  } = useOrgMembers(page, 20, debouncedSearch || undefined);
   const { data: invitations } = useInvitations();
   const inviteUser = useInviteUser();
   const cancelInvitation = useCancelInvitation();
@@ -147,7 +163,10 @@ export default function MembersSettingsPage() {
     [resetMfa],
   );
 
-  const handleToggleInviteForm = useCallback(() => setShowInviteForm((v) => !v), []);
+  const handleToggleInviteForm = useCallback(
+    () => setShowInviteForm((v) => !v),
+    [],
+  );
   const handleEmailChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setInviteEmail(e.target.value),
     [],
@@ -167,7 +186,9 @@ export default function MembersSettingsPage() {
     [page, updateParams],
   );
 
-  const handleRetryMembers = useCallback(() => { void refetchMembers(); }, [refetchMembers]);
+  const handleRetryMembers = useCallback(() => {
+    void refetchMembers();
+  }, [refetchMembers]);
 
   return (
     <PageWrapper
@@ -206,12 +227,19 @@ export default function MembersSettingsPage() {
             <Card className="rounded-xl border shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">Invite New Member</CardTitle>
-                <CardDescription>Send an invitation to join your organization</CardDescription>
+                <CardDescription>
+                  Send an invitation to join your organization
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleInvite} className="flex flex-col sm:flex-row sm:items-end gap-3">
+                <form
+                  onSubmit={handleInvite}
+                  className="flex flex-col sm:flex-row sm:items-end gap-3"
+                >
                   <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="email" className="text-sm">Email</Label>
+                    <Label htmlFor="email" className="text-sm">
+                      Email
+                    </Label>
                     <Input
                       id="email"
                       type="email"
@@ -224,15 +252,23 @@ export default function MembersSettingsPage() {
                   <div className="w-full sm:w-[180px] space-y-1.5">
                     <Label className="text-sm">Role</Label>
                     <Select value={inviteRole} onValueChange={setInviteRole}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         {ALL_ROLES.filter((r) => r.value !== "CEO").map((r) => (
-                          <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                          <SelectItem key={r.value} value={r.value}>
+                            {r.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" disabled={inviteUser.isPending} className="w-full sm:w-auto">
+                  <Button
+                    type="submit"
+                    disabled={inviteUser.isPending}
+                    className="w-full sm:w-auto"
+                  >
                     {inviteUser.isPending ? "Sending..." : "Send"}
                   </Button>
                 </form>
@@ -271,11 +307,21 @@ export default function MembersSettingsPage() {
                   <Table>
                     <TableHeader className="bg-muted/40">
                       <TableRow>
-                        <TableHead className="px-5 py-3 text-xs font-semibold">Member</TableHead>
-                        <TableHead className="px-5 py-3 text-xs font-semibold">Email</TableHead>
-                        <TableHead className="px-5 py-3 text-xs font-semibold">Role</TableHead>
-                        <TableHead className="px-5 py-3 text-xs font-semibold">Joined</TableHead>
-                        <TableHead className="px-5 py-3 text-right text-xs font-semibold">Actions</TableHead>
+                        <TableHead className="px-5 py-3 text-xs font-semibold">
+                          Member
+                        </TableHead>
+                        <TableHead className="px-5 py-3 text-xs font-semibold">
+                          Email
+                        </TableHead>
+                        <TableHead className="px-5 py-3 text-xs font-semibold">
+                          Role
+                        </TableHead>
+                        <TableHead className="px-5 py-3 text-xs font-semibold">
+                          Joined
+                        </TableHead>
+                        <TableHead className="px-5 py-3 text-right text-xs font-semibold">
+                          Actions
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -290,13 +336,24 @@ export default function MembersSettingsPage() {
                       ) : membersError ? (
                         <TableRow>
                           <TableCell colSpan={5} className="py-10 text-center">
-                            <p className="text-sm text-muted-foreground mb-2">Failed to load members.</p>
-                            <Button variant="outline" size="sm" onClick={handleRetryMembers}>Retry</Button>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Failed to load members.
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleRetryMembers}
+                            >
+                              Retry
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ) : !membersData?.data.length ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-sm text-muted-foreground">
+                          <TableCell
+                            colSpan={5}
+                            className="text-center py-8 text-sm text-muted-foreground"
+                          >
                             No members found
                           </TableCell>
                         </TableRow>
@@ -319,7 +376,8 @@ export default function MembersSettingsPage() {
               {membersData && membersData.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between border-t px-5 py-3">
                   <span className="text-sm text-muted-foreground">
-                    Page {membersData.pagination.page} of {membersData.pagination.totalPages}
+                    Page {membersData.pagination.page} of{" "}
+                    {membersData.pagination.totalPages}
                   </span>
                   <div className="flex gap-1">
                     <Button
@@ -351,12 +409,19 @@ export default function MembersSettingsPage() {
           <Card className="rounded-xl border shadow-sm">
             <CardHeader>
               <CardTitle className="text-base">Invite New Member</CardTitle>
-              <CardDescription>Send an invitation to join your organization</CardDescription>
+              <CardDescription>
+                Send an invitation to join your organization
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleInvite} className="flex flex-col sm:flex-row sm:items-end gap-3">
+              <form
+                onSubmit={handleInvite}
+                className="flex flex-col sm:flex-row sm:items-end gap-3"
+              >
                 <div className="flex-1 space-y-1.5">
-                  <Label htmlFor="inv-tab-email" className="text-sm">Email</Label>
+                  <Label htmlFor="inv-tab-email" className="text-sm">
+                    Email
+                  </Label>
                   <Input
                     id="inv-tab-email"
                     type="email"
@@ -369,15 +434,23 @@ export default function MembersSettingsPage() {
                 <div className="w-full sm:w-[180px] space-y-1.5">
                   <Label className="text-sm">Role</Label>
                   <Select value={inviteRole} onValueChange={setInviteRole}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       {ALL_ROLES.filter((r) => r.value !== "CEO").map((r) => (
-                        <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                        <SelectItem key={r.value} value={r.value}>
+                          {r.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" disabled={inviteUser.isPending} className="w-full sm:w-auto">
+                <Button
+                  type="submit"
+                  disabled={inviteUser.isPending}
+                  className="w-full sm:w-auto"
+                >
                   {inviteUser.isPending ? "Sending..." : "Send Invite"}
                 </Button>
               </form>
@@ -412,8 +485,12 @@ export default function MembersSettingsPage() {
                 <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
                   <EmptyMailIllustration className="h-24 w-24 opacity-80" />
                   <div>
-                    <p className="text-sm font-medium text-foreground">No pending invitations</p>
-                    <p className="text-xs text-muted-foreground mt-1">Invite team members using the form above</p>
+                    <p className="text-sm font-medium text-foreground">
+                      No pending invitations
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Invite team members using the form above
+                    </p>
                   </div>
                 </div>
               )}

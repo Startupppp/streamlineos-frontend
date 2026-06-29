@@ -1,4 +1,4 @@
-import { getProjectById } from "@/server/actions/project-actions";
+import { getProjectById } from "@/server/project-actions";
 import { notFound } from "next/navigation";
 import { ProjectSidebar } from "@/components/layout/project-sidebar";
 import { auth } from "@/lib/auth";
@@ -29,7 +29,6 @@ export default async function ProjectLayout({
 
   return (
     <div className="flex flex-col md:flex-row h-full w-full">
-
       <ProjectSidebar
         projectId={projectId}
         projectName={project.name}

@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAIBatchScoreLeads } from "@/lib/api/hooks/ai";
+import { useAIBatchScoreLeads } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
@@ -23,13 +23,22 @@ interface AIBulkScoreButtonProps {
   onComplete?: () => void;
 }
 
-export function AIBulkScoreButton({ leadIds, onComplete }: AIBulkScoreButtonProps) {
+export function AIBulkScoreButton({
+  leadIds,
+  onComplete,
+}: AIBulkScoreButtonProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const batchMutation = useAIBatchScoreLeads();
-  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.lead-scoring");
+  const { enabled: featureEnabled, requiredPlan } =
+    useFeature("ai.lead-scoring");
 
   const handleScore = useCallback(() => {
-    if (!featureEnabled) { toast.error(`AI bulk scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
+    if (!featureEnabled) {
+      toast.error(
+        `AI bulk scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`,
+      );
+      return;
+    }
     batchMutation.mutate(leadIds, {
       onSuccess: (data) => {
         toast.success(`Scored ${data.scored} leads`);
@@ -53,23 +62,36 @@ export function AIBulkScoreButton({ leadIds, onComplete }: AIBulkScoreButtonProp
         disabled={batchMutation.isPending}
       >
         {batchMutation.isPending ? (
-          <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Scoring...</>
+          <>
+            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+            Scoring...
+          </>
         ) : (
-          <><Sparkles className="h-3.5 w-3.5 mr-1.5 text-blue-600" />AI Score {leadIds.length}</>
+          <>
+            <Sparkles className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+            AI Score {leadIds.length}
+          </>
         )}
       </Button>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>AI Score {leadIds.length} Lead{leadIds.length === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              AI Score {leadIds.length} Lead{leadIds.length === 1 ? "" : "s"}?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will use AI to score the selected leads from 0-100 with reasoning. Each lead&apos;s score will be updated in the database. Max 50 leads per batch.
+              This will use AI to score the selected leads from 0-100 with
+              reasoning. Each lead&apos;s score will be updated in the database.
+              Max 50 leads per batch.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleScore} disabled={batchMutation.isPending}>
+            <AlertDialogAction
+              onClick={handleScore}
+              disabled={batchMutation.isPending}
+            >
               {batchMutation.isPending ? "Scoring..." : "Score Now"}
             </AlertDialogAction>
           </AlertDialogFooter>

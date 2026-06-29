@@ -27,8 +27,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
-import { useInvoiceStats, useInvoices } from "@/lib/api/hooks/invoice";
-import { useSubscription } from "@/lib/api/hooks/subscription";
+import { useInvoiceStats, useInvoices } from "@/hooks/api/invoice";
+import { useSubscription } from "@/hooks/api/subscription";
 import type { InvoiceStatus } from "@/types/invoice";
 
 const PLAN_LABELS: Record<string, string> = {
@@ -37,7 +37,13 @@ const PLAN_LABELS: Record<string, string> = {
   ENTERPRISE: "Enterprise",
 };
 
-const SUB_STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const SUB_STATUS_BADGE: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
   TRIAL: { label: "Trial", variant: "secondary" },
   ACTIVE: { label: "Active", variant: "default" },
   PAST_DUE: { label: "Past Due", variant: "destructive" },
@@ -45,7 +51,13 @@ const SUB_STATUS_BADGE: Record<string, { label: string; variant: "default" | "se
   EXPIRED: { label: "Expired", variant: "outline" },
 };
 
-const STATUS_BADGE: Record<InvoiceStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const STATUS_BADGE: Record<
+  InvoiceStatus,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
   DRAFT: { label: "Draft", variant: "secondary" },
   SENT: { label: "Sent", variant: "default" },
   PAID: { label: "Paid", variant: "outline" },
@@ -58,8 +70,15 @@ function fmt(amount: string | number) {
 }
 
 export default function BillingPage() {
-  const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useInvoiceStats();
-  const { data: recentData, isLoading: recentLoading } = useInvoices({ limit: 5 });
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    refetch: refetchStats,
+  } = useInvoiceStats();
+  const { data: recentData, isLoading: recentLoading } = useInvoices({
+    limit: 5,
+  });
   const { data: overdueData } = useInvoices({ status: "OVERDUE", limit: 5 });
   const { data: subData } = useSubscription();
 
@@ -74,7 +93,12 @@ export default function BillingPage() {
   const subStatusInfo = sub ? SUB_STATUS_BADGE[sub.status] : null;
   const trialDaysRemaining =
     sub?.status === "TRIAL" && sub.trialEndsAt
-      ? Math.max(0, Math.ceil((new Date(sub.trialEndsAt).getTime() - Date.now()) / 86_400_000))
+      ? Math.max(
+          0,
+          Math.ceil(
+            (new Date(sub.trialEndsAt).getTime() - Date.now()) / 86_400_000,
+          ),
+        )
       : null;
 
   return (
@@ -100,15 +124,31 @@ export default function BillingPage() {
               </p>
               {sub.status === "TRIAL" && trialDaysRemaining !== null && (
                 <p className="text-xs text-amber-600 mt-0.5">
-                  Trial ends in {trialDaysRemaining === 0 ? "today" : `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""}`}
+                  Trial ends in{" "}
+                  {trialDaysRemaining === 0
+                    ? "today"
+                    : `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""}`}
                   {sub.trialEndsAt && (
-                    <> · {new Date(sub.trialEndsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</>
+                    <>
+                      {" "}
+                      ·{" "}
+                      {new Date(sub.trialEndsAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </>
                   )}
                 </p>
               )}
               {sub.status === "ACTIVE" && sub.currentPeriodEnd && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Renews {new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                  Renews{" "}
+                  {new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
                 </p>
               )}
             </div>
@@ -140,7 +180,10 @@ export default function BillingPage() {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {statsLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="rounded-lg border border-border bg-card px-4 py-4 space-y-2">
+                  <div
+                    key={i}
+                    className="rounded-lg border border-border bg-card px-4 py-4 space-y-2"
+                  >
                     <Skeleton className="h-3 w-24" />
                     <Skeleton className="h-7 w-28" />
                   </div>
@@ -149,7 +192,9 @@ export default function BillingPage() {
                 <>
                   <StatCard
                     label="Total Invoiced"
-                    value={fmt(stats ? (stats.totalOutstanding + stats.totalPaid) : 0)}
+                    value={fmt(
+                      stats ? stats.totalOutstanding + stats.totalPaid : 0,
+                    )}
                     icon={FileText}
                     color="blue"
                   />
@@ -176,34 +221,47 @@ export default function BillingPage() {
             </div>
 
             <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-              {statsLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="rounded-lg border border-border bg-card px-3.5 py-2.5 space-y-2">
-                    <Skeleton className="h-3 w-12" />
-                    <Skeleton className="h-7 w-8" />
-                  </div>
-                ))
-              ) : (
-                (["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as InvoiceStatus[]).map((s) => {
-                  const badge = STATUS_BADGE[s];
-                  const statusCountMap: Record<InvoiceStatus, number> = {
-                    DRAFT: stats?.draft ?? 0,
-                    SENT: stats?.sent ?? 0,
-                    PAID: stats?.paid ?? 0,
-                    OVERDUE: stats?.overdue ?? 0,
-                    CANCELLED: stats?.cancelled ?? 0,
-                  };
-                  const count = statusCountMap[s];
-                  return (
-                    <Link key={s} href={`/billing/invoices?status=${s}`}>
-                      <div className="rounded-lg border border-border bg-card px-3.5 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer">
-                        <p className="text-xs text-muted-foreground mb-1 truncate">{badge.label}</p>
-                        <p className="text-xl font-bold tabular-nums">{count}</p>
-                      </div>
-                    </Link>
-                  );
-                })
-              )}
+              {statsLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="rounded-lg border border-border bg-card px-3.5 py-2.5 space-y-2"
+                    >
+                      <Skeleton className="h-3 w-12" />
+                      <Skeleton className="h-7 w-8" />
+                    </div>
+                  ))
+                : (
+                    [
+                      "DRAFT",
+                      "SENT",
+                      "PAID",
+                      "OVERDUE",
+                      "CANCELLED",
+                    ] as InvoiceStatus[]
+                  ).map((s) => {
+                    const badge = STATUS_BADGE[s];
+                    const statusCountMap: Record<InvoiceStatus, number> = {
+                      DRAFT: stats?.draft ?? 0,
+                      SENT: stats?.sent ?? 0,
+                      PAID: stats?.paid ?? 0,
+                      OVERDUE: stats?.overdue ?? 0,
+                      CANCELLED: stats?.cancelled ?? 0,
+                    };
+                    const count = statusCountMap[s];
+                    return (
+                      <Link key={s} href={`/billing/invoices?status=${s}`}>
+                        <div className="rounded-lg border border-border bg-card px-3.5 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-1 truncate">
+                            {badge.label}
+                          </p>
+                          <p className="text-xl font-bold tabular-nums">
+                            {count}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
             </div>
           </>
         )}
@@ -229,7 +287,9 @@ export default function BillingPage() {
             <div className="px-4 py-3 flex items-center justify-between border-b border-destructive/30 bg-destructive/5">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-destructive" />
-                <p className="text-sm font-semibold text-destructive">Overdue Invoices</p>
+                <p className="text-sm font-semibold text-destructive">
+                  Overdue Invoices
+                </p>
               </div>
               <Link href="/billing/invoices?status=OVERDUE">
                 <Button variant="ghost" size="sm" className="text-xs gap-1">
@@ -251,7 +311,10 @@ function TableSkeleton({ rows }: { rows: number }) {
       <div className="min-w-[640px]">
         <div className="divide-y divide-border">
           {Array.from({ length: rows }).map((_, i) => (
-            <div key={i} className="grid grid-cols-6 gap-4 px-4 py-3 items-center">
+            <div
+              key={i}
+              className="grid grid-cols-6 gap-4 px-4 py-3 items-center"
+            >
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-5 w-14 rounded-full" />
@@ -295,56 +358,62 @@ function InvoiceTable({
 
   return (
     <div className="overflow-x-auto">
-    <Table className="min-w-[640px]">
-      <TableHeader>
-        <TableRow>
-          <TableHead>Invoice #</TableHead>
-          <TableHead>Client</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Due Date</TableHead>
-          <TableHead className="text-right">Amount</TableHead>
-          <TableHead />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {invoices.map((inv) => {
-          const badge = STATUS_BADGE[inv.status];
-          const overdue =
-            inv.status !== "PAID" &&
-            inv.status !== "CANCELLED" &&
-            inv.dueDate &&
-            isPast(new Date(inv.dueDate));
-          return (
-            <TableRow key={inv.id}>
-              <TableCell className="font-mono text-xs font-medium">
-                {inv.invoiceNumber}
-              </TableCell>
-              <TableCell className="text-sm">
-                {inv.client?.name ?? <span className="text-muted-foreground">—</span>}
-              </TableCell>
-              <TableCell>
-                <Badge variant={badge.variant} className="text-[11px]">
-                  {badge.label}
-                </Badge>
-              </TableCell>
-              <TableCell className={`text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                {inv.dueDate ? format(new Date(inv.dueDate), "dd MMM yyyy") : "—"}
-              </TableCell>
-              <TableCell className="text-right font-medium text-sm">
-                {fmt(inv.total)}
-              </TableCell>
-              <TableCell>
-                <Link href={`/billing/invoices/${inv.id}`}>
-                  <Button variant="ghost" size="sm" className="text-xs">
-                    View
-                  </Button>
-                </Link>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+      <Table className="min-w-[640px]">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Invoice #</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Due Date</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {invoices.map((inv) => {
+            const badge = STATUS_BADGE[inv.status];
+            const overdue =
+              inv.status !== "PAID" &&
+              inv.status !== "CANCELLED" &&
+              inv.dueDate &&
+              isPast(new Date(inv.dueDate));
+            return (
+              <TableRow key={inv.id}>
+                <TableCell className="font-mono text-xs font-medium">
+                  {inv.invoiceNumber}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {inv.client?.name ?? (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={badge.variant} className="text-[11px]">
+                    {badge.label}
+                  </Badge>
+                </TableCell>
+                <TableCell
+                  className={`text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}
+                >
+                  {inv.dueDate
+                    ? format(new Date(inv.dueDate), "dd MMM yyyy")
+                    : "—"}
+                </TableCell>
+                <TableCell className="text-right font-medium text-sm">
+                  {fmt(inv.total)}
+                </TableCell>
+                <TableCell>
+                  <Link href={`/billing/invoices/${inv.id}`}>
+                    <Button variant="ghost" size="sm" className="text-xs">
+                      View
+                    </Button>
+                  </Link>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 }

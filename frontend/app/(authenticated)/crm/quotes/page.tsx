@@ -6,19 +6,45 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuotes, useCreateQuote } from "@/lib/api/hooks/quotes";
-import { useDebouncedValue } from "@/hooks/use-debounce";
+import { useQuotes, useCreateQuote } from "@/hooks/api/quotes";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
-import { Plus, Search, Download, Trash2, AlertCircle, RefreshCw } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Download,
+  Trash2,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 
@@ -51,36 +77,96 @@ interface LineItemRowProps {
   onRemove: (idx: number) => void;
 }
 
-const LineItemRow = memo(function LineItemRow({ item, idx, isFirst, canRemove, onUpdate, onRemove }: LineItemRowProps) {
-  const handleDescription = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "description", e.target.value), [onUpdate, idx]);
-  const handleQuantity = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "quantity", Number(e.target.value)), [onUpdate, idx]);
-  const handleUnitPrice = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "unitPrice", Number(e.target.value)), [onUpdate, idx]);
-  const handleTaxRate = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "taxRate", Number(e.target.value)), [onUpdate, idx]);
+const LineItemRow = memo(function LineItemRow({
+  item,
+  idx,
+  isFirst,
+  canRemove,
+  onUpdate,
+  onRemove,
+}: LineItemRowProps) {
+  const handleDescription = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      onUpdate(idx, "description", e.target.value),
+    [onUpdate, idx],
+  );
+  const handleQuantity = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      onUpdate(idx, "quantity", Number(e.target.value)),
+    [onUpdate, idx],
+  );
+  const handleUnitPrice = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      onUpdate(idx, "unitPrice", Number(e.target.value)),
+    [onUpdate, idx],
+  );
+  const handleTaxRate = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      onUpdate(idx, "taxRate", Number(e.target.value)),
+    [onUpdate, idx],
+  );
   const handleRemove = useCallback(() => onRemove(idx), [onRemove, idx]);
 
   return (
     <div className="grid grid-cols-12 gap-2 items-end">
       <div className="col-span-12 sm:col-span-5">
-        {isFirst && <span className="text-xs text-muted-foreground">Description</span>}
-        <Input value={item.description} onChange={handleDescription} placeholder="Item description" />
+        {isFirst && (
+          <span className="text-xs text-muted-foreground">Description</span>
+        )}
+        <Input
+          value={item.description}
+          onChange={handleDescription}
+          placeholder="Item description"
+        />
       </div>
       <div className="col-span-4 sm:col-span-2">
         {isFirst && <span className="text-xs text-muted-foreground">Qty</span>}
-        {!isFirst && <span className="text-xs text-muted-foreground sm:hidden">Qty</span>}
-        <Input type="number" min={0} value={item.quantity} onChange={handleQuantity} />
+        {!isFirst && (
+          <span className="text-xs text-muted-foreground sm:hidden">Qty</span>
+        )}
+        <Input
+          type="number"
+          min={0}
+          value={item.quantity}
+          onChange={handleQuantity}
+        />
       </div>
       <div className="col-span-4 sm:col-span-2">
-        {isFirst && <span className="text-xs text-muted-foreground">Price</span>}
-        {!isFirst && <span className="text-xs text-muted-foreground sm:hidden">Price</span>}
-        <Input type="number" min={0} value={item.unitPrice} onChange={handleUnitPrice} />
+        {isFirst && (
+          <span className="text-xs text-muted-foreground">Price</span>
+        )}
+        {!isFirst && (
+          <span className="text-xs text-muted-foreground sm:hidden">Price</span>
+        )}
+        <Input
+          type="number"
+          min={0}
+          value={item.unitPrice}
+          onChange={handleUnitPrice}
+        />
       </div>
       <div className="col-span-3 sm:col-span-2">
-        {isFirst && <span className="text-xs text-muted-foreground">Tax %</span>}
-        {!isFirst && <span className="text-xs text-muted-foreground sm:hidden">Tax %</span>}
-        <Input type="number" min={0} value={item.taxRate} onChange={handleTaxRate} />
+        {isFirst && (
+          <span className="text-xs text-muted-foreground">Tax %</span>
+        )}
+        {!isFirst && (
+          <span className="text-xs text-muted-foreground sm:hidden">Tax %</span>
+        )}
+        <Input
+          type="number"
+          min={0}
+          value={item.taxRate}
+          onChange={handleTaxRate}
+        />
       </div>
       <div className="col-span-1">
-        <Button type="button" variant="ghost" size="icon" onClick={handleRemove} disabled={!canRemove}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={handleRemove}
+          disabled={!canRemove}
+        >
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
@@ -89,7 +175,13 @@ const LineItemRow = memo(function LineItemRow({ item, idx, isFirst, canRemove, o
 });
 
 function makeLineItem(): LineItem {
-  return { key: crypto.randomUUID(), description: "", quantity: 1, unitPrice: 0, taxRate: 0 };
+  return {
+    key: crypto.randomUUID(),
+    description: "",
+    quantity: 1,
+    unitPrice: 0,
+    taxRate: 0,
+  };
 }
 
 function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
@@ -99,62 +191,98 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<LineItem[]>([makeLineItem()]);
 
-  const addLine = useCallback(() => setLineItems((prev) => [...prev, makeLineItem()]), []);
+  const addLine = useCallback(
+    () => setLineItems((prev) => [...prev, makeLineItem()]),
+    [],
+  );
 
-  const updateLine = useCallback((idx: number, field: LineItemField, value: string | number) => {
-    setLineItems((prev) =>
-      prev.map((item, i) => (i === idx ? { ...item, [field]: value } : item))
-    );
-  }, []);
+  const updateLine = useCallback(
+    (idx: number, field: LineItemField, value: string | number) => {
+      setLineItems((prev) =>
+        prev.map((item, i) => (i === idx ? { ...item, [field]: value } : item)),
+      );
+    },
+    [],
+  );
 
   const removeLine = useCallback((idx: number) => {
     setLineItems((prev) => prev.filter((_, i) => i !== idx));
   }, []);
 
-  const handleSubjectChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value), []);
-  const handleValidUntilChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setValidUntil(e.target.value), []);
-  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+  const handleSubjectChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value),
+    [],
+  );
+  const handleValidUntilChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setValidUntil(e.target.value),
+    [],
+  );
+  const handleNotesChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value),
+    [],
+  );
 
-  const total = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const total = lineItems.reduce(
+    (sum, item) => sum + item.quantity * item.unitPrice,
+    0,
+  );
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (!subject.trim() || !validUntil) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    if (lineItems.some((li) => !li.description.trim())) {
-      toast.error("Every line item needs a description");
-      return;
-    }
-    const cleanedItems = lineItems.map(({ description, quantity, unitPrice, taxRate }) => ({
-      description: description.trim(),
-      quantity,
-      unitPrice,
-      taxRate,
-    }));
-    createQuote.mutate(
-      { subject: subject.trim(), validUntil, notes: notes || undefined, lineItems: cleanedItems },
-      {
-        onSuccess: () => {
-          toast.success("Quote created successfully");
-          onSuccess();
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!subject.trim() || !validUntil) {
+        toast.error("Please fill all required fields");
+        return;
       }
-    );
-  }, [subject, validUntil, notes, lineItems, createQuote, onSuccess]);
+      if (lineItems.some((li) => !li.description.trim())) {
+        toast.error("Every line item needs a description");
+        return;
+      }
+      const cleanedItems = lineItems.map(
+        ({ description, quantity, unitPrice, taxRate }) => ({
+          description: description.trim(),
+          quantity,
+          unitPrice,
+          taxRate,
+        }),
+      );
+      createQuote.mutate(
+        {
+          subject: subject.trim(),
+          validUntil,
+          notes: notes || undefined,
+          lineItems: cleanedItems,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Quote created successfully");
+            onSuccess();
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [subject, validUntil, notes, lineItems, createQuote, onSuccess],
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <Label>Subject *</Label>
-          <Input value={subject} onChange={handleSubjectChange} placeholder="Quote subject" />
+          <Input
+            value={subject}
+            onChange={handleSubjectChange}
+            placeholder="Quote subject"
+          />
         </div>
         <div>
           <Label>Valid Until *</Label>
-          <Input type="date" value={validUntil} onChange={handleValidUntilChange} />
+          <Input
+            type="date"
+            value={validUntil}
+            onChange={handleValidUntilChange}
+          />
         </div>
       </div>
 
@@ -173,11 +301,18 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
             />
           ))}
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={addLine} className="mt-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={addLine}
+          className="mt-2"
+        >
           <Plus className="mr-1 h-3 w-3" /> Add Line
         </Button>
         <p className="text-sm text-right mt-2 font-medium">
-          Subtotal: INR {total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+          Subtotal: INR{" "}
+          {total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
         </p>
       </div>
 
@@ -257,7 +392,8 @@ export default function QuotesPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => updateParams({ q: e.target.value }),
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      updateParams({ q: e.target.value }),
     [updateParams],
   );
 
@@ -266,10 +402,15 @@ export default function QuotesPage() {
     [updateParams],
   );
 
-  const handleCreateOpenChange = useCallback((open: boolean) => setCreateOpen(open), []);
+  const handleCreateOpenChange = useCallback(
+    (open: boolean) => setCreateOpen(open),
+    [],
+  );
   const handleCreateSuccess = useCallback(() => setCreateOpen(false), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const isFiltered = Boolean(debouncedSearch || statusFilter !== "all");
 
@@ -292,7 +433,10 @@ export default function QuotesPage() {
                 New Quote
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl" aria-describedby={`${instanceId}-dialog-desc`}>
+            <DialogContent
+              className="max-w-2xl"
+              aria-describedby={`${instanceId}-dialog-desc`}
+            >
               <DialogHeader>
                 <DialogTitle>Create Quote</DialogTitle>
               </DialogHeader>
@@ -335,7 +479,9 @@ export default function QuotesPage() {
       ) : isError ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
           <AlertCircle className="h-10 w-10 text-destructive" />
-          <p className="text-sm text-muted-foreground">Failed to load quotes. Please try again.</p>
+          <p className="text-sm text-muted-foreground">
+            Failed to load quotes. Please try again.
+          </p>
           <Button variant="outline" size="sm" onClick={handleRetry}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Retry
@@ -345,8 +491,16 @@ export default function QuotesPage() {
         <EmptyState
           illustration={<EmptyDocumentsIllustration />}
           title={isFiltered ? "No quotes match your filters" : "No quotes yet"}
-          description={isFiltered ? "Try adjusting your search or status filter." : "Create your first quote to start closing deals."}
-          action={isFiltered ? undefined : { label: "New Quote", onClick: handleOpenCreate }}
+          description={
+            isFiltered
+              ? "Try adjusting your search or status filter."
+              : "Create your first quote to start closing deals."
+          }
+          action={
+            isFiltered
+              ? undefined
+              : { label: "New Quote", onClick: handleOpenCreate }
+          }
           className="flex-1"
         />
       ) : (
@@ -365,19 +519,31 @@ export default function QuotesPage() {
             </TableHeader>
             <TableBody>
               {data.quotes.map((q) => (
-                <TableRow key={q.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow
+                  key={q.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                >
                   <TableCell>
-                    <Link href={`/crm/quotes/${q.id}`} className="font-mono text-sm text-blue-600 hover:underline">
+                    <Link
+                      href={`/crm/quotes/${q.id}`}
+                      className="font-mono text-sm text-blue-600 hover:underline"
+                    >
                       {q.quoteNumber}
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <Link href={`/crm/quotes/${q.id}`} className="font-medium hover:underline">
+                    <Link
+                      href={`/crm/quotes/${q.id}`}
+                      className="font-medium hover:underline"
+                    >
                       {q.subject}
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={STATUS_COLORS[q.status]}>
+                    <Badge
+                      variant="secondary"
+                      className={STATUS_COLORS[q.status]}
+                    >
                       {q.status}
                     </Badge>
                   </TableCell>
@@ -385,13 +551,20 @@ export default function QuotesPage() {
                     {q.deal?.name ?? "—"}
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    {q.currency} {Number(q.netAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    {q.currency}{" "}
+                    {Number(q.netAmount).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {q.validUntil ? format(new Date(q.validUntil), "dd MMM yyyy") : "—"}
+                    {q.validUntil
+                      ? format(new Date(q.validUntil), "dd MMM yyyy")
+                      : "—"}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {q.createdAt ? format(new Date(q.createdAt), "dd MMM yyyy") : "—"}
+                    {q.createdAt
+                      ? format(new Date(q.createdAt), "dd MMM yyyy")
+                      : "—"}
                   </TableCell>
                 </TableRow>
               ))}

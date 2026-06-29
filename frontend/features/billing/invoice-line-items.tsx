@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { useUpdateInvoice } from "@/lib/api/hooks/invoice";
+import { useUpdateInvoice } from "@/hooks/api/invoice";
 
 function fmt(amount: string | number) {
   return `₹${Number(amount).toLocaleString("en-IN", {
@@ -307,7 +307,9 @@ export function InvoiceLineItems({
                 {editDiscount > 0 && (
                   <div className="flex justify-between text-muted-foreground">
                     <span>Discount</span>
-                    <span className="text-destructive">-{fmt(editDiscount)}</span>
+                    <span className="text-destructive">
+                      -{fmt(editDiscount)}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold border-t border-border pt-1.5">
@@ -368,11 +370,7 @@ export function InvoiceLineItems({
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCancelEdit}
-            >
+            <Button variant="outline" size="sm" onClick={handleCancelEdit}>
               Cancel
             </Button>
             <Button

@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Loader2, Plus, X, AlertTriangle, Building2, UserCircle } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  X,
+  AlertTriangle,
+  Building2,
+  UserCircle,
+} from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -22,16 +29,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { toast } from "sonner";
-import { getApiError } from "@/lib/api-client";
+import {@/hooks/api/rolesback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";@/hooks/api/organization
+import { getApiError } from "@/lib@/hooks/api/hr/employees
 import {
   useRoleMembers,
   useAssignRoleMember,
   useUnassignRoleMember,
-} from "@/lib/api/hooks/roles";
-import { useOrgMembers } from "@/lib/api/hooks/organization";
-import { useHrDepartments } from "@/lib/api/hooks/hr/employees";
+} from "@/hooks/hooks/roles";
+import { useOrgMembers } from "@/hooks/hooks/organization";
+import { useHrDepartments } from "@/hooks/hooks/hr/employees";
 import { getInitials } from "@/lib/format-utils";
 import type { Role, OrgMember } from "@/types/organization";
 import type { Department } from "@/types/hr";
@@ -44,7 +51,11 @@ interface RoleAssignmentsSheetProps {
   onOpenChange: (value: boolean) => void;
 }
 
-export function RoleAssignmentsSheet({ role, open, onOpenChange }: RoleAssignmentsSheetProps) {
+export function RoleAssignmentsSheet({
+  role,
+  open,
+  onOpenChange,
+}: RoleAssignmentsSheetProps) {
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   return (
@@ -75,7 +86,11 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const [userPage, setUserPage] = useState(1);
 
   const membersQuery = useRoleMembers(roleId);
-  const orgMembersQuery = useOrgMembers(userPage, ORG_MEMBERS_PAGE_SIZE, userSearch || undefined);
+  const orgMembersQuery = useOrgMembers(
+    userPage,
+    ORG_MEMBERS_PAGE_SIZE,
+    userSearch || undefined,
+  );
   const departmentsQuery = useHrDepartments();
   const assign = useAssignRoleMember();
   const unassign = useUnassignRoleMember();
@@ -84,16 +99,24 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const directUsers = members.filter(
     (member) => member.principalType === "user" && member.via === "direct",
   );
-  const assignedDepartments = members.filter((member) => member.principalType === "department");
-  const directUserIds = new Set(directUsers.map((member) => member.principalId));
-  const assignedDepartmentIds = new Set(assignedDepartments.map((member) => member.principalId));
+  const assignedDepartments = members.filter(
+    (member) => member.principalType === "department",
+  );
+  const directUserIds = new Set(
+    directUsers.map((member) => member.principalId),
+  );
+  const assignedDepartmentIds = new Set(
+    assignedDepartments.map((member) => member.principalId),
+  );
 
   const orgMembersPage = orgMembersQuery.data;
   const orgMembers = orgMembersPage?.data ?? [];
   const orgMembersTotalPages = orgMembersPage?.pagination.totalPages ?? 1;
   const departments = departmentsQuery.data ?? [];
 
-  const availableUsers = orgMembers.filter((member) => !directUserIds.has(member.userId));
+  const availableUsers = orgMembers.filter(
+    (member) => !directUserIds.has(member.userId),
+  );
   const availableDepartments = departments.filter(
     (department) => !assignedDepartmentIds.has(String(department.id)),
   );
@@ -108,7 +131,9 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
       vias: [],
     };
     const via =
-      member.via === "direct" ? "Direct" : `via ${member.departmentName ?? "Department"}`;
+      member.via === "direct"
+        ? "Direct"
+        : `via ${member.departmentName ?? "Department"}`;
     if (!existing.vias.includes(via)) existing.vias.push(via);
     effectiveUsers.set(member.principalId, existing);
   }
@@ -200,14 +225,19 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   }, [membersQuery]);
 
   const isLoading =
-    membersQuery.isLoading || orgMembersQuery.isLoading || departmentsQuery.isLoading;
+    membersQuery.isLoading ||
+    orgMembersQuery.isLoading ||
+    departmentsQuery.isLoading;
 
   return (
     <>
       <SheetHeader className="px-6 pt-5 pb-3 border-b border-border/60 shrink-0 text-left gap-1">
-        <SheetTitle className="text-base font-semibold">Manage members</SheetTitle>
+        <SheetTitle className="text-base font-semibold">
+          Manage members
+        </SheetTitle>
         <SheetDescription className="text-sm text-muted-foreground">
-          Assign people and departments to <span className="font-medium">{role.name}</span>.
+          Assign people and departments to{" "}
+          <span className="font-medium">{role.name}</span>.
         </SheetDescription>
       </SheetHeader>
 
@@ -215,7 +245,9 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
           <AlertTriangle className="h-8 w-8 text-muted-foreground" />
           <div>
-            <p className="text-sm font-medium text-foreground">Couldn&apos;t load members</p>
+            <p className="text-sm font-medium text-foreground">
+              Couldn&apos;t load members
+            </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {getApiError(membersQuery.error)}
             </p>
@@ -242,7 +274,10 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold flex items-center gap-1.5">
-                  <UserCircle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <UserCircle
+                    className="h-4 w-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                   Users
                 </h3>
                 <Badge variant="outline" className="text-[10px]">
@@ -298,7 +333,10 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                         variant="ghost"
                         size="sm"
                         className="h-6 px-2 text-xs"
-                        disabled={userPage >= orgMembersTotalPages || orgMembersQuery.isFetching}
+                        disabled={
+                          userPage >= orgMembersTotalPages ||
+                          orgMembersQuery.isFetching
+                        }
                         onClick={handleUserPageNext}
                         aria-label="Next page of users"
                       >
@@ -308,9 +346,15 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                   </div>
                 )}
               </Command>
-              <div className="space-y-1.5" role="list" aria-label="Directly assigned users">
+              <div
+                className="space-y-1.5"
+                role="list"
+                aria-label="Directly assigned users"
+              >
                 {directUsers.length === 0 ? (
-                  <p className="text-xs text-muted-foreground px-1">No users directly assigned.</p>
+                  <p className="text-xs text-muted-foreground px-1">
+                    No users directly assigned.
+                  </p>
                 ) : (
                   directUsers.map((member) => (
                     <MemberRow
@@ -330,7 +374,10 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold flex items-center gap-1.5">
-                  <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <Building2
+                    className="h-4 w-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                   Departments
                 </h3>
                 <Badge variant="outline" className="text-[10px]">
@@ -362,7 +409,9 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                 aria-label="Assigned departments"
               >
                 {assignedDepartments.length === 0 ? (
-                  <p className="text-xs text-muted-foreground px-1">No departments assigned.</p>
+                  <p className="text-xs text-muted-foreground px-1">
+                    No departments assigned.
+                  </p>
                 ) : (
                   assignedDepartments.map((member) => (
                     <DepartmentRow
@@ -389,7 +438,11 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                   No one has this role yet. Assign users or departments above.
                 </p>
               ) : (
-                <div className="space-y-1.5" role="list" aria-label="Effective role members">
+                <div
+                  className="space-y-1.5"
+                  role="list"
+                  aria-label="Effective role members"
+                >
                   {effectiveList.map(([principalId, user]) => (
                     <div
                       key={principalId}
@@ -397,7 +450,10 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                       className="flex items-center gap-3 rounded-md border border-border/50 px-3 py-2"
                     >
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.image ?? undefined} alt={user.name ?? ""} />
+                        <AvatarImage
+                          src={user.image ?? undefined}
+                          alt={user.name ?? ""}
+                        />
                         <AvatarFallback className="text-[10px]">
                           {getInitials(user.name ?? user.email ?? "?")}
                         </AvatarFallback>
@@ -414,7 +470,11 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                       </div>
                       <div className="flex flex-wrap items-center justify-end gap-1 shrink-0">
                         {user.vias.map((via) => (
-                          <Badge key={via} variant="secondary" className="text-[9px]">
+                          <Badge
+                            key={via}
+                            variant="secondary"
+                            className="text-[9px]"
+                          >
                             {via}
                           </Badge>
                         ))}
@@ -444,7 +504,10 @@ interface AssignableUserItemProps {
 }
 
 function AssignableUserItem({ member, busy, onAdd }: AssignableUserItemProps) {
-  const handleSelect = useCallback(() => onAdd(member.userId), [member.userId, onAdd]);
+  const handleSelect = useCallback(
+    () => onAdd(member.userId),
+    [member.userId, onAdd],
+  );
 
   return (
     <CommandItem
@@ -463,13 +526,18 @@ function AssignableUserItem({ member, busy, onAdd }: AssignableUserItemProps) {
       <div className="min-w-0 flex-1">
         <p className="text-[13px] truncate">{member.name ?? member.email}</p>
         {member.name && (
-          <p className="text-[11px] text-muted-foreground truncate">{member.email}</p>
+          <p className="text-[11px] text-muted-foreground truncate">
+            {member.email}
+          </p>
         )}
       </div>
       {busy ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
       ) : (
-        <Plus className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+        <Plus
+          className="h-3.5 w-3.5 text-muted-foreground"
+          aria-hidden="true"
+        />
       )}
     </CommandItem>
   );
@@ -481,8 +549,15 @@ interface AssignableDepartmentItemProps {
   onAdd: (departmentId: number) => void;
 }
 
-function AssignableDepartmentItem({ department, busy, onAdd }: AssignableDepartmentItemProps) {
-  const handleSelect = useCallback(() => onAdd(department.id), [department.id, onAdd]);
+function AssignableDepartmentItem({
+  department,
+  busy,
+  onAdd,
+}: AssignableDepartmentItemProps) {
+  const handleSelect = useCallback(
+    () => onAdd(department.id),
+    [department.id, onAdd],
+  );
 
   return (
     <CommandItem
@@ -497,7 +572,10 @@ function AssignableDepartmentItem({ department, busy, onAdd }: AssignableDepartm
       {busy ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
       ) : (
-        <Plus className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+        <Plus
+          className="h-3.5 w-3.5 text-muted-foreground"
+          aria-hidden="true"
+        />
       )}
     </CommandItem>
   );
@@ -512,8 +590,18 @@ interface MemberRowProps {
   onRemove: (userId: string) => void;
 }
 
-function MemberRow({ name, subtitle, image, principalId, removing, onRemove }: MemberRowProps) {
-  const handleRemove = useCallback(() => onRemove(principalId), [principalId, onRemove]);
+function MemberRow({
+  name,
+  subtitle,
+  image,
+  principalId,
+  removing,
+  onRemove,
+}: MemberRowProps) {
+  const handleRemove = useCallback(
+    () => onRemove(principalId),
+    [principalId, onRemove],
+  );
 
   return (
     <div
@@ -527,9 +615,13 @@ function MemberRow({ name, subtitle, image, principalId, removing, onRemove }: M
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-medium truncate">{name ?? subtitle ?? "Unknown"}</p>
+        <p className="text-[13px] font-medium truncate">
+          {name ?? subtitle ?? "Unknown"}
+        </p>
         {subtitle && name && (
-          <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
+          <p className="text-[11px] text-muted-foreground truncate">
+            {subtitle}
+          </p>
         )}
       </div>
       <Button
@@ -557,8 +649,16 @@ interface DepartmentRowProps {
   onRemove: (departmentId: number) => void;
 }
 
-function DepartmentRow({ name, principalId, removing, onRemove }: DepartmentRowProps) {
-  const handleRemove = useCallback(() => onRemove(principalId), [principalId, onRemove]);
+function DepartmentRow({
+  name,
+  principalId,
+  removing,
+  onRemove,
+}: DepartmentRowProps) {
+  const handleRemove = useCallback(
+    () => onRemove(principalId),
+    [principalId, onRemove],
+  );
 
   return (
     <div
@@ -571,7 +671,9 @@ function DepartmentRow({ name, principalId, removing, onRemove }: DepartmentRowP
       >
         <Building2 className="h-4 w-4 text-muted-foreground" />
       </span>
-      <p className="text-[13px] font-medium truncate flex-1">{name ?? "Department"}</p>
+      <p className="text-[13px] font-medium truncate flex-1">
+        {name ?? "Department"}
+      </p>
       <Button
         variant="ghost"
         size="icon"

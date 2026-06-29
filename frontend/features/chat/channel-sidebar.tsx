@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquareText, PanelLeftClose, Search, X } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
-import { useChatChannels, useChatOnlineUsers } from "@/lib/api/hooks";
+import { useChatChannels, useChatOnlineUsers } from "@/hooks/api";
 import type { Channel } from "./chat-types";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelItem } from "./channel-item";
@@ -21,8 +21,17 @@ interface ChannelListEntryProps {
   onSelectChannel: (id: number) => void;
 }
 
-function ChannelListEntry({ channel: ch, activeChannelId, currentUserId, onlineUserIds, onSelectChannel }: ChannelListEntryProps) {
-  const handleClick = useCallback(() => onSelectChannel(ch.id), [ch.id, onSelectChannel]);
+function ChannelListEntry({
+  channel: ch,
+  activeChannelId,
+  currentUserId,
+  onlineUserIds,
+  onSelectChannel,
+}: ChannelListEntryProps) {
+  const handleClick = useCallback(
+    () => onSelectChannel(ch.id),
+    [ch.id, onSelectChannel],
+  );
   return (
     <ChannelItem
       channel={ch}
@@ -59,9 +68,15 @@ export function ChannelSidebar({
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    [],
+  );
   const handleClearSearch = useCallback(() => setSearch(""), []);
-  const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
+  const handleToggleGroups = useCallback(
+    () => setGroupsCollapsed((p) => !p),
+    [],
+  );
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
 
   useEffect(() => {
@@ -73,7 +88,7 @@ export function ChannelSidebar({
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
-    [onlineUsers]
+    [onlineUsers],
   );
 
   const filteredChannels = useMemo(() => {
@@ -83,17 +98,17 @@ export function ChannelSidebar({
     return channels.filter(
       (ch) =>
         ch.name.toLowerCase().includes(q) ||
-        ch.lastMessage?.content?.toLowerCase().includes(q)
+        ch.lastMessage?.content?.toLowerCase().includes(q),
     );
   }, [channels, search]);
 
   const dms = useMemo(
     () => filteredChannels.filter((c) => c.type === "DIRECT"),
-    [filteredChannels]
+    [filteredChannels],
   );
   const groups = useMemo(
     () => filteredChannels.filter((c) => c.type === "GROUP"),
-    [filteredChannels]
+    [filteredChannels],
   );
 
   return (
@@ -112,8 +127,16 @@ export function ChannelSidebar({
             </div>
           </div>
           <div className="flex items-center gap-0.5">
-            <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
-            <NewGroupDialog open={newGroupOpen} onOpenChange={setNewGroupOpen} onCreated={onSelectChannel} />
+            <NewDMDialog
+              open={newDMOpen}
+              onOpenChange={setNewDMOpen}
+              onCreated={onSelectChannel}
+            />
+            <NewGroupDialog
+              open={newGroupOpen}
+              onOpenChange={setNewGroupOpen}
+              onCreated={onSelectChannel}
+            />
             {onCollapse && (
               <button
                 onClick={onCollapse}
@@ -209,7 +232,9 @@ export function ChannelSidebar({
                   {search ? "No results found" : "No conversations yet"}
                 </p>
                 <p className="text-[11px] text-muted-foreground/50 mt-1">
-                  {search ? "Try a different search" : "Start a new conversation"}
+                  {search
+                    ? "Try a different search"
+                    : "Start a new conversation"}
                 </p>
               </div>
             )}

@@ -13,58 +13,84 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { X, Plus, Linkedin, Twitter, Github, Globe, User } from "lucide-react";
-import { useUpdateProfile } from "@/lib/api/hooks/hr";
+import { useUpdateProfile } from "@/hooks/api/hr";
 import { resolveImageUrl } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
 
-
-const schema = z.object({
-  image: z.string().url().optional().or(z.literal("")),
-  bio: z.string().max(500, "Bio must be 500 characters or less").optional(),
-  linkedinUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  twitterUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  githubUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  websiteUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  newSkill: z.string().optional(),
-}).superRefine((data, ctx) => {
-  const social = [
-    { field: "linkedinUrl" as const, label: "LinkedIn" },
-    { field: "twitterUrl" as const, label: "Twitter" },
-    { field: "githubUrl" as const, label: "GitHub" },
-    { field: "websiteUrl" as const, label: "Website" },
-  ];
-  const seen = new Map<string, string>();
-  for (const { field, label } of social) {
-    const url = data[field]?.trim();
-    if (!url) continue;
-    const normalized = url.toLowerCase();
-    if (seen.has(normalized)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `This URL is already used for ${seen.get(normalized)}`,
-        path: [field],
-      });
-    } else {
-      seen.set(normalized, label);
+const schema = z
+  .object({
+    image: z.string().url().optional().or(z.literal("")),
+    bio: z.string().max(500, "Bio must be 500 characters or less").optional(),
+    linkedinUrl: z
+      .string()
+      .url("Must be a valid URL")
+      .optional()
+      .or(z.literal("")),
+    twitterUrl: z
+      .string()
+      .url("Must be a valid URL")
+      .optional()
+      .or(z.literal("")),
+    githubUrl: z
+      .string()
+      .url("Must be a valid URL")
+      .optional()
+      .or(z.literal("")),
+    websiteUrl: z
+      .string()
+      .url("Must be a valid URL")
+      .optional()
+      .or(z.literal("")),
+    newSkill: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const social = [
+      { field: "linkedinUrl" as const, label: "LinkedIn" },
+      { field: "twitterUrl" as const, label: "Twitter" },
+      { field: "githubUrl" as const, label: "GitHub" },
+      { field: "websiteUrl" as const, label: "Website" },
+    ];
+    const seen = new Map<string, string>();
+    for (const { field, label } of social) {
+      const url = data[field]?.trim();
+      if (!url) continue;
+      const normalized = url.toLowerCase();
+      if (seen.has(normalized)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `This URL is already used for ${seen.get(normalized)}`,
+          path: [field],
+        });
+      } else {
+        seen.set(normalized, label);
+      }
     }
-  }
-});
+  });
 
 type FormValues = z.infer<typeof schema>;
-
 
 interface SelfEditProfileFormProps {
   employee: Employee;
   onSaved?: () => void;
 }
 
-export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormProps) {
+export function SelfEditProfileForm({
+  employee,
+  onSaved,
+}: SelfEditProfileFormProps) {
   const updateProfile = useUpdateProfile();
   const [skills, setSkills] = useState<string[]>(employee.skills ?? []);
   const [skillError, setSkillError] = useState<string | null>(null);
 
-  const fullName = `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() || "?";
-  const initials = fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
+  const fullName =
+    `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() || "?";
+  const initials =
+    fullName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "?";
 
   const {
     register,
@@ -159,7 +185,10 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-1">
-              <Label htmlFor="image" className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Label
+                htmlFor="image"
+                className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
                 <User className="h-3.5 w-3.5" />
                 Profile Photo URL
               </Label>
@@ -170,10 +199,13 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
                 className="h-8 text-sm"
               />
               {errors.image && (
-                <p className="text-xs text-destructive">{errors.image.message}</p>
+                <p className="text-xs text-destructive">
+                  {errors.image.message}
+                </p>
               )}
               <p className="text-[11px] text-muted-foreground">
-                Paste a direct image URL (jpg/png). Use your company photo or a professional headshot.
+                Paste a direct image URL (jpg/png). Use your company photo or a
+                professional headshot.
               </p>
             </div>
           </div>
@@ -182,7 +214,10 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
 
       <Card>
         <CardContent className="p-4 space-y-2">
-          <Label htmlFor="bio" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <Label
+            htmlFor="bio"
+            className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          >
             Bio
           </Label>
           <Textarea
@@ -193,7 +228,9 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
             className="text-sm resize-none"
           />
           <div className="flex justify-between">
-            {errors.bio && <p className="text-xs text-destructive">{errors.bio.message}</p>}
+            {errors.bio && (
+              <p className="text-xs text-destructive">{errors.bio.message}</p>
+            )}
             <p className="text-[11px] text-muted-foreground ml-auto">
               {(watch("bio") ?? "").length}/500
             </p>
@@ -208,7 +245,11 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
           </Label>
           <div className="flex flex-wrap gap-1.5 min-h-[2rem]">
             {skills.map((skill) => (
-              <Badge key={skill} variant="secondary" className="text-xs gap-1 pr-1">
+              <Badge
+                key={skill}
+                variant="secondary"
+                className="text-xs gap-1 pr-1"
+              >
                 {skill}
                 <button
                   type="button"
@@ -221,7 +262,9 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
               </Badge>
             ))}
             {skills.length === 0 && (
-              <p className="text-xs text-muted-foreground">No skills added yet.</p>
+              <p className="text-xs text-muted-foreground">
+                No skills added yet.
+              </p>
             )}
           </div>
           <div className="space-y-1">
@@ -233,7 +276,13 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
                 onChange={handleSkillInputChange}
                 onKeyDown={handleSkillKeyDown}
               />
-              <Button type="button" size="sm" variant="outline" className="h-8 gap-1" onClick={addSkill}>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1"
+                onClick={addSkill}
+              >
                 <Plus className="h-3.5 w-3.5" />
                 Add
               </Button>
@@ -286,14 +335,16 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
       <Button
         type="submit"
         className="w-full"
-        disabled={updateProfile.isPending || (!isDirty && skills === (employee.skills ?? []))}
+        disabled={
+          updateProfile.isPending ||
+          (!isDirty && skills === (employee.skills ?? []))
+        }
       >
         {updateProfile.isPending ? "Saving…" : "Save Profile"}
       </Button>
     </form>
   );
 }
-
 
 interface SocialFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string;
@@ -302,11 +353,24 @@ interface SocialFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
-const SocialField = ({ id, icon, placeholder, error, ...rest }: SocialFieldProps) => (
+const SocialField = ({
+  id,
+  icon,
+  placeholder,
+  error,
+  ...rest
+}: SocialFieldProps) => (
   <div>
     <div className="flex items-center gap-2">
-      <div className="flex items-center justify-center w-7 h-8 shrink-0">{icon}</div>
-      <Input id={id} {...rest} placeholder={placeholder} className="h-8 text-sm" />
+      <div className="flex items-center justify-center w-7 h-8 shrink-0">
+        {icon}
+      </div>
+      <Input
+        id={id}
+        {...rest}
+        placeholder={placeholder}
+        className="h-8 text-sm"
+      />
     </div>
     {error && <p className="text-xs text-destructive mt-0.5 pl-9">{error}</p>}
   </div>

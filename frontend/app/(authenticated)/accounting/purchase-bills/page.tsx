@@ -7,12 +7,25 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,@/hooks/api/accounting
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { usePurchaseBills } from "@/lib/api/hooks/accounting";
+import { usePurchaseBills } from "@/hooks/hooks/accounting";
 import type { PurchaseBillStatus } from "@/types/accounting";
 
 type StatusFilter = "ALL" | PurchaseBillStatus;
@@ -26,7 +39,10 @@ const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const STATUS_VARIANT: Record<PurchaseBillStatus, "default" | "secondary" | "destructive" | "outline"> = {
+const STATUS_VARIANT: Record<
+  PurchaseBillStatus,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   DRAFT: "secondary",
   POSTED: "default",
   PARTIALLY_PAID: "outline",
@@ -139,16 +155,23 @@ export default function PurchaseBillsListPage() {
               {items.map((bill) => (
                 <TableRow key={bill.id}>
                   <TableCell className="font-mono text-xs">
-                    <Link href={`/accounting/purchase-bills/${bill.id}`} className="text-foreground hover:text-blue-600 hover:underline">
+                    <Link
+                      href={`/accounting/purchase-bills/${bill.id}`}
+                      className="text-foreground hover:text-blue-600 hover:underline"
+                    >
                       {bill.billNumber}
                     </Link>
                   </TableCell>
                   <TableCell>{bill.vendorName ?? "—"}</TableCell>
                   <TableCell>{formatDate(bill.billDate)}</TableCell>
                   <TableCell>{formatDate(bill.dueDate)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{Number(bill.total).toFixed(2)}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {Number(bill.total).toFixed(2)}
+                  </TableCell>
                   <TableCell>
-                    <Badge variant={STATUS_VARIANT[bill.status]}>{bill.status}</Badge>
+                    <Badge variant={STATUS_VARIANT[bill.status]}>
+                      {bill.status}
+                    </Badge>
                   </TableCell>
                 </TableRow>
               ))}

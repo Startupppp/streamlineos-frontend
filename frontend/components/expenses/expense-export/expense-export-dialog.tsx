@@ -37,9 +37,9 @@ import {
   exportExpenses,
   emailExpenseReport,
   type ExportFilters,
-} from "@/server/actions/expense-export";
+} from "@/server/expense-export";
 import type { ExpenseFilters } from "@/types/hr/expenses";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
+import { useHrEmployees } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { usePdfRenderer } from "./pdf-renderer";
 import { downloadCSV, downloadXLSX } from "./xlsx-renderer";
@@ -62,7 +62,8 @@ const FORMAT_OPTIONS: {
   {
     value: "csv",
     label: "CSV",
-    description: "Comma-separated values, compatible with Excel and Google Sheets",
+    description:
+      "Comma-separated values, compatible with Excel and Google Sheets",
     icon: File,
   },
   {
@@ -89,7 +90,6 @@ export function ExpenseExportDialog({
   categories = [],
   paymentMethods = DEFAULT_PAYMENT_METHODS,
 }: ExpenseExportDialogProps) {
-
   const [open, setOpen] = useState(false);
 
   const [format, setFormat] = useState<ExportFormat>("xlsx");
@@ -107,7 +107,7 @@ export function ExpenseExportDialog({
   const [exportCategory, setExportCategory] = useState("all");
   const [exportPayment, setExportPayment] = useState("all");
   const [exportStatus, setExportStatus] = useState(
-    filters.status && filters.status !== "all" ? String(filters.status) : "all"
+    filters.status && filters.status !== "all" ? String(filters.status) : "all",
   );
   const [exportUserId, setExportUserId] = useState(filters.userId || "all");
 
@@ -126,13 +126,13 @@ export function ExpenseExportDialog({
     const fromError = fromInFuture
       ? "From date cannot be in the future"
       : rangeInvalid
-      ? "From date must be before To date"
-      : null;
+        ? "From date must be before To date"
+        : null;
     const toError = toInFuture
       ? "To date cannot be in the future"
       : rangeInvalid
-      ? "To date must be after From date"
-      : null;
+        ? "To date must be after From date"
+        : null;
     return { from: fromError, to: toError };
   }, [dateFrom, dateTo]);
 
@@ -148,7 +148,8 @@ export function ExpenseExportDialog({
     category: exportCategory !== "all" ? exportCategory : filters.category,
     status: exportStatus !== "all" ? exportStatus : filters.status,
     userId: exportUserId !== "all" ? exportUserId : filters.userId,
-    paymentMethod: exportPayment !== "all" ? exportPayment : filters.paymentMethod,
+    paymentMethod:
+      exportPayment !== "all" ? exportPayment : filters.paymentMethod,
     minAmount: filters.minAmount,
     maxAmount: filters.maxAmount,
     search: filters.search,
@@ -232,7 +233,11 @@ export function ExpenseExportDialog({
       setDateTo(filters.endDate || "");
       setExportCategory("all");
       setExportPayment("all");
-      setExportStatus(filters.status && filters.status !== "all" ? String(filters.status) : "all");
+      setExportStatus(
+        filters.status && filters.status !== "all"
+          ? String(filters.status)
+          : "all",
+      );
       setExportUserId(filters.userId || "all");
       setEmailTarget("BOTH");
     }
@@ -263,7 +268,6 @@ export function ExpenseExportDialog({
           </SheetHeader>
 
           <div className="space-y-5">
-
             <div className="space-y-3">
               <Label className="text-sm font-medium flex items-center gap-1.5">
                 <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
@@ -271,21 +275,41 @@ export function ExpenseExportDialog({
               </Label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground block">From</Label>
-                  <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="From date" toDate={new Date()} />
+                  <Label className="text-xs text-muted-foreground block">
+                    From
+                  </Label>
+                  <DatePicker
+                    value={dateFrom}
+                    onChange={setDateFrom}
+                    placeholder="From date"
+                    toDate={new Date()}
+                  />
                   {dateFieldErrors.from && (
                     <p className="flex items-center gap-1 text-xs text-destructive">
-                      <AlertCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      <AlertCircle
+                        className="h-3 w-3 shrink-0"
+                        aria-hidden="true"
+                      />
                       {dateFieldErrors.from}
                     </p>
                   )}
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground block">To</Label>
-                  <DatePicker value={dateTo} onChange={setDateTo} placeholder="To date" toDate={new Date()} />
+                  <Label className="text-xs text-muted-foreground block">
+                    To
+                  </Label>
+                  <DatePicker
+                    value={dateTo}
+                    onChange={setDateTo}
+                    placeholder="To date"
+                    toDate={new Date()}
+                  />
                   {dateFieldErrors.to && (
                     <p className="flex items-center gap-1 text-xs text-destructive">
-                      <AlertCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      <AlertCircle
+                        className="h-3 w-3 shrink-0"
+                        aria-hidden="true"
+                      />
                       {dateFieldErrors.to}
                     </p>
                   )}
@@ -306,7 +330,9 @@ export function ExpenseExportDialog({
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Status</Label>
+                <Label className="text-xs text-muted-foreground mb-1 block">
+                  Status
+                </Label>
                 <Select value={exportStatus} onValueChange={setExportStatus}>
                   <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
@@ -321,8 +347,13 @@ export function ExpenseExportDialog({
                 </Select>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Category</Label>
-                <Select value={exportCategory} onValueChange={setExportCategory}>
+                <Label className="text-xs text-muted-foreground mb-1 block">
+                  Category
+                </Label>
+                <Select
+                  value={exportCategory}
+                  onValueChange={setExportCategory}
+                >
                   <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
@@ -337,7 +368,9 @@ export function ExpenseExportDialog({
                 </Select>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Payment</Label>
+                <Label className="text-xs text-muted-foreground mb-1 block">
+                  Payment
+                </Label>
                 <Select value={exportPayment} onValueChange={setExportPayment}>
                   <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
@@ -356,7 +389,9 @@ export function ExpenseExportDialog({
 
             {employees.length > 0 && (
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Spent By</Label>
+                <Label className="text-xs text-muted-foreground mb-1 block">
+                  Spent By
+                </Label>
                 <Select value={exportUserId} onValueChange={setExportUserId}>
                   <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
@@ -367,7 +402,9 @@ export function ExpenseExportDialog({
                       .filter((e) => e.isActive)
                       .map((e) => (
                         <SelectItem key={e.id} value={e.id}>
-                          {[e.firstName, e.lastName].filter(Boolean).join(" ") || e.email}
+                          {[e.firstName, e.lastName]
+                            .filter(Boolean)
+                            .join(" ") || e.email}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -386,16 +423,22 @@ export function ExpenseExportDialog({
                   <label
                     key={option.value}
                     className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
-                      format === option.value ? "border-primary bg-primary/5" : "border-border"
+                      format === option.value
+                        ? "border-primary bg-primary/5"
+                        : "border-border"
                     }`}
                   >
                     <RadioGroupItem value={option.value} className="mt-0.5" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <option.icon className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium text-sm">{option.label}</span>
+                        <span className="font-medium text-sm">
+                          {option.label}
+                        </span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">{option.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {option.description}
+                      </p>
                     </div>
                   </label>
                 ))}
@@ -410,18 +453,28 @@ export function ExpenseExportDialog({
                     Add title, date, and filter information
                   </p>
                 </div>
-                <Switch checked={includeHeader} onCheckedChange={setIncludeHeader} />
+                <Switch
+                  checked={includeHeader}
+                  onCheckedChange={setIncludeHeader}
+                />
               </div>
               <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
                 <div className="space-y-0.5">
                   <Label className="text-sm font-medium">Include Totals</Label>
-                  <p className="text-xs text-muted-foreground">Add summary totals at the end</p>
+                  <p className="text-xs text-muted-foreground">
+                    Add summary totals at the end
+                  </p>
                 </div>
-                <Switch checked={includeTotals} onCheckedChange={setIncludeTotals} />
+                <Switch
+                  checked={includeTotals}
+                  onCheckedChange={setIncludeTotals}
+                />
               </div>
             </div>
 
-            {Object.values(exportFilters).some((v) => v !== undefined && v !== "") && (
+            {Object.values(exportFilters).some(
+              (v) => v !== undefined && v !== "",
+            ) && (
               <div className="p-4 bg-muted/30 rounded-lg border text-sm">
                 <p className="font-medium text-sm mb-2">Applied Filters:</p>
                 <ul className="text-muted-foreground space-y-1 text-xs">
@@ -434,7 +487,9 @@ export function ExpenseExportDialog({
                   {exportFilters.status && exportFilters.status !== "all" && (
                     <li>Status: {exportFilters.status}</li>
                   )}
-                  {exportFilters.category && <li>Category: {exportFilters.category}</li>}
+                  {exportFilters.category && (
+                    <li>Category: {exportFilters.category}</li>
+                  )}
                   {exportFilters.paymentMethod && (
                     <li>Payment: {exportFilters.paymentMethod}</li>
                   )}
@@ -453,7 +508,12 @@ export function ExpenseExportDialog({
               </Button>
               <Button
                 onClick={handleExport}
-                disabled={isExporting || exportComplete || isSendingEmail || !!dateRangeError}
+                disabled={
+                  isExporting ||
+                  exportComplete ||
+                  isSendingEmail ||
+                  !!dateRangeError
+                }
                 className="gap-2"
               >
                 {isExporting ? (
@@ -478,7 +538,9 @@ export function ExpenseExportDialog({
             <div className="flex items-center gap-2">
               <Select
                 value={emailTarget}
-                onValueChange={(v) => setEmailTarget(v as "CEO" | "HR" | "BOTH")}
+                onValueChange={(v) =>
+                  setEmailTarget(v as "CEO" | "HR" | "BOTH")
+                }
               >
                 <SelectTrigger className="h-9 w-[130px] text-xs shrink-0">
                   <Mail className="h-3.5 w-3.5 mr-1.5 text-primary" />

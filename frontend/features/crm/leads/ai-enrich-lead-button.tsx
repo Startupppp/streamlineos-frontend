@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEnrichLead } from "@/lib/api/hooks/ai";
+import { useEnrichLead } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
@@ -26,14 +26,25 @@ interface AIEnrichLeadButtonProps {
   city?: string | null;
 }
 
-export function AIEnrichLeadButton({ leadName, company, email, designation, city }: AIEnrichLeadButtonProps) {
+export function AIEnrichLeadButton({
+  leadName,
+  company,
+  email,
+  designation,
+  city,
+}: AIEnrichLeadButtonProps) {
   const [open, setOpen] = useState(false);
   const enrichMutation = useEnrichLead();
   const result = enrichMutation.data;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.enrichment");
 
   const handleEnrich = () => {
-    if (!featureEnabled) { toast.error(`AI lead enrichment requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
+    if (!featureEnabled) {
+      toast.error(
+        `AI lead enrichment requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`,
+      );
+      return;
+    }
     enrichMutation.mutate(
       {
         name: leadName,
@@ -88,19 +99,30 @@ export function AIEnrichLeadButton({ leadName, company, email, designation, city
                     <Building2 className="h-3 w-3" />
                     Company Insight
                   </p>
-                  <p className="text-sm leading-snug">{result.companyInsight}</p>
+                  <p className="text-sm leading-snug">
+                    {result.companyInsight}
+                  </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="secondary" className="text-[10px]">{result.industry}</Badge>
-                    <Badge variant="outline" className="text-[10px]">{result.estimatedCompanySize}</Badge>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {result.industry}
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px]">
+                      {result.estimatedCompanySize}
+                    </Badge>
                   </div>
                 </div>
 
                 {result.talkingPoints.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Talking Points</p>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+                      Talking Points
+                    </p>
                     <ul className="space-y-1.5">
                       {result.talkingPoints.map((p, i) => (
-                        <li key={i} className="flex items-start gap-1.5 text-xs">
+                        <li
+                          key={i}
+                          className="flex items-start gap-1.5 text-xs"
+                        >
                           <span className="text-blue-600 mt-0.5">•</span>
                           <span>{p}</span>
                         </li>
@@ -117,7 +139,10 @@ export function AIEnrichLeadButton({ leadName, company, email, designation, city
                     </p>
                     <ul className="space-y-1.5">
                       {result.potentialNeeds.map((n, i) => (
-                        <li key={i} className="flex items-start gap-1.5 text-xs">
+                        <li
+                          key={i}
+                          className="flex items-start gap-1.5 text-xs"
+                        >
                           <span className="text-blue-400 mt-0.5">•</span>
                           <span>{n}</span>
                         </li>
@@ -131,10 +156,17 @@ export function AIEnrichLeadButton({ leadName, company, email, designation, city
                     <Lightbulb className="h-3 w-3" />
                     Recommended Approach
                   </p>
-                  <p className="text-xs leading-snug">{result.recommendedApproach}</p>
+                  <p className="text-xs leading-snug">
+                    {result.recommendedApproach}
+                  </p>
                 </div>
 
-                <Button onClick={handleEnrich} variant="outline" size="sm" className="w-full">
+                <Button
+                  onClick={handleEnrich}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
                   <Sparkles className="h-3.5 w-3.5 mr-1.5" />
                   Regenerate
                 </Button>

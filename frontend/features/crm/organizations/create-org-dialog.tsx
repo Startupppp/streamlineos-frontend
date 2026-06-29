@@ -20,7 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useCreateCrmOrganization } from "@/lib/api/hooks/crm";
+import { useCreateCrmOrganization } from "@/hooks/api/crm";
 import { toast } from "sonner";
 
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-1000", "1000+"] as const;

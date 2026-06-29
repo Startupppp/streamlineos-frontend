@@ -6,8 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { CheckCircle, ArrowLeft, ArrowRight, Check, Loader2, Send, Shield, type LucideIcon } from "lucide-react";
-import { submitOnboarding } from "@/server/actions/onboarding-actions";
+import {
+  CheckCircle,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Loader2,
+  Send,
+  Shield,
+  type LucideIcon,
+} from "lucide-react";
+import { submitOnboarding } from "@/server/onboarding-actions";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
@@ -40,7 +49,12 @@ interface ReviewTabProps {
   onBack: () => void;
 }
 
-export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: ReviewTabProps) {
+export function ReviewTab({
+  completedSteps,
+  steps,
+  reviewStepId,
+  onBack,
+}: ReviewTabProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,7 +64,10 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
   const dataSteps = steps.filter((s) => s.id !== reviewStepId);
   const allDataStepsComplete = dataSteps.every((s) => completedSteps.has(s.id));
 
-  const handleGoToDashboard = useCallback(() => router.push("/dashboard"), [router]);
+  const handleGoToDashboard = useCallback(
+    () => router.push("/dashboard"),
+    [router],
+  );
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -79,21 +96,39 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
             animate="visible"
             className="flex flex-col items-center space-y-4"
           >
-            <motion.div variants={fadeUp} className="bg-green-500/15 p-4 rounded-full">
-              <CheckCircle className="h-16 w-16 text-green-500" aria-hidden="true" />
+            <motion.div
+              variants={fadeUp}
+              className="bg-green-500/15 p-4 rounded-full"
+            >
+              <CheckCircle
+                className="h-16 w-16 text-green-500"
+                aria-hidden="true"
+              />
             </motion.div>
-            <motion.h2 variants={fadeUp} className="text-2xl font-bold">You&apos;re All Set!</motion.h2>
-            <motion.p variants={fadeUp} className="text-muted-foreground max-w-md">
-              Your onboarding information has been submitted. The HR team will verify your documents and approve your profile soon.
+            <motion.h2 variants={fadeUp} className="text-2xl font-bold">
+              You&apos;re All Set!
+            </motion.h2>
+            <motion.p
+              variants={fadeUp}
+              className="text-muted-foreground max-w-md"
+            >
+              Your onboarding information has been submitted. The HR team will
+              verify your documents and approve your profile soon.
             </motion.p>
 
-            <motion.div variants={fadeUp} className="w-full max-w-sm space-y-2 pt-4">
+            <motion.div
+              variants={fadeUp}
+              className="w-full max-w-sm space-y-2 pt-4"
+            >
               {dataSteps.map((step) => (
                 <div
                   key={step.id}
                   className="flex items-center gap-3 p-3 rounded-lg text-left bg-green-500/10"
                 >
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" aria-hidden="true" />
+                  <Check
+                    className="h-5 w-5 text-green-500 flex-shrink-0"
+                    aria-hidden="true"
+                  />
                   <span className="text-sm font-medium text-green-600">
                     {step.label}
                   </span>
@@ -104,13 +139,14 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
               ))}
 
               <div className="flex items-center gap-3 p-3 rounded-lg text-left bg-primary/10">
-                <Shield className="h-5 w-5 text-primary flex-shrink-0" aria-hidden="true" />
+                <Shield
+                  className="h-5 w-5 text-primary flex-shrink-0"
+                  aria-hidden="true"
+                />
                 <span className="text-sm font-medium text-primary">
                   Role: {roleLabel}
                 </span>
-                <span className="ml-auto text-xs text-primary">
-                  Assigned
-                </span>
+                <span className="ml-auto text-xs text-primary">Assigned</span>
               </div>
             </motion.div>
 
@@ -135,15 +171,27 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
           animate="visible"
           className="flex flex-col items-center space-y-4"
         >
-          <motion.div variants={fadeUp} className="bg-primary/10 p-4 rounded-full">
+          <motion.div
+            variants={fadeUp}
+            className="bg-primary/10 p-4 rounded-full"
+          >
             <Send className="h-12 w-12 text-primary" aria-hidden="true" />
           </motion.div>
-          <motion.h2 variants={fadeUp} className="text-2xl font-bold">Review & Submit</motion.h2>
-          <motion.p variants={fadeUp} className="text-muted-foreground max-w-md">
-            Please review your completed steps below. When you&apos;re ready, click Submit to finalize your onboarding.
+          <motion.h2 variants={fadeUp} className="text-2xl font-bold">
+            Review & Submit
+          </motion.h2>
+          <motion.p
+            variants={fadeUp}
+            className="text-muted-foreground max-w-md"
+          >
+            Please review your completed steps below. When you&apos;re ready,
+            click Submit to finalize your onboarding.
           </motion.p>
 
-          <motion.div variants={fadeUp} className="w-full max-w-sm space-y-2 pt-4">
+          <motion.div
+            variants={fadeUp}
+            className="w-full max-w-sm space-y-2 pt-4"
+          >
             {dataSteps.map((step) => {
               const isCompleted = completedSteps.has(step.id);
               const StepIcon = step.icon;
@@ -153,14 +201,24 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
                   className={`flex items-center gap-3 p-3 rounded-lg text-left ${isCompleted ? "bg-green-500/10" : "bg-muted/50"}`}
                 >
                   {isCompleted ? (
-                    <Check className="h-5 w-5 text-green-500 flex-shrink-0" aria-hidden="true" />
+                    <Check
+                      className="h-5 w-5 text-green-500 flex-shrink-0"
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <StepIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+                    <StepIcon
+                      className="h-5 w-5 text-muted-foreground flex-shrink-0"
+                      aria-hidden="true"
+                    />
                   )}
-                  <span className={`text-sm font-medium ${isCompleted ? "text-green-600" : "text-muted-foreground"}`}>
+                  <span
+                    className={`text-sm font-medium ${isCompleted ? "text-green-600" : "text-muted-foreground"}`}
+                  >
                     {step.label}
                   </span>
-                  <span className={`ml-auto text-xs ${isCompleted ? "text-green-600" : "text-muted-foreground"}`}>
+                  <span
+                    className={`ml-auto text-xs ${isCompleted ? "text-green-600" : "text-muted-foreground"}`}
+                  >
                     {isCompleted ? "Completed" : "Pending"}
                   </span>
                 </div>
@@ -168,17 +226,21 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
             })}
 
             <div className="flex items-center gap-3 p-3 rounded-lg text-left bg-primary/10">
-              <Shield className="h-5 w-5 text-primary flex-shrink-0" aria-hidden="true" />
+              <Shield
+                className="h-5 w-5 text-primary flex-shrink-0"
+                aria-hidden="true"
+              />
               <span className="text-sm font-medium text-primary">
                 Role: {roleLabel}
               </span>
-              <span className="ml-auto text-xs text-primary">
-                Assigned
-              </span>
+              <span className="ml-auto text-xs text-primary">Assigned</span>
             </div>
           </motion.div>
 
-          <motion.p variants={fadeUp} className="text-sm text-muted-foreground italic pt-2">
+          <motion.p
+            variants={fadeUp}
+            className="text-sm text-muted-foreground italic pt-2"
+          >
             Default leave balances will be allocated upon submission
           </motion.p>
 
@@ -187,20 +249,32 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-            <span title={!allDataStepsComplete ? "Complete all steps before submitting" : undefined}>
+            <span
+              title={
+                !allDataStepsComplete
+                  ? "Complete all steps before submitting"
+                  : undefined
+              }
+            >
               <Button
                 onClick={handleSubmit}
                 disabled={!allDataStepsComplete || isSubmitting}
                 aria-busy={isSubmitting}
-                aria-describedby={!allDataStepsComplete ? "review-hint" : undefined}
+                aria-describedby={
+                  !allDataStepsComplete ? "review-hint" : undefined
+                }
               >
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Submit
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </span>
             {!allDataStepsComplete && (
-              <p id="review-hint" className="sr-only">Complete all previous steps to enable this button</p>
+              <p id="review-hint" className="sr-only">
+                Complete all previous steps to enable this button
+              </p>
             )}
           </motion.div>
         </motion.div>

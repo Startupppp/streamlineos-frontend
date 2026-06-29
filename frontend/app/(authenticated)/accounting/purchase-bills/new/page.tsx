@@ -43,8 +43,8 @@ import {
   useAccounts,
   useCreatePurchaseBill,
   type CreatePurchaseBillInput,
-} from "@/lib/api/hooks/accounting";
-import { useClientAccounts } from "@/lib/api/hooks/crm";
+} from "@/hooks/api/accounting";
+import { useClientAccounts } from "@/hooks/api/crm";
 import { INDIAN_STATES } from "@/lib/accounting/indian-states";
 
 const GST_RATES = ["0", "5", "12", "18", "28"] as const;
@@ -230,9 +230,7 @@ export default function NewPurchaseBillPage() {
     });
   }
 
-  function handleReverseChargeChange(
-    checked: boolean | "indeterminate",
-  ): void {
+  function handleReverseChargeChange(checked: boolean | "indeterminate"): void {
     form.setValue("reverseCharge", checked === true);
   }
 
@@ -338,7 +336,10 @@ export default function NewPurchaseBillPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Vendor</FormLabel>
-                    <Select value={field.value} onValueChange={handleVendorChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={handleVendorChange}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select vendor" />
@@ -546,7 +547,9 @@ export default function NewPurchaseBillPage() {
                     <TableHead className="text-right w-[100px]">Qty</TableHead>
                     <TableHead className="text-right w-[120px]">Rate</TableHead>
                     <TableHead className="w-[100px]">GST %</TableHead>
-                    <TableHead className="text-right w-[120px]">Amount</TableHead>
+                    <TableHead className="text-right w-[120px]">
+                      Amount
+                    </TableHead>
                     <TableHead className="w-[60px]" />
                   </TableRow>
                 </TableHeader>
@@ -563,10 +566,7 @@ export default function NewPurchaseBillPage() {
                             name={`items.${index}.description`}
                             render={({ field: f, fieldState }) => (
                               <div>
-                                <Input
-                                  {...f}
-                                  placeholder="What is this for?"
-                                />
+                                <Input {...f} placeholder="What is this for?" />
                                 {fieldState.error && (
                                   <p className="text-xs text-destructive mt-0.5">
                                     {fieldState.error.message}

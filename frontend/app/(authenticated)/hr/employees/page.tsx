@@ -3,8 +3,8 @@
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { LayoutGrid, List, Users, UserPlus } from "lucide-react";
-import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
-import { useDebouncedValue } from "@/hooks/use-debounce";
+import { useHrEmployees, useHrDepartments } from "@/hooks/api/hr";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -142,7 +142,9 @@ export default function EmployeesPage() {
     >
       {filtered.length === 0 ? (
         <EmptyState
-          illustration={<Users className="h-12 w-12 text-muted-foreground/40" />}
+          illustration={
+            <Users className="h-12 w-12 text-muted-foreground/40" />
+          }
           title="No employees match your filters"
           description={
             hasFilters
@@ -171,20 +173,40 @@ export default function EmployeesPage() {
             <caption className="sr-only">Employee directory</caption>
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead scope="col" className="font-semibold text-foreground/80">Employee</TableHead>
-                <TableHead scope="col" className="w-[110px] font-semibold text-foreground/80">
+                <TableHead
+                  scope="col"
+                  className="font-semibold text-foreground/80"
+                >
+                  Employee
+                </TableHead>
+                <TableHead
+                  scope="col"
+                  className="w-[110px] font-semibold text-foreground/80"
+                >
                   Employee ID
                 </TableHead>
-                <TableHead scope="col" className="w-[160px] font-semibold text-foreground/80">
+                <TableHead
+                  scope="col"
+                  className="w-[160px] font-semibold text-foreground/80"
+                >
                   Designation
                 </TableHead>
-                <TableHead scope="col" className="w-[140px] font-semibold text-foreground/80">
+                <TableHead
+                  scope="col"
+                  className="w-[140px] font-semibold text-foreground/80"
+                >
                   Department
                 </TableHead>
-                <TableHead scope="col" className="w-[200px] font-semibold text-foreground/80">
+                <TableHead
+                  scope="col"
+                  className="w-[200px] font-semibold text-foreground/80"
+                >
                   Email
                 </TableHead>
-                <TableHead scope="col" className="w-[90px] font-semibold text-foreground/80">
+                <TableHead
+                  scope="col"
+                  className="w-[90px] font-semibold text-foreground/80"
+                >
                   Status
                 </TableHead>
               </TableRow>

@@ -1,13 +1,21 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Sparkles, Loader2, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
+import {
+  Sparkles,
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
+} from "lucide-react";@/hooks/api/ai
 import { Button } from "@/components/ui/button";
 import {
-  Popover, PopoverContent, PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useAIScoreLead } from "@/lib/api/hooks/ai";
+import { useAIScoreLead } from "@/hooks/hooks/ai";
 import { useFeature } from "@/lib/billing/use-feature";
 import { toast } from "sonner";
 
@@ -17,15 +25,22 @@ interface AIScoreButtonProps {
   compact?: boolean;
 }
 
-export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonProps) {
+export function AIScoreButton({
+  leadId,
+  currentScore,
+  compact,
+}: AIScoreButtonProps) {
   const [open, setOpen] = useState(false);
   const scoreMutation = useAIScoreLead();
   const result = scoreMutation.data;
-  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.lead-scoring");
+  const { enabled: featureEnabled, requiredPlan } =
+    useFeature("ai.lead-scoring");
 
   const handleScore = useCallback(() => {
     if (!featureEnabled) {
-      toast.error(`AI lead scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`);
+      toast.error(
+        `AI lead scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`,
+      );
       return;
     }
     scoreMutation.mutate(leadId, {
@@ -33,10 +48,13 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
     });
   }, [featureEnabled, requiredPlan, scoreMutation, leadId]);
 
-  const handleCompactClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!result) handleScore();
-  }, [result, handleScore]);
+  const handleCompactClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!result) handleScore();
+    },
+    [result, handleScore],
+  );
 
   const scoreColor = (score: number) => {
     if (score >= 80) return "text-emerald-500";
@@ -55,7 +73,11 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
             className="h-7 px-2 text-xs gap-1"
             onClick={handleCompactClick}
             disabled={scoreMutation.isPending || !featureEnabled}
-            title={!featureEnabled ? `Requires ${requiredPlan ?? "PROFESSIONAL"} plan` : undefined}
+            title={
+              !featureEnabled
+                ? `Requires ${requiredPlan ?? "PROFESSIONAL"} plan`
+                : undefined
+            }
           >
             {scoreMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
@@ -63,7 +85,9 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
               <Sparkles className="h-3 w-3 text-blue-600" />
             )}
             {result ? (
-              <span className={cn("font-bold", scoreColor(result.score))}>{result.score}</span>
+              <span className={cn("font-bold", scoreColor(result.score))}>
+                {result.score}
+              </span>
             ) : currentScore ? (
               <span className="text-muted-foreground">{currentScore}</span>
             ) : (
@@ -72,7 +96,11 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
           </Button>
         </PopoverTrigger>
         {result && (
-          <PopoverContent className="w-72 p-3" align="start" onClick={(e) => e.stopPropagation()}>
+          <PopoverContent
+            className="w-72 p-3"
+            align="start"
+            onClick={(e) => e.stopPropagation()}
+          >
             <AIScoreDetails result={result} />
           </PopoverContent>
         )}
@@ -87,7 +115,11 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
         size="sm"
         onClick={handleScore}
         disabled={scoreMutation.isPending || !featureEnabled}
-        title={!featureEnabled ? `Requires ${requiredPlan ?? "PROFESSIONAL"} plan` : undefined}
+        title={
+          !featureEnabled
+            ? `Requires ${requiredPlan ?? "PROFESSIONAL"} plan`
+            : undefined
+        }
         className="w-full"
       >
         {scoreMutation.isPending ? (
@@ -108,25 +140,59 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
   );
 }
 
-function AIScoreDetails({ result }: { result: { score: number; reasoning: string; strengths: string[]; weaknesses: string[]; suggestedActions: string[] } }) {
-  const scoreColor = result.score >= 80 ? "text-emerald-500" : result.score >= 60 ? "text-amber-500" : result.score >= 40 ? "text-orange-500" : "text-red-500";
-  const scoreBg = result.score >= 80 ? "bg-emerald-500/10" : result.score >= 60 ? "bg-amber-500/10" : result.score >= 40 ? "bg-orange-500/10" : "bg-red-500/10";
+function AIScoreDetails({
+  result,
+}: {
+  result: {
+    score: number;
+    reasoning: string;
+    strengths: string[];
+    weaknesses: string[];
+    suggestedActions: string[];
+  };
+}) {
+  const scoreColor =
+    result.score >= 80
+      ? "text-emerald-500"
+      : result.score >= 60
+        ? "text-amber-500"
+        : result.score >= 40
+          ? "text-orange-500"
+          : "text-red-500";
+  const scoreBg =
+    result.score >= 80
+      ? "bg-emerald-500/10"
+      : result.score >= 60
+        ? "bg-amber-500/10"
+        : result.score >= 40
+          ? "bg-orange-500/10"
+          : "bg-red-500/10";
 
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-2">
-        <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center font-bold text-lg", scoreBg, scoreColor)}>
+        <div
+          className={cn(
+            "h-10 w-10 rounded-lg flex items-center justify-center font-bold text-lg",
+            scoreBg,
+            scoreColor,
+          )}
+        >
           {result.score}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium">AI Score</p>
-          <p className="text-[11px] text-muted-foreground leading-snug">{result.reasoning}</p>
+          <p className="text-[11px] text-muted-foreground leading-snug">
+            {result.reasoning}
+          </p>
         </div>
       </div>
 
       {result.strengths.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Strengths</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+            Strengths
+          </p>
           {result.strengths.map((s, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
               <TrendingUp className="h-3 w-3 text-emerald-500 mt-0.5 shrink-0" />
@@ -138,7 +204,9 @@ function AIScoreDetails({ result }: { result: { score: number; reasoning: string
 
       {result.weaknesses.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Weaknesses</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+            Weaknesses
+          </p>
           {result.weaknesses.map((w, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
               <TrendingDown className="h-3 w-3 text-red-400 mt-0.5 shrink-0" />
@@ -150,7 +218,9 @@ function AIScoreDetails({ result }: { result: { score: number; reasoning: string
 
       {result.suggestedActions.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Suggested Actions</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+            Suggested Actions
+          </p>
           {result.suggestedActions.map((a, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
               <AlertCircle className="h-3 w-3 text-blue-400 mt-0.5 shrink-0" />

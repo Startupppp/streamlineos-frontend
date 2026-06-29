@@ -6,23 +6,51 @@ import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
-  Search, Mail, Phone, Building2,
-  ChevronLeft, ChevronRight, Linkedin, MoreHorizontal, Pencil, Trash2,
-  TableIcon, LayoutGrid, Link2, Sparkles, Twitter, Globe, Plus,
+  Search,
+  Mail,
+  Phone,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  Linkedin,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  TableIcon,
+  LayoutGrid,
+  Link2,
+  Sparkles,
+  Twitter,
+  Globe,
+  Plus,
 } from "lucide-react";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
-  TableBody, TableCell, TableHead, TableHeader, TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -30,8 +58,8 @@ import { EmptyTeamIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState, SkeletonTable } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useContacts, useDeleteContact } from "@/lib/api/hooks/crm";
-import { useDebouncedValue } from "@/hooks/use-debounce";
+import { useContacts, useDeleteContact } from "@/hooks/api/crm";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { CreateContactDialog } from "@/features/crm/contacts/create-contact-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -42,7 +70,11 @@ const PAGE_SIZE = 20;
 
 function useEnrichContact() {
   return useMutation({
-    mutationFn: (input: { name: string; email?: string | null; company?: string | null }) =>
+    mutationFn: (input: {
+      name: string;
+      email?: string | null;
+      company?: string | null;
+    }) =>
       apiClient.post<LeadEnrichmentResult>("/ai/enrich-lead", {
         name: input.name,
         email: input.email ?? undefined,
@@ -101,14 +133,17 @@ function ContactActionsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleView}>
-          <Pencil className="h-3.5 w-3.5 mr-2" />View / Edit
+          <Pencil className="h-3.5 w-3.5 mr-2" />
+          View / Edit
         </DropdownMenuItem>
         <DropdownMenuItem disabled={isEnrichPending} onClick={handleEnrich}>
-          <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-600" />Enrich with AI
+          <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-600" />
+          Enrich with AI
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-red-600" onClick={handleDelete}>
-          <Trash2 className="h-3.5 w-3.5 mr-2" />Delete
+          <Trash2 className="h-3.5 w-3.5 mr-2" />
+          Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -130,7 +165,10 @@ export default function ContactsPage() {
   const page = Number(searchParams.get("page")) || 1;
 
   const debouncedSearch = useDebouncedValue(searchInput, 300);
-  const apiSearch = debouncedSearch.length >= 3 || debouncedSearch.length === 0 ? debouncedSearch : "";
+  const apiSearch =
+    debouncedSearch.length >= 3 || debouncedSearch.length === 0
+      ? debouncedSearch
+      : "";
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -158,8 +196,14 @@ export default function ContactsPage() {
 
   const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
 
-  const handleViewTable = useCallback(() => updateParams({ view: null }), [updateParams]);
-  const handleViewCard = useCallback(() => updateParams({ view: "card" }), [updateParams]);
+  const handleViewTable = useCallback(
+    () => updateParams({ view: null }),
+    [updateParams],
+  );
+  const handleViewCard = useCallback(
+    () => updateParams({ view: "card" }),
+    [updateParams],
+  );
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
   const handleSearchChange = useCallback(
@@ -221,7 +265,11 @@ export default function ContactsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Contacts" subtitle="People directory">
-        <SkeletonTable rows={8} columns={9} className="h-[calc(100dvh-16rem)]" />
+        <SkeletonTable
+          rows={8}
+          columns={9}
+          className="h-[calc(100dvh-16rem)]"
+        />
       </PageWrapper>
     );
   }
@@ -267,7 +315,10 @@ export default function ContactsPage() {
             <Button onClick={handleOpenCreate}>
               <Plus className="h-4 w-4 mr-2" /> New Contact
             </Button>
-            <CreateContactDialog open={createOpen} onOpenChange={setCreateOpen} />
+            <CreateContactDialog
+              open={createOpen}
+              onOpenChange={setCreateOpen}
+            />
           </>
         }
         filters={
@@ -282,8 +333,12 @@ export default function ContactsPage() {
           </div>
         }
       >
-        <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
-
+        <motion.div
+          className="space-y-4"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           {view === "table" && (
             <motion.div variants={fadeUp}>
               <div className="border border-border rounded-md flex flex-col h-[calc(100dvh-16rem)] min-h-[320px]">
@@ -292,14 +347,30 @@ export default function ContactsPage() {
                     <table className="w-full caption-bottom text-[11px]">
                       <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
                         <TableRow className="border-b-2 border-border">
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Email</TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Phone</TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Company</TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Title</TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Tags</TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Social</TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Linked To</TableHead>
+                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                            Name
+                          </TableHead>
+                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                            Email
+                          </TableHead>
+                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                            Phone
+                          </TableHead>
+                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                            Company
+                          </TableHead>
+                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                            Title
+                          </TableHead>
+                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                            Tags
+                          </TableHead>
+                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                            Social
+                          </TableHead>
+                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                            Linked To
+                          </TableHead>
                           <TableHead className="text-[10px] w-8 px-2"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -308,99 +379,176 @@ export default function ContactsPage() {
                           <TableRow>
                             <TableCell colSpan={9} className="p-0">
                               <EmptyState
-                                illustration={<EmptyTeamIllustration className="w-28 h-28" />}
+                                illustration={
+                                  <EmptyTeamIllustration className="w-28 h-28" />
+                                }
                                 title="No contacts found"
-                                description={apiSearch ? "No contacts match your search." : "Create your first contact to get started."}
-                                action={apiSearch ? undefined : { label: "New Contact", onClick: handleOpenCreate }}
+                                description={
+                                  apiSearch
+                                    ? "No contacts match your search."
+                                    : "Create your first contact to get started."
+                                }
+                                action={
+                                  apiSearch
+                                    ? undefined
+                                    : {
+                                        label: "New Contact",
+                                        onClick: handleOpenCreate,
+                                      }
+                                }
                                 className="border-0 bg-transparent min-h-[40vh]"
                               />
                             </TableCell>
                           </TableRow>
-                        ) : data?.items.map(contact => (
-                          <TableRow key={contact.id} className="h-8 hover:bg-muted/30 transition-colors">
-                            <TableCell className="px-2 py-1">
-                              <div className="flex items-center gap-2">
-                                <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[9px] font-bold text-blue-600 shrink-0">
-                                  {contact.name[0]?.toUpperCase() ?? "?"}
+                        ) : (
+                          data?.items.map((contact) => (
+                            <TableRow
+                              key={contact.id}
+                              className="h-8 hover:bg-muted/30 transition-colors"
+                            >
+                              <TableCell className="px-2 py-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[9px] font-bold text-blue-600 shrink-0">
+                                    {contact.name[0]?.toUpperCase() ?? "?"}
+                                  </div>
+                                  <span className="text-[12px] font-medium truncate max-w-[120px]">
+                                    {contact.name}
+                                  </span>
                                 </div>
-                                <span className="text-[12px] font-medium truncate max-w-[120px]">{contact.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[140px]">{contact.email || "—"}</TableCell>
-                            <TableCell className="text-[11px] text-muted-foreground font-mono px-2 py-1">{contact.phone || "—"}</TableCell>
-                            <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.company || "—"}</TableCell>
-                            <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.title || "—"}</TableCell>
-                            <TableCell className="px-2 py-1">
-                              {contact.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-0.5">
-                                  {contact.tags.slice(0, 2).map(tag => (
-                                    <Badge key={tag} variant="secondary" className="text-[8px] px-1 py-0 h-4">{tag}</Badge>
-                                  ))}
+                              </TableCell>
+                              <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[140px]">
+                                {contact.email || "—"}
+                              </TableCell>
+                              <TableCell className="text-[11px] text-muted-foreground font-mono px-2 py-1">
+                                {contact.phone || "—"}
+                              </TableCell>
+                              <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">
+                                {contact.company || "—"}
+                              </TableCell>
+                              <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">
+                                {contact.title || "—"}
+                              </TableCell>
+                              <TableCell className="px-2 py-1">
+                                {contact.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-0.5">
+                                    {contact.tags.slice(0, 2).map((tag) => (
+                                      <Badge
+                                        key={tag}
+                                        variant="secondary"
+                                        className="text-[8px] px-1 py-0 h-4"
+                                      >
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell className="px-2 py-1">
+                                <div className="flex items-center gap-1.5">
+                                  {contact.linkedinUrl && (
+                                    <a
+                                      href={contact.linkedinUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      aria-label="LinkedIn profile"
+                                      className="text-muted-foreground hover:text-blue-500 transition-colors"
+                                    >
+                                      <Linkedin className="h-3 w-3" />
+                                    </a>
+                                  )}
+                                  {contact.twitterUrl && (
+                                    <a
+                                      href={contact.twitterUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      aria-label="Twitter profile"
+                                      className="text-muted-foreground hover:text-sky-500 transition-colors"
+                                    >
+                                      <Twitter className="h-3 w-3" />
+                                    </a>
+                                  )}
+                                  {contact.websiteUrl && (
+                                    <a
+                                      href={contact.websiteUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      aria-label="Website"
+                                      className="text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                      <Globe className="h-3 w-3" />
+                                    </a>
+                                  )}
+                                  {!contact.linkedinUrl &&
+                                    !contact.twitterUrl &&
+                                    !contact.websiteUrl && (
+                                      <span className="text-[10px] text-muted-foreground">
+                                        —
+                                      </span>
+                                    )}
                                 </div>
-                              )}
-                            </TableCell>
-                            <TableCell className="px-2 py-1">
-                              <div className="flex items-center gap-1.5">
-                                {contact.linkedinUrl && (
-                                  <a href={contact.linkedinUrl} target="_blank" rel="noopener noreferrer"
-                                    aria-label="LinkedIn profile" className="text-muted-foreground hover:text-blue-500 transition-colors">
-                                    <Linkedin className="h-3 w-3" />
-                                  </a>
-                                )}
-                                {contact.twitterUrl && (
-                                  <a href={contact.twitterUrl} target="_blank" rel="noopener noreferrer"
-                                    aria-label="Twitter profile" className="text-muted-foreground hover:text-sky-500 transition-colors">
-                                    <Twitter className="h-3 w-3" />
-                                  </a>
-                                )}
-                                {contact.websiteUrl && (
-                                  <a href={contact.websiteUrl} target="_blank" rel="noopener noreferrer"
-                                    aria-label="Website" className="text-muted-foreground hover:text-foreground transition-colors">
-                                    <Globe className="h-3 w-3" />
-                                  </a>
-                                )}
-                                {!contact.linkedinUrl && !contact.twitterUrl && !contact.websiteUrl && (
-                                  <span className="text-[10px] text-muted-foreground">—</span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-2 py-1">
-                              <div className="flex flex-col gap-0.5">
-                                {contact.lead && (
-                                  <Link href={`/crm/leads/${contact.lead.id}`} className="inline-flex items-center gap-1 text-[9px] font-medium text-blue-600 hover:text-blue-700 hover:underline truncate max-w-[90px]">
-                                    <Link2 className="h-2.5 w-2.5 shrink-0" />Lead: {contact.lead.name}
-                                  </Link>
-                                )}
-                                {contact.deal && (
-                                  <Link href={`/crm/deals/${contact.deal.id}`} className="inline-flex items-center gap-1 text-[9px] font-medium text-blue-600 hover:text-blue-600/80 hover:underline truncate max-w-[90px]">
-                                    <Link2 className="h-2.5 w-2.5 shrink-0" />Deal: {contact.deal.name}
-                                  </Link>
-                                )}
-                                {!contact.lead && !contact.deal && <span className="text-[10px] text-muted-foreground">—</span>}
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-2 py-1">
-                              <ContactActionsMenu
-                                contact={contact}
-                                isEnrichPending={enrichContact.isPending}
-                                onDelete={handleRequestDelete}
-                                onEnrich={handleEnrich}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                              </TableCell>
+                              <TableCell className="px-2 py-1">
+                                <div className="flex flex-col gap-0.5">
+                                  {contact.lead && (
+                                    <Link
+                                      href={`/crm/leads/${contact.lead.id}`}
+                                      className="inline-flex items-center gap-1 text-[9px] font-medium text-blue-600 hover:text-blue-700 hover:underline truncate max-w-[90px]"
+                                    >
+                                      <Link2 className="h-2.5 w-2.5 shrink-0" />
+                                      Lead: {contact.lead.name}
+                                    </Link>
+                                  )}
+                                  {contact.deal && (
+                                    <Link
+                                      href={`/crm/deals/${contact.deal.id}`}
+                                      className="inline-flex items-center gap-1 text-[9px] font-medium text-blue-600 hover:text-blue-600/80 hover:underline truncate max-w-[90px]"
+                                    >
+                                      <Link2 className="h-2.5 w-2.5 shrink-0" />
+                                      Deal: {contact.deal.name}
+                                    </Link>
+                                  )}
+                                  {!contact.lead && !contact.deal && (
+                                    <span className="text-[10px] text-muted-foreground">
+                                      —
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-2 py-1">
+                                <ContactActionsMenu
+                                  contact={contact}
+                                  isEnrichPending={enrichContact.isPending}
+                                  onDelete={handleRequestDelete}
+                                  onEnrich={handleEnrich}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
                       </TableBody>
                     </table>
                   </div>
                 </div>
                 {totalPages > 1 && (
                   <div className="shrink-0 flex items-center justify-between p-4 border-t">
-                    <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
+                    <span className="text-xs text-muted-foreground">
+                      Page {page} of {totalPages}
+                    </span>
                     <div className="flex gap-1">
-                      <Button variant="outline" size="sm" disabled={page <= 1} onClick={handlePrevPage}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page <= 1}
+                        onClick={handlePrevPage}
+                      >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={handleNextPage}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={handleNextPage}
+                      >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
@@ -412,17 +560,29 @@ export default function ContactsPage() {
 
           {view === "card" && (
             <>
-              <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {data?.items.map(contact => (
-                  <Card key={contact.id} className="shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 group">
+              <motion.div
+                variants={fadeUp}
+                className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+              >
+                {data?.items.map((contact) => (
+                  <Card
+                    key={contact.id}
+                    className="shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 group"
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-600 shrink-0">
                           {contact.name[0]?.toUpperCase() ?? "?"}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate group-hover:text-blue-600 transition-colors">{contact.name}</p>
-                          {contact.title && <p className="text-xs text-muted-foreground truncate">{contact.title}</p>}
+                          <p className="text-sm font-medium truncate group-hover:text-blue-600 transition-colors">
+                            {contact.name}
+                          </p>
+                          {contact.title && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {contact.title}
+                            </p>
+                          )}
                         </div>
                         <ContactActionsMenu
                           contact={contact}
@@ -452,23 +612,40 @@ export default function ContactsPage() {
                           </div>
                         )}
                       </div>
-                      {(contact.linkedinUrl || contact.twitterUrl || contact.websiteUrl) && (
+                      {(contact.linkedinUrl ||
+                        contact.twitterUrl ||
+                        contact.websiteUrl) && (
                         <div className="mt-3 flex items-center gap-2">
                           {contact.linkedinUrl && (
-                            <a href={contact.linkedinUrl} target="_blank" rel="noopener noreferrer"
-                              aria-label="LinkedIn profile" className="text-muted-foreground hover:text-blue-500 transition-colors">
+                            <a
+                              href={contact.linkedinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="LinkedIn profile"
+                              className="text-muted-foreground hover:text-blue-500 transition-colors"
+                            >
                               <Linkedin className="h-3.5 w-3.5" />
                             </a>
                           )}
                           {contact.twitterUrl && (
-                            <a href={contact.twitterUrl} target="_blank" rel="noopener noreferrer"
-                              aria-label="Twitter profile" className="text-muted-foreground hover:text-sky-500 transition-colors">
+                            <a
+                              href={contact.twitterUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Twitter profile"
+                              className="text-muted-foreground hover:text-sky-500 transition-colors"
+                            >
                               <Twitter className="h-3.5 w-3.5" />
                             </a>
                           )}
                           {contact.websiteUrl && (
-                            <a href={contact.websiteUrl} target="_blank" rel="noopener noreferrer"
-                              aria-label="Website" className="text-muted-foreground hover:text-foreground transition-colors">
+                            <a
+                              href={contact.websiteUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Website"
+                              className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
                               <Globe className="h-3.5 w-3.5" />
                             </a>
                           )}
@@ -476,8 +653,14 @@ export default function ContactsPage() {
                       )}
                       {contact.tags.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
-                          {contact.tags.slice(0, 3).map(tag => (
-                            <Badge key={tag} variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{tag}</Badge>
+                          {contact.tags.slice(0, 3).map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="text-[9px] px-1.5 py-0 h-4"
+                            >
+                              {tag}
+                            </Badge>
                           ))}
                         </div>
                       )}
@@ -485,15 +668,23 @@ export default function ContactsPage() {
                         <div className="mt-3 flex flex-wrap gap-1.5">
                           {contact.lead && (
                             <Link href={`/crm/leads/${contact.lead.id}`}>
-                              <Badge variant="secondary" className="text-[10px] text-blue-600 border-blue-200 hover:border-blue-400 gap-1 cursor-pointer">
-                                <Link2 className="h-2.5 w-2.5" />Lead: {contact.lead.name}
+                              <Badge
+                                variant="secondary"
+                                className="text-[10px] text-blue-600 border-blue-200 hover:border-blue-400 gap-1 cursor-pointer"
+                              >
+                                <Link2 className="h-2.5 w-2.5" />
+                                Lead: {contact.lead.name}
                               </Badge>
                             </Link>
                           )}
                           {contact.deal && (
                             <Link href={`/crm/deals/${contact.deal.id}`}>
-                              <Badge variant="secondary" className="text-[10px] text-amber-700 border-amber-200 hover:border-amber-400 gap-1 cursor-pointer">
-                                <Link2 className="h-2.5 w-2.5" />Deal: {contact.deal.name}
+                              <Badge
+                                variant="secondary"
+                                className="text-[10px] text-amber-700 border-amber-200 hover:border-amber-400 gap-1 cursor-pointer"
+                              >
+                                <Link2 className="h-2.5 w-2.5" />
+                                Deal: {contact.deal.name}
                               </Badge>
                             </Link>
                           )}
@@ -508,19 +699,42 @@ export default function ContactsPage() {
                 <EmptyState
                   illustration={<EmptyTeamIllustration className="w-36 h-36" />}
                   title="No contacts found"
-                  description={apiSearch ? "No contacts match your search." : "Create your first contact to get started."}
-                  action={apiSearch ? undefined : { label: "New Contact", onClick: handleOpenCreate }}
+                  description={
+                    apiSearch
+                      ? "No contacts match your search."
+                      : "Create your first contact to get started."
+                  }
+                  action={
+                    apiSearch
+                      ? undefined
+                      : { label: "New Contact", onClick: handleOpenCreate }
+                  }
                   className="min-h-[50vh]"
                 />
               )}
 
               {totalPages > 1 && (
-                <motion.div variants={fadeUp} className="flex items-center justify-center gap-2">
-                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={handlePrevPage}>
+                <motion.div
+                  variants={fadeUp}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={handlePrevPage}
+                  >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-                  <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={handleNextPage}>
+                  <span className="text-sm text-muted-foreground">
+                    Page {page} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={handleNextPage}
+                  >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </motion.div>
@@ -530,12 +744,16 @@ export default function ContactsPage() {
         </motion.div>
       </PageWrapper>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogOpenChange}>
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={handleDeleteDialogOpenChange}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete contact?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The contact will be permanently removed.
+              This action cannot be undone. The contact will be permanently
+              removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

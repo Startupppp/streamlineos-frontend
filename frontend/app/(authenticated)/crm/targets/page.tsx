@@ -8,8 +8,17 @@ import {
   EmptyCalendarIllustration,
 } from "@/components/illustrations";
 import {
-  Trophy, Target, TrendingUp, Medal,
-  Zap, Phone, UserCheck, BarChart3, Calendar, History, AlertCircle,
+  Trophy,
+  Target,
+  TrendingUp,
+  Medal,
+  Zap,
+  Phone,
+  UserCheck,
+  BarChart3,
+  Calendar,
+  History,
+  AlertCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +27,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
+  DialogContent,@/hooks/api/crm
+  DialogHeader,@/hooks/api/hr
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -27,8 +36,13 @@ import { Button } from "@/components/ui/button";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
-import { useMyTargets, useTargetLeaderboard, useCreateTarget, useTargetHistory } from "@/lib/api/hooks/crm";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
+import {
+  useMyTargets,
+  useTargetLeaderboard,
+  useCreateTarget,
+  useTargetHistory,
+} from "@/hooks/hooks/crm";
+import { useHrEmployees } from "@/hooks/hooks/hr";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
@@ -36,7 +50,10 @@ import { formatDistanceToNow } from "date-fns";
 import { CreateTargetSheet } from "@/features/crm/targets/create-target-sheet";
 import type { Employee } from "@/types/hr";
 
-const METRIC_ICONS: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
+const METRIC_ICONS: Record<
+  string,
+  { icon: React.ComponentType<{ className?: string }>; color: string }
+> = {
   calls: { icon: Phone, color: "text-blue-400" },
   leads_converted: { icon: UserCheck, color: "text-emerald-400" },
   revenue: { icon: TrendingUp, color: "text-blue-600" },
@@ -45,19 +62,50 @@ const METRIC_ICONS: Record<string, { icon: React.ComponentType<{ className?: str
 };
 
 const RANK_STYLES = [
-  { bg: "bg-amber-500/10", border: "border-amber-500/20", text: "text-amber-400", ring: "ring-amber-500/10", bar: "bg-gradient-to-r from-amber-500 to-amber-400", badge: "bg-amber-500 text-white" },
-  { bg: "bg-slate-400/10", border: "border-slate-400/20", text: "text-slate-300", ring: "ring-slate-400/10", bar: "bg-gradient-to-r from-slate-400 to-slate-300", badge: "bg-slate-400 text-white" },
-  { bg: "bg-orange-700/10", border: "border-orange-700/20", text: "text-orange-400", ring: "ring-orange-700/10", bar: "bg-gradient-to-r from-orange-700 to-orange-500", badge: "bg-orange-700 text-white" },
+  {
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+    text: "text-amber-400",
+    ring: "ring-amber-500/10",
+    bar: "bg-gradient-to-r from-amber-500 to-amber-400",
+    badge: "bg-amber-500 text-white",
+  },
+  {
+    bg: "bg-slate-400/10",
+    border: "border-slate-400/20",
+    text: "text-slate-300",
+    ring: "ring-slate-400/10",
+    bar: "bg-gradient-to-r from-slate-400 to-slate-300",
+    badge: "bg-slate-400 text-white",
+  },
+  {
+    bg: "bg-orange-700/10",
+    border: "border-orange-700/20",
+    text: "text-orange-400",
+    ring: "ring-orange-700/10",
+    bar: "bg-gradient-to-r from-orange-700 to-orange-500",
+    badge: "bg-orange-700 text-white",
+  },
 ];
 
-
-function TargetHistoryDialog({ targetId, metricType }: { targetId: number; metricType: string }) {
+function TargetHistoryDialog({
+  targetId,
+  metricType,
+}: {
+  targetId: number;
+  metricType: string;
+}) {
   const { data: history, isLoading } = useTargetHistory(targetId);
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="View history">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          aria-label="View history"
+        >
           <History className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </DialogTrigger>
@@ -78,25 +126,36 @@ function TargetHistoryDialog({ targetId, metricType }: { targetId: number; metri
           {history && history.length === 0 && (
             <div className="py-6">
               <EmptyCalendarIllustration className="mx-auto mb-4 h-32 w-32 opacity-95" />
-              <p className="text-sm text-muted-foreground text-center">No changes recorded yet.</p>
+              <p className="text-sm text-muted-foreground text-center">
+                No changes recorded yet.
+              </p>
             </div>
           )}
           {history?.map((h) => (
-            <div key={h.id} className="flex items-start gap-3 text-sm border-b pb-2 last:border-0">
+            <div
+              key={h.id}
+              className="flex items-start gap-3 text-sm border-b pb-2 last:border-0"
+            >
               <Avatar className="h-6 w-6 mt-0.5 shrink-0">
                 <AvatarImage src={resolveImageUrl(h.changedBy?.image)} />
-                <AvatarFallback className="text-[9px]">{getInitials(h.changedBy?.name ?? "")}</AvatarFallback>
+                <AvatarFallback className="text-[9px]">
+                  {getInitials(h.changedBy?.name ?? "")}
+                </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-xs">
                   <span className="font-medium">{h.changedBy?.name}</span>{" "}
-                  changed <span className="font-medium">{h.field}</span>{" "}
-                  from <span className="text-muted-foreground">{h.oldValue ?? "—"}</span>{" "}
+                  changed <span className="font-medium">{h.field}</span> from{" "}
+                  <span className="text-muted-foreground">
+                    {h.oldValue ?? "—"}
+                  </span>{" "}
                   to <span className="font-medium">{h.newValue ?? "—"}</span>
                 </p>
                 {h.createdAt && (
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {formatDistanceToNow(new Date(h.createdAt), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(h.createdAt), {
+                      addSuffix: true,
+                    })}
                   </p>
                 )}
               </div>
@@ -110,10 +169,22 @@ function TargetHistoryDialog({ targetId, metricType }: { targetId: number; metri
 
 export default function TargetsPage() {
   const { data: session } = useSession();
-  const { data: myTargets, isLoading: targetsLoading, isError: targetsError, refetch: refetchTargets } = useMyTargets();
-  const { data: leaderboard, isLoading: leaderboardLoading, isError: leaderboardError, refetch: refetchLeaderboard } = useTargetLeaderboard();
+  const {
+    data: myTargets,
+    isLoading: targetsLoading,
+    isError: targetsError,
+    refetch: refetchTargets,
+  } = useMyTargets();
+  const {
+    data: leaderboard,
+    isLoading: leaderboardLoading,
+    isError: leaderboardError,
+    refetch: refetchLeaderboard,
+  } = useTargetLeaderboard();
   const { data: rawEmployees } = useHrEmployees();
-  const employees: Employee[] = Array.isArray(rawEmployees) ? rawEmployees : (rawEmployees as { data: Employee[] } | undefined)?.data ?? [];
+  const employees: Employee[] = Array.isArray(rawEmployees)
+    ? rawEmployees
+    : ((rawEmployees as { data: Employee[] } | undefined)?.data ?? []);
   const createTarget = useCreateTarget();
 
   const userRole = session?.user?.role ?? "";
@@ -131,26 +202,31 @@ export default function TargetsPage() {
     [isAdmin, employees, directReports],
   );
 
-  const handleCreateTarget = useCallback(async (data: {
-    userIds: string[];
-    metricType: string;
-    targetValue: string;
-    period: string;
-    startDate: string;
-    endDate: string;
-    notes?: string;
-  }) => {
-    if (data.userIds.length === 0) {
-      toast.error("Please select at least one team member");
-      return;
-    }
-    try {
-      await createTarget.mutateAsync(data);
-      toast.success(`Target created for ${data.userIds.length} member${data.userIds.length > 1 ? "s" : ""}`);
-    } catch {
-      toast.error("Failed to create target");
-    }
-  }, [createTarget]);
+  const handleCreateTarget = useCallback(
+    async (data: {
+      userIds: string[];
+      metricType: string;
+      targetValue: string;
+      period: string;
+      startDate: string;
+      endDate: string;
+      notes?: string;
+    }) => {
+      if (data.userIds.length === 0) {
+        toast.error("Please select at least one team member");
+        return;
+      }
+      try {
+        await createTarget.mutateAsync(data);
+        toast.success(
+          `Target created for ${data.userIds.length} member${data.userIds.length > 1 ? "s" : ""}`,
+        );
+      } catch {
+        toast.error("Failed to create target");
+      }
+    },
+    [createTarget],
+  );
 
   const handleRetry = useCallback(() => {
     void refetchTargets();
@@ -202,10 +278,16 @@ export default function TargetsPage() {
         <div className="flex flex-1 flex-col items-center justify-center min-h-[400px] gap-4 text-center">
           <AlertCircle className="h-12 w-12 text-destructive/60" />
           <div>
-            <p className="font-medium text-foreground">Failed to load targets</p>
-            <p className="text-sm text-muted-foreground mt-1">Something went wrong. Please try again.</p>
+            <p className="font-medium text-foreground">
+              Failed to load targets
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Something went wrong. Please try again.
+            </p>
           </div>
-          <Button variant="outline" onClick={handleRetry}>Retry</Button>
+          <Button variant="outline" onClick={handleRetry}>
+            Retry
+          </Button>
         </div>
       </PageWrapper>
     );
@@ -215,15 +297,22 @@ export default function TargetsPage() {
     <PageWrapper
       title="Targets & Leaderboard"
       subtitle="Track daily targets and team performance rankings"
-      actions={canSetTargets ? (
-        <CreateTargetSheet
-          assignableEmployees={assignableEmployees}
-          isPending={createTarget.isPending}
-          onSubmit={handleCreateTarget}
-        />
-      ) : undefined}
+      actions={
+        canSetTargets ? (
+          <CreateTargetSheet
+            assignableEmployees={assignableEmployees}
+            isPending={createTarget.isPending}
+            onSubmit={handleCreateTarget}
+          />
+        ) : undefined
+      }
     >
-      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
+      <motion.div
+        className="space-y-4"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
         {myTargets && myTargets.length > 0 && (
           <motion.div variants={fadeUp}>
             <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
@@ -232,10 +321,21 @@ export default function TargetsPage() {
             </h2>
             <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
               {myTargets.map((target) => {
-                const progress = Number(target.targetValue) > 0
-                  ? Math.min(100, Math.round((Number(target.currentValue ?? 0) / Number(target.targetValue)) * 100))
-                  : 0;
-                const config = METRIC_ICONS[target.metricType] || { icon: BarChart3, color: "text-muted-foreground" };
+                const progress =
+                  Number(target.targetValue) > 0
+                    ? Math.min(
+                        100,
+                        Math.round(
+                          (Number(target.currentValue ?? 0) /
+                            Number(target.targetValue)) *
+                            100,
+                        ),
+                      )
+                    : 0;
+                const config = METRIC_ICONS[target.metricType] || {
+                  icon: BarChart3,
+                  color: "text-muted-foreground",
+                };
                 const MetricIcon = config.icon;
                 return (
                   <Card key={target.id} className="shadow-noir overflow-hidden">
@@ -243,21 +343,36 @@ export default function TargetsPage() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-muted/50">
-                            <MetricIcon className={cn("h-4 w-4", config.color)} />
+                            <MetricIcon
+                              className={cn("h-4 w-4", config.color)}
+                            />
                           </div>
                           <div>
-                            <p className="text-sm font-medium capitalize">{target.metricType.replace("_", " ")}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase">{target.period}</p>
+                            <p className="text-sm font-medium capitalize">
+                              {target.metricType.replace("_", " ")}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground uppercase">
+                              {target.period}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
-                          <TargetHistoryDialog targetId={target.id} metricType={target.metricType} />
-                          <Badge variant="outline" className="text-xs">{progress}%</Badge>
+                          <TargetHistoryDialog
+                            targetId={target.id}
+                            metricType={target.metricType}
+                          />
+                          <Badge variant="outline" className="text-xs">
+                            {progress}%
+                          </Badge>
                         </div>
                       </div>
                       <div className="flex items-end justify-between mb-2">
-                        <span className="text-2xl font-bold tabular-nums">{Number(target.currentValue ?? 0)}</span>
-                        <span className="text-sm text-muted-foreground">/ {Number(target.targetValue)}</span>
+                        <span className="text-2xl font-bold tabular-nums">
+                          {Number(target.currentValue ?? 0)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          / {Number(target.targetValue)}
+                        </span>
                       </div>
                       <div
                         className="h-2 rounded-full bg-muted overflow-hidden"
@@ -270,9 +385,13 @@ export default function TargetsPage() {
                         <motion.div
                           className={cn(
                             "h-full rounded-full",
-                            progress >= 100 ? "bg-emerald-500" :
-                            progress >= 75 ? "bg-blue-500" :
-                            progress >= 50 ? "bg-amber-500" : "bg-blue-500",
+                            progress >= 100
+                              ? "bg-emerald-500"
+                              : progress >= 75
+                                ? "bg-blue-500"
+                                : progress >= 50
+                                  ? "bg-amber-500"
+                                  : "bg-blue-500",
                           )}
                           initial={{ width: 0 }}
                           animate={{ width: `${progress}%` }}
@@ -301,7 +420,9 @@ export default function TargetsPage() {
             <div className="flex flex-1 flex-col items-center justify-center min-h-[320px] gap-4 text-center">
               <EmptyTargetIllustration className="w-40 h-40" />
               <div>
-                <p className="text-base font-medium text-foreground">No targets assigned yet</p>
+                <p className="text-base font-medium text-foreground">
+                  No targets assigned yet
+                </p>
                 <p className="text-xs text-muted-foreground/70 mt-1 max-w-md mx-auto">
                   {canSetTargets
                     ? "Use the Set Target button above to add daily, weekly, or monthly goals for your team."
@@ -330,20 +451,35 @@ export default function TargetsPage() {
                         className={cn(
                           "relative rounded-xl p-4 transition-colors",
                           isTop3
-                            ? cn("border", style?.bg, style?.border, "ring-1", style?.ring)
+                            ? cn(
+                                "border",
+                                style?.bg,
+                                style?.border,
+                                "ring-1",
+                                style?.ring,
+                              )
                             : "border border-border/50 bg-muted/30",
                         )}
                         variants={slideInLeft}
                       >
                         <div className="flex items-center gap-4">
-                          <div className={cn(
-                            "relative flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold shrink-0",
-                            isTop3 ? cn(style?.bg, style?.text) : "bg-muted text-muted-foreground",
-                          )}>
+                          <div
+                            className={cn(
+                              "relative flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold shrink-0",
+                              isTop3
+                                ? cn(style?.bg, style?.text)
+                                : "bg-muted text-muted-foreground",
+                            )}
+                          >
                             {isTop3 ? (
                               <>
                                 <Medal className={cn("h-5 w-5", style?.text)} />
-                                <span className={cn("absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold", style?.badge)}>
+                                <span
+                                  className={cn(
+                                    "absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold",
+                                    style?.badge,
+                                  )}
+                                >
                                   {i + 1}
                                 </span>
                               </>
@@ -353,15 +489,27 @@ export default function TargetsPage() {
                           </div>
                           <Avatar className="h-9 w-9 shrink-0">
                             <AvatarImage src={resolveImageUrl(member.image)} />
-                            <AvatarFallback className="text-xs">{getInitials(member.name)}</AvatarFallback>
+                            <AvatarFallback className="text-xs">
+                              {getInitials(member.name)}
+                            </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2 mb-1">
-                              <p className={cn("text-sm font-semibold truncate", isTop3 ? style?.text : "text-foreground")}>
+                              <p
+                                className={cn(
+                                  "text-sm font-semibold truncate",
+                                  isTop3 ? style?.text : "text-foreground",
+                                )}
+                              >
                                 {member.name}
                               </p>
                               <div className="flex items-center gap-2 shrink-0">
-                                <span className={cn("text-sm font-bold tabular-nums", isTop3 ? style?.text : "text-foreground")}>
+                                <span
+                                  className={cn(
+                                    "text-sm font-bold tabular-nums",
+                                    isTop3 ? style?.text : "text-foreground",
+                                  )}
+                                >
                                   {member.progress}%
                                 </span>
                                 <span className="text-xs text-muted-foreground">
@@ -378,10 +526,20 @@ export default function TargetsPage() {
                               aria-label={`${member.name} target progress`}
                             >
                               <motion.div
-                                className={cn("h-full rounded-full", isTop3 ? style?.bar : "bg-muted-foreground/40")}
+                                className={cn(
+                                  "h-full rounded-full",
+                                  isTop3
+                                    ? style?.bar
+                                    : "bg-muted-foreground/40",
+                                )}
                                 initial={{ width: 0 }}
-                                animate={{ width: `${Math.min(100, member.progress)}%` }}
-                                transition={{ duration: 0.6, delay: 0.2 + i * 0.08 }}
+                                animate={{
+                                  width: `${Math.min(100, member.progress)}%`,
+                                }}
+                                transition={{
+                                  duration: 0.6,
+                                  delay: 0.2 + i * 0.08,
+                                }}
                               />
                             </div>
                           </div>
@@ -398,10 +556,13 @@ export default function TargetsPage() {
                 <div className="flex flex-col items-center text-center gap-4">
                   <EmptyLeaderboardIllustration className="w-40 h-40" />
                   <div>
-                    <p className="text-base font-medium text-foreground">No leaderboard data yet</p>
+                    <p className="text-base font-medium text-foreground">
+                      No leaderboard data yet
+                    </p>
                     <p className="text-xs text-muted-foreground/70 mt-1 max-w-md mx-auto">
-                      Targets need to be set for team members first. Once your team starts tracking activity,
-                      their rankings will appear here.
+                      Targets need to be set for team members first. Once your
+                      team starts tracking activity, their rankings will appear
+                      here.
                     </p>
                   </div>
                 </div>

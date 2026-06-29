@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ChangeEvent, type MouseEvent } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type MouseEvent,
+} from "react";
 import {
   BarChart,
   Bar,
@@ -79,13 +85,13 @@ import {
 import {
   useCsatSurveys,
   useCsatSurveyResponses,
-  useCreateCsatSurvey,
+  useCre@/hooks/api/crm
   useUpdateCsatSurvey,
   useDeleteCsatSurvey,
   useClientAccounts,
   type CsatSurvey,
   type CsatResponse,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/hooks/crm";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -115,7 +121,10 @@ function barColor(scoreOutOf5: number): string {
   return "#EF4444";
 }
 
-function normalizeTo5(avg: number | null | undefined, scaleMax: number): number {
+function normalizeTo5(
+  avg: number | null | undefined,
+  scaleMax: number,
+): number {
   if (avg === null || avg === undefined || scaleMax <= 0) return 0;
   return (avg / scaleMax) * 5;
 }
@@ -124,7 +133,13 @@ function satisfiedThreshold(scaleMax: number): number {
   return Math.ceil(scaleMax * 0.8);
 }
 
-function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function CreateSurveyDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const [title, setTitle] = useState("");
   const [question, setQuestion] = useState(DEFAULT_QUESTION);
   const [clientId, setClientId] = useState<string>("none");
@@ -151,9 +166,12 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
     setTitle(e.target.value);
   }, []);
 
-  const handleQuestionChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    setQuestion(e.target.value);
-  }, []);
+  const handleQuestionChange = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      setQuestion(e.target.value);
+    },
+    [],
+  );
 
   const handleSave = useCallback(() => {
     if (!title.trim() || !question.trim()) return;
@@ -191,7 +209,11 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
           </div>
           <div className="space-y-1">
             <Label>Question *</Label>
-            <Textarea rows={3} value={question} onChange={handleQuestionChange} />
+            <Textarea
+              rows={3}
+              value={question}
+              onChange={handleQuestionChange}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
@@ -260,7 +282,9 @@ function ResponseRow({ r, scaleMax }: { r: CsatResponse; scaleMax: number }) {
           {r.submittedAt ? format(new Date(r.submittedAt), "MMM d, yyyy") : ""}
         </span>
       </div>
-      {r.comment && <p className="text-xs text-muted-foreground mt-1.5">{r.comment}</p>}
+      {r.comment && (
+        <p className="text-xs text-muted-foreground mt-1.5">{r.comment}</p>
+      )}
     </div>
   );
 }
@@ -278,16 +302,23 @@ function SurveyDetailSheet({
   onCloseSurvey: () => void;
   isUpdating: boolean;
 }) {
-  const { data: responses, isLoading, isError, refetch } = useCsatSurveyResponses(survey.id);
+  const {
+    data: responses,
+    isLoading,
+    isError,
+    refetch,
+  } = useCsatSurveyResponses(survey.id);
   const scaleMax = survey.scaleMax;
 
   const stats = useMemo(() => {
     const list = responses ?? [];
     const total = list.length;
-    const avg = total > 0 ? list.reduce((s, r) => s + r.rating, 0) / total : null;
+    const avg =
+      total > 0 ? list.reduce((s, r) => s + r.rating, 0) / total : null;
     const threshold = satisfiedThreshold(scaleMax);
     const satisfied = list.filter((r) => r.rating >= threshold).length;
-    const satisfactionRate = total > 0 ? Math.round((satisfied / total) * 100) : 0;
+    const satisfactionRate =
+      total > 0 ? Math.round((satisfied / total) * 100) : 0;
     const distribution = Array.from({ length: scaleMax }, (_, i) => {
       const rating = i + 1;
       return { rating, count: list.filter((r) => r.rating === rating).length };
@@ -314,7 +345,10 @@ function SurveyDetailSheet({
         <SheetHeader className="px-0">
           <div className="flex items-center gap-2">
             <SheetTitle className="truncate">{survey.title}</SheetTitle>
-            <Badge variant={STATUS_CONFIG[survey.status].variant} className="text-[10px] shrink-0">
+            <Badge
+              variant={STATUS_CONFIG[survey.status].variant}
+              className="text-[10px] shrink-0"
+            >
               {STATUS_CONFIG[survey.status].label}
             </Badge>
           </div>
@@ -329,7 +363,12 @@ function SurveyDetailSheet({
           <div className="space-y-5 py-2 flex-1">
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-lg border border-border/60 p-3 text-center">
-                <p className={cn("text-2xl font-bold tabular-nums leading-none", scoreColor(normAvg))}>
+                <p
+                  className={cn(
+                    "text-2xl font-bold tabular-nums leading-none",
+                    scoreColor(normAvg),
+                  )}
+                >
                   {stats.avg !== null ? stats.avg.toFixed(1) : "—"}
                 </p>
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1">
@@ -358,9 +397,23 @@ function SurveyDetailSheet({
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold">Rating distribution</h3>
                 <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={stats.distribution} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                    <XAxis dataKey="rating" tickLine={false} axisLine={false} fontSize={11} />
-                    <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={11} width={32} />
+                  <BarChart
+                    data={stats.distribution}
+                    margin={{ top: 4, right: 4, left: -24, bottom: 0 }}
+                  >
+                    <XAxis
+                      dataKey="rating"
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={11}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={11}
+                      width={32}
+                    />
                     <Tooltip
                       cursor={{ fill: "hsl(var(--muted))" }}
                       contentStyle={{
@@ -371,7 +424,10 @@ function SurveyDetailSheet({
                     />
                     <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                       {stats.distribution.map((d) => (
-                        <Cell key={d.rating} fill={barColor(normalizeTo5(d.rating, scaleMax))} />
+                        <Cell
+                          key={d.rating}
+                          fill={barColor(normalizeTo5(d.rating, scaleMax))}
+                        />
                       ))}
                     </Bar>
                   </BarChart>
@@ -380,7 +436,9 @@ function SurveyDetailSheet({
             )}
 
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Responses ({stats.total})</h3>
+              <h3 className="text-sm font-semibold">
+                Responses ({stats.total})
+              </h3>
               {stats.total === 0 ? (
                 <EmptyState
                   illustration={<EmptyMailIllustration />}
@@ -401,13 +459,22 @@ function SurveyDetailSheet({
 
         <SheetFooter className="gap-2 sm:gap-2">
           {survey.status === "draft" && (
-            <Button onClick={onActivate} disabled={isUpdating} className="gap-1.5">
+            <Button
+              onClick={onActivate}
+              disabled={isUpdating}
+              className="gap-1.5"
+            >
               <Play className="size-4" />
               Activate
             </Button>
           )}
           {survey.status === "sent" && (
-            <Button variant="outline" onClick={onCloseSurvey} disabled={isUpdating} className="gap-1.5">
+            <Button
+              variant="outline"
+              onClick={onCloseSurvey}
+              disabled={isUpdating}
+              className="gap-1.5"
+            >
               <Square className="size-4" />
               Close survey
             </Button>
@@ -442,21 +509,32 @@ function SurveyTableRow({
     (e: MouseEvent<HTMLTableCellElement>) => e.stopPropagation(),
     [],
   );
-  const handleActivate = useCallback(() => onActivate(survey), [onActivate, survey]);
-  const handleCloseSurveyClick = useCallback(() => onCloseSurvey(survey), [onCloseSurvey, survey]);
+  const handleActivate = useCallback(
+    () => onActivate(survey),
+    [onActivate, survey],
+  );
+  const handleCloseSurveyClick = useCallback(
+    () => onCloseSurvey(survey),
+    [onCloseSurvey, survey],
+  );
   const handleDelete = useCallback(() => onDelete(survey), [onDelete, survey]);
 
   return (
     <TableRow className="cursor-pointer" onClick={handleRowClick}>
       <TableCell className="max-w-[260px]">
         <p className="font-medium text-sm truncate">{survey.title}</p>
-        <p className="text-xs text-muted-foreground truncate">{survey.question}</p>
+        <p className="text-xs text-muted-foreground truncate">
+          {survey.question}
+        </p>
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">
         {survey.client?.name ?? "—"}
       </TableCell>
       <TableCell>
-        <Badge variant={STATUS_CONFIG[survey.status].variant} className="text-[10px]">
+        <Badge
+          variant={STATUS_CONFIG[survey.status].variant}
+          className="text-[10px]"
+        >
           {STATUS_CONFIG[survey.status].label}
         </Badge>
       </TableCell>
@@ -464,7 +542,9 @@ function SurveyTableRow({
         {survey.responseCount ?? 0}
       </TableCell>
       <TableCell className="text-right">
-        <span className={cn("text-sm font-semibold tabular-nums", scoreColor(norm))}>
+        <span
+          className={cn("text-sm font-semibold tabular-nums", scoreColor(norm))}
+        >
           {survey.avgRating !== null && survey.avgRating !== undefined
             ? `${survey.avgRating.toFixed(1)}/${survey.scaleMax}`
             : "—"}
@@ -540,7 +620,8 @@ export default function CsatPage() {
     const weighted = list.reduce(
       (acc, x) => {
         const count = x.responseCount ?? 0;
-        if (x.avgRating === null || x.avgRating === undefined || count === 0) return acc;
+        if (x.avgRating === null || x.avgRating === undefined || count === 0)
+          return acc;
         acc.sum += normalizeTo5(x.avgRating, x.scaleMax) * count;
         acc.count += count;
         return acc;
@@ -569,7 +650,10 @@ export default function CsatPage() {
       updateSurvey.mutate(
         { id: survey.id, status },
         {
-          onSuccess: () => toast.success(status === "sent" ? "Survey activated" : "Survey closed"),
+          onSuccess: () =>
+            toast.success(
+              status === "sent" ? "Survey activated" : "Survey closed",
+            ),
           onError: () => toast.error("Failed to update survey"),
         },
       );
@@ -591,7 +675,9 @@ export default function CsatPage() {
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
   const handleCloseDetail = useCallback(() => setDetailTarget(null), []);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
   const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
   }, []);
@@ -643,12 +729,34 @@ export default function CsatPage() {
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <StatCard label="Total Surveys" value={summary.total} icon={ClipboardList} color="blue" index={0} />
-            <StatCard label="Active" value={summary.active} icon={Radio} color="green" index={1} />
-            <StatCard label="Responses" value={summary.totalResponses} icon={MessageSquare} color="violet" index={2} />
+            <StatCard
+              label="Total Surveys"
+              value={summary.total}
+              icon={ClipboardList}
+              color="blue"
+              index={0}
+            />
+            <StatCard
+              label="Active"
+              value={summary.active}
+              icon={Radio}
+              color="green"
+              index={1}
+            />
+            <StatCard
+              label="Responses"
+              value={summary.totalResponses}
+              icon={MessageSquare}
+              color="violet"
+              index={2}
+            />
             <StatCard
               label="Avg Score"
-              value={summary.avgScore !== null ? `${summary.avgScore.toFixed(1)} / 5` : "—"}
+              value={
+                summary.avgScore !== null
+                  ? `${summary.avgScore.toFixed(1)} / 5`
+                  : "—"
+              }
               icon={Star}
               color="amber"
               index={3}
@@ -662,9 +770,24 @@ export default function CsatPage() {
             <CardContent>
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                    <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={11} interval={0} />
-                    <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={11} width={32} />
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+                  >
+                    <XAxis
+                      dataKey="name"
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={11}
+                      interval={0}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={11}
+                      width={32}
+                    />
                     <Tooltip
                       cursor={{ fill: "hsl(var(--muted))" }}
                       contentStyle={{
@@ -743,12 +866,16 @@ export default function CsatPage() {
         />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogChange}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete survey?</AlertDialogTitle>
             <AlertDialogDescription>
-              &ldquo;{deleteTarget?.title}&rdquo; and all its responses will be permanently deleted.
+              &ldquo;{deleteTarget?.title}&rdquo; and all its responses will be
+              permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

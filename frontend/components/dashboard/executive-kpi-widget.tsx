@@ -2,14 +2,9 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
-import { useExecutiveDashboard } from "@/lib/api/hooks/dashboard";
-import { useCan } from "@/lib/api/hooks/access";
-import {
-  IndianRupee,
-  TrendingUp,
-  Target,
-  Briefcase,
-} from "lucide-react";
+import { useExecutiveDashboard } from "@/hooks/api/dashboard";
+import { useCan } from "@/hooks/api/access";
+import { IndianRupee, TrendingUp, Target, Briefcase } from "lucide-react";
 
 export function ExecutiveKpiWidget() {
   const { data, isLoading, error } = useExecutiveDashboard();

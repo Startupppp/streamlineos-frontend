@@ -16,7 +16,7 @@ import {
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
-import { useSignOut } from "@/hooks/auth-hooks";
+import { useSignOut } from "@/hooks/common/auth-hooks";
 import { cn } from "@/lib/utils";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 
@@ -90,7 +90,11 @@ export function OwnerSidebar({
           collapsed ? "justify-center px-2" : "justify-between px-3",
         )}
       >
-        <Link href="/owner" className="flex items-center gap-2 min-w-0" aria-label="StreamlineOS">
+        <Link
+          href="/owner"
+          className="flex items-center gap-2 min-w-0"
+          aria-label="StreamlineOS"
+        >
           <AnimatedLogo size={26} className="rounded-md shrink-0" />
           {!collapsed && (
             <div className="min-w-0 leading-tight">

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useAnalyzeChurnRisk } from "@/lib/api/hooks/ai";
+import { useAnalyzeChurnRisk } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
@@ -36,12 +36,25 @@ export function AIChurnRiskButton({
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.churn-risk");
 
   const handleAnalyze = useCallback(() => {
-    if (!featureEnabled) { toast.error(`AI churn risk analysis requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
+    if (!featureEnabled) {
+      toast.error(
+        `AI churn risk analysis requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`,
+      );
+      return;
+    }
     analyzeMutation.mutate(
       { clientId, openTickets, ticketsLast90Days, daysSinceLastActivity },
       { onError: (e) => toast.error(getErrorMessage(e)) },
     );
-  }, [featureEnabled, requiredPlan, analyzeMutation, clientId, openTickets, ticketsLast90Days, daysSinceLastActivity]);
+  }, [
+    featureEnabled,
+    requiredPlan,
+    analyzeMutation,
+    clientId,
+    openTickets,
+    ticketsLast90Days,
+    daysSinceLastActivity,
+  ]);
 
   const handleCompactClick = useCallback(() => {
     if (!result) handleAnalyze();
@@ -77,12 +90,27 @@ export function AIChurnRiskButton({
             ) : (
               <Sparkles className="h-3 w-3 text-blue-600" />
             )}
-            {result ? <span className={cn("font-bold capitalize", riskColor(result.riskLevel))}>{result.riskLevel}</span> : "Churn Risk"}
+            {result ? (
+              <span
+                className={cn(
+                  "font-bold capitalize",
+                  riskColor(result.riskLevel),
+                )}
+              >
+                {result.riskLevel}
+              </span>
+            ) : (
+              "Churn Risk"
+            )}
           </Button>
         </PopoverTrigger>
         {result && (
           <PopoverContent className="w-80 p-3" align="end">
-            <ChurnDetails result={result} riskColor={riskColor} riskBg={riskBg} />
+            <ChurnDetails
+              result={result}
+              riskColor={riskColor}
+              riskBg={riskBg}
+            />
           </PopoverContent>
         )}
       </Popover>
@@ -99,12 +127,20 @@ export function AIChurnRiskButton({
         className="w-full"
       >
         {analyzeMutation.isPending ? (
-          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Analyzing...</>
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Analyzing...
+          </>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />AI Churn Risk Analysis</>
+          <>
+            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+            AI Churn Risk Analysis
+          </>
         )}
       </Button>
-      {result && <ChurnDetails result={result} riskColor={riskColor} riskBg={riskBg} />}
+      {result && (
+        <ChurnDetails result={result} riskColor={riskColor} riskBg={riskBg} />
+      )}
     </div>
   );
 }
@@ -129,24 +165,44 @@ function ChurnDetails({
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-2">
-        <div className={cn("h-12 w-12 rounded-lg flex flex-col items-center justify-center font-bold", riskBg(result.riskLevel), riskColor(result.riskLevel))}>
-          <span className="text-base leading-none">{result.churnRiskScore}</span>
-          <span className="text-[8px] uppercase tracking-wider mt-0.5">risk</span>
+        <div
+          className={cn(
+            "h-12 w-12 rounded-lg flex flex-col items-center justify-center font-bold",
+            riskBg(result.riskLevel),
+            riskColor(result.riskLevel),
+          )}
+        >
+          <span className="text-base leading-none">
+            {result.churnRiskScore}
+          </span>
+          <span className="text-[8px] uppercase tracking-wider mt-0.5">
+            risk
+          </span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="text-xs font-medium">Churn Risk</p>
-            <Badge variant="secondary" className={cn("text-[9px] h-4 px-1 capitalize", riskColor(result.riskLevel))}>
+            <Badge
+              variant="secondary"
+              className={cn(
+                "text-[9px] h-4 px-1 capitalize",
+                riskColor(result.riskLevel),
+              )}
+            >
               {result.riskLevel}
             </Badge>
           </div>
-          <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{result.reasoning}</p>
+          <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+            {result.reasoning}
+          </p>
         </div>
       </div>
 
       {result.riskFactors.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Risk Factors</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+            Risk Factors
+          </p>
           {result.riskFactors.map((f, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
               <AlertTriangle className="h-3 w-3 text-red-400 mt-0.5 shrink-0" />
@@ -158,7 +214,9 @@ function ChurnDetails({
 
       {result.retentionActions.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Retention Actions</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+            Retention Actions
+          </p>
           {result.retentionActions.map((a, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
               <ShieldCheck className="h-3 w-3 text-emerald-500 mt-0.5 shrink-0" />

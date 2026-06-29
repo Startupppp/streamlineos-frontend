@@ -14,7 +14,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { useGstr1 } from "@/lib/api/hooks/accounting";
+import { useGstr1 } from "@/hooks/api/accounting";
 import type {
   Gstr1PlaceBucket,
   Gstr1RateBucket,
@@ -59,13 +59,16 @@ interface SummaryStatProps {
 }
 
 function SummaryStat({ label, value, tone = "default" }: SummaryStatProps) {
-  const valueTone = tone === "muted" ? "text-muted-foreground" : "text-foreground";
+  const valueTone =
+    tone === "muted" ? "text-muted-foreground" : "text-foreground";
   return (
     <div className="flex flex-col gap-1">
       <span className="text-[11px] font-medium text-muted-foreground leading-none">
         {label}
       </span>
-      <span className={`font-mono tabular-nums text-base font-semibold ${valueTone}`}>
+      <span
+        className={`font-mono tabular-nums text-base font-semibold ${valueTone}`}
+      >
         {value}
       </span>
     </div>
@@ -83,7 +86,10 @@ function RateRows({ place }: RateRowsProps) {
       {place.rates.map((rate: Gstr1RateBucket, index: number) => (
         <TableRow key={`${place.placeOfSupply ?? "unk"}-${rate.gstRate}`}>
           {index === 0 ? (
-            <TableCell rowSpan={rateCount} className="align-top text-sm text-foreground font-medium">
+            <TableCell
+              rowSpan={rateCount}
+              className="align-top text-sm text-foreground font-medium"
+            >
               {formatPlace(place)}
             </TableCell>
           ) : null}
@@ -118,7 +124,12 @@ interface SectionTableProps {
   section: Gstr1Section1;
 }
 
-function SectionTable({ title, description, tint, section }: SectionTableProps) {
+function SectionTable({
+  title,
+  description,
+  tint,
+  section,
+}: SectionTableProps) {
   const tintClass =
     tint === "b2b"
       ? "bg-violet-500/10 text-violet-700 border-violet-500/20"
@@ -136,44 +147,44 @@ function SectionTable({ title, description, tint, section }: SectionTableProps) 
         </div>
       ) : (
         <div className="overflow-x-auto">
-        <Table className="min-w-[760px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[180px]">Place of supply</TableHead>
-              <TableHead className="w-[100px]">GST rate</TableHead>
-              <TableHead className="text-right">Taxable value</TableHead>
-              <TableHead className="text-right">CGST</TableHead>
-              <TableHead className="text-right">SGST</TableHead>
-              <TableHead className="text-right">IGST</TableHead>
-              <TableHead className="w-[90px] text-right">Invoices</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {section.places.map((place) => (
-              <RateRows key={place.placeOfSupply ?? "unk"} place={place} />
-            ))}
-            <TableRow className="font-semibold bg-muted/30">
-              <TableCell colSpan={2} className="text-sm">
-                Section total
-              </TableCell>
-              <TableCell className="text-sm text-right tabular-nums">
-                {section.totalTaxableValue}
-              </TableCell>
-              <TableCell className="text-sm text-right tabular-nums">
-                {section.totalCgst}
-              </TableCell>
-              <TableCell className="text-sm text-right tabular-nums">
-                {section.totalSgst}
-              </TableCell>
-              <TableCell className="text-sm text-right tabular-nums">
-                {section.totalIgst}
-              </TableCell>
-              <TableCell className="text-sm text-right tabular-nums">
-                {section.totalInvoices}
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+          <Table className="min-w-[760px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[180px]">Place of supply</TableHead>
+                <TableHead className="w-[100px]">GST rate</TableHead>
+                <TableHead className="text-right">Taxable value</TableHead>
+                <TableHead className="text-right">CGST</TableHead>
+                <TableHead className="text-right">SGST</TableHead>
+                <TableHead className="text-right">IGST</TableHead>
+                <TableHead className="w-[90px] text-right">Invoices</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {section.places.map((place) => (
+                <RateRows key={place.placeOfSupply ?? "unk"} place={place} />
+              ))}
+              <TableRow className="font-semibold bg-muted/30">
+                <TableCell colSpan={2} className="text-sm">
+                  Section total
+                </TableCell>
+                <TableCell className="text-sm text-right tabular-nums">
+                  {section.totalTaxableValue}
+                </TableCell>
+                <TableCell className="text-sm text-right tabular-nums">
+                  {section.totalCgst}
+                </TableCell>
+                <TableCell className="text-sm text-right tabular-nums">
+                  {section.totalSgst}
+                </TableCell>
+                <TableCell className="text-sm text-right tabular-nums">
+                  {section.totalIgst}
+                </TableCell>
+                <TableCell className="text-sm text-right tabular-nums">
+                  {section.totalInvoices}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
@@ -259,13 +270,22 @@ export default function Gstr1Page() {
         ) : (
           <div className="space-y-4">
             <div className="rounded-xl border border-border/60 bg-card px-5 py-4">
-              <h3 className="text-sm font-semibold text-foreground mb-3">Grand total</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-3">
+                Grand total
+              </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                <SummaryStat label="Taxable value" value={report.grandTotal.taxableValue} />
+                <SummaryStat
+                  label="Taxable value"
+                  value={report.grandTotal.taxableValue}
+                />
                 <SummaryStat label="CGST" value={report.grandTotal.cgst} />
                 <SummaryStat label="SGST" value={report.grandTotal.sgst} />
                 <SummaryStat label="IGST" value={report.grandTotal.igst} />
-                <SummaryStat label="Invoices" value={report.grandTotal.invoices} tone="muted" />
+                <SummaryStat
+                  label="Invoices"
+                  value={report.grandTotal.invoices}
+                  tone="muted"
+                />
               </div>
             </div>
 

@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINR } from "@/lib/format-utils";
-import { viewFile, downloadFile } from "@/hooks/use-file-url";
+import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import { toast } from "sonner";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseToEdit } from "@/app/(authenticated)/hr/expenses/create-expense-dialog";

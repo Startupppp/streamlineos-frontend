@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import type { Employee } from "@/types/hr";
-import { useHrMonthlyAttendance } from "@/lib/api/hooks/hr";
+import { useHrMonthlyAttendance } from "@/hooks/api/hr";
 
 interface UsePayslipFormArgs {
   employees: Employee[];
@@ -11,7 +11,9 @@ interface UsePayslipFormArgs {
 
 export function usePayslipForm({ employees }: UsePayslipFormArgs) {
   const [open, setOpen] = useState(false);
-  const [formMonth, setFormMonth] = useState<string>(format(new Date(), "yyyy-MM"));
+  const [formMonth, setFormMonth] = useState<string>(
+    format(new Date(), "yyyy-MM"),
+  );
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
   const [lopDays, setLopDays] = useState("");
@@ -26,17 +28,20 @@ export function usePayslipForm({ employees }: UsePayslipFormArgs) {
   const [payYear, payMonthOneIndexed] = formMonth.split("-").map(Number);
   const payMonthZeroIndexed = payMonthOneIndexed - 1;
 
-  const { data: monthlyAttendance, isLoading: isAttendanceLoading } = useHrMonthlyAttendance({
-    userId: selectedEmployee,
-    year: payYear,
-    month: payMonthZeroIndexed,
-  });
+  const { data: monthlyAttendance, isLoading: isAttendanceLoading } =
+    useHrMonthlyAttendance({
+      userId: selectedEmployee,
+      year: payYear,
+      month: payMonthZeroIndexed,
+    });
 
   useEffect(() => {
     if (!selectedEmployee || !monthlyAttendance || isAttendanceLoading) return;
 
     const daysInMonth = new Date(payYear, payMonthOneIndexed, 0).getDate();
-    const attendedDates = new Set(monthlyAttendance.map((l) => l.date.slice(0, 10)));
+    const attendedDates = new Set(
+      monthlyAttendance.map((l) => l.date.slice(0, 10)),
+    );
 
     let absentCount = 0;
     let halfDayCount = 0;
@@ -46,7 +51,9 @@ export function usePayslipForm({ employees }: UsePayslipFormArgs) {
       const dayOfWeek = new Date(dateStr).getDay();
       if (dayOfWeek === 0 || dayOfWeek === 6) continue;
 
-      const log = monthlyAttendance.find((l) => l.date.slice(0, 10) === dateStr);
+      const log = monthlyAttendance.find(
+        (l) => l.date.slice(0, 10) === dateStr,
+      );
       if (!log && !attendedDates.has(dateStr)) {
         absentCount++;
       } else if (log?.status === "HALF_DAY") {
@@ -56,7 +63,13 @@ export function usePayslipForm({ employees }: UsePayslipFormArgs) {
 
     setLopDays(absentCount > 0 ? String(absentCount) : "");
     setHalfDays(halfDayCount > 0 ? String(halfDayCount) : "");
-  }, [selectedEmployee, monthlyAttendance, isAttendanceLoading, payYear, payMonthOneIndexed]);
+  }, [
+    selectedEmployee,
+    monthlyAttendance,
+    isAttendanceLoading,
+    payYear,
+    payMonthOneIndexed,
+  ]);
 
   useEffect(() => {
     setLopDays("");

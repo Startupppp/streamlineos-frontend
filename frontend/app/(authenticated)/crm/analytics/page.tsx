@@ -4,20 +4,38 @@ import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Users, IndianRupee, Target, Percent } from "lucide-react";
 import {
-  BarChart, Bar, AreaChart, Area, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-} from "recharts";
-import { StatCard } from "@/components/ui/stat-card";
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,@/hooks/api/leads
+  ResponsiveContainer,@/hooks/api/crm
+} from "recharts";@/hooks/api/tasks
+import { StatCard } from "@/co@/hooks/api/crm-settings
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useLeadStats, useLeads, useLeadAnalyticsSummary, useSalesLeaderboard } from "@/lib/api/hooks/leads";
-import { useDeals } from "@/lib/api/hooks/crm";
-import { useTaskAnalytics } from "@/lib/api/hooks/tasks";
-import { useSlaReport } from "@/lib/api/hooks/crm-settings";
-import { CHART_TOOLTIP_STYLE, AXIS_TICK, CHART_COLORS } from "@/features/crm/shared/constants";
+import {
+  useLeadStats,
+  useLeads,
+  useLeadAnalyticsSummary,
+  useSalesLeaderboard,
+} from "@/hooks/hooks/leads";
+import { useDeals } from "@/hooks/hooks/crm";
+import { useTaskAnalytics } from "@/hooks/hooks/tasks";
+import { useSlaReport } from "@/hooks/hooks/crm-settings";
+import {
+  CHART_TOOLTIP_STYLE,
+  AXIS_TICK,
+  CHART_COLORS,
+} from "@/features/crm/shared/constants";
 import { PipelineFunnelChart } from "@/features/crm/analytics/pipeline-funnel-chart";
 import { SourceBreakdownChart } from "@/features/crm/analytics/source-breakdown-chart";
 import { RepPerformanceTable } from "@/features/crm/analytics/rep-performance-table";
@@ -31,10 +49,13 @@ export default function CrmAnalyticsPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const handleDateRangeChange = useCallback((range: { from: string; to: string }) => {
-    setDateFrom(range.from);
-    setDateTo(range.to);
-  }, []);
+  const handleDateRangeChange = useCallback(
+    (range: { from: string; to: string }) => {
+      setDateFrom(range.from);
+      setDateTo(range.to);
+    },
+    [],
+  );
 
   const { data: leadStats, isLoading: statsLoading } = useLeadStats({
     dateFrom: dateFrom || undefined,
@@ -43,25 +64,50 @@ export default function CrmAnalyticsPage() {
   const { data: allDeals, isLoading: dealsLoading } = useDeals();
   const { data: leaderboard, isLoading: leaderLoading } = useSalesLeaderboard();
   const { data: slaReport, isLoading: slaLoading } = useSlaReport();
-  const { data: allLeadsResult, isLoading: leadsLoading } = useLeads({ limit: 100 });
+  const { data: allLeadsResult, isLoading: leadsLoading } = useLeads({
+    limit: 100,
+  });
   const allLeads = allLeadsResult?.leads;
   const { data: taskAnalytics } = useTaskAnalytics(30);
 
-  const { data: analyticsSummary, isLoading: summaryLoading } = useLeadAnalyticsSummary({
-    dateFrom: dateFrom || undefined,
-    dateTo: dateTo || undefined,
-  });
+  const { data: analyticsSummary, isLoading: summaryLoading } =
+    useLeadAnalyticsSummary({
+      dateFrom: dateFrom || undefined,
+      dateTo: dateTo || undefined,
+    });
 
-  const isLoading = statsLoading || dealsLoading || leaderLoading || slaLoading || leadsLoading || summaryLoading;
+  const isLoading =
+    statsLoading ||
+    dealsLoading ||
+    leaderLoading ||
+    slaLoading ||
+    leadsLoading ||
+    summaryLoading;
 
   const funnelData = useMemo(() => {
     if (!leadStats) return [];
     return [
       { name: "New", value: leadStats.byStatus.NEW, fill: "#3B82F6" },
-      { name: "Contacted", value: leadStats.byStatus.CONTACTED, fill: "#0EA5E9" },
-      { name: "Interested", value: leadStats.byStatus.INTERESTED, fill: "#F59E0B" },
-      { name: "Qualified", value: leadStats.byStatus.QUALIFIED, fill: "#8B5CF6" },
-      { name: "Converted", value: leadStats.byStatus.CONVERTED, fill: "#10B981" },
+      {
+        name: "Contacted",
+        value: leadStats.byStatus.CONTACTED,
+        fill: "#0EA5E9",
+      },
+      {
+        name: "Interested",
+        value: leadStats.byStatus.INTERESTED,
+        fill: "#F59E0B",
+      },
+      {
+        name: "Qualified",
+        value: leadStats.byStatus.QUALIFIED,
+        fill: "#8B5CF6",
+      },
+      {
+        name: "Converted",
+        value: leadStats.byStatus.CONVERTED,
+        fill: "#10B981",
+      },
     ].filter((s) => s.value > 0);
   }, [leadStats]);
 
@@ -73,7 +119,10 @@ export default function CrmAnalyticsPage() {
       weeks[`W${12 - i}`] = 0;
     }
     allLeads.forEach((lead) => {
-      const diffDays = Math.floor((now.getTime() - new Date(lead.createdAt!).getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.floor(
+        (now.getTime() - new Date(lead.createdAt!).getTime()) /
+          (1000 * 60 * 60 * 24),
+      );
       const weekIndex = Math.floor(diffDays / 7);
       if (weekIndex < 12) {
         const key = `W${12 - weekIndex}`;
@@ -96,8 +145,13 @@ export default function CrmAnalyticsPage() {
   const dealsByStageValue = useMemo(() => {
     if (!allDeals) return [];
     const map: Record<string, number> = {};
-    allDeals.forEach((d) => { map[d.stage] = (map[d.stage] ?? 0) + Number(d.value ?? 0); });
-    return Object.entries(map).map(([stage, value]) => ({ stage, value: Math.round(value / 100000) }));
+    allDeals.forEach((d) => {
+      map[d.stage] = (map[d.stage] ?? 0) + Number(d.value ?? 0);
+    });
+    return Object.entries(map).map(([stage, value]) => ({
+      stage,
+      value: Math.round(value / 100000),
+    }));
   }, [allDeals]);
 
   const wonLostReasons = useMemo(() => {
@@ -112,7 +166,13 @@ export default function CrmAnalyticsPage() {
 
   const scoreDistribution = useMemo(() => {
     if (!allLeads) return [];
-    const buckets = { "0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0 };
+    const buckets = {
+      "0-20": 0,
+      "21-40": 0,
+      "41-60": 0,
+      "61-80": 0,
+      "81-100": 0,
+    };
     allLeads.forEach((l) => {
       const score = l.score ?? 0;
       if (score <= 20) buckets["0-20"]++;
@@ -126,7 +186,10 @@ export default function CrmAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="CRM Analytics" subtitle="Pipeline insights and performance metrics">
+      <PageWrapper
+        title="CRM Analytics"
+        subtitle="Pipeline insights and performance metrics"
+      >
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -141,8 +204,12 @@ export default function CrmAnalyticsPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <Card key={i} className="shadow-sm">
-                <CardHeader className="pb-2"><Skeleton className="h-4 w-36" /></CardHeader>
-                <CardContent><Skeleton className="h-[280px] w-full" /></CardContent>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-36" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-[280px] w-full" />
+                </CardContent>
               </Card>
             ))}
           </div>
@@ -164,25 +231,69 @@ export default function CrmAnalyticsPage() {
         />
       }
     >
-      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
+      <motion.div
+        className="space-y-4"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
         {analyticsSummary && (
-          <motion.div variants={fadeUp} className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <motion.div
+            variants={fadeUp}
+            className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          >
             <StatCard
-              label="Total Leads" value={analyticsSummary.totalLeads} icon={Users} index={0}
-              trend={analyticsSummary.totalLeadsPrevPeriod > 0 ? {
-                value: Math.round(((analyticsSummary.totalLeads - analyticsSummary.totalLeadsPrevPeriod) / analyticsSummary.totalLeadsPrevPeriod) * 100),
-                isPositive: analyticsSummary.totalLeads >= analyticsSummary.totalLeadsPrevPeriod,
-              } : undefined}
+              label="Total Leads"
+              value={analyticsSummary.totalLeads}
+              icon={Users}
+              index={0}
+              trend={
+                analyticsSummary.totalLeadsPrevPeriod > 0
+                  ? {
+                      value: Math.round(
+                        ((analyticsSummary.totalLeads -
+                          analyticsSummary.totalLeadsPrevPeriod) /
+                          analyticsSummary.totalLeadsPrevPeriod) *
+                          100,
+                      ),
+                      isPositive:
+                        analyticsSummary.totalLeads >=
+                        analyticsSummary.totalLeadsPrevPeriod,
+                    }
+                  : undefined
+              }
             />
             <StatCard
-              label="Conversion Rate" value={`${analyticsSummary.conversionRate}%`} icon={Percent} index={1}
-              trend={analyticsSummary.conversionRatePrevPeriod > 0 ? {
-                value: Math.abs(analyticsSummary.conversionRate - analyticsSummary.conversionRatePrevPeriod),
-                isPositive: analyticsSummary.conversionRate >= analyticsSummary.conversionRatePrevPeriod,
-              } : undefined}
+              label="Conversion Rate"
+              value={`${analyticsSummary.conversionRate}%`}
+              icon={Percent}
+              index={1}
+              trend={
+                analyticsSummary.conversionRatePrevPeriod > 0
+                  ? {
+                      value: Math.abs(
+                        analyticsSummary.conversionRate -
+                          analyticsSummary.conversionRatePrevPeriod,
+                      ),
+                      isPositive:
+                        analyticsSummary.conversionRate >=
+                        analyticsSummary.conversionRatePrevPeriod,
+                    }
+                  : undefined
+              }
             />
-            <StatCard label="Total Revenue" value={`₹${(analyticsSummary.totalRevenue / 100000).toFixed(1)}L`} icon={IndianRupee} index={2} />
-            <StatCard label="Active Reps" value={analyticsSummary.assignmentDistribution.length} icon={Target} index={3} />
+            <StatCard
+              label="Total Revenue"
+              value={`₹${(analyticsSummary.totalRevenue / 100000).toFixed(1)}L`}
+              icon={IndianRupee}
+              index={2}
+            />
+            <StatCard
+              label="Active Reps"
+              value={analyticsSummary.assignmentDistribution.length}
+              icon={Target}
+              index={3}
+            />
           </motion.div>
         )}
 
@@ -194,99 +305,206 @@ export default function CrmAnalyticsPage() {
           <ConversionChart data={wonLostReasons} />
           <DealValueChart data={dealsByStageValue} />
 
-          <AnalyticsChartCard title="SLA Compliance Rate" data={[]} filename="sla-compliance">
+          <AnalyticsChartCard
+            title="SLA Compliance Rate"
+            data={[]}
+            filename="sla-compliance"
+          >
             {!slaReport ? (
               <EmptyChart message="No SLA data available" />
             ) : (
               <div className="flex flex-col items-center justify-center h-[280px]">
                 <div className="relative h-40 w-40">
-                  <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
+                  <svg
+                    viewBox="0 0 100 100"
+                    className="h-full w-full -rotate-90"
+                  >
                     <circle
-                      cx="50" cy="50" r="42" fill="none"
-                      stroke={slaReport.complianceRate >= 80 ? "#10B981" : slaReport.complianceRate >= 50 ? "#F59E0B" : "#EF4444"}
+                      cx="50"
+                      cy="50"
+                      r="42"
+                      fill="none"
+                      stroke="hsl(var(--border))"
+                      strokeWidth="8"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="42"
+                      fill="none"
+                      stroke={
+                        slaReport.complianceRate >= 80
+                          ? "#10B981"
+                          : slaReport.complianceRate >= 50
+                            ? "#F59E0B"
+                            : "#EF4444"
+                      }
                       strokeWidth="8"
                       strokeDasharray={`${slaReport.complianceRate * 2.64} 264`}
                       strokeLinecap="round"
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-bold">{slaReport.complianceRate}%</span>
-                    <span className="text-xs text-muted-foreground">Compliant</span>
+                    <span className="text-3xl font-bold">
+                      {slaReport.complianceRate}%
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Compliant
+                    </span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-xs justify-center">
-                  <span className="text-muted-foreground">Total: {slaReport.total}</span>
-                  <span className="text-emerald-400">Met: {slaReport.compliant}</span>
-                  <span className="text-red-400">Breached: {slaReport.breached}</span>
+                  <span className="text-muted-foreground">
+                    Total: {slaReport.total}
+                  </span>
+                  <span className="text-emerald-400">
+                    Met: {slaReport.compliant}
+                  </span>
+                  <span className="text-red-400">
+                    Breached: {slaReport.breached}
+                  </span>
                 </div>
               </div>
             )}
           </AnalyticsChartCard>
 
-          <AnalyticsChartCard title="Score Distribution" data={scoreDistribution} filename="score-distribution">
+          <AnalyticsChartCard
+            title="Score Distribution"
+            data={scoreDistribution}
+            filename="score-distribution"
+          >
             {scoreDistribution.every((b) => b.count === 0) ? (
               <EmptyChart message="No scored leads yet" />
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={scoreDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                  />
                   <XAxis dataKey="range" tick={AXIS_TICK} />
                   <YAxis tick={AXIS_TICK} />
                   <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {scoreDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                    {scoreDistribution.map((_, i) => (
+                      <Cell
+                        key={i}
+                        fill={CHART_COLORS[i % CHART_COLORS.length]}
+                      />
+                    ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             )}
           </AnalyticsChartCard>
 
-          {analyticsSummary && analyticsSummary.assignmentDistribution.length > 0 && (
-            <AnalyticsChartCard title="Lead Assignment Distribution" data={analyticsSummary.assignmentDistribution} filename="assignment-distribution">
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={analyticsSummary.assignmentDistribution} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tick={AXIS_TICK} />
-                  <YAxis dataKey="name" type="category" tick={AXIS_TICK} width={100} />
-                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                  <Bar dataKey="count" fill="#3B82F6" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </AnalyticsChartCard>
-          )}
+          {analyticsSummary &&
+            analyticsSummary.assignmentDistribution.length > 0 && (
+              <AnalyticsChartCard
+                title="Lead Assignment Distribution"
+                data={analyticsSummary.assignmentDistribution}
+                filename="assignment-distribution"
+              >
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart
+                    data={analyticsSummary.assignmentDistribution}
+                    layout="vertical"
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                    />
+                    <XAxis type="number" tick={AXIS_TICK} />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      tick={AXIS_TICK}
+                      width={100}
+                    />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                    <Bar dataKey="count" fill="#3B82F6" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </AnalyticsChartCard>
+            )}
 
-          {analyticsSummary && analyticsSummary.conversionBySource.length > 0 && (
-            <AnalyticsChartCard title="Conversion Rate by Source" data={analyticsSummary.conversionBySource} filename="conversion-by-source">
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={analyticsSummary.conversionBySource}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="source" tick={{ ...AXIS_TICK, fontSize: 10 }} />
-                  <YAxis tick={AXIS_TICK} />
-                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                  <Bar dataKey="total" name="Total" fill="#94A3B8" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="converted" name="Converted" fill="#10B981" radius={[4, 4, 0, 0]} />
-                  <Legend />
-                </BarChart>
-              </ResponsiveContainer>
-            </AnalyticsChartCard>
-          )}
+          {analyticsSummary &&
+            analyticsSummary.conversionBySource.length > 0 && (
+              <AnalyticsChartCard
+                title="Conversion Rate by Source"
+                data={analyticsSummary.conversionBySource}
+                filename="conversion-by-source"
+              >
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={analyticsSummary.conversionBySource}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                    />
+                    <XAxis
+                      dataKey="source"
+                      tick={{ ...AXIS_TICK, fontSize: 10 }}
+                    />
+                    <YAxis tick={AXIS_TICK} />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                    <Bar
+                      dataKey="total"
+                      name="Total"
+                      fill="#94A3B8"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="converted"
+                      name="Converted"
+                      fill="#10B981"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Legend />
+                  </BarChart>
+                </ResponsiveContainer>
+              </AnalyticsChartCard>
+            )}
 
           {analyticsSummary && analyticsSummary.monthlyRevenue.length > 0 && (
-            <AnalyticsChartCard title="Monthly Revenue Trend" data={analyticsSummary.monthlyRevenue} filename="monthly-revenue">
+            <AnalyticsChartCard
+              title="Monthly Revenue Trend"
+              data={analyticsSummary.monthlyRevenue}
+              filename="monthly-revenue"
+            >
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={analyticsSummary.monthlyRevenue}>
                   <defs>
-                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient
+                      id="revenueGrad"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
                       <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
                       <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                  />
                   <XAxis dataKey="month" tick={AXIS_TICK} />
                   <YAxis tick={AXIS_TICK} />
-                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(value) => [`₹${(Number(value) / 100000).toFixed(1)}L`, "Revenue"]} />
-                  <Area type="monotone" dataKey="revenue" stroke="#06b6d4" strokeWidth={2} fill="url(#revenueGrad)" />
+                  <Tooltip
+                    contentStyle={CHART_TOOLTIP_STYLE}
+                    formatter={(value) => [
+                      `₹${(Number(value) / 100000).toFixed(1)}L`,
+                      "Revenue",
+                    ]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#06b6d4"
+                    strokeWidth={2}
+                    fill="url(#revenueGrad)"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </AnalyticsChartCard>
@@ -298,16 +516,24 @@ export default function CrmAnalyticsPage() {
         <motion.div variants={fadeUp} className="mt-4">
           <Card>
             <CardHeader className="px-4 py-3 border-b">
-              <h3 className="text-sm font-semibold">Task Analytics (Last 30 Days)</h3>
+              <h3 className="text-sm font-semibold">
+                Task Analytics (Last 30 Days)
+              </h3>
             </CardHeader>
             <CardContent className="p-4">
               <div className="grid grid-cols-3 gap-4 mb-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold">{taskAnalytics.completionRate}%</p>
-                  <p className="text-xs text-muted-foreground">Completion Rate</p>
+                  <p className="text-2xl font-bold">
+                    {taskAnalytics.completionRate}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Completion Rate
+                  </p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-destructive">{taskAnalytics.overdue}</p>
+                  <p className="text-2xl font-bold text-destructive">
+                    {taskAnalytics.overdue}
+                  </p>
                   <p className="text-xs text-muted-foreground">Overdue</p>
                 </div>
                 <div>
@@ -317,22 +543,33 @@ export default function CrmAnalyticsPage() {
               </div>
               {taskAnalytics.perRep.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Per Rep</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Per Rep
+                  </p>
                   {taskAnalytics.perRep.slice(0, 8).map((rep) => (
-                    <div key={rep.assigneeId} className="flex items-center gap-3">
-                      <p className="text-xs font-medium w-32 truncate shrink-0">{rep.name}</p>
+                    <div
+                      key={rep.assigneeId}
+                      className="flex items-center gap-3"
+                    >
+                      <p className="text-xs font-medium w-32 truncate shrink-0">
+                        {rep.name}
+                      </p>
                       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                         <div
                           className="h-full rounded-full bg-primary"
                           style={{ width: `${rep.completionRate}%` }}
                         />
                       </div>
-                      <span className="text-xs tabular-nums w-10 text-right shrink-0">{rep.completionRate}%</span>
+                      <span className="text-xs tabular-nums w-10 text-right shrink-0">
+                        {rep.completionRate}%
+                      </span>
                       <span className="text-xs text-muted-foreground tabular-nums w-12 text-right shrink-0">
                         {rep.completed}/{rep.total}
                       </span>
                       {rep.overdue > 0 && (
-                        <span className="text-[10px] text-destructive shrink-0">{rep.overdue} late</span>
+                        <span className="text-[10px] text-destructive shrink-0">
+                          {rep.overdue} late
+                        </span>
                       )}
                     </div>
                   ))}

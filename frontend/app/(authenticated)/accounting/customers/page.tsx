@@ -15,12 +15,16 @@ import {
 import { ListToolbar, LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
-import { useCustomersOutstanding } from "@/lib/api/hooks/accounting";
+import { useCustomersOutstanding } from "@/hooks/api/accounting";
 
 function formatCurrency(value: string): string {
   const n = Number(value);
   if (!Number.isFinite(n)) return value;
-  return n.toLocaleString(undefined, { style: "currency", currency: "INR", maximumFractionDigits: 2 });
+  return n.toLocaleString(undefined, {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  });
 }
 
 export default function CustomerLedgersPage() {
@@ -38,7 +42,9 @@ export default function CustomerLedgersPage() {
     setSearch(value);
   }
 
-  function handleOnlyOutstandingToggle(checked: boolean | "indeterminate"): void {
+  function handleOnlyOutstandingToggle(
+    checked: boolean | "indeterminate",
+  ): void {
     setOnlyOutstanding(checked === true);
   }
 
@@ -100,8 +106,12 @@ export default function CustomerLedgersPage() {
                   <TableHead>Customer</TableHead>
                   <TableHead className="w-[160px]">State</TableHead>
                   <TableHead className="w-[180px]">GSTIN</TableHead>
-                  <TableHead className="w-[100px] text-right">Invoices</TableHead>
-                  <TableHead className="w-[160px] text-right">Outstanding</TableHead>
+                  <TableHead className="w-[100px] text-right">
+                    Invoices
+                  </TableHead>
+                  <TableHead className="w-[160px] text-right">
+                    Outstanding
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

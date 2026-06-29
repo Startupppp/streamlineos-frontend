@@ -27,7 +27,7 @@ import {
   type UpcomingHoliday,
   type LeaveBalance,
   type BirthdayEntry,
-} from "@/lib/api/hooks/dashboard";
+} from "@/hooks/api/dashboard";
 
 function EmptyWidget({ message }: { message: string }) {
   return (

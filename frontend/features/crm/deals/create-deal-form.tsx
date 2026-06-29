@@ -10,18 +10,30 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { PhoneInput } from "@/components/ui/phone-input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
+import {@/hooks/api/crm
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { useCreateDeal } from "@/lib/api/hooks/crm";
+import { useCreateDeal } from "@/hooks/hooks/crm";
 import { DEAL_STAGES } from "@/features/crm/shared/constants";
 import type { DealStage } from "@/features/crm/shared/constants";
 import { toast } from "sonner";
 
-const DEAL_STAGE_KEYS = DEAL_STAGES.map((s) => s.key) as [DealStage, ...DealStage[]];
+const DEAL_STAGE_KEYS = DEAL_STAGES.map((s) => s.key) as [
+  DealStage,
+  ...DealStage[],
+];
 
 const createDealSchema = z.object({
   name: z
@@ -38,13 +50,20 @@ const createDealSchema = z.object({
     .string()
     .optional()
     .or(z.literal(""))
-    .refine((v) => !v || (Number(v) >= 0 && Number(v) <= 100), "Must be between 0 and 100"),
+    .refine(
+      (v) => !v || (Number(v) >= 0 && Number(v) <= 100),
+      "Must be between 0 and 100",
+    ),
   contactPerson: z
     .string()
     .regex(/^[A-Za-z\s]*$/, "Only letters allowed")
     .optional()
     .or(z.literal("")),
-  contactEmail: z.string().email("Enter a valid email").optional().or(z.literal("")),
+  contactEmail: z
+    .string()
+    .email("Enter a valid email")
+    .optional()
+    .or(z.literal("")),
   contactPhone: z.string().optional().or(z.literal("")),
   assignedToId: z.string().optional().or(z.literal("")),
   expectedCloseDate: z.string().optional().or(z.literal("")),
@@ -93,7 +112,10 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
           notes: data.notes || undefined,
         },
         {
-          onSuccess: () => { toast.success("Deal created"); onSuccess(); },
+          onSuccess: () => {
+            toast.success("Deal created");
+            onSuccess();
+          },
           onError: (err) => toast.error(err.message),
         },
       );
@@ -106,125 +128,189 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <FormField control={form.control} name="name" render={({ field }) => (
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Deal Name *</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. Enterprise License"
+                      className="capitalize"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="value"
+            render={({ field }) => (
               <FormItem>
-                <FormLabel>Deal Name *</FormLabel>
+                <FormLabel>Value (INR)</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Enterprise License" className="capitalize" {...field} />
+                  <Input type="number" min={0} placeholder="0" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
-            )} />
-          </div>
-          <FormField control={form.control} name="value" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Value (INR)</FormLabel>
-              <FormControl>
-                <Input type="number" min={0} placeholder="0" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="stage" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Stage</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="stage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Stage</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="w-full h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {DEAL_STAGES.map((s) => (
+                      <SelectItem key={s.key} value={s.key}>
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-2 h-2 rounded-full", s.dot)} />
+                          {s.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="probability"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Probability (%)</FormLabel>
                 <FormControl>
-                  <SelectTrigger className="w-full h-9"><SelectValue /></SelectTrigger>
+                  <Input type="number" min={0} max={100} {...field} />
                 </FormControl>
-                <SelectContent>
-                  {DEAL_STAGES.map((s) => (
-                    <SelectItem key={s.key} value={s.key}>
-                      <div className="flex items-center gap-2">
-                        <div className={cn("w-2 h-2 rounded-full", s.dot)} />
-                        {s.label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="probability" render={({ field }) => (
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="expectedCloseDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Expected Close</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Select date"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="contactPerson"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contact Person</FormLabel>
+                <FormControl>
+                  <Input placeholder="Name" className="capitalize" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="contactEmail"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contact Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="email@example.com"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="contactPhone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contact Phone</FormLabel>
+                <FormControl>
+                  <PhoneInput
+                    defaultCountry="IN"
+                    placeholder="Enter phone number"
+                    value={field.value || undefined}
+                    onChange={(value) => field.onChange(value ?? "")}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="assignedToId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Assigned To</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="w-full h-9">
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="max-h-[200px] overflow-y-auto">
+                    {employees.map((e) => (
+                      <SelectItem key={e.id} value={e.id}>
+                        {e.name || e.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
             <FormItem>
-              <FormLabel>Probability (%)</FormLabel>
+              <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Input type="number" min={0} max={100} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="expectedCloseDate" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Expected Close</FormLabel>
-              <FormControl>
-                <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Select date" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="contactPerson" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Contact Person</FormLabel>
-              <FormControl>
-                <Input placeholder="Name" className="capitalize" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="contactEmail" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Contact Email</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="email@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="contactPhone" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Contact Phone</FormLabel>
-              <FormControl>
-                <PhoneInput
-                  defaultCountry="IN"
-                  placeholder="Enter phone number"
-                  value={field.value || undefined}
-                  onChange={(value) => field.onChange(value ?? "")}
+                <Textarea
+                  placeholder="Additional notes..."
+                  className="min-h-[80px]"
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
-          )} />
-          <FormField control={form.control} name="assignedToId" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Assigned To</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="Select..." />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="max-h-[200px] overflow-y-auto">
-                  {employees.map((e) => (
-                    <SelectItem key={e.id} value={e.id}>{e.name || e.id}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
-        <FormField control={form.control} name="notes" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Notes</FormLabel>
-            <FormControl>
-              <Textarea placeholder="Additional notes..." className="min-h-[80px]" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+          )}
+        />
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={createMutation.isPending}
+        >
           {createMutation.isPending ? "Creating..." : "Create Deal"}
         </Button>
       </form>

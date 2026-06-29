@@ -27,7 +27,11 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { StatCard } from "@/components/ui/stat-card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -38,12 +42,16 @@ import {
   useHealthConfig,
   useUpdateHealthConfig,
   useRecomputeHealth,
-  type HealthScoreItem,
+  type H@/hooks/api/crm
   type HealthScoreWeights,
   type HealthScoreThresholds,
   type HealthScoreBreakdown,
-} from "@/lib/api/hooks/crm";
-import { healthStatusColors, healthDotColors, getColorSafe } from "@/lib/theme-constants";
+} from "@/hooks/hooks/crm";
+import {
+  healthStatusColors,
+  healthDotColors,
+  getColorSafe,
+} from "@/lib/theme-constants";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -101,7 +109,9 @@ function WeightSliderRow({ field, value, onChange }: WeightSliderRowProps) {
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <Label className="text-xs">{field.label}</Label>
-        <span className="text-xs font-medium tabular-nums text-muted-foreground">{value}</span>
+        <span className="text-xs font-medium tabular-nums text-muted-foreground">
+          {value}
+        </span>
       </div>
       <Slider
         value={[value]}
@@ -128,9 +138,15 @@ function ConfigSheet({
 }) {
   const update = useUpdateHealthConfig();
   const [weights, setWeights] = useState<HealthScoreWeights>(initialWeights);
-  const [thresholds, setThresholds] = useState<HealthScoreThresholds>(initialThresholds);
+  const [thresholds, setThresholds] =
+    useState<HealthScoreThresholds>(initialThresholds);
 
-  const totalWeight = weights.sla + weights.csat + weights.activity + weights.renewal + weights.tickets;
+  const totalWeight =
+    weights.sla +
+    weights.csat +
+    weights.activity +
+    weights.renewal +
+    weights.tickets;
   const thresholdsValid = thresholds.healthy > thresholds.atRisk;
   const canSave = totalWeight > 0 && thresholdsValid && !update.isPending;
 
@@ -138,7 +154,10 @@ function ConfigSheet({
     setWeights((prev) => ({ ...prev, [key]: value }));
   }
 
-  function handleThresholdChange(key: keyof HealthScoreThresholds, raw: string) {
+  function handleThresholdChange(
+    key: keyof HealthScoreThresholds,
+    raw: string,
+  ) {
     const value = Math.max(0, Math.min(100, Number(raw) || 0));
     setThresholds((prev) => ({ ...prev, [key]: value }));
   }
@@ -161,7 +180,9 @@ function ConfigSheet({
     onOpenChange(false);
   }
 
-  function handleHealthyThresholdChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleHealthyThresholdChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
     handleThresholdChange("healthy", e.target.value);
   }
 
@@ -175,15 +196,21 @@ function ConfigSheet({
         <SheetHeader className="px-0">
           <SheetTitle>Scoring configuration</SheetTitle>
           <SheetDescription>
-            Tune the weight of each signal and the thresholds that classify accounts.
+            Tune the weight of each signal and the thresholds that classify
+            accounts.
           </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-6 py-2">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">Signal weights</h3>
-              <Badge variant={totalWeight > 0 ? "secondary" : "destructive"} className="tabular-nums">
+              <h3 className="text-sm font-semibold text-foreground">
+                Signal weights
+              </h3>
+              <Badge
+                variant={totalWeight > 0 ? "secondary" : "destructive"}
+                className="tabular-nums"
+              >
                 Total {totalWeight}
               </Badge>
             </div>
@@ -196,13 +223,17 @@ function ConfigSheet({
               />
             ))}
             {totalWeight === 0 && (
-              <p className="text-xs text-destructive">At least one weight must be greater than zero.</p>
+              <p className="text-xs text-destructive">
+                At least one weight must be greater than zero.
+              </p>
             )}
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-sm font-semibold text-foreground">Thresholds</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                Thresholds
+              </h3>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -216,19 +247,27 @@ function ConfigSheet({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="start" className="w-64">
-                  <p className="text-xs font-semibold text-foreground mb-1.5">Health bands</p>
+                  <p className="text-xs font-semibold text-foreground mb-1.5">
+                    Health bands
+                  </p>
                   <ul className="space-y-1 text-xs text-muted-foreground">
                     <li>
-                      <span className="font-medium text-emerald-600">Healthy</span> — score at or above
-                      the healthy threshold; account shows positive signals and low churn risk.
+                      <span className="font-medium text-emerald-600">
+                        Healthy
+                      </span>{" "}
+                      — score at or above the healthy threshold; account shows
+                      positive signals and low churn risk.
                     </li>
                     <li>
-                      <span className="font-medium text-amber-600">At risk</span> — between the two
-                      thresholds; needs attention.
+                      <span className="font-medium text-amber-600">
+                        At risk
+                      </span>{" "}
+                      — between the two thresholds; needs attention.
                     </li>
                     <li>
-                      <span className="font-medium text-red-600">Critical</span> — below the at-risk
-                      threshold; warrants immediate intervention.
+                      <span className="font-medium text-red-600">Critical</span>{" "}
+                      — below the at-risk threshold; warrants immediate
+                      intervention.
                     </li>
                   </ul>
                   <p className="mt-2 text-[11px] text-muted-foreground">
@@ -287,7 +326,12 @@ function BreakdownPopover({ breakdown }: { breakdown: HealthScoreBreakdown }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="View score breakdown">
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-7 w-7"
+          aria-label="View score breakdown"
+        >
           <Info className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
@@ -300,10 +344,20 @@ function BreakdownPopover({ breakdown }: { breakdown: HealthScoreBreakdown }) {
               <div key={field.key} className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">{field.label}</span>
-                  <span className={cn("font-medium tabular-nums", scoreColor(value))}>{value}</span>
+                  <span
+                    className={cn(
+                      "font-medium tabular-nums",
+                      scoreColor(value),
+                    )}
+                  >
+                    {value}
+                  </span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full bg-primary" style={{ width: `${value}%` }} />
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${value}%` }}
+                  />
                 </div>
               </div>
             );
@@ -324,20 +378,34 @@ export default function AccountHealthPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const items = useMemo(() => data?.items ?? [], [data?.items]);
-  const summary = data?.summary ?? { healthy: 0, atRisk: 0, critical: 0, total: 0, avgScore: 0 };
+  const summary = data?.summary ?? {
+    healthy: 0,
+    atRisk: 0,
+    critical: 0,
+    total: 0,
+    avgScore: 0,
+  };
 
   const chartData = useMemo(
     () =>
       [
         { name: "Healthy", value: summary.healthy, status: "healthy" as const },
         { name: "At Risk", value: summary.atRisk, status: "at_risk" as const },
-        { name: "Critical", value: summary.critical, status: "critical" as const },
+        {
+          name: "Critical",
+          value: summary.critical,
+          status: "critical" as const,
+        },
       ].filter((d) => d.value > 0),
     [summary.healthy, summary.atRisk, summary.critical],
   );
 
   const sortedItems = useMemo(() => {
-    const statusRank: Record<HealthScoreItem["status"], number> = { critical: 0, at_risk: 1, healthy: 2 };
+    const statusRank: Record<HealthScoreItem["status"], number> = {
+      critical: 0,
+      at_risk: 1,
+      healthy: 2,
+    };
     const copy = [...items];
     copy.sort((a, b) => {
       let cmp = 0;
@@ -376,7 +444,9 @@ export default function AccountHealthPage() {
 
   const recomputeButton = (
     <Button size="sm" onClick={handleRecompute} disabled={recompute.isPending}>
-      <RefreshCw className={cn("h-4 w-4 mr-1.5", recompute.isPending && "animate-spin")} />
+      <RefreshCw
+        className={cn("h-4 w-4 mr-1.5", recompute.isPending && "animate-spin")}
+      />
       {recompute.isPending ? "Recomputing…" : "Recompute now"}
     </Button>
   );
@@ -420,10 +490,34 @@ export default function AccountHealthPage() {
       ) : (
         <div className="space-y-4">
           <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Avg Score" value={summary.avgScore} icon={Activity} color="blue" index={0} />
-            <StatCard label="Healthy" value={summary.healthy} icon={ShieldCheck} color="green" index={1} />
-            <StatCard label="At Risk" value={summary.atRisk} icon={AlertTriangle} color="amber" index={2} />
-            <StatCard label="Critical" value={summary.critical} icon={HeartPulse} color="red" index={3} />
+            <StatCard
+              label="Avg Score"
+              value={summary.avgScore}
+              icon={Activity}
+              color="blue"
+              index={0}
+            />
+            <StatCard
+              label="Healthy"
+              value={summary.healthy}
+              icon={ShieldCheck}
+              color="green"
+              index={1}
+            />
+            <StatCard
+              label="At Risk"
+              value={summary.atRisk}
+              icon={AlertTriangle}
+              color="amber"
+              index={2}
+            />
+            <StatCard
+              label="Critical"
+              value={summary.critical}
+              icon={HeartPulse}
+              color="red"
+              index={3}
+            />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-12">
@@ -439,9 +533,20 @@ export default function AccountHealthPage() {
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
                     <PieChart>
-                      <Pie data={chartData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value">
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={85}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
                         {chartData.map((d) => (
-                          <Cell key={d.status} fill={STATUS_CHART_COLORS[d.status]} />
+                          <Cell
+                            key={d.status}
+                            fill={STATUS_CHART_COLORS[d.status]}
+                          />
                         ))}
                       </Pie>
                       <Tooltip
@@ -455,15 +560,21 @@ export default function AccountHealthPage() {
                   </ResponsiveContainer>
                 )}
                 <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5">
-                  {(["healthy", "at_risk", "critical"] as const).map((status) => (
-                    <div key={status} className="flex items-center gap-1.5">
-                      <span
-                        className="h-2.5 w-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: STATUS_CHART_COLORS[status] }}
-                      />
-                      <span className="text-xs text-muted-foreground">{STATUS_LABELS[status]}</span>
-                    </div>
-                  ))}
+                  {(["healthy", "at_risk", "critical"] as const).map(
+                    (status) => (
+                      <div key={status} className="flex items-center gap-1.5">
+                        <span
+                          className="h-2.5 w-2.5 rounded-full shrink-0"
+                          style={{
+                            backgroundColor: STATUS_CHART_COLORS[status],
+                          }}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {STATUS_LABELS[status]}
+                        </span>
+                      </div>
+                    ),
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -507,7 +618,9 @@ export default function AccountHealthPage() {
                             <ArrowUpDown className="h-3 w-3" />
                           </button>
                         </th>
-                        <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Updated</th>
+                        <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">
+                          Updated
+                        </th>
                         <th className="px-4 py-2.5 text-right font-medium text-muted-foreground sr-only">
                           Breakdown
                         </th>
@@ -515,16 +628,29 @@ export default function AccountHealthPage() {
                     </thead>
                     <tbody>
                       {sortedItems.map((item) => (
-                        <tr key={item.clientAccountId} className="border-b last:border-0 hover:bg-muted/20">
+                        <tr
+                          key={item.clientAccountId}
+                          className="border-b last:border-0 hover:bg-muted/20"
+                        >
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2 min-w-0">
                               <span
-                                className={cn("h-2 w-2 rounded-full shrink-0", getColorSafe(healthDotColors, item.status))}
+                                className={cn(
+                                  "h-2 w-2 rounded-full shrink-0",
+                                  getColorSafe(healthDotColors, item.status),
+                                )}
                               />
-                              <span className="font-medium text-foreground truncate">{item.clientName}</span>
+                              <span className="font-medium text-foreground truncate">
+                                {item.clientName}
+                              </span>
                             </div>
                           </td>
-                          <td className={cn("px-4 py-3 text-right tabular-nums font-semibold", scoreColor(item.score))}>
+                          <td
+                            className={cn(
+                              "px-4 py-3 text-right tabular-nums font-semibold",
+                              scoreColor(item.score),
+                            )}
+                          >
                             {item.score}
                           </td>
                           <td className="px-4 py-3">
@@ -538,7 +664,9 @@ export default function AccountHealthPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right text-xs text-muted-foreground tabular-nums">
-                            {formatDistanceToNow(new Date(item.computedAt), { addSuffix: true })}
+                            {formatDistanceToNow(new Date(item.computedAt), {
+                              addSuffix: true,
+                            })}
                           </td>
                           <td className="px-4 py-3 text-right">
                             <BreakdownPopover breakdown={item.breakdown} />
