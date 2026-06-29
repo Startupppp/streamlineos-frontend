@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useInterviews, useUpdateInterview } from "@/hooks/api/hr";
+import { useInterviews } from "@/hooks/api/hr";
 import { useBulkRescheduleInterviews } from "@/hooks/api/hr/recruitment";
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
-import type { Interview, InterviewResult } from "@/types/hr";
+import type { Interview } from "@/types/hr";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -171,7 +171,6 @@ function InterviewTableRow({ interview, isSelected, onToggleSelect, onFeedback }
 
 export function InterviewList() {
   const { data: interviews } = useInterviews();
-  const updateInterview = useUpdateInterview();
   const bulkReschedule = useBulkRescheduleInterviews();
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());

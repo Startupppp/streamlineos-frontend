@@ -1,15 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Shield,
-  Users,
-  Key,
-  TrendingUp,
-  ArrowRight,
-  Loader2,
-} from "lucide-react";
-import { useRoles, useRolesAnalytics } from "@/hooks/hooks/roles";
+import { Shield, Users, Key, TrendingUp, ArrowRight } from "lucide-react";
+import { useRoles, useRolesAnalytics } from "@/hooks/api/roles";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,21 +41,6 @@ function StatCard({
 export default function RbacOverviewPage() {
   const { data: roles, isLoading: rolesLoading } = useRoles();
   const { data: analytics, isLoading: analyticsLoading } = useRolesAnalytics();
-
-  const totalPermissions = analytics?.totalPermissions ?? 0;
-  const assignedPermissions =
-    roles?.reduce(
-      (sum, r) =>
-        sum + ((r as { permissionCount?: number }).permissionCount ?? 0),
-      0,
-    ) ?? 0;
-  const coveragePct =
-    totalPermissions > 0
-      ? Math.round(
-          (assignedPermissions / (totalPermissions * (roles?.length || 1))) *
-            100,
-        )
-      : 0;
 
   return (
     <DashboardGate permission="settings:rbac:manage">
