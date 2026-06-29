@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useSignOut } from "@/lib/hooks/auth-hooks";
+import { useSignOut } from "@/hooks/auth-hooks";
 import Link from "next/link";
 import { Settings, LogOut, ChevronUp } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

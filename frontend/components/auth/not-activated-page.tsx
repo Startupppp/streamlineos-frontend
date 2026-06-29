@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { ShieldOff, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSignOut } from "@/lib/hooks/auth-hooks";
+import { useSignOut } from "@/hooks/auth-hooks";
 
 export function NotActivatedPage() {
   const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();

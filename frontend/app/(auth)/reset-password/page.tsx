@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { resetPassword } from "@/server/actions/auth-actions";
-import { useResetPassword } from "@/lib/hooks/auth-hooks";
+import { useResetPassword } from "@/hooks/auth-hooks";
 import { Loader2, Rocket, Shield, Eye, EyeOff, ArrowRight, ArrowLeft, AlertCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";

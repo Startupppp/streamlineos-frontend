@@ -1,5 +1,5 @@
 import { withAuth } from "@/lib/api/helpers";
-import { exchangeCalendarOAuthCode } from "@/lib/services/hr/calendar";
+import { exchangeCalendarOAuthCode } from "@/lib/api/calendar-oauth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 

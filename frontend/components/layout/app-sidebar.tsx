@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, ChevronsUpDown, Check, Search } from "lucide
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useGetOrganizations, useSwitchOrg } from "@/lib/hooks/auth-hooks";
+import { useGetOrganizations, useSwitchOrg } from "@/hooks/auth-hooks";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useForgotPassword } from "@/lib/hooks/auth-hooks";
+import { useForgotPassword } from "@/hooks/auth-hooks";
 import {
   ArrowLeft,
   CheckCircle2,

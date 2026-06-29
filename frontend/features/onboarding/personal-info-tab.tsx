@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { updatePersonalDetails } from "@/server/actions/onboarding-actions";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useOnboardingSubmit } from "@/lib/hooks/use-onboarding-submit";
+import { useOnboardingSubmit } from "@/hooks/use-onboarding-submit";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 import type { Variants } from "framer-motion";
 

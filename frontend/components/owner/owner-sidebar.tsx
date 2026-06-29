@@ -16,7 +16,7 @@ import {
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
-import { useSignOut } from "@/lib/hooks/auth-hooks";
+import { useSignOut } from "@/hooks/auth-hooks";
 import { cn } from "@/lib/utils";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 

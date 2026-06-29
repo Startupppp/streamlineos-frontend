@@ -1,5 +1,5 @@
 import { withAuth, err } from "@/lib/api/helpers";
-import { buildMicrosoftAuthUrl } from "@/lib/services/hr/calendar";
+import { buildMicrosoftAuthUrl } from "@/lib/api/calendar-oauth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 

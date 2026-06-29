@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useVerifyEmail, useResendVerificationEmail } from "@/lib/hooks/auth-hooks";
+import { useVerifyEmail, useResendVerificationEmail } from "@/hooks/auth-hooks";
 import { CheckCircle2, Mail, Loader2, ArrowLeft, RefreshCw, AlertCircle } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 
