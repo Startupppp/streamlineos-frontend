@@ -3,8 +3,6 @@ import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, intege
 import { relations } from "drizzle-orm";
 import { genderEnum, onboardingStatusEnum, onboardingDocStatusEnum } from "./enums";
 
-import { departments } from "./hr";
-import { tickets } from "./projects";
 
 export const organizations = pgTable("organizations", {
   id: text("id").primaryKey(),
@@ -109,6 +107,11 @@ export const users = pgTable("users", {
   loginAttempts: integer("login_attempts").default(0).notNull(),
   lockedUntil: timestamp("locked_until"),
   isActive: boolean("is_active").default(true).notNull(),
+  userStatus: text("user_status").default("active").notNull(),
+  invitedAt: timestamp("invited_at"),
+  activatedAt: timestamp("activated_at"),
+  archivedAt: timestamp("archived_at"),
+  deletedAt: timestamp("deleted_at"),
   hasDashboardAccess: boolean("has_dashboard_access").default(false).notNull(),
   reportingTo: text("reporting_to"),
   team: text("team"),
@@ -339,7 +342,6 @@ export const onboardingSteps = pgTable("onboarding_steps", {
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   members: many(organizationMembers),
-  departments: many(departments),
 }));
 
 export const organizationMembersRelations = relations(organizationMembers, ({ one }) => ({
@@ -354,10 +356,6 @@ export const organizationMembersRelations = relations(organizationMembers, ({ on
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
-  department: one(departments, {
-    fields: [users.departmentId],
-    references: [departments.id],
-  }),
   organizations: many(organizationMembers),
   accounts: many(accounts),
   sessions: many(sessions),
@@ -366,8 +364,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [users.id],
     relationName: "manager",
   }),
-  assignedTickets: many(tickets, { relationName: "assignee" }),
-  reportedTickets: many(tickets, { relationName: "reporter" }),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({

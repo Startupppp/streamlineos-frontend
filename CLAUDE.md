@@ -57,7 +57,7 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 
 ## API & data
 - BACKEND OWNS ALL APIs & BUSINESS LOGIC: every REST API/route handler/controller and business-logic service is written in the BACKEND repo (NestJS `streamlineos-api`) ONLY — never under this frontend repo. This frontend holds only UI, client state, and TanStack Query hooks (lib/api/) that call the backend API. Do NOT add new `app/api/**` business route handlers or `lib/services/**` business logic here (the only `app/api/**` allowed are NextAuth/auth-bridge routes); put business logic in the backend.
-- DB SCHEMA is authored in the FRONTEND and synced to the backend: the Drizzle schema source-of-truth is `frontend/lib/db/schema/**`, and the Drizzle config + migrations live in `frontend/` (e.g. `frontend/migrations/`). After editing the schema source, run `pnpm sync:schema` to regenerate the backend copy (`backend/src/db/schema/**`, gitignored) and `pnpm check:schema` to drift-gate it — NEVER hand-edit the generated backend schema. The backend still OWNS all DB queries/transactions against that schema.
+- DB SCHEMA source-of-truth is in the BACKEND: `backend/src/db/schema/**`. The Drizzle config (`backend/drizzle.config.ts`) and migrations (`backend/migrations/`) also live in the backend. Run `pnpm -C backend db:generate` / `pnpm -C backend db:push` / `pnpm -C backend db:migrate` for migration work — NEVER from the frontend. The frontend keeps a MINIMAL auth-only schema at `frontend/lib/db/schema/` (only enums.ts, auth.ts, shared.ts) solely for NextAuth's DrizzleAdapter — do NOT add business-domain tables there. Do NOT use `pnpm sync:schema` or `pnpm check:schema` (retired).
 - All client data fetching through TanStack Query hooks in lib/api/ — no raw fetch/axios inside components. Handle loading/error via query states.
 - Server components fetch on the server where possible; TanStack Query only for interactive client needs (mutations, polling, refetch, infinite scroll).
 - Backend controllers (NestJS, REST): Zod validation on every body/param, consistent error shape, correct HTTP status codes. Business logic in the backend service layer; controllers stay thin.
@@ -79,7 +79,7 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - App Router conventions: server components by default; "use client" only when needed and as deep in the tree as possible.
 - next/image for all images, next/link for navigation.
 - Dynamic route segments and their params use DESCRIPTIVE resource names, never a bare `id` — backend route params (`:projectId`, `:ticketId`, `:goalId`) and frontend page segments (`app/(authenticated)/projects/[projectId]`) — and the destructured variable matches (`const { projectId } = await ctx.params`). Never `[id]`.
-- Folder structure (frontend): page/route files thin; client logic in lib/, shared UI in components/ui/, feature components in components/<feature>/, hooks in hooks/, types in types/ or co-located — all business logic + APIs live in the backend repo (Drizzle DB schema is authored in frontend/lib/db/schema and synced to the backend via pnpm sync:schema). Move misplaced files into this structure when fixing a page and update imports.
+- Folder structure (frontend): page/route files thin; client logic in lib/, shared UI in components/ui/, feature components in components/<feature>/, hooks in hooks/, types in types/ or co-located — all business logic + APIs live in the backend repo (Drizzle DB schema source-of-truth is in backend/src/db/schema; the frontend only holds a minimal auth-only schema for NextAuth). Move misplaced files into this structure when fixing a page and update imports.
 - Logging: use the repo's logger (or Winston-style structured logging server-side); global error handling, graceful 500s.
 - Code must be implicitly testable; add minimal tests if the repo has a test setup.
 
@@ -110,7 +110,7 @@ Always `"module:resource:action"` — e.g. `"hr:employees:view"`, `"crm:leads:cr
 
 ### Key files
 - **Permission catalog** (source of truth): `backend/src/modules/rbac/permissions.constants.ts` — `PERMISSIONS` array + `ROLE_DEFAULT_PERMISSIONS` map
-- **DB schema**: `frontend/lib/db/schema/access.ts` (synced to backend via `pnpm sync:schema`)
+- **DB schema**: `backend/src/db/schema/access.ts` (source of truth in backend)
 - **AccessService**: `backend/src/modules/access/access.service.ts` — resolves snapshots, caches per (userId, orgId), degrades gracefully pre-migration
 - **PermissionGuard**: `backend/src/modules/access/permission.guard.ts` — NestJS guard that reads `@RequirePermission` metadata and calls `authorize()`
 - **Scope helpers**: each module has `*-scope.ts` (e.g. `leads-scope.ts`, `projects-scope.ts`) following the `applyScope(query, scope, userId)` pattern
@@ -201,11 +201,10 @@ Always `"module:resource:action"` — e.g. `"hr:employees:view"`, `"crm:leads:cr
 After adding new keys to `permissions.constants.ts`, they automatically appear in the roles admin permission matrix at `/settings/roles`. No frontend changes needed — the matrix reads from `GET /rbac/permissions`.
 
 ### DB migration for schema changes
-1. Edit `frontend/lib/db/schema/access.ts` (source of truth)
-2. Run `pnpm sync:schema` to regenerate backend copy
-3. Run `pnpm check:schema` to verify no drift
-4. Apply migration via `pnpm db:push` (requires TTY + pre-existing enums `data_scope` and `principal_group_type`)
-5. Run backfill after first deploy: `pnpm -C backend backfill:rbac`
+1. Edit `backend/src/db/schema/access.ts` (source of truth in backend)
+2. Run `pnpm -C backend db:generate` to generate the migration file
+3. Run `pnpm -C backend db:push` or `pnpm -C backend db:migrate` to apply (requires TTY + pre-existing enums `data_scope` and `principal_group_type`)
+4. Run backfill after first deploy: `pnpm -C backend backfill:rbac`
 
 ### RBAC runtime notes
 - The RBAC tables (`user_roles`, `role_permission_grants`, `group_roles`, `access_versions`) must exist for the engine to work. Before migration, `AccessService` degrades gracefully to legacy CASL fallback.
