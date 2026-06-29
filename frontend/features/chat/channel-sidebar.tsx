@@ -13,6 +13,7 @@ import { ChannelItem } from "./channel-item";
 import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
 import { BrowseChannelsDialog } from "./browse-channels-dialog";
+import { ChatSearchDialog } from "./chat-search-dialog";
 
 interface ChannelListEntryProps {
   channel: Channel;
@@ -57,6 +58,7 @@ export function ChannelSidebar({
   const [newDMOpen, setNewDMOpen] = useState(false);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
+  const [chatSearchOpen, setChatSearchOpen] = useState(false);
   const [dmsCollapsed, setDmsCollapsed] = useState(false);
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
   const [publicCollapsed, setPublicCollapsed] = useState(false);
@@ -123,6 +125,14 @@ export function ChannelSidebar({
             </div>
           </div>
           <div className="flex items-center gap-0.5">
+            <button
+              onClick={() => setChatSearchOpen(true)}
+              className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              aria-label="Search"
+              title="Search"
+            >
+              <Search className="h-3.5 w-3.5" />
+            </button>
             <button
               onClick={handleOpenBrowse}
               className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
@@ -256,6 +266,11 @@ export function ChannelSidebar({
         )}
       </ScrollArea>
 
+      <ChatSearchDialog
+        open={chatSearchOpen}
+        onOpenChange={setChatSearchOpen}
+        onSelectChannel={onSelectChannel}
+      />
       <BrowseChannelsDialog
         open={browseOpen}
         onOpenChange={setBrowseOpen}

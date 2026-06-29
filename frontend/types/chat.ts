@@ -275,6 +275,7 @@ export interface Huddle {
   startedBy: string;
   status: "active" | "ended";
   calendarEventId: number | null;
+  hasVideo: boolean;
   startedAt: Date | string;
   endedAt: Date | string | null;
   participants: HuddleParticipant[];
@@ -285,4 +286,25 @@ export interface HuddleSignalInput {
   type: "offer" | "answer" | "ice-candidate";
   targetUserId: string;
   payload: unknown;
+}
+
+export interface SearchMessagesResult {
+  results: (Message & { channel?: { id: number; name: string | null; type: string } | null })[];
+  nextCursor?: number;
+}
+
+export interface SearchChannelResult {
+  id: number;
+  name: string | null;
+  type: string;
+  description: string | null;
+  avatarUrl: string | null;
+  isMember: boolean;
+}
+
+export interface SearchUserResult {
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
 }

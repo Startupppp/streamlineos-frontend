@@ -29,6 +29,9 @@ import type {
   PinnedMessage,
   PublicChannel,
   ThreadPage,
+  SearchMessagesResult,
+  SearchChannelResult,
+  SearchUserResult,
 } from "@/types/chat";
 
 export function useChatChannels(enabled = true) {
@@ -418,5 +421,32 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
         queryKey: queryKeys.chat.thread(channelId, parentMessageId),
       });
     },
+  });
+}
+
+export function useSearchMessages(query: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.all, "search", "messages", query] as const,
+    queryFn: () => apiClient.get<SearchMessagesResult>("/chat/search/messages", { q: query }),
+    enabled: enabled && query.trim().length >= 2,
+    staleTime: 30_000,
+  });
+}
+
+export function useSearchChannels(query: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.all, "search", "channels", query] as const,
+    queryFn: () => apiClient.get<SearchChannelResult[]>("/chat/search/channels", { q: query }),
+    enabled: enabled && query.trim().length >= 1,
+    staleTime: 30_000,
+  });
+}
+
+export function useSearchUsers(query: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.all, "search", "users", query] as const,
+    queryFn: () => apiClient.get<SearchUserResult[]>("/chat/search/users", { q: query }),
+    enabled: enabled && query.trim().length >= 1,
+    staleTime: 30_000,
   });
 }

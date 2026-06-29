@@ -77,3 +77,21 @@ export function useSendHuddleSignal() {
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/signal`, signal),
   });
 }
+
+export function useStartVideoMeeting() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.post<Huddle>(`/chat/channels/${channelId}/meeting/start`),
+    onSuccess: (_data, channelId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(channelId) });
+    },
+  });
+}
+
+export function useSendMeetingSignal() {
+  return useMutation({
+    mutationFn: ({ huddleId, ...signal }: { huddleId: number } & HuddleSignalInput) =>
+      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/meeting-signal`, signal),
+  });
+}

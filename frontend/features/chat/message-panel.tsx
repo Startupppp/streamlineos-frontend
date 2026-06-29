@@ -17,6 +17,7 @@ import {
   Mic,
   PanelLeftOpen,
   Users,
+  Video,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,9 +40,10 @@ import {
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { useChatRealtime } from "@/lib/api/hooks/chat-realtime";
-import { useStartHuddle, useJoinHuddle, useActiveHuddle } from "@/lib/api/hooks/chat-huddles";
+import { useStartHuddle, useJoinHuddle, useActiveHuddle, useStartVideoMeeting } from "@/lib/api/hooks/chat-huddles";
 import { useHuddleRealtime } from "./huddle-realtime";
 import { HuddlePanel } from "./huddle-panel";
+import { VideoMeetingPanel } from "./video-meeting-panel";
 import { getInitials, getDateLabel } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { MessageList } from "./message-list";
@@ -90,6 +92,7 @@ export function MessagePanel({
   const { data: activeHuddle } = useActiveHuddle(channelId);
   const startHuddle = useStartHuddle();
   const joinHuddle = useJoinHuddle();
+  const startVideoMeeting = useStartVideoMeeting();
 
   const isInHuddle = activeHuddle?.participants.some((p) => p.userId === currentUserId) ?? false;
 
@@ -118,6 +121,7 @@ export function MessagePanel({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
+  const [showMeeting, setShowMeeting] = useState(false);
 
   const [pendingAttachments, setPendingAttachments] = useState<
     { fileName: string; fileUrl: string; fileKey: string; fileSize: number; mimeType: string }[]
@@ -476,6 +480,19 @@ export function MessagePanel({
               )}
             </Button>
           )}
+          <button
+            onClick={() => {
+              if (!activeHuddle) {
+                startVideoMeeting.mutate(channelId);
+              }
+              setShowMeeting(true);
+            }}
+            className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+            title="Video meeting"
+            aria-label="Video meeting"
+          >
+            <Video className={cn("h-4 w-4", activeHuddle?.hasVideo ? "text-blue-500" : "")} />
+          </button>
           <Button
             variant="ghost"
             size="icon"
@@ -560,6 +577,14 @@ export function MessagePanel({
         />
       )}
       </div>
+
+      {showMeeting && (
+        <VideoMeetingPanel
+          channelId={channelId}
+          currentUserId={currentUserId}
+          onClose={() => setShowMeeting(false)}
+        />
+      )}
 
       <AnimatePresence>
         {threadMessageId !== null && (

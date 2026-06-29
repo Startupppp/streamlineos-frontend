@@ -13,6 +13,7 @@ import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import { NewDMDialog } from "@/features/chat/new-dm-dialog";
 import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
+import { ChatNotificationsProvider } from "@/features/chat/chat-notifications";
 
 function ChatNotifications({
   activeChannelId,
@@ -75,6 +76,7 @@ export default function ChatPage() {
   return (
     <ChatAblyProvider>
       <ChatNotifications activeChannelId={activeChannelId} currentUserId={currentUserId} />
+      <ChatNotificationsProvider onSelectChannel={handleSelectChannel} />
     <div className="flex h-full overflow-hidden bg-background">
 
       <div
