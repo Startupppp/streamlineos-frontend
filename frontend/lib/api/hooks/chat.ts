@@ -495,3 +495,36 @@ export function useUnarchiveChannel() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() }); },
   });
 }
+
+export function useSetPresenceStatus() {
+  return useMutation({
+    mutationFn: (status: "ONLINE" | "AWAY" | "BUSY" | "INVISIBLE") =>
+      apiClient.put<{ ok: boolean }>("/chat/presence/status", { status }),
+  });
+}
+
+export function useMarkChannelUnread() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) => apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/mark-unread`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() }); },
+  });
+}
+
+interface LinkMeta {
+  url: string;
+  title: string | null;
+  description: string | null;
+  image: string | null;
+  siteName: string | null;
+}
+
+export function useLinkPreview(url: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.all, "linkPreview", url] as const,
+    queryFn: () => apiClient.get<LinkMeta>("/chat/link-preview", { url: url! }),
+    enabled: Boolean(url) && url!.startsWith("http"),
+    staleTime: 10 * 60_000,
+    retry: false,
+  });
+}

@@ -4,9 +4,12 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Compass, MessageSquareText, PanelLeftClose, Search, X } from "lucide-react";
+import { ChevronDown, Compass, MessageSquareText, PanelLeftClose, Search, X } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
-import { useChatChannels, useChatOnlineUsers } from "@/lib/api/hooks";
+import { useChatChannels, useChatOnlineUsers, useSetPresenceStatus } from "@/lib/api/hooks";
+import { useSession } from "next-auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import type { Channel } from "./chat-types";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelItem } from "./channel-item";
@@ -56,6 +59,25 @@ export function ChannelSidebar({
   const { data: onlineUsers } = useChatOnlineUsers();
   const [search, setSearch] = useState("");
   const [newDMOpen, setNewDMOpen] = useState(false);
+  const { data: session } = useSession();
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const setStatus = useSetPresenceStatus();
+  const [currentStatus, setCurrentStatus] = useState<"ONLINE" | "AWAY" | "BUSY" | "INVISIBLE">("ONLINE");
+
+  const STATUS_OPTIONS = [
+    { value: "ONLINE" as const, label: "Online", color: "bg-emerald-500" },
+    { value: "AWAY" as const, label: "Away", color: "bg-yellow-400" },
+    { value: "BUSY" as const, label: "Busy", color: "bg-red-500" },
+    { value: "INVISIBLE" as const, label: "Invisible", color: "bg-zinc-400" },
+  ];
+
+  const handleSelectStatus = useCallback((value: "ONLINE" | "AWAY" | "BUSY" | "INVISIBLE") => {
+    setCurrentStatus(value);
+    setShowStatusMenu(false);
+    setStatus.mutate(value);
+  }, [setStatus]);
+
+  const handleToggleStatusMenu = useCallback(() => setShowStatusMenu((p) => !p), []);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
   const [chatSearchOpen, setChatSearchOpen] = useState(false);
@@ -265,6 +287,48 @@ export function ChannelSidebar({
           </div>
         )}
       </ScrollArea>
+
+      <div className="px-3 py-2.5 border-t border-border/30 shrink-0">
+        <div className="relative">
+          <button
+            onClick={handleToggleStatusMenu}
+            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-muted/40 transition-colors"
+            aria-label="Set status"
+          >
+            <div className="relative shrink-0">
+              <Avatar className="h-7 w-7 border border-border/30">
+                <AvatarImage src={resolveImageUrl(session?.user?.image)} />
+                <AvatarFallback className="text-[9px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
+                  {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}
+                </AvatarFallback>
+              </Avatar>
+              <span className={cn("absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background", STATUS_OPTIONS.find(o => o.value === currentStatus)?.color ?? "bg-emerald-500")} />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-[12px] font-medium truncate">{session?.user?.name ?? "You"}</p>
+              <p className="text-[10px] text-muted-foreground">{STATUS_OPTIONS.find(o => o.value === currentStatus)?.label ?? "Online"}</p>
+            </div>
+            <ChevronDown className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+          </button>
+          {showStatusMenu && (
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-background border border-border/60 rounded-xl shadow-lg overflow-hidden z-30">
+              {STATUS_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => handleSelectStatus(opt.value)}
+                  className={cn(
+                    "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors text-[12px]",
+                    currentStatus === opt.value && "bg-muted/30 font-medium"
+                  )}
+                >
+                  <span className={cn("h-2 w-2 rounded-full shrink-0", opt.color)} />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       <ChatSearchDialog
         open={chatSearchOpen}

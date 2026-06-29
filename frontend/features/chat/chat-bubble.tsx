@@ -18,6 +18,7 @@ import {
   resolveFileUrl,
 } from "./chat-helpers";
 import type { Message } from "./chat-types";
+import { LinkPreviewCard } from "./link-preview-card";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
@@ -181,6 +182,10 @@ export function ChatBubble({
               )}>
                 {message.content}
               </p>
+            )}
+
+            {message.content && /https?:\/\//.test(message.content) && (
+              <LinkPreviewCard content={message.content} isOwn={isOwn} />
             )}
 
             {message.attachments.length > 0 && (

@@ -253,6 +253,32 @@ export function MessagePanel({
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
   }, []);
 
+  const handlePastedFiles = useCallback(async (files: File[]) => {
+    setUploading(true);
+    const MAX_SIZE = 10 * 1024 * 1024;
+    try {
+      for (const file of files) {
+        if (file.size > MAX_SIZE) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "chat");
+        try {
+          const result = await apiClient.upload<{ url: string; key: string; size?: number; mimeType?: string }>(
+            "/storage/upload",
+            formData,
+          );
+          setPendingAttachments((prev) => [
+            ...prev,
+            { fileName: file.name, fileUrl: result.url, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type },
+          ]);
+        } catch (err) {
+          toast.error(`Failed: ${getApiError(err) || file.name}`);
+        }
+      }
+    } catch (error) { toast.error(getErrorMessage(error)); }
+    finally { setUploading(false); }
+  }, []);
+
   const insertEmoji = useCallback((emoji: string) => {
     const el = inputRef.current;
     if (el) {
@@ -618,6 +644,7 @@ export function MessagePanel({
         onSend={handleSend}
         onKeyDown={handleKeyDown}
         onInputChange={handleInputChange}
+        onFilesSelected={handlePastedFiles}
       />
 
       {activeHuddle && isInHuddle && (

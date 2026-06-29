@@ -148,6 +148,7 @@ interface MessageInputProps {
   onSend: () => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onFilesSelected?: (files: File[]) => void;
 }
 
 export function MessageInput({
@@ -180,6 +181,7 @@ export function MessageInput({
   onSend,
   onKeyDown,
   onInputChange,
+  onFilesSelected,
 }: MessageInputProps) {
   const handleCancelReply = useCallback(() => setReplyTo(null), [setReplyTo]);
   const handleOpenFileInput = useCallback(() => { fileInputRef.current?.click(); }, [fileInputRef]);
@@ -201,6 +203,17 @@ export function MessageInput({
   const handleRemoveAttachment = useCallback((idx: number) => {
     setPendingAttachments((prev) => prev.filter((_, i) => i !== idx));
   }, [setPendingAttachments]);
+
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItems = items.filter(item => item.type.startsWith("image/"));
+    if (imageItems.length === 0) return;
+    e.preventDefault();
+    const files = imageItems.map(item => item.getAsFile()).filter((f): f is File => f !== null);
+    if (files.length > 0 && onFilesSelected) {
+      onFilesSelected(files);
+    }
+  }, [onFilesSelected]);
 
   return (
     <>
@@ -323,6 +336,7 @@ export function MessageInput({
               value={messageInput}
               onChange={onInputChange}
               onKeyDown={onKeyDown}
+              onPaste={handlePaste}
               placeholder={`Message ${channelType === "DIRECT" ? displayName : "#" + displayName}...`}
               rows={1}
               className="w-full bg-transparent text-[14px] resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground/60 min-h-[40px] max-h-[160px]"
