@@ -59,7 +59,8 @@ type WizardData = {
   companySize: string;
   country: string;
   website: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   logo: string;
   primaryColor: string;
   supportEmail: string;
@@ -83,7 +84,8 @@ const DEFAULT_DATA: WizardData = {
   companySize: "",
   country: "",
   website: "",
-  name: "",
+  firstName: "",
+  lastName: "",
   logo: "",
   primaryColor: "#2563eb",
   supportEmail: "",
@@ -129,9 +131,9 @@ export default function OrgSetupPage() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>(() => {
     const draft = loadDraft();
-    if (!draft.name && session?.user?.email) {
+    if (!draft.firstName && session?.user?.email) {
       const username = session.user.email.split("@")[0] ?? "";
-      draft.name = username.charAt(0).toUpperCase() + username.slice(1);
+      draft.firstName = username.charAt(0).toUpperCase() + username.slice(1);
     }
     return draft;
   });
@@ -181,10 +183,7 @@ export default function OrgSetupPage() {
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      const nameParts = data.name.trim().split(/\s+/);
-      const firstName = nameParts[0] ?? data.name;
-      const lastName = nameParts.slice(1).join(" ") || "";
-      await apiClient.patch("/org/setup", { ...data, firstName, lastName, name: undefined, website: data.website || undefined, logo: data.logo || undefined, supportEmail: data.supportEmail || undefined });
+      await apiClient.patch("/org/setup", { ...data, website: data.website || undefined, logo: data.logo || undefined, supportEmail: data.supportEmail || undefined });
       localStorage.removeItem("org-setup-draft");
       setShowCelebration(true);
     } catch (error) {
@@ -279,11 +278,15 @@ export default function OrgSetupPage() {
           <div className="space-y-4">
             <p className="text-[13px] text-slate-500">A few details about you, the admin.</p>
             <div className="space-y-1">
-              <Label className="text-[12px] font-medium text-slate-700">Your name *</Label>
-              <Input value={data.name} onChange={(e) => patch({ name: e.target.value })} placeholder="Aditya Sharma" className="h-10" />
+              <Label className="text-[12px] font-medium text-slate-700">First name *</Label>
+              <Input value={data.firstName} onChange={(e) => patch({ firstName: e.target.value })} placeholder="Aditya" className="h-10" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[12px] font-medium text-slate-700">Last name <span className="text-slate-400 font-normal">(optional)</span></Label>
+              <Input value={data.lastName} onChange={(e) => patch({ lastName: e.target.value })} placeholder="Sharma" className="h-10" />
             </div>
             <NavButtons onBack={goBack} onNext={() => {
-              if (!data.name.trim()) { toast.error("Please enter your name"); return; }
+              if (!data.firstName.trim()) { toast.error("Please enter your first name"); return; }
               goNext();
             }} />
           </div>
@@ -481,7 +484,7 @@ export default function OrgSetupPage() {
               <ReviewRow label="Organization" value={data.companyName} />
               <ReviewRow label="Industry" value={`${data.industry} · ${data.companySize}`} />
               <ReviewRow label="Country" value={data.country} />
-              <ReviewRow label="Admin" value={data.name} />
+              <ReviewRow label="Admin" value={data.lastName ? `${data.firstName} ${data.lastName}` : data.firstName} />
               <ReviewRow label="Timezone" value={`${data.timezone} · ${data.currency}`} />
               <ReviewRow label="Business hours" value={`${Object.values(data.businessHours).filter((h) => h.enabled).length} days/week`} />
               <ReviewRow label="Holidays" value={`${data.holidays.length} selected`} />

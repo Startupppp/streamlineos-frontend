@@ -37,7 +37,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <main
           id="main-content"
           aria-label="Authentication"
-          className="flex w-full flex-1 flex-col items-center min-h-0 py-3 px-4 sm:px-6 lg:px-8"
+          className="flex w-full flex-1 flex-col items-center justify-center min-h-0 overflow-y-auto scrollbar-hide py-6 px-4 sm:px-6 lg:px-8"
         >
           {children}
         </main>
