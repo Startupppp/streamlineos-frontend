@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUserStats } from "@/lib/api/hooks/users";
+import { useUserStats } from "@/hooks/api/users";
 import { Users, UserCheck, UserX, Mail } from "lucide-react";
 
 interface StatCardProps {

@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { useCreateUser } from "@/lib/api/hooks/users";
-import { useOrgBranches, useOrgDepartments } from "@/lib/api/hooks/org-hierarchy";
+import { useCreateUser } from "@/hooks/api/users";
+import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
 import {
   Dialog,

@@ -48,7 +48,7 @@ import {
   useDeleteProjectTemplate,
   useApplyProjectTemplate,
   type ProjectTemplate,
-} from "@/lib/api/hooks/projects";
+} from "@/hooks/api/projects";
 import { toast } from "sonner";
 
 interface TicketDraft {

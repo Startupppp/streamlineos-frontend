@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { isBefore, isAfter, format } from "date-fns";
 import { motion } from "framer-motion";
-import { useHrWfhRequests } from "@/lib/api/hooks/hr";
+import { useHrWfhRequests } from "@/hooks/api/hr";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

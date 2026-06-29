@@ -4,7 +4,7 @@ import { Monitor, Trash2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { format } from "date-fns";
-import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/lib/api/hooks/auth";
+import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/auth";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

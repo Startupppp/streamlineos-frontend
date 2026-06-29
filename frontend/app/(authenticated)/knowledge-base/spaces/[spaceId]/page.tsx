@@ -17,7 +17,7 @@ import {
   useKbSpace,
   useKbCategories,
   useKbArticles,
-} from "@/lib/api/hooks/kb";
+} from "@/hooks/api/kb";
 import { getApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import type { KbAudience } from "@/types/kb";

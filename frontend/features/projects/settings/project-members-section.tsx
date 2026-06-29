@@ -40,7 +40,7 @@ import {
   Trash2,
   UserX,
 } from "lucide-react";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
+import { useHrEmployees } from "@/hooks/api/hr";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";

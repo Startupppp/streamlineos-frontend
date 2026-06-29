@@ -43,8 +43,8 @@ import {
   useCreateTransfer,
   type TransferListItem,
   type TransferStatus,
-} from "@/lib/api/hooks/inventory/stock";
-import { useWarehouses } from "@/lib/api/hooks/inventory/warehouses";
+} from "@/hooks/api/inventory/stock";
+import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 

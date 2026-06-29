@@ -18,7 +18,7 @@ import {
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
-import type { DocumentTemplate } from "@/lib/api/hooks/hr/document-templates";
+import type { DocumentTemplate } from "@/hooks/api/hr/document-templates";
 
 export function VariableChips({ variables }: { variables: string[] }) {
   const visible = variables.slice(0, 3);

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateJobForm } from "@/features/hr/recruitment/jobs/create-job-form";
-import { useJobPosting } from "@/lib/api/hooks/hr/recruitment";
+import { useJobPosting } from "@/hooks/api/hr/recruitment";
 
 interface Props {
   params: Promise<{ jobId: string }>;

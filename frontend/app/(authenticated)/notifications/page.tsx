@@ -8,7 +8,7 @@ import {
   useUnreadNotificationCount,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
-} from "@/lib/api/hooks/notifications";
+} from "@/hooks/api/notifications";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

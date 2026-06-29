@@ -29,7 +29,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { useBulkInviteUsers } from "@/lib/api/hooks/users";
+import { useBulkInviteUsers } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle } from "lucide-react";

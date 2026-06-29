@@ -7,7 +7,7 @@ import {
   useUpdatePIP,
   useHrEmployees,
   type PIP,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";

@@ -12,8 +12,7 @@ import {
   useSubmitScorecard,
   type ScorecardTemplate,
   type InterviewScorecard,
-} from "@/lib/api/hooks/hr/recruitment";
-
+} from "@/hooks/api/hr/recruitment";
 
 const DEFAULT_CRITERIA = [
   "Technical Skills",
@@ -21,7 +20,6 @@ const DEFAULT_CRITERIA = [
   "Culture Fit",
   "Problem Solving",
 ];
-
 
 type Recommendation = "HIRE" | "NO_HIRE" | "MAYBE";
 
@@ -38,7 +36,8 @@ const RECOMMENDATION_OPTIONS: RecommendationOption[] = [
     value: "HIRE",
     label: "Hire",
     Icon: CheckCircle2,
-    badgeClass: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    badgeClass:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
     activeClass: "border-green-500 bg-green-50 dark:bg-green-900/20",
   },
   {
@@ -52,11 +51,11 @@ const RECOMMENDATION_OPTIONS: RecommendationOption[] = [
     value: "MAYBE",
     label: "Maybe",
     Icon: HelpCircle,
-    badgeClass: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+    badgeClass:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
     activeClass: "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20",
   },
 ];
-
 
 interface StarRatingProps {
   value: number;
@@ -87,7 +86,7 @@ function StarRating({ value, onChange, readOnly, label }: StarRatingProps) {
           aria-label={`Rate ${star} out of 5`}
           className={cn(
             "transition-colors",
-            readOnly ? "cursor-default" : "cursor-pointer hover:scale-110"
+            readOnly ? "cursor-default" : "cursor-pointer hover:scale-110",
           )}
         >
           <Star
@@ -95,7 +94,7 @@ function StarRating({ value, onChange, readOnly, label }: StarRatingProps) {
               "h-5 w-5 transition-colors",
               star <= display
                 ? "fill-yellow-400 text-yellow-400"
-                : "fill-transparent text-muted-foreground"
+                : "fill-transparent text-muted-foreground",
             )}
           />
         </button>
@@ -104,14 +103,15 @@ function StarRating({ value, onChange, readOnly, label }: StarRatingProps) {
   );
 }
 
-
 interface ReadOnlyViewProps {
   scorecard: InterviewScorecard;
   criteriaNames: string[];
 }
 
 function ReadOnlyView({ scorecard, criteriaNames }: ReadOnlyViewProps) {
-  const rec = RECOMMENDATION_OPTIONS.find((r) => r.value === scorecard.recommendation);
+  const rec = RECOMMENDATION_OPTIONS.find(
+    (r) => r.value === scorecard.recommendation,
+  );
 
   return (
     <div className="space-y-6">
@@ -146,7 +146,9 @@ function ReadOnlyView({ scorecard, criteriaNames }: ReadOnlyViewProps) {
 
       {rec && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-foreground">Recommendation</h4>
+          <h4 className="text-sm font-semibold text-foreground">
+            Recommendation
+          </h4>
           <Badge className={cn("gap-1.5 text-sm", rec.badgeClass)}>
             <rec.Icon className="h-4 w-4" />
             {rec.label}
@@ -169,13 +171,11 @@ function ReadOnlyView({ scorecard, criteriaNames }: ReadOnlyViewProps) {
   );
 }
 
-
 export interface ScorecardFormProps {
   interviewId: number;
   template: ScorecardTemplate | null;
   existingScorecard?: InterviewScorecard | null;
 }
-
 
 export function ScorecardForm({
   interviewId,
@@ -186,14 +186,18 @@ export function ScorecardForm({
     ? template.criteria.map((c) => c.name)
     : DEFAULT_CRITERIA;
 
-  const initialRatings = criteriaNames.reduce<Record<string, number>>((acc, name) => {
-    acc[name] = existingScorecard?.ratings?.[name] ?? 0;
-    return acc;
-  }, {});
+  const initialRatings = criteriaNames.reduce<Record<string, number>>(
+    (acc, name) => {
+      acc[name] = existingScorecard?.ratings?.[name] ?? 0;
+      return acc;
+    },
+    {},
+  );
 
-  const [ratings, setRatings] = useState<Record<string, number>>(initialRatings);
+  const [ratings, setRatings] =
+    useState<Record<string, number>>(initialRatings);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(
-    existingScorecard?.recommendation ?? null
+    existingScorecard?.recommendation ?? null,
   );
   const [notes, setNotes] = useState(existingScorecard?.notes ?? "");
 
@@ -232,9 +236,16 @@ export function ScorecardForm({
         onError: () => {
           toast.error("Failed to submit scorecard. Please try again.");
         },
-      }
+      },
     );
-  }, [ratings, recommendation, notes, criteriaNames, template, submitScorecard]);
+  }, [
+    ratings,
+    recommendation,
+    notes,
+    criteriaNames,
+    template,
+    submitScorecard,
+  ]);
 
   if (isSubmitted && existingScorecard) {
     return (
@@ -255,7 +266,9 @@ export function ScorecardForm({
       )}
 
       <div className="space-y-4">
-        <h4 className="text-sm font-semibold text-foreground">Criteria Ratings</h4>
+        <h4 className="text-sm font-semibold text-foreground">
+          Criteria Ratings
+        </h4>
         {criteriaNames.map((name) => (
           <div key={name} className="flex items-center justify-between gap-4">
             <span className="text-sm text-foreground">{name}</span>
@@ -271,34 +284,40 @@ export function ScorecardForm({
       <Separator />
 
       <div className="space-y-3">
-        <h4 className="text-sm font-semibold text-foreground">Recommendation</h4>
+        <h4 className="text-sm font-semibold text-foreground">
+          Recommendation
+        </h4>
         <div
           className="flex flex-col gap-2 sm:flex-row"
           role="group"
           aria-label="Hiring recommendation"
         >
-          {RECOMMENDATION_OPTIONS.map(({ value, label, Icon, badgeClass, activeClass }) => {
-            const selected = recommendation === value;
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setRecommendation(value)}
-                aria-pressed={selected}
-                className={cn(
-                  "flex flex-1 items-center justify-center gap-2 rounded-md border-2 px-4 py-2.5 text-sm font-medium transition-colors",
-                  selected
-                    ? activeClass + " border-current"
-                    : "border-border bg-background hover:bg-muted"
-                )}
-              >
-                <Badge className={cn("gap-1 pointer-events-none", badgeClass)}>
-                  <Icon className="h-3.5 w-3.5" />
-                  {label}
-                </Badge>
-              </button>
-            );
-          })}
+          {RECOMMENDATION_OPTIONS.map(
+            ({ value, label, Icon, badgeClass, activeClass }) => {
+              const selected = recommendation === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setRecommendation(value)}
+                  aria-pressed={selected}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-md border-2 px-4 py-2.5 text-sm font-medium transition-colors",
+                    selected
+                      ? activeClass + " border-current"
+                      : "border-border bg-background hover:bg-muted",
+                  )}
+                >
+                  <Badge
+                    className={cn("gap-1 pointer-events-none", badgeClass)}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {label}
+                  </Badge>
+                </button>
+              );
+            },
+          )}
         </div>
       </div>
 

@@ -28,7 +28,7 @@ import {
   useToggleAutomation,
   useDeleteAutomation,
   type AutomationRule,
-} from "@/lib/api/hooks/automations";
+} from "@/hooks/api/automations";
 import { TRIGGER_META, ACTION_TYPES } from "@/components/automations/automation-meta";
 import { AutomationBuilderSheet } from "@/components/automations/automation-builder-sheet";
 import { AutomationRunsDialog } from "@/components/automations/automation-runs-dialog";

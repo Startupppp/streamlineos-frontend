@@ -25,7 +25,7 @@ import {
   useSupportActivity,
   type SupportActivityAction,
   type SupportActivityEntry,
-} from "@/lib/api/hooks/support/activity";
+} from "@/hooks/api/support/activity";
 
 const ACTION_ICONS: Record<SupportActivityAction, LucideIcon> = {
   created: PlusCircle,

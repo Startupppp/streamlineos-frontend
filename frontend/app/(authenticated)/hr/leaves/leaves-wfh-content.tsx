@@ -9,7 +9,7 @@ import {
   useHrLeaveApprovals,
   useHrMyLeaveRequests,
   useHrLeavesThisWeek,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +31,7 @@ import type {
 import { LeavesTabContent } from "./leaves-tab-content";
 import { WfhTabContent } from "./wfh-tab-content";
 import { LeaveApprovalsContent } from "./leave-approvals";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 export function LeavesWfhContent() {
   const { data: session } = useSession();

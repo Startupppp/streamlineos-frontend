@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
-import { useResourceAllocation } from "@/lib/api/hooks/projects";
+import { useResourceAllocation } from "@/hooks/api/projects";
 import { ErrorState } from "@/components/shared/error-state";
 
 const PROJECT_COLORS = [

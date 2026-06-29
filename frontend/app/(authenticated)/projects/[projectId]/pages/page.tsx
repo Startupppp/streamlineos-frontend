@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState, useMemo, useCallback, memo } from "react";
-import { usePages, useCreatePage, useUpdatePage } from "@/lib/api/hooks/projects";
+import { usePages, useCreatePage, useUpdatePage } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

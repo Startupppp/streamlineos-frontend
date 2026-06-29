@@ -5,7 +5,7 @@ import {
   useProjectAnalytics,
   useSprints,
   useSprintBurndown,
-} from "@/lib/api/hooks/projects";
+} from "@/hooks/api/projects";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyActivityIllustration } from "@/components/illustrations";

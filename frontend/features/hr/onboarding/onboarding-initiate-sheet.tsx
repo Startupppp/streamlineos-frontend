@@ -9,8 +9,8 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useInitiateOnboarding } from "@/lib/api/hooks/hr/onboarding";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
+import { useInitiateOnboarding } from "@/hooks/api/hr/onboarding";
+import { useHrEmployees } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 
 interface OnboardingInitiateSheetProps {

@@ -11,7 +11,7 @@ import {
   useUpdateClientOpportunity,
   useDeleteClientOpportunity,
   type CreateClientOpportunityInput,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/api/crm";
 import {
   UpsellList,
   sumValues,

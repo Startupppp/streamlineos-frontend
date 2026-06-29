@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useScoringRules, useCreateScoringRule, useUpdateScoringRule, useDeleteScoringRule,
-} from "@/lib/api/hooks/crm-settings";
+} from "@/hooks/api/crm-settings";
 import { toast } from "sonner";
 
 const FIELDS = [

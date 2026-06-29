@@ -4,7 +4,7 @@ import { use } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useDocumentTemplate } from "@/lib/api/hooks/hr/document-templates";
+import { useDocumentTemplate } from "@/hooks/api/hr/document-templates";
 import { TemplateEditor } from "@/features/hr/documents/template-editor";
 
 interface EditTemplatePageProps {

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EmptyTicketIllustration } from "@/components/illustrations";
-import { useHrHelpdeskTickets, useCreateHelpdeskTicket } from "@/lib/api/hooks/hr";
+import { useHrHelpdeskTickets, useCreateHelpdeskTicket } from "@/hooks/api/hr";
 import { AISuggestReplyButton } from "@/features/hr/helpdesk/ai-suggest-reply-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

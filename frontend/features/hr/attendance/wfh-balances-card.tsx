@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useHrWfhRequests } from "@/lib/api/hooks/hr";
+import { useHrWfhRequests } from "@/hooks/api/hr";
 import { WFH_MONTHLY_QUOTA } from "@/lib/leave-policy";
 import { RequestWfhDialog } from "@/components/hr/request-wfh-dialog";
 import { Home } from "lucide-react";

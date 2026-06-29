@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useAllReferrals, useUpdateReferralStatus } from "@/lib/api/hooks/hr/recruitment/referrals";
+import { useAllReferrals, useUpdateReferralStatus } from "@/hooks/api/hr/recruitment/referrals";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";

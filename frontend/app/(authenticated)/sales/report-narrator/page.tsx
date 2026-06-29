@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useReportNarrator, type ReportNarratorResult } from "@/lib/api/hooks/ai";
+import { useReportNarrator, type ReportNarratorResult } from "@/hooks/api/ai";
 import { toast } from "sonner";
 
 

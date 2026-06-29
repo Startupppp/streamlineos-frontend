@@ -3,7 +3,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useCreateRichDocument } from "@/lib/api/hooks/hr";
+import { useCreateRichDocument } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

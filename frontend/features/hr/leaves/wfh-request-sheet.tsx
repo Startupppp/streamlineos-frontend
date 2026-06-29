@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, addDays, startOfDay } from "date-fns";
 import { toast } from "sonner";
-import { useCreateWfhRequest } from "@/lib/api/hooks/hr";
+import { useCreateWfhRequest } from "@/hooks/api/hr";
 
 import {
   Form,

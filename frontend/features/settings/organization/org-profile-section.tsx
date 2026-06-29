@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { useUpdateOrgSettings } from "@/lib/api/hooks/organization";
+import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
 
 const INDUSTRIES = [

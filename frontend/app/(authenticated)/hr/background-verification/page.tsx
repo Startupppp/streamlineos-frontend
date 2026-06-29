@@ -7,9 +7,9 @@ import {
   useCreateBackgroundVerification,
   useUpdateBackgroundVerification,
   type BackgroundVerification,
-} from "@/lib/api/hooks/hr";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
-import { useBgvComplianceDashboard, type BgvComplianceRow } from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr";
+import { useHrEmployees } from "@/hooks/api/hr";
+import { useBgvComplianceDashboard, type BgvComplianceRow } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

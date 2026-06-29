@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useInvitations, useResendInvite, useCancelInvitation } from "@/lib/api/hooks/users";
+import {@/hooks/api/users
+  useInvitations,
+  useResendInvite,
+  useCancelInvitation,
+} from "@/hooks/hooks/users";
 import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
 import { Mail, RefreshCw, X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -69,11 +73,15 @@ export function UserInvitationsPanel() {
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{inv.email}</p>
                 <div className="flex items-center gap-2 mt-0.5 text-muted-foreground">
-                  <Badge variant="secondary" className="h-4 text-[10px] px-1">{inv.role}</Badge>
+                  <Badge variant="secondary" className="h-4 text-[10px] px-1">
+                    {inv.role}
+                  </Badge>
                   {expired ? (
                     <span className="text-red-500">Expired</span>
                   ) : (
-                    <span>Expires {format(new Date(inv.expiresAt), "MMM d")}</span>
+                    <span>
+                      Expires {format(new Date(inv.expiresAt), "MMM d")}
+                    </span>
                   )}
                   <span>Sent {format(new Date(inv.createdAt), "MMM d")}</span>
                 </div>
@@ -118,12 +126,16 @@ export function UserInvitationsPanel() {
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="px-1">{page} / {pagination.totalPages}</span>
+            <span className="px-1">
+              {page} / {pagination.totalPages}
+            </span>
             <Button
               variant="outline"
               size="sm"
               className="h-7 w-7 p-0"
-              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              onClick={() =>
+                setPage((p) => Math.min(pagination.totalPages, p + 1))
+              }
               disabled={page === pagination.totalPages}
             >
               <ChevronRight className="h-3.5 w-3.5" />

@@ -23,7 +23,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useCandidateVault,
   useDeleteVaultDocument,
-} from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 

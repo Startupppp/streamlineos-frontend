@@ -11,7 +11,7 @@ import {
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useUpdateInterview } from "@/lib/api/hooks/hr";
+import { useUpdateInterview } from "@/hooks/api/hr";
 import { Star, Plus, X, ClipboardList, BarChart3, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Interview, InterviewResult, InterviewRubricEntry } from "@/types/hr";

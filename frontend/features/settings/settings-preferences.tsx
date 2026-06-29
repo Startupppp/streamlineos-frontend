@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Monitor,  Mail, Bell, BellOff, Smartphone, Moon } from "lucide-react";
-import { useNotificationPreferences, useUpdateNotificationPreferences } from "@/lib/api/hooks/hr";
+import { useNotificationPreferences, useUpdateNotificationPreferences } from "@/hooks/api/hr";
 import { Input } from "@/components/ui/input";
 
 interface PrefRowProps {

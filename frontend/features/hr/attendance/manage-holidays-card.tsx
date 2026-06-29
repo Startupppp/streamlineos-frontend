@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday, useUpdateHoliday } from "@/lib/api/hooks/hr";
+import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday, useUpdateHoliday } from "@/hooks/api/hr";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Pencil, Check, X, PartyPopper } from "lucide-react";

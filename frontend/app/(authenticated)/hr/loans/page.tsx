@@ -8,7 +8,7 @@ import {
   useProcessSalaryLoan,
   useHrEmployees,
   type SalaryLoan,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +23,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, CheckCircle2, XCircle, Banknote, User, CalendarDays, AlertCircle } from "lucide-react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { cn } from "@/lib/utils";
 

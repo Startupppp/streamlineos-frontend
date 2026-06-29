@@ -31,7 +31,7 @@ import {
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useEmailTemplates, useCreateEmailTemplate, useUpdateEmailTemplate, useDeleteEmailTemplate,
-} from "@/lib/api/hooks/crm-settings";
+} from "@/hooks/api/crm-settings";
 import { toast } from "sonner";
 
 const VARIABLES = [

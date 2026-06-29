@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useVendor, useVendorPurchaseOrders } from "@/lib/api/hooks/inventory";
+import { useVendor, useVendorPurchaseOrders } from "@/hooks/api/inventory";
 import type { PurchaseOrderStatus } from "@/types/inventory";
 
 interface VendorDetailPageProps {

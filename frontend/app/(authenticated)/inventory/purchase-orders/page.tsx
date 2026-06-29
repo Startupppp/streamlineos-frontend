@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { usePurchaseOrders, useVendors } from "@/lib/api/hooks/inventory";
+import { usePurchaseOrders, useVendors } from "@/hooks/api/inventory";
 import type { PurchaseOrderStatus } from "@/types/inventory";
 
 type StatusFilter = "ALL" | PurchaseOrderStatus;

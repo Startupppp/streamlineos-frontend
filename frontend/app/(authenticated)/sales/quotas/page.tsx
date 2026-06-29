@@ -33,11 +33,11 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { useSalesQuotas, useCreateSalesQuota } from "@/lib/api/hooks/crm";
+import { useSalesQuotas, useCreateSalesQuota } from "@/hooks/api/crm";
 import { useHrEmployees } from "@/lib/api/hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import type { SalesQuota } from "@/lib/api/hooks/crm";
+import type { SalesQuota } from "@/hooks/api/crm";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 

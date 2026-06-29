@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useInfiniteBlogFeed } from "@/lib/api/hooks/blog";
+import { useInfiniteBlogFeed } from "@/hooks/api/blog";
 import { BlogCard } from "./blog-card";
 import { BlogCardSkeleton } from "./blog-card-skeleton";
 import type { BlogPostWithRelations } from "@/types/blog";
@@ -55,7 +55,9 @@ export function PostFeed({
           <BlogCard key={post.id} post={post} />
         ))}
         {loading &&
-          Array.from({ length: 3 }).map((_, i) => <BlogCardSkeleton key={`s-${i}`} />)}
+          Array.from({ length: 3 }).map((_, i) => (
+            <BlogCardSkeleton key={`s-${i}`} />
+          ))}
       </div>
 
       {hasMore && (

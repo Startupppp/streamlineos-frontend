@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useRenewalAccounts, useUpdateRenewal } from "@/lib/api/hooks/crm";
+import { useRenewalAccounts, useUpdateRenewal } from "@/hooks/api/crm";
 import type { ClientAccount } from "@/types/crm";
 import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared/error-state";

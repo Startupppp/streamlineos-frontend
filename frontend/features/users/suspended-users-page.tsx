@@ -22,8 +22,8 @@ import {
   useUpdateUserStatus,
   useDeleteUser,
   useBulkRestore,
-} from "@/lib/api/hooks/users";
-import type { User } from "@/lib/api/hooks/users";
+} from "@/hooks/api/users";
+import type { User } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { UserDetailSheet } from "./user-detail-sheet";
 import { toast } from "sonner";

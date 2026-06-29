@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Plus, Loader2 } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
-import { useWatchers, useToggleWatch, useAddWatcher } from "@/lib/api/hooks/projects";
+import { useWatchers, useToggleWatch, useAddWatcher } from "@/hooks/api/projects";
 import {
   Select,
   SelectContent,

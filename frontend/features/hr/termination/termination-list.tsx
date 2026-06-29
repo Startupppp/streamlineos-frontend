@@ -21,7 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
 
-import type { Termination, TerminationStatus } from "@/lib/api/hooks/hr";
+import type { Termination, TerminationStatus } from "@/hooks/api/hr";
 import {
   TERMINATION_STATUS_LABELS,
   TERMINATION_STATUSES,

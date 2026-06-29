@@ -5,7 +5,7 @@ import { Upload, FileText, ChevronDown, FolderLock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { useCandidateVault } from "@/lib/api/hooks/hr/recruitment";
+import { useCandidateVault } from "@/hooks/api/hr/recruitment";
 import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";
 import { BgvTracker } from "./vault-bgv-tracker";
 import { VaultUploadArea } from "./vault-upload-area";

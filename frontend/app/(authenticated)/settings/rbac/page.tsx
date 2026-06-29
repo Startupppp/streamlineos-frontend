@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Shield, Users, Key, TrendingUp, ArrowRight, Loader2 } from "lucide-react";
-import { useRoles, useRolesAnalytics } from "@/lib/api/hooks/roles";
+import { useRoles, useRolesAnalytics } from "@/hooks/api/roles";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

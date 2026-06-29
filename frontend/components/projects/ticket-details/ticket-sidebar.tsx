@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
-import { useEpics, useModules } from "@/lib/api/hooks/projects";
+import { useEpics, useModules } from "@/hooks/api/projects";
 import { LabelPicker } from "../label-picker";
 import type { ProjectMember } from "./types";
 

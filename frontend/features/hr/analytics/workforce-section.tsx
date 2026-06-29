@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useHrAnalytics } from "@/lib/api/hooks/hr/analytics";
+import { useHrAnalytics } from "@/hooks/api/hr/analytics";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { StatCard } from "@/components/ui/stat-card";

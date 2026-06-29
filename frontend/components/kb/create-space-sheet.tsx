@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateKbSpace } from "@/lib/api/hooks/kb";
+import { useCreateKbSpace } from "@/hooks/api/kb";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 

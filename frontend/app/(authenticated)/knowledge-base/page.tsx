@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { SpaceCard } from "@/components/kb/space-card";
 import { CreateSpaceSheet } from "@/components/kb/create-space-sheet";
-import { useKbSpaces } from "@/lib/api/hooks/kb";
+import { useKbSpaces } from "@/hooks/api/kb";
 import { getApiError } from "@/lib/api-client";
 
 export default function KnowledgeBaseHomePage() {

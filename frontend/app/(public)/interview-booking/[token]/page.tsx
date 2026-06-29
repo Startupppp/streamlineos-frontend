@@ -11,7 +11,7 @@ import {
   InterviewBookingExpiredError,
   useConfirmInterviewBooking,
   usePublicInterviewBooking,
-} from "@/lib/api/hooks/public-booking";
+} from "@/hooks/api/public-booking";
 import { getApiError } from "@/lib/api-client";
 
 export default function InterviewBookingPage() {

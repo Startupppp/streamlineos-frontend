@@ -9,8 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
-import { useMovementsReport, type MovementType } from "@/lib/api/hooks/inventory/reports";
-import { useWarehouses } from "@/lib/api/hooks/inventory/warehouses";
+import { useMovementsReport, type MovementType } from "@/hooks/api/inventory/reports";
+import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "ALL", label: "All types" },

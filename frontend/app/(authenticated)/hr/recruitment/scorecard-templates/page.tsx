@@ -26,7 +26,7 @@ import {
   useDeleteScorecardTemplate,
   type ScorecardTemplate,
   type ScorecardCriterion,
-} from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";

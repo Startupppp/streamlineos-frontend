@@ -29,7 +29,7 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useWarehouse, useLocations, useCreateLocation } from "@/lib/api/hooks/inventory/warehouses";
+import { useWarehouse, useLocations, useCreateLocation } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 

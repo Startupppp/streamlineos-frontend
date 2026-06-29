@@ -18,7 +18,7 @@ import {
   useInvoiceSalesOrder,
   type SalesOrderStatus,
   type AtpEntry,
-} from "@/lib/api/hooks/inventory/sales-orders";
+} from "@/hooks/api/inventory/sales-orders";
 
 type SoStatus = SalesOrderStatus;
 

@@ -32,8 +32,8 @@ import {
   useKbSpace,
   useLogKbArticleView,
   useVerifyKbArticle,
-} from "@/lib/api/hooks/kb";
-import { useOrgMembers } from "@/lib/api/hooks/organization";
+} from "@/hooks/api/kb";
+import { useOrgMembers } from "@/hooks/api/organization";
 import { CommentThread } from "@/components/kb/comment-thread";
 import {
   ArticleContent,

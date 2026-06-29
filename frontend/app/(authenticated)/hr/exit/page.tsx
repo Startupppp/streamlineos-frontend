@@ -9,7 +9,7 @@ import {
   useCeoReviewResignation,
   useWithdrawResignation,
   type Resignation,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { apiClient } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ import {
 import { FileUpload } from "@/components/storage/file-upload";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { RESIGNATION_REASONS, RESIGNATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 

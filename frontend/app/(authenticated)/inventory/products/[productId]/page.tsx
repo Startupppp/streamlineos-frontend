@@ -50,7 +50,7 @@ import {
   useCategories,
   useUom,
   useStockLevels,
-} from "@/lib/api/hooks/inventory";
+} from "@/hooks/api/inventory";
 
 interface ProductDetailPageProps {
   params: Promise<{ productId: string }>;

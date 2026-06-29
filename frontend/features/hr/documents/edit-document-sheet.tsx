@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
-import { useUpdateDocument, useHrEmployees } from "@/lib/api/hooks/hr";
+import { useUpdateDocument, useHrEmployees } from "@/hooks/api/hr";
 import { formSchema, type DocumentFormData, DocumentFormFields } from "@/features/hr/documents/document-form-fields";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Document } from "@/types/hr";

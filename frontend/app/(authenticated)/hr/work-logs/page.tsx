@@ -3,8 +3,8 @@
 import { useState, useMemo, useCallback, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { format, eachDayOfInterval, parse, isValid } from "date-fns";
-import { useGetWorkLogs, useUpsertWorkLog, useHrMyLeaveRequests } from "@/lib/api/hooks/hr";
-import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
+import { useGetWorkLogs, useUpsertWorkLog, useHrMyLeaveRequests } from "@/hooks/api/hr";
+import { useHrEmployees, useHrDepartments } from "@/hooks/api/hr";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -20,7 +20,7 @@ import {
 } from "@/features/hr/work-logs/work-log-filters";
 import { WorkLogMonthGroup } from "@/features/hr/work-logs/work-log-month-group";
 import { EmptyTimeIllustration } from "@/components/illustrations";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 export default function WorkLogsPage() {
   const { data: session } = useSession();

@@ -27,9 +27,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { useCreateProject } from "@/lib/api/hooks/projects";
+import { useCreateProject } from "@/hooks/api/projects";
 import { Plus, Check, User, Search } from "lucide-react";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
+import { useHrEmployees } from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({

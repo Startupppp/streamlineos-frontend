@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useLeadSourceReport } from "@/lib/api/hooks/crm/leads";
+import { useLeadSourceReport } from "@/hooks/api/crm/leads";
 
 const SOURCE_LABELS: Record<string, string> = {
   referral: "Referral",

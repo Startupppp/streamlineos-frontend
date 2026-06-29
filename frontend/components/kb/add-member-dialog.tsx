@@ -20,8 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAddKbSpaceMember } from "@/lib/api/hooks/kb";
-import { useOrgMembers } from "@/lib/api/hooks/organization";
+import { useAddKbSpaceMember } from "@/hooks/api/kb";
+import { useOrgMembers } from "@/hooks/api/organization";
 import { getApiError } from "@/lib/api-client";
 import { SYSTEM_ROLES } from "@/lib/rbac/permissions/roles";
 import type { KbSpaceRole } from "@/types/kb";

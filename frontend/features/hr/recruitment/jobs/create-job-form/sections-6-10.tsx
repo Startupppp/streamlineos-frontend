@@ -15,7 +15,7 @@ import { FieldError, SectionTitle } from "./sections-1-5";
 import type { CreateJobFormValues } from "./schema";
 import type { SectionProps } from "./sections-1-5";
 import { cn } from "@/lib/utils";
-import { useHiringFlows } from "@/lib/api/hooks/hr/recruitment";
+import { useHiringFlows } from "@/hooks/api/hr/recruitment";
 import {
   FileText, Users, Settings, Eye, Zap,
 } from "lucide-react";

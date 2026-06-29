@@ -5,7 +5,7 @@ import { useState, useCallback } from "react";
 import {
   useAssessments, useCreateAssessment,
   type Assessment, type AssessmentAttempt, type AssessStatus,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +15,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Plus, ClipboardCheck, Clock, Users, CheckCircle2, Minus, AlertCircle } from "lucide-react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 
 function deriveStatus(attempts: AssessmentAttempt[]): AssessStatus {

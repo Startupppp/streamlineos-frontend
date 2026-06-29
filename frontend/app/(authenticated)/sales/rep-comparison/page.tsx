@@ -23,7 +23,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { useRepComparison, useSalesDashboardLeaderboard } from "@/lib/api/hooks/crm";
+import { useRepComparison, useSalesDashboardLeaderboard } from "@/hooks/api/crm";
 import { GitCompare } from "lucide-react";
 import { ErrorState } from "@/components/shared/error-state";
 

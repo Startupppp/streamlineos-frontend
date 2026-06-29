@@ -30,8 +30,8 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { useInviteUser } from "@/lib/api/hooks/users";
-import { useOrgBranches, useOrgDepartments } from "@/lib/api/hooks/org-hierarchy";
+import { useInviteUser } from "@/hooks/api/users";
+import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { CheckCircle2, Mail, ChevronDown } from "lucide-react";

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
-import { useRoleTemplates, useCloneRoleTemplate, type RoleTemplate } from "@/lib/api/hooks/roles";
+import { useRoleTemplates, useCloneRoleTemplate, type RoleTemplate } from "@/hooks/api/roles";
 
 interface RoleTemplateDialogProps {
   open: boolean;

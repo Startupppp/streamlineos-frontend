@@ -12,7 +12,7 @@ import {
   useRevokeApiToken,
   useDeleteApiToken,
   type CreateApiTokenInput,
-} from "@/lib/api/hooks/api-tokens";
+} from "@/hooks/api/api-tokens";
 import {
   useUserApiTokens,
   useCreateUserApiToken,
@@ -20,7 +20,7 @@ import {
   type CreateUserApiTokenInput,
   type CreateUserApiTokenResponse,
   type UserApiToken,
-} from "@/lib/api/hooks/user-api-tokens";
+} from "@/hooks/api/user-api-tokens";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { ApiToken, CreateApiTokenResponse } from "@/lib/api/hooks/api-tokens";
+import type { ApiToken, CreateApiTokenResponse } from "@/hooks/api/api-tokens";
 
 const AVAILABLE_SCOPES = [
   "read:all",

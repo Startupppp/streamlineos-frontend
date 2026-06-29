@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useDiversityReport, type DiversityFilters } from "@/lib/api/hooks/hr/recruitment";
-import { useHrDepartments } from "@/lib/api/hooks/hr";
+import { useDiversityReport, type DiversityFilters } from "@/hooks/api/hr/recruitment";
+import { useHrDepartments } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";

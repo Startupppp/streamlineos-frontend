@@ -17,8 +17,8 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Plus, TrendingUp, ArrowRight, ChevronsUpDown, Check, Building2, AlertCircle } from "lucide-react";
-import { useCan } from "@/lib/api/hooks/access";
-import { useHrDepartments } from "@/lib/api/hooks/hr";
+import { useCan } from "@/hooks/api/access";
+import { useHrDepartments } from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
 
 interface CareerLadderLevel {

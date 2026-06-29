@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { BlogContentEditor } from "./blog-content-editor";
 import { CoverImageUpload } from "./cover-image-upload";
-import { useCreatePost, useUpdatePost } from "@/lib/api/hooks/blog";
+import { useCreatePost, useUpdatePost } from "@/hooks/api/blog";
 import type { PostPayload } from "@/types/blog";
 
 const formSchema = z.object({

@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Shield, ShieldCheck, ShieldOff, Copy, Check } from "lucide-react";
-import { useMfaStatus, useMfaSetup, useMfaVerify, useMfaDisable } from "@/lib/api/hooks/mfa";
+import { useMfaStatus, useMfaSetup, useMfaVerify, useMfaDisable } from "@/hooks/api/mfa";
 import { toast } from "sonner";
 
 export function MfaSettings() {

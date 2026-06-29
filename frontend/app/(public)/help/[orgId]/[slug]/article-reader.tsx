@@ -23,11 +23,11 @@ import {
 import {
   usePublicKbArticle,
   useSubmitKbFeedback,
-} from "@/lib/api/hooks/support/kb";
+} from "@/hooks/api/support/kb";
 import {
   usePublicKbAttachments,
   type PublicKbAttachment,
-} from "@/lib/api/hooks/support/kb-attachments";
+} from "@/hooks/api/support/kb-attachments";
 import { ArticleContent, prepareArticle } from "@/components/kb/article-content";
 import { TableOfContents } from "@/components/blog/table-of-contents";
 import type { TocItem } from "@/lib/blog-utils";

@@ -32,7 +32,7 @@ import {
   useCategories,
   useUom,
   useCreateProduct,
-} from "@/lib/api/hooks/inventory";
+} from "@/hooks/api/inventory";
 
 interface Category {
   id: number;

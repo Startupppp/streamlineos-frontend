@@ -33,7 +33,7 @@ import {
   useCreateHiringFlowRound,
   useUpdateHiringFlowRound,
   useDeleteHiringFlowRound,
-} from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { HiringFlow, HiringFlowRound } from "@/types/hr/recruitment";
 

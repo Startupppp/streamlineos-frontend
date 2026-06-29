@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import {
   useUpdateCandidateBgv,
   type BgvStatus,
-} from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSprintBurndown } from "@/lib/api/hooks/projects";
+import { useSprintBurndown } from "@/hooks/api/projects";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { TrendingDown } from "lucide-react";

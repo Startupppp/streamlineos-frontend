@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRecruiters, useRecruiterActivity } from "@/lib/api/hooks/hr/recruitment";
-import type { RecruiterSummary, RecruiterActivityEntry } from "@/lib/api/hooks/hr/recruitment";
+import { useRecruiters, useRecruiterActivity } from "@/hooks/api/hr/recruitment";
+import type { RecruiterSummary, RecruiterActivityEntry } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";

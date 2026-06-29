@@ -14,7 +14,7 @@ import { EmptyPersonIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
 import { OnboardingInitiateSheet } from "./onboarding-initiate-sheet";
-import { useOnboardingStatus, type OnboardingStatus } from "@/lib/api/hooks/hr/onboarding";
+import { useOnboardingStatus, type OnboardingStatus } from "@/hooks/api/hr/onboarding";
 
 function isStalledBadge(row: OnboardingStatus): boolean {
   if (row.percentComplete >= 100) return false;

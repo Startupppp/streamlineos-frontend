@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { formatCurrency, formatNumber } from "@/lib/format-utils";
-import type { SalesFunnelStageResult } from "@/lib/api/hooks/crm";
+import type { SalesFunnelStageResult } from "@/hooks/api/crm";
 
 interface SalesFunnelChartProps {
   data: SalesFunnelStageResult[];

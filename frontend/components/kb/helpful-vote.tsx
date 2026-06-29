@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useVoteKbArticle } from "@/lib/api/hooks/kb";
+import { useVoteKbArticle } from "@/hooks/api/kb";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 

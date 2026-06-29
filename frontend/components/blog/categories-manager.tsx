@@ -14,7 +14,7 @@ import {
   useCreateCategory,
   useUpdateCategory,
   useDeleteCategory,
-} from "@/lib/api/hooks/blog";
+} from "@/hooks/api/blog";
 
 const DEFAULT_COLOR = "#3B82F6";
 

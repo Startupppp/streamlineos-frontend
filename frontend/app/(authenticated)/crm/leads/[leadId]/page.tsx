@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/lib/api/hooks/leads";
-import { useCreateTask } from "@/lib/api/hooks/tasks";
+import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/hooks/api/leads";
+import { useCreateTask } from "@/hooks/api/tasks";
 import { toast } from "sonner";
 
 import { LeadDetailHeader } from "@/features/crm/leads/detail/lead-detail-header";

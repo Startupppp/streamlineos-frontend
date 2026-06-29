@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateKbCategory } from "@/lib/api/hooks/kb";
+import { useCreateKbCategory } from "@/hooks/api/kb";
 import { getApiError } from "@/lib/api-client";
 import type { KbCategory } from "@/types/kb";
 

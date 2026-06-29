@@ -36,7 +36,7 @@ import {
   type AutomationAction,
   type AutomationActionType,
   type AutomationTestResult,
-} from "@/lib/api/hooks/automations";
+} from "@/hooks/api/automations";
 import {
   TRIGGER_META,
   CONDITION_OPS,

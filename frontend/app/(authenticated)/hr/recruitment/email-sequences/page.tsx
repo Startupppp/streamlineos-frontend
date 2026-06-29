@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useEmailSequences, useCreateEmailSequence, useUpdateEmailSequence, useDeleteEmailSequence } from "@/lib/api/hooks/hr/recruitment/email-sequences";
+import { useEmailSequences, useCreateEmailSequence, useUpdateEmailSequence, useDeleteEmailSequence } from "@/hooks/api/hr/recruitment/email-sequences";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";

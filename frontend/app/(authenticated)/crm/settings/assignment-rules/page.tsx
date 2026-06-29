@@ -35,8 +35,8 @@ import {
   useAssignmentRules, useCreateAssignmentRule, useUpdateAssignmentRule,
   useDeleteAssignmentRule, useReorderAssignmentRules,
   type AssignmentRuleCondition,
-} from "@/lib/api/hooks/crm-settings";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
+} from "@/hooks/api/crm-settings";
+import { useHrEmployees } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { toast } from "sonner";
 

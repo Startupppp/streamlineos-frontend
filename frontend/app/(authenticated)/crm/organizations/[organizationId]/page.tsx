@@ -36,7 +36,7 @@ import {
   useCrmOrgTimeline,
   useCrmOrgRelatedLeads,
   useDeleteCrmOrganization,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/api/crm";
 import { AccountHealthBadge, computeHealthScore } from "@/features/crm/organizations/detail/account-health-badge";
 import { HierarchyTree } from "@/features/crm/organizations/detail/hierarchy-tree";
 import { AccountTimeline } from "@/features/crm/organizations/detail/account-timeline";

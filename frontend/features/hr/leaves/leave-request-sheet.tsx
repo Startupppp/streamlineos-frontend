@@ -28,7 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FileUpload } from "@/components/storage/file-upload";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
-import { useRequestLeave } from "@/lib/api/hooks/hr";
+import { useRequestLeave } from "@/hooks/api/hr";
 import { LEAVE_MAX_DAYS } from "@/lib/leave-policy";
 import type {
   LeaveType,

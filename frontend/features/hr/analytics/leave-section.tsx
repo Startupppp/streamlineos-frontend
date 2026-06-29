@@ -1,6 +1,6 @@
 "use client";
 
-import { useHrLeaveAnalytics } from "@/lib/api/hooks/hr/leaves-expenses";
+import { useHrLeaveAnalytics } from "@/hooks/api/hr/leaves-expenses";
 import {
   ResponsiveContainer,
   BarChart,

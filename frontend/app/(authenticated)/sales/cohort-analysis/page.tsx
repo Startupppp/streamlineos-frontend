@@ -24,7 +24,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { useSalesCohort } from "@/lib/api/hooks/crm";
+import { useSalesCohort } from "@/hooks/api/crm";
 import { Users } from "lucide-react";
 import { ErrorState } from "@/components/shared/error-state";
 

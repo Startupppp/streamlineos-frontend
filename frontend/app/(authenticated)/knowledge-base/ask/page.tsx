@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { AskAnswer } from "@/components/kb/ask-answer";
-import { useKbAsk } from "@/lib/api/hooks/kb";
+import { useKbAsk } from "@/hooks/api/kb";
 import { getApiError } from "@/lib/api-client";
 
 function isCreditError(error: unknown): boolean {

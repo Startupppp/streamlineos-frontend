@@ -25,7 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useAuditLogs, type AuditLogRow } from "@/lib/api/hooks/audit-log";
+import { useAuditLogs, type AuditLogRow } from "@/hooks/api/audit-log";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 

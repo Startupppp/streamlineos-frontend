@@ -2,7 +2,7 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
-import { useEnpsScores, useSubmitEnpsScore, type EnpsScore } from "@/lib/api/hooks/hr";
+import { useEnpsScores, useSubmitEnpsScore, type EnpsScore } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, ThumbsUp, MessageSquare, EyeOff, User, TrendingUp, AlertCircle } from "lucide-react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 

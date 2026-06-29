@@ -23,13 +23,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useUpdateKbArticle, useKbCategories } from "@/lib/api/hooks/kb";
+import { useUpdateKbArticle, useKbCategories } from "@/hooks/api/kb";
 import {
   useKbTags,
   useCreateKbTag,
   useKbArticleTags,
   useSetKbArticleTags,
-} from "@/lib/api/hooks/kb/tags";
+} from "@/hooks/api/kb/tags";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { KbArticle } from "@/types/kb";
 

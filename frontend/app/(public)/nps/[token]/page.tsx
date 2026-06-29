@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, CheckCircle2, ThumbsUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePublicNpsSurvey, useSubmitNpsResponse } from "@/lib/api/hooks/crm";
+import { usePublicNpsSurvey, useSubmitNpsResponse } from "@/hooks/api/crm";
 import { getApiError } from "@/lib/api-client";
 
 const SCORES = Array.from({ length: 11 }, (_, i) => i);

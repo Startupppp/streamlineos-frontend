@@ -7,14 +7,14 @@ import {
   useProject,
   useUpdateProject,
   useDeleteProject,
-} from "@/lib/api/hooks/projects";
+} from "@/hooks/api/projects";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ProjectInfoSection } from "@/features/projects/settings/project-info-section";
 import {

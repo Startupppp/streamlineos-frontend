@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
-import { useSlaCompliance } from "@/lib/api/hooks/crm";
+import { useSlaCompliance } from "@/hooks/api/crm";
 import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared/error-state";
 

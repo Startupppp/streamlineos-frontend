@@ -28,7 +28,7 @@ import {
   useKbSpace,
   useKbSpaceMembers,
   useRemoveKbSpaceMember,
-} from "@/lib/api/hooks/kb";
+} from "@/hooks/api/kb";
 import { getApiError } from "@/lib/api-client";
 import type { KbSpaceMember } from "@/types/kb";
 

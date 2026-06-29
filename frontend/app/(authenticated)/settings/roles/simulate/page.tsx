@@ -28,8 +28,8 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useHrEmployees } from "@/lib/api/hooks/hr/employees";
-import { useSimulateAccess } from "@/lib/api/hooks/access/simulate";
+import { useHrEmployees } from "@/hooks/api/hr/employees";
+import { useSimulateAccess } from "@/hooks/api/access/simulate";
 import { getInitials } from "@/lib/format-utils";
 import type { Employee } from "@/types/hr";
 import type { DataScope } from "@/types/access";

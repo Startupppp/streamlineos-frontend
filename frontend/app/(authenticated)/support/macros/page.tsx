@@ -36,7 +36,7 @@ import {
   useUpdateMacro,
   useDeleteMacro,
   type SupportMacro,
-} from "@/lib/api/hooks/support/macros";
+} from "@/hooks/api/support/macros";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 

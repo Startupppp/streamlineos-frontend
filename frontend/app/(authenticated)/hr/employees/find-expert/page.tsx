@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
-import { useFindExpert, useHrDepartments, type ExpertResult } from "@/lib/api/hooks/hr";
+import { useFindExpert, useHrDepartments, type ExpertResult } from "@/hooks/api/hr";
 import { Search, X } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import Link from "next/link";

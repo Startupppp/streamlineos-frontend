@@ -36,8 +36,8 @@ import {
   useUpdatePlaybookEntry,
   useDeletePlaybookEntry,
   type PlaybookEntry,
-} from "@/lib/api/hooks/sales-playbook";
-import { useCan } from "@/lib/api/hooks/access";
+} from "@/hooks/api/sales-playbook";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 

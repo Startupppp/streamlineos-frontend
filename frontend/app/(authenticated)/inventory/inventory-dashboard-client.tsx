@@ -25,9 +25,9 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { DS } from "@/lib/design-system";
-import { useInventoryDashboard, useStockSummary, useReorderReport } from "@/lib/api/hooks/inventory/reports";
-import { useProducts } from "@/lib/api/hooks/inventory/products";
-import { useStockTransactions } from "@/lib/api/hooks/inventory/stock";
+import { useInventoryDashboard, useStockSummary, useReorderReport } from "@/hooks/api/inventory/reports";
+import { useProducts } from "@/hooks/api/inventory/products";
+import { useStockTransactions } from "@/hooks/api/inventory/stock";
 
 interface DashboardData {
   salesOrders: {

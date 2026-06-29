@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { isToday, isFuture, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Plus, AlertCircle } from "lucide-react";
@@ -26,7 +26,7 @@ import {
   useHrEmployees,
   type Termination,
   type TerminationStatus,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import type { Employee } from "@/types/hr";
 
 import { getErrorMessage } from "@/lib/get-error-message";

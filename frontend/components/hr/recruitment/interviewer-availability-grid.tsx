@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { InterviewerAvailability } from "@/lib/api/hooks/hr/recruitment";
+import type { InterviewerAvailability } from "@/hooks/api/hr/recruitment";
 import { cn } from "@/lib/utils";
 
 const WORK_START = 9;
@@ -54,7 +54,9 @@ export function InterviewerAvailabilityGrid({
   return (
     <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        Availability ({WORK_START > 12 ? `${WORK_START - 12} PM` : `${WORK_START} AM`} – {WORK_END > 12 ? `${WORK_END - 12} PM` : `${WORK_END} AM`})
+        Availability (
+        {WORK_START > 12 ? `${WORK_START - 12} PM` : `${WORK_START} AM`} –{" "}
+        {WORK_END > 12 ? `${WORK_END - 12} PM` : `${WORK_END} AM`})
       </p>
 
       <div className="relative ml-20">
@@ -88,7 +90,10 @@ export function InterviewerAvailabilityGrid({
                 <div
                   key={idx}
                   className="absolute top-0 h-full bg-destructive/60 rounded-sm"
-                  style={{ left: `${Math.max(0, leftPct)}%`, width: `${Math.min(widthPct, 100 - leftPct)}%` }}
+                  style={{
+                    left: `${Math.max(0, leftPct)}%`,
+                    width: `${Math.min(widthPct, 100 - leftPct)}%`,
+                  }}
                   title={`${block.title} (${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} – ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })})`}
                 />
               );
@@ -96,7 +101,10 @@ export function InterviewerAvailabilityGrid({
             {proposedBlock && (
               <div
                 className="absolute top-0 h-full border-2 border-blue rounded-sm bg-blue/20"
-                style={{ left: `${proposedBlock.left}%`, width: `${proposedBlock.width}%` }}
+                style={{
+                  left: `${proposedBlock.left}%`,
+                  width: `${proposedBlock.width}%`,
+                }}
               />
             )}
           </div>

@@ -65,8 +65,8 @@ import {
   useRemoveGoalLink,
   type KeyResult,
   type GoalDetail,
-} from "@/lib/api/hooks/goals";
-import { useProjects, useTickets } from "@/lib/api/hooks/projects";
+} from "@/hooks/api/goals";
+import { useProjects, useTickets } from "@/hooks/api/projects";
 import { GoalFormSheet } from "@/features/projects/goals/goal-form-sheet";
 import {
   STATUS_CONFIG,

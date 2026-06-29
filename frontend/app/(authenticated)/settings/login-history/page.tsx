@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { History, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
-import { useLoginHistory } from "@/lib/api/hooks/auth";
+import { useLoginHistory } from "@/hooks/api/auth";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -39,7 +39,7 @@ import {
   useUpdateMilestone,
   useDeleteMilestone,
   type ProjectMilestone,
-} from "@/lib/api/hooks/projects";
+} from "@/hooks/api/projects";
 import { toast } from "sonner";
 import { format, isPast, isToday, differenceInDays } from "date-fns";
 

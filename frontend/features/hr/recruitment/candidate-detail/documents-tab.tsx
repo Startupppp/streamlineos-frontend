@@ -18,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
-import { useRolloutDocuments, type RolloutDocumentRecord } from "@/lib/api/hooks/hr/recruitment";
+import { useRolloutDocuments, type RolloutDocumentRecord } from "@/hooks/api/hr/recruitment";
 import { RolloutDocumentsDialog } from "@/components/hr/recruitment/rollout-documents-dialog";
 import { cn } from "@/lib/utils";
 

@@ -13,7 +13,7 @@ import {
   useGenerateEmployeePayslip,
   useApprovePayroll,
   useMarkPayrollPaid,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import {
   Select,

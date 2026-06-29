@@ -5,7 +5,7 @@ import { ChevronRight, Building2, GitBranch, Briefcase, Users, Search } from "lu
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOrgTree } from "@/lib/api/hooks/org-hierarchy";
+import { useOrgTree } from "@/hooks/api/org-hierarchy";
 import type { OrgTreeNode, OrgTreeBranch, OrgTreeDepartment, OrgTreeTeam } from "@/types/org-hierarchy";
 
 type NodeType = "business_unit" | "branch" | "department" | "team";

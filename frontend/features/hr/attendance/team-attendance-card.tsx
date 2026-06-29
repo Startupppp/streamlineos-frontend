@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Search, Wifi, WifiOff, Coffee, LogOut } from "lucide-react";
-import { useHrTeamAttendanceStatus } from "@/lib/api/hooks/hr";
+import { useHrTeamAttendanceStatus } from "@/hooks/api/hr";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import type { TeamAttendanceEntry } from "@/types/hr";

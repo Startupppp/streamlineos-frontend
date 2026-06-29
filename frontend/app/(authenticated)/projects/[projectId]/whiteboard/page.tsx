@@ -53,7 +53,7 @@ import {
   useDeleteWhiteboard,
   type WhiteboardElement,
   type WhiteboardSummary,
-} from "@/lib/api/hooks/projects";
+} from "@/hooks/api/projects";
 import { toast } from "sonner";
 
 type ElementType = WhiteboardElement["type"];

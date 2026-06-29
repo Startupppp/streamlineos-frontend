@@ -1,6 +1,6 @@
 "use client";
 
-import { useHrAttendanceAnalytics } from "@/lib/api/hooks/hr/analytics";
+import { useHrAttendanceAnalytics } from "@/hooks/api/hr/analytics";
 import { StatCard } from "@/components/ui/stat-card";
 import { Clock, Building2, CalendarCheck } from "lucide-react";
 import {

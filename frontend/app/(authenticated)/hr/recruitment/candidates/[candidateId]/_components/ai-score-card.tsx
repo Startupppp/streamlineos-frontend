@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Sparkles } from "lucide-react";
 import { format } from "date-fns";
-import type { AiScoreResult } from "@/lib/api/hooks/hr";
+import type { AiScoreResult } from "@/hooks/api/hr";
 
 const AI_SCORE_DIMENSIONS: Array<{ key: keyof AiScoreResult["breakdown"]; label: string }> = [
   { key: "technicalSkills", label: "Technical Skills" },

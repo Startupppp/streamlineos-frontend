@@ -57,7 +57,7 @@ import {
   type GitConnection,
   type GitProvider,
   type CreatedGitConnection,
-} from "@/lib/api/hooks/git-integration";
+} from "@/hooks/api/git-integration";
 import { toast } from "sonner";
 
 const PROVIDERS: { value: GitProvider; label: string }[] = [

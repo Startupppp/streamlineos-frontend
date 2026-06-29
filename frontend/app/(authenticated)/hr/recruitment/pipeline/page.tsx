@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useAtsKanban, useUpdateCandidateStage } from "@/lib/api/hooks/hr";
+import { useAtsKanban, useUpdateCandidateStage } from "@/hooks/api/hr";
 import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

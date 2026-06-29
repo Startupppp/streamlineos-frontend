@@ -2,7 +2,7 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
-import { useEmployeeSkills, useAddSkill, type EmployeeSkill } from "@/lib/api/hooks/hr";
+import { useEmployeeSkills, useAddSkill, type EmployeeSkill } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

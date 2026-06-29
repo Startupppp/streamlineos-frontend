@@ -19,7 +19,7 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { AppSheet } from "@/components/shared/app-sheet";
-import { useVendors, useCreateVendor } from "@/lib/api/hooks/inventory";
+import { useVendors, useCreateVendor } from "@/hooks/api/inventory";
 import type { CreateVendorInput } from "@/types/inventory";
 
 const vendorSchema = z.object({

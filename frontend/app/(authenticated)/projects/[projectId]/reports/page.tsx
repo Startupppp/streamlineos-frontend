@@ -37,7 +37,7 @@ import {
   useCfdReport,
   useCaptureSnapshot,
   useCriticalPath,
-} from "@/lib/api/hooks/projects/reports";
+} from "@/hooks/api/projects/reports";
 import { toast } from "sonner";
 import { format } from "date-fns";
 

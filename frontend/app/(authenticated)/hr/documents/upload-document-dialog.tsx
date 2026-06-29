@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
-import { useCreateDocument, useHrEmployees } from "@/lib/api/hooks/hr";
-import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
+import { useCreateDocument, useHrEmployees } from "@/hooks/api/hr";
+import { useUploadFile } from "@/hooks/api/use-upload-file";
 import {
   formSchema, type DocumentFormData, DocumentFormFields,
 } from "@/features/hr/documents/document-form-fields";

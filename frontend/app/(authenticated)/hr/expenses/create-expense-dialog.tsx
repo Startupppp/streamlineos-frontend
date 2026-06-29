@@ -29,8 +29,8 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
-import { useCreateExpense, useUpdateExpense } from "@/lib/api/hooks/hr";
-import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
+import { useCreateExpense, useUpdateExpense } from "@/hooks/api/hr";
+import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const CONTAINS_LETTER_REGEX = /[a-zA-Z]/;

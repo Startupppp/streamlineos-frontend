@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useUpdateTicket } from "@/lib/api/hooks/projects";
+import { useUpdateTicket } from "@/hooks/api/projects";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";

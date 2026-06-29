@@ -30,7 +30,7 @@ import {
   useApproveOffer,
   useRejectOfferApproval,
   type CandidateOffer,
-} from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { toast } from "sonner";
 import { format } from "date-fns";
 

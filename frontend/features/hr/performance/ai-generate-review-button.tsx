@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { useAIGenerateReview } from "@/lib/api/hooks/ai";
+import { useAIGenerateReview } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";

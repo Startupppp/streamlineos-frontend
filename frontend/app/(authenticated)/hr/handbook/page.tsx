@@ -8,8 +8,8 @@ import {
   useUpdateHandbookVersion,
   useDeleteHandbookVersion,
   type HandbookVersion,
-} from "@/lib/api/hooks/hr";
-import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
+} from "@/hooks/api/hr";
+import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

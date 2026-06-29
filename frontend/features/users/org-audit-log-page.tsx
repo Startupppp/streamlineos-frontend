@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useOrgAuditLog } from "@/lib/api/hooks/users";
+import { useOrgAuditLog } from "@/hooks/api/users";
 import {
   ChevronLeft,
   ChevronRight,

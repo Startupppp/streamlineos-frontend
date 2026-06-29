@@ -7,7 +7,7 @@ import {
   useUpdateTicket,
   useDeleteTicket,
   useCreateTicket,
-} from "@/lib/api/hooks/projects";
+} from "@/hooks/api/projects";
 import { CreateEpicDialog } from "@/components/projects/create-epic-dialog";
 import { EditEpicDialog } from "@/components/projects/edit-epic-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useUserDevices, useRemoveDevice } from "@/lib/api/hooks/users";
+import { useUserDevices, useRemoveDevice } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { Laptop, Trash2 } from "lucide-react";

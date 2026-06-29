@@ -4,8 +4,8 @@ import { useMemo, useState, useCallback } from "react";
 import {
   useHrAnalytics,
   useHrAttritionAnalytics,
-} from "@/lib/api/hooks/hr/analytics";
-import { useRecruitmentStats } from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/analytics";
+import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";

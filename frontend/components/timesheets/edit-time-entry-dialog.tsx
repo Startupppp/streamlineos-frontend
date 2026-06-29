@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { useUpdateTimeEntry } from "@/lib/api/hooks/projects";
+import { useUpdateTimeEntry } from "@/hooks/api/projects";
 
 interface EditTimeEntryDialogProps {
   entry: {

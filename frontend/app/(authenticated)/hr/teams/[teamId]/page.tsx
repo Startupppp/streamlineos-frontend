@@ -32,8 +32,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { HrSheet } from "@/features/hr/hr-sheet";
 
-import { useOrgTeams, useUpdateOrgTeam, useDeleteOrgTeam } from "@/lib/api/hooks/org-hierarchy";
-import { useHrEmployees } from "@/lib/api/hooks/hr/employees";
+import { useOrgTeams, useUpdateOrgTeam, useDeleteOrgTeam } from "@/hooks/api/org-hierarchy";
+import { useHrEmployees } from "@/hooks/api/hr/employees";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import type { Employee } from "@/types/hr";

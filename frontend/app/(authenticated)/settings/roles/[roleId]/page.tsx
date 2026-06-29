@@ -20,7 +20,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { PermissionMatrix } from "@/components/rbac/permission-matrix";
 import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
-import { useRole, useRoleMembers } from "@/lib/api/hooks/roles";
+import { useRole, useRoleMembers } from "@/hooks/api/roles";
 
 export default function RoleEditorPage() {
   return (

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { OnboardingTask } from "@/lib/api/hooks/hr/onboarding";
+import type { OnboardingTask } from "@/hooks/api/hr/onboarding";
 
 
 export interface OnboardingTaskCardProps {

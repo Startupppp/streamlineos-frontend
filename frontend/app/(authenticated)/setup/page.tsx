@@ -19,9 +19,9 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useUpdateOrgSettings } from "@/lib/api/hooks/organization";
-import { useInviteUser } from "@/lib/api/hooks/organization";
-import { useCreateBusinessUnit, useCreateOrgBranch, useCreateOrgDepartment, useCreateOrgTeam } from "@/lib/api/hooks/org-hierarchy";
+import { useUpdateOrgSettings } from "@/hooks/api/organization";
+import { useInviteUser } from "@/hooks/api/organization";
+import { useCreateBusinessUnit, useCreateOrgBranch, useCreateOrgDepartment, useCreateOrgTeam } from "@/hooks/api/org-hierarchy";
 
 const STEPS = [
   { id: "profile",       label: "Profile",       icon: Building2,  desc: "Organization basics" },

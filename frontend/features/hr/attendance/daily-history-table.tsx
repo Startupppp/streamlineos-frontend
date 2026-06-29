@@ -5,10 +5,17 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,@/hooks/api/hr
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useHrAttendanceStatus } from "@/lib/api/hooks/hr";
+import { useHrAttendanceStatus } from "@/hooks/hooks/hr";
 import { toast } from "sonner";
 import { Download, ClipboardList } from "lucide-react";
 import { AttendanceLogRow } from "./attendance-log-row";
@@ -25,19 +32,22 @@ async function handleDownloadReport(logs: AttendanceLog[]) {
       totalHours: log.workHours || "",
       status: log.status || "PRESENT",
     }));
-    await downloadXlsx(`attendance-report-${format(new Date(), "yyyy-MM-dd")}.xlsx`, [
-      {
-        name: "Attendance",
-        columns: [
-          { header: "Date", key: "date", width: 15 },
-          { header: "Check In", key: "checkIn", width: 15 },
-          { header: "Check Out", key: "checkOut", width: 15 },
-          { header: "Total Hours", key: "totalHours", width: 15 },
-          { header: "Status", key: "status", width: 15 },
-        ],
-        rows,
-      },
-    ]);
+    await downloadXlsx(
+      `attendance-report-${format(new Date(), "yyyy-MM-dd")}.xlsx`,
+      [
+        {
+          name: "Attendance",
+          columns: [
+            { header: "Date", key: "date", width: 15 },
+            { header: "Check In", key: "checkIn", width: 15 },
+            { header: "Check Out", key: "checkOut", width: 15 },
+            { header: "Total Hours", key: "totalHours", width: 15 },
+            { header: "Status", key: "status", width: 15 },
+          ],
+          rows,
+        },
+      ],
+    );
     toast.success("Report downloaded");
   } catch {
     toast.error("Failed to generate report");
@@ -91,7 +101,12 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
       </CardHeader>
       <CardContent className="p-0 px-5 pb-5">
         <div className="rounded-xl border border-border overflow-hidden">
-          <ScrollArea className="w-full" type="auto" role="region" aria-label="Attendance records table">
+          <ScrollArea
+            className="w-full"
+            type="auto"
+            role="region"
+            aria-label="Attendance records table"
+          >
             <div className="min-w-max">
               <Table className="border-collapse">
                 <caption className="sr-only">Recent attendance history</caption>
@@ -119,7 +134,9 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
                     <TableRow>
                       <TableCell colSpan={5} className="py-0 border-0">
                         <EmptyState
-                          illustration={<ClipboardList className="h-8 w-8 text-muted-foreground" />}
+                          illustration={
+                            <ClipboardList className="h-8 w-8 text-muted-foreground" />
+                          }
                           title="No attendance records"
                           description="Your attendance history will appear here."
                           compact

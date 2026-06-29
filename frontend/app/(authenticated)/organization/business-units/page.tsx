@@ -11,7 +11,7 @@ import {
   useCreateBusinessUnit,
   useUpdateBusinessUnit,
   useDeleteBusinessUnit,
-} from "@/lib/api/hooks/org-hierarchy";
+} from "@/hooks/api/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

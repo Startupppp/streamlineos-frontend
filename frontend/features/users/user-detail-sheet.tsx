@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { useUser } from "@/lib/api/hooks/users";
+import { useUser } from "@/hooks/api/users";
 import { UserStatusBadge } from "./user-status-badge";
 import { UserEditForm } from "./user-edit-form";
 import { UserSessionsTab } from "./user-sessions-tab";

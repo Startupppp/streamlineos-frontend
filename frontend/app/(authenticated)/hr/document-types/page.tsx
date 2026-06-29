@@ -16,7 +16,7 @@ import { DocumentTypeFormDialog } from "@/features/hr/document-types/document-ty
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 interface DocumentType {
   id: number;

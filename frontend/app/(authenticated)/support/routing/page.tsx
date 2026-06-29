@@ -54,8 +54,8 @@ import {
   useDeleteRoutingRule,
   type SupportRoutingRule,
   type TicketPriority,
-} from "@/lib/api/hooks/support/macros";
-import { useOrgMembers } from "@/lib/api/hooks/organization";
+} from "@/hooks/api/support/macros";
+import { useOrgMembers } from "@/hooks/api/organization";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 

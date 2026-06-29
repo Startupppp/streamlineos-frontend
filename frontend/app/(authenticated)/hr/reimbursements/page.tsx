@@ -7,7 +7,7 @@ import {
   useCreateReimbursement,
   useProcessReimbursement,
   type Reimbursement,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,7 +37,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Receipt, CheckCircle2, XCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["Travel", "Meals", "Office Supplies", "Software", "Medical", "Other"];

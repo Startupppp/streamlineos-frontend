@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useCandidateMessages, useSendCandidateMessage } from "@/lib/api/hooks/hr/recruitment";
-import type { CandidateMessage, MessageChannel } from "@/lib/api/hooks/hr/recruitment";
+import { useCandidateMessages, useSendCandidateMessage } from "@/hooks/api/hr/recruitment";
+import type { CandidateMessage, MessageChannel } from "@/hooks/api/hr/recruitment";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";

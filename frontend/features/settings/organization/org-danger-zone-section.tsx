@@ -15,12 +15,12 @@ import {
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import {
   useArchiveOrg,
   useRestoreOrg,
   useTransferOwnership,
-} from "@/lib/api/hooks/organization";
+} from "@/hooks/api/organization";
 import { getApiError } from "@/lib/api-client";
 import type { OrgSettings } from "@/types/organization";
 

@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUserPreferences, useUpdateUserPreferences } from "@/lib/api/hooks/users";
+import { useUserPreferences, useUpdateUserPreferences } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 

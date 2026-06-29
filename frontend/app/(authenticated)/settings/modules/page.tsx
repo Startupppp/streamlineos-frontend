@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { Layers } from "lucide-react";
 import { toast } from "sonner";
-import { useOrgModules, useToggleOrgModule } from "@/lib/api/hooks/access/org-modules";
+import { useOrgModules, useToggleOrgModule } from "@/hooks/api/access/org-modules";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";

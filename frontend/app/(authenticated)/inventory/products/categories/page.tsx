@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useCategories, useCreateCategory } from "@/lib/api/hooks/inventory";
+import { useCategories, useCreateCategory } from "@/hooks/api/inventory";
 import type { InventoryCategory } from "@/types/inventory";
 
 const categorySchema = z.object({

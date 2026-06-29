@@ -26,7 +26,7 @@ import {
   useUpsertSourcePortal,
   type SourcePortal,
   type UpsertPortalInput,
-} from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
 import Link from "next/link";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState, useCallback } from "react";
-import { useCycles, useCreateCycle } from "@/lib/api/hooks/projects";
+import { useCycles, useCreateCycle } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

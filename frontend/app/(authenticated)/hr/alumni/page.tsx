@@ -5,7 +5,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
+import { useHrEmployees } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Briefcase, Calendar, Mail, Users, ExternalLink, AlertCircle } from "lucide-react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
 

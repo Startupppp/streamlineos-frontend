@@ -10,7 +10,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import type { RevenueVsGoalEntryResult } from "@/lib/api/hooks/crm";
+import type { RevenueVsGoalEntryResult } from "@/hooks/api/crm";
 import { formatINRCompact } from "@/lib/format-utils";
 
 interface RevenueVsGoalChartProps {

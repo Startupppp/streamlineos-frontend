@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { useSupportTicket, useAddSupportMessage, useUpdateSupportTicket } from "@/lib/api/hooks/support";
+import { useSupportTicket, useAddSupportMessage, useUpdateSupportTicket } from "@/hooks/api/support";
 import { formatDistanceToNow } from "date-fns";
 import {
   Loader2,
@@ -36,8 +36,8 @@ import { apiClient } from "@/lib/api-client";
 import { getInitials } from "@/lib/format-utils";
 import { SupportActivityLog } from "@/components/support/support-activity-log";
 import type { SupportTicketStatus } from "@/types/support";
-import { useKbSearch, useKbSpaces } from "@/lib/api/hooks/kb";
-import { useCreateKbArticleFromTicket } from "@/lib/api/hooks/kb/from-ticket";
+import { useKbSearch, useKbSpaces } from "@/hooks/api/kb";
+import { useCreateKbArticleFromTicket } from "@/hooks/api/kb/from-ticket";
 
 const PRIORITY_COLORS: Record<string, string> = {
   LOW: "bg-slate-100 text-slate-700",

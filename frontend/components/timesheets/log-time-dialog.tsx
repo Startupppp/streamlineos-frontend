@@ -19,7 +19,7 @@ import {
   useProjects,
   useProject,
   useLogTime,
-} from "@/lib/api/hooks/projects";
+} from "@/hooks/api/projects";
 import { Plus, Loader2 } from "lucide-react";
 import { addTimeEntryInputSchema } from "@/lib/validation/projects";
 import { ScrollArea } from "../ui/scroll-area";

@@ -49,9 +49,9 @@ import {
   useBulkUpdateUsers,
   useResetUserPassword,
   useExportUsers,
-} from "@/lib/api/hooks/users";
-import type { User } from "@/lib/api/hooks/users";
-import { useOrgBranches, useOrgDepartments } from "@/lib/api/hooks/org-hierarchy";
+} from "@/hooks/api/users";
+import type { User } from "@/hooks/api/users";
+import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
 import { UserStatusBadge } from "./user-status-badge";
 import { UserDetailSheet } from "./user-detail-sheet";

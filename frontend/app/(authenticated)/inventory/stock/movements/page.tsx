@@ -28,7 +28,7 @@ import {
   useStockTransactions,
   type StockTransaction,
   type TransactionType,
-} from "@/lib/api/hooks/inventory/stock";
+} from "@/hooks/api/inventory/stock";
 import { cn } from "@/lib/utils";
 
 const TXN_TYPE_LABELS: Record<TransactionType, string> = {

@@ -23,7 +23,7 @@ import {
   useKbVerificationQueue,
   useKbSpaces,
   useVerifyKbArticle,
-} from "@/lib/api/hooks/kb";
+} from "@/hooks/api/kb";
 import { queryKeys } from "@/lib/query-keys";
 import { getApiError } from "@/lib/api-client";
 import type { KbVerificationItem } from "@/types/kb";

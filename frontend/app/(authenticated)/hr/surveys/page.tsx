@@ -5,7 +5,7 @@ import { useState, useCallback, memo, useMemo } from "react";
 import {
   usePulseSurveys, useCreateSurvey, useUpdateSurvey,
   type PulseSurvey,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, ClipboardList, Calendar, Play, Archive, BarChart3, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 type SurveyStatusFilter = "all" | "DRAFT" | "ACTIVE" | "CLOSED";
 

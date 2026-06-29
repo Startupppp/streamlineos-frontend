@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useSkillsMatrix } from "@/lib/api/hooks/hr";
+import { useSkillsMatrix } from "@/hooks/api/hr";
 import { getInitials } from "@/lib/format-utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { LayoutGrid, Table2, AlertCircle } from "lucide-react";

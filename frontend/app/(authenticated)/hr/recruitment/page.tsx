@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { useRecruitmentStats, useJobPostings, useInterviews } from "@/lib/api/hooks/hr";
-import { useRecruitmentAnalytics } from "@/lib/api/hooks/hr/recruitment";
+import { useRecruitmentStats, useJobPostings, useInterviews } from "@/hooks/api/hr";
+import { useRecruitmentAnalytics } from "@/hooks/api/hr/recruitment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

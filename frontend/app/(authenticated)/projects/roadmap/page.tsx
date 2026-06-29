@@ -79,7 +79,7 @@ import {
   type FeedbackStatus,
   type ChangelogEntry,
   type ChangelogType,
-} from "@/lib/api/hooks/projects/roadmap";
+} from "@/hooks/api/projects/roadmap";
 
 const ROADMAP_COLUMNS: { status: RoadmapStatus; label: string }[] = [
   { status: "planned", label: "Planned" },

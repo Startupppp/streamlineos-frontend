@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuditLogs } from "@/lib/api/hooks/audit-log";
-import type { AuditLogRow as AuditLogEntry } from "@/lib/api/hooks/audit-log";
+import { useAuditLogs } from "@/hooks/api/audit-log";
+import type { AuditLogRow as AuditLogEntry } from "@/hooks/api/audit-log";
 import { getInitials } from "@/lib/format-utils";
 
 const RBAC_ACTIONS = [

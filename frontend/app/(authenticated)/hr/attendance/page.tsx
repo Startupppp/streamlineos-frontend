@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AttendanceContent } from "./attendance-content";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 export default function AttendancePage() {
   const { data: session, status } = useSession();

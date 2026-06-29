@@ -5,7 +5,7 @@ import { Zap, CalendarClock, UserX, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/format-utils";
 import { fadeUp } from "@/lib/motion-variants";
-import type { DealVelocityResult, AgingDealResult, CycleLengthResult, LostAnalysisResult } from "@/lib/api/hooks/crm/analytics";
+import type { DealVelocityResult, AgingDealResult, CycleLengthResult, LostAnalysisResult } from "@/hooks/api/crm/analytics";
 
 interface SalesVelocityCardsProps {
   velocityData: DealVelocityResult | undefined;

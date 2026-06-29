@@ -12,10 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { useWarehouses } from "@/lib/api/hooks/inventory/warehouses";
-import { useProducts } from "@/lib/api/hooks/inventory/products";
-import { useCreateSalesOrder } from "@/lib/api/hooks/inventory/sales-orders";
-import { useClientAccounts } from "@/lib/api/hooks/crm";
+import { useWarehouses } from "@/hooks/api/inventory/warehouses";
+import { useProducts } from "@/hooks/api/inventory/products";
+import { useCreateSalesOrder } from "@/hooks/api/inventory/sales-orders";
+import { useClientAccounts } from "@/hooks/api/crm";
 
 interface DraftLine {
   key: number;

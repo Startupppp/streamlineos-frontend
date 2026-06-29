@@ -11,7 +11,7 @@ import { fadeUp, scaleIn } from "@/lib/motion-variants";
 import { sparkColors } from "@/lib/theme-constants";
 import { formatCurrency, formatINRCompact } from "@/lib/format-utils";
 import type { SalesFunnelItem, DealsByStage } from "@/types/crm/deals";
-import type { SalesFunnelStageResult, RevenueVsGoalEntryResult } from "@/lib/api/hooks/crm/analytics";
+import type { SalesFunnelStageResult, RevenueVsGoalEntryResult } from "@/hooks/api/crm/analytics";
 
 const formatRevenueValue = (v: number) => formatINRCompact(v);
 

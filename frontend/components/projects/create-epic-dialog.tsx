@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateTicket } from "@/lib/api/hooks/projects";
+import { useCreateTicket } from "@/hooks/api/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 

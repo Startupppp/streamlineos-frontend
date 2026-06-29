@@ -69,9 +69,9 @@ import {
   type KbArticleListItem,
   type KbArticleStatus,
   type KbArticleVisibility,
-} from "@/lib/api/hooks/support/kb";
+} from "@/hooks/api/support/kb";
 import { KbAskPanel } from "@/components/support/kb-ask-panel";
-import { useReindexAllKb } from "@/lib/api/hooks/support/kb-rag";
+import { useReindexAllKb } from "@/hooks/api/support/kb-rag";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { format } from "date-fns";

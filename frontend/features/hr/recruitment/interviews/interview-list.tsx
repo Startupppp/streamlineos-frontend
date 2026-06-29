@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useInterviews, useUpdateInterview } from "@/lib/api/hooks/hr";
-import { useBulkRescheduleInterviews } from "@/lib/api/hooks/hr/recruitment";
+import { useInterviews, useUpdateInterview } from "@/hooks/api/hr";
+import { useBulkRescheduleInterviews } from "@/hooks/api/hr/recruitment";
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
 import type { Interview, InterviewResult } from "@/types/hr";
 import { Button } from "@/components/ui/button";

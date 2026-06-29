@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
-import { useOrgSettings, useUpdateOrgSettings, useUpdateOrgSecuritySettings } from "@/lib/api/hooks/organization";
-import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
+import { useOrgSettings, useUpdateOrgSettings, useUpdateOrgSecuritySettings } from "@/hooks/api/organization";
+import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { OrgProfileSection } from "@/features/settings/organization/org-profile-section";

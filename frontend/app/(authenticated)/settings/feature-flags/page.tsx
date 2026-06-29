@@ -13,7 +13,7 @@ import {
   useArchiveFlag,
   type FeatureFlag,
   type CreateFlagInput,
-} from "@/lib/api/hooks/feature-flags";
+} from "@/hooks/api/feature-flags";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";

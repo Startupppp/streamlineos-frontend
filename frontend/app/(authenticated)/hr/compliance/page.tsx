@@ -6,7 +6,7 @@ import {
   usePolicyAcknowledgments,
   useAcknowledgePolicy,
   type PolicyAcknowledgment,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

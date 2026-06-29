@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { useSentimentAnalysis, type SentimentResult } from "@/lib/api/hooks/ai";
+import { useSentimentAnalysis, type SentimentResult } from "@/hooks/api/ai";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 

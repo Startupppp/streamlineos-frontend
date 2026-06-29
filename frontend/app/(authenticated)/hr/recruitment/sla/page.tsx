@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useInterviewSlas, useUpsertInterviewSla } from "@/lib/api/hooks/hr";
-import type { InterviewSla } from "@/lib/api/hooks/hr";
+import { useInterviewSlas, useUpsertInterviewSla } from "@/hooks/api/hr";
+import type { InterviewSla } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

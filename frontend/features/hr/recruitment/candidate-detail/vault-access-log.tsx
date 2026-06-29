@@ -5,7 +5,7 @@ import { History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useVaultAccessLogs } from "@/lib/api/hooks/hr/recruitment";
+import { useVaultAccessLogs } from "@/hooks/api/hr/recruitment";
 import { useSession } from "next-auth/react";
 
 interface VaultAccessLogProps {

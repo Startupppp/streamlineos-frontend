@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { useInterviews } from "@/lib/api/hooks/hr";
+import { useInterviews } from "@/hooks/api/hr";
 import type { Interview } from "@/types/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

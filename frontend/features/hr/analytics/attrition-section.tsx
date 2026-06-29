@@ -1,6 +1,6 @@
 "use client";
 
-import { useHrAttritionAnalytics } from "@/lib/api/hooks/hr/analytics";
+import { useHrAttritionAnalytics } from "@/hooks/api/hr/analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import { Users, UserMinus, TrendingDown } from "lucide-react";

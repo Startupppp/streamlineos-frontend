@@ -1,6 +1,6 @@
 "use client";
 
-import { useResignationProgress } from "@/lib/api/hooks/hr";
+import { useResignationProgress } from "@/hooks/api/hr";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";

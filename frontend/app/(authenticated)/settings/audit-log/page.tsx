@@ -28,7 +28,7 @@ import {
   useAuditLogActions,
   useAuditLogTargetTypes,
   type AuditLogRow,
-} from "@/lib/api/hooks/audit-log";
+} from "@/hooks/api/audit-log";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 

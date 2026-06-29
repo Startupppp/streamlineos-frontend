@@ -3,7 +3,7 @@
 import { Laptop, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { useDevices, useTrustDevice, useRemoveDevice } from "@/lib/api/hooks/auth";
+import { useDevices, useTrustDevice, useRemoveDevice } from "@/hooks/api/auth";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

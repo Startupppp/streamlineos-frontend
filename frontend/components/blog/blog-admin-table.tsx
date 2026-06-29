@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatusBadge } from "./status-badge";
 import { formatBlogDate } from "@/lib/blog-utils";
-import { useAdminPosts, useDeletePost, useUpdatePost } from "@/lib/api/hooks/blog";
+import { useAdminPosts, useDeletePost, useUpdatePost } from "@/hooks/api/blog";
 
 export function BlogAdminTable() {
   const { data: posts, isLoading } = useAdminPosts();

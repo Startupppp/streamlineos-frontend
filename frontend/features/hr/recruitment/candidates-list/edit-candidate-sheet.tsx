@@ -6,7 +6,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { User, Mail, Phone, Briefcase, Building2, Link2, FileText, Zap } from "lucide-react";
 
-import { useUpdateCandidate } from "@/lib/api/hooks/hr";
+import { useUpdateCandidate } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Candidate } from "@/types/hr";
 

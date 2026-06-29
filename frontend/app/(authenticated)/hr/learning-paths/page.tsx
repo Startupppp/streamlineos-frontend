@@ -23,7 +23,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Plus, GraduationCap, Clock, Target, BookOpen, AlertCircle } from "lucide-react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 
 interface LearningPath {

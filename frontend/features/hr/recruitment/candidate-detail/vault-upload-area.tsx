@@ -14,7 +14,7 @@ import {
 import {
   useAddVaultDocument,
   type VaultDocumentType,
-} from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 

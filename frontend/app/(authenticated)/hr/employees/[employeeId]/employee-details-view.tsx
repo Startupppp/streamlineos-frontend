@@ -13,7 +13,7 @@ import {
   useDirectReports,
   useManagerScorecard,
   useEmployeeAvailability,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { EmployeeProjectsList } from "@/components/hr/employee-projects-list";
 import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";

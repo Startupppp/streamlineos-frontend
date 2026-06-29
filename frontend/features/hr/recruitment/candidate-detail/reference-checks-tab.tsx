@@ -7,7 +7,7 @@ import {
   useCreateReferenceCheck,
   useUpdateReferenceCheck,
   useDeleteReferenceCheck,
-} from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

@@ -28,8 +28,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, FileText, Send, CheckCircle2 } from "lucide-react";
-import { useDocumentTemplates } from "@/lib/api/hooks/hr/document-templates";
-import { useGenerateAndRollout } from "@/lib/api/hooks/hr/recruitment";
+import { useDocumentTemplates } from "@/hooks/api/hr/document-templates";
+import { useGenerateAndRollout } from "@/hooks/api/hr/recruitment";
 import { extractVariables } from "@/lib/utils/document-variables";
 
 

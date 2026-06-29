@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { MoreHorizontal, Trash2, BookOpen, Pencil } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import type { InterviewQuestion } from "@/lib/api/hooks/hr/recruitment";
+import type { InterviewQuestion } from "@/hooks/api/hr/recruitment";
 import { QuestionFormDialog } from "./question-form-dialog";
 
 const DIFFICULTY_VARIANT: Record<string, "default" | "secondary" | "destructive"> = {

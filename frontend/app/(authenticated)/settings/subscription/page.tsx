@@ -16,7 +16,7 @@ import {
   type SubscriptionPlan,
   type BillingCycle,
   type CouponValidationResult,
-} from "@/lib/api/hooks/subscription";
+} from "@/hooks/api/subscription";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 

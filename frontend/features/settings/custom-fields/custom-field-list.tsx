@@ -24,7 +24,7 @@ import {
   useUpdateCustomField,
   useDeleteCustomField,
   type CustomFieldDefinition,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/api/crm";
 import { toast } from "sonner";
 import { CustomFieldFormDialog } from "./custom-field-form-dialog";
 

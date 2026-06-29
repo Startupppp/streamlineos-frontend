@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ClipboardCheck } from "lucide-react";
-import type { CompositeScoreResult, CompositeVerdict } from "@/lib/api/hooks/hr/recruitment";
+import type { CompositeScoreResult, CompositeVerdict } from "@/hooks/api/hr/recruitment";
 
 function verdictColor(verdict: CompositeVerdict): string {
   if (verdict === "STRONG_HIRE") return "text-green-600";

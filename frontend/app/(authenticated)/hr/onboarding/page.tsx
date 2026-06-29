@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { OnboardingWizard } from "@/components/hr/onboarding-wizard";
 import { OnboardingList } from "@/features/hr/onboarding/onboarding-list";
 import { EmployeeDocumentsTab } from "@/features/hr/onboarding/onboarding-detail-sheet";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 function HrDocumentsTab() {
   return (

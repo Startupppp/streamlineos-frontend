@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useWarehouses, useCreateWarehouse } from "@/lib/api/hooks/inventory/warehouses";
+import { useWarehouses, useCreateWarehouse } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import Link from "next/link";
 

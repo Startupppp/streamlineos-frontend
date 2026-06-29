@@ -5,8 +5,8 @@ import {
   useCalibrationSessions,
   useCreateCalibration,
   useUpdateCalibration,
-} from "@/lib/api/hooks/hr/recruitment";
-import { useCalendarOrgMembers } from "@/lib/api/hooks/calendar";
+} from "@/hooks/api/hr/recruitment";
+import { useCalendarOrgMembers } from "@/hooks/api/calendar";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useOrgMembers } from "@/lib/api/hooks/organization";
+import { useOrgMembers } from "@/hooks/api/organization";
 import { Combobox } from "@/components/ui/combobox";
 
 interface UserComboboxProps {

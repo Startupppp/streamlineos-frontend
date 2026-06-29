@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { CheckCircle2, XCircle, MinusCircle } from "lucide-react";
 import { format } from "date-fns";
-import { useAutomationRuns, type AutomationRunStatus } from "@/lib/api/hooks/automations";
+import { useAutomationRuns, type AutomationRunStatus } from "@/hooks/api/automations";
 
 interface AutomationRunsDialogProps {
   ruleId: number;

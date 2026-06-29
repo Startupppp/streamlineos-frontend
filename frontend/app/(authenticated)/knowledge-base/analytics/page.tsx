@@ -26,7 +26,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MetricCard } from "@/components/charts/metric-card";
-import { useKbAnalyticsOverview, useKbNoResults } from "@/lib/api/hooks/kb";
+import { useKbAnalyticsOverview, useKbNoResults } from "@/hooks/api/kb";
 import { getApiError } from "@/lib/api-client";
 import type { KbAnalyticsRange } from "@/types/kb";
 

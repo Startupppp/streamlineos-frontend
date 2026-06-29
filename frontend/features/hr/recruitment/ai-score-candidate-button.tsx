@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useAIScoreCandidate } from "@/lib/api/hooks/ai";
+import { useAIScoreCandidate } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";

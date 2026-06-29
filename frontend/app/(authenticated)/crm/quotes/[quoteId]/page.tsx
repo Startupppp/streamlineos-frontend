@@ -31,7 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useQuoteDetail, useSendQuote, useDeleteQuote } from "@/lib/api/hooks/quotes";
+import { useQuoteDetail, useSendQuote, useDeleteQuote } from "@/hooks/api/quotes";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const STATUS_COLORS: Record<string, string> = {

@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { useHrPendingWfhRequests, useProcessWfhRequest, useApproveLeaveDedicated, useRejectLeaveDedicated } from "@/lib/api/hooks/hr";
+import { useHrPendingWfhRequests, useProcessWfhRequest, useApproveLeaveDedicated, useRejectLeaveDedicated } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 

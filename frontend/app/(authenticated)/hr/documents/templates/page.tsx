@@ -46,7 +46,7 @@ import {
   useDeleteDocumentTemplate,
   useSetDocumentTemplateDefault,
   type DocumentTemplate,
-} from "@/lib/api/hooks/hr/document-templates";
+} from "@/hooks/api/hr/document-templates";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   VariableChips,

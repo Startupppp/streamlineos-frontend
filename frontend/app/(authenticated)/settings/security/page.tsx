@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
-import { useChangePassword } from "@/lib/api/hooks/auth";
+import { useChangePassword } from "@/hooks/api/auth";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

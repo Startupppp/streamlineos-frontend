@@ -29,7 +29,7 @@ import {
   useDeleteDocument,
   useRichDocuments,
   useDeleteRichDocument,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { UploadDocumentDialog } from "./upload-document-dialog";
 import { useSession } from "next-auth/react";
 import { formatDistanceToNow } from "date-fns";
@@ -41,7 +41,7 @@ import { DocumentTable, type FolderItem } from "@/features/hr/documents/document
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { EditDocumentSheet } from "@/features/hr/documents/edit-document-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 const DOCUMENT_CATEGORIES = [
   "Personal Documents",

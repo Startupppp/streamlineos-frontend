@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, Pencil, Upload, Palette } from "lucide-react";
 import { toast } from "sonner";
-import { useUpdateOrgSettings } from "@/lib/api/hooks/organization";
-import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
+import { useUpdateOrgSettings } from "@/hooks/api/organization";
+import { useUploadFile } from "@/hooks/api/use-upload-file";
 import type { OrgSettings } from "@/types/organization";
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;

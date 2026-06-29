@@ -22,7 +22,7 @@ import { resolveImageUrl } from "@/lib/utils";
 import {
   useApproveTimesheet,
   useRejectTimesheet,
-} from "@/lib/api/hooks/projects";
+} from "@/hooks/api/projects";
 import type { TimeEntryWithUser } from "@/types/projects";
 
 interface TimeEntryDetailSheetProps {

@@ -13,7 +13,7 @@ import {
   useUpdateFeatureFlag,
   useAiUsage,
   type OrgFeatureFlags,
-} from "@/lib/api/hooks/ai";
+} from "@/hooks/api/ai";
 import { AlertCircle, BarChart3, Bot, BrainCircuit, TrendingUp, Zap } from "lucide-react";
 
 const FLAG_META: {

@@ -6,7 +6,7 @@ import {
   useInterviewQuestions,
   useDeleteInterviewQuestion,
   useJobPostings,
-} from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

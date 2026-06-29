@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, ClipboardCheck, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { ScorecardForm } from "@/components/hr/recruitment/scorecard-form";
-import type { ScorecardTemplate } from "@/lib/api/hooks/hr/recruitment";
+import type { ScorecardTemplate } from "@/hooks/api/hr/recruitment";
 
 interface Interview {
   id: number;

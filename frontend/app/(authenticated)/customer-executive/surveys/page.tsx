@@ -10,7 +10,7 @@ import {
   useCsatSurveys,
   useDeleteCsatSurvey,
   type CsatSurvey,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/api/crm";
 import { toast } from "sonner";
 import { CreateSurveySheet } from "@/features/customer-executive/surveys/survey-form-sheet";
 import { SurveyList } from "@/features/customer-executive/surveys/survey-list";

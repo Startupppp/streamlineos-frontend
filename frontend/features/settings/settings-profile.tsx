@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
 import { Camera, Loader2, Trash2, Check, X } from "lucide-react";
-import { useUpdateProfile } from "@/lib/api/hooks/hr";
+import { useUpdateProfile } from "@/hooks/api/hr";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";

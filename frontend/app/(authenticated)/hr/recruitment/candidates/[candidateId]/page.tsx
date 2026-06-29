@@ -11,13 +11,13 @@ import {
   useCreateApplication,
   useJobPostings,
   useGenerateCandidateAiScore,
-} from "@/lib/api/hooks/hr";
-import type { AiScoreResult } from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
+import type { AiScoreResult } from "@/hooks/api/hr";
 import {
   useScorecardTemplates,
   useGenerateCandidateCompositeScore,
-} from "@/lib/api/hooks/hr/recruitment";
-import type { CompositeScoreResult } from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
+import type { CompositeScoreResult } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

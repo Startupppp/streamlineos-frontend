@@ -2,7 +2,7 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
-import { useCertifications, useCreateCertification, type Certification } from "@/lib/api/hooks/hr";
+import { useCertifications, useCreateCertification, type Certification } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

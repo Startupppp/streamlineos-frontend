@@ -11,8 +11,8 @@ import {
   startOfMonth,
   endOfMonth,
 } from "date-fns";
-import { useAllTeamTimesheets, useProjects } from "@/lib/api/hooks/projects";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
+import { useAllTeamTimesheets, useProjects } from "@/hooks/api/projects";
+import { useHrEmployees } from "@/hooks/api/hr";
 import type { TimeEntryWithUser } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

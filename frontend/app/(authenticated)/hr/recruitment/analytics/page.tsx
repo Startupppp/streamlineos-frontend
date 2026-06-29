@@ -7,7 +7,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRecruitmentStats, useRecruitmentAnalytics } from "@/lib/api/hooks/hr/recruitment";
+import { useRecruitmentStats, useRecruitmentAnalytics } from "@/hooks/api/hr/recruitment";
 
 const FUNNEL_STAGES = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"] as const;
 const FUNNEL_LABELS: Record<string, string> = {

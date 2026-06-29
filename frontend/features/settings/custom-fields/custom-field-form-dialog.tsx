@@ -26,7 +26,7 @@ import {
   useUpdateCustomField,
   type CustomFieldDefinition,
   type CreateCustomFieldInput,
-} from "@/lib/api/hooks/crm";
+} from "@/hooks/api/crm";
 import { toast } from "sonner";
 
 type EntityType = "lead" | "deal" | "contact";

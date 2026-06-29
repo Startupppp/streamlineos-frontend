@@ -19,7 +19,7 @@ import {
   useCompleteOnboardingTask,
   useOnboardingStatus,
   type OnboardingTask,
-} from "@/lib/api/hooks/hr/onboarding";
+} from "@/hooks/api/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 function ownerRoleVariant(role: string): "default" | "secondary" | "outline" {

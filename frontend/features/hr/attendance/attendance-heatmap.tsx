@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
-import { useAttendanceHeatmap } from "@/lib/api/hooks/hr";
+import { useAttendanceHeatmap } from "@/hooks/api/hr";
 
 const MONTH_LABELS = [
   "Jan",

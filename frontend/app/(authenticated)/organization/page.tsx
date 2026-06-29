@@ -5,8 +5,8 @@ import {
   ChevronRight, Plus, Network, Settings, AlertCircle, CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
-import { useOrgHierarchyOverview } from "@/lib/api/hooks/org-hierarchy";
-import { useOrgSettings } from "@/lib/api/hooks/organization";
+import { useOrgHierarchyOverview } from "@/hooks/api/org-hierarchy";
+import { useOrgSettings } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

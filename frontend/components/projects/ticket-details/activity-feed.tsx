@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, MessageSquare } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
-import { useAddComment } from "@/lib/api/hooks/projects";
+import { useAddComment } from "@/hooks/api/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";

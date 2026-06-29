@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useSupportTickets, useSupportStats } from "@/lib/api/hooks/support";
+import { useSupportTickets, useSupportStats } from "@/hooks/api/support";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

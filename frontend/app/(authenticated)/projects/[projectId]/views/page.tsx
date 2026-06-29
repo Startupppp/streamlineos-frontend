@@ -6,7 +6,7 @@ import {
   useCreateView,
   useUpdateView,
   useDeleteView,
-} from "@/lib/api/hooks/projects";
+} from "@/hooks/api/projects";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

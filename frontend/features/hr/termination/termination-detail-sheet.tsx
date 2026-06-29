@@ -1,23 +1,34 @@
 "use client";
 
 import { format } from "date-fns";
-import { CheckCircle2, XCircle, Calendar, User, BadgeDollarSign, AlertTriangle } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Calendar,
+  User,
+  BadgeDollarSign,
+  AlertTriangle,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Label } from "@/components/ui/label";
+import { Label } from "@/component@/hooks/api/hr
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 
-import type { Termination } from "@/lib/api/hooks/hr";
+import type { Termination } from "@/hooks/hooks/hr";
 
 function terminationStatusBadgeClass(status: string | null): string {
-  if (status === "APPROVED" || status === "COMPLETED") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
-  if (status === "PENDING_CEO") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
-  if (status === "REJECTED") return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800";
-  if (status === "SENT") return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800";
+  if (status === "APPROVED" || status === "COMPLETED")
+    return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
+  if (status === "PENDING_CEO")
+    return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
+  if (status === "REJECTED")
+    return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800";
+  if (status === "SENT")
+    return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800";
   return "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700";
 }
 
@@ -94,13 +105,14 @@ export function TerminationDetailSheet({
           <div
             className={cn(
               "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 p-4 flex items-center gap-3",
-              reviewRecord.status === "APPROVED" || reviewRecord.status === "COMPLETED"
+              reviewRecord.status === "APPROVED" ||
+                reviewRecord.status === "COMPLETED"
                 ? "border-l-emerald-500"
                 : reviewRecord.status === "REJECTED"
                   ? "border-l-rose-500"
                   : reviewRecord.status === "PENDING_CEO"
                     ? "border-l-amber-400"
-                    : "border-l-slate-300 dark:border-l-slate-600"
+                    : "border-l-slate-300 dark:border-l-slate-600",
             )}
           >
             <Avatar className="h-10 w-10 shrink-0">
@@ -116,7 +128,7 @@ export function TerminationDetailSheet({
                 <span
                   className={cn(
                     "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                    terminationStatusBadgeClass(reviewRecord.status)
+                    terminationStatusBadgeClass(reviewRecord.status),
                   )}
                 >
                   {terminationStatusLabel(reviewRecord.status)}
@@ -160,19 +172,23 @@ export function TerminationDetailSheet({
               </div>
             )}
 
-            {reviewRecord.severanceAmount && Number(reviewRecord.severanceAmount) > 0 && (
-              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
-                <div className="flex items-center gap-1.5">
-                  <BadgeDollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Severance
+            {reviewRecord.severanceAmount &&
+              Number(reviewRecord.severanceAmount) > 0 && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <BadgeDollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Severance
+                    </p>
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">
+                    ₹
+                    {Number(reviewRecord.severanceAmount).toLocaleString(
+                      "en-IN",
+                    )}
                   </p>
                 </div>
-                <p className="text-sm font-semibold text-foreground">
-                  ₹{Number(reviewRecord.severanceAmount).toLocaleString("en-IN")}
-                </p>
-              </div>
-            )}
+              )}
 
             {reviewRecord.noticePeriodWaived && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-3 space-y-1">
@@ -229,7 +245,9 @@ export function TerminationDetailSheet({
                   {reviewDecision === "reject" ? (
                     <span className="text-destructive">*</span>
                   ) : (
-                    <span className="text-muted-foreground font-normal">(optional)</span>
+                    <span className="text-muted-foreground font-normal">
+                      (optional)
+                    </span>
                   )}
                 </Label>
                 <Textarea
@@ -256,7 +274,9 @@ export function TerminationDetailSheet({
                   CEO Remarks
                 </p>
                 <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{reviewRecord.ceoRemarks}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {reviewRecord.ceoRemarks}
+                  </p>
                 </div>
               </div>
             </>

@@ -3,8 +3,8 @@
 import { use, useMemo, useCallback, useState, memo } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useProject, useSprints } from "@/lib/api/hooks";
-import { useBulkUpdateTickets } from "@/lib/api/hooks/projects";
-import type { BulkUpdateTicketsInput } from "@/lib/api/hooks/projects";
+import { useBulkUpdateTickets } from "@/hooks/api/projects";
+import type { BulkUpdateTicketsInput } from "@/hooks/api/projects";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
 import { TicketFilterBar } from "@/components/projects/shared/ticket-filter-bar";

@@ -2,7 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useUserActivity } from "@/lib/api/hooks/users";
+import { useUserActivity } from "@/hooks/api/users";
 import { Activity } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { cn } from "@/lib/utils";

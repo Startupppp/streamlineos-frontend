@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useTransition } from "react";
 import { useSession } from "next-auth/react";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -21,7 +21,7 @@ import {
   useProjects,
   useTimeEntries,
   useDeleteTimeEntry,
-} from "@/lib/api/hooks/projects";
+} from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

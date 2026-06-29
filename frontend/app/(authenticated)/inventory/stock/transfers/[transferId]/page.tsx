@@ -26,7 +26,7 @@ import {
   useCompleteTransfer,
   type TransferDetail,
   type TransferStatus,
-} from "@/lib/api/hooks/inventory/stock";
+} from "@/hooks/api/inventory/stock";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 

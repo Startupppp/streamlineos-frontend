@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useAISuggestHelpdeskReply } from "@/lib/api/hooks/ai";
+import { useAISuggestHelpdeskReply } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";

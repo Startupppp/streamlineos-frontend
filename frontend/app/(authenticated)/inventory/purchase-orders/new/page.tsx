@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { useVendors, useProductVariants, useCreatePurchaseOrder } from "@/lib/api/hooks/inventory";
+import { useVendors, useProductVariants, useCreatePurchaseOrder } from "@/hooks/api/inventory";
 import type { CreatePurchaseOrderInput, CreatePoLineInput, ProductVariantFlat } from "@/types/inventory";
 
 const poLineSchema = z.object({

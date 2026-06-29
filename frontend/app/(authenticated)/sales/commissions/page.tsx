@@ -53,8 +53,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
-import { useCommissions, useCommissionRules, useCreateCommissionRule, useUpdateCommissionStatus, type CommissionItem, type CommissionRule } from "@/lib/api/hooks/crm";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCommissions, useCommissionRules, useCreateCommissionRule, useUpdateCommissionStatus, type CommissionItem, type CommissionRule } from "@/hooks/api/crm";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { EmptyExpensesIllustration } from "@/components/illustrations";

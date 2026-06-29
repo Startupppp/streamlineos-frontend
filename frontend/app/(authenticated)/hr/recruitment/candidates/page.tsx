@@ -4,7 +4,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import React, { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useCandidates, useUpdateCandidateStage, useDeleteCandidate, useBulkRejectCandidates } from "@/lib/api/hooks/hr";
+import { useCandidates, useUpdateCandidateStage, useDeleteCandidate, useBulkRejectCandidates } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

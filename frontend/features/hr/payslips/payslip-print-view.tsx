@@ -2,7 +2,7 @@
 
 import { format, parseISO } from "date-fns";
 import { PayslipEarningsTable } from "./payslip-earnings-table";
-import { useOrgSettings } from "@/lib/api/hooks/organization";
+import { useOrgSettings } from "@/hooks/api/organization";
 import { resolveImageUrl } from "@/lib/utils";
 
 export interface PayslipUser {

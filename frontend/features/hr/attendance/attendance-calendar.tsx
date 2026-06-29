@@ -1,28 +1,65 @@
 "use client";
 
 import { useState, useMemo, memo } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isWeekend, isToday } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,@/hooks/api/hr
+  getDay,
+  isWeekend,
+  isToday,
+} from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useHrMonthlyAttendance, useHrWfhRequests, useHrHolidaysForCalendar } from "@/lib/api/hooks/hr";
+import {
+  useHrMonthlyAttendance,
+  useHrWfhRequests,
+  useHrHolidaysForCalendar,
+} from "@/hooks/hooks/hr";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { WEEKDAY_LABELS, CalendarDay, statusConfig } from "./attendance-utils";
 import { cn } from "@/lib/utils";
 
 const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
-const LEGEND_STATUSES = ["present", "wfh", "leave", "absent", "holiday", "weekend"] as const;
+const LEGEND_STATUSES = [
+  "present",
+  "wfh",
+  "leave",
+  "absent",
+  "holiday",
+  "weekend",
+] as const;
 
-export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: { userId: string }) {
+export const AttendanceCalendar = memo(function AttendanceCalendar({
+  userId,
+}: {
+  userId: string;
+}) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
 
-  const { data: monthlyLogs, isLoading } = useHrMonthlyAttendance({ userId, year, month });
+  const { data: monthlyLogs, isLoading } = useHrMonthlyAttendance({
+    userId,
+    year,
+    month,
+  });
   const { data: wfhRequests } = useHrWfhRequests();
   const { data: holidaysList } = useHrHolidaysForCalendar({ year, month });
 
@@ -43,7 +80,11 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
     if (wfhRequests) {
       for (const req of wfhRequests) {
         if (req.status === "APPROVED") {
-          wfhMap.add(typeof req.date === "string" ? req.date : format(new Date(req.date), "yyyy-MM-dd"));
+          wfhMap.add(
+            typeof req.date === "string"
+              ? req.date
+              : format(new Date(req.date), "yyyy-MM-dd"),
+          );
         }
       }
     }
@@ -65,7 +106,10 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
       if (wfhMap.has(dateStr)) return { date, status: "wfh" };
 
       const attendanceStatus = attendanceMap.get(dateStr);
-      if (attendanceStatus === "PRESENT" || attendanceStatus === "CHECKED_OUT") {
+      if (
+        attendanceStatus === "PRESENT" ||
+        attendanceStatus === "CHECKED_OUT"
+      ) {
         return { date, status: "present" };
       }
 
@@ -139,13 +183,17 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
                   </div>
                 ))}
                 {paddingDays.map((i) => (
-                  <div key={`pad-${i}`} className="aspect-square min-w-0 rounded-md" />
+                  <div
+                    key={`pad-${i}`}
+                    className="aspect-square min-w-0 rounded-md"
+                  />
                 ))}
                 {calendarDays.map((day) => {
                   const config = statusConfig[day.status];
                   const dayNum = day.date.getDate();
                   const isTodayDate = isToday(day.date);
-                  const isFutureOrNone = day.status === "future" || day.status === "none";
+                  const isFutureOrNone =
+                    day.status === "future" || day.status === "none";
                   const title = day.holidayName
                     ? `${format(day.date, "MMM dd")} – ${day.holidayName}`
                     : `${format(day.date, "MMM dd")}${config.label ? ` – ${config.label}` : ""}`;
@@ -157,8 +205,13 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
                         "relative aspect-square flex min-w-0 items-center justify-center rounded-md text-xs font-medium transition-colors duration-200",
                         isFutureOrNone
                           ? "text-muted-foreground/40 hover:bg-muted/40"
-                          : cn(config.bg, config.text, "hover:opacity-90 cursor-default"),
-                        isTodayDate && "ring-2 ring-blue-500 ring-offset-1 ring-offset-background"
+                          : cn(
+                              config.bg,
+                              config.text,
+                              "hover:opacity-90 cursor-default",
+                            ),
+                        isTodayDate &&
+                          "ring-2 ring-blue-500 ring-offset-1 ring-offset-background",
                       )}
                       title={title}
                     >
@@ -179,7 +232,12 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
                     className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
                     role="listitem"
                   >
-                    <div className={cn("h-2 w-2 rounded-full shrink-0", statusConfig[status].dot)} />
+                    <div
+                      className={cn(
+                        "h-2 w-2 rounded-full shrink-0",
+                        statusConfig[status].dot,
+                      )}
+                    />
                     {statusConfig[status].label}
                   </div>
                 ))}

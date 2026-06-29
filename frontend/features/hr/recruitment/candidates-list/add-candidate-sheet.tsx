@@ -6,7 +6,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { User, Mail, Phone, Briefcase, Building2, Link2, FileText, Zap } from "lucide-react";
 
-import { useCreateCandidate } from "@/lib/api/hooks/hr";
+import { useCreateCandidate } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { EntityFormSheet } from "@/components/shared";

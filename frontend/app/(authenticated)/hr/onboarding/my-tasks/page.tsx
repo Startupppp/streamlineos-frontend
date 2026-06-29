@@ -17,7 +17,7 @@ import { OnboardingTaskCard } from "@/components/hr/onboarding-task-card";
 import {
   useUserOnboarding,
   useCompleteOnboardingTask,
-} from "@/lib/api/hooks/hr/onboarding";
+} from "@/hooks/api/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useUom, useCreateUom } from "@/lib/api/hooks/inventory";
+import { useUom, useCreateUom } from "@/hooks/api/inventory";
 
 const uomSchema = z.object({
   name: z.string().min(1, "Name is required"),

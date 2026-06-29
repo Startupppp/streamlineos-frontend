@@ -19,7 +19,7 @@ import {
   useSetPrimaryCalendar,
   type CalendarConnection,
   type CalendarConnectionProvider,
-} from "@/lib/api/hooks/calendar";
+} from "@/hooks/api/calendar";
 
 const PROVIDER_LABELS: Record<CalendarConnectionProvider, string> = {
   GOOGLE: "Google Calendar",

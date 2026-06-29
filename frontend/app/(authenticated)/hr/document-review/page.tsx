@@ -15,7 +15,7 @@ import { ReviewSheet } from "@/features/hr/document-review/review-sheet";
 
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 function useDocReviewSummary() {
   return useQuery<EmployeeDocSummary[]>({

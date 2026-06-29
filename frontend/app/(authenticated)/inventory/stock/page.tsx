@@ -24,8 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useStockLevels, type StockLevelRow } from "@/lib/api/hooks/inventory/stock";
-import { useWarehouses } from "@/lib/api/hooks/inventory/warehouses";
+import { useStockLevels, type StockLevelRow } from "@/hooks/api/inventory/stock";
+import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { cn } from "@/lib/utils";
 
 interface WarehouseOption {

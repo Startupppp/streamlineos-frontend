@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useOfferTemplates, useCreateOfferTemplate, useUpdateOfferTemplate, useDeleteOfferTemplate, useGenerateOfferPdf } from "@/lib/api/hooks/hr/recruitment/offer-templates";
-import type { OfferLetterTemplate } from "@/lib/api/hooks/hr/recruitment/offer-templates";
+import { useOfferTemplates, useCreateOfferTemplate, useUpdateOfferTemplate, useDeleteOfferTemplate, useGenerateOfferPdf } from "@/hooks/api/hr/recruitment/offer-templates";
+import type { OfferLetterTemplate } from "@/hooks/api/hr/recruitment/offer-templates";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";

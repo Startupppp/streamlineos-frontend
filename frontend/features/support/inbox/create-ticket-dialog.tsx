@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { useCreateSupportTicket, useAddSupportMessage } from "@/lib/api/hooks/support";
+import { useCreateSupportTicket, useAddSupportMessage } from "@/hooks/api/support";
 import { Loader2, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

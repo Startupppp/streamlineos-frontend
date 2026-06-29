@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { useRoles, useDeleteRole, useRolesAnalytics } from "@/lib/api/hooks/roles";
+import { useRoles, useDeleteRole, useRolesAnalytics } from "@/hooks/api/roles";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { Plus, Loader2, Trash2, Shield, Copy, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -40,7 +40,7 @@ import {
   useApplyTaskSequence,
   type TaskSequence,
   type TaskEntityType,
-} from "@/lib/api/hooks/tasks";
+} from "@/hooks/api/tasks";
 import { toast } from "sonner";
 
 interface StepDraft {

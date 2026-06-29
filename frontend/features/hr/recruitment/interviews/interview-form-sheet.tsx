@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { useScheduleInterview, useCandidates, useJobPostings } from "@/lib/api/hooks/hr";
-import { useInterviewerAvailability } from "@/lib/api/hooks/hr/recruitment";
+import { useScheduleInterview, useCandidates, useJobPostings } from "@/hooks/api/hr";
+import { useInterviewerAvailability } from "@/hooks/api/hr/recruitment";
 import { InterviewerAvailabilityGrid } from "@/components/hr/recruitment/interviewer-availability-grid";
-import { useCalendarOrgMembers } from "@/lib/api/hooks/calendar";
+import { useCalendarOrgMembers } from "@/hooks/api/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";

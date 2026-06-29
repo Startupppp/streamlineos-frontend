@@ -6,16 +6,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   useHrAttendanceStatus,
-  useHrCheckIn,
+  useHrC@/hooks/api/hr
   useHrCheckOut,
   useHrToggleBreak,
   useHrHolidaysForCalendar,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/hooks/hr";
 import { toast } from "sonner";
-import { Clock, Coffee, LogIn, LogOut, Loader2, Play, Pause } from "lucide-react";
+import {
+  Clock,
+  Coffee,
+  LogIn,
+  LogOut,
+  Loader2,
+  Play,
+  Pause,
+} from "lucide-react";
 import { formatDuration, formatTimerSegment } from "./attendance-utils";
 import { cn } from "@/lib/utils";
 
@@ -29,8 +41,14 @@ export const TimerCard = memo(function TimerCard() {
   const todayStr = format(today, "yyyy-MM-dd");
   const isSundayToday = getDay(today) === 0;
 
-  const { data: statusData, isLoading } = useHrAttendanceStatus({ refetchInterval: 60000, staleTime: 30000 });
-  const { data: holidaysList } = useHrHolidaysForCalendar({ year: todayYear, month: todayMonth });
+  const { data: statusData, isLoading } = useHrAttendanceStatus({
+    refetchInterval: 60000,
+    staleTime: 30000,
+  });
+  const { data: holidaysList } = useHrHolidaysForCalendar({
+    year: todayYear,
+    month: todayMonth,
+  });
 
   const todayHolidayName = useMemo(() => {
     if (!holidaysList) return null;
@@ -61,7 +79,9 @@ export const TimerCard = memo(function TimerCard() {
     onError: (err) => toast.error(err.message),
   });
 
-  const [localBreakOverride, setLocalBreakOverride] = useState<boolean | null>(null);
+  const [localBreakOverride, setLocalBreakOverride] = useState<boolean | null>(
+    null,
+  );
 
   const breakMutation = useHrToggleBreak({
     onSuccess: () => toast.success("Break toggled"),
@@ -79,7 +99,10 @@ export const TimerCard = memo(function TimerCard() {
 
   useEffect(() => {
     if (localCooldown <= 0) return;
-    const timer = setTimeout(() => setLocalCooldown((prev) => Math.max(0, prev - 1)), 1000);
+    const timer = setTimeout(
+      () => setLocalCooldown((prev) => Math.max(0, prev - 1)),
+      1000,
+    );
     return () => clearTimeout(timer);
   }, [localCooldown]);
 
@@ -87,8 +110,13 @@ export const TimerCard = memo(function TimerCard() {
     if (statusData) setLocalBreakOverride(null);
   }, [statusData?.status]);
 
-  const isCheckedIn = statusData?.status === "PRESENT" || (localBreakOverride === false && statusData?.status === "ON_BREAK");
-  const isOnBreak = localBreakOverride !== null ? localBreakOverride : statusData?.status === "ON_BREAK";
+  const isCheckedIn =
+    statusData?.status === "PRESENT" ||
+    (localBreakOverride === false && statusData?.status === "ON_BREAK");
+  const isOnBreak =
+    localBreakOverride !== null
+      ? localBreakOverride
+      : statusData?.status === "ON_BREAK";
   const isActive = isCheckedIn || isOnBreak;
   const isInCooldown = localCooldown > 0;
   const isPending = checkInMutation.isPending || checkOutMutation.isPending;
@@ -125,11 +153,18 @@ export const TimerCard = memo(function TimerCard() {
       return { hours: 0, minutes: 0, seconds: 0 };
     }
     const checkInTime = new Date(statusData.todayLog.checkIn);
-    const serverBreakMs = (Number(statusData.todayLog.breakHours) || 0) * 3600000;
+    const serverBreakMs =
+      (Number(statusData.todayLog.breakHours) || 0) * 3600000;
     const totalBreakMs = serverBreakMs + localExtraBreakMs;
-    const currentBreakMs = isOnBreak && breakStartRef.current ? now.getTime() - breakStartRef.current : 0;
+    const currentBreakMs =
+      isOnBreak && breakStartRef.current
+        ? now.getTime() - breakStartRef.current
+        : 0;
     const allBreakMs = totalBreakMs + currentBreakMs;
-    const diffMs = Math.max(0, now.getTime() - checkInTime.getTime() - allBreakMs);
+    const diffMs = Math.max(
+      0,
+      now.getTime() - checkInTime.getTime() - allBreakMs,
+    );
     return {
       hours: Math.floor(diffMs / 3600000),
       minutes: Math.floor((diffMs % 3600000) / 60000),
@@ -138,7 +173,10 @@ export const TimerCard = memo(function TimerCard() {
   }, [now, statusData?.todayLog, localExtraBreakMs, isOnBreak]);
 
   const handleCheckIn = useCallback(() => {
-    checkInMutation.mutate({ location: undefined, localDate: format(new Date(), "yyyy-MM-dd") });
+    checkInMutation.mutate({
+      location: undefined,
+      localDate: format(new Date(), "yyyy-MM-dd"),
+    });
   }, [checkInMutation]);
 
   const handleClockAction = useCallback(() => {
@@ -208,7 +246,9 @@ export const TimerCard = memo(function TimerCard() {
             </span>
           </div>
 
-          <span className="text-2xl font-bold text-blue-500 animate-pulse mb-5">:</span>
+          <span className="text-2xl font-bold text-blue-500 animate-pulse mb-5">
+            :
+          </span>
 
           <div className="flex flex-col items-center">
             <div className="bg-muted rounded-xl px-4 py-3 min-w-[64px] text-center">
@@ -221,7 +261,9 @@ export const TimerCard = memo(function TimerCard() {
             </span>
           </div>
 
-          <span className="text-2xl font-bold text-blue-500 animate-pulse mb-5">:</span>
+          <span className="text-2xl font-bold text-blue-500 animate-pulse mb-5">
+            :
+          </span>
 
           <div className="flex flex-col items-center">
             <div className="bg-muted rounded-xl px-4 py-3 min-w-[64px] text-center">
@@ -239,17 +281,32 @@ export const TimerCard = memo(function TimerCard() {
           className={cn(
             "text-sm text-center",
             isOnBreak && "text-amber-600 dark:text-amber-400 font-medium",
-            isCheckedIn && !isOnBreak && "text-emerald-600 dark:text-emerald-400 font-medium",
-            !isActive && !isInCooldown && !isBlockedDay && "text-muted-foreground italic",
-            !isActive && isInCooldown && "text-slate-600 dark:text-slate-400 font-medium",
-            isBlockedDay && "text-amber-600 dark:text-amber-400 font-medium"
+            isCheckedIn &&
+              !isOnBreak &&
+              "text-emerald-600 dark:text-emerald-400 font-medium",
+            !isActive &&
+              !isInCooldown &&
+              !isBlockedDay &&
+              "text-muted-foreground italic",
+            !isActive &&
+              isInCooldown &&
+              "text-slate-600 dark:text-slate-400 font-medium",
+            isBlockedDay && "text-amber-600 dark:text-amber-400 font-medium",
           )}
         >
           {isOnBreak && "On break"}
-          {isCheckedIn && !isOnBreak && checkInTime && `Checked in at ${format(new Date(checkInTime), "hh:mm a")}`}
+          {isCheckedIn &&
+            !isOnBreak &&
+            checkInTime &&
+            `Checked in at ${format(new Date(checkInTime), "hh:mm a")}`}
           {!isActive && !isInCooldown && !isBlockedDay && "Not clocked in"}
-          {!isActive && isInCooldown && `Cooldown: ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`}
-          {isBlockedDay && (isSundayToday ? "Sunday — no check-in" : `Holiday: ${todayHolidayName}`)}
+          {!isActive &&
+            isInCooldown &&
+            `Cooldown: ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`}
+          {isBlockedDay &&
+            (isSundayToday
+              ? "Sunday — no check-in"
+              : `Holiday: ${todayHolidayName}`)}
         </p>
 
         {isOnBreak && (
@@ -272,7 +329,10 @@ export const TimerCard = memo(function TimerCard() {
                 variant={isActive ? "secondary" : "default"}
                 className={cn(
                   "font-semibold flex-1 gap-1.5 h-9 duration-200",
-                  !isActive && !isInCooldown && !isBlockedDay && "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  !isActive &&
+                    !isInCooldown &&
+                    !isBlockedDay &&
+                    "bg-emerald-600 hover:bg-emerald-700 text-white",
                 )}
               >
                 {checkInMutation.isPending ? (
@@ -330,12 +390,20 @@ export const TimerCard = memo(function TimerCard() {
         {dailyStats && (
           <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
             <div className="bg-muted/30 rounded-xl p-3 text-center">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Work</p>
-              <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">{formatDuration(dailyStats.workHours)}</p>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Work
+              </p>
+              <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
+                {formatDuration(dailyStats.workHours)}
+              </p>
             </div>
             <div className="bg-muted/30 rounded-xl p-3 text-center">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Break</p>
-              <p className="text-sm font-bold text-amber-700 dark:text-amber-400 tabular-nums">{formatDuration(dailyStats.breakHours)}</p>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Break
+              </p>
+              <p className="text-sm font-bold text-amber-700 dark:text-amber-400 tabular-nums">
+                {formatDuration(dailyStats.breakHours)}
+              </p>
             </div>
           </div>
         )}

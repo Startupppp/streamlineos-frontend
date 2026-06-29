@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ImportValidationPreview } from "@/features/hr/expenses/import-validation-preview";
-import { useImportExpenses } from "@/lib/api/hooks/use-import-expenses";
+import { useImportExpenses } from "@/hooks/api/use-import-expenses";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const TEMPLATE_COLUMNS = [

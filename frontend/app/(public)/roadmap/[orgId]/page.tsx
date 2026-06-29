@@ -23,7 +23,7 @@ import {
   type PublicFeedbackPost,
   type PublicChangelogEntry,
   type ChangelogType,
-} from "@/lib/api/hooks/projects/roadmap";
+} from "@/hooks/api/projects/roadmap";
 
 const VOTER_KEY_STORAGE = "streamlineos:roadmap:voterKey";
 

@@ -55,7 +55,7 @@ import {
   useApproveIncentive,
   useRejectIncentive,
   useSetIncentiveConfig,
-} from "@/lib/api/hooks/hr";
+} from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";

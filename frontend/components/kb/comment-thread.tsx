@@ -12,7 +12,7 @@ import {
   useDeleteKbComment,
   useKbArticleComments,
   useResolveKbComment,
-} from "@/lib/api/hooks/kb/comments";
+} from "@/hooks/api/kb/comments";
 import type { KbComment } from "@/types/kb";
 
 interface CommentThreadProps {

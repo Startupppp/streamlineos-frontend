@@ -20,7 +20,7 @@ import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
 import { LeadDistributionDialog } from "@/features/crm/leads/lead-distribution-dialog";
 import { StatCard } from "@/components/ui/stat-card";
 import { Search, Users, ArrowRight, FileSpreadsheet, AlertTriangle } from "lucide-react";
-import { useLeads } from "@/lib/api/hooks/leads";
+import { useLeads } from "@/hooks/api/leads";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 

@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { ArticleEditor, ArticleEditorSkeleton } from "@/components/kb/article-editor";
 import { ErrorState } from "@/components/shared";
-import { useKbArticle } from "@/lib/api/hooks/kb";
+import { useKbArticle } from "@/hooks/api/kb";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function EditKbArticlePage() {

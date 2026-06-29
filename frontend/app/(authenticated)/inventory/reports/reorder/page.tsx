@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
-import { useReorderReport } from "@/lib/api/hooks/inventory/reports";
+import { useReorderReport } from "@/hooks/api/inventory/reports";
 
 function UrgencyBadge({ available, reorderPoint }: { available: number; reorderPoint: number }) {
   if (available <= 0) {

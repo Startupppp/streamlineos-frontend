@@ -1,6 +1,6 @@
 "use client";
 
-import { useRecruitmentStats } from "@/lib/api/hooks/hr/recruitment";
+import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import { Briefcase, Users, TrendingUp, Clock } from "lucide-react";

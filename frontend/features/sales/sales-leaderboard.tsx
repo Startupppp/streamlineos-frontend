@@ -11,7 +11,7 @@ import { fadeUp, slideInLeft } from "@/lib/motion-variants";
 import { getColorSafe, stageColors, rankStyles } from "@/lib/theme-constants";
 import { calcPercent } from "@/lib/format-utils";
 import type { TopDeal, SalesLeaderboardItem, SalesActivityItem } from "@/types/crm/deals";
-import type { SalesLeaderboardEntryResult } from "@/lib/api/hooks/crm/analytics";
+import type { SalesLeaderboardEntryResult } from "@/hooks/api/crm/analytics";
 
 const DEFAULT_BAR_COLOR = "bg-muted-foreground/40";
 

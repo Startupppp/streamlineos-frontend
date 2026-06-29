@@ -21,7 +21,7 @@ import {
   useTicketActivity,
   type TicketActivityAction,
   type TicketActivityEntry,
-} from "@/lib/api/hooks/projects/ticket-activity";
+} from "@/hooks/api/projects/ticket-activity";
 
 interface TicketActivityLogProps {
   projectId: number;

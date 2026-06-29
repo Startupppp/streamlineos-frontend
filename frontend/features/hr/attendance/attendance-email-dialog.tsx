@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/command";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
+import { useHrEmployees } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { apiClient } from "@/lib/api-client";
 

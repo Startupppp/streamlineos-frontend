@@ -22,8 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useUpdateUser } from "@/lib/api/hooks/users";
-import type { User } from "@/lib/api/hooks/users";
+import { useUpdateUser } from "@/hooks/api/users";
+import type { User } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 

@@ -17,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { AppSheet } from "@/components/shared/app-sheet";
-import { usePurchaseOrder, useSendPurchaseOrder, useReceiveGoods } from "@/lib/api/hooks/inventory";
+import { usePurchaseOrder, useSendPurchaseOrder, useReceiveGoods } from "@/hooks/api/inventory";
 import type { PurchaseOrder, PurchaseOrderLine, PurchaseOrderStatus, ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
 
 interface PoDetailPageProps {

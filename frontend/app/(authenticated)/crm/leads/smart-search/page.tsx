@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { useNLSearch, type NLSearchLead } from "@/lib/api/hooks/ai";
+import { useNLSearch, type NLSearchLead } from "@/hooks/api/ai";
 
 const EXAMPLE_QUERIES = [
   "Hot leads not yet contacted",

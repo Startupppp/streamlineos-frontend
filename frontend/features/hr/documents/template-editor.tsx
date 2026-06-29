@@ -37,7 +37,7 @@ import {
   useDocumentTemplateVersions,
   useDocumentTemplates,
   type DocumentTemplate,
-} from "@/lib/api/hooks/hr/document-templates";
+} from "@/hooks/api/hr/document-templates";
 import { extractVariables, substituteVariables } from "@/lib/utils/document-variables";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TEMPLATE_TYPES, SAMPLE_VARS, DEFAULT_HTML } from "./template-constants";

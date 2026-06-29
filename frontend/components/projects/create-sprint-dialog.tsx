@@ -8,7 +8,7 @@ import { addDays, format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { EntityFormSheet } from "@/components/shared";
 import { SprintFormFields } from "./sprint-form-fields";
-import { useCreateSprint } from "@/lib/api/hooks/projects";
+import { useCreateSprint } from "@/hooks/api/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 

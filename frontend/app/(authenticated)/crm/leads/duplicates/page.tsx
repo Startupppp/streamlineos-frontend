@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useDuplicateLeads, useMergeLead, type DuplicateGroup } from "@/lib/api/hooks/crm/leads";
+import { useDuplicateLeads, useMergeLead, type DuplicateGroup } from "@/hooks/api/crm/leads";
 import { cn } from "@/lib/utils";
 
 

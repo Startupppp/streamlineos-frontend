@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
+import { useUploadFile } from "@/hooks/api/use-upload-file";
 
 interface OnboardingDoc {
   id: number;

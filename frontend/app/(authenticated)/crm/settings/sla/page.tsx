@@ -38,7 +38,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useSlaPolicies, useSlaReport, useSlaBreachedLeads,
   useCreateSlaPolicy, useUpdateSlaPolicy, useDeleteSlaPolicy,
-} from "@/lib/api/hooks/crm-settings";
+} from "@/hooks/api/crm-settings";
 import { toast } from "sonner";
 
 const PRIORITY_COLORS: Record<string, { color: string; bg: string }> = {

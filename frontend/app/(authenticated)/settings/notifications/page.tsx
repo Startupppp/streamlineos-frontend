@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useNotificationPreferences, useUpdateNotificationPreferences } from "@/lib/api/hooks/hr/leaves-expenses";
+import { useNotificationPreferences, useUpdateNotificationPreferences } from "@/hooks/api/hr/leaves-expenses";
 import { toast } from "sonner";
 
 const CATEGORIES = [

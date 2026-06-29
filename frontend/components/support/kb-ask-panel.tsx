@@ -14,7 +14,7 @@ import {
   usePublicAskKb,
   type KbAnswer,
   type KbAnswerSource,
-} from "@/lib/api/hooks/support/kb-rag";
+} from "@/hooks/api/support/kb-rag";
 
 type KbAskPanelProps =
   | { mode: "authed"; articleId?: number; className?: string }

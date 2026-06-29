@@ -10,9 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUserMembership, useUpdateUserMembership } from "@/lib/api/hooks/users";
-import { useOrgBranches, useOrgDepartments } from "@/lib/api/hooks/org-hierarchy";
-import { useOrgMembers } from "@/lib/api/hooks/organization";
+import { useUserMembership, useUpdateUserMembership } from "@/hooks/api/users";
+import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
+import { useOrgMembers } from "@/hooks/api/organization";
 import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
 import { Building2, GitBranch, Network, Pencil, Check, X } from "lucide-react";

@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
-import { useStockSummary, type StockSummaryRow } from "@/lib/api/hooks/inventory/reports";
+import { useStockSummary, type StockSummaryRow } from "@/hooks/api/inventory/reports";
 
 function StockLevelBadge({ available, reorderPoint }: { available: number; reorderPoint: number | null }) {
   if (reorderPoint !== null && available <= 0) {

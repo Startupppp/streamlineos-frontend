@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IndianRupee, Clock, TrendingUp, Pencil } from "lucide-react";
-import { useProjectBudget, useUpdateProjectBudget } from "@/lib/api/hooks/projects";
+import { useProjectBudget, useUpdateProjectBudget } from "@/hooks/api/projects";
 import { toast } from "sonner";
 
 export default function BudgetPage({ params }: { params: Promise<{ projectId: string }> }) {

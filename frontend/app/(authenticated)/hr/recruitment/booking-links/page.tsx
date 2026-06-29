@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { clientEnv } from "@/lib/env";
 import {
   useHrBookingLinks, useRevokeBookingLink, type HrBookingLink,
-} from "@/lib/api/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const STATUS_BADGE: Record<HrBookingLink["status"], { label: string; className: string }> = {

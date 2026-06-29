@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
-import { useDealForecast } from "@/lib/api/hooks/crm";
+import { useDealForecast } from "@/hooks/api/crm";
 
 
 function fmtCurrency(val: number) {

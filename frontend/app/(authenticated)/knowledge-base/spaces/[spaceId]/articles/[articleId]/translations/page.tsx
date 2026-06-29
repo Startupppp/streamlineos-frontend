@@ -18,7 +18,7 @@ import {
   useKbTranslations,
   useUpsertKbTranslation,
   useDeleteKbTranslation,
-} from "@/lib/api/hooks/kb/translations";
+} from "@/hooks/api/kb/translations";
 import type { KbTranslation } from "@/types/kb";
 
 type StatusVariant = "default" | "secondary" | "outline" | "destructive";
