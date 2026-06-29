@@ -13,6 +13,14 @@ import { usePushSubscription } from "@/hooks/common/use-push-subscription";
 import Image from "next/image";
 import { TrialBanner } from "@/components/billing/trial-banner";
 
+const SuccessChecklist = dynamic(
+  () =>
+    import("@/components/workspace-onboarding/success-checklist").then(
+      (m) => m.SuccessChecklist,
+    ),
+  { ssr: false },
+);
+
 const ChatUnreadNotifications = dynamic(
   () =>
     import("@/components/chat/chat-unread-notifications").then(
@@ -137,6 +145,7 @@ export function DashboardShell({
             <div className="flex-1 min-h-0 overflow-auto flex flex-col">
               {children}
             </div>
+            <SuccessChecklist />
           </>
         ) : (
           <NotActivatedPage />

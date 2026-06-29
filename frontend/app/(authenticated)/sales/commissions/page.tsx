@@ -53,11 +53,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
-<<<<<<< Updated upstream
-import { useCommissions, useCommissionRules, useCreateCommissionRule, useUpdateCommissionStatus, type CommissionItem } from "@/hooks/api/crm";
-=======
 import { useCommissions, useCommissionRules, useCreateCommissionRule, useUpdateCommissionStatus, type CommissionItem, type CommissionRule } from "@/hooks/api/crm";
->>>>>>> Stashed changes
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";

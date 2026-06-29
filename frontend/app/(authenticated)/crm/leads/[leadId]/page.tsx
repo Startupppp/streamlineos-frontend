@@ -10,17 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-<<<<<<< Updated upstream
-import {
-  useLeadDetail,
-  useLeadTimeline,
-  useUpdateLead,
-  useUpdateLeadStatus,
-  useLogLeadActivity,
-} from "@/hooks/api/leads";
-=======
 import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/hooks/api/leads";
->>>>>>> Stashed changes
 import { useCreateTask } from "@/hooks/api/tasks";
 import { toast } from "sonner";
 

@@ -70,14 +70,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-<<<<<<< Updated upstream
-import type {
-  ApiToken,
-  CreateApiTokenResponse,
-} from "@/hooks/api/api-tokens";
-=======
 import type { ApiToken, CreateApiTokenResponse } from "@/hooks/api/api-tokens";
->>>>>>> Stashed changes
 
 const AVAILABLE_SCOPES = [
   "read:all",

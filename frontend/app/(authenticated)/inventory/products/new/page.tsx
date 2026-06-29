@@ -28,15 +28,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { LoadingState, ErrorState } from "@/components/shared";
-<<<<<<< Updated upstream
-import { useCategories, useUom, useCreateProduct } from "@/hooks/api/inventory";
-=======
 import {
   useCategories,
   useUom,
   useCreateProduct,
 } from "@/hooks/api/inventory";
->>>>>>> Stashed changes
 
 interface Category {
   id: number;

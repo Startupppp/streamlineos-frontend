@@ -16,14 +16,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-<<<<<<< Updated upstream
-import {
-  useRecruitmentStats,
-  useRecruitmentAnalytics,
-} from "@/hooks/api/hr/recruitment";
-=======
 import { useRecruitmentStats, useRecruitmentAnalytics } from "@/hooks/api/hr/recruitment";
->>>>>>> Stashed changes
 
 const FUNNEL_STAGES = [
   "NEW",

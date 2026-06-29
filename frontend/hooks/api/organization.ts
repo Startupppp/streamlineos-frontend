@@ -148,6 +148,7 @@ export const useUpdateOrgSettings = () => {
       numberFormat?: string;
       weekStartDay?: "monday" | "sunday" | "saturday";
       businessHours?: Record<string, { open: string; close: string; enabled: boolean }>;
+      enabledModules?: string[];
     }
   >({
     mutationFn: (data) =>

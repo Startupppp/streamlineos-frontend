@@ -16,24 +16,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaveIllustration } from "@/components/illustrations";
-<<<<<<< Updated upstream
-import {
-  Filter,
-  Download,
-  CalendarDays,
-  TrendingUp,
-  History,
-} from "lucide-react";
-import {
-  useCancelLeave,
-  useApproveLeaveDedicated,
-  useRejectLeaveDedicated,
-  useRevertLeave,
-} from "@/hooks/api/hr";
-=======
 import { Filter, Download, CalendarDays, TrendingUp, History } from "lucide-react";
 import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/hooks/api/hr";
->>>>>>> Stashed changes
 import { cn, resolveImageUrl } from "@/lib/utils";
 
 import type {

@@ -1,9 +1,14 @@
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { getAuthenticatedMember } from "@/lib/auth-helpers";
+import { getServerQueryClient } from "@/lib/api/server-query-client";
+import { queryKeys } from "@/lib/query-keys";
+import { getDashboardStats, getRoleStats } from "@/server/queries/dashboard/hr-widgets";
+import {
+  getActiveSprintSummary,
+  getRecentProjects,
+} from "@/server/queries/dashboard/project-widgets";
 import { DashboardClient } from "./dashboard-client";
 
-<<<<<<< Updated upstream
-export default function DashboardPage() {
-  return <DashboardClient />;
-=======
 export default async function DashboardPage() {
   const auth = await getAuthenticatedMember();
   if ("error" in auth) {
@@ -36,5 +41,4 @@ export default async function DashboardPage() {
       <DashboardClient />
     </HydrationBoundary>
   );
->>>>>>> Stashed changes
 }

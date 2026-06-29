@@ -4,15 +4,11 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-<<<<<<< Updated upstream
-import { useCreateTicket, useAddAttachment, useProject } from "@/hooks/api";
-=======
 import {
   useCreateTicket,
   useAddAttachment,
   useProject,
 } from "@/hooks/api";
->>>>>>> Stashed changes
 import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import {

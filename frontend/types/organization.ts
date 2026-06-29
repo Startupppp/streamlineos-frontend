@@ -32,6 +32,7 @@ export interface OrgSettings {
   timeFormat?: "12h" | "24h" | null;
   numberFormat?: string | null;
   weekStartDay?: "monday" | "sunday" | "saturday" | null;
+  onboardingCompletedAt?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
