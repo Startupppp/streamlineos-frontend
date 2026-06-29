@@ -5,7 +5,7 @@ import {
   format,
   startOfMonth,
   endOfMonth,
-  eachDayOfInterval,@/hooks/api/hr
+  eachDayOfInterval,
   getDay,
   isWeekend,
   isToday,
@@ -17,7 +17,7 @@ import {
   useHrMonthlyAttendance,
   useHrWfhRequests,
   useHrHolidaysForCalendar,
-} from "@/hooks/hooks/hr";
+} from "@/hooks/api/hr";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { WEEKDAY_LABELS, CalendarDay, statusConfig } from "./attendance-utils";
 import { cn } from "@/lib/utils";

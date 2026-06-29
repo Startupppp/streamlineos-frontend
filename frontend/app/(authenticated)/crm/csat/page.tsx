@@ -85,7 +85,7 @@ import {
 import {
   useCsatSurveys,
   useCsatSurveyResponses,
-  useCre@/hooks/api/crm
+  useCre
   useUpdateCsatSurvey,
   useDeleteCsatSurvey,
   useClientAccounts,

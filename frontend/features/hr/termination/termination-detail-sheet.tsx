@@ -11,14 +11,14 @@ import {
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Label } from "@/component@/hooks/api/hr
+import { Label } from "@/component
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 
-import type { Termination } from "@/hooks/hooks/hr";
+import type { Termination } from "@/hooks/api/hr";
 
 function terminationStatusBadgeClass(status: string | null): string {
   if (status === "APPROVED" || status === "COMPLETED")

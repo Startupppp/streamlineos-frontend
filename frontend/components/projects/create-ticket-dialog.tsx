@@ -8,7 +8,7 @@ import { useCreateTicket, useAddAttachment, useProject } from "@/hooks/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import {
-  Sheet,@/hooks/api
+  Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,

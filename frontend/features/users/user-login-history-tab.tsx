@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useUserLoginHistory } from "@/hooks/api/users";
-import { History, ChevronLeft, ChevronRight, CheckCircle, XCircle, Monitor } from "lucide-react";
+import {
+  History,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  XCircle,
+  Monitor,
+} from "lucide-react";
 import { format } from "date-fns";
 
 interface UserLoginHistoryTabProps {
@@ -24,7 +31,9 @@ function parseUserAgent(ua: string | null): string {
 
 export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
   const [page, setPage] = useState(1);
-  const [successFilter, setSuccessFilter] = useState<boolean | undefined>(undefined);
+  const [successFilter, setSuccessFilter] = useState<boolean | undefined>(
+    undefined,
+  );
 
   const { data, isLoading } = useUserLoginHistory(userId, {
     page,
@@ -52,7 +61,10 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           variant={successFilter === undefined ? "secondary" : "outline"}
           size="sm"
           className="h-7 text-xs"
-          onClick={() => { setSuccessFilter(undefined); setPage(1); }}
+          onClick={() => {
+            setSuccessFilter(undefined);
+            setPage(1);
+          }}
         >
           All
         </Button>
@@ -60,7 +72,10 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           variant={successFilter === true ? "secondary" : "outline"}
           size="sm"
           className="h-7 text-xs"
-          onClick={() => { setSuccessFilter(true); setPage(1); }}
+          onClick={() => {
+            setSuccessFilter(true);
+            setPage(1);
+          }}
         >
           <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
           Successful
@@ -69,7 +84,10 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           variant={successFilter === false ? "secondary" : "outline"}
           size="sm"
           className="h-7 text-xs"
-          onClick={() => { setSuccessFilter(false); setPage(1); }}
+          onClick={() => {
+            setSuccessFilter(false);
+            setPage(1);
+          }}
         >
           <XCircle className="h-3 w-3 mr-1 text-red-500" />
           Failed
@@ -79,7 +97,9 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
       {entries.length === 0 ? (
         <EmptyState
           compact
-          illustration={<History className="h-10 w-10 text-muted-foreground/40" />}
+          illustration={
+            <History className="h-10 w-10 text-muted-foreground/40" />
+          }
           title="No login history"
           description="No login events recorded for this user."
         />
@@ -101,7 +121,10 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium">{entry.event}</span>
                   {entry.failureReason && (
-                    <Badge variant="destructive" className="text-[10px] h-4 px-1">
+                    <Badge
+                      variant="destructive"
+                      className="text-[10px] h-4 px-1"
+                    >
                       {entry.failureReason}
                     </Badge>
                   )}
@@ -112,7 +135,9 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
                   )}
                   <span>{parseUserAgent(entry.userAgent)}</span>
                   {(entry.city || entry.country) && (
-                    <span>{[entry.city, entry.country].filter(Boolean).join(", ")}</span>
+                    <span>
+                      {[entry.city, entry.country].filter(Boolean).join(", ")}
+                    </span>
                   )}
                 </div>
               </div>
@@ -137,12 +162,16 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="px-1">{page} / {pagination.totalPages}</span>
+            <span className="px-1">
+              {page} / {pagination.totalPages}
+            </span>
             <Button
               variant="outline"
               size="sm"
               className="h-7 w-7 p-0"
-              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              onClick={() =>
+                setPage((p) => Math.min(pagination.totalPages, p + 1))
+              }
               disabled={page === pagination.totalPages}
             >
               <ChevronRight className="h-3.5 w-3.5" />

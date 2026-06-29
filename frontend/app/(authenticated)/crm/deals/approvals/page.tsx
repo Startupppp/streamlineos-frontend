@@ -38,7 +38,7 @@ import { useDealApprovals, useResolveDealApproval } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
-@/hooks/api/crm
+
 function fmt(amount: string | number) {
   return `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }

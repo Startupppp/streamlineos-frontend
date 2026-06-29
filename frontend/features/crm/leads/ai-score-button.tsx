@@ -7,7 +7,7 @@ import {
   TrendingUp,
   TrendingDown,
   AlertCircle,
-} from "lucide-react";@/hooks/api/ai
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,

@@ -26,8 +26,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
-import {@/hooks/api/accounting
-  useJournalEntry,@/hooks/api/access
+import {
+  useJournalEntry,
   usePostJournalEntry,
   useReverseJournalEntry,
 } from "@/hooks/api/accounting";

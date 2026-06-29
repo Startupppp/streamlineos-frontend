@@ -20,7 +20,7 @@ import {
   TableBody,
   TableRow,
   TableHead,
-  TableCell,@/hooks/api/crm
+  TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";

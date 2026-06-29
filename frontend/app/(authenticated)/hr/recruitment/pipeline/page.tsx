@@ -27,15 +27,18 @@ export default function PipelinePage() {
             }
           },
           onError: (e) => toast.error(getErrorMessage(e)),
-        }
+        },
       );
     },
-    [updateStage]
+    [updateStage],
   );
 
   if (isError) {
     return (
-      <PageWrapper title="Recruitment Pipeline" subtitle="Drag candidates between stages to update their status">
+      <PageWrapper
+        title="Recruitment Pipeline"
+        subtitle="Drag candidates between stages to update their status"
+      >
         <ErrorState description="Failed to load pipeline" onRetry={refetch} />
       </PageWrapper>
     );

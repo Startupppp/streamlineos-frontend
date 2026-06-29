@@ -25,7 +25,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import {@/hooks/api/invoicen } from "@/components/illustrations";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import {
   useRecurringInvoices,

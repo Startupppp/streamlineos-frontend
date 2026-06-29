@@ -12,15 +12,15 @@ import {
   CheckCircle2,
   XCircle,
   Lock,
-  AlertTriangle,@/hooks/api/roles
-  ShieldOff,@/hooks/api/roles
+  AlertTriangle,
+  ShieldOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
-import { useRolePermissionsMatrix } from "@/hooks/hooks/roles";
-import type { RolePermissionsMatrixEntry } from "@/hooks/hooks/roles";
+import { useRolePermissionsMatrix } from "@/hooks/api/roles";
+import type { RolePermissionsMatrixEntry } from "@/hooks/api/roles";
 import { cn } from "@/lib/utils";
 
 function groupByResource(permissions: typeof PERMISSIONS) {

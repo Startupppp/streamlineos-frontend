@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Camera,
   Check,
-  ChevronRight,@/hooks/api
+  ChevronRight,
   Hash,
   Loader2,
   Search,

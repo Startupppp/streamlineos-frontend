@@ -1,8 +1,16 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useMessageThreads, useCandidateMessages, useSendCandidateMessage } from "@/hooks/api/hr/recruitment";
-import type { MessageThread, CandidateMessage, MessageChannel } from "@/hooks/api/hr/recruitment";
+import {
+  useMessageThreads,
+  useCandidateMessages,
+  useSendCandidateMessage,
+} from "@/hooks/hooks/hr/recruitment";
+import type {
+  MessageThread,
+  CandidateMessage,
+  MessageChannel,
+} from "@/hooks/hooks/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";
@@ -13,7 +21,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -36,21 +48,28 @@ function ThreadItem({
   isActive: boolean;
   onSelect: (thread: MessageThread) => void;
 }) {
-  function handleClick() { onSelect(thread); }
+  function handleClick() {
+    onSelect(thread);
+  }
 
   return (
     <button
       onClick={handleClick}
       className={cn(
         "w-full text-left px-3 py-2.5 rounded-lg transition-colors hover:bg-muted/60",
-        isActive && "bg-muted"
+        isActive && "bg-muted",
       )}
     >
       <div className="flex items-center justify-between gap-2 mb-0.5">
-        <span className="text-sm font-medium truncate">{candidateName(thread)}</span>
+        <span className="text-sm font-medium truncate">
+          {candidateName(thread)}
+        </span>
         <div className="flex items-center gap-1.5 shrink-0">
           {thread.unreadCount > 0 && (
-            <Badge variant="default" className="h-4 min-w-4 px-1 text-[9px] rounded-full">
+            <Badge
+              variant="default"
+              className="h-4 min-w-4 px-1 text-[9px] rounded-full"
+            >
               {thread.unreadCount}
             </Badge>
           )}
@@ -76,15 +95,23 @@ function MessageBubble({ msg }: { msg: CandidateMessage }) {
           "max-w-[75%] rounded-2xl px-3.5 py-2.5 text-sm",
           isOutbound
             ? "bg-primary text-primary-foreground rounded-br-sm"
-            : "bg-muted rounded-bl-sm"
+            : "bg-muted rounded-bl-sm",
         )}
       >
         {msg.subject && (
-          <p className="text-xs font-medium mb-1 opacity-75">Re: {msg.subject}</p>
+          <p className="text-xs font-medium mb-1 opacity-75">
+            Re: {msg.subject}
+          </p>
         )}
         <p className="whitespace-pre-wrap leading-relaxed">{msg.body}</p>
-        <p className={cn("text-[10px] mt-1 opacity-60", isOutbound ? "text-right" : "text-left")}>
-          {isOutbound ? msg.senderName ?? "You" : candidateName(msg)} · {format(new Date(msg.sentAt), "h:mm a")}
+        <p
+          className={cn(
+            "text-[10px] mt-1 opacity-60",
+            isOutbound ? "text-right" : "text-left",
+          )}
+        >
+          {isOutbound ? (msg.senderName ?? "You") : candidateName(msg)} ·{" "}
+          {format(new Date(msg.sentAt), "h:mm a")}
         </p>
       </div>
     </div>
@@ -106,7 +133,12 @@ function ComposeBar({
   const handleSend = useCallback(() => {
     if (!body.trim()) return;
     send.mutate(
-      { candidateId, channel, subject: subject.trim() || undefined, body: body.trim() },
+      {
+        candidateId,
+        channel,
+        subject: subject.trim() || undefined,
+        body: body.trim(),
+      },
       {
         onSuccess: () => {
           setBody("");
@@ -114,13 +146,19 @@ function ComposeBar({
           toast.success("Message sent");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
-      }
+      },
     );
   }, [body, subject, channel, candidateId, send]);
 
-  function handleBodyChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setBody(e.target.value); }
-  function handleSubjectChange(e: React.ChangeEvent<HTMLInputElement>) { setSubject(e.target.value); }
-  function handleChannelChange(v: string) { setChannel(v as MessageChannel); }
+  function handleBodyChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setBody(e.target.value);
+  }
+  function handleSubjectChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSubject(e.target.value);
+  }
+  function handleChannelChange(v: string) {
+    setChannel(v as MessageChannel);
+  }
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSend();
   }
@@ -135,7 +173,9 @@ function ComposeBar({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="EMAIL">Email {candidateEmail ? `(${candidateEmail})` : ""}</SelectItem>
+              <SelectItem value="EMAIL">
+                Email {candidateEmail ? `(${candidateEmail})` : ""}
+              </SelectItem>
               <SelectItem value="IN_APP">In-App</SelectItem>
             </SelectContent>
           </Select>
@@ -176,7 +216,9 @@ function ComposeBar({
 }
 
 function ThreadPane({ thread }: { thread: MessageThread }) {
-  const { data: messages = [], isLoading } = useCandidateMessages(thread.candidateId);
+  const { data: messages = [], isLoading } = useCandidateMessages(
+    thread.candidateId,
+  );
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -191,15 +233,24 @@ function ThreadPane({ thread }: { thread: MessageThread }) {
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)
+          Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-xl" />
+          ))
         ) : messages.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">No messages yet.</p>
+          <p className="text-sm text-muted-foreground text-center py-8">
+            No messages yet.
+          </p>
         ) : (
-          [...messages].reverse().map((msg) => <MessageBubble key={msg.id} msg={msg} />)
+          [...messages]
+            .reverse()
+            .map((msg) => <MessageBubble key={msg.id} msg={msg} />)
         )}
         <div ref={bottomRef} />
       </div>
-      <ComposeBar candidateId={thread.candidateId} candidateEmail={thread.candidateEmail} />
+      <ComposeBar
+        candidateId={thread.candidateId}
+        candidateEmail={thread.candidateEmail}
+      />
     </div>
   );
 }
@@ -208,14 +259,19 @@ export default function InboxPage() {
   const { data: threads = [], isLoading } = useMessageThreads();
   const [activeThread, setActiveThread] = useState<MessageThread | null>(null);
 
-  const handleSelectThread = useCallback((t: MessageThread) => setActiveThread(t), []);
+  const handleSelectThread = useCallback(
+    (t: MessageThread) => setActiveThread(t),
+    [],
+  );
 
   if (isLoading) {
     return (
       <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates">
         <div className="flex gap-4 h-[calc(100vh-12rem)]">
           <div className="w-72 space-y-2">
-            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)}
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 rounded-lg" />
+            ))}
           </div>
           <Skeleton className="flex-1 rounded-xl" />
         </div>
@@ -224,7 +280,10 @@ export default function InboxPage() {
   }
 
   return (
-    <PageWrapper title="Candidate Inbox" subtitle="Manage candidate conversations across channels">
+    <PageWrapper
+      title="Candidate Inbox"
+      subtitle="Manage candidate conversations across channels"
+    >
       {threads.length === 0 ? (
         <EmptyState
           illustration={<EmptyInboxIllustration />}
@@ -232,7 +291,10 @@ export default function InboxPage() {
           description="Send the first message to a candidate from their profile page."
         />
       ) : (
-        <div className="flex gap-0 border rounded-xl overflow-hidden" style={{ height: "calc(100vh - 13rem)" }}>
+        <div
+          className="flex gap-0 border rounded-xl overflow-hidden"
+          style={{ height: "calc(100vh - 13rem)" }}
+        >
           <div className="w-72 border-r flex flex-col shrink-0">
             <div className="px-3 py-2 border-b">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">

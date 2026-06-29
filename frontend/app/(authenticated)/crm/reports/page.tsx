@@ -16,7 +16,7 @@ import {
   X,
   AlertTriangle,
   Clock,
-} from "lucide-react";@/hooks/api/leads
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";

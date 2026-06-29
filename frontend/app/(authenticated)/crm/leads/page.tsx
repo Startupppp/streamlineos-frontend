@@ -69,7 +69,7 @@ export default function LeadsPipelinePage() {
 
   const { data: tableData, isLoading: tableLoading } = useLeads({
     search: debouncedSearchQuery || undefined,
-    sortBy: sortColumn as
+    sortBy: sortColumn
       | "name"
       | "email"
       | "company"
@@ -82,7 +82,7 @@ export default function LeadsPipelinePage() {
     sortOrder: sortDirection,
     page: tablePage,
     limit: pageSize,
-    status: statusFilter as
+    status: statusFilter
       | "NEW"
       | "CONTACTED"
       | "INTERESTED"
@@ -91,7 +91,7 @@ export default function LeadsPipelinePage() {
       | "LOST"
       | undefined,
     priority: priorityFilter as "HOT" | "WARM" | "COLD" | undefined,
-    source: sourceFilter as
+    source: sourceFilter
       | "referral"
       | "campaign"
       | "cold_call"
@@ -201,7 +201,7 @@ export default function LeadsPipelinePage() {
         phone: (formData.get("phone") as string)?.trim() || undefined,
         company: (formData.get("company") as string)?.trim() || undefined,
         source: isLeadSource(formData.get("source"))
-          ? (formData.get("source") as
+          ? (formData.get("source")
               | "referral"
               | "campaign"
               | "cold_call"

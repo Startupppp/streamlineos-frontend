@@ -14,8 +14,8 @@ import {
 import {
   Card,
   CardContent,
-  CardHeader,@/hooks/api/ai
-  CardTitle,@/hooks/api/crm
+  CardHeader,
+  CardTitle,
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

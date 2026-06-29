@@ -18,7 +18,7 @@ import { MetricCard } from "@/components/charts/metric-card";
 import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
 import { MiniAreaChart } from "@/components/charts/mini-area-chart";
 import { ActivityFeed } from "@/components/charts/activity-feed";
-import {@/hooks/api
+import {
   useCustomerExecutiveDashboard,
   useCrmPeopleSlugs,
 } from "@/hooks/api";

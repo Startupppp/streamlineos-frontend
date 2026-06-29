@@ -30,10 +30,10 @@ import { MessageInput } from "./message-input";
 
 export function MessagePanel({
   channelId,
-  curren@/hooks/api
+  curren
   onBack,
   onToggleInfo,
-  showInfoPanel,@/hooks/api/chat-realtime
+  showInfoPanel,
   sidebarCollapsed,
   onExpandSidebar,
 }: {

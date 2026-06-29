@@ -8,14 +8,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
-  TableCell,@/hooks/api/hr
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useHrAttendanceStatus } from "@/hooks/hooks/hr";
+import { useHrAttendanceStatus } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { Download, ClipboardList } from "lucide-react";
 import { AttendanceLogRow } from "./attendance-log-row";

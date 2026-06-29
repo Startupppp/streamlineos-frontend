@@ -1,4 +1,4 @@
-import type {@/hooks/api/goals
+import type {
   GoalLevel,
   GoalStatus,
   KeyResultMetric,

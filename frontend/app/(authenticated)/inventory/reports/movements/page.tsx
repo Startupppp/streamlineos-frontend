@@ -4,13 +4,29 @@ import { useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,@/hooks/api/inventory/reports
+} from "@/components/ui/select"@/hooks/api/inventory/warehouses
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
-import { useMovementsReport, type MovementType } from "@/hooks/api/inventory/reports";
-import { useWarehouses } from "@/hooks/api/inventory/warehouses";
+import {
+  useMovementsReport,
+  type MovementType,
+} from "@/hooks/hooks/inventory/reports";
+import { useWarehouses } from "@/hooks/hooks/inventory/warehouses";
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "ALL", label: "All types" },
@@ -25,7 +41,10 @@ const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "RETURN_OUT", label: "Return Out" },
 ];
 
-const TYPE_VARIANT: Record<MovementType, "default" | "secondary" | "destructive" | "outline"> = {
+const TYPE_VARIANT: Record<
+  MovementType,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   PURCHASE: "default",
   SALE: "outline",
   GRN: "default",
@@ -89,7 +108,9 @@ export default function MovementsReportPage() {
 
   const rows = query.data ?? [];
 
-  function handleRetry() { void query.refetch(); }
+  function handleRetry() {
+    void query.refetch();
+  }
 
   return (
     <PageWrapper
@@ -98,7 +119,10 @@ export default function MovementsReportPage() {
       subtitle="Full audit trail of all inventory movements — receipts, shipments, adjustments, and transfers."
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end mb-4 flex-wrap">
-        <Select value={warehouseId || "ALL"} onValueChange={handleWarehouseChange}>
+        <Select
+          value={warehouseId || "ALL"}
+          onValueChange={handleWarehouseChange}
+        >
           <SelectTrigger className="w-full sm:max-w-[180px]">
             <SelectValue placeholder="All warehouses" />
           </SelectTrigger>
@@ -138,7 +162,9 @@ export default function MovementsReportPage() {
       </div>
 
       {query.isLoading && <LoadingState variant="table" rows={10} />}
-      {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
+      {query.error && (
+        <ErrorState description={query.error.message} onRetry={handleRetry} />
+      )}
 
       {!query.isLoading && !query.error && rows.length === 0 && (
         <EmptyState
@@ -168,7 +194,9 @@ export default function MovementsReportPage() {
             <TableBody>
               {rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="text-xs whitespace-nowrap">{formatDate(row.createdAt)}</TableCell>
+                  <TableCell className="text-xs whitespace-nowrap">
+                    {formatDate(row.createdAt)}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={TYPE_VARIANT[row.type]}
@@ -177,13 +205,20 @@ export default function MovementsReportPage() {
                       {row.type.replace(/_/g, " ")}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium">{row.productName}</TableCell>
+                  <TableCell className="font-medium">
+                    {row.productName}
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{row.sku}</TableCell>
                   <TableCell>{row.warehouseName ?? "—"}</TableCell>
                   <TableCell>{row.locationName ?? "—"}</TableCell>
                   <TableCell className="text-right tabular-nums font-medium">
-                    <span className={row.quantity >= 0 ? "text-green-700" : "text-red-700"}>
-                      {row.quantity >= 0 ? "+" : ""}{row.quantity}
+                    <span
+                      className={
+                        row.quantity >= 0 ? "text-green-700" : "text-red-700"
+                      }
+                    >
+                      {row.quantity >= 0 ? "+" : ""}
+                      {row.quantity}
                     </span>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
@@ -192,9 +227,11 @@ export default function MovementsReportPage() {
                   <TableCell className="text-xs">
                     {row.referenceType && row.referenceNumber
                       ? `${row.referenceType} ${row.referenceNumber}`
-                      : row.notes ?? "—"}
+                      : (row.notes ?? "—")}
                   </TableCell>
-                  <TableCell className="text-xs">{row.performedBy ?? "—"}</TableCell>
+                  <TableCell className="text-xs">
+                    {row.performedBy ?? "—"}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

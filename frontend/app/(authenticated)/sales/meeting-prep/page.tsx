@@ -9,7 +9,7 @@ import {
   Loader2,
   Download,
   RotateCcw,
-  User,@/hooks/api/ai
+  User,
   Calendar,
 } from "lucide-react";
 import {
@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useMeetingPrep, type MeetingPrepResult } from "@/hooks/hooks/ai";
+import { useMeetingPrep, type MeetingPrepResult } from "@/hooks/api/ai";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 

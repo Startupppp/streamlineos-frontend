@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useDiversityReport, type DiversityFilters } from "@/hooks/api/hr/recruitment";
-import { useHrDepartments } from "@/hooks/api/hr";
+import {@/hooks/api/hr/recruitment
+  useDiversityReport,@/hooks/api/hr
+  type DiversityFilters,
+} from "@/hooks/hooks/hr/recruitment";
+import { useHrDepartments } from "@/hooks/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,7 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, AlertCircle, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,7 +47,9 @@ function HorizontalBar({
         const color = colorFn?.(item.label) ?? "bg-primary";
         return (
           <div key={item.label} className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground w-32 truncate text-right">{item.label}</span>
+            <span className="text-xs text-muted-foreground w-32 truncate text-right">
+              {item.label}
+            </span>
             <div className="flex-1 h-4 rounded-full bg-muted overflow-hidden">
               <div
                 className={cn("h-full rounded-full transition-all", color)}
@@ -49,7 +57,10 @@ function HorizontalBar({
               />
             </div>
             <span className="text-xs tabular-nums w-16 text-right shrink-0">
-              {item.count} <span className="text-muted-foreground">({Math.round(pct)}%)</span>
+              {item.count}{" "}
+              <span className="text-muted-foreground">
+                ({Math.round(pct)}%)
+              </span>
             </span>
           </div>
         );
@@ -67,7 +78,10 @@ function DeptCheckboxItem({
   checked: boolean;
   onToggle: (id: number) => void;
 }) {
-  const handleChange = useCallback(() => onToggle(dept.id), [dept.id, onToggle]);
+  const handleChange = useCallback(
+    () => onToggle(dept.id),
+    [dept.id, onToggle],
+  );
   return (
     <DropdownMenuCheckboxItem checked={checked} onCheckedChange={handleChange}>
       {dept.name}
@@ -101,15 +115,23 @@ export default function DiversityReportPage() {
     setFilters(cleared);
   }, []);
 
-  const handleFromChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setPendingFilters((p) => ({ ...p, from: e.target.value }));
-  }, []);
+  const handleFromChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setPendingFilters((p) => ({ ...p, from: e.target.value }));
+    },
+    [],
+  );
 
-  const handleToChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setPendingFilters((p) => ({ ...p, to: e.target.value }));
-  }, []);
+  const handleToChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setPendingFilters((p) => ({ ...p, to: e.target.value }));
+    },
+    [],
+  );
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const toggleDept = useCallback((id: number) => {
     setPendingFilters((prev) => ({
@@ -120,7 +142,8 @@ export default function DiversityReportPage() {
     }));
   }, []);
 
-  const hasActiveFilters = filters.from || filters.to || filters.departmentIds.length > 0;
+  const hasActiveFilters =
+    filters.from || filters.to || filters.departmentIds.length > 0;
 
   return (
     <PageWrapper
@@ -150,14 +173,21 @@ export default function DiversityReportPage() {
           <Label className="text-xs">Departments</Label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs min-w-[140px] justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs min-w-[140px] justify-between"
+              >
                 {pendingFilters.departmentIds.length === 0
                   ? "All Departments"
                   : `${pendingFilters.departmentIds.length} selected`}
                 <ChevronDown className="ml-2 h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52 max-h-56 overflow-y-auto">
+            <DropdownMenuContent
+              align="start"
+              className="w-52 max-h-56 overflow-y-auto"
+            >
               {(departments ?? []).map((dept) => (
                 <DeptCheckboxItem
                   key={dept.id}
@@ -174,18 +204,32 @@ export default function DiversityReportPage() {
             Apply Filters
           </Button>
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={handleReset}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={handleReset}
+            >
               Reset
             </Button>
           )}
         </div>
         {hasActiveFilters && (
           <div className="flex flex-wrap gap-1 ml-auto">
-            {filters.from && <Badge variant="secondary" className="text-[10px]">From: {filters.from}</Badge>}
-            {filters.to && <Badge variant="secondary" className="text-[10px]">To: {filters.to}</Badge>}
+            {filters.from && (
+              <Badge variant="secondary" className="text-[10px]">
+                From: {filters.from}
+              </Badge>
+            )}
+            {filters.to && (
+              <Badge variant="secondary" className="text-[10px]">
+                To: {filters.to}
+              </Badge>
+            )}
             {filters.departmentIds.length > 0 && (
               <Badge variant="secondary" className="text-[10px]">
-                {filters.departmentIds.length} dept{filters.departmentIds.length !== 1 ? "s" : ""}
+                {filters.departmentIds.length} dept
+                {filters.departmentIds.length !== 1 ? "s" : ""}
               </Badge>
             )}
           </div>
@@ -195,13 +239,19 @@ export default function DiversityReportPage() {
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}><CardContent className="pt-6"><Skeleton className="h-40 w-full" /></CardContent></Card>
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <Skeleton className="h-40 w-full" />
+              </CardContent>
+            </Card>
           ))}
         </div>
       ) : isError ? (
         <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
           <AlertCircle className="h-10 w-10 text-destructive/50" />
-          <p className="text-sm text-muted-foreground">Failed to load diversity report.</p>
+          <p className="text-sm text-muted-foreground">
+            Failed to load diversity report.
+          </p>
           <Button variant="outline" size="sm" onClick={handleRetry}>
             Try again
           </Button>
@@ -209,15 +259,22 @@ export default function DiversityReportPage() {
       ) : !data || data.total === 0 ? (
         <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
           <BarChart2 className="h-10 w-10 text-muted-foreground/30" />
-          <p className="text-sm font-medium text-muted-foreground">No applicant data found.</p>
-          <p className="text-xs text-muted-foreground">Adjust the filters or wait for candidates to apply.</p>
+          <p className="text-sm font-medium text-muted-foreground">
+            No applicant data found.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Adjust the filters or wait for candidates to apply.
+          </p>
         </div>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-4 mb-6">
             {[
               { label: "Total Applicants", value: data.total },
-              { label: "Gender Categories", value: data.genderBreakdown.length },
+              {
+                label: "Gender Categories",
+                value: data.genderBreakdown.length,
+              },
               { label: "Locations", value: data.locationBreakdown.length },
               { label: "Sources", value: data.sourceBreakdown.length },
             ].map((stat) => (
@@ -237,10 +294,15 @@ export default function DiversityReportPage() {
               </CardHeader>
               <CardContent>
                 {data.genderBreakdown.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No gender data recorded yet.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No gender data recorded yet.
+                  </p>
                 ) : (
                   <HorizontalBar
-                    items={data.genderBreakdown.map((g) => ({ label: g.gender, count: g.count }))}
+                    items={data.genderBreakdown.map((g) => ({
+                      label: g.gender,
+                      count: g.count,
+                    }))}
                     total={data.total}
                     colorFn={(label) => GENDER_COLORS[label] ?? "bg-slate-400"}
                   />
@@ -254,10 +316,15 @@ export default function DiversityReportPage() {
               </CardHeader>
               <CardContent>
                 {data.locationBreakdown.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No location data recorded yet.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No location data recorded yet.
+                  </p>
                 ) : (
                   <HorizontalBar
-                    items={data.locationBreakdown.map((l) => ({ label: l.location, count: l.count }))}
+                    items={data.locationBreakdown.map((l) => ({
+                      label: l.location,
+                      count: l.count,
+                    }))}
                     total={data.total}
                     colorFn={() => "bg-emerald-500"}
                   />
@@ -271,7 +338,10 @@ export default function DiversityReportPage() {
               </CardHeader>
               <CardContent>
                 <HorizontalBar
-                  items={data.sourceBreakdown.map((s) => ({ label: s.source, count: s.count }))}
+                  items={data.sourceBreakdown.map((s) => ({
+                    label: s.source,
+                    count: s.count,
+                  }))}
                   total={data.total}
                   colorFn={() => "bg-blue-500"}
                 />
@@ -280,11 +350,16 @@ export default function DiversityReportPage() {
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Pipeline Stage Distribution</CardTitle>
+                <CardTitle className="text-sm">
+                  Pipeline Stage Distribution
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <HorizontalBar
-                  items={data.stageBreakdown.map((s) => ({ label: s.stage, count: s.count }))}
+                  items={data.stageBreakdown.map((s) => ({
+                    label: s.stage,
+                    count: s.count,
+                  }))}
                   total={data.total}
                   colorFn={() => "bg-amber-500"}
                 />

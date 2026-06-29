@@ -1,4 +1,4 @@
-import type {@/hooks/api/automations
+import type {
   AutomationTrigger,
   AutomationActionType,
   AutomationConditionOp,

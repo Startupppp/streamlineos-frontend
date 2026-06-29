@@ -22,8 +22,8 @@ import { DealSidePanel } from "@/features/crm/deals/deal-side-panel";
 import { DealsStatsBar } from "@/features/crm/deals/deals-stats-bar";
 import { DealForecastWidget } from "@/features/crm/deals/deal-forecast-widget";
 import { DealsLoadingSkeleton } from "@/features/crm/deals/deals-loading-skeleton";
-import {@/hooks/api/crm } from "@/features/crm/deals/deals-create-sheet";
-import { KanbanFilterBar } from @/hooks/api/hrdeals/kanban-filter-bar";
+import { DealsCreateSheet } from "@/features/crm/deals/deals-create-sheet";
+import { KanbanFilterBar } from "@/features/crm/deals/kanban-filter-bar";
 import { KanbanColumn } from "@/features/crm/deals/kanban-column";
 import { WinLossDialog } from "@/features/crm/deals/win-loss-dialog";
 import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
@@ -187,7 +187,7 @@ export default function DealsPage() {
       updateStageMutation.mutate(
         {
           id,
-          stage: stage as
+          stage: stage
             | "LEAD"
             | "CONTACTED"
             | "PROPOSAL"
@@ -249,7 +249,7 @@ export default function DealsPage() {
     updateStageMutation.mutate(
       {
         id: stageSkipDialog.id,
-        stage: stageSkipDialog.to as
+        stage: stageSkipDialog.to
           | "LEAD"
           | "CONTACTED"
           | "PROPOSAL"

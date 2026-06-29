@@ -13,11 +13,11 @@ import {
 } from "@/components/ui/tooltip";
 import {
   useHrAttendanceStatus,
-  useHrC@/hooks/api/hr
+  useHrC
   useHrCheckOut,
   useHrToggleBreak,
   useHrHolidaysForCalendar,
-} from "@/hooks/hooks/hr";
+} from "@/hooks/api/hr";
 import { toast } from "sonner";
 import {
   Clock,

@@ -12,7 +12,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,@/hooks/api/inventory/sales-orders
+  SelectValue,
 } from "@/components/ui/select";
 import {
   Table,
@@ -28,7 +28,7 @@ import { EmptyExpensesIllustration } from "@/components/illustrations";
 import {
   useSalesOrders,
   type SalesOrderStatus,
-} from "@/hooks/hooks/inventory/sales-orders";
+} from "@/hooks/api/inventory/sales-orders";
 
 type SoStatus = SalesOrderStatus;
 type StatusFilter = "ALL" | SoStatus;

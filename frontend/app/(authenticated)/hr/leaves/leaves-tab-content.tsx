@@ -12,13 +12,13 @@ import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";@/hooks/api/hr
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaveIllustration } from "@/components/illustrations";
 import {
-  Filter,@/hooks/api/access
+  Filter,
   Download,
   CalendarDays,
   TrendingUp,
@@ -29,7 +29,7 @@ import {
   useApproveLeaveDedicated,
   useRejectLeaveDedicated,
   useRevertLeave,
-} from "@/hooks/hooks/hr";
+} from "@/hooks/api/hr";
 import { cn, resolveImageUrl } from "@/lib/utils";
 
 import type {
@@ -39,7 +39,7 @@ import type {
 } from "./leaves-shared";
 import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
 import { ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
-import { useCan } from "@/hooks/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 const DONUT_COLORS = ["#06b6d4", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
 

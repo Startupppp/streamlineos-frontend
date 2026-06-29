@@ -27,8 +27,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Dialog,
-  DialogContent,@/hooks/api/crm
-  DialogHeader,@/hooks/api/hr
+  DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";

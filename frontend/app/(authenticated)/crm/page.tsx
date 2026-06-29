@@ -16,8 +16,8 @@ import {
   AlertTriangle,
   FileText,
   Briefcase,
-  RefreshCw,@/hooks/api/leads
-} from "lucide-react";@/hooks/api/crm
+  RefreshCw,
+} from "lucide-react";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";

@@ -3,12 +3,12 @@
 import { useState, useMemo, useCallback, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { format, eachDayOfInterval, parse, isValid } from "date-fns";
-import {@/hooks/api/hr
-  useGetWorkLogs,@/hooks/api/hr
+import {
+  useGetWorkLogs,
   useUpsertWorkLog,
   useHrMyLeaveRequests,
-} from "@/hooks/hooks/hr";
-import { useHrEmployees, useHrDepartments } from "@/hooks/hooks/hr";
+} from "@/hooks/api/hr";
+import { useHrEmployees, useHrDepartments } from "@/hooks/api/hr";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -20,11 +20,11 @@ import type { Employee } from "@/types/hr";
 import {
   WorkLogFilterActions,
   WorkLogFiltersPanel,
-  type WorkLogFilters as@/hooks/api/access
+  type WorkLogFilters
 } from "@/features/hr/work-logs/work-log-filters";
 import { WorkLogMonthGroup } from "@/features/hr/work-logs/work-log-month-group";
 import { EmptyTimeIllustration } from "@/components/illustrations";
-import { useCan } from "@/hooks/hooks/access";
+import { useCan } from "@/hooks/api/access";
 
 export default function WorkLogsPage() {
   const { data: session } = useSession();
@@ -175,7 +175,7 @@ export default function WorkLogsPage() {
     const dateSet = new Set<string>();
     const requests =
       (
-        myLeaveData as
+        myLeaveData
           | {
               requests?: {
                 status: string;

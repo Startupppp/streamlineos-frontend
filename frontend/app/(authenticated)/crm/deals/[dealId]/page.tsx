@@ -13,7 +13,7 @@ import {
   FolderKanban,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {@/hooks/api/crmcomponents/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
@@ -187,7 +187,7 @@ export default function DealDetailPage({
 
   const handleQuickActionClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      const type = e.currentTarget.dataset.actionType as
+      const type = e.currentTarget.dataset.actionType
         | "call"
         | "note"
         | "email"

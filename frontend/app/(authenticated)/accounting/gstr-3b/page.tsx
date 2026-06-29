@@ -9,7 +9,7 @@ import {
   TableBody,
   TableCell,
   TableHead,
-  TableHeader,@/hooks/api/accounting
+  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { LoadingState } from "@/components/shared/loading-state";

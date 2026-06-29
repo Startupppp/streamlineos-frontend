@@ -30,7 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { EntityFormDialog } from "@/components/shared";
 import { LoadingState, ErrorState } from "@/components/shared";
-import {@/hooks/api/accounting
+import {
   useAccounts,
   useJournal,
   useUpdateAccount,

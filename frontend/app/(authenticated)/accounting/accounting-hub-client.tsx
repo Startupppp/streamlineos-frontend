@@ -5,7 +5,7 @@ import {
   Calculator,
   BookOpen,
   ScrollText,
-  BarChart3,@/hooks/api/accounting
+  BarChart3,
   Users,
   FileText,
   Scale,

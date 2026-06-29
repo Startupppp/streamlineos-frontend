@@ -42,7 +42,7 @@ import {
   useHealthConfig,
   useUpdateHealthConfig,
   useRecomputeHealth,
-  type H@/hooks/api/crm
+  type H
   type HealthScoreWeights,
   type HealthScoreThresholds,
   type HealthScoreBreakdown,

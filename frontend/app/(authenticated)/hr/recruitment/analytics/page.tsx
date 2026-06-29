@@ -1,15 +1,34 @@
 "use client";
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,@/hooks/api/hr/recruitment
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from "recharts";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRecruitmentStats, useRecruitmentAnalytics } from "@/hooks/api/hr/recruitment";
+import {
+  useRecruitmentStats,
+  useRecruitmentAnalytics,
+} from "@/hooks/hooks/hr/recruitment";
 
-const FUNNEL_STAGES = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"] as const;
+const FUNNEL_STAGES = [
+  "NEW",
+  "SCREENING",
+  "INTERVIEW",
+  "OFFER",
+  "HIRED",
+  "REJECTED",
+] as const;
 const FUNNEL_LABELS: Record<string, string> = {
   NEW: "New",
   SCREENING: "Screening",
@@ -42,7 +61,9 @@ function KpiCard({ label, value, sub, icon }: KpiCardProps) {
           <div>
             <p className="text-xs text-muted-foreground">{label}</p>
             <p className="text-2xl font-bold mt-1">{value}</p>
-            {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+            {sub && (
+              <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+            )}
           </div>
           <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
             {icon}
@@ -67,14 +88,16 @@ function KpiSkeleton() {
 
 export default function RecruitmentAnalyticsPage() {
   const { data: stats, isLoading: statsLoading } = useRecruitmentStats();
-  const { data: analytics, isLoading: analyticsLoading } = useRecruitmentAnalytics();
+  const { data: analytics, isLoading: analyticsLoading } =
+    useRecruitmentAnalytics();
 
   const isLoading = statsLoading || analyticsLoading;
 
   const funnelData = FUNNEL_STAGES.map((stage) => ({
     stage: FUNNEL_LABELS[stage],
     count: stats?.funnel?.[stage] ?? 0,
-    avgDays: analytics?.funnel?.find((f) => f.stage === stage)?.avgDaysInStage ?? null,
+    avgDays:
+      analytics?.funnel?.find((f) => f.stage === stage)?.avgDaysInStage ?? null,
   }));
 
   const sourceData = (stats?.sources ?? [])
@@ -83,7 +106,10 @@ export default function RecruitmentAnalyticsPage() {
     .slice(0, 8);
 
   return (
-    <PageWrapper title="Recruitment Analytics" subtitle="Track hiring performance and pipeline health">
+    <PageWrapper
+      title="Recruitment Analytics"
+      subtitle="Track hiring performance and pipeline health"
+    >
       <div className="space-y-6">
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
           {isLoading ? (
@@ -95,8 +121,15 @@ export default function RecruitmentAnalyticsPage() {
                 value={stats?.totalJobs ?? 0}
                 sub={`${stats?.openJobs ?? 0} open`}
                 icon={
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect x="2" y="7" width="20" height="14" rx="2" />
+                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
                   </svg>
                 }
               />
@@ -105,8 +138,15 @@ export default function RecruitmentAnalyticsPage() {
                 value={stats?.totalCandidates ?? 0}
                 sub={`${stats?.newCandidates ?? 0} new`}
                 icon={
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 }
@@ -116,7 +156,13 @@ export default function RecruitmentAnalyticsPage() {
                 value={stats?.hiredThisMonth ?? 0}
                 sub={`${analytics?.hireRate ?? 0}% hire rate`}
                 icon={
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 }
@@ -125,9 +171,17 @@ export default function RecruitmentAnalyticsPage() {
                 label="Upcoming Interviews"
                 value={stats?.upcomingInterviews ?? 0}
                 icon={
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                 }
               />
@@ -136,8 +190,15 @@ export default function RecruitmentAnalyticsPage() {
                 value={stats?.avgTimeToHireDays ?? 0}
                 sub="from application to hired"
                 icon={
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
                   </svg>
                 }
               />
@@ -146,8 +207,15 @@ export default function RecruitmentAnalyticsPage() {
                 value={`${analytics?.hireRate ?? 0}%`}
                 sub={`${analytics?.totalHired ?? 0} of ${analytics?.totalCandidates ?? 0} hired`}
                 icon={
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
                     <line x1="6" y1="20" x2="6" y2="14" />
                   </svg>
                 }
@@ -159,22 +227,34 @@ export default function RecruitmentAnalyticsPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">Hiring Funnel</CardTitle>
+              <CardTitle className="text-sm font-semibold">
+                Hiring Funnel
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <Skeleton className="h-52 w-full" />
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={funnelData} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <BarChart
+                    data={funnelData}
+                    margin={{ top: 4, right: 8, bottom: 4, left: -10 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      className="stroke-border"
+                    />
                     <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} />
                     <Tooltip
                       contentStyle={{ fontSize: 12 }}
                       formatter={(value) => [value, "Candidates"]}
                     />
-                    <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="count"
+                      fill="hsl(var(--primary))"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -183,7 +263,9 @@ export default function RecruitmentAnalyticsPage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">Candidate Sources</CardTitle>
+              <CardTitle className="text-sm font-semibold">
+                Candidate Sources
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -202,13 +284,22 @@ export default function RecruitmentAnalyticsPage() {
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
-                      label={({ name, percent }: { name?: string; percent?: number }) =>
+                      label={({
+                        name,
+                        percent,
+                      }: {
+                        name?: string;
+                        percent?: number;
+                      }) =>
                         `${name ?? ""} ${Math.round((percent ?? 0) * 100)}%`
                       }
                       labelLine={false}
                     >
                       {sourceData.map((_, i) => (
-                        <Cell key={i} fill={SOURCE_COLORS[i % SOURCE_COLORS.length]} />
+                        <Cell
+                          key={i}
+                          fill={SOURCE_COLORS[i % SOURCE_COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
@@ -222,7 +313,9 @@ export default function RecruitmentAnalyticsPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Avg. Days in Each Stage</CardTitle>
+            <CardTitle className="text-sm font-semibold">
+              Avg. Days in Each Stage
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -233,14 +326,21 @@ export default function RecruitmentAnalyticsPage() {
                   data={funnelData.filter((f) => f.avgDays !== null)}
                   margin={{ top: 4, right: 8, bottom: 4, left: -10 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="stroke-border"
+                  />
                   <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} unit="d" />
                   <Tooltip
                     contentStyle={{ fontSize: 12 }}
                     formatter={(value) => [`${value}d`, "Avg. Days"]}
                   />
-                  <Bar dataKey="avgDays" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                  <Bar
+                    dataKey="avgDays"
+                    fill="hsl(var(--chart-2))"
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             )}

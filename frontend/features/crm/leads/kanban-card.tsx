@@ -9,8 +9,8 @@ import {
   Building2,
   Clock,
   AlertTriangle,
-  Info,@/hooks/api
-} from "lucide-react";@/hooks/api/leads
+  Info,
+} from "lucide-react";
 import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

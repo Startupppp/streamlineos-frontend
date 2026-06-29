@@ -12,7 +12,7 @@ import { Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
-import {@/hooks/api
+import {
   useChatChannel,
   useChatOnlineUsers,
   useUpdateChannel,

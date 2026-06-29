@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
-  TableCell,@/hooks/api/accounting
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,

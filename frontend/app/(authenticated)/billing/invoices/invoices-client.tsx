@@ -12,7 +12,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  useInv@/hooks/api/invoice
+  useInv
   useInvoiceStats,
   useUpdateInvoice,
   useDeleteInvoice,

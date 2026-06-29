@@ -24,12 +24,12 @@ import {
 import {
   ListToolbar,
   LoadingState,
-  ErrorState,@/hooks/api/inventory
+  ErrorState,
   DataTablePagination,
 } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import { useProducts, useCategories } from "@/hooks/hooks/inventory";
+import { useProducts, useCategories } from "@/hooks/api/inventory";
 
 interface Category {
   id: number;

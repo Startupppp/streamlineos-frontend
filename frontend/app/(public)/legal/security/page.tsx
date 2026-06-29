@@ -242,7 +242,7 @@ export default function SecurityPage() {
             is on the 2027 roadmap.
           </li>
           <li>
-            <strong>India DPDP Act 2023:</strong> compliant. We treat the workspace owner as
+            <strong>India DPDP Act 2023:</strong> compliant. We treat the workspace owner
             the &ldquo;data fiduciary&rdquo; for their content; we act as the
             &ldquo;data processor.&rdquo;
           </li>

@@ -12,7 +12,7 @@ import {
   Check,
   Clock,
   Shield,
-  Shield@/hooks/api/api-tokens
+  Shield
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -20,8 +20,8 @@ import {
   useCreateApiToken,
   useRevokeApiToken,
   useDeleteApiToken,
-  type C@/hooks/api/user-api-tokens
-} from "@/hooks/hooks/api-tokens";
+  type C
+} from "@/hooks/api/api-tokens";
 import {
   useUserApiTokens,
   useCreateUserApiToken,
@@ -29,7 +29,7 @@ import {
   type CreateUserApiTokenInput,
   type CreateUserApiTokenResponse,
   type UserApiToken,
-} from "@/hooks/hooks/user-api-tokens";
+} from "@/hooks/api/user-api-tokens";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -73,7 +73,7 @@ import {
 import type {
   ApiToken,
   CreateApiTokenResponse,
-} from "@/hooks/hooks/api-tokens";
+} from "@/hooks/api/api-tokens";
 
 const AVAILABLE_SCOPES = [
   "read:all",
