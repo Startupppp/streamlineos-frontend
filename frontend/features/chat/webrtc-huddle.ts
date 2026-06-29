@@ -37,9 +37,12 @@ export function useWebRTCHuddle(
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
   const [isMuted, setIsMuted] = useState(false);
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
+  const [isSharingScreen, setIsSharingScreen] = useState(false);
 
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
   const knownParticipants = useRef<Set<string>>(new Set());
   const streamReady = useRef(false);
   const sendSignalRef = useRef<typeof sendSignalMutation.mutate>(sendSignalMutation.mutate);
@@ -228,6 +231,26 @@ export function useWebRTCHuddle(
     }
   }, []);
 
+  const stopScreenShare = useCallback(() => {
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+    screenStreamRef.current = null;
+    setScreenStream(null);
+    setIsSharingScreen(false);
+  }, []);
+
+  const startScreenShare = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      screenStreamRef.current = stream;
+      setScreenStream(stream);
+      setIsSharingScreen(true);
+      peerConnections.current.forEach((pc) => {
+        stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+      });
+      stream.getVideoTracks()[0]?.addEventListener("ended", () => stopScreenShare());
+    } catch (_err) {}
+  }, [stopScreenShare]);
+
   const cleanup = useCallback(() => {
     for (const userId of Array.from(peerConnections.current.keys())) {
       closePeerConnection(userId);
@@ -236,17 +259,21 @@ export function useWebRTCHuddle(
     if (stream) {
       stream.getTracks().forEach((t) => t.stop());
     }
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+    screenStreamRef.current = null;
     localStreamRef.current = null;
     streamReady.current = false;
     knownParticipants.current.clear();
     setLocalStream(null);
     setRemoteStreams(new Map());
     setIsMuted(false);
+    setScreenStream(null);
+    setIsSharingScreen(false);
   }, [closePeerConnection]);
 
   useEffect(() => {
     return cleanup;
   }, [cleanup]);
 
-  return { localStream, remoteStreams, isMuted, toggleMute, cleanup };
+  return { localStream, remoteStreams, screenStream, isMuted, isSharingScreen, toggleMute, startScreenShare, stopScreenShare, cleanup };
 }

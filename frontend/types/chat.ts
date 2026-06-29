@@ -266,6 +266,8 @@ export interface HuddleParticipant {
   leftAt: Date | string | null;
   isMuted: boolean;
   handRaised: boolean;
+  isCameraOff: boolean;
+  isScreenSharing: boolean;
   user?: { id: string; name: string | null; image: string | null } | null;
 }
 

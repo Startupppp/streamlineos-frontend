@@ -1,17 +1,43 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown } from "lucide-react";
+import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown, CameraOff, Monitor, MonitorOff, UserMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { useLeaveHuddle, useSetHuddleMute, useRaiseHand } from "@/lib/api/hooks/chat-huddles";
+import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant } from "@/lib/api/hooks/chat-huddles";
 import type { Huddle, HuddleParticipant } from "@/types/chat";
 import { getInitials } from "./chat-helpers";
 import { useWebRTCHuddle } from "./webrtc-huddle";
+import { useAbly } from "ably/react";
+import type { InboundMessage } from "ably";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 interface AudioLevelMap {
   [userId: string]: number;
+}
+
+function useElapsedTime(startedAt: Date | string): string {
+  const [elapsed, setElapsed] = useState("");
+  useEffect(() => {
+    const start = new Date(startedAt).getTime();
+    const update = () => {
+      const diff = Math.floor((Date.now() - start) / 1000);
+      const h = Math.floor(diff / 3600);
+      const m = Math.floor((diff % 3600) / 60);
+      const s = diff % 60;
+      setElapsed(
+        h > 0
+          ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+          : `${m}:${String(s).padStart(2, "0")}`,
+      );
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+  return elapsed;
 }
 
 function useAudioLevels(
@@ -95,10 +121,15 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const leaveHuddle = useLeaveHuddle();
   const setMuteMutation = useSetHuddleMute();
   const raiseHandMutation = useRaiseHand();
+  const kickParticipant = useKickParticipant();
+  const ably = useAbly();
+  const { data: session } = useSession();
+  const orgId = (session as { orgId?: string } | null)?.orgId;
+  const elapsed = useElapsedTime(huddle.startedAt);
 
   const myParticipant = huddle.participants.find((p) => p.userId === currentUserId);
-  const isMutedDB = myParticipant?.isMuted ?? false;
   const isHandRaised = myParticipant?.handRaised ?? false;
+  const isHost = huddle.startedBy === currentUserId;
 
   const { localStream, remoteStreams, isMuted, toggleMute, cleanup } = useWebRTCHuddle(
     huddle.id,
@@ -108,6 +139,42 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   );
 
   const audioLevels = useAudioLevels(remoteStreams, localStream, currentUserId);
+
+  useEffect(() => {
+    if (!orgId) return;
+    const ch = ably.channels.get(`huddle:${orgId}:${channelId}`);
+
+    const handleJoined = (msg: InboundMessage) => {
+      const data = msg.data as { userId: string };
+      if (data.userId === currentUserId) return;
+      const participant = huddle.participants.find((p) => p.userId === data.userId);
+      toast(`${participant?.user?.name ?? "Someone"} joined the huddle`);
+    };
+
+    const handleLeft = (msg: InboundMessage) => {
+      const data = msg.data as { userId: string };
+      if (data.userId === currentUserId) return;
+      const participant = huddle.participants.find((p) => p.userId === data.userId);
+      toast(`${participant?.user?.name ?? "Someone"} left the huddle`);
+    };
+
+    ch.subscribe("huddle:user_joined", handleJoined);
+    ch.subscribe("huddle:user_left", handleLeft);
+
+    const userCh = ably.channels.get(`notifications:${orgId}:${currentUserId}`);
+    const handleKicked = () => {
+      toast.error("You were removed from the huddle");
+      cleanup();
+      leaveHuddle.mutate({ huddleId: huddle.id, channelId });
+    };
+    userCh.subscribe("huddle:kicked", handleKicked);
+
+    return () => {
+      ch.unsubscribe("huddle:user_joined", handleJoined);
+      ch.unsubscribe("huddle:user_left", handleLeft);
+      userCh.unsubscribe("huddle:kicked", handleKicked);
+    };
+  }, [ably, orgId, channelId, currentUserId, huddle.participants, huddle.id, cleanup, leaveHuddle]);
 
   const handleLeave = useCallback(() => {
     cleanup();
@@ -127,6 +194,13 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
     setExpanded((prev) => !prev);
   }, []);
 
+  const handleKick = useCallback(
+    (targetUserId: string) => {
+      kickParticipant.mutate({ huddleId: huddle.id, channelId, targetUserId });
+    },
+    [kickParticipant, huddle.id, channelId],
+  );
+
   const participantCount = huddle.participants.length;
 
   return (
@@ -141,7 +215,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             <Mic className="h-3 w-3 text-green-500" />
           </div>
           <span className="text-sm font-medium text-green-500 truncate">
-            Huddle active
+            Huddle · {elapsed}
           </span>
           <span className="text-xs text-muted-foreground">
             {participantCount} {participantCount === 1 ? "participant" : "participants"}
@@ -165,6 +239,8 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
                 participant={participant}
                 audioLevel={audioLevels[participant.userId] ?? 0}
                 isCurrentUser={participant.userId === currentUserId}
+                isHost={isHost}
+                onKick={isHost && participant.userId !== currentUserId ? () => handleKick(participant.userId) : undefined}
               />
             ))}
           </div>
@@ -256,9 +332,11 @@ interface ParticipantCardProps {
   participant: HuddleParticipant;
   audioLevel: number;
   isCurrentUser: boolean;
+  isHost: boolean;
+  onKick?: () => void;
 }
 
-function ParticipantCard({ participant, audioLevel, isCurrentUser }: ParticipantCardProps) {
+function ParticipantCard({ participant, audioLevel, isCurrentUser, isHost, onKick }: ParticipantCardProps) {
   const isSpeaking = audioLevel > 0.05;
 
   return (
@@ -285,10 +363,30 @@ function ParticipantCard({ participant, audioLevel, isCurrentUser }: Participant
             <Hand className="h-2.5 w-2.5 text-amber-500" />
           </span>
         )}
+        {participant.isCameraOff && (
+          <span className="absolute -top-0.5 -left-0.5 h-4 w-4 rounded-full bg-background border border-border flex items-center justify-center">
+            <CameraOff className="h-2.5 w-2.5 text-muted-foreground" />
+          </span>
+        )}
+        {participant.isScreenSharing && (
+          <span className="absolute -bottom-0.5 -left-0.5 h-4 w-4 rounded-full bg-blue-500/10 border border-border flex items-center justify-center">
+            <Monitor className="h-2.5 w-2.5 text-blue-500" />
+          </span>
+        )}
       </div>
       <span className="text-[11px] text-center truncate w-full leading-tight">
         {isCurrentUser ? "You" : (participant.user?.name ?? "Unknown")}
       </span>
+      {isHost && !isCurrentUser && onKick && (
+        <button
+          onClick={onKick}
+          className="text-[10px] text-red-500/60 hover:text-red-500 transition-colors flex items-center gap-0.5"
+          aria-label="Remove from huddle"
+        >
+          <UserMinus className="h-2.5 w-2.5" />
+          Remove
+        </button>
+      )}
     </div>
   );
 }

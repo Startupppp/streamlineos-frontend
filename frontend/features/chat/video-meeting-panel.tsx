@@ -6,7 +6,7 @@ import { Camera, CameraOff, Hand, Mic, MicOff, Monitor, MonitorOff, PhoneOff } f
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useActiveHuddle, useJoinHuddle, useLeaveHuddle, useSetHuddleMute, useRaiseHand } from "@/lib/api/hooks";
+import { useActiveHuddle, useJoinHuddle, useLeaveHuddle, useSetHuddleMute, useRaiseHand, useSetHuddleCamera, useSetHuddleScreenShare } from "@/lib/api/hooks";
 import { useMeetingRealtime } from "./meeting-realtime";
 import { useWebRTCMeeting } from "./webrtc-meeting";
 import { getInitials } from "./chat-helpers";
@@ -81,6 +81,8 @@ export function VideoMeetingPanel({
   const leaveHuddle = useLeaveHuddle();
   const setMute = useSetHuddleMute();
   const raiseHand = useRaiseHand();
+  const setCameraState = useSetHuddleCamera();
+  const setScreenState = useSetHuddleScreenShare();
 
   const [inMeeting, setInMeeting] = useState(false);
   const [handRaised, setHandRaised] = useState(false);
@@ -133,6 +135,22 @@ export function VideoMeetingPanel({
     toggleMute();
     await setMute.mutateAsync({ huddleId: huddle.id, channelId, muted: !isMuted }).catch(() => {});
   }, [huddle, toggleMute, setMute, channelId, isMuted]);
+
+  const handleCameraToggle = useCallback(async () => {
+    if (!huddle) return;
+    toggleCamera();
+    await setCameraState.mutateAsync({ huddleId: huddle.id, channelId, isCameraOff: !isCameraOff }).catch(() => {});
+  }, [huddle, toggleCamera, setCameraState, channelId, isCameraOff]);
+
+  const handleStartScreenShare = useCallback(async () => {
+    await startScreenShare();
+    if (huddle) await setScreenState.mutateAsync({ huddleId: huddle.id, channelId, isScreenSharing: true }).catch(() => {});
+  }, [startScreenShare, setScreenState, huddle, channelId]);
+
+  const handleStopScreenShare = useCallback(async () => {
+    stopScreenShare();
+    if (huddle) await setScreenState.mutateAsync({ huddleId: huddle.id, channelId, isScreenSharing: false }).catch(() => {});
+  }, [stopScreenShare, setScreenState, huddle, channelId]);
 
   const handleRaiseHand = useCallback(async () => {
     if (!huddle) return;
@@ -203,6 +221,7 @@ export function VideoMeetingPanel({
               stream={stream}
               label={participant?.user?.name ?? "User"}
               isMuted={participant?.isMuted}
+              isCameraOff={participant?.isCameraOff}
             />
           );
         })}
@@ -232,14 +251,14 @@ export function VideoMeetingPanel({
             {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
           </button>
           <button
-            onClick={toggleCamera}
+            onClick={handleCameraToggle}
             className={cn("h-11 w-11 rounded-full flex items-center justify-center transition-colors", isCameraOff ? "bg-red-500 text-white" : "bg-white/10 text-white hover:bg-white/20")}
             title={isCameraOff ? "Turn on camera" : "Turn off camera"}
           >
             {isCameraOff ? <CameraOff className="h-5 w-5" /> : <Camera className="h-5 w-5" />}
           </button>
           <button
-            onClick={isSharingScreen ? stopScreenShare : startScreenShare}
+            onClick={isSharingScreen ? handleStopScreenShare : handleStartScreenShare}
             className={cn("h-11 w-11 rounded-full flex items-center justify-center transition-colors", isSharingScreen ? "bg-blue-500 text-white" : "bg-white/10 text-white hover:bg-white/20")}
             title={isSharingScreen ? "Stop sharing" : "Share screen"}
           >

@@ -95,3 +95,36 @@ export function useSendMeetingSignal() {
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/meeting-signal`, signal),
   });
 }
+
+export function useSetHuddleCamera() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ huddleId, isCameraOff }: { huddleId: number; channelId: number; isCameraOff: boolean }) =>
+      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/camera`, { isCameraOff }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+    },
+  });
+}
+
+export function useSetHuddleScreenShare() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ huddleId, isScreenSharing }: { huddleId: number; channelId: number; isScreenSharing: boolean }) =>
+      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/screenshare`, { isScreenSharing }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+    },
+  });
+}
+
+export function useKickParticipant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ huddleId, targetUserId }: { huddleId: number; channelId: number; targetUserId: string }) =>
+      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/kick`, { targetUserId }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+    },
+  });
+}
