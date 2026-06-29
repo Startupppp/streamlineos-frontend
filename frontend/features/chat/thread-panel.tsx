@@ -7,7 +7,7 @@ import { Loader2, MessageSquare, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { useThreadReplies, useSendThreadReply } from "@/lib/api/hooks";
+import { useThreadReplies, useSendThreadReply } from "@/hooks/api";
 import { getInitials, formatMessageTime } from "./chat-helpers";
 import type { Message } from "@/types/chat";
 

@@ -2,7 +2,7 @@
 
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLinkPreview } from "@/lib/api/hooks";
+import { useLinkPreview } from "@/hooks/api";
 
 function extractFirstUrl(content: string): string | null {
   const match = content.match(/https?:\/\/[^\s<>"']+/);

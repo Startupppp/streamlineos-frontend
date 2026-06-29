@@ -163,7 +163,7 @@ export default function AnalyticsPage({
   const healthStatus = (analytics as { healthStatus?: string } | undefined)
     ?.healthStatus;
   const healthBreakdown = (
-    analytics
+    analytics as
       | {
           healthBreakdown?: {
             completionPct: number;

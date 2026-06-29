@@ -7,7 +7,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,@/hooks/api/hr/recruitment
+  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   useRecruitmentStats,
   useRecruitmentAnalytics,
-} from "@/hooks/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 
 const FUNNEL_STAGES = [
   "NEW",

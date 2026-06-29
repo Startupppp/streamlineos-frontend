@@ -9,8 +9,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,@/hooks/api/inventory/reports
-} from "@/components/ui/select"@/hooks/api/inventory/warehouses
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -25,8 +25,8 @@ import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   useMovementsReport,
   type MovementType,
-} from "@/hooks/hooks/inventory/reports";
-import { useWarehouses } from "@/hooks/hooks/inventory/warehouses";
+} from "@/hooks/api/inventory/reports";
+import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "ALL", label: "All types" },

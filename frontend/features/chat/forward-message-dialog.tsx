@@ -7,7 +7,7 @@ import { Hash, Loader2, MessageSquare, Search, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useChatChannels, useSendMessage } from "@/lib/api/hooks";
+import { useChatChannels, useSendMessage } from "@/hooks/api";
 import type { Channel } from "@/types/chat";
 
 interface ForwardableMessage {

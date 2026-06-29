@@ -263,9 +263,7 @@ export function LeadDetailHeader({
                 company={lead.company}
                 designation={lead.designation}
                 potentialValue={
-                  (lead as Record<string, unknown>).potentialValue
-                    | string
-                    | undefined
+                  (lead as Record<string, unknown>).potentialValue as string | undefined
                 }
               />
               <AINextActionButton
@@ -276,17 +274,11 @@ export function LeadDetailHeader({
                 leadName={lead.name}
                 company={lead.company}
                 email={
-                  (lead as Record<string, unknown>).email
-                    | string
-                    | null
-                    | undefined
+                  (lead as Record<string, unknown>).email as string | null | undefined
                 }
                 designation={lead.designation}
                 city={
-                  (lead as Record<string, unknown>).city
-                    | string
-                    | null
-                    | undefined
+                  (lead as Record<string, unknown>).city as string | null | undefined
                 }
               />
 

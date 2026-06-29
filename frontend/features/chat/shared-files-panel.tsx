@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText, Loader2, Paperclip, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useChannelFiles } from "@/lib/api/hooks";
+import { useChannelFiles } from "@/hooks/api";
 import { formatFileSize, getFileExt, getFileColor, resolveFileUrl, isImageMime } from "./chat-helpers";
 
 export function SharedFilesPanel({ channelId, onClose }: { channelId: number; onClose: () => void }) {

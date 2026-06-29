@@ -187,13 +187,7 @@ export default function DealsPage() {
       updateStageMutation.mutate(
         {
           id,
-          stage: stage
-            | "LEAD"
-            | "CONTACTED"
-            | "PROPOSAL"
-            | "NEGOTIATION"
-            | "WON"
-            | "LOST",
+          stage: stage as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST",
           version,
         },
         {
@@ -249,13 +243,7 @@ export default function DealsPage() {
     updateStageMutation.mutate(
       {
         id: stageSkipDialog.id,
-        stage: stageSkipDialog.to
-          | "LEAD"
-          | "CONTACTED"
-          | "PROPOSAL"
-          | "NEGOTIATION"
-          | "WON"
-          | "LOST",
+        stage: stageSkipDialog.to as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST",
       },
       {
         onSuccess: () => {

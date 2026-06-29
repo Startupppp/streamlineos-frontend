@@ -2,7 +2,7 @@
 
 import { use, useMemo, useCallback, useState, memo } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
-import { useProject, useSprints } from "@/lib/api/hooks";
+import { useProject, useSprints } from "@/hooks/api";
 import { useBulkUpdateTickets } from "@/hooks/api/projects";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/projects";
 import { notFound, useRouter, useSearchParams } from "next/navigation";

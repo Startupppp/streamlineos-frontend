@@ -85,7 +85,7 @@ import {
 import {
   useCsatSurveys,
   useCsatSurveyResponses,
-  useCre
+  useCreateCsatSurvey,
   useUpdateCsatSurvey,
   useDeleteCsatSurvey,
   useClientAccounts,

@@ -7,7 +7,7 @@ import { Bookmark, Hash, Loader2, X } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useSavedMessages, useUnsaveMessage } from "@/lib/api/hooks";
+import { useSavedMessages, useUnsaveMessage } from "@/hooks/api";
 import { getInitials, formatMessageTime } from "./chat-helpers";
 import type { SavedMessage } from "@/types/chat";
 

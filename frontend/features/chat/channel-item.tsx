@@ -6,7 +6,7 @@ import { BellOff, Hash } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials, formatChannelTime } from "./chat-helpers";
 import type { Channel } from "./chat-types";
-import { useMarkChannelUnread } from "@/lib/api/hooks";
+import { useMarkChannelUnread } from "@/hooks/api";
 
 export function ChannelItem({
   channel,

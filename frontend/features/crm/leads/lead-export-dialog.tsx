@@ -10,7 +10,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/c@/hooks/api/leads;
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,

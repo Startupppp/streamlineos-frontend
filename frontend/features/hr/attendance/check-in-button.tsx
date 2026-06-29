@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import {
   useHrAttendanceStatus,
-  useHrC
+  useHrCheckIn,
   useHrCheckOut,
   useHrToggleBreak,
   useHrHolidaysForCalendar,

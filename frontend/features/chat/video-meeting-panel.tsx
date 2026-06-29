@@ -6,7 +6,7 @@ import { Camera, CameraOff, Hand, Loader2, Maximize2, Mic, MicOff, Monitor, Moni
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useActiveHuddle, useJoinHuddle, useLeaveHuddle, useSetHuddleMute, useRaiseHand, useSetHuddleCamera, useSetHuddleScreenShare } from "@/lib/api/hooks";
+import { useActiveHuddle, useJoinHuddle, useLeaveHuddle, useSetHuddleMute, useRaiseHand, useSetHuddleCamera, useSetHuddleScreenShare } from "@/hooks/api";
 import { useMeetingRealtime } from "./meeting-realtime";
 import { useWebRTCMeeting } from "./webrtc-meeting";
 import { getInitials } from "./chat-helpers";
@@ -30,7 +30,7 @@ function VideoTile({
   isScreenShare?: boolean;
   isSelf?: boolean;
   connectionState?: RTCPeerConnectionState;
-  videoRef?: React.RefObject<HTMLVideoElement>;
+  videoRef?: React.RefObject<HTMLVideoElement | null>;
   onClick?: () => void;
 }) {
   const internalVideoRef = useRef<HTMLVideoElement>(null);

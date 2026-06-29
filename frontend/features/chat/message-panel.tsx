@@ -36,7 +36,7 @@ import {
   useSavedMessages,
   useSaveMessage,
   useUnsaveMessage,
-} from "@/hooks/api";
+} from "@/hooks/api/chat";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";

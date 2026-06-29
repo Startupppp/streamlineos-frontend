@@ -35,7 +35,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/hooks/apiui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -50,7 +50,7 @@ import {
   type VendorSubmission,
   type CreateVendorInput,
   type UpdateVendorInput,
-} from "@/hooks/hooks";
+} from "@/hooks/api";
 
 const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER"];
 

@@ -187,11 +187,7 @@ export default function DealDetailPage({
 
   const handleQuickActionClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      const type = e.currentTarget.dataset.actionType
-        | "call"
-        | "note"
-        | "email"
-        | "meeting";
+      const type = e.currentTarget.dataset.actionType as "call" | "note" | "email" | "meeting";
       const label = e.currentTarget.dataset.actionLabel ?? "";
       setPendingAction({ type, label });
     },

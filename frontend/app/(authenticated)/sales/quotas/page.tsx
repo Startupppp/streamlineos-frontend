@@ -34,7 +34,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { useSalesQuotas, useCreateSalesQuota } from "@/hooks/api/crm";
-import { useHrEmployees } from "@/lib/api/hooks";
+import { useHrEmployees } from "@/hooks/api";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { SalesQuota } from "@/hooks/api/crm";

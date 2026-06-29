@@ -10,7 +10,7 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { ChipInput } from "./chip-input";
 import type { CreateJobFormValues } from "./schema";
 import type { Department } from "@/types/hr";
-import { useBranches } from "@/lib/api/hooks";
+import { useBranches } from "@/hooks/api";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {

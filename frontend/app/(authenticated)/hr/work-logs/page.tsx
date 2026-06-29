@@ -37,7 +37,7 @@ export default function WorkLogsPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
 
-  const filters = useMemo<WorkLogFiltersType>(() => {
+  const filters = useMemo<WorkLogFilters>(() => {
     const monthParam = searchParams.get("month");
     return {
       year: parseInt(searchParams.get("year") ?? "") || currentYear,
@@ -53,8 +53,8 @@ export default function WorkLogsPage() {
   const setFilters = useCallback(
     (
       update:
-        | WorkLogFiltersType
-        | ((prev: WorkLogFiltersType) => WorkLogFiltersType),
+        | WorkLogFilters
+        | ((prev: WorkLogFilters) => WorkLogFilters),
     ) => {
       const newFilters =
         typeof update === "function" ? update(filters) : update;
@@ -85,7 +85,7 @@ export default function WorkLogsPage() {
     [filters, searchParams, pathname, router, currentYear, currentQuarter],
   );
 
-  const [draftFilters, setDraftFilters] = useState<WorkLogFiltersType>(() => {
+  const [draftFilters, setDraftFilters] = useState<WorkLogFilters>(() => {
     const monthParam = searchParams.get("month");
     return {
       year: parseInt(searchParams.get("year") ?? "") || currentYear,
@@ -175,7 +175,7 @@ export default function WorkLogsPage() {
     const dateSet = new Set<string>();
     const requests =
       (
-        myLeaveData
+        myLeaveData as
           | {
               requests?: {
                 status: string;

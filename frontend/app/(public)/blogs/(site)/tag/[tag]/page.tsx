@@ -4,7 +4,6 @@ import { ChevronRight } from "lucide-react";
 
 import { BlogHeader } from "@/components/blog/blog-header";
 import { PostFeed } from "@/components/blog/post-feed";
-import { getPublishedPosts } from "@/server/queries/blog";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +16,7 @@ export async function generateMetadata({
   const decoded = decodeURIComponent(tag);
   return {
     title: `#${decoded}`,
-    description: `Articles tagged “${decoded}”.`,
+    description: `Articles tagged "${decoded}".`,
     alternates: { canonical: `/blogs/tag/${tag}` },
   };
 }
@@ -29,7 +28,6 @@ export default async function TagPage({
 }) {
   const { tag } = await params;
   const decoded = decodeURIComponent(tag);
-  const feed = await getPublishedPosts({ tag: decoded, limit: 9 });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
@@ -44,13 +42,13 @@ export default async function TagPage({
         <span className="font-medium text-foreground">#{decoded}</span>
       </nav>
 
-      <BlogHeader title={`#${decoded}`} subtitle={`Articles tagged “${decoded}”.`} />
+      <BlogHeader title={`#${decoded}`} subtitle={`Articles tagged "${decoded}".`} />
 
       <div className="mt-12">
         <PostFeed
-          initialPosts={feed.posts}
-          initialCursor={feed.nextCursor}
-          initialHasMore={feed.hasMore}
+          initialPosts={[]}
+          initialCursor={null}
+          initialHasMore={false}
           tag={decoded}
           emptyMessage="No articles with this tag yet."
         />

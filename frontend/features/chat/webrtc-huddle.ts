@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useAbly } from "ably/react";
 import { useSession } from "next-auth/react";
 import type { InboundMessage } from "ably";
-import { useSendHuddleSignal } from "@/lib/api/hooks/chat-huddles";
+import { useSendHuddleSignal } from "@/hooks/api/chat-huddles";
 import type { HuddleParticipant } from "@/types/chat";
 
 function getIceServers(): RTCIceServer[] {

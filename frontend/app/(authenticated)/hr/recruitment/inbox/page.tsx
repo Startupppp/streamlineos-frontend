@@ -5,12 +5,12 @@ import {
   useMessageThreads,
   useCandidateMessages,
   useSendCandidateMessage,
-} from "@/hooks/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import type {
   MessageThread,
   CandidateMessage,
   MessageChannel,
-} from "@/hooks/hooks/hr/recruitment";
+} from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";

@@ -47,7 +47,7 @@ import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { useCan } from "@/hooks/api/access";
 import { CeoDashboard } from "@/features/dashboard/ceo-dashboard";
 import { HrDashboard } from "@/features/dashboard/hr-dashboard";
-import { SalesDashboard @/hooks/api/accessashboard/sales-dashboard";
+import { SalesDashboard } from "@/features/dashboard/sales-dashboard";
 import { EmployeeDashboard } from "@/features/dashboard/employee-dashboard";
 import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
 import { GettingStartedChecklist } from "@/features/dashboard/getting-started-checklist";

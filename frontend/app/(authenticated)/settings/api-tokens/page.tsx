@@ -12,7 +12,7 @@ import {
   Check,
   Clock,
   Shield,
-  Shield
+  ShieldOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -20,7 +20,7 @@ import {
   useCreateApiToken,
   useRevokeApiToken,
   useDeleteApiToken,
-  type C
+  type CreateApiTokenInput,
 } from "@/hooks/api/api-tokens";
 import {
   useUserApiTokens,
@@ -61,7 +61,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } fro@/hooks/api/api-tokens;
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,

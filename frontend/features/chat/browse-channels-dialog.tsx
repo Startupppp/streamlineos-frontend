@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Globe, Hash, Loader2, Search, Users } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { usePublicChannels, useJoinChannel, useLeaveChannel } from "@/lib/api/hooks";
+import { usePublicChannels, useJoinChannel, useLeaveChannel } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 import type { PublicChannel } from "@/types/chat";
 

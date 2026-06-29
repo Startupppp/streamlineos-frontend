@@ -79,7 +79,7 @@ import {
 const ROADMAP_COLUMNS: { status: RoadmapStatus; label: string }[] = [
   { status: "planned", label: "Planned" },
   { status: "in_progress", label: "In Progress" },
-  { stat@/hooks/api/projects/roadmapeted" },
+  { status: "completed", label: "Completed" },
   { status: "cancelled", label: "Cancelled" },
 ];
 

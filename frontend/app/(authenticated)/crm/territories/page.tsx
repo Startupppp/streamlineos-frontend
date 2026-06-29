@@ -40,7 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/hooks/api/crmlert-dialog";
+} from "@/components/ui/alert-dialog";
 import {
   useTerritories,
   useCreateTerritory,

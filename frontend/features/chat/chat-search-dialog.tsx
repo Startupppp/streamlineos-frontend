@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Hash, Loader2, MessageSquare, Search, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useSearchMessages, useSearchChannels, useSearchUsers } from "@/lib/api/hooks";
+import { useSearchMessages, useSearchChannels, useSearchUsers } from "@/hooks/api";
 import { formatMessageTime } from "./chat-helpers";
 
 interface ChatSearchDialogProps {

@@ -69,37 +69,13 @@ export default function LeadsPipelinePage() {
 
   const { data: tableData, isLoading: tableLoading } = useLeads({
     search: debouncedSearchQuery || undefined,
-    sortBy: sortColumn
-      | "name"
-      | "email"
-      | "company"
-      | "status"
-      | "priority"
-      | "source"
-      | "score"
-      | "potentialValue"
-      | "createdAt",
+    sortBy: sortColumn as "name" | "email" | "company" | "status" | "priority" | "source" | "score" | "potentialValue" | "createdAt",
     sortOrder: sortDirection,
     page: tablePage,
     limit: pageSize,
-    status: statusFilter
-      | "NEW"
-      | "CONTACTED"
-      | "INTERESTED"
-      | "QUALIFIED"
-      | "CONVERTED"
-      | "LOST"
-      | undefined,
+    status: statusFilter as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" | undefined,
     priority: priorityFilter as "HOT" | "WARM" | "COLD" | undefined,
-    source: sourceFilter
-      | "referral"
-      | "campaign"
-      | "cold_call"
-      | "website"
-      | "social_media"
-      | "walk_in"
-      | "other"
-      | undefined,
+    source: sourceFilter as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
   });
 
   const { data: teamCapacity } = useSalesTeamCapacity();
@@ -201,14 +177,7 @@ export default function LeadsPipelinePage() {
         phone: (formData.get("phone") as string)?.trim() || undefined,
         company: (formData.get("company") as string)?.trim() || undefined,
         source: isLeadSource(formData.get("source"))
-          ? (formData.get("source")
-              | "referral"
-              | "campaign"
-              | "cold_call"
-              | "website"
-              | "social_media"
-              | "walk_in"
-              | "other")
+          ? (formData.get("source") as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other")
           : "other",
         potentialValue: potentialValueRaw || undefined,
         investmentInterest: investmentInterestRaw || undefined,

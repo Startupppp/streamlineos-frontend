@@ -58,7 +58,7 @@ import {
   type ReportSchedule,
   type GenerateReportResult,
   type ScheduledReport,
-} from "@/hooks/hooks";
+} from "@/hooks/api";
 
 const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER"];
 

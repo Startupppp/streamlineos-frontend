@@ -42,7 +42,7 @@ import {
   useHealthConfig,
   useUpdateHealthConfig,
   useRecomputeHealth,
-  type H
+  type HealthScoreItem,
   type HealthScoreWeights,
   type HealthScoreThresholds,
   type HealthScoreBreakdown,

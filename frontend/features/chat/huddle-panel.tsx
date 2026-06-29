@@ -5,7 +5,7 @@ import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown, CameraOff, Monitor
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant, useSetHuddleScreenShare, useSetHuddleDeafen, useInviteToHuddle } from "@/lib/api/hooks/chat-huddles";
+import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant, useSetHuddleScreenShare, useSetHuddleDeafen, useInviteToHuddle } from "@/hooks/api/chat-huddles";
 import type { Huddle, HuddleParticipant } from "@/types/chat";
 import { getInitials } from "./chat-helpers";
 import { useWebRTCHuddle } from "./webrtc-huddle";

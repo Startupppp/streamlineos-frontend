@@ -67,7 +67,7 @@ import {
   useUpdateAsset,
   useAssignAsset,
   useHrEmployees,
-} from "@/lib/api/hooks";
+} from "@/hooks/api";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";

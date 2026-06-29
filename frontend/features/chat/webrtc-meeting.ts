@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSendMeetingSignal } from "@/lib/api/hooks";
+import { useSendMeetingSignal } from "@/hooks/api";
 import type { HuddleParticipant } from "@/types/chat";
 
 function getIceServers(): RTCIceServer[] {
