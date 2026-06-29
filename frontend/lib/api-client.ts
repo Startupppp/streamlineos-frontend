@@ -141,6 +141,7 @@ const MIGRATED_PREFIXES = [
   "/public",
   "/access",
   "/auth",
+  "/users",
 ] as const;
 
 function isMigrated(path: string): boolean {
