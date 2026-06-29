@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { ArrowDown, CheckCheck, Copy, FileText, Pencil, Reply, Smile, Trash2 } from "lucide-react";
+import { ArrowDown, Bookmark, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, Link, MessageSquare, Pencil, Reply, Smile, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,8 +18,67 @@ import {
   resolveFileUrl,
 } from "./chat-helpers";
 import type { Message } from "./chat-types";
+import { LinkPreviewCard } from "./link-preview-card";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
+
+function renderFormattedContent(content: string, isOwn: boolean): React.ReactNode {
+  const lines = content.split("\n");
+  const result: React.ReactNode[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line.startsWith("```")) {
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].startsWith("```")) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      result.push(
+        <pre
+          key={i}
+          className={cn(
+            "font-mono text-[12px] rounded-lg p-2.5 mt-1.5 overflow-x-auto whitespace-pre",
+            isOwn ? "bg-black/20 text-white/90" : "bg-muted text-foreground",
+          )}
+        >
+          {codeLines.join("\n")}
+        </pre>,
+      );
+    } else {
+      const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+      result.push(
+        <span key={i} className="block">
+          {parts.map((part, j) => {
+            if (part.startsWith("**") && part.endsWith("**")) {
+              return <strong key={j}>{part.slice(2, -2)}</strong>;
+            }
+            if (part.startsWith("*") && part.endsWith("*")) {
+              return <em key={j}>{part.slice(1, -1)}</em>;
+            }
+            if (part.startsWith("`") && part.endsWith("`")) {
+              return (
+                <code
+                  key={j}
+                  className={cn(
+                    "font-mono text-[12px] px-1.5 py-0.5 rounded",
+                    isOwn ? "bg-black/20 text-white/90" : "bg-muted",
+                  )}
+                >
+                  {part.slice(1, -1)}
+                </code>
+              );
+            }
+            return <span key={j}>{part}</span>;
+          })}
+        </span>,
+      );
+    }
+    i++;
+  }
+  return result;
+}
 
 export function ChatBubble({
   message,
@@ -28,13 +87,22 @@ export function ChatBubble({
   isEditing,
   editInput,
   currentUserId,
+  isPinned,
+  replyCount,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
   onReply,
+  onOpenThread,
   onDelete,
   onReact,
+  onPin,
+  onUnpin,
+  isSaved,
+  onSave,
+  onUnsaveMsg,
+  onForward,
 }: {
   message: Message;
   isOwn: boolean;
@@ -42,13 +110,22 @@ export function ChatBubble({
   isEditing: boolean;
   editInput: string;
   currentUserId: string;
+  isPinned?: boolean;
+  replyCount?: number;
   onEditInputChange: (v: string) => void;
   onStartEdit: () => void;
   onCancelEdit: () => void;
   onSaveEdit: () => void;
   onReply: () => void;
+  onOpenThread: () => void;
   onDelete: () => void;
   onReact: (emoji: string) => void;
+  onPin: () => void;
+  onUnpin: () => void;
+  isSaved?: boolean;
+  onSave?: () => void;
+  onUnsaveMsg?: () => void;
+  onForward?: () => void;
 }) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
 
@@ -61,11 +138,21 @@ export function ChatBubble({
     navigator.clipboard.writeText(message.content!);
     toast.success("Copied");
   }, [message.content]);
+  const handleCopyLink = useCallback(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("message", String(message.id));
+    navigator.clipboard.writeText(url.toString());
+    toast.success("Link copied");
+  }, [message.id]);
   const handleToggleReactionPicker = useCallback(() => setShowReactionPicker((p) => !p), []);
   const handleQuickReact = useCallback((emoji: string) => {
     onReact(emoji);
     setShowReactionPicker(false);
   }, [onReact]);
+  const handlePinToggle = useCallback(() => {
+    if (isPinned) onUnpin();
+    else onPin();
+  }, [isPinned, onPin, onUnpin]);
 
   if (message.isDeleted) {
     return (
@@ -153,12 +240,13 @@ export function ChatBubble({
             )}
           >
             {message.content && (
-              <p className={cn(
-                "text-[14px] whitespace-pre-wrap break-words leading-[1.55]",
-                isOwn ? "text-white" : "text-foreground"
-              )}>
-                {message.content}
-              </p>
+              <div className={cn("text-[14px] leading-[1.55] break-words", isOwn ? "text-white" : "text-foreground")}>
+                {renderFormattedContent(message.content, isOwn)}
+              </div>
+            )}
+
+            {message.content && /https?:\/\//.test(message.content) && (
+              <LinkPreviewCard content={message.content} isOwn={isOwn} />
             )}
 
             {message.attachments.length > 0 && (
@@ -240,6 +328,19 @@ export function ChatBubble({
           </div>
         )}
 
+        {replyCount !== undefined && replyCount > 0 && (
+          <button
+            onClick={onOpenThread}
+            className={cn(
+              "mt-1 px-1 flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:underline",
+              isOwn ? "self-end" : "self-start"
+            )}
+          >
+            <MessageSquare className="h-3 w-3" />
+            {replyCount} {replyCount === 1 ? "reply" : "replies"}
+          </button>
+        )}
+
         {message.reactions && Object.keys(message.reactions).length > 0 && (
           <div className={cn("flex flex-wrap gap-1 mt-1 px-1", isOwn ? "justify-end" : "justify-start")}>
             {Object.entries(message.reactions).map(([emoji, userIds]) => {
@@ -275,6 +376,17 @@ export function ChatBubble({
               <button onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply">
                 <Reply className="h-3.5 w-3.5" />
               </button>
+              <button onClick={onOpenThread} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Open thread" aria-label="Open thread">
+                <MessageSquare className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={handlePinToggle}
+                className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isPinned ? "text-amber-500" : "text-muted-foreground")}
+                title={isPinned ? "Unpin" : "Pin"}
+                aria-label={isPinned ? "Unpin message" : "Pin message"}
+              >
+                <Bookmark className={cn("h-3.5 w-3.5", isPinned && "fill-amber-500")} />
+              </button>
               <button
                 onClick={handleToggleReactionPicker}
                 className={cn("p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground", showReactionPicker && "bg-muted/50 text-foreground")}
@@ -291,6 +403,34 @@ export function ChatBubble({
                   aria-label="Copy"
                 >
                   <Copy className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <button
+                onClick={handleCopyLink}
+                className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                title="Copy link"
+                aria-label="Copy message link"
+              >
+                <Link className="h-3.5 w-3.5" />
+              </button>
+              {onForward && (
+                <button
+                  onClick={onForward}
+                  className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                  title="Forward"
+                  aria-label="Forward message"
+                >
+                  <Forward className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {onSave && (
+                <button
+                  onClick={isSaved ? onUnsaveMsg : onSave}
+                  className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isSaved ? "text-amber-500" : "text-muted-foreground")}
+                  title={isSaved ? "Unsave" : "Save message"}
+                  aria-label={isSaved ? "Unsave message" : "Save message"}
+                >
+                  {isSaved ? <BookmarkCheck className="h-3.5 w-3.5 fill-amber-500" /> : <BookmarkPlus className="h-3.5 w-3.5" />}
                 </button>
               )}
               {isOwn && (

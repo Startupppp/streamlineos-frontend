@@ -449,6 +449,13 @@
       "when": 1783200000000,
       "tag": "0134_user_management",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1783300000000,
+      "tag": "0135_huddle_camera_state",
+      "breakpoints": true
     }
   ]
 }

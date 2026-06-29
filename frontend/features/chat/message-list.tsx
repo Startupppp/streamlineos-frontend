@@ -19,13 +19,22 @@ interface MessageItemProps {
   currentUserId: string;
   editingMessageId: number | undefined;
   editInput: string;
+  pinnedMessageIds: Set<number>;
+  savedMessageIds: Set<number>;
+  replyCountMap: Map<number, number>;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
   onCancelEdit: () => void;
   onSaveEdit: (messageId: number) => void;
   onReply: (msg: Message) => void;
+  onOpenThread: (msg: Message) => void;
   onDelete: (messageId: number) => void;
   onReact: (messageId: number, emoji: string) => void;
+  onPin: (messageId: number) => void;
+  onUnpin: (messageId: number) => void;
+  onSave: (messageId: number) => void;
+  onUnsaveMsg: (messageId: number) => void;
+  onForward: (msg: Message) => void;
 }
 
 function MessageItem({
@@ -35,19 +44,34 @@ function MessageItem({
   currentUserId,
   editingMessageId,
   editInput,
+  pinnedMessageIds,
+  savedMessageIds,
+  replyCountMap,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
   onReply,
+  onOpenThread,
   onDelete,
   onReact,
+  onPin,
+  onUnpin,
+  onSave,
+  onUnsaveMsg,
+  onForward,
 }: MessageItemProps) {
   const handleStartEdit = useCallback(() => onStartEdit(msg), [msg, onStartEdit]);
   const handleSaveEdit = useCallback(() => onSaveEdit(msg.id), [msg.id, onSaveEdit]);
   const handleReply = useCallback(() => onReply(msg), [msg, onReply]);
+  const handleOpenThread = useCallback(() => onOpenThread(msg), [msg, onOpenThread]);
   const handleDelete = useCallback(() => onDelete(msg.id), [msg.id, onDelete]);
   const handleReact = useCallback((emoji: string) => onReact(msg.id, emoji), [msg.id, onReact]);
+  const handlePin = useCallback(() => onPin(msg.id), [msg.id, onPin]);
+  const handleUnpin = useCallback(() => onUnpin(msg.id), [msg.id, onUnpin]);
+  const handleSave = useCallback(() => onSave(msg.id), [msg.id, onSave]);
+  const handleUnsaveMsg = useCallback(() => onUnsaveMsg(msg.id), [msg.id, onUnsaveMsg]);
+  const handleForward = useCallback(() => onForward(msg), [msg, onForward]);
   return (
     <ChatBubble
       message={msg}
@@ -56,13 +80,22 @@ function MessageItem({
       currentUserId={currentUserId}
       isEditing={editingMessageId === msg.id}
       editInput={editingMessageId === msg.id ? editInput : ""}
+      isPinned={pinnedMessageIds.has(msg.id)}
+      isSaved={savedMessageIds.has(msg.id)}
+      replyCount={replyCountMap.get(msg.id)}
       onEditInputChange={onEditInputChange}
       onStartEdit={handleStartEdit}
       onCancelEdit={onCancelEdit}
       onSaveEdit={handleSaveEdit}
       onReply={handleReply}
+      onOpenThread={handleOpenThread}
       onDelete={handleDelete}
       onReact={handleReact}
+      onPin={handlePin}
+      onUnpin={handleUnpin}
+      onSave={handleSave}
+      onUnsaveMsg={handleUnsaveMsg}
+      onForward={handleForward}
     />
   );
 }
@@ -80,13 +113,23 @@ interface MessageListProps {
   channelType: string | undefined;
   editingMessage: Message | null;
   editInput: string;
+  pinnedMessageIds: Set<number>;
+  savedMessageIds: Set<number>;
+  replyCountMap: Map<number, number>;
+  firstUnreadMessageId?: number;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
   onCancelEdit: () => void;
   onSaveEdit: (messageId: number) => void;
   onReply: (msg: Message) => void;
+  onOpenThread: (msg: Message) => void;
   onDelete: (messageId: number) => void;
   onReact: (messageId: number, emoji: string) => void;
+  onPin: (messageId: number) => void;
+  onUnpin: (messageId: number) => void;
+  onSave: (messageId: number) => void;
+  onUnsaveMsg: (messageId: number) => void;
+  onForward: (msg: Message) => void;
   showScrollBtn: boolean;
   scrollToBottom: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -107,13 +150,23 @@ export function MessageList({
   channelType,
   editingMessage,
   editInput,
+  pinnedMessageIds,
+  savedMessageIds,
+  replyCountMap,
+  firstUnreadMessageId,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
   onReply,
+  onOpenThread,
   onDelete,
   onReact,
+  onPin,
+  onUnpin,
+  onSave,
+  onUnsaveMsg,
+  onForward,
   showScrollBtn,
   scrollToBottom,
   messagesEndRef,
@@ -133,9 +186,16 @@ export function MessageList({
       onScroll={onScroll}
     >
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center h-full">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-          <p className="text-[13px] text-muted-foreground mt-3">Loading messages...</p>
+        <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto space-y-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className={`flex items-start gap-3 ${i % 3 === 2 ? "flex-row-reverse" : ""}`}>
+              <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
+              <div className="space-y-1.5 max-w-[60%]">
+                <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+                <div className={`h-10 rounded-xl bg-muted animate-pulse ${i % 3 === 2 ? "w-40" : "w-56"}`} />
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="py-2 px-3 sm:px-5 max-w-[900px] mx-auto">
@@ -181,24 +241,42 @@ export function MessageList({
                       new Date(prevMsg.createdAt).getTime()
                     : 0;
                 const showHeader = !isSameSender || timeDiff > 2 * 60 * 1000;
+                const showUnreadDivider = firstUnreadMessageId !== undefined && msg.id === firstUnreadMessageId;
 
                 return (
-                  <MessageItem
-                    key={msg.id}
-                    msg={msg}
-                    isOwn={isOwn}
-                    showHeader={showHeader}
-                    currentUserId={currentUserId}
-                    editingMessageId={editingMessage?.id}
-                    editInput={editInput}
-                    onEditInputChange={onEditInputChange}
-                    onStartEdit={onStartEdit}
-                    onCancelEdit={onCancelEdit}
-                    onSaveEdit={onSaveEdit}
-                    onReply={onReply}
-                    onDelete={onDelete}
-                    onReact={onReact}
-                  />
+                  <Fragment key={msg.id}>
+                    {showUnreadDivider && (
+                      <div className="flex items-center gap-3 my-2 px-2">
+                        <div className="flex-1 h-px bg-red-400/60" />
+                        <span className="text-[10px] font-bold text-red-500 whitespace-nowrap px-2">New Messages</span>
+                        <div className="flex-1 h-px bg-red-400/60" />
+                      </div>
+                    )}
+                    <MessageItem
+                      msg={msg}
+                      isOwn={isOwn}
+                      showHeader={showHeader}
+                      currentUserId={currentUserId}
+                      editingMessageId={editingMessage?.id}
+                      editInput={editInput}
+                      pinnedMessageIds={pinnedMessageIds}
+                      savedMessageIds={savedMessageIds}
+                      replyCountMap={replyCountMap}
+                      onEditInputChange={onEditInputChange}
+                      onStartEdit={onStartEdit}
+                      onCancelEdit={onCancelEdit}
+                      onSaveEdit={onSaveEdit}
+                      onReply={onReply}
+                      onOpenThread={onOpenThread}
+                      onDelete={onDelete}
+                      onReact={onReact}
+                      onPin={onPin}
+                      onUnpin={onUnpin}
+                      onSave={onSave}
+                      onUnsaveMsg={onUnsaveMsg}
+                      onForward={onForward}
+                    />
+                  </Fragment>
                 );
               })}
             </Fragment>

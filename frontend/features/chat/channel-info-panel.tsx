@@ -8,15 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
+import { BellOff, BellRing, Bookmark, Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
-import {@/hooks/api
-  useChatChannel,
-  useChatOnlineUsers,
-  useUpdateChannel,
-} from "@/hooks/api";
+import { useChatChannel, useChatOnlineUsers, useUpdateChannel, useChatPins, useUnpinMessage, useArchiveChannel, useUnarchiveChannel, useMuteChannel, useUnmuteChannel } from "@/hooks/api";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
@@ -33,15 +29,21 @@ export function ChannelInfoPanel({
   const { data: channel } = useChatChannel(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
   const updateChannel = useUpdateChannel();
+  const { data: pins } = useChatPins(channelId);
+  const unpinMessage = useUnpinMessage();
+  const archiveChannel = useArchiveChannel();
+  const unarchiveChannel = useUnarchiveChannel();
+  const muteChannel = useMuteChannel();
+  const unmuteChannel = useUnmuteChannel();
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
-    [onlineUsers],
+    [onlineUsers]
   );
 
   const isAdmin = channel?.members?.some(
-    (m) => m.user?.id === currentUserId && m.role === "ADMIN",
+    (m) => m.user?.id === currentUserId && m.role ==="ADMIN"
   );
-  const isGroup = channel?.type === "GROUP";
+  const isGroup = channel?.type ==="GROUP";
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -50,52 +52,32 @@ export function ChannelInfoPanel({
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const editAvatarRef = useRef<HTMLInputElement>(null);
 
-  const handleOpenAvatarInput = useCallback(() => {
-    editAvatarRef.current?.click();
-  }, []);
+  const handleOpenAvatarInput = useCallback(() => { editAvatarRef.current?.click(); }, []);
   const handleCancelEdit = useCallback(() => setEditing(false), []);
-  const handleEditNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value),
-    [],
-  );
-  const handleEditDescChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setEditDesc(e.target.value),
-    [],
-  );
+  const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value), []);
+  const handleEditDescChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditDesc(e.target.value), []);
 
   const startEditing = () => {
-    setEditName(channel?.name ?? "");
-    setEditDesc(channel?.description ?? "");
-    setEditAvatar(channel?.avatarUrl ?? "");
+    setEditName(channel?.name ??"");
+    setEditDesc(channel?.description ??"");
+    setEditAvatar(channel?.avatarUrl ??"");
     setEditing(true);
   };
 
-  const handleEditAvatarUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleEditAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be under 5MB");
-      return;
-    }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
     setUploadingAvatar(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", "chat-avatars");
-      const data = await apiClient.upload<{ url?: string }>(
-        "/storage/upload",
-        formData,
-      );
+      formData.append("folder","chat-avatars");
+      const data = await apiClient.upload<{ url?: string }>("/storage/upload", formData);
       if (data.url) setEditAvatar(data.url);
       else toast.error("Upload failed");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    } finally {
-      setUploadingAvatar(false);
-      if (editAvatarRef.current) editAvatarRef.current.value = "";
-    }
+    } catch (error) { toast.error(getErrorMessage(error)); }
+    finally { setUploadingAvatar(false); if (editAvatarRef.current) editAvatarRef.current.value =""; }
   };
 
   const handleSaveEdit = async () => {
@@ -108,19 +90,15 @@ export function ChannelInfoPanel({
       });
       setEditing(false);
       toast.success("Channel updated");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
+    } catch (error) { toast.error(getErrorMessage(error)); }
   };
 
   const otherMember =
-    channel?.type === "DIRECT"
+    channel?.type ==="DIRECT"
       ? channel.members?.find((m) => m.user?.id !== currentUserId)?.user
       : null;
   const displayName =
-    channel?.type === "DIRECT"
-      ? (otherMember?.name ?? "Unknown")
-      : (channel?.name ?? "Channel");
+    channel?.type ==="DIRECT" ? otherMember?.name ??"Unknown" : channel?.name ??"Channel";
 
   return (
     <div className="flex flex-col h-full w-80">
@@ -128,20 +106,11 @@ export function ChannelInfoPanel({
         <h3 className="text-[14px] font-bold">Details</h3>
         <div className="flex items-center gap-1">
           {isGroup && isAdmin && !editing && (
-            <button
-              onClick={startEditing}
-              className="p-1.5 hover:bg-muted rounded-lg"
-              title="Edit channel"
-              aria-label="Edit channel"
-            >
+            <button onClick={startEditing} className="p-1.5 hover:bg-muted rounded-lg" title="Edit channel" aria-label="Edit channel">
               <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           )}
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-muted rounded-lg"
-            aria-label="Close"
-          >
+          <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close">
             <X className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
@@ -152,37 +121,15 @@ export function ChannelInfoPanel({
           {editing ? (
             <div className="space-y-4 mb-6">
               <div className="flex justify-center">
-                <input
-                  ref={editAvatarRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleEditAvatarUpload}
-                  className="hidden"
-                  aria-label="Upload channel avatar"
-                />
-                <button
-                  type="button"
-                  onClick={handleOpenAvatarInput}
-                  disabled={uploadingAvatar}
-                  className="relative group"
-                >
+                <input ref={editAvatarRef} type="file" accept="image/*" onChange={handleEditAvatarUpload} className="hidden" aria-label="Upload channel avatar" />
+                <button type="button" onClick={handleOpenAvatarInput} disabled={uploadingAvatar} className="relative group">
                   {editAvatar ? (
                     <div className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-border/40">
-                      <Image
-                        src={resolveImageUrl(editAvatar) ?? ""}
-                        alt="Avatar"
-                        fill
-                        unoptimized
-                        className="object-cover"
-                      />
+                      <Image src={resolveImageUrl(editAvatar) ??""} alt="Avatar" fill unoptimized className="object-cover" />
                     </div>
                   ) : (
                     <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border border-blue/10">
-                      {uploadingAvatar ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                      ) : (
-                        <ImageIcon className="h-6 w-6 text-blue/40" />
-                      )}
+                      {uploadingAvatar ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <ImageIcon className="h-6 w-6 text-blue/40" />}
                     </div>
                   )}
                   <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -191,52 +138,23 @@ export function ChannelInfoPanel({
                 </button>
               </div>
               <div>
-                <Label className="text-[11px] font-medium text-muted-foreground mb-1 block">
-                  Name
-                </Label>
-                <Input
-                  value={editName}
-                  onChange={handleEditNameChange}
-                  className="h-8 text-[13px] bg-muted/30"
-                />
+                <Label className="text-[11px] font-medium text-muted-foreground mb-1 block">Name</Label>
+                <Input value={editName} onChange={handleEditNameChange} className="h-8 text-[13px] bg-muted/30" />
               </div>
               <div>
-                <Label className="text-[11px] font-medium text-muted-foreground mb-1 block">
-                  Description
-                </Label>
-                <Input
-                  value={editDesc}
-                  onChange={handleEditDescChange}
-                  placeholder="Add a description..."
-                  className="h-8 text-[13px] bg-muted/30"
-                />
+                <Label className="text-[11px] font-medium text-muted-foreground mb-1 block">Description</Label>
+                <Input value={editDesc} onChange={handleEditDescChange} placeholder="Add a description..." className="h-8 text-[13px] bg-muted/30" />
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancelEdit}
-                  className="flex-1 h-8 text-[12px]"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSaveEdit}
-                  disabled={updateChannel.isPending || !editName.trim()}
-                  className="flex-1 h-8 text-[12px]"
-                >
-                  {updateChannel.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    "Save"
-                  )}
+                <Button variant="outline" size="sm" onClick={handleCancelEdit} className="flex-1 h-8 text-[12px]">Cancel</Button>
+                <Button size="sm" onClick={handleSaveEdit} disabled={updateChannel.isPending || !editName.trim()} className="flex-1 h-8 text-[12px]">
+                  {updateChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> :"Save"}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center text-center mb-6">
-              {channel?.type === "DIRECT" ? (
+              {channel?.type ==="DIRECT" ? (
                 <Avatar className="h-20 w-20 mb-3 border-2 border-border/30 shadow-md">
                   <AvatarImage src={resolveImageUrl(otherMember?.image)} />
                   <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
@@ -245,13 +163,7 @@ export function ChannelInfoPanel({
                 </Avatar>
               ) : channel?.avatarUrl ? (
                 <div className="relative h-20 w-20 rounded-2xl overflow-hidden mb-3 border-2 border-border/30 shadow-md">
-                  <Image
-                    src={resolveImageUrl(channel.avatarUrl) ?? ""}
-                    alt={channel.name}
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
+                  <Image src={resolveImageUrl(channel.avatarUrl) ??""} alt={channel.name} fill unoptimized className="object-cover" />
                 </div>
               ) : (
                 <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center mb-3 border border-blue/10">
@@ -259,13 +171,13 @@ export function ChannelInfoPanel({
                 </div>
               )}
               <h4 className="text-[17px] font-bold">{displayName}</h4>
-              {channel?.type === "DIRECT" ? (
+              {channel?.type ==="DIRECT" ? (
                 <p className="text-[12px] text-muted-foreground mt-0.5">
                   {otherMember
                     ? onlineUserIds.has(otherMember.id)
-                      ? "Online"
-                      : "Offline"
-                    : ""}
+                      ?"Online"
+                      :"Offline"
+                    :""}
                 </p>
               ) : (
                 channel?.description && (
@@ -277,13 +189,51 @@ export function ChannelInfoPanel({
             </div>
           )}
 
+          {pins && pins.length > 0 && (
+            <div className="mb-6">
+              <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
+                <Bookmark className="h-3 w-3" />
+                Pinned Messages ({pins.length})
+              </h5>
+              <div className="space-y-1.5">
+                {pins.map((pin) => (
+                  <div
+                    key={pin.id}
+                    className="flex items-start gap-2.5 px-2 py-2 rounded-lg bg-muted/20 border border-border/20 hover:bg-muted/30 transition-colors"
+                  >
+                    <Avatar className="h-6 w-6 shrink-0 mt-0.5">
+                      <AvatarImage src={resolveImageUrl(pin.message.sender?.image)} />
+                      <AvatarFallback className="text-[8px] font-bold">
+                        {getInitials(pin.message.sender?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold truncate">{pin.message.sender?.name}</p>
+                      <p className="text-[12px] text-muted-foreground line-clamp-2 break-words">
+                        {pin.message.content ?? (pin.message.attachments.length > 0 ? `${pin.message.attachments.length} attachment(s)` : "")}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => unpinMessage.mutate({ channelId, messageId: pin.messageId })}
+                      className="shrink-0 p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+                      title="Unpin"
+                      aria-label="Unpin message"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
               Members ({channel?.members?.length ?? 0})
             </h5>
             <div className="space-y-0.5">
               {channel?.members?.map((m) => {
-                const isOnline = onlineUserIds.has(m.user?.id ?? "");
+                const isOnline = onlineUserIds.has(m.user?.id ??"");
                 const isYou = m.user?.id === currentUserId;
                 return (
                   <div
@@ -304,22 +254,12 @@ export function ChannelInfoPanel({
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-medium truncate">
                         {m.user?.name}
-                        {isYou && (
-                          <span className="text-muted-foreground font-normal">
-                            {" "}
-                            (you)
-                          </span>
-                        )}
+                        {isYou && <span className="text-muted-foreground font-normal"> (you)</span>}
                       </p>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {m.user?.email}
-                      </p>
+                      <p className="text-[11px] text-muted-foreground truncate">{m.user?.email}</p>
                     </div>
-                    {m.role === "ADMIN" && (
-                      <Badge
-                        variant="outline"
-                        className="text-[9px] px-1.5 py-0 h-4 border-blue-500/30 text-blue-600"
-                      >
+                    {m.role ==="ADMIN" && (
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-blue-500/30 text-blue-600">
                         Admin
                       </Badge>
                     )}
@@ -329,13 +269,92 @@ export function ChannelInfoPanel({
             </div>
           </div>
 
+          {channel?.type !== "DIRECT" && (() => {
+            const myMember = channel?.members?.find((m) => m.user?.id === currentUserId);
+            const mutedUntil = myMember?.mutedUntil;
+            const isMuted = mutedUntil !== null && mutedUntil !== undefined && new Date(mutedUntil) > new Date();
+            const MUTE_OPTIONS = [
+              { label: "15 minutes", value: "15m" },
+              { label: "1 hour", value: "1h" },
+              { label: "8 hours", value: "8h" },
+              { label: "24 hours", value: "24h" },
+              { label: "Forever", value: "forever" },
+            ];
+            return (
+              <div className="mt-4 pt-4 border-t border-border/30">
+                <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
+                  {isMuted ? <BellOff className="h-3 w-3" /> : <BellRing className="h-3 w-3" />}
+                  Notifications
+                </h5>
+                {isMuted ? (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-[12px] text-muted-foreground px-1">
+                      Muted until {mutedUntil && new Date(mutedUntil).getFullYear() >= 2099 ? "forever" : mutedUntil ? new Date(mutedUntil).toLocaleString() : ""}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full h-8 text-[12px]"
+                      onClick={() => unmuteChannel.mutate(channelId)}
+                      disabled={unmuteChannel.isPending}
+                    >
+                      {unmuteChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : null}
+                      Unmute
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {MUTE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => muteChannel.mutate({ channelId, duration: opt.value })}
+                        disabled={muteChannel.isPending}
+                        className="h-7 px-2 rounded-lg border border-border/50 text-[11px] font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {channel?.createdAt && (
             <div className="mt-6 pt-4 border-t border-border/30">
               <p className="text-[11px] text-muted-foreground/50 text-center">
-                {channel.type === "GROUP"
+                {channel.type ==="GROUP"
                   ? `Created ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`
                   : `Started ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`}
               </p>
+            </div>
+          )}
+
+          {isAdmin && channel?.type !== "DIRECT" && (
+            <div className="mt-4 pt-4 border-t border-border/30">
+              {channel?.isArchived ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-[12px]"
+                  onClick={() => unarchiveChannel.mutate(channelId)}
+                  disabled={unarchiveChannel.isPending}
+                >
+                  {unarchiveChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : null}
+                  Unarchive Channel
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-[12px] border-destructive/40 text-destructive hover:bg-destructive/10"
+                  onClick={() => archiveChannel.mutate(channelId)}
+                  disabled={archiveChannel.isPending}
+                >
+                  {archiveChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : null}
+                  Archive Channel
+                </Button>
+              )}
             </div>
           )}
         </div>

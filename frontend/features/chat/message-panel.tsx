@@ -1,11 +1,28 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Hash, PanelLeftOpen, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Bell,
+  Bookmark,
+  Hash,
+  Mic,
+  Paperclip,
+  PanelLeftOpen,
+  Users,
+  Video,
+} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import {
@@ -19,21 +36,36 @@ import {
   useChatOnlineUsers,
   useChatOrgUsers,
   useToggleReaction,
+  useChatPins,
+  usePinMessage,
+  useUnpinMessage,
+  useSavedMessages,
+  useSaveMessage,
+  useUnsaveMessage,
 } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
+import { useStartHuddle, useJoinHuddle, useActiveHuddle, useStartVideoMeeting } from "@/hooks/api/chat-huddles";
+import { useHuddleRealtime } from "./huddle-realtime";
+import { HuddlePanel } from "./huddle-panel";
+import { VideoMeetingPanel } from "./video-meeting-panel";
 import { getInitials, getDateLabel } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
+import { ThreadPanel } from "./thread-panel";
+import { SavedMessagesPanel } from "./saved-messages-panel";
+import { SharedFilesPanel } from "./shared-files-panel";
+import { ForwardMessageDialog } from "./forward-message-dialog";
+import { NotificationCenter } from "./notification-center";
 
 export function MessagePanel({
   channelId,
-  curren@/hooks/api
+  currentUserId,
   onBack,
   onToggleInfo,
-  showInfoPanel,@/hooks/api/chat-realtime
+  showInfoPanel,
   sidebarCollapsed,
   onExpandSidebar,
 }: {
@@ -60,24 +92,31 @@ export function MessagePanel({
   const deleteMessage = useDeleteMessage();
   const editMessage = useEditMessage();
   const toggleReaction = useToggleReaction(channelId);
+  const pinMessage = usePinMessage();
+  const unpinMessage = useUnpinMessage();
+  const { data: pins } = useChatPins(channelId);
+  const { data: savedData } = useSavedMessages();
+  const saveMessage = useSaveMessage();
+  const unsaveMessage = useUnsaveMessage();
   const { data: onlineUsers } = useChatOnlineUsers();
   const lastTypingSent = useRef(0);
-  const {
-    isConnected: ablyConnected,
-    typingUsers,
-    publishTyping,
-  } = useChatRealtime(channelId);
+  const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
+  useHuddleRealtime(channelId);
+  const { data: activeHuddle } = useActiveHuddle(channelId);
+  const startHuddle = useStartHuddle();
+  const joinHuddle = useJoinHuddle();
+  const startVideoMeeting = useStartVideoMeeting();
+
+  const isInHuddle = activeHuddle?.participants.some((p) => p.userId === currentUserId) ?? false;
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
-    [onlineUsers],
+    [onlineUsers]
   );
 
   const typingText = useMemo(() => {
     if (!typingUsers || typingUsers.length === 0) return null;
-    const names = typingUsers.map(
-      (t: { name: string }) => t.name.split(" ")[0],
-    );
+    const names = typingUsers.map((t: { name: string }) => t.name.split(" ")[0]);
     if (names.length === 1) return `${names[0]} is typing...`;
     if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
     return `${names[0]} and ${names.length - 1} others are typing...`;
@@ -89,26 +128,27 @@ export function MessagePanel({
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editInput, setEditInput] = useState("");
-  const [lastPollTime, setLastPollTime] = useState(() =>
-    new Date().toISOString(),
-  );
+  const [lastPollTime, setLastPollTime] = useState(() => new Date().toISOString());
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
+  const [showMeeting, setShowMeeting] = useState(false);
+  const [showSavedPanel, setShowSavedPanel] = useState(false);
+  const [showFilesPanel, setShowFilesPanel] = useState(false);
+  const [forwardMessage, setForwardMessage] = useState<{ content: string | null } | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const [pendingAttachments, setPendingAttachments] = useState<
-    {
-      fileName: string;
-      fileUrl: string;
-      fileKey: string;
-      fileSize: number;
-      mimeType: string;
-    }[]
+    { fileName: string; fileUrl: string; fileKey: string; fileSize: number; mimeType: string }[]
   >([]);
   const [uploading, setUploading] = useState(false);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiRef = useRef<HTMLDivElement>(null);
+  const [isOnline, setIsOnline] = useState(true);
+  const messageQueue = useRef<{ content: string; replyToId?: number; attachments?: { fileName: string; fileUrl: string; fileKey: string; fileSize: number; mimeType: string }[] }[]>([]);
 
   const { data: orgUsers } = useChatOrgUsers();
   const [showMentions, setShowMentions] = useState(false);
@@ -118,8 +158,7 @@ export function MessagePanel({
   const mentionCandidates = useMemo(() => {
     if (!orgUsers) return [];
     if (channel?.type === "DIRECT") {
-      const otherId = channel.members?.find((m) => m.user?.id !== currentUserId)
-        ?.user?.id;
+      const otherId = channel.members?.find((m) => m.user?.id !== currentUserId)?.user?.id;
       return orgUsers.filter((u) => u.id === otherId);
     }
     return orgUsers.filter((u) => u.id !== currentUserId);
@@ -132,6 +171,19 @@ export function MessagePanel({
   }, [mentionCandidates, mentionQuery]);
 
   useEffect(() => {
+    const saved = localStorage.getItem(`chat:draft:${channelId}`);
+    setMessageInput(saved ?? "");
+  }, [channelId]);
+
+  useEffect(() => {
+    if (messageInput) {
+      localStorage.setItem(`chat:draft:${channelId}`, messageInput);
+    } else {
+      localStorage.removeItem(`chat:draft:${channelId}`);
+    }
+  }, [channelId, messageInput]);
+
+  useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
         setShowEmojiPicker(false);
@@ -141,9 +193,39 @@ export function MessagePanel({
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
 
+  useEffect(() => {
+    const goOnline = async () => {
+      setIsOnline(true);
+      const queued = [...messageQueue.current];
+      messageQueue.current = [];
+      for (const msg of queued) {
+        try {
+          await sendMessage.mutateAsync({ channelId, content: msg.content, replyToId: msg.replyToId, attachments: msg.attachments });
+        } catch (_err) {}
+      }
+    };
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    setIsOnline(navigator.onLine);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("joinHuddle") === "1" && activeHuddle && !isInHuddle) {
+      joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
+      const url = new URL(window.location.href);
+      url.searchParams.delete("joinHuddle");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [activeHuddle, channelId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const messages: Message[] = useMemo(() => {
-    const all =
-      (messagesData?.pages.flatMap((p) => p.messages) as Message[]) ?? [];
+    const all = (messagesData?.pages.flatMap((p) => p.messages) as Message[]) ?? [];
     const seen = new Set<number>();
     return all.filter((msg) => {
       if (seen.has(msg.id)) return false;
@@ -152,17 +234,11 @@ export function MessagePanel({
     });
   }, [messagesData]);
 
-  const { data: polledMessages } = useChatPoll(
-    channelId,
-    lastPollTime,
-    !ablyConnected && messages.length > 0,
-  );
+  const { data: polledMessages } = useChatPoll(channelId, lastPollTime, !ablyConnected && messages.length > 0);
 
   useEffect(() => {
     if (polledMessages && polledMessages.length > 0) {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(channelId),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.messages(channelId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
       setLastPollTime(new Date().toISOString());
     }
@@ -184,8 +260,30 @@ export function MessagePanel({
     setPendingAttachments([]);
     setShowEmojiPicker(false);
     setShowMentions(false);
+    setThreadMessageId(null);
+    setShowFilesPanel(false);
     inputRef.current?.focus();
   }, [channelId]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key === "k") {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("chat:open-search"));
+        return;
+      }
+      if (e.key === "Escape") {
+        if (threadMessageId !== null) { setThreadMessageId(null); return; }
+        if (showSavedPanel) { setShowSavedPanel(false); return; }
+        if (showFilesPanel) { setShowFilesPanel(false); return; }
+        if (showNotifications) { setShowNotifications(false); return; }
+        if (showMeeting) { setShowMeeting(false); return; }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [threadMessageId, showSavedPanel, showFilesPanel, showNotifications, showMeeting]);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
@@ -196,96 +294,89 @@ export function MessagePanel({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const handleFileSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-      setUploading(true);
-      const MAX_SIZE = 10 * 1024 * 1024;
-      try {
-        for (const file of Array.from(files)) {
-          if (file.size > MAX_SIZE) {
-            toast.error(`${file.name} is too large (max 10MB)`);
-            continue;
-          }
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("folder", "chat");
-          try {
-            const result = await apiClient.upload<{
-              url: string;
-              key: string;
-              size?: number;
-              mimeType?: string;
-            }>("/storage/upload", formData);
-            setPendingAttachments((prev) => [
-              ...prev,
-              {
-                fileName: file.name,
-                fileUrl: result.url,
-                fileKey: result.key,
-                fileSize: result.size ?? file.size,
-                mimeType: result.mimeType ?? file.type,
-              },
-            ]);
-          } catch (err) {
-            toast.error(`Failed: ${getApiError(err) || file.name}`);
-            continue;
-          }
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    const MAX_SIZE = 10 * 1024 * 1024;
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > MAX_SIZE) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "chat");
+        try {
+          const result = await apiClient.upload<{ url: string; key: string; size?: number; mimeType?: string }>(
+            "/storage/upload",
+            formData,
+          );
+          setPendingAttachments((prev) => [
+            ...prev,
+            { fileName: file.name, fileUrl: result.url, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type },
+          ]);
+        } catch (err) {
+          toast.error(`Failed: ${getApiError(err) || file.name}`);
+          continue;
         }
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      } finally {
-        setUploading(false);
-        if (fileInputRef.current) fileInputRef.current.value = "";
       }
-    },
-    [],
-  );
+    } catch (error) { toast.error(getErrorMessage(error)); }
+    finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
+  }, []);
 
-  const insertEmoji = useCallback(
-    (emoji: string) => {
-      const el = inputRef.current;
-      if (el) {
-        const start = el.selectionStart ?? messageInput.length;
-        const end = el.selectionEnd ?? messageInput.length;
-        const newValue =
-          messageInput.slice(0, start) + emoji + messageInput.slice(end);
-        setMessageInput(newValue);
-        setTimeout(() => {
-          el.focus();
-          el.setSelectionRange(start + emoji.length, start + emoji.length);
-        }, 0);
-      } else {
-        setMessageInput((prev) => prev + emoji);
+  const handlePastedFiles = useCallback(async (files: File[]) => {
+    setUploading(true);
+    const MAX_SIZE = 10 * 1024 * 1024;
+    try {
+      for (const file of files) {
+        if (file.size > MAX_SIZE) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "chat");
+        try {
+          const result = await apiClient.upload<{ url: string; key: string; size?: number; mimeType?: string }>(
+            "/storage/upload",
+            formData,
+          );
+          setPendingAttachments((prev) => [
+            ...prev,
+            { fileName: file.name, fileUrl: result.url, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type },
+          ]);
+        } catch (err) {
+          toast.error(`Failed: ${getApiError(err) || file.name}`);
+        }
       }
-      setShowEmojiPicker(false);
-    },
-    [messageInput],
-  );
+    } catch (error) { toast.error(getErrorMessage(error)); }
+    finally { setUploading(false); }
+  }, []);
 
-  const insertMention = useCallback(
-    (name: string) => {
-      const el = inputRef.current;
-      if (!el) return;
-      const text = messageInput;
-      const cursorPos = el.selectionStart ?? text.length;
-      const beforeCursor = text.slice(0, cursorPos);
-      const atIdx = beforeCursor.lastIndexOf("@");
-      if (atIdx === -1) return;
-      const newValue =
-        text.slice(0, atIdx) + `@${name} ` + text.slice(cursorPos);
+  const insertEmoji = useCallback((emoji: string) => {
+    const el = inputRef.current;
+    if (el) {
+      const start = el.selectionStart ?? messageInput.length;
+      const end = el.selectionEnd ?? messageInput.length;
+      const newValue = messageInput.slice(0, start) + emoji + messageInput.slice(end);
       setMessageInput(newValue);
-      setShowMentions(false);
-      setMentionQuery("");
-      setTimeout(() => {
-        el.focus();
-        const pos = atIdx + name.length + 2;
-        el.setSelectionRange(pos, pos);
-      }, 0);
-    },
-    [messageInput],
-  );
+      setTimeout(() => { el.focus(); el.setSelectionRange(start + emoji.length, start + emoji.length); }, 0);
+    } else {
+      setMessageInput((prev) => prev + emoji);
+    }
+    setShowEmojiPicker(false);
+  }, [messageInput]);
+
+  const insertMention = useCallback((name: string) => {
+    const el = inputRef.current;
+    if (!el) return;
+    const text = messageInput;
+    const cursorPos = el.selectionStart ?? text.length;
+    const beforeCursor = text.slice(0, cursorPos);
+    const atIdx = beforeCursor.lastIndexOf("@");
+    if (atIdx === -1) return;
+    const newValue = text.slice(0, atIdx) + `@${name} ` + text.slice(cursorPos);
+    setMessageInput(newValue);
+    setShowMentions(false);
+    setMentionQuery("");
+    setTimeout(() => { el.focus(); const pos = atIdx + name.length + 2; el.setSelectionRange(pos, pos); }, 0);
+  }, [messageInput]);
 
   const handleSend = useCallback(async () => {
     const content = messageInput.trim();
@@ -293,118 +384,122 @@ export function MessagePanel({
     const replyId = replyTo?.id;
     const attachments = [...pendingAttachments];
     setMessageInput("");
+    localStorage.removeItem(`chat:draft:${channelId}`);
     setReplyTo(null);
     setPendingAttachments([]);
+    if (!isOnline) {
+      messageQueue.current.push({ content: content || "", replyToId: replyId, attachments: attachments.length > 0 ? attachments : undefined });
+      toast.info("You're offline — message will be sent when you reconnect");
+      return;
+    }
     try {
-      await sendMessage.mutateAsync({
-        channelId,
-        content: content || undefined,
-        replyToId: replyId,
-        attachments: attachments.length > 0 ? attachments : undefined,
-      });
+      await sendMessage.mutateAsync({ channelId, content: content || undefined, replyToId: replyId, attachments: attachments.length > 0 ? attachments : undefined });
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (error) {
       setMessageInput(content);
       setPendingAttachments(attachments);
       toast.error(getErrorMessage(error));
     }
-  }, [messageInput, channelId, replyTo, sendMessage, pendingAttachments]);
+  }, [messageInput, channelId, replyTo, sendMessage, pendingAttachments, isOnline]);
 
-  const handleEdit = useCallback(
-    async (messageId: number) => {
-      const content = editInput.trim();
-      if (!content) return;
-      try {
-        await editMessage.mutateAsync({ channelId, messageId, content });
-        setEditingMessage(null);
-        setEditInput("");
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [editInput, editMessage, channelId],
+  const handleEdit = useCallback(async (messageId: number) => {
+    const content = editInput.trim();
+    if (!content) return;
+    try {
+      await editMessage.mutateAsync({ channelId, messageId, content });
+      setEditingMessage(null);
+      setEditInput("");
+    } catch (error) { toast.error(getErrorMessage(error)); }
+  }, [editInput, editMessage, channelId]);
+
+  const pinnedMessageIds = useMemo(
+    () => new Set((pins ?? []).map((p) => p.messageId)),
+    [pins]
   );
 
-  const handleReact = useCallback(
-    (messageId: number, emoji: string) => {
-      toggleReaction.mutate({ messageId, emoji });
-    },
-    [toggleReaction],
+  const savedMessageIds = useMemo(
+    () => new Set(savedData?.pages.flatMap(p => p.items.map(i => i.messageId)) ?? []),
+    [savedData]
   );
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (showMentions && filteredMentions.length > 0) {
-        if (e.key === "ArrowDown") {
-          e.preventDefault();
-          setMentionIndex((prev) => (prev + 1) % filteredMentions.length);
-          return;
-        }
-        if (e.key === "ArrowUp") {
-          e.preventDefault();
-          setMentionIndex(
-            (prev) =>
-              (prev - 1 + filteredMentions.length) % filteredMentions.length,
-          );
-          return;
-        }
-        if (e.key === "Enter" || e.key === "Tab") {
-          e.preventDefault();
-          insertMention(filteredMentions[mentionIndex].name ?? "");
-          return;
-        }
-        if (e.key === "Escape") {
-          setShowMentions(false);
-          return;
-        }
-      }
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
-      }
-    },
-    [handleSend, showMentions, filteredMentions, mentionIndex, insertMention],
-  );
+  const handleSave = useCallback((messageId: number) => {
+    saveMessage.mutate(messageId);
+  }, [saveMessage]);
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const value = e.target.value;
-      setMessageInput(value);
-      const el = e.target;
-      el.style.height = "auto";
-      el.style.height = Math.min(el.scrollHeight, 160) + "px";
-      if (value.trim() && Date.now() - lastTypingSent.current > 3000) {
-        lastTypingSent.current = Date.now();
-        publishTyping();
-      }
-      const cursorPos = el.selectionStart ?? value.length;
-      const textBefore = value.slice(0, cursorPos);
-      const atMatch = textBefore.match(/@(\w*)$/);
-      if (atMatch) {
-        setShowMentions(true);
-        setMentionQuery(atMatch[1]);
-        setMentionIndex(0);
-      } else {
-        setShowMentions(false);
-        setMentionQuery("");
-      }
-    },
-    [],
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleUnsaveMsg = useCallback((messageId: number) => {
+    unsaveMessage.mutate(messageId);
+  }, [unsaveMessage]);
+
+  const handleForward = useCallback((msg: Message) => {
+    setForwardMessage({ content: msg.content });
+  }, []);
+
+  const handleReact = useCallback((messageId: number, emoji: string) => {
+    toggleReaction.mutate({ messageId, emoji });
+  }, [toggleReaction]);
+
+  const handlePin = useCallback((messageId: number) => {
+    pinMessage.mutate({ channelId, messageId });
+  }, [pinMessage, channelId]);
+
+  const handleUnpin = useCallback((messageId: number) => {
+    unpinMessage.mutate({ channelId, messageId });
+  }, [unpinMessage, channelId]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (showMentions && filteredMentions.length > 0) {
+      if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex((prev) => (prev + 1) % filteredMentions.length); return; }
+      if (e.key === "ArrowUp") { e.preventDefault(); setMentionIndex((prev) => (prev - 1 + filteredMentions.length) % filteredMentions.length); return; }
+      if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); insertMention(filteredMentions[mentionIndex].name ?? ""); return; }
+      if (e.key === "Escape") { setShowMentions(false); return; }
+    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  }, [handleSend, showMentions, filteredMentions, mentionIndex, insertMention]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setMessageInput(value);
+    const el = e.target;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+    if (value.trim() && Date.now() - lastTypingSent.current > 3000) {
+      lastTypingSent.current = Date.now();
+      publishTyping();
+    }
+    const cursorPos = el.selectionStart ?? value.length;
+    const textBefore = value.slice(0, cursorPos);
+    const atMatch = textBefore.match(/@(\w*)$/);
+    if (atMatch) { setShowMentions(true); setMentionQuery(atMatch[1]); setMentionIndex(0); }
+    else { setShowMentions(false); setMentionQuery(""); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const otherMember =
     channel?.type === "DIRECT"
       ? channel.members?.find((m) => m.user?.id !== currentUserId)?.user
       : null;
   const displayName =
-    channel?.type === "DIRECT"
-      ? (otherMember?.name ?? "Unknown")
-      : (channel?.name ?? "Chat");
+    channel?.type === "DIRECT" ? otherMember?.name ?? "Unknown" : channel?.name ?? "Chat";
   const memberCount = channel?.members?.length ?? 0;
   const isOtherOnline =
-    channel?.type === "DIRECT" && otherMember
-      ? onlineUserIds.has(otherMember.id)
-      : false;
+    channel?.type === "DIRECT" && otherMember ? onlineUserIds.has(otherMember.id) : false;
+
+  const replyCountMap = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const msg of messages) {
+      if (msg.replyToId !== null && msg.replyToId !== undefined) {
+        map.set(msg.replyToId, (map.get(msg.replyToId) ?? 0) + 1);
+      }
+    }
+    return map;
+  }, [messages]);
+
+  const handleOpenThread = useCallback((msg: Message) => {
+    setThreadMessageId(msg.id);
+  }, []);
+
+  const handleCloseThread = useCallback(() => {
+    setThreadMessageId(null);
+  }, []);
 
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Message[] }[] = [];
@@ -412,17 +507,26 @@ export function MessagePanel({
     for (const msg of messages) {
       const d = msg.createdAt ? new Date(msg.createdAt) : new Date();
       const dateStr = getDateLabel(d);
-      if (dateStr !== currentDate) {
-        currentDate = dateStr;
-        groups.push({ date: dateStr, messages: [] });
-      }
+      if (dateStr !== currentDate) { currentDate = dateStr; groups.push({ date: dateStr, messages: [] }); }
       groups[groups.length - 1].messages.push(msg);
     }
     return groups;
   }, [messages]);
 
+  const firstUnreadMessageId = useMemo(() => {
+    const currentMember = channel?.members?.find((m) => m.user?.id === currentUserId);
+    const lastReadAt = currentMember?.lastReadAt;
+    if (!lastReadAt) return undefined;
+    const lastReadTime = new Date(lastReadAt).getTime();
+    return messages.find(
+      (m) => m.createdAt && new Date(m.createdAt).getTime() > lastReadTime && m.senderId !== currentUserId,
+    )?.id;
+  }, [messages, channel, currentUserId]);
+
   return (
-    <>
+    <div className="flex flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center gap-3 shrink-0 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
         {sidebarCollapsed && onExpandSidebar && (
           <button
@@ -460,9 +564,7 @@ export function MessagePanel({
           )}
 
           <div className="min-w-0">
-            <h3 className="text-[15px] font-bold truncate leading-tight">
-              {displayName}
-            </h3>
+            <h3 className="text-[15px] font-bold truncate leading-tight">{displayName}</h3>
             <p className="text-[11px] text-muted-foreground leading-tight">
               {channel?.type === "DIRECT" ? (
                 isOtherOnline ? (
@@ -481,14 +583,9 @@ export function MessagePanel({
           {channel?.type === "GROUP" && (
             <div className="hidden sm:flex -space-x-1.5 mr-2">
               {channel.members?.slice(0, 3).map((m) => (
-                <Avatar
-                  key={m.user?.id}
-                  className="h-6 w-6 border-2 border-background"
-                >
+                <Avatar key={m.user?.id} className="h-6 w-6 border-2 border-background">
                   <AvatarImage src={resolveImageUrl(m.user?.image)} />
-                  <AvatarFallback className="text-[8px]">
-                    {getInitials(m.user?.name)}
-                  </AvatarFallback>
+                  <AvatarFallback className="text-[8px]">{getInitials(m.user?.name)}</AvatarFallback>
                 </Avatar>
               ))}
               {memberCount > 3 && (
@@ -498,6 +595,71 @@ export function MessagePanel({
               )}
             </div>
           )}
+          {!isInHuddle && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-8 gap-1.5 rounded-lg px-2 text-xs font-medium",
+                activeHuddle
+                  ? "text-green-500 hover:text-green-500 hover:bg-green-500/10"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              onClick={() => {
+                if (activeHuddle) {
+                  joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
+                } else {
+                  startHuddle.mutate(channelId);
+                }
+              }}
+              disabled={startHuddle.isPending || joinHuddle.isPending}
+              aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
+            >
+              <Mic className="h-3.5 w-3.5" />
+              {activeHuddle ? (
+                <span>Join ({activeHuddle.participants.length})</span>
+              ) : (
+                <span>Huddle</span>
+              )}
+            </Button>
+          )}
+          <button
+            onClick={() => {
+              if (!activeHuddle) {
+                startVideoMeeting.mutate(channelId);
+              }
+              setShowMeeting(true);
+            }}
+            className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+            title="Video meeting"
+            aria-label="Video meeting"
+          >
+            <Video className={cn("h-4 w-4", activeHuddle?.hasVideo ? "text-blue-500" : "")} />
+          </button>
+          <button
+            onClick={() => { setShowFilesPanel((p) => !p); setShowSavedPanel(false); setShowNotifications(false); }}
+            className={cn("h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors", showFilesPanel ? "bg-muted text-blue-500" : "text-muted-foreground hover:text-foreground")}
+            title="Shared files"
+            aria-label="Shared files"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => { setShowSavedPanel(p => !p); setShowNotifications(false); setShowFilesPanel(false); }}
+            className={cn("h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors", showSavedPanel ? "bg-muted text-amber-500" : "text-muted-foreground hover:text-foreground")}
+            title="Saved messages"
+            aria-label="Saved messages"
+          >
+            <Bookmark className={cn("h-4 w-4", showSavedPanel && "fill-amber-500")} />
+          </button>
+          <button
+            onClick={() => { setShowNotifications(p => !p); setShowSavedPanel(false); }}
+            className={cn("h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors", showNotifications ? "bg-muted" : "text-muted-foreground hover:text-foreground")}
+            title="Notifications"
+            aria-label="Notifications"
+          >
+            <Bell className="h-4 w-4" />
+          </button>
           <Button
             variant="ghost"
             size="icon"
@@ -510,6 +672,12 @@ export function MessagePanel({
         </div>
       </div>
 
+      {!isOnline && (
+        <div className="shrink-0 px-4 py-1.5 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2 text-[12px] text-amber-600 font-medium">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+          You&apos;re offline — messages will be sent when you reconnect
+        </div>
+      )}
       <MessageList
         groupedMessages={groupedMessages}
         messages={messages}
@@ -523,22 +691,23 @@ export function MessagePanel({
         channelType={channel?.type}
         editingMessage={editingMessage}
         editInput={editInput}
+        pinnedMessageIds={pinnedMessageIds}
+        savedMessageIds={savedMessageIds}
+        replyCountMap={replyCountMap}
+        firstUnreadMessageId={firstUnreadMessageId}
         onEditInputChange={setEditInput}
-        onStartEdit={(msg) => {
-          setEditingMessage(msg);
-          setEditInput(msg.content ?? "");
-        }}
-        onCancelEdit={() => {
-          setEditingMessage(null);
-          setEditInput("");
-        }}
+        onStartEdit={(msg) => { setEditingMessage(msg); setEditInput(msg.content ?? ""); }}
+        onCancelEdit={() => { setEditingMessage(null); setEditInput(""); }}
         onSaveEdit={handleEdit}
-        onReply={(msg) => {
-          setReplyTo(msg);
-          inputRef.current?.focus();
-        }}
+        onReply={(msg) => { setReplyTo(msg); inputRef.current?.focus(); }}
+        onOpenThread={handleOpenThread}
         onDelete={(messageId) => deleteMessage.mutate({ channelId, messageId })}
         onReact={handleReact}
+        onPin={handlePin}
+        onUnpin={handleUnpin}
+        onSave={handleSave}
+        onUnsaveMsg={handleUnsaveMsg}
+        onForward={handleForward}
         showScrollBtn={showScrollBtn}
         scrollToBottom={scrollToBottom}
         messagesEndRef={messagesEndRef}
@@ -576,7 +745,101 @@ export function MessagePanel({
         onSend={handleSend}
         onKeyDown={handleKeyDown}
         onInputChange={handleInputChange}
+        onFilesSelected={handlePastedFiles}
       />
-    </>
+
+      {activeHuddle && isInHuddle && (
+        <HuddlePanel
+          huddle={activeHuddle}
+          channelId={channelId}
+          currentUserId={currentUserId}
+        />
+      )}
+      </div>
+
+      {showMeeting && (
+        <VideoMeetingPanel
+          channelId={channelId}
+          currentUserId={currentUserId}
+          onClose={() => setShowMeeting(false)}
+        />
+      )}
+
+      <AnimatePresence>
+        {threadMessageId !== null && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <ThreadPanel
+              channelId={channelId}
+              parentMessageId={threadMessageId}
+              currentUserId={currentUserId}
+              onClose={handleCloseThread}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSavedPanel && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <SavedMessagesPanel
+              onClose={() => setShowSavedPanel(false)}
+              onJumpToChannel={() => setShowSavedPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showFilesPanel && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <SharedFilesPanel
+              channelId={channelId}
+              onClose={() => setShowFilesPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showNotifications && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <NotificationCenter
+              onClose={() => setShowNotifications(false)}
+              onSelectChannel={() => setShowNotifications(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ForwardMessageDialog
+        message={forwardMessage}
+        open={Boolean(forwardMessage)}
+        onOpenChange={(o) => { if (!o) setForwardMessage(null); }}
+      />
+    </div>
   );
 }

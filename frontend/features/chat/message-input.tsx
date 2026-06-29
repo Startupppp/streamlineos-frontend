@@ -6,7 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AtSign,
+  Bold,
+  Code,
   FileText,
+  Italic,
   Loader2,
   Paperclip,
   Reply,
@@ -111,7 +114,6 @@ function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProp
 }
 
 interface MessageInputProps {
-
   channelId: number;
   displayName: string;
   channelType: string | undefined;
@@ -148,6 +150,7 @@ interface MessageInputProps {
   onSend: () => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onFilesSelected?: (files: File[]) => void;
 }
 
 export function MessageInput({
@@ -180,7 +183,29 @@ export function MessageInput({
   onSend,
   onKeyDown,
   onInputChange,
+  onFilesSelected,
 }: MessageInputProps) {
+  const formatSelection = useCallback((marker: string, block = false) => {
+    const el = inputRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const selected = el.value.slice(start, end);
+    const formatted = block
+      ? `\`\`\`\n${selected || "code"}\n\`\`\``
+      : `${marker}${selected || "text"}${marker}`;
+    const newValue = el.value.slice(0, start) + formatted + el.value.slice(end);
+    setMessageInput(newValue);
+    setTimeout(() => {
+      el.setSelectionRange(start + marker.length, start + marker.length + (selected || "text").length);
+      el.focus();
+    }, 0);
+  }, [inputRef, setMessageInput]);
+
+  const handleFormatBold = useCallback(() => formatSelection("**"), [formatSelection]);
+  const handleFormatItalic = useCallback(() => formatSelection("*"), [formatSelection]);
+  const handleFormatCode = useCallback(() => formatSelection("`"), [formatSelection]);
+
   const handleCancelReply = useCallback(() => setReplyTo(null), [setReplyTo]);
   const handleOpenFileInput = useCallback(() => { fileInputRef.current?.click(); }, [fileInputRef]);
   const handleToggleEmoji = useCallback(() => {
@@ -201,6 +226,17 @@ export function MessageInput({
   const handleRemoveAttachment = useCallback((idx: number) => {
     setPendingAttachments((prev) => prev.filter((_, i) => i !== idx));
   }, [setPendingAttachments]);
+
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItems = items.filter(item => item.type.startsWith("image/"));
+    if (imageItems.length === 0) return;
+    e.preventDefault();
+    const files = imageItems.map(item => item.getAsFile()).filter((f): f is File => f !== null);
+    if (files.length > 0 && onFilesSelected) {
+      onFilesSelected(files);
+    }
+  }, [onFilesSelected]);
 
   return (
     <>
@@ -323,6 +359,7 @@ export function MessageInput({
               value={messageInput}
               onChange={onInputChange}
               onKeyDown={onKeyDown}
+              onPaste={handlePaste}
               placeholder={`Message ${channelType === "DIRECT" ? displayName : "#" + displayName}...`}
               rows={1}
               className="w-full bg-transparent text-[14px] resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground/60 min-h-[40px] max-h-[160px]"
@@ -363,6 +400,31 @@ export function MessageInput({
                   aria-label="Mention someone"
                 >
                   <AtSign className="h-[18px] w-[18px]" />
+                </button>
+                <div className="w-px h-4 bg-border/40 mx-0.5" />
+                <button
+                  onClick={handleFormatBold}
+                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground/70 hover:text-foreground transition-colors font-bold"
+                  title="Bold (**text**)"
+                  aria-label="Bold"
+                >
+                  <Bold className="h-[16px] w-[16px]" />
+                </button>
+                <button
+                  onClick={handleFormatItalic}
+                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground/70 hover:text-foreground transition-colors"
+                  title="Italic (*text*)"
+                  aria-label="Italic"
+                >
+                  <Italic className="h-[16px] w-[16px]" />
+                </button>
+                <button
+                  onClick={handleFormatCode}
+                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground/70 hover:text-foreground transition-colors font-mono"
+                  title="Inline code (`code`)"
+                  aria-label="Code"
+                >
+                  <Code className="h-[16px] w-[16px]" />
                 </button>
               </div>
               <div className="flex items-center gap-2">
