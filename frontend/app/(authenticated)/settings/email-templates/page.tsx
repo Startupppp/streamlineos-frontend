@@ -18,7 +18,7 @@ export default function EmailTemplatesPage() {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string>("");
 
-  const resolvedCategory = activeCategory || categories[0] ?? "";
+  const resolvedCategory = activeCategory || (categories[0] ?? "");
 
   const categoryTemplates = useMemo(
     () => templates.filter((t) => t.category === resolvedCategory),

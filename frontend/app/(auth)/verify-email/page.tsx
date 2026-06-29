@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useVerifyEmail, useResendVerificationEmail } from "@/hooks/auth-hooks";
 import { CheckCircle2, Mail, Loader2, ArrowLeft, RefreshCw, AlertCircle } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { signIn } from "next-auth/react";
 
 function VerifyEmailForm() {
   const router = useRouter();
@@ -47,10 +48,18 @@ function VerifyEmailForm() {
       verifyEmail.mutate(
         { token },
         {
-          onSuccess: () => {
+          onSuccess: async (data) => {
             setIsVerified(true);
-            toast.success("Email verified successfully!");
-            setTimeout(() => router.push("/signin"), 2000);
+            toast.success("Email verified! Signing you in…");
+            const result = await signIn("credentials", {
+              magicToken: data.autoLoginToken,
+              redirect: false,
+            });
+            if (result?.ok) {
+              window.location.href = "/org-setup";
+            } else {
+              setTimeout(() => router.push("/signin"), 1500);
+            }
           },
           onError: (error) => {
             toast.error(getErrorMessage(error));
@@ -84,16 +93,14 @@ function VerifyEmailForm() {
             <CheckCircle2 className="h-5 w-5 text-green-600" />
           </div>
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Email Verified!</h1>
-          <p className="text-muted-foreground mt-2">Your email has been successfully verified</p>
+          <p className="text-muted-foreground mt-2">Signing you in automatically…</p>
         </div>
 
         <div className="rounded-xl border bg-card shadow-soft p-4 sm:p-6 space-y-4">
-          <div role="status" aria-live="polite" className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-            <p className="text-sm text-green-600">Redirecting you to sign in page...</p>
+          <div role="status" aria-live="polite" className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-center gap-2">
+            <Loader2 className="h-4 w-4 text-green-600 animate-spin shrink-0" />
+            <p className="text-sm text-green-600">Setting up your account…</p>
           </div>
-          <Link href="/signin" className="block">
-            <Button className="w-full">Go to Sign In</Button>
-          </Link>
         </div>
       </div>
     );

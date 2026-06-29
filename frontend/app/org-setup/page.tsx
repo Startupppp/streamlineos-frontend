@@ -54,13 +54,11 @@ type BusinessHours = Record<string, DayHours>;
 type Invitee = { email: string; role: string };
 
 type WizardData = {
-  companyName: string;
   industry: string;
   companySize: string;
   country: string;
   website: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   logo: string;
   primaryColor: string;
   supportEmail: string;
@@ -79,13 +77,11 @@ const DEFAULT_BUSINESS_HOURS: BusinessHours = Object.fromEntries(
 );
 
 const DEFAULT_DATA: WizardData = {
-  companyName: "",
   industry: "",
   companySize: "",
   country: "",
   website: "",
-  firstName: "",
-  lastName: "",
+  name: "",
   logo: "",
   primaryColor: "#2563eb",
   supportEmail: "",
@@ -131,9 +127,13 @@ export default function OrgSetupPage() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>(() => {
     const draft = loadDraft();
-    if (!draft.firstName && session?.user?.email) {
-      const username = session.user.email.split("@")[0] ?? "";
-      draft.firstName = username.charAt(0).toUpperCase() + username.slice(1);
+    if (!draft.name) {
+      if (session?.user?.name) {
+        draft.name = session.user.name;
+      } else if (session?.user?.email) {
+        const username = session.user.email.split("@")[0] ?? "";
+        draft.name = username.charAt(0).toUpperCase() + username.slice(1).replace(/[._-]/g, " ");
+      }
     }
     return draft;
   });
@@ -183,7 +183,18 @@ export default function OrgSetupPage() {
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      await apiClient.patch("/org/setup", { ...data, website: data.website || undefined, logo: data.logo || undefined, supportEmail: data.supportEmail || undefined });
+      const trimmedName = data.name.trim();
+      const spaceIdx = trimmedName.indexOf(" ");
+      const firstName = spaceIdx === -1 ? trimmedName : trimmedName.slice(0, spaceIdx);
+      const lastName = spaceIdx === -1 ? "" : trimmedName.slice(spaceIdx + 1).trim();
+      await apiClient.patch("/org/setup", {
+        ...data,
+        firstName,
+        lastName,
+        website: data.website || undefined,
+        logo: data.logo || undefined,
+        supportEmail: data.supportEmail || undefined,
+      });
       localStorage.removeItem("org-setup-draft");
       setShowCelebration(true);
     } catch (error) {
@@ -226,10 +237,6 @@ export default function OrgSetupPage() {
         {step === 1 && (
           <div className="space-y-4">
             <p className="text-[13px] text-slate-500">Tell us about your organization.</p>
-            <div className="space-y-1">
-              <Label className="text-[12px] font-medium text-slate-700">Company name *</Label>
-              <Input value={data.companyName} onChange={(e) => patch({ companyName: e.target.value })} placeholder="Acme Inc." className="h-10" />
-            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-[12px] font-medium text-slate-700">Industry *</Label>
@@ -262,7 +269,7 @@ export default function OrgSetupPage() {
             <Button
               className="w-full h-10 mt-2"
               onClick={() => {
-                if (!data.companyName || !data.industry || !data.companySize || !data.country) {
+                if (!data.industry || !data.companySize || !data.country) {
                   toast.error("Please fill in the required fields");
                   return;
                 }
@@ -278,15 +285,11 @@ export default function OrgSetupPage() {
           <div className="space-y-4">
             <p className="text-[13px] text-slate-500">A few details about you, the admin.</p>
             <div className="space-y-1">
-              <Label className="text-[12px] font-medium text-slate-700">First name *</Label>
-              <Input value={data.firstName} onChange={(e) => patch({ firstName: e.target.value })} placeholder="Aditya" className="h-10" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[12px] font-medium text-slate-700">Last name <span className="text-slate-400 font-normal">(optional)</span></Label>
-              <Input value={data.lastName} onChange={(e) => patch({ lastName: e.target.value })} placeholder="Sharma" className="h-10" />
+              <Label className="text-[12px] font-medium text-slate-700">Your name *</Label>
+              <Input value={data.name} onChange={(e) => patch({ name: e.target.value })} placeholder="Aditya Sharma" className="h-10" />
             </div>
             <NavButtons onBack={goBack} onNext={() => {
-              if (!data.firstName.trim()) { toast.error("Please enter your first name"); return; }
+              if (!data.name.trim()) { toast.error("Please enter your name"); return; }
               goNext();
             }} />
           </div>
@@ -481,10 +484,9 @@ export default function OrgSetupPage() {
           <div className="space-y-5">
             <p className="text-[13px] text-slate-500">Everything looks good? Launch your workspace.</p>
             <div className="space-y-3 text-sm">
-              <ReviewRow label="Organization" value={data.companyName} />
               <ReviewRow label="Industry" value={`${data.industry} · ${data.companySize}`} />
               <ReviewRow label="Country" value={data.country} />
-              <ReviewRow label="Admin" value={data.lastName ? `${data.firstName} ${data.lastName}` : data.firstName} />
+              <ReviewRow label="Admin" value={data.name} />
               <ReviewRow label="Timezone" value={`${data.timezone} · ${data.currency}`} />
               <ReviewRow label="Business hours" value={`${Object.values(data.businessHours).filter((h) => h.enabled).length} days/week`} />
               <ReviewRow label="Holidays" value={`${data.holidays.length} selected`} />

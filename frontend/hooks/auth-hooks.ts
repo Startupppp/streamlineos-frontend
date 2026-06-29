@@ -9,7 +9,7 @@ import { queryKeys } from "@/lib/query-keys";
 export function useVerifyEmail() {
   return useMutation({
     mutationFn: (variables: { token: string }) =>
-      apiClient.post<{ success: boolean }>("/auth/verify-email", variables),
+      apiClient.post<{ autoLoginToken: string }>("/auth/verify-email", variables),
   });
 }
 

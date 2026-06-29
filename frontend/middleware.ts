@@ -29,17 +29,19 @@ function buildCsp(nonce: string, apiUrl?: string): string {
     "https://*.r2.cloudflarestorage.com",
     "https://www.googletagmanager.com",
     "https://www.clarity.ms",
+    "https://api.razorpay.com",
+    "https://checkout.razorpay.com",
     ...(apiOrigin ? [apiOrigin] : []),
   ].join(" ");
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com https://www.clarity.ms`,
+    `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com https://www.clarity.ms https://checkout.razorpay.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://lh3.googleusercontent.com https://streamlineos.app https://images.unsplash.com https://www.googletagmanager.com",
     "font-src 'self' https://fonts.gstatic.com",
     `connect-src ${connectSrc}`,
-    "frame-src https://www.googletagmanager.com",
+    "frame-src https://www.googletagmanager.com https://checkout.razorpay.com https://api.razorpay.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
