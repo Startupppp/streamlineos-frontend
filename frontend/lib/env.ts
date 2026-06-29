@@ -1,11 +1,9 @@
 import { z } from "zod";
 
-/* ─── Server-side schema (loose — optional unless app cannot boot) ──────── */
-
 const serverSchema = z.object({
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
 
   NEXTAUTH_URL: z.string().url().optional(),
   NEXTAUTH_SECRET: z
@@ -16,25 +14,10 @@ const serverSchema = z.object({
       "In production, NEXTAUTH_SECRET must be at least 44 characters (256-bit base64)",
     ),
 
-  BLOGS_DB: z.string().optional(),
-  BACKEND_JWT_SECRET: z.string().min(32, "BACKEND_JWT_SECRET must be at least 32 characters").optional(),
-
-  ENCRYPTION_KEY: z.string().optional(),
-  CRON_SECRET: z.string().optional(),
-  LOAD_TEST_SECRET: z.string().optional(),
-  WEBHOOK_SECRET: z.string().optional(),
-
-  RESEND_API_KEY: z.string().optional(),
-  SENDGRID_API_KEY: z.string().optional(),
-  EMAIL_FROM_ADDRESS: z.string().email().optional(),
-  EMAIL_FROM_NAME: z.string().optional(),
-  EMAIL_PROVIDER: z.enum(["resend", "sendgrid"]).default("resend"),
-  ADMIN_NOTIFICATION_EMAILS: z.string().optional(),
-  ADMIN_NOTIFICATION_EMAIL: z.string().email().optional(),
-  OWNER_EMAIL: z.string().email().optional(),
-
-  GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
-  OPENAI_API_KEY: z.string().optional(),
+  BACKEND_JWT_SECRET: z
+    .string()
+    .min(32, "BACKEND_JWT_SECRET must be at least 32 characters")
+    .optional(),
 
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -47,25 +30,8 @@ const serverSchema = z.object({
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
 
-  R2_ACCOUNT_ID: z.string().optional(),
-  R2_REGION: z.string().default("auto"),
-  R2_BUCKET_NAME: z.string().optional(),
-  R2_ACCESS_KEY_ID: z.string().optional(),
-  R2_SECRET_ACCESS_KEY: z.string().optional(),
-  R2_ENDPOINT: z.string().optional(),
-
-  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
-  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
-
-  VAPID_PUBLIC_KEY: z.string().optional(),
-  VAPID_PRIVATE_KEY: z.string().optional(),
-
-  ABLY_API_KEY: z.string().optional(),
-
   TURNSTILE_SECRET_KEY: z.string().optional(),
 });
-
-/* ─── Client-side schema (NEXT_PUBLIC_*) ────────────────────────────────── */
 
 const clientSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
