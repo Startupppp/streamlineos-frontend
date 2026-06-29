@@ -14,12 +14,10 @@ import { CompanyProfileStep } from "@/features/workspace-onboarding/steps/compan
 import { GenerationStep } from "@/features/workspace-onboarding/steps/generation-step";
 import { RecommendationsStep } from "@/features/workspace-onboarding/steps/recommendations-step";
 import { InviteStep } from "@/features/workspace-onboarding/steps/invite-step";
-import { IntegrationsStep } from "@/features/workspace-onboarding/steps/integrations-step";
-import { ImportStep } from "@/features/workspace-onboarding/steps/import-step";
 import { SuccessStep } from "@/features/workspace-onboarding/steps/success-step";
 import type { CompanyProfileData } from "@/features/workspace-onboarding/types";
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 8;
 
 const STEP_LABELS = [
   "Welcome",
@@ -29,8 +27,6 @@ const STEP_LABELS = [
   "Building Workspace",
   "Recommendations",
   "Invite Team",
-  "Integrations",
-  "Import Data",
   "All Done",
 ];
 
@@ -160,26 +156,6 @@ export default function SetupPage() {
     goToStep(5, -1);
   }, [goToStep]);
 
-  const handleIntegrationsNext = useCallback(() => {
-    goToStep(8, 1);
-  }, [goToStep]);
-
-  const handleIntegrationsBack = useCallback(() => {
-    goToStep(6, -1);
-  }, [goToStep]);
-
-  const handleImportNext = useCallback(() => {
-    goToStep(9, 1);
-  }, [goToStep]);
-
-  const handleImportSkip = useCallback(() => {
-    goToStep(9, 1);
-  }, [goToStep]);
-
-  const handleImportBack = useCallback(() => {
-    goToStep(7, -1);
-  }, [goToStep]);
-
   const handleEnterWorkspace = useCallback(() => {
     router.push("/dashboard");
   }, [router]);
@@ -281,19 +257,6 @@ export default function SetupPage() {
                 />
               )}
               {currentStep === 7 && (
-                <IntegrationsStep
-                  onNext={handleIntegrationsNext}
-                  onBack={handleIntegrationsBack}
-                />
-              )}
-              {currentStep === 8 && (
-                <ImportStep
-                  onNext={handleImportNext}
-                  onSkip={handleImportSkip}
-                  onBack={handleImportBack}
-                />
-              )}
-              {currentStep === 9 && (
                 <SuccessStep
                   summary={{
                     industry,
