@@ -27,6 +27,11 @@ export interface OrgSettings {
   favicon?: string | null;
   secondaryColor?: string | null;
   businessHours?: Record<string, { open: string; close: string; enabled: boolean }> | null;
+  language?: string | null;
+  dateFormat?: string | null;
+  timeFormat?: "12h" | "24h" | null;
+  numberFormat?: string | null;
+  weekStartDay?: "monday" | "sunday" | "saturday" | null;
   createdAt: Date;
   updatedAt: Date;
 }
