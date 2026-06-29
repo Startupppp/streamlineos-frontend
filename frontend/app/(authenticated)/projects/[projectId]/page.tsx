@@ -1,13 +1,16 @@
 "use client";
 
 import { use, useState, useMemo, useCallback } from "react";
-import { useProject } from "@/lib/api/hooks";
+import { useProject } from "@/hooks/api";
 import { KanbanBoard } from "@/components/projects/kanban-board";
 import { ListView } from "@/components/projects/list-view";
 import { TableView } from "@/components/projects/table-view";
 import { CalendarView } from "@/components/projects/calendar-view";
 import { GanttView } from "@/components/projects/gantt-view";
-import { ViewSwitcher, type ViewType } from "@/components/projects/view-switcher";
+import {
+  ViewSwitcher,
+  type ViewType,
+} from "@/components/projects/view-switcher";
 import { TicketFilterBar } from "@/components/projects/shared/ticket-filter-bar";
 import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
 import { TicketDetailsDialog } from "@/components/projects/ticket-details/ticket-details-dialog";
@@ -47,7 +50,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       params.set("view", v);
       router.replace(`?${params.toString()}`, { scroll: false });
     },
-    [router, searchParams]
+    [router, searchParams],
   );
 
   const handleTicketSelect = useCallback(
@@ -56,7 +59,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       params.set("ticket", String(id));
       router.replace(`?${params.toString()}`, { scroll: false });
     },
-    [router, searchParams]
+    [router, searchParams],
   );
 
   const handleTicketClose = useCallback(
@@ -67,7 +70,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
         router.replace(`?${params.toString()}`, { scroll: false });
       }
     },
-    [router, searchParams]
+    [router, searchParams],
   );
 
   const allTickets: KanbanTicket[] = useMemo(() => {
@@ -117,13 +120,24 @@ export default function ProjectBoardPage({ params }: PageProps) {
       const lower = q.toLowerCase();
       tickets = tickets.filter((t) => t.title.toLowerCase().includes(lower));
     }
-    if (filterStatus) tickets = tickets.filter((t) => t.status === filterStatus);
-    if (filterPriority) tickets = tickets.filter((t) => t.priority === filterPriority);
+    if (filterStatus)
+      tickets = tickets.filter((t) => t.status === filterStatus);
+    if (filterPriority)
+      tickets = tickets.filter((t) => t.priority === filterPriority);
     if (filterType) tickets = tickets.filter((t) => t.type === filterType);
-    if (filterAssigneeId) tickets = tickets.filter((t) => t.assigneeId === filterAssigneeId);
+    if (filterAssigneeId)
+      tickets = tickets.filter((t) => t.assigneeId === filterAssigneeId);
 
     return tickets;
-  }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId]);
+  }, [
+    allTickets,
+    hideCompleted,
+    q,
+    filterStatus,
+    filterPriority,
+    filterType,
+    filterAssigneeId,
+  ]);
 
   const members = useMemo(() => {
     if (!data?.members) return [];
@@ -139,7 +153,12 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const statuses =
     data && "statuses" in data
-      ? (data.statuses as { id: number; name: string; color: string | null; order: number }[])
+      ? (data.statuses as {
+          id: number;
+          name: string;
+          color: string | null;
+          order: number;
+        }[])
       : undefined;
 
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
@@ -165,10 +184,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
         <>
           <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
           <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
-          <TicketFilterBar
-            members={members}
-            showSprintFilter={false}
-          />
+          <TicketFilterBar members={members} showSprintFilter={false} />
           <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
           <div className="flex items-center gap-1.5 shrink-0 ml-auto">
             <Switch
@@ -191,7 +207,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
         </>
       }
     >
-
       {view === "board" && (
         <div className="h-full w-full px-3 pt-2 pb-1">
           <KanbanBoard

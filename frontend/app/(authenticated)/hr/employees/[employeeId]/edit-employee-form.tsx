@@ -22,23 +22,41 @@ const formSchema = z
       .trim()
       .min(2, "First name must be at least 2 characters")
       .max(50, "First name must be at most 50 characters")
-      .regex(/^[A-Za-z\s'-]+$/, "Only alphabetic characters, spaces, hyphens and apostrophes are allowed")
-      .refine((v) => !/\s{2,}/.test(v), "First name cannot have consecutive spaces"),
+      .regex(
+        /^[A-Za-z\s'-]+$/,
+        "Only alphabetic characters, spaces, hyphens and apostrophes are allowed",
+      )
+      .refine(
+        (v) => !/\s{2,}/.test(v),
+        "First name cannot have consecutive spaces",
+      ),
     lastName: z
       .string()
       .trim()
       .min(2, "Last name must be at least 2 characters")
       .max(50, "Last name must be at most 50 characters")
-      .regex(/^[A-Za-z\s'-]+$/, "Only alphabetic characters, spaces, hyphens and apostrophes are allowed")
-      .refine((v) => !/\s{2,}/.test(v), "Last name cannot have consecutive spaces"),
+      .regex(
+        /^[A-Za-z\s'-]+$/,
+        "Only alphabetic characters, spaces, hyphens and apostrophes are allowed",
+      )
+      .refine(
+        (v) => !/\s{2,}/.test(v),
+        "Last name cannot have consecutive spaces",
+      ),
     role: z.string(),
     designation: z
       .string()
       .trim()
       .min(2, "Designation must be at least 2 characters")
       .max(100, "Designation must be at most 100 characters")
-      .refine((v) => /[a-zA-Z]/.test(v), "Designation must contain at least one letter")
-      .refine((v) => !/\s{2,}/.test(v), "Designation cannot have consecutive spaces")
+      .refine(
+        (v) => /[a-zA-Z]/.test(v),
+        "Designation must contain at least one letter",
+      )
+      .refine(
+        (v) => !/\s{2,}/.test(v),
+        "Designation cannot have consecutive spaces",
+      )
       .optional()
       .or(z.literal("")),
     departmentId: z.number().optional(),
@@ -67,7 +85,9 @@ const formSchema = z
       .max(500, "Skills must be at most 500 characters")
       .refine((v) => {
         if (!v?.trim()) return true;
-        return v.split(",").every((s) => !s.trim() || /[a-zA-Z]/.test(s.trim()));
+        return v
+          .split(",")
+          .every((s) => !s.trim() || /[a-zA-Z]/.test(s.trim()));
       }, "Each skill must contain at least one letter")
       .optional(),
     taxId: z
@@ -97,7 +117,10 @@ const formSchema = z
       .or(z.literal("")),
     ifsc: z
       .string()
-      .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC code format (e.g. SBIN0001234)")
+      .regex(
+        /^[A-Z]{4}0[A-Z0-9]{6}$/,
+        "Invalid IFSC code format (e.g. SBIN0001234)",
+      )
       .optional()
       .or(z.literal("")),
     accountHolder: z
@@ -179,13 +202,19 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       departmentId: employee.departmentId || undefined,
       phone: employee.phone || "",
       gender: employee.gender || "MALE",
-      joiningDate: employee.joiningDate ? new Date(employee.joiningDate) : undefined,
-      experienceYears: employee.experienceYears ? Number(employee.experienceYears) : 0,
+      joiningDate: employee.joiningDate
+        ? new Date(employee.joiningDate)
+        : undefined,
+      experienceYears: employee.experienceYears
+        ? Number(employee.experienceYears)
+        : 0,
       skills: Array.isArray(employee.skills)
         ? employee.skills.join(", ")
         : employee.skills || "",
       taxId: employee.taxId || "",
-      monthlySalary: employee.monthlySalary ? Number(employee.monthlySalary) : undefined,
+      monthlySalary: employee.monthlySalary
+        ? Number(employee.monthlySalary)
+        : undefined,
       bankAccount: employee.bankDetails?.accountNumber || "",
       bankName: employee.bankDetails?.bankName || "",
       branch: employee.bankDetails?.branch || "",
@@ -254,7 +283,10 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col flex-1 min-h-0"
+      >
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto min-h-0">
             <div className="p-5">

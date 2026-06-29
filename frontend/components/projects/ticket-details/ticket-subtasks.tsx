@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { ListChecks, Plus } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
-import { useCreateTicket, useUpdateTicket } from "@/lib/api/hooks";
+import { useCreateTicket, useUpdateTicket } from "@/hooks/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
@@ -45,11 +45,7 @@ export function TicketSubtasks({
   const subtaskProgress =
     subtasksTotal > 0 ? (subtasksDone / subtasksTotal) * 100 : 0;
 
-  const subtaskQueryKey = [
-    ...queryKeys.projects.all,
-    "subtasks",
-    { ticketId },
-  ];
+  const subtaskQueryKey = [...queryKeys.projects.all, "subtasks", { ticketId }];
 
   const createSubtask = useCreateTicket({
     onSuccess: () => {
@@ -62,8 +58,7 @@ export function TicketSubtasks({
         queryKey: queryKeys.projects.ticket(ticketId),
       });
     },
-    onError: (error) =>
-      toast.error(getErrorMessage(error)),
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const updateTicketMutation = useUpdateTicket(projectId, {
@@ -72,8 +67,7 @@ export function TicketSubtasks({
         queryClient.invalidateQueries({ queryKey: subtaskQueryKey });
       }, 300);
     },
-    onError: (error) =>
-      toast.error(getErrorMessage(error)),
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const handleAddSubtask = () => {
@@ -88,7 +82,7 @@ export function TicketSubtasks({
 
   const handleToggleSubtask = (
     subtaskId: number,
-    currentStatus: string | null | undefined
+    currentStatus: string | null | undefined,
   ) => {
     const newStatus = currentStatus === "DONE" ? "TODO" : "DONE";
     updateTicketMutation.mutate({ ticketId: subtaskId, status: newStatus });

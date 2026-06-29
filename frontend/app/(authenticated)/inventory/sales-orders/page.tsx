@@ -7,12 +7,28 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,@/hooks/api/inventory/sales-orders
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { useSalesOrders, type SalesOrderStatus } from "@/hooks/api/inventory/sales-orders";
+import {
+  useSalesOrders,
+  type SalesOrderStatus,
+} from "@/hooks/hooks/inventory/sales-orders";
 
 type SoStatus = SalesOrderStatus;
 type StatusFilter = "ALL" | SoStatus;
@@ -26,7 +42,10 @@ const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const STATUS_VARIANT: Record<SoStatus, "default" | "secondary" | "destructive" | "outline"> = {
+const STATUS_VARIANT: Record<
+  SoStatus,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   DRAFT: "secondary",
   CONFIRMED: "default",
   SHIPPED: "outline",
@@ -78,7 +97,9 @@ export default function SalesOrdersListPage() {
 
   const items = query.data?.items ?? [];
 
-  function handleRetry() { void query.refetch(); }
+  function handleRetry() {
+    void query.refetch();
+  }
 
   return (
     <PageWrapper
@@ -124,7 +145,9 @@ export default function SalesOrdersListPage() {
       </div>
 
       {query.isLoading && <LoadingState variant="table" rows={8} />}
-      {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
+      {query.error && (
+        <ErrorState description={query.error.message} onRetry={handleRetry} />
+      )}
 
       {!query.isLoading && !query.error && items.length === 0 && (
         <EmptyState
@@ -176,7 +199,9 @@ export default function SalesOrdersListPage() {
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/inventory/sales-orders/${so.id}`}>View</Link>
+                      <Link href={`/inventory/sales-orders/${so.id}`}>
+                        View
+                      </Link>
                     </Button>
                   </TableCell>
                 </TableRow>

@@ -16,17 +16,40 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Target, Calendar, MoreHorizontal, Trash2, Pencil, ChevronsUpDown, Check } from "lucide-react";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  Plus,
+  Target,
+  Calendar,
+  MoreHorizontal,
+  Trash2,
+  Pencil,
+  ChevronsUpDown,
+  Check,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Employee, Goal } from "@/types/hr";
 
@@ -48,12 +71,23 @@ export function GoalsTab() {
   const [endDate, setEndDate] = useState("");
 
   const employees = useMemo(
-    () => ((Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]).filter((e) => !!e.id),
-    [employeesRaw]
+    () =>
+      (
+        (Array.isArray(employeesRaw)
+          ? employeesRaw
+          : ((employeesRaw as { data?: Employee[] })?.data ?? [])) as Employee[]
+      ).filter((e) => !!e.id),
+    [employeesRaw],
   );
 
   const resetForm = useCallback(() => {
-    setUserId(""); setTitle(""); setDescription(""); setTargetValue(""); setStartDate(""); setEndDate(""); setEditGoal(null);
+    setUserId("");
+    setTitle("");
+    setDescription("");
+    setTargetValue("");
+    setStartDate("");
+    setEndDate("");
+    setEditGoal(null);
   }, []);
 
   const handleOpenEdit = useCallback((goal: Goal) => {
@@ -61,91 +95,194 @@ export function GoalsTab() {
     setTitle(goal.title);
     setDescription(goal.description ?? "");
     setTargetValue(goal.targetValue != null ? String(goal.targetValue) : "");
-    setStartDate(typeof goal.startDate === "string" ? goal.startDate.slice(0, 10) : "");
-    setEndDate(typeof goal.endDate === "string" ? goal.endDate.slice(0, 10) : "");
+    setStartDate(
+      typeof goal.startDate === "string" ? goal.startDate.slice(0, 10) : "",
+    );
+    setEndDate(
+      typeof goal.endDate === "string" ? goal.endDate.slice(0, 10) : "",
+    );
     setSheetOpen(true);
   }, []);
 
   const handleSave = useCallback(() => {
     const trimmedTitle = title.trim();
     const trimmedDesc = description.trim();
-    if (!editGoal && !userId) { toast.error("Please select an employee"); return; }
-    if (!trimmedTitle) { toast.error("Goal title is required"); return; }
-    if (trimmedTitle.length < 2) { toast.error("Goal title must be at least 2 characters"); return; }
-    if (trimmedTitle.length > 100) { toast.error("Goal title must be at most 100 characters"); return; }
-    if (!/[a-zA-Z0-9]/.test(trimmedTitle)) { toast.error("Goal title must contain at least one letter or number"); return; }
-    if (/\s{2,}/.test(trimmedTitle)) { toast.error("Goal title cannot have consecutive spaces"); return; }
-    if (trimmedDesc && trimmedDesc.length > 1000) { toast.error("Description must be at most 1000 characters"); return; }
+    if (!editGoal && !userId) {
+      toast.error("Please select an employee");
+      return;
+    }
+    if (!trimmedTitle) {
+      toast.error("Goal title is required");
+      return;
+    }
+    if (trimmedTitle.length < 2) {
+      toast.error("Goal title must be at least 2 characters");
+      return;
+    }
+    if (trimmedTitle.length > 100) {
+      toast.error("Goal title must be at most 100 characters");
+      return;
+    }
+    if (!/[a-zA-Z0-9]/.test(trimmedTitle)) {
+      toast.error("Goal title must contain at least one letter or number");
+      return;
+    }
+    if (/\s{2,}/.test(trimmedTitle)) {
+      toast.error("Goal title cannot have consecutive spaces");
+      return;
+    }
+    if (trimmedDesc && trimmedDesc.length > 1000) {
+      toast.error("Description must be at most 1000 characters");
+      return;
+    }
     if (targetValue !== "") {
       const tv = Number(targetValue);
-      if (isNaN(tv) || tv <= 0) { toast.error("Target value must be a positive number"); return; }
-      if (tv > 9_999_999_999) { toast.error("Target value is too large (max 10 digits)"); return; }
+      if (isNaN(tv) || tv <= 0) {
+        toast.error("Target value must be a positive number");
+        return;
+      }
+      if (tv > 9_999_999_999) {
+        toast.error("Target value is too large (max 10 digits)");
+        return;
+      }
     }
-    if (!startDate) { toast.error("Start date is required"); return; }
-    if (!endDate) { toast.error("End date is required"); return; }
+    if (!startDate) {
+      toast.error("Start date is required");
+      return;
+    }
+    if (!endDate) {
+      toast.error("End date is required");
+      return;
+    }
     if (!editGoal) {
       const today = new Date().toISOString().slice(0, 10);
-      if (startDate < today) { toast.error("Start date cannot be in the past"); return; }
+      if (startDate < today) {
+        toast.error("Start date cannot be in the past");
+        return;
+      }
     }
-    if (endDate < startDate) { toast.error("End date must be after start date"); return; }
-
-    if (editGoal) {
-      updateGoal.mutate({
-        goalId: editGoal.id,
-        title: trimmedTitle,
-        description: trimmedDesc || undefined,
-        targetValue: targetValue !== "" ? Number(targetValue) : undefined,
-        startDate,
-        endDate,
-      }, {
-        onSuccess: () => { toast.success("Goal updated"); setSheetOpen(false); resetForm(); },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
+    if (endDate < startDate) {
+      toast.error("End date must be after start date");
       return;
     }
 
-    createGoal.mutate({
-      userId,
-      title: trimmedTitle,
-      description: trimmedDesc || undefined,
-      targetValue: targetValue !== "" ? Number(targetValue) : undefined,
-      currentValue: 0,
-      startDate,
-      endDate,
-    }, {
-      onSuccess: () => { toast.success("Goal created"); setSheetOpen(false); resetForm(); },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [userId, title, description, targetValue, startDate, endDate, editGoal, createGoal, updateGoal, resetForm]);
+    if (editGoal) {
+      updateGoal.mutate(
+        {
+          goalId: editGoal.id,
+          title: trimmedTitle,
+          description: trimmedDesc || undefined,
+          targetValue: targetValue !== "" ? Number(targetValue) : undefined,
+          startDate,
+          endDate,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Goal updated");
+            setSheetOpen(false);
+            resetForm();
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+      return;
+    }
 
-  const handleTargetValueChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    if (v === "" || (/^\d{1,10}(\.\d{0,4})?$/.test(v) && Number(v) > 0)) setTargetValue(v);
-  }, []);
+    createGoal.mutate(
+      {
+        userId,
+        title: trimmedTitle,
+        description: trimmedDesc || undefined,
+        targetValue: targetValue !== "" ? Number(targetValue) : undefined,
+        currentValue: 0,
+        startDate,
+        endDate,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Goal created");
+          setSheetOpen(false);
+          resetForm();
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [
+    userId,
+    title,
+    description,
+    targetValue,
+    startDate,
+    endDate,
+    editGoal,
+    createGoal,
+    updateGoal,
+    resetForm,
+  ]);
 
-  const handleProgressUpdate = useCallback((goalId: number, progress: number) => {
-    const newProgress = Math.min(100, Math.max(0, progress));
-    updateGoal.mutate({ goalId, progress: newProgress, status: newProgress >= 100 ? "COMPLETED" : "IN_PROGRESS" }, {
-      onSuccess: () => toast.success("Progress updated"),
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [updateGoal]);
+  const handleTargetValueChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value;
+      if (v === "" || (/^\d{1,10}(\.\d{0,4})?$/.test(v) && Number(v) > 0))
+        setTargetValue(v);
+    },
+    [],
+  );
+
+  const handleProgressUpdate = useCallback(
+    (goalId: number, progress: number) => {
+      const newProgress = Math.min(100, Math.max(0, progress));
+      updateGoal.mutate(
+        {
+          goalId,
+          progress: newProgress,
+          status: newProgress >= 100 ? "COMPLETED" : "IN_PROGRESS",
+        },
+        {
+          onSuccess: () => toast.success("Progress updated"),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [updateGoal],
+  );
 
   const handleDelete = useCallback(() => {
     if (!deleteId) return;
     deleteGoal.mutate(deleteId, {
-      onSuccess: () => { toast.success("Goal deleted"); setDeleteId(null); },
+      onSuccess: () => {
+        toast.success("Goal deleted");
+        setDeleteId(null);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteId, deleteGoal]);
 
-  const handleOpenSheet = useCallback(() => { resetForm(); setSheetOpen(true); }, [resetForm]);
-  const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
+  const handleOpenSheet = useCallback(() => {
+    resetForm();
+    setSheetOpen(true);
+  }, [resetForm]);
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeleteId(null);
+  }, []);
 
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
-  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
-  const handleStartDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value), []);
-  const handleEndDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value), []);
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value),
+    [],
+  );
+  const handleDescriptionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+      setDescription(e.target.value),
+    [],
+  );
+  const handleStartDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value),
+    [],
+  );
+  const handleEndDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value),
+    [],
+  );
 
   if (isLoading) {
     return <LoadingState variant="cards" rows={4} />;
@@ -157,16 +294,27 @@ export function GoalsTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Goals</p>
-          <p className="text-3xl font-bold tabular-nums text-foreground">{goalsList.length}</p>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Total Goals
+          </p>
+          <p className="text-3xl font-bold tabular-nums text-foreground">
+            {goalsList.length}
+          </p>
         </div>
         <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" />New Goal
+          <Plus className="h-3.5 w-3.5" />
+          New Goal
         </Button>
       </div>
 
       {goalsList.length === 0 ? (
-        <EmptyState illustration={<Target className="h-10 w-10 text-muted-foreground/40" />} title="No goals set yet" compact />
+        <EmptyState
+          illustration={
+            <Target className="h-10 w-10 text-muted-foreground/40" />
+          }
+          title="No goals set yet"
+          compact
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {goalsList.map((goal: Goal) => {
@@ -175,13 +323,13 @@ export function GoalsTab() {
             const accentClass = isCompleted
               ? "border-l-emerald-500"
               : progress > 0
-              ? "border-l-blue-500"
-              : "border-l-slate-300 dark:border-l-slate-600";
+                ? "border-l-blue-500"
+                : "border-l-slate-300 dark:border-l-slate-600";
             const statusBadgeClass = isCompleted
               ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
               : goal.status === "IN_PROGRESS"
-              ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
-              : "border-slate-200 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
+                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
+                : "border-slate-200 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
 
             return (
               <Card
@@ -190,32 +338,54 @@ export function GoalsTab() {
               >
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <Badge className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}>
+                    <Badge
+                      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}
+                    >
                       {(goal.status ?? "IN_PROGRESS").replace("_", " ")}
                     </Badge>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-200">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-200"
+                        >
                           <MoreHorizontal className="h-3.5 w-3.5" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleOpenEdit(goal)}>
-                          <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                          Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleProgressUpdate(goal.id, (goal.progress ?? 0) + 10)}>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleProgressUpdate(
+                              goal.id,
+                              (goal.progress ?? 0) + 10,
+                            )
+                          }
+                        >
                           +10% Progress
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleProgressUpdate(goal.id, 100)}>
+                        <DropdownMenuItem
+                          onClick={() => handleProgressUpdate(goal.id, 100)}
+                        >
                           Mark Complete
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(goal.id)}>
-                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => setDeleteId(goal.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <p className="text-sm font-semibold text-foreground leading-tight">{goal.title}</p>
+                  <p className="text-sm font-semibold text-foreground leading-tight">
+                    {goal.title}
+                  </p>
                   {goal.endDate && (
                     <div className="flex items-center gap-1.5">
                       <div className="h-5 w-5 rounded-md bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
@@ -228,14 +398,20 @@ export function GoalsTab() {
                   )}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Progress</span>
-                      <span className="text-[10px] font-bold text-foreground">{progress}%</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Progress
+                      </span>
+                      <span className="text-[10px] font-bold text-foreground">
+                        {progress}%
+                      </span>
                     </div>
                     <Progress
                       value={progress}
                       className={cn(
                         "h-1.5",
-                        isCompleted ? "[&>div]:bg-emerald-500" : "[&>div]:bg-blue-500"
+                        isCompleted
+                          ? "[&>div]:bg-emerald-500"
+                          : "[&>div]:bg-blue-500",
                       )}
                     />
                   </div>
@@ -246,41 +422,86 @@ export function GoalsTab() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title={editGoal ? "Edit Goal" : "Create Goal"} onSubmit={handleSave} submitLabel={editGoal ? "Save Changes" : "Create"} isPending={createGoal.isPending || updateGoal.isPending}>
-        {!editGoal && <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee</label>
-          <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" aria-expanded={userPickerOpen} className="w-full justify-between font-normal">
-                <span className="truncate">{employees.find((e) => e.id === userId)?.name ?? employees.find((e) => e.id === userId)?.email ?? "Select employee"}</span>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Search employees..." />
-                <CommandList className="max-h-48 overflow-y-auto">
-                  <CommandEmpty>No employee found.</CommandEmpty>
-                  <CommandGroup>
-                    {employees.map((e) => (
-                      <CommandItem key={e.id} value={`${e.name ?? ""} ${e.email}`} onSelect={() => { setUserId(e.id); setUserPickerOpen(false); }}>
-                        <Check className={cn("mr-2 h-4 w-4", userId === e.id ? "opacity-100" : "opacity-0")} />
-                        {e.name ?? e.email}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>}
+      <HrSheet
+        open={sheetOpen}
+        onOpenChange={(open) => {
+          if (!open) resetForm();
+          setSheetOpen(open);
+        }}
+        title={editGoal ? "Edit Goal" : "Create Goal"}
+        onSubmit={handleSave}
+        submitLabel={editGoal ? "Save Changes" : "Create"}
+        isPending={createGoal.isPending || updateGoal.isPending}
+      >
+        {!editGoal && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Employee</label>
+            <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={userPickerOpen}
+                  className="w-full justify-between font-normal"
+                >
+                  <span className="truncate">
+                    {employees.find((e) => e.id === userId)?.name ??
+                      employees.find((e) => e.id === userId)?.email ??
+                      "Select employee"}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-[var(--radix-popover-trigger-width)] p-0"
+                align="start"
+              >
+                <Command>
+                  <CommandInput placeholder="Search employees..." />
+                  <CommandList className="max-h-48 overflow-y-auto">
+                    <CommandEmpty>No employee found.</CommandEmpty>
+                    <CommandGroup>
+                      {employees.map((e) => (
+                        <CommandItem
+                          key={e.id}
+                          value={`${e.name ?? ""} ${e.email}`}
+                          onSelect={() => {
+                            setUserId(e.id);
+                            setUserPickerOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              userId === e.id ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          {e.name ?? e.email}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Title</label>
-          <Input placeholder="e.g., Complete Q2 OKRs" value={title} onChange={handleTitleChange} />
+          <Input
+            placeholder="e.g., Complete Q2 OKRs"
+            value={title}
+            onChange={handleTitleChange}
+          />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Description</label>
-          <Textarea placeholder="Goal details..." value={description} onChange={handleDescriptionChange} rows={3} />
+          <Textarea
+            placeholder="Goal details..."
+            value={description}
+            onChange={handleDescriptionChange}
+            rows={3}
+          />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Target Value</label>
@@ -294,7 +515,11 @@ export function GoalsTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Start Date</label>
-            <Input type="date" value={startDate} onChange={handleStartDateChange} />
+            <Input
+              type="date"
+              value={startDate}
+              onChange={handleStartDateChange}
+            />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">End Date</label>

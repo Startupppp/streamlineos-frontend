@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { useScheduleInterview, useCandidates, useJobPostings } from "@/hooks/api/hr";
-import { useInterviewerAvailability } from "@/hooks/api/hr/recruitment";
+import {@/hooks/api/hr
+  useScheduleInterview,@/hooks/api/hr/recruitment
+  useCandidates,
+  useJobPostings,@/hooks/api/calendar
+} from "@/hooks/hooks/hr";
+import { useInterviewerAvailability } from "@/hooks/hooks/hr/recruitment";
 import { InterviewerAvailabilityGrid } from "@/components/hr/recruitment/interviewer-availability-grid";
-import { useCalendarOrgMembers } from "@/hooks/api/calendar";
+import { useCalendarOrgMembers } from "@/hooks/hooks/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -38,7 +42,18 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { Check, ChevronsUpDown, Plus, X, User, Briefcase, Calendar, Clock, Video, Bell } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  Plus,
+  X,
+  User,
+  Briefcase,
+  Calendar,
+  Clock,
+  Video,
+  Bell,
+} from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
@@ -62,11 +77,21 @@ interface FieldGroupProps {
   children: React.ReactNode;
 }
 
-function FieldGroup({ icon: Icon, label, colorClass, children }: FieldGroupProps) {
+function FieldGroup({
+  icon: Icon,
+  label,
+  colorClass,
+  children,
+}: FieldGroupProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center shrink-0", colorClass)}>
+        <div
+          className={cn(
+            "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+            colorClass,
+          )}
+        >
           <Icon className="h-3.5 w-3.5" />
         </div>
         <span className="text-sm font-semibold text-foreground">{label}</span>
@@ -76,7 +101,10 @@ function FieldGroup({ icon: Icon, label, colorClass, children }: FieldGroupProps
   );
 }
 
-export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetProps) {
+export function InterviewFormSheet({
+  open,
+  onOpenChange,
+}: InterviewFormSheetProps) {
   const { data: allCandidates } = useCandidates();
   const { data: jobPostings } = useJobPostings({ status: "OPEN" });
   const { data: orgMembers } = useCalendarOrgMembers();
@@ -126,7 +154,9 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
 
   const toggleInterviewer = useCallback((userId: string) => {
     setInterviewerIds((prev) =>
-      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
     );
   }, []);
 
@@ -157,7 +187,11 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
       return;
     }
     const numDuration = Number(duration);
-    if (!Number.isInteger(numDuration) || numDuration < 15 || numDuration > 480) {
+    if (
+      !Number.isInteger(numDuration) ||
+      numDuration < 15 ||
+      numDuration > 480
+    ) {
       toast.error("Duration must be a whole number between 15 and 480 minutes");
       return;
     }
@@ -185,7 +219,20 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [candidateId, jobPostingId, format_, scheduledAt, duration, meetLink, interviewerIds, notifyEmail, notifyWhatsApp, scheduleInterview, resetForm, onOpenChange]);
+  }, [
+    candidateId,
+    jobPostingId,
+    format_,
+    scheduledAt,
+    duration,
+    meetLink,
+    interviewerIds,
+    notifyEmail,
+    notifyWhatsApp,
+    scheduleInterview,
+    resetForm,
+    onOpenChange,
+  ]);
 
   function handleFormatChange(v: string) {
     setFormat_(v as InterviewFormat);
@@ -214,7 +261,13 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
   }
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) resetForm(); }}>
+    <Sheet
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) resetForm();
+      }}
+    >
       <SheetTrigger asChild>
         <Button size="sm" className="gap-1.5 h-8">
           <Plus className="h-3.5 w-3.5" />
@@ -223,9 +276,12 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
       </SheetTrigger>
       <SheetContent className="flex flex-col p-0 gap-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b border-border/60 gap-1">
-          <SheetTitle className="text-base font-semibold">Schedule Interview</SheetTitle>
+          <SheetTitle className="text-base font-semibold">
+            Schedule Interview
+          </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">
-            Set up an interview session. Notifications will be sent automatically.
+            Set up an interview session. Notifications will be sent
+            automatically.
           </SheetDescription>
         </SheetHeader>
 
@@ -235,7 +291,10 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
             label="Candidate"
             colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
           >
-            <Popover open={candidatePickerOpen} onOpenChange={setCandidatePickerOpen}>
+            <Popover
+              open={candidatePickerOpen}
+              onOpenChange={setCandidatePickerOpen}
+            >
               <PopoverTrigger asChild>
                 <Button
                   type="button"
@@ -252,7 +311,10 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <PopoverContent
+                className="w-[var(--radix-popover-trigger-width)] p-0"
+                align="start"
+              >
                 <Command>
                   <CommandInput placeholder="Search candidates..." />
                   <CommandList>
@@ -270,7 +332,9 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                candidateId === idStr ? "opacity-100" : "opacity-0",
+                                candidateId === idStr
+                                  ? "opacity-100"
+                                  : "opacity-0",
                               )}
                             />
                             <span className="truncate">{label}</span>
@@ -409,7 +473,10 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
                   ))}
                 </div>
               )}
-              <Popover open={interviewerPickerOpen} onOpenChange={setInterviewerPickerOpen}>
+              <Popover
+                open={interviewerPickerOpen}
+                onOpenChange={setInterviewerPickerOpen}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
@@ -421,7 +488,10 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
                     Add interviewer
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <PopoverContent
+                  className="w-[var(--radix-popover-trigger-width)] p-0"
+                  align="start"
+                >
                   <Command>
                     <CommandInput placeholder="Search members..." />
                     <CommandList>
@@ -444,7 +514,9 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
                               />
                               <div className="flex flex-col">
                                 <span className="text-sm">{label}</span>
-                                <span className="text-xs text-muted-foreground">{m.role}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {m.role}
+                                </span>
                               </div>
                             </CommandItem>
                           );
@@ -464,13 +536,17 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
               <div className="h-7 w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <Bell className="h-3.5 w-3.5" />
               </div>
-              <span className="text-sm font-semibold text-foreground">Notifications</span>
+              <span className="text-sm font-semibold text-foreground">
+                Notifications
+              </span>
             </div>
             <div className="rounded-2xl border border-border bg-muted/30 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
                 <div>
                   <p className="text-sm font-medium text-foreground">Email</p>
-                  <p className="text-[11px] text-muted-foreground">Notify via email</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Notify via email
+                  </p>
                 </div>
                 <Switch
                   checked={notifyEmail}
@@ -480,8 +556,12 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
               </div>
               <div className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="text-sm font-medium text-foreground">WhatsApp</p>
-                  <p className="text-[11px] text-muted-foreground">Requires Twilio configuration</p>
+                  <p className="text-sm font-medium text-foreground">
+                    WhatsApp
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Requires Twilio configuration
+                  </p>
                 </div>
                 <Switch
                   checked={notifyWhatsApp}
@@ -494,7 +574,11 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
         </div>
 
         <SheetFooter className="shrink-0 px-6 py-4 border-t border-border/60 bg-muted/30 flex-row gap-2">
-          <Button variant="outline" className="flex-1 h-9" onClick={handleCancelSheet}>
+          <Button
+            variant="outline"
+            className="flex-1 h-9"
+            onClick={handleCancelSheet}
+          >
             Cancel
           </Button>
           <Button
@@ -502,7 +586,9 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
             onClick={handleCreate}
             disabled={scheduleInterview.isPending}
           >
-            {scheduleInterview.isPending ? "Scheduling..." : "Schedule Interview"}
+            {scheduleInterview.isPending
+              ? "Scheduling..."
+              : "Schedule Interview"}
           </Button>
         </SheetFooter>
       </SheetContent>

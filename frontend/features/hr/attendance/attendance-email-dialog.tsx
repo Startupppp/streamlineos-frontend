@@ -61,13 +61,16 @@ function MultiSelectField({
   const [open, setOpen] = useState(false);
 
   const available = useMemo(
-    () => options.filter((o) => !excludedEmails.includes(o.email) && !selected.includes(o.email)),
-    [options, excludedEmails, selected]
+    () =>
+      options.filter(
+        (o) => !excludedEmails.includes(o.email) && !selected.includes(o.email),
+      ),
+    [options, excludedEmails, selected],
   );
 
   const selectedOptions = useMemo(
     () => options.filter((o) => selected.includes(o.email)),
-    [options, selected]
+    [options, selected],
   );
 
   const handleSelect = (email: string) => {
@@ -77,7 +80,9 @@ function MultiSelectField({
 
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">{label}</Label>
+      <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+        {label}
+      </Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
@@ -85,15 +90,22 @@ function MultiSelectField({
             className="w-full flex items-center justify-between h-9 rounded-md border border-input bg-background px-3 text-sm text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors duration-200"
             aria-expanded={open}
           >
-            <span className="text-muted-foreground truncate text-xs">{placeholder}</span>
+            <span className="text-muted-foreground truncate text-xs">
+              {placeholder}
+            </span>
             <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-2" />
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-72 p-0" align="start">
           <Command>
-            <CommandInput placeholder="Search by name or email..." className="h-8 text-xs" />
+            <CommandInput
+              placeholder="Search by name or email..."
+              className="h-8 text-xs"
+            />
             <CommandList className="max-h-48 overflow-y-auto">
-              <CommandEmpty className="text-xs py-4">No users available</CommandEmpty>
+              <CommandEmpty className="text-xs py-4">
+                No users available
+              </CommandEmpty>
               <CommandGroup>
                 {available.map((opt) => (
                   <CommandItem
@@ -105,7 +117,9 @@ function MultiSelectField({
                     <Check className="h-3.5 w-3.5 mr-2 opacity-0" />
                     <div className="flex flex-col min-w-0">
                       <span className="font-medium truncate">{opt.name}</span>
-                      <span className="text-muted-foreground truncate">{opt.email}</span>
+                      <span className="text-muted-foreground truncate">
+                        {opt.email}
+                      </span>
                     </div>
                   </CommandItem>
                 ))}
@@ -167,20 +181,41 @@ export function AttendanceEmailDialog() {
 
   const toExcludedForCc = useMemo(() => toEmails, [toEmails]);
 
-  const addTo = useCallback((email: string) => setToEmails((prev) => [...prev, email]), []);
-  const removeTo = useCallback((email: string) => setToEmails((prev) => prev.filter((e) => e !== email)), []);
+  const addTo = useCallback(
+    (email: string) => setToEmails((prev) => [...prev, email]),
+    [],
+  );
+  const removeTo = useCallback(
+    (email: string) => setToEmails((prev) => prev.filter((e) => e !== email)),
+    [],
+  );
 
-  const addCc = useCallback((email: string) => setCcEmails((prev) => [...prev, email]), []);
-  const removeCc = useCallback((email: string) => setCcEmails((prev) => prev.filter((e) => e !== email)), []);
+  const addCc = useCallback(
+    (email: string) => setCcEmails((prev) => [...prev, email]),
+    [],
+  );
+  const removeCc = useCallback(
+    (email: string) => setCcEmails((prev) => prev.filter((e) => e !== email)),
+    [],
+  );
 
-  const addBcc = useCallback((email: string) => setBccEmails((prev) => [...prev.filter((e) => e !== email), email]), []);
-  const removeBcc = useCallback((email: string) => setBccEmails((prev) => prev.filter((e) => e !== email)), []);
+  const addBcc = useCallback(
+    (email: string) =>
+      setBccEmails((prev) => [...prev.filter((e) => e !== email), email]),
+    [],
+  );
+  const removeBcc = useCallback(
+    (email: string) => setBccEmails((prev) => prev.filter((e) => e !== email)),
+    [],
+  );
 
   const dateError = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
-    if (startDate && startDate > today) return "Start date cannot be in the future";
+    if (startDate && startDate > today)
+      return "Start date cannot be in the future";
     if (endDate && endDate > today) return "End date cannot be in the future";
-    if (startDate && endDate && startDate > endDate) return "Start date must be before end date";
+    if (startDate && endDate && startDate > endDate)
+      return "Start date must be before end date";
     return null;
   }, [startDate, endDate]);
 
@@ -210,7 +245,7 @@ export function AttendanceEmailDialog() {
 
     setIsSending(true);
     try {
-      await apiClient.post('/hr/attendance/email-report', {
+      await apiClient.post("/hr/attendance/email-report", {
         to: toEmails,
         cc: ccEmails,
         bcc: bccEmails,
@@ -220,7 +255,9 @@ export function AttendanceEmailDialog() {
       toast.success("Attendance report sent successfully");
       handleClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send attendance report");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to send attendance report",
+      );
     } finally {
       setIsSending(false);
     }
@@ -260,7 +297,9 @@ export function AttendanceEmailDialog() {
             </Label>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-[10px] font-medium text-muted-foreground">From</Label>
+                <Label className="text-[10px] font-medium text-muted-foreground">
+                  From
+                </Label>
                 <DatePicker
                   value={startDate}
                   onChange={setStartDate}
@@ -269,7 +308,9 @@ export function AttendanceEmailDialog() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] font-medium text-muted-foreground">To</Label>
+                <Label className="text-[10px] font-medium text-muted-foreground">
+                  To
+                </Label>
                 <DatePicker
                   value={endDate}
                   onChange={setEndDate}
@@ -317,15 +358,41 @@ export function AttendanceEmailDialog() {
 
           {totalCount > 0 && (
             <p className="text-[11px] text-muted-foreground">
-              Sending to <span className="font-semibold text-foreground">{toEmails.length}</span> recipient(s)
-              {ccEmails.length > 0 && <>, <span className="font-semibold text-foreground">{ccEmails.length}</span> CC</>}
-              {bccEmails.length > 0 && <>, <span className="font-semibold text-foreground">{bccEmails.length}</span> BCC</>}
+              Sending to{" "}
+              <span className="font-semibold text-foreground">
+                {toEmails.length}
+              </span>{" "}
+              recipient(s)
+              {ccEmails.length > 0 && (
+                <>
+                  ,{" "}
+                  <span className="font-semibold text-foreground">
+                    {ccEmails.length}
+                  </span>{" "}
+                  CC
+                </>
+              )}
+              {bccEmails.length > 0 && (
+                <>
+                  ,{" "}
+                  <span className="font-semibold text-foreground">
+                    {bccEmails.length}
+                  </span>{" "}
+                  BCC
+                </>
+              )}
             </p>
           )}
         </div>
 
         <DialogFooter className="gap-2 pt-1">
-          <Button variant="outline" size="sm" onClick={handleClose} disabled={isSending} className="h-9">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClose}
+            disabled={isSending}
+            className="h-9"
+          >
             Cancel
           </Button>
           <Button

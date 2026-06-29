@@ -66,7 +66,13 @@ const PROVIDERS: { value: GitProvider; label: string }[] = [
   { value: "bitbucket", label: "Bitbucket" },
 ];
 
-function ProviderIcon({ provider, className }: { provider: GitProvider; className?: string }) {
+function ProviderIcon({
+  provider,
+  className,
+}: {
+  provider: GitProvider;
+  className?: string;
+}) {
   if (provider === "github") return <Github className={className} />;
   if (provider === "gitlab") return <Gitlab className={className} />;
   return <GitBranch className={className} />;
@@ -79,7 +85,14 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   }, [value, label]);
 
   return (
-    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleCopy} aria-label={`Copy ${label.toLowerCase()}`}>
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7 shrink-0"
+      onClick={handleCopy}
+      aria-label={`Copy ${label.toLowerCase()}`}
+    >
       <Copy className="h-3.5 w-3.5" />
     </Button>
   );
@@ -99,8 +112,14 @@ function ConnectionRow({
   const [revealed, setRevealed] = useState(false);
 
   const handleToggleReveal = useCallback(() => setRevealed((v) => !v), []);
-  const handleToggle = useCallback(() => onToggle(connection), [connection, onToggle]);
-  const handleDelete = useCallback(() => onDelete(connection.id), [connection.id, onDelete]);
+  const handleToggle = useCallback(
+    () => onToggle(connection),
+    [connection, onToggle],
+  );
+  const handleDelete = useCallback(
+    () => onDelete(connection.id),
+    [connection.id, onDelete],
+  );
 
   return (
     <Card className="shadow-noir">
@@ -108,25 +127,37 @@ function ConnectionRow({
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-              <ProviderIcon provider={connection.provider} className="h-4.5 w-4.5 text-foreground" />
+              <ProviderIcon
+                provider={connection.provider}
+                className="h-4.5 w-4.5 text-foreground"
+              />
             </div>
             <div className="min-w-0">
               <CardTitle className="text-sm truncate">
                 {connection.repoName || connection.repoUrl}
               </CardTitle>
-              <p className="text-xs text-muted-foreground truncate mt-0.5">{connection.repoUrl}</p>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                {connection.repoUrl}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <div className="flex items-center gap-2">
-              <Badge variant={connection.isActive ? "default" : "secondary"} className="text-[10px]">
+              <Badge
+                variant={connection.isActive ? "default" : "secondary"}
+                className="text-[10px]"
+              >
                 {connection.isActive ? "Active" : "Paused"}
               </Badge>
               <Switch
                 checked={connection.isActive}
                 onCheckedChange={handleToggle}
                 disabled={isToggling}
-                aria-label={connection.isActive ? "Pause connection" : "Activate connection"}
+                aria-label={
+                  connection.isActive
+                    ? "Pause connection"
+                    : "Activate connection"
+                }
               />
             </div>
             <Button
@@ -145,12 +176,16 @@ function ConnectionRow({
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">Webhook URL</Label>
           <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5">
-            <code className="text-xs font-mono truncate flex-1 min-w-0">{connection.webhookUrl}</code>
+            <code className="text-xs font-mono truncate flex-1 min-w-0">
+              {connection.webhookUrl}
+            </code>
             <CopyButton value={connection.webhookUrl} label="Webhook URL" />
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Webhook secret</Label>
+          <Label className="text-xs text-muted-foreground">
+            Webhook secret
+          </Label>
           <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5">
             <code className="text-xs font-mono truncate flex-1 min-w-0">
               {revealed ? connection.maskedSecret : "••••••••••••"}
@@ -163,11 +198,16 @@ function ConnectionRow({
               onClick={handleToggleReveal}
               aria-label={revealed ? "Hide secret" : "Reveal secret"}
             >
-              {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              {revealed ? (
+                <EyeOff className="h-3.5 w-3.5" />
+              ) : (
+                <Eye className="h-3.5 w-3.5" />
+              )}
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground/80">
-            The full secret is shown only once at creation. Recreate the connection if it is lost.
+            The full secret is shown only once at creation. Recreate the
+            connection if it is lost.
           </p>
         </div>
       </CardContent>
@@ -182,9 +222,12 @@ function CreatedSecretDialog({
   created: CreatedGitConnection;
   onClose: () => void;
 }) {
-  const handleOpenChange = useCallback((open: boolean) => {
-    if (!open) onClose();
-  }, [onClose]);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) onClose();
+    },
+    [onClose],
+  );
 
   return (
     <Dialog open onOpenChange={handleOpenChange}>
@@ -202,14 +245,20 @@ function CreatedSecretDialog({
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Webhook URL</Label>
             <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5">
-              <code className="text-xs font-mono truncate flex-1 min-w-0">{created.webhookUrl}</code>
+              <code className="text-xs font-mono truncate flex-1 min-w-0">
+                {created.webhookUrl}
+              </code>
               <CopyButton value={created.webhookUrl} label="Webhook URL" />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Webhook secret</Label>
+            <Label className="text-xs text-muted-foreground">
+              Webhook secret
+            </Label>
             <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5">
-              <code className="text-xs font-mono truncate flex-1 min-w-0">{created.webhookSecret}</code>
+              <code className="text-xs font-mono truncate flex-1 min-w-0">
+                {created.webhookSecret}
+              </code>
               <CopyButton value={created.webhookSecret} label="Secret" />
             </div>
           </div>
@@ -230,19 +279,22 @@ function SetupInstructions() {
       </CardHeader>
       <CardContent className="text-xs text-muted-foreground space-y-2 leading-relaxed">
         <p>
-          Add a connection, then paste the webhook URL into your repository settings
-          (GitHub: <span className="font-mono">Settings → Webhooks</span>, GitLab:{" "}
+          Add a connection, then paste the webhook URL into your repository
+          settings (GitHub:{" "}
+          <span className="font-mono">Settings → Webhooks</span>, GitLab:{" "}
           <span className="font-mono">Settings → Webhooks</span>).
         </p>
         <p>
-          For GitHub set the content type to <span className="font-mono">application/json</span> and
-          paste the secret into the <span className="font-mono">Secret</span> field. For GitLab paste
-          the secret into the <span className="font-mono">Secret token</span> field.
+          For GitHub set the content type to{" "}
+          <span className="font-mono">application/json</span> and paste the
+          secret into the <span className="font-mono">Secret</span> field. For
+          GitLab paste the secret into the{" "}
+          <span className="font-mono">Secret token</span> field.
         </p>
         <p>
-          Reference a ticket in a commit message or pull request title using its key
-          (<span className="font-mono">ABC-12-34</span>) or number (<span className="font-mono">#34</span>)
-          to link it automatically.
+          Reference a ticket in a commit message or pull request title using its
+          key (<span className="font-mono">ABC-12-34</span>) or number (
+          <span className="font-mono">#34</span>) to link it automatically.
         </p>
       </CardContent>
     </Card>
@@ -250,7 +302,12 @@ function SetupInstructions() {
 }
 
 export default function GitIntegrationPage() {
-  const { data: connections, isLoading, isError, refetch } = useGitConnections();
+  const {
+    data: connections,
+    isLoading,
+    isError,
+    refetch,
+  } = useGitConnections();
   const createConnection = useCreateGitConnection();
   const updateConnection = useUpdateGitConnection();
   const deleteConnection = useDeleteGitConnection();
@@ -268,10 +325,13 @@ export default function GitIntegrationPage() {
     setRepoName("");
   }, []);
 
-  const handleDialogChange = useCallback((open: boolean) => {
-    setDialogOpen(open);
-    if (!open) resetForm();
-  }, [resetForm]);
+  const handleDialogChange = useCallback(
+    (open: boolean) => {
+      setDialogOpen(open);
+      if (!open) resetForm();
+    },
+    [resetForm],
+  );
 
   const handleOpenDialog = useCallback(() => setDialogOpen(true), []);
 
@@ -279,13 +339,19 @@ export default function GitIntegrationPage() {
     setProvider(value as GitProvider);
   }, []);
 
-  const handleRepoUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setRepoUrl(e.target.value);
-  }, []);
+  const handleRepoUrlChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setRepoUrl(e.target.value);
+    },
+    [],
+  );
 
-  const handleRepoNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setRepoName(e.target.value);
-  }, []);
+  const handleRepoNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setRepoName(e.target.value);
+    },
+    [],
+  );
 
   const handleCreate = useCallback(() => {
     const trimmedUrl = repoUrl.trim();
@@ -307,15 +373,23 @@ export default function GitIntegrationPage() {
     );
   }, [provider, repoUrl, repoName, createConnection, resetForm]);
 
-  const handleToggle = useCallback((connection: GitConnection) => {
-    updateConnection.mutate(
-      { id: connection.id, isActive: !connection.isActive },
-      {
-        onSuccess: () => toast.success(connection.isActive ? "Connection paused" : "Connection activated"),
-        onError: () => toast.error("Failed to update connection"),
-      },
-    );
-  }, [updateConnection]);
+  const handleToggle = useCallback(
+    (connection: GitConnection) => {
+      updateConnection.mutate(
+        { id: connection.id, isActive: !connection.isActive },
+        {
+          onSuccess: () =>
+            toast.success(
+              connection.isActive
+                ? "Connection paused"
+                : "Connection activated",
+            ),
+          onError: () => toast.error("Failed to update connection"),
+        },
+      );
+    },
+    [updateConnection],
+  );
 
   const handleConfirmDelete = useCallback(() => {
     if (deleteId === null) return;
@@ -334,7 +408,9 @@ export default function GitIntegrationPage() {
 
   const handleCloseCreated = useCallback(() => setCreated(null), []);
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <PageWrapper
@@ -386,7 +462,8 @@ export default function GitIntegrationPage() {
           <DialogHeader>
             <DialogTitle>Add Git connection</DialogTitle>
             <DialogDescription>
-              We generate a webhook URL and secret for you to paste into your repository.
+              We generate a webhook URL and secret for you to paste into your
+              repository.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -435,22 +512,30 @@ export default function GitIntegrationPage() {
             <Button variant="outline" onClick={() => handleDialogChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={createConnection.isPending || !repoUrl.trim()}>
+            <Button
+              onClick={handleCreate}
+              disabled={createConnection.isPending || !repoUrl.trim()}
+            >
               {createConnection.isPending ? "Creating..." : "Create connection"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {created && <CreatedSecretDialog created={created} onClose={handleCloseCreated} />}
+      {created && (
+        <CreatedSecretDialog created={created} onClose={handleCloseCreated} />
+      )}
 
-      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogChange}>
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={handleDeleteDialogChange}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete connection?</AlertDialogTitle>
             <AlertDialogDescription>
-              The webhook will stop linking commits and pull requests. Existing links are kept. This
-              action cannot be undone.
+              The webhook will stop linking commits and pull requests. Existing
+              links are kept. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

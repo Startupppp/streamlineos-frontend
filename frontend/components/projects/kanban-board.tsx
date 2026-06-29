@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUpdateTicketOrder } from "@/lib/api/hooks";
+import { useUpdateTicketOrder } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import {
@@ -21,7 +21,7 @@ import { AnimatePresence, motion } from "framer-motion";
 type UpdateOrderContext = { previous: KanbanTicket[] };
 
 function isUpdateOrderContext(v: unknown): v is UpdateOrderContext {
-  return typeof v === 'object' && v !== null && 'previous' in v;
+  return typeof v === "object" && v !== null && "previous" in v;
 }
 
 const DEFAULT_COLUMNS: KanbanColumn[] = [

@@ -1,24 +1,45 @@
 "use client";
 
 import React, { useCallback, useMemo } from "react";
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval } from "date-fns";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isWithinInterval,
+} from "date-fns";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";@/hooks/api/hr
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaveIllustration } from "@/components/illustrations";
-import { Filter, Download, CalendarDays, TrendingUp, History } from "lucide-react";
-import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/hooks/api/hr";
+import {
+  Filter,@/hooks/api/access
+  Download,
+  CalendarDays,
+  TrendingUp,
+  History,
+} from "lucide-react";
+import {
+  useCancelLeave,
+  useApproveLeaveDedicated,
+  useRejectLeaveDedicated,
+  useRevertLeave,
+} from "@/hooks/hooks/hr";
 import { cn, resolveImageUrl } from "@/lib/utils";
 
-import type { LeaveBalance, LeaveRequest, ApprovedLeave } from "./leaves-shared";
+import type {
+  LeaveBalance,
+  LeaveRequest,
+  ApprovedLeave,
+} from "./leaves-shared";
 import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
 import { ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
-import { useCan } from "@/hooks/api/access";
+import { useCan } from "@/hooks/hooks/access";
 
 const DONUT_COLORS = ["#06b6d4", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
 
@@ -35,7 +56,10 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
         .map((b) => ({
           name: b.typeName!,
           remaining: Math.max(0, parseFloat(b.balance || "0")),
-          used: Math.max(0, (b.daysPerYear ?? 0) - parseFloat(b.balance || "0")),
+          used: Math.max(
+            0,
+            (b.daysPerYear ?? 0) - parseFloat(b.balance || "0"),
+          ),
           total: b.daysPerYear ?? 0,
         })),
     [balances],
@@ -44,8 +68,18 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
   if (data.length === 0) return null;
 
   const chartData = data.flatMap((d, i) => [
-    { name: `${d.name} (used)`, value: d.used, color: DONUT_COLORS[i % DONUT_COLORS.length], opacity: 0.3 },
-    { name: `${d.name} (remaining)`, value: d.remaining, color: DONUT_COLORS[i % DONUT_COLORS.length], opacity: 1 },
+    {
+      name: `${d.name} (used)`,
+      value: d.used,
+      color: DONUT_COLORS[i % DONUT_COLORS.length],
+      opacity: 0.3,
+    },
+    {
+      name: `${d.name} (remaining)`,
+      value: d.remaining,
+      color: DONUT_COLORS[i % DONUT_COLORS.length],
+      opacity: 1,
+    },
   ]);
 
   return (
@@ -53,7 +87,10 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
           <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-            <TrendingUp className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+            <TrendingUp
+              className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
+              aria-hidden="true"
+            />
           </div>
           Balance Overview
         </CardTitle>
@@ -94,9 +131,13 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span
                       className="h-2 w-2 rounded-full shrink-0"
-                      style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }}
+                      style={{
+                        backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length],
+                      }}
                     />
-                    <span className="text-[11px] font-medium text-muted-foreground truncate">{item.name}</span>
+                    <span className="text-[11px] font-medium text-muted-foreground truncate">
+                      {item.name}
+                    </span>
                   </div>
                   <span className="text-[11px] font-semibold text-foreground shrink-0 tabular-nums">
                     {item.remaining}/{item.total}
@@ -120,7 +161,11 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
   );
 }
 
-function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave[] }) {
+function LeaveCalendarWidget({
+  approvedLeaves,
+}: {
+  approvedLeaves: ApprovedLeave[];
+}) {
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
@@ -149,7 +194,10 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
           <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
-            <CalendarDays className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            <CalendarDays
+              className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400"
+              aria-hidden="true"
+            />
           </div>
           Who&apos;s Out This Week
         </CardTitle>
@@ -171,7 +219,9 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
                 <div
                   className={cn(
                     "text-[10px] font-medium text-center leading-tight mb-1",
-                    isToday ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground",
+                    isToday
+                      ? "text-blue-600 dark:text-blue-400"
+                      : "text-muted-foreground",
                   )}
                 >
                   {format(day, "EEE")}
@@ -182,7 +232,11 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
                 </div>
                 <div className="flex flex-wrap gap-0.5 justify-center">
                   {leaves.slice(0, 3).map((l) => (
-                    <Avatar key={l.id} className="h-5 w-5" title={`${l.user?.firstName} ${l.user?.lastName}`}>
+                    <Avatar
+                      key={l.id}
+                      className="h-5 w-5"
+                      title={`${l.user?.firstName} ${l.user?.lastName}`}
+                    >
                       <AvatarImage src={resolveImageUrl(l.user?.image)} />
                       <AvatarFallback className="text-[8px] bg-amber-100 text-amber-700">
                         {l.user?.firstName?.[0]}
@@ -211,7 +265,11 @@ interface LeavesTabContentProps {
   approvedLeavesThisWeek?: ApprovedLeave[];
 }
 
-export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThisWeek = [] }: LeavesTabContentProps) {
+export function LeavesTabContent({
+  balances,
+  myLeaveRequests,
+  approvedLeavesThisWeek = [],
+}: LeavesTabContentProps) {
   const { data: session } = useSession();
   const isAdmin = useCan("hr:employees:manage");
 
@@ -222,39 +280,51 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
   const revertMutation = useRevertLeave();
   const cancelMutation = useCancelLeave();
 
-  const handleApproveRequest = useCallback((id: number) => {
-    approveMutation.mutate(
-      { leaveId: id },
-      {
-        onSuccess: () => toast.success("Leave request approved"),
-        onError: (err) => toast.error(err.message || "Failed to approve"),
-      },
-    );
-  }, [approveMutation]);
+  const handleApproveRequest = useCallback(
+    (id: number) => {
+      approveMutation.mutate(
+        { leaveId: id },
+        {
+          onSuccess: () => toast.success("Leave request approved"),
+          onError: (err) => toast.error(err.message || "Failed to approve"),
+        },
+      );
+    },
+    [approveMutation],
+  );
 
-  const handleRejectRequest = useCallback((id: number, reason?: string) => {
-    rejectMutation.mutate(
-      { leaveId: id, reason: reason ?? "" },
-      {
-        onSuccess: () => toast.success("Leave request rejected"),
-        onError: (err) => toast.error(err.message || "Failed to reject"),
-      },
-    );
-  }, [rejectMutation]);
+  const handleRejectRequest = useCallback(
+    (id: number, reason?: string) => {
+      rejectMutation.mutate(
+        { leaveId: id, reason: reason ?? "" },
+        {
+          onSuccess: () => toast.success("Leave request rejected"),
+          onError: (err) => toast.error(err.message || "Failed to reject"),
+        },
+      );
+    },
+    [rejectMutation],
+  );
 
-  const handleRevertRequest = useCallback((id: number) => {
-    revertMutation.mutate(id, {
-      onSuccess: () => toast.success("Leave request reverted to pending"),
-      onError: (err) => toast.error(err.message || "Failed to revert"),
-    });
-  }, [revertMutation]);
+  const handleRevertRequest = useCallback(
+    (id: number) => {
+      revertMutation.mutate(id, {
+        onSuccess: () => toast.success("Leave request reverted to pending"),
+        onError: (err) => toast.error(err.message || "Failed to revert"),
+      });
+    },
+    [revertMutation],
+  );
 
-  const handleCancelRequest = useCallback((id: number) => {
-    cancelMutation.mutate(id, {
-      onSuccess: () => toast.success("Leave request cancelled"),
-      onError: (err) => toast.error(err.message || "Failed to cancel"),
-    });
-  }, [cancelMutation]);
+  const handleCancelRequest = useCallback(
+    (id: number) => {
+      cancelMutation.mutate(id, {
+        onSuccess: () => toast.success("Leave request cancelled"),
+        onError: (err) => toast.error(err.message || "Failed to cancel"),
+      });
+    },
+    [cancelMutation],
+  );
 
   const handleExportExcel = useCallback(async () => {
     if (myLeaveRequests.length === 0) {
@@ -313,9 +383,15 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
         </p>
       </div>
 
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-3" role="list" aria-label="Leave balances">
+      <div
+        className="grid gap-3 grid-cols-2 lg:grid-cols-3"
+        role="list"
+        aria-label="Leave balances"
+      >
         {balances
-          .filter((bal) => bal.typeName && ALLOWED_LEAVE_TYPE_NAMES.has(bal.typeName))
+          .filter(
+            (bal) => bal.typeName && ALLOWED_LEAVE_TYPE_NAMES.has(bal.typeName),
+          )
           .map((bal, index) => (
             <BalanceCard
               key={`${bal.leaveTypeId}-${index}`}
@@ -336,7 +412,10 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
               <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-950/40 flex items-center justify-center">
-                <History className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                <History
+                  className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400"
+                  aria-hidden="true"
+                />
               </div>
               Request History
             </CardTitle>
@@ -370,15 +449,29 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
             <ScrollArea className="w-full" type="auto">
               <div className="min-w-[600px]">
                 <table className="w-full">
-                  <caption className="sr-only">Your leave request history</caption>
+                  <caption className="sr-only">
+                    Your leave request history
+                  </caption>
                   <thead className="bg-muted/40">
                     <tr>
-                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Type</th>
-                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Date Requested</th>
-                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Period</th>
-                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Priority</th>
-                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Status</th>
-                      <th className="text-right text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Action</th>
+                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                        Type
+                      </th>
+                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                        Date Requested
+                      </th>
+                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                        Period
+                      </th>
+                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                        Priority
+                      </th>
+                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                        Status
+                      </th>
+                      <th className="text-right text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                        Action
+                      </th>
                     </tr>
                   </thead>
                   <tbody>

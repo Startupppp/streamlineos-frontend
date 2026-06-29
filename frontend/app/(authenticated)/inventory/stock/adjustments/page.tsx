@@ -110,7 +110,9 @@ function AdjustmentsTableSkeleton() {
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
             {Array.from({ length: 6 }).map((_, i) => (
-              <TableHead key={i}><Skeleton className="h-3 w-16" /></TableHead>
+              <TableHead key={i}>
+                <Skeleton className="h-3 w-16" />
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -118,7 +120,9 @@ function AdjustmentsTableSkeleton() {
           {Array.from({ length: 6 }).map((_, i) => (
             <TableRow key={i}>
               {Array.from({ length: 6 }).map((__, j) => (
-                <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                <TableCell key={j}>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
               ))}
             </TableRow>
           ))}
@@ -138,7 +142,9 @@ export default function AdjustmentsPage() {
 
   const adjustments: AdjustmentListItem[] = adjData?.items ?? [];
 
-  const warehouses: WarehouseOption[] = Array.isArray(warehousesData) ? warehousesData : [];
+  const warehouses: WarehouseOption[] = Array.isArray(warehousesData)
+    ? warehousesData
+    : [];
 
   const setField = useCallback(
     <K extends keyof AdjFormState>(key: K, value: AdjFormState[K]) => {
@@ -170,27 +176,44 @@ export default function AdjustmentsPage() {
     }
   }, []);
 
-  function handleRetry() { void refetch(); }
+  function handleRetry() {
+    void refetch();
+  }
 
-  const handleWarehouseSelectChange = useCallback((v: string) => {
-    setField("warehouseId", v);
-  }, [setField]);
+  const handleWarehouseSelectChange = useCallback(
+    (v: string) => {
+      setField("warehouseId", v);
+    },
+    [setField],
+  );
 
-  const handleProductIdChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("productId", e.target.value);
-  }, [setField]);
+  const handleProductIdChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setField("productId", e.target.value);
+    },
+    [setField],
+  );
 
-  const handleLocationIdChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("locationId", e.target.value);
-  }, [setField]);
+  const handleLocationIdChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setField("locationId", e.target.value);
+    },
+    [setField],
+  );
 
-  const handleQtyChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("quantity", e.target.value);
-  }, [setField]);
+  const handleQtyChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setField("quantity", e.target.value);
+    },
+    [setField],
+  );
 
-  const handleNotesChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    setField("notes", e.target.value);
-  }, [setField]);
+  const handleNotesChange = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      setField("notes", e.target.value);
+    },
+    [setField],
+  );
 
   const handleCancelSheet = useCallback(() => {
     setSheetOpen(false);
@@ -203,10 +226,22 @@ export default function AdjustmentsPage() {
     const locationId = Number(form.locationId);
     const quantity = Number(form.quantity);
 
-    if (!warehouseId) { toast.error("Warehouse is required"); return; }
-    if (!productId) { toast.error("Product variant ID is required"); return; }
-    if (!locationId) { toast.error("Location ID is required"); return; }
-    if (!quantity || isNaN(quantity) || quantity <= 0) { toast.error("Quantity must be a positive number"); return; }
+    if (!warehouseId) {
+      toast.error("Warehouse is required");
+      return;
+    }
+    if (!productId) {
+      toast.error("Product variant ID is required");
+      return;
+    }
+    if (!locationId) {
+      toast.error("Location ID is required");
+      return;
+    }
+    if (!quantity || isNaN(quantity) || quantity <= 0) {
+      toast.error("Quantity must be a positive number");
+      return;
+    }
 
     createMutation.mutate(
       {
@@ -246,7 +281,12 @@ export default function AdjustmentsPage() {
       ) : isError ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
-            illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+            illustration={
+              <AlertCircle
+                className="h-12 w-12 text-muted-foreground/40"
+                aria-hidden="true"
+              />
+            }
             title="Failed to load adjustments"
             description="An error occurred while fetching adjustment records. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
@@ -256,7 +296,10 @@ export default function AdjustmentsPage() {
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
             illustration={
-              <ClipboardList className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
+              <ClipboardList
+                className="h-12 w-12 text-muted-foreground/40"
+                aria-hidden="true"
+              />
             }
             title="No adjustments yet"
             description="Create a stock adjustment to correct on-hand quantities."
@@ -264,19 +307,37 @@ export default function AdjustmentsPage() {
           />
         </motion.div>
       ) : (
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           <motion.div variants={fadeUp}>
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="text-xs font-semibold">Reference</TableHead>
-                    <TableHead className="text-xs font-semibold">Date</TableHead>
-                    <TableHead className="text-xs font-semibold">Reason</TableHead>
-                    <TableHead className="text-xs font-semibold">Lines</TableHead>
-                    <TableHead className="text-xs font-semibold">Status</TableHead>
-                    <TableHead className="text-xs font-semibold">Created By</TableHead>
-                    <TableHead className="text-xs font-semibold">Notes</TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Reference
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Reason
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Lines
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Status
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Created By
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Notes
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -298,7 +359,8 @@ export default function AdjustmentsPage() {
                         <Badge
                           className={cn(
                             "text-[10px] px-1.5 py-0 h-4",
-                            STATUS_COLORS[adj.status] ?? "bg-muted text-muted-foreground",
+                            STATUS_COLORS[adj.status] ??
+                              "bg-muted text-muted-foreground",
                           )}
                         >
                           {adj.status}
@@ -320,7 +382,10 @@ export default function AdjustmentsPage() {
       )}
 
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col gap-0 p-0">
+        <SheetContent
+          side="right"
+          className="sm:max-w-md w-full flex flex-col gap-0 p-0"
+        >
           <SheetHeader className="px-6 pt-6 pb-4 border-b">
             <SheetTitle>New Stock Adjustment</SheetTitle>
             <SheetDescription>
@@ -329,8 +394,13 @@ export default function AdjustmentsPage() {
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="adj-warehouse">Warehouse <span className="text-destructive">*</span></Label>
-              <Select value={form.warehouseId} onValueChange={handleWarehouseSelectChange}>
+              <Label htmlFor="adj-warehouse">
+                Warehouse <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.warehouseId}
+                onValueChange={handleWarehouseSelectChange}
+              >
                 <SelectTrigger id="adj-warehouse">
                   <SelectValue placeholder="Select warehouse" />
                 </SelectTrigger>
@@ -344,7 +414,9 @@ export default function AdjustmentsPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="adj-product">Product Variant ID <span className="text-destructive">*</span></Label>
+              <Label htmlFor="adj-product">
+                Product Variant ID <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="adj-product"
                 type="number"
@@ -354,7 +426,9 @@ export default function AdjustmentsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="adj-location">Location ID <span className="text-destructive">*</span></Label>
+              <Label htmlFor="adj-location">
+                Location ID <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="adj-location"
                 type="number"
@@ -364,7 +438,9 @@ export default function AdjustmentsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="adj-type">Adjustment Type <span className="text-destructive">*</span></Label>
+              <Label htmlFor="adj-type">
+                Adjustment Type <span className="text-destructive">*</span>
+              </Label>
               <Select
                 value={form.adjustmentType}
                 onValueChange={handleTypeChange}
@@ -380,7 +456,9 @@ export default function AdjustmentsPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="adj-qty">Quantity <span className="text-destructive">*</span></Label>
+              <Label htmlFor="adj-qty">
+                Quantity <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="adj-qty"
                 type="number"
@@ -391,7 +469,9 @@ export default function AdjustmentsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="adj-reason">Reason <span className="text-destructive">*</span></Label>
+              <Label htmlFor="adj-reason">
+                Reason <span className="text-destructive">*</span>
+              </Label>
               <Select value={form.reason} onValueChange={handleReasonChange}>
                 <SelectTrigger id="adj-reason">
                   <SelectValue />

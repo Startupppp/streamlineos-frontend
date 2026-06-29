@@ -3,7 +3,10 @@
 import { useCallback } from "react";
 import { Layers } from "lucide-react";
 import { toast } from "sonner";
-import { useOrgModules, useToggleOrgModule } from "@/hooks/api/access/org-modules";
+import {@/hooks/api/access/org-modules
+  useOrgModules,
+  useToggleOrgModule,
+} from "@/hooks/hooks/access/org-modules";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
@@ -24,7 +27,10 @@ const MODULE_LABELS: Record<string, string> = {
 };
 
 function getModuleLabel(moduleKey: string): string {
-  return MODULE_LABELS[moduleKey] ?? moduleKey.charAt(0).toUpperCase() + moduleKey.slice(1);
+  return (
+    MODULE_LABELS[moduleKey] ??
+    moduleKey.charAt(0).toUpperCase() + moduleKey.slice(1)
+  );
 }
 
 export default function ModulesPage() {
@@ -56,7 +62,12 @@ interface ModuleCardProps {
   onToggle: (moduleKey: string, enabled: boolean) => void;
 }
 
-function ModuleCard({ moduleKey, enabled, isPending, onToggle }: ModuleCardProps) {
+function ModuleCard({
+  moduleKey,
+  enabled,
+  isPending,
+  onToggle,
+}: ModuleCardProps) {
   const handleToggle = useCallback(
     (checked: boolean) => {
       onToggle(moduleKey, checked);
@@ -68,8 +79,12 @@ function ModuleCard({ moduleKey, enabled, isPending, onToggle }: ModuleCardProps
     <Card>
       <CardContent className="flex items-center justify-between p-5">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground">{getModuleLabel(moduleKey)}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{enabled ? "Enabled" : "Disabled"}</p>
+          <p className="text-sm font-medium text-foreground">
+            {getModuleLabel(moduleKey)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {enabled ? "Enabled" : "Disabled"}
+          </p>
         </div>
         <Switch
           checked={enabled}
@@ -92,7 +107,9 @@ function ModulesContent() {
         { moduleKey, enabled },
         {
           onSuccess: () =>
-            toast.success(`${getModuleLabel(moduleKey)} ${enabled ? "enabled" : "disabled"}`),
+            toast.success(
+              `${getModuleLabel(moduleKey)} ${enabled ? "enabled" : "disabled"}`,
+            ),
           onError: (err) => toast.error(getApiError(err)),
         },
       );

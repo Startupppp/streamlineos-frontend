@@ -7,7 +7,13 @@ import { useCreateRichDocument } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -16,26 +22,65 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, FileText, FileCheck, FileClock, FileKey, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  FileCheck,
+  FileClock,
+  FileKey,
+  Loader2,
+} from "lucide-react";
 import Link from "next/link";
 
 const TEMPLATES = [
-  { value: "blank", label: "Blank Document", description: "Start from scratch", icon: FileText },
-  { value: "offer_letter", label: "Offer Letter", description: "Standard employment offer", icon: FileCheck },
-  { value: "policy", label: "Company Policy", description: "Internal policy template", icon: FileKey },
-  { value: "nda", label: "NDA", description: "Non-disclosure agreement", icon: FileClock },
-  { value: "handbook", label: "Employee Handbook", description: "Company handbook section", icon: FileText },
+  {
+    value: "blank",
+    label: "Blank Document",
+    description: "Start from scratch",
+    icon: FileText,
+  },
+  {
+    value: "offer_letter",
+    label: "Offer Letter",
+    description: "Standard employment offer",
+    icon: FileCheck,
+  },
+  {
+    value: "policy",
+    label: "Company Policy",
+    description: "Internal policy template",
+    icon: FileKey,
+  },
+  {
+    value: "nda",
+    label: "NDA",
+    description: "Non-disclosure agreement",
+    icon: FileClock,
+  },
+  {
+    value: "handbook",
+    label: "Employee Handbook",
+    description: "Company handbook section",
+    icon: FileText,
+  },
 ];
 
 interface TemplateButtonProps {
-  templateDef: typeof TEMPLATES[number];
+  templateDef: (typeof TEMPLATES)[number];
   isSelected: boolean;
   onSelect: (value: string) => void;
 }
 
-function TemplateButton({ templateDef, isSelected, onSelect }: TemplateButtonProps) {
+function TemplateButton({
+  templateDef,
+  isSelected,
+  onSelect,
+}: TemplateButtonProps) {
   const Icon = templateDef.icon;
-  const handleClick = useCallback(() => onSelect(templateDef.value), [onSelect, templateDef.value]);
+  const handleClick = useCallback(
+    () => onSelect(templateDef.value),
+    [onSelect, templateDef.value],
+  );
   return (
     <button
       type="button"
@@ -46,9 +91,13 @@ function TemplateButton({ templateDef, isSelected, onSelect }: TemplateButtonPro
           : "border-border hover:border-primary/30 bg-card"
       }`}
     >
-      <Icon className={`h-7 w-7 mb-2 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+      <Icon
+        className={`h-7 w-7 mb-2 ${isSelected ? "text-primary" : "text-muted-foreground"}`}
+      />
       <p className="font-medium text-sm">{templateDef.label}</p>
-      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{templateDef.description}</p>
+      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+        {templateDef.description}
+      </p>
     </button>
   );
 }
@@ -58,51 +107,185 @@ const DEFAULT_CONTENT: Record<string, unknown> = {
   offer_letter: {
     type: "doc",
     content: [
-      { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "Offer Letter" }] },
-      { type: "paragraph", content: [{ type: "text", text: "Dear [Candidate Name]," }] },
-      { type: "paragraph", content: [{ type: "text", text: "We are pleased to offer you the position of [Job Title] at [Company Name]. Your start date will be [Start Date]." }] },
-      { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Compensation" }] },
-      { type: "bulletList", content: [
-        { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Base Salary: ₹[Amount] per annum" }] }] },
-        { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Probation Period: [Duration]" }] }] },
-      ]},
-      { type: "paragraph", content: [{ type: "text", text: "Please confirm your acceptance by signing below." }] },
+      {
+        type: "heading",
+        attrs: { level: 1 },
+        content: [{ type: "text", text: "Offer Letter" }],
+      },
+      {
+        type: "paragraph",
+        content: [{ type: "text", text: "Dear [Candidate Name]," }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "We are pleased to offer you the position of [Job Title] at [Company Name]. Your start date will be [Start Date].",
+          },
+        ],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Compensation" }],
+      },
+      {
+        type: "bulletList",
+        content: [
+          {
+            type: "listItem",
+            content: [
+              {
+                type: "paragraph",
+                content: [
+                  { type: "text", text: "Base Salary: ₹[Amount] per annum" },
+                ],
+              },
+            ],
+          },
+          {
+            type: "listItem",
+            content: [
+              {
+                type: "paragraph",
+                content: [
+                  { type: "text", text: "Probation Period: [Duration]" },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Please confirm your acceptance by signing below.",
+          },
+        ],
+      },
       { type: "paragraph" },
       { type: "paragraph", content: [{ type: "text", text: "Sincerely," }] },
-      { type: "paragraph", content: [{ type: "text", text: "[HR Manager Name]" }] },
+      {
+        type: "paragraph",
+        content: [{ type: "text", text: "[HR Manager Name]" }],
+      },
     ],
   },
   policy: {
     type: "doc",
     content: [
-      { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "Company Policy: [Policy Name]" }] },
-      { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "1. Purpose" }] },
-      { type: "paragraph", content: [{ type: "text", text: "This policy outlines..." }] },
-      { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "2. Scope" }] },
-      { type: "paragraph", content: [{ type: "text", text: "This policy applies to all employees of [Company Name]." }] },
-      { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "3. Policy Details" }] },
+      {
+        type: "heading",
+        attrs: { level: 1 },
+        content: [{ type: "text", text: "Company Policy: [Policy Name]" }],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "1. Purpose" }],
+      },
+      {
+        type: "paragraph",
+        content: [{ type: "text", text: "This policy outlines..." }],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "2. Scope" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "This policy applies to all employees of [Company Name].",
+          },
+        ],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "3. Policy Details" }],
+      },
       { type: "paragraph", content: [{ type: "text", text: "..." }] },
-      { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "4. Compliance" }] },
-      { type: "paragraph", content: [{ type: "text", text: "Violations of this policy may result in disciplinary action." }] },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "4. Compliance" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Violations of this policy may result in disciplinary action.",
+          },
+        ],
+      },
     ],
   },
   nda: {
     type: "doc",
     content: [
-      { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "Non-Disclosure Agreement" }] },
-      { type: "paragraph", content: [{ type: "text", text: "This Non-Disclosure Agreement (\"Agreement\") is entered into by and between:" }] },
-      { type: "paragraph", content: [{ type: "text", text: "Party A: [Company Name]" }] },
-      { type: "paragraph", content: [{ type: "text", text: "Party B: [Employee/Contractor Name]" }] },
-      { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "1. Definition of Confidential Information" }] },
+      {
+        type: "heading",
+        attrs: { level: 1 },
+        content: [{ type: "text", text: "Non-Disclosure Agreement" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: 'This Non-Disclosure Agreement ("Agreement") is entered into by and between:',
+          },
+        ],
+      },
+      {
+        type: "paragraph",
+        content: [{ type: "text", text: "Party A: [Company Name]" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          { type: "text", text: "Party B: [Employee/Contractor Name]" },
+        ],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [
+          { type: "text", text: "1. Definition of Confidential Information" },
+        ],
+      },
       { type: "paragraph", content: [{ type: "text", text: "..." }] },
     ],
   },
   handbook: {
     type: "doc",
     content: [
-      { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "Employee Handbook" }] },
-      { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Welcome" }] },
-      { type: "paragraph", content: [{ type: "text", text: "Welcome to [Company Name]. This handbook provides guidelines and information about your employment." }] },
+      {
+        type: "heading",
+        attrs: { level: 1 },
+        content: [{ type: "text", text: "Employee Handbook" }],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Welcome" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Welcome to [Company Name]. This handbook provides guidelines and information about your employment.",
+          },
+        ],
+      },
     ],
   },
 };
@@ -113,19 +296,43 @@ export default function NewDocumentPage() {
   const [title, setTitle] = useState("");
   const [template, setTemplate] = useState("blank");
 
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-  }, []);
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setTitle(e.target.value);
+    },
+    [],
+  );
 
   const handleCreate = useCallback(() => {
     const trimmedTitle = title.trim();
-    if (trimmedTitle && trimmedTitle !== title) { toast.error("Title cannot have leading or trailing spaces"); return; }
-    if (trimmedTitle && trimmedTitle.length < 2) { toast.error("Title must be at least 2 characters"); return; }
-    if (trimmedTitle && trimmedTitle.length > 200) { toast.error("Title must be at most 200 characters"); return; }
-    if (trimmedTitle && !/[a-zA-Z]/.test(trimmedTitle)) { toast.error("Title must contain at least one letter"); return; }
-    if (trimmedTitle && /^[^a-zA-Z0-9]+$/.test(trimmedTitle)) { toast.error("Title cannot consist of only special characters"); return; }
-    if (/\s{2,}/.test(title)) { toast.error("Title cannot have multiple consecutive spaces"); return; }
-    if (trimmedTitle && /[<>{}[\]\\|^~`]/.test(trimmedTitle)) { toast.error("Title contains invalid special characters"); return; }
+    if (trimmedTitle && trimmedTitle !== title) {
+      toast.error("Title cannot have leading or trailing spaces");
+      return;
+    }
+    if (trimmedTitle && trimmedTitle.length < 2) {
+      toast.error("Title must be at least 2 characters");
+      return;
+    }
+    if (trimmedTitle && trimmedTitle.length > 200) {
+      toast.error("Title must be at most 200 characters");
+      return;
+    }
+    if (trimmedTitle && !/[a-zA-Z]/.test(trimmedTitle)) {
+      toast.error("Title must contain at least one letter");
+      return;
+    }
+    if (trimmedTitle && /^[^a-zA-Z0-9]+$/.test(trimmedTitle)) {
+      toast.error("Title cannot consist of only special characters");
+      return;
+    }
+    if (/\s{2,}/.test(title)) {
+      toast.error("Title cannot have multiple consecutive spaces");
+      return;
+    }
+    if (trimmedTitle && /[<>{}[\]\\|^~`]/.test(trimmedTitle)) {
+      toast.error("Title contains invalid special characters");
+      return;
+    }
     const docTitle = trimmedTitle || "Untitled Document";
     createDoc.mutate(
       {
@@ -139,7 +346,7 @@ export default function NewDocumentPage() {
           router.push(`/hr/documents/editor/${doc.id}`);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
-      }
+      },
     );
   }, [title, template, createDoc, router]);
 
@@ -161,7 +368,9 @@ export default function NewDocumentPage() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Choose Template</CardTitle>
-              <CardDescription>Select a starter template for your document.</CardDescription>
+              <CardDescription>
+                Select a starter template for your document.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -180,7 +389,9 @@ export default function NewDocumentPage() {
           <Card className="h-fit lg:sticky lg:top-4">
             <CardHeader>
               <CardTitle>Document Details</CardTitle>
-              <CardDescription>Give your document a title and confirm template.</CardDescription>
+              <CardDescription>
+                Give your document a title and confirm template.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -207,7 +418,12 @@ export default function NewDocumentPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleCreate} disabled={createDoc.isPending} className="w-full" size="lg">
+              <Button
+                onClick={handleCreate}
+                disabled={createDoc.isPending}
+                className="w-full"
+                size="lg"
+              >
                 {createDoc.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

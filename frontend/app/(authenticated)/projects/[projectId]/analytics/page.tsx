@@ -57,7 +57,7 @@ export default function AnalyticsPage({
           count: row.count,
           fill: STATE_COLORS[state.toLowerCase()] ?? "#94a3b8",
         };
-      }
+      },
     );
   }, [analytics?.stateDistribution]);
 
@@ -71,7 +71,7 @@ export default function AnalyticsPage({
           value: row.count,
           fill: PRIORITY_COLORS[priority.toLowerCase()] ?? "#94a3b8",
         };
-      }
+      },
     );
   }, [analytics?.priorityBreakdown]);
 
@@ -81,7 +81,7 @@ export default function AnalyticsPage({
       (entry: { week: string | null; count: number }) => ({
         date: entry.week ?? "",
         created: entry.count,
-      })
+      }),
     );
   }, [analytics?.volumeOverTime]);
 
@@ -101,7 +101,7 @@ export default function AnalyticsPage({
           entry.total > 0
             ? Math.round((entry.completed / entry.total) * 100)
             : 0,
-      })
+      }),
     );
   }, [analytics?.assigneeCompletion]);
 
@@ -115,7 +115,7 @@ export default function AnalyticsPage({
       }) => ({
         cycle: entry.cycleName ?? `Cycle ${entry.cycleId}`,
         points: entry.completedPoints,
-      })
+      }),
     );
   }, [analytics?.cycleVelocity]);
 
@@ -127,7 +127,7 @@ export default function AnalyticsPage({
           ? p.date.slice(0, 10)
           : new Date(p.date).toISOString().slice(0, 10),
         p.points,
-      ])
+      ]),
     );
     return burndownData.actualBurndown.map((p: SprintBurndownPoint) => {
       const dateKey =
@@ -154,26 +154,26 @@ export default function AnalyticsPage({
         label: entry.title || `#${entry.ticketId}`,
         estimate: entry.estimated ? parseFloat(entry.estimated) : 0,
         actual: entry.actual,
-      })
+      }),
     );
   }, [analytics?.estimateVsActual]);
 
-  const healthScore = (
-    analytics as { healthScore?: number } | undefined
-  )?.healthScore;
-  const healthStatus = (
-    analytics as { healthStatus?: string } | undefined
-  )?.healthStatus;
+  const healthScore = (analytics as { healthScore?: number } | undefined)
+    ?.healthScore;
+  const healthStatus = (analytics as { healthStatus?: string } | undefined)
+    ?.healthStatus;
   const healthBreakdown = (
-    analytics as {
-      healthBreakdown?: {
-        completionPct: number;
-        onTimePct: number;
-        velocityScore: number;
-        overdueTickets: number;
-        totalTickets: number;
-      };
-    } | undefined
+    analytics as
+      | {
+          healthBreakdown?: {
+            completionPct: number;
+            onTimePct: number;
+            velocityScore: number;
+            overdueTickets: number;
+            totalTickets: number;
+          };
+        }
+      | undefined
   )?.healthBreakdown;
 
   if (isLoading) {

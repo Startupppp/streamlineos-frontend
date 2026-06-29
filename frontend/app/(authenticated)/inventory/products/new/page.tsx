@@ -28,11 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { LoadingState, ErrorState } from "@/components/shared";
-import {
-  useCategories,
-  useUom,
-  useCreateProduct,
-} from "@/hooks/api/inventory";
+import { useCategories, useUom, useCreateProduct } from "@/hooks/api/inventory";
 
 interface Category {
   id: number;
@@ -56,21 +52,21 @@ const productSchema = z.object({
     .optional()
     .refine(
       (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number"
+      "Must be a non-negative number",
     ),
   sellingPrice: z
     .string()
     .optional()
     .refine(
       (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number"
+      "Must be a non-negative number",
     ),
   reorderPoint: z
     .string()
     .optional()
     .refine(
       (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number"
+      "Must be a non-negative number",
     ),
   isActive: z.string().optional(),
 });
@@ -137,12 +133,11 @@ export default function NewProductPage() {
 
   if (categoriesQuery.error || uomQuery.error) {
     const errorMessage =
-      categoriesQuery.error?.message ?? uomQuery.error?.message ?? "Could not load required data.";
+      categoriesQuery.error?.message ??
+      uomQuery.error?.message ??
+      "Could not load required data.";
     return (
-      <ErrorState
-        title="Failed to load form data"
-        description={errorMessage}
-      />
+      <ErrorState title="Failed to load form data" description={errorMessage} />
     );
   }
 
@@ -203,10 +198,7 @@ export default function NewProductPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
@@ -230,10 +222,7 @@ export default function NewProductPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Unit of Measure</FormLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select UOM" />
@@ -276,10 +265,7 @@ export default function NewProductPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />

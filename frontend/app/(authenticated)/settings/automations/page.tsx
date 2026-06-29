@@ -29,7 +29,10 @@ import {
   useDeleteAutomation,
   type AutomationRule,
 } from "@/hooks/api/automations";
-import { TRIGGER_META, ACTION_TYPES } from "@/components/automations/automation-meta";
+import {
+  TRIGGER_META,
+  ACTION_TYPES,
+} from "@/components/automations/automation-meta";
 import { AutomationBuilderSheet } from "@/components/automations/automation-builder-sheet";
 import { AutomationRunsDialog } from "@/components/automations/automation-runs-dialog";
 
@@ -76,7 +79,9 @@ function AutomationCard({
               )}
             </div>
             {rule.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate">{rule.description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                {rule.description}
+              </p>
             )}
             <p className="text-xs text-muted-foreground mt-1.5">
               <span className="font-medium text-foreground/70">Actions:</span>{" "}
@@ -99,10 +104,20 @@ function AutomationCard({
               aria-label="Toggle automation"
             />
             <div className="flex items-center gap-1">
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onViewRuns}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={onViewRuns}
+              >
                 <History className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onEdit}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={onEdit}
+              >
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
               <Button
@@ -180,7 +195,8 @@ export default function AutomationsPage() {
     toggle.mutate(
       { id: rule.id, isEnabled: next },
       {
-        onSuccess: () => toast.success(next ? "Automation enabled" : "Automation disabled"),
+        onSuccess: () =>
+          toast.success(next ? "Automation enabled" : "Automation disabled"),
         onError: () => toast.error("Failed to update automation"),
         onSettled: () => setTogglingId(null),
       },
@@ -299,7 +315,8 @@ export default function AutomationsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete automation?</AlertDialogTitle>
             <AlertDialogDescription>
-              &ldquo;{deleteTarget?.name}&rdquo; and its run history will be permanently deleted.
+              &ldquo;{deleteTarget?.name}&rdquo; and its run history will be
+              permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

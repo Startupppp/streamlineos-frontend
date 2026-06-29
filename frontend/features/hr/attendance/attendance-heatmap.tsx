@@ -140,23 +140,39 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
         {data?.summary && (
           <div className="flex flex-wrap gap-4 mt-3 p-3 rounded-xl bg-muted/30">
             <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Days</span>
-              <span className="text-sm font-bold text-foreground tabular-nums">{data.summary.totalDays}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Days
+              </span>
+              <span className="text-sm font-bold text-foreground tabular-nums">
+                {data.summary.totalDays}
+              </span>
             </div>
             <div className="w-px bg-border" />
             <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Hours</span>
-              <span className="text-sm font-bold text-foreground tabular-nums">{data.summary.totalHours}h</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Hours
+              </span>
+              <span className="text-sm font-bold text-foreground tabular-nums">
+                {data.summary.totalHours}h
+              </span>
             </div>
             <div className="w-px bg-border" />
             <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Avg/Day</span>
-              <span className="text-sm font-bold text-foreground tabular-nums">{data.summary.avgHoursPerDay}h</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Avg/Day
+              </span>
+              <span className="text-sm font-bold text-foreground tabular-nums">
+                {data.summary.avgHoursPerDay}h
+              </span>
             </div>
             <div className="w-px bg-border" />
             <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Streak</span>
-              <span className="text-sm font-bold text-foreground tabular-nums">{data.summary.longestStreak}d</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Streak
+              </span>
+              <span className="text-sm font-bold text-foreground tabular-nums">
+                {data.summary.longestStreak}d
+              </span>
             </div>
           </div>
         )}
@@ -229,14 +245,18 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
                 </div>
               </div>
               <div className="flex items-center gap-1.5 mt-3 pl-8">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Less</span>
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Less
+                </span>
                 {[0, 1, 2, 3, 4].map((level) => (
                   <div
                     key={level}
                     className={`h-3 w-3 rounded-[2px] ${intensityClasses[level]}`}
                   />
                 ))}
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">More</span>
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  More
+                </span>
               </div>
             </div>
           </div>

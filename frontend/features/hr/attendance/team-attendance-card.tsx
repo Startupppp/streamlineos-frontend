@@ -53,7 +53,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
   const filtered = (data ?? []).filter(
     (e) =>
       e.name.toLowerCase().includes(search.toLowerCase()) ||
-      (e.department ?? "").toLowerCase().includes(search.toLowerCase())
+      (e.department ?? "").toLowerCase().includes(search.toLowerCase()),
   );
 
   const counts = (data ?? []).reduce(
@@ -61,7 +61,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
       acc[e.status] = (acc[e.status] ?? 0) + 1;
       return acc;
     },
-    {} as Record<TeamAttendanceEntry["status"], number>
+    {} as Record<TeamAttendanceEntry["status"], number>,
   );
 
   return (
@@ -79,16 +79,28 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
         {data && (
           <div className="flex flex-wrap gap-2 pt-1">
             <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-emerald-600">{counts.PRESENT ?? 0}</span> present
+              <span className="font-semibold text-emerald-600">
+                {counts.PRESENT ?? 0}
+              </span>{" "}
+              present
             </span>
             <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-amber-600">{counts.ON_BREAK ?? 0}</span> on break
+              <span className="font-semibold text-amber-600">
+                {counts.ON_BREAK ?? 0}
+              </span>{" "}
+              on break
             </span>
             <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-blue-600">{counts.CHECKED_OUT ?? 0}</span> checked out
+              <span className="font-semibold text-blue-600">
+                {counts.CHECKED_OUT ?? 0}
+              </span>{" "}
+              checked out
             </span>
             <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-muted-foreground">{counts.OFFLINE ?? 0}</span> offline
+              <span className="font-semibold text-muted-foreground">
+                {counts.OFFLINE ?? 0}
+              </span>{" "}
+              offline
             </span>
           </div>
         )}
@@ -112,7 +124,9 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">No employees found.</p>
+          <p className="text-sm text-muted-foreground text-center py-6">
+            No employees found.
+          </p>
         ) : (
           <div
             className={
@@ -127,14 +141,20 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
                 className="flex items-center gap-3 py-2 px-2 rounded-md hover:bg-muted/50 transition-colors"
               >
                 <Avatar className="h-8 w-8 shrink-0">
-                  {entry.image && <AvatarImage src={resolveImageUrl(entry.image)} />}
-                  <AvatarFallback className="text-xs">{getInitials(entry.name)}</AvatarFallback>
+                  {entry.image && (
+                    <AvatarImage src={resolveImageUrl(entry.image)} />
+                  )}
+                  <AvatarFallback className="text-xs">
+                    {getInitials(entry.name)}
+                  </AvatarFallback>
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{entry.name}</p>
                   {entry.department && (
-                    <p className="text-xs text-muted-foreground truncate">{entry.department}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {entry.department}
+                    </p>
                   )}
                 </div>
 

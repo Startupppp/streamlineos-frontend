@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
-import { useCreateTicket } from "@/lib/api/hooks";
+import { useCreateTicket } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -26,7 +26,9 @@ export function QuickAddInput({ columnId, projectId }: QuickAddInputProps) {
     onSuccess: () => {
       setValue("");
       setIsAdding(false);
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.detail(projectId),
+      });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -47,13 +49,22 @@ export function QuickAddInput({ columnId, projectId }: QuickAddInputProps) {
     setValue(e.target.value);
   }, []);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleSubmit();
-    if (e.key === "Escape") { setIsAdding(false); setValue(""); }
-  }, [handleSubmit]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") handleSubmit();
+      if (e.key === "Escape") {
+        setIsAdding(false);
+        setValue("");
+      }
+    },
+    [handleSubmit],
+  );
 
   const handleBlur = useCallback(() => {
-    if (!value.trim()) { setIsAdding(false); setValue(""); }
+    if (!value.trim()) {
+      setIsAdding(false);
+      setValue("");
+    }
   }, [value]);
 
   const handleAddClick = useCallback(() => {

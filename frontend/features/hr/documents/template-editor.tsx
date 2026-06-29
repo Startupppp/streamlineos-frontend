@@ -38,9 +38,16 @@ import {
   useDocumentTemplates,
   type DocumentTemplate,
 } from "@/hooks/api/hr/document-templates";
-import { extractVariables, substituteVariables } from "@/lib/utils/document-variables";
+import {
+  extractVariables,
+  substituteVariables,
+} from "@/lib/utils/document-variables";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { TEMPLATE_TYPES, SAMPLE_VARS, DEFAULT_HTML } from "./template-constants";
+import {
+  TEMPLATE_TYPES,
+  SAMPLE_VARS,
+  DEFAULT_HTML,
+} from "./template-constants";
 import { TemplateTokenPicker } from "./template-token-picker";
 import { TemplatePreviewPanel } from "./template-preview-panel";
 import { TemplateVersionHistory } from "./template-version-history";
@@ -50,8 +57,12 @@ const templateSchema = z.object({
     .string()
     .min(2, "Template name must be at least 2 characters")
     .max(100, "Template name must be at most 100 characters")
-    .refine((v) => /[a-zA-Z]/.test(v), { message: "Template name must contain at least one letter" })
-    .refine((v) => !/\s{2,}/.test(v), { message: "Template name cannot have consecutive spaces" }),
+    .refine((v) => /[a-zA-Z]/.test(v), {
+      message: "Template name must contain at least one letter",
+    })
+    .refine((v) => !/\s{2,}/.test(v), {
+      message: "Template name cannot have consecutive spaces",
+    }),
   type: z.string().min(1, "Type is required"),
   htmlContent: z.string().min(1, "Template content cannot be empty"),
   showPreview: z.boolean(),
@@ -87,14 +98,19 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
   const createMutation = useCreateDocumentTemplate();
   const updateMutation = useUpdateDocumentTemplate();
   const isSaving = createMutation.isPending || updateMutation.isPending;
-  const { data: versionHistory } = useDocumentTemplateVersions(template?.id ?? 0);
+  const { data: versionHistory } = useDocumentTemplateVersions(
+    template?.id ?? 0,
+  );
   const { data: allTemplates } = useDocumentTemplates();
 
   const watchedType = form.watch("type");
   const watchedHtml = form.watch("htmlContent");
   const showPreview = form.watch("showPreview");
 
-  const detectedVariables = useMemo(() => extractVariables(watchedHtml), [watchedHtml]);
+  const detectedVariables = useMemo(
+    () => extractVariables(watchedHtml),
+    [watchedHtml],
+  );
 
   const previewHtml = useMemo(() => {
     const { result } = substituteVariables(watchedHtml, SAMPLE_VARS);
@@ -107,7 +123,10 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
       const prev = DEFAULT_HTML[prevTypeRef.current];
       const current = form.getValues("htmlContent");
       if (current === prev) {
-        form.setValue("htmlContent", DEFAULT_HTML[watchedType] ?? DEFAULT_HTML.OTHER);
+        form.setValue(
+          "htmlContent",
+          DEFAULT_HTML[watchedType] ?? DEFAULT_HTML.OTHER,
+        );
       }
       prevTypeRef.current = watchedType;
     }
@@ -121,7 +140,8 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
       const start = el.selectionStart ?? current.length;
       const end = el.selectionEnd ?? start;
       const tokenStr = `{{${token}}}`;
-      const newContent = current.slice(0, start) + tokenStr + current.slice(end);
+      const newContent =
+        current.slice(0, start) + tokenStr + current.slice(end);
       form.setValue("htmlContent", newContent);
       requestAnimationFrame(() => {
         el.focus();
@@ -160,7 +180,9 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
           t.id !== (template?.id ?? -1),
       );
       if (isDuplicate) {
-        form.setError("title", { message: "A template with this name already exists" });
+        form.setError("title", {
+          message: "A template with this name already exists",
+        });
         return;
       }
 
@@ -182,7 +204,9 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
             onError: (e) => {
               const msg = getErrorMessage(e);
               if (msg.includes("already exists")) {
-                form.setError("title", { message: "A template with this name already exists" });
+                form.setError("title", {
+                  message: "A template with this name already exists",
+                });
               } else {
                 toast.error(msg);
               }
@@ -198,7 +222,9 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
           onError: (e) => {
             const msg = getErrorMessage(e);
             if (msg.includes("already exists")) {
-              form.setError("title", { message: "A template with this name already exists" });
+              form.setError("title", {
+                message: "A template with this name already exists",
+              });
             } else {
               toast.error(msg);
             }
@@ -206,7 +232,16 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
         });
       }
     },
-    [detectedVariables, allTemplates, template, isEdit, updateMutation, createMutation, router, form],
+    [
+      detectedVariables,
+      allTemplates,
+      template,
+      isEdit,
+      updateMutation,
+      createMutation,
+      router,
+      form,
+    ],
   );
 
   return (
@@ -306,7 +341,10 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                       <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
                         Type
                       </FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger className="h-9">
                             <SelectValue />
@@ -364,7 +402,9 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                     </CardTitle>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       Write raw HTML. Use{" "}
-                      <code className="text-[10px] px-1 rounded bg-muted">{"{{Variable_Name}}"}</code>{" "}
+                      <code className="text-[10px] px-1 rounded bg-muted">
+                        {"{{Variable_Name}}"}
+                      </code>{" "}
                       tokens as placeholders.
                     </p>
                   </div>

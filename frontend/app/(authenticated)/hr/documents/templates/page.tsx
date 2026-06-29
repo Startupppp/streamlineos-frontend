@@ -57,7 +57,11 @@ import {
 
 const TYPE_CONFIG: Record<
   string,
-  { label: string; badgeClass: string; icon: React.ComponentType<{ className?: string }> }
+  {
+    label: string;
+    badgeClass: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }
 > = {
   OFFER_LETTER: {
     label: "Offer Letter",
@@ -105,7 +109,10 @@ function TemplatesPageSkeleton() {
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border bg-card p-4 space-y-3 shadow-sm">
+            <div
+              key={i}
+              className="rounded-2xl border bg-card p-4 space-y-3 shadow-sm"
+            >
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
                   <Skeleton className="h-3 w-24" />
@@ -118,12 +125,21 @@ function TemplatesPageSkeleton() {
         </div>
         <div className="rounded-2xl border bg-card overflow-hidden shadow-sm">
           <div className="flex items-center gap-4 px-4 py-3 bg-muted/40 border-b">
-            {["Title", "Type", "Variables", "Version", "Status", "Created"].map((h) => (
-              <Skeleton key={h} className="h-3" style={{ width: `${h.length * 9}px` }} />
-            ))}
+            {["Title", "Type", "Variables", "Version", "Status", "Created"].map(
+              (h) => (
+                <Skeleton
+                  key={h}
+                  className="h-3"
+                  style={{ width: `${h.length * 9}px` }}
+                />
+              ),
+            )}
           </div>
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-4 border-b last:border-0">
+            <div
+              key={i}
+              className="flex items-center gap-4 px-4 py-4 border-b last:border-0"
+            >
               <Skeleton className="h-4 w-40" />
               <Skeleton className="h-5 w-20 rounded-full" />
               <Skeleton className="h-4 w-48" />
@@ -217,7 +233,9 @@ function TemplateTableRow({
         </span>
       </TableCell>
       <TableCell className="py-3 text-xs text-muted-foreground">
-        {template.createdAt ? format(new Date(template.createdAt), "MMM d, yyyy") : "—"}
+        {template.createdAt
+          ? format(new Date(template.createdAt), "MMM d, yyyy")
+          : "—"}
       </TableCell>
       <TableCell className="py-3">
         <DropdownMenu>
@@ -251,7 +269,12 @@ function TemplateTableRow({
 }
 
 export default function DocumentTemplatesPage() {
-  const { data: templates, isLoading, isError, refetch } = useDocumentTemplates();
+  const {
+    data: templates,
+    isLoading,
+    isError,
+    refetch,
+  } = useDocumentTemplates();
   const deleteMutation = useDeleteDocumentTemplate();
   const setDefaultMutation = useSetDocumentTemplateDefault();
 
@@ -271,7 +294,9 @@ export default function DocumentTemplatesPage() {
         { id, isDefault },
         {
           onSuccess: () =>
-            toast.success(isDefault ? "Template set as default" : "Default status removed"),
+            toast.success(
+              isDefault ? "Template set as default" : "Default status removed",
+            ),
           onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
@@ -279,7 +304,9 @@ export default function DocumentTemplatesPage() {
     [setDefaultMutation],
   );
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (isLoading) return <TemplatesPageSkeleton />;
 
@@ -292,10 +319,16 @@ export default function DocumentTemplatesPage() {
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="h-8 w-8 text-destructive" />
           <div>
-            <p className="text-sm font-medium text-foreground">Failed to load document templates</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+            <p className="text-sm font-medium text-foreground">
+              Failed to load document templates
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Something went wrong. Please try again.
+            </p>
           </div>
-          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={handleRetry}>
+            Try again
+          </Button>
         </div>
       </PageWrapper>
     );
@@ -323,10 +356,34 @@ export default function DocumentTemplatesPage() {
     >
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total Templates" value={total} icon={FileText} color="blue" index={0} />
-          <StatCard label="Active" value={active} icon={FileCheck} color="green" index={1} />
-          <StatCard label="NDAs" value={ndaCount} icon={FileLock} color="red" index={2} />
-          <StatCard label="Offer Letters" value={offerCount} icon={FileKey} color="amber" index={3} />
+          <StatCard
+            label="Total Templates"
+            value={total}
+            icon={FileText}
+            color="blue"
+            index={0}
+          />
+          <StatCard
+            label="Active"
+            value={active}
+            icon={FileCheck}
+            color="green"
+            index={1}
+          />
+          <StatCard
+            label="NDAs"
+            value={ndaCount}
+            icon={FileLock}
+            color="red"
+            index={2}
+          />
+          <StatCard
+            label="Offer Letters"
+            value={offerCount}
+            icon={FileKey}
+            color="amber"
+            index={3}
+          />
         </div>
 
         {list.length === 0 ? (
@@ -334,7 +391,10 @@ export default function DocumentTemplatesPage() {
             illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
             title="No templates yet"
             description="Create your first document template to automate offer letters, NDAs, and more."
-            action={{ label: "Create your first template", href: "/hr/documents/templates/new" }}
+            action={{
+              label: "Create your first template",
+              href: "/hr/documents/templates/new",
+            }}
           />
         ) : (
           <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
@@ -344,14 +404,24 @@ export default function DocumentTemplatesPage() {
                   <TableHeader>
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableHead className="w-[32px]" />
-                      <TableHead className="w-[220px] font-semibold text-foreground/80">Title</TableHead>
-                      <TableHead className="w-[120px] font-semibold text-foreground/80">Type</TableHead>
-                      <TableHead className="font-semibold text-foreground/80">Variables</TableHead>
+                      <TableHead className="w-[220px] font-semibold text-foreground/80">
+                        Title
+                      </TableHead>
+                      <TableHead className="w-[120px] font-semibold text-foreground/80">
+                        Type
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground/80">
+                        Variables
+                      </TableHead>
                       <TableHead className="w-[90px] text-center font-semibold text-foreground/80">
                         Version
                       </TableHead>
-                      <TableHead className="w-[90px] font-semibold text-foreground/80">Status</TableHead>
-                      <TableHead className="w-[120px] font-semibold text-foreground/80">Created</TableHead>
+                      <TableHead className="w-[90px] font-semibold text-foreground/80">
+                        Status
+                      </TableHead>
+                      <TableHead className="w-[120px] font-semibold text-foreground/80">
+                        Created
+                      </TableHead>
                       <TableHead className="w-[56px]" />
                     </TableRow>
                   </TableHeader>

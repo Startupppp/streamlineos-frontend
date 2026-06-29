@@ -15,7 +15,7 @@ import {
   useCreateOrgLabel,
   useAddLabelToTicket,
   useRemoveLabelFromTicket,
-} from "@/lib/api/hooks";
+} from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -24,12 +24,27 @@ import { getErrorMessage } from "@/lib/get-error-message";
 interface LabelPickerProps {
   ticketId: number;
   projectId?: number;
-  currentLabels: Array<{ label: { id: number; name: string; color: string | null } }>;
+  currentLabels: Array<{
+    label: { id: number; name: string; color: string | null };
+  }>;
 }
 
-const PRESET_COLORS = ["#3B82F6", "#EF4444", "#22C55E", "#EAB308", "#8B5CF6", "#EC4899", "#F97316", "#06B6D4"];
+const PRESET_COLORS = [
+  "#3B82F6",
+  "#EF4444",
+  "#22C55E",
+  "#EAB308",
+  "#8B5CF6",
+  "#EC4899",
+  "#F97316",
+  "#06B6D4",
+];
 
-export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerProps) {
+export function LabelPicker({
+  ticketId,
+  projectId,
+  currentLabels,
+}: LabelPickerProps) {
   const [open, setOpen] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
@@ -48,20 +63,25 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
 
   const addLabel = useAddLabelToTicket({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(ticketId),
+      });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const removeLabel = useRemoveLabelFromTicket({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(ticketId),
+      });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const currentLabelIds = new Set(currentLabels.map((l) => l.label.id));
-  const availableLabels = allLabels?.filter((l) => !currentLabelIds.has(l.id)) ?? [];
+  const availableLabels =
+    allLabels?.filter((l) => !currentLabelIds.has(l.id)) ?? [];
 
   const handleRemoveLabel = (labelId: number) => () => {
     removeLabel.mutate({ ticketId, projectId, labelId });
@@ -109,7 +129,12 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
         ))}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" aria-label="Add label" className="h-6 w-6 p-0 rounded-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Add label"
+              className="h-6 w-6 p-0 rounded-full"
+            >
               <Plus className="h-3.5 w-3.5" />
             </Button>
           </PopoverTrigger>
@@ -133,7 +158,9 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
                 </div>
               )}
               <div className="border-t pt-2 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Create new label</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Create new label
+                </p>
                 <Input
                   value={newLabelName}
                   onChange={(e) => setNewLabelName(e.target.value)}
@@ -150,8 +177,12 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
                       className="w-5 h-5 rounded-full transition-transform"
                       style={{
                         backgroundColor: c,
-                        transform: selectedColor === c ? "scale(1.2)" : "scale(1)",
-                        outline: selectedColor === c ? "2px solid currentColor" : "none",
+                        transform:
+                          selectedColor === c ? "scale(1.2)" : "scale(1)",
+                        outline:
+                          selectedColor === c
+                            ? "2px solid currentColor"
+                            : "none",
                         outlineOffset: "2px",
                       }}
                     />

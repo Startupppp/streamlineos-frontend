@@ -40,7 +40,12 @@ export default function QuestionBankPage() {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [form, setForm] = useState<QuestionFormState>(EMPTY_FORM);
 
-  const { data: questions, isLoading, isError, refetch } = useInterviewQuestions({
+  const {
+    data: questions,
+    isLoading,
+    isError,
+    refetch,
+  } = useInterviewQuestions({
     category: category !== "ALL" ? category : undefined,
     difficulty: difficulty !== "ALL" ? difficulty : undefined,
     q: search || undefined,
@@ -49,7 +54,9 @@ export default function QuestionBankPage() {
   const { data: jobPostings } = useJobPostings({ status: "OPEN" });
 
   const roleOptions = useMemo(() => {
-    const fromQuestions = (questions ?? []).map((q) => q.role).filter((r): r is string => !!r);
+    const fromQuestions = (questions ?? [])
+      .map((q) => q.role)
+      .filter((r): r is string => !!r);
     const fromJobs = (jobPostings ?? []).map((j) => j.title).filter(Boolean);
     return [...new Set([...fromQuestions, ...fromJobs])].sort();
   }, [questions, jobPostings]);
@@ -85,9 +92,12 @@ export default function QuestionBankPage() {
     if (!open) setDeleteTargetId(null);
   }, []);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-  }, []);
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
+    },
+    [],
+  );
 
   return (
     <PageWrapper

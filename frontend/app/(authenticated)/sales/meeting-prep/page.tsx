@@ -1,19 +1,33 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { CalendarCheck, Sparkles, Copy, CheckCheck, Loader2, Download, RotateCcw, User, Calendar } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  CalendarCheck,
+  Sparkles,
+  Copy,
+  CheckCheck,
+  Loader2,
+  Download,
+  RotateCcw,
+  User,@/hooks/api/ai
+  Calendar,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useMeetingPrep, type MeetingPrepResult } from "@/hooks/api/ai";
+import { useMeetingPrep, type MeetingPrepResult } from "@/hooks/hooks/ai";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -29,7 +43,12 @@ function CopyButton({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <Button variant="outline" size="sm" onClick={handleCopy} aria-label="Copy brief to clipboard">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleCopy}
+      aria-label="Copy brief to clipboard"
+    >
       {copied ? (
         <CheckCheck className="h-4 w-4 mr-2 text-green-500" />
       ) : (
@@ -39,8 +58,6 @@ function CopyButton({ text }: { text: string }) {
     </Button>
   );
 }
-
-
 
 interface FormState {
   meetingTitle: string;
@@ -58,8 +75,6 @@ const INITIAL_FORM: FormState = {
   notes: "",
 };
 
-
-
 interface ResultDisplayProps {
   result: MeetingPrepResult;
   meetingTitle: string;
@@ -67,7 +82,12 @@ interface ResultDisplayProps {
   onPrepareAnother: () => void;
 }
 
-function ResultDisplay({ result, meetingTitle, scheduledAt, onPrepareAnother }: ResultDisplayProps) {
+function ResultDisplay({
+  result,
+  meetingTitle,
+  scheduledAt,
+  onPrepareAnother,
+}: ResultDisplayProps) {
   const formattedDate = scheduledAt
     ? new Date(scheduledAt).toLocaleString("en-IN", {
         dateStyle: "full",
@@ -107,7 +127,9 @@ ${result.brief}`;
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <CardTitle className="text-lg">Meeting Brief: {meetingTitle}</CardTitle>
+            <CardTitle className="text-lg">
+              Meeting Brief: {meetingTitle}
+            </CardTitle>
             <div className="flex flex-wrap items-center gap-3 mt-2">
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
@@ -118,15 +140,27 @@ ${result.brief}`;
                 {formattedDate}
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Generated at {generatedAt}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Generated at {generatedAt}
+            </p>
           </div>
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 shrink-0">
             <CopyButton text={result.brief} />
-            <Button variant="outline" size="sm" onClick={handleDownload} aria-label="Download brief as text file">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownload}
+              aria-label="Download brief as text file"
+            >
               <Download className="h-4 w-4 mr-2" />
               Download .txt
             </Button>
-            <Button variant="ghost" size="sm" onClick={onPrepareAnother} aria-label="Prepare another meeting brief">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onPrepareAnother}
+              aria-label="Prepare another meeting brief"
+            >
               <RotateCcw className="h-4 w-4 mr-2" />
               Prepare Another
             </Button>
@@ -147,7 +181,10 @@ ${result.brief}`;
                     /^#{1,3}\s/.test(line);
                   if (isHeader) {
                     return (
-                      <p key={j} className="font-semibold text-sm text-foreground pt-2 first:pt-0">
+                      <p
+                        key={j}
+                        className="font-semibold text-sm text-foreground pt-2 first:pt-0"
+                      >
                         {line.replace(/^#{1,3}\s/, "")}
                       </p>
                     );
@@ -155,14 +192,22 @@ ${result.brief}`;
                   const isBullet = /^[-•*]\s/.test(line);
                   if (isBullet) {
                     return (
-                      <div key={j} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <div
+                        key={j}
+                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                      >
                         <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                        <span className="leading-relaxed">{line.replace(/^[-•*]\s/, "")}</span>
+                        <span className="leading-relaxed">
+                          {line.replace(/^[-•*]\s/, "")}
+                        </span>
                       </div>
                     );
                   }
                   return (
-                    <p key={j} className="text-sm text-muted-foreground leading-relaxed">
+                    <p
+                      key={j}
+                      className="text-sm text-muted-foreground leading-relaxed"
+                    >
                       {line}
                     </p>
                   );
@@ -175,8 +220,6 @@ ${result.brief}`;
     </Card>
   );
 }
-
-
 
 export default function MeetingPrepPage() {
   const { mutateAsync: generateBrief, isPending } = useMeetingPrep();
@@ -203,11 +246,16 @@ export default function MeetingPrepPage() {
       setResult(data);
       setLastForm(form);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to generate brief";
+      const msg =
+        error instanceof Error ? error.message : "Failed to generate brief";
       if (msg.toLowerCase().includes("not configured")) {
-        toast.error("AI features need setup. Add your API key in Settings → AI Settings.");
+        toast.error(
+          "AI features need setup. Add your API key in Settings → AI Settings.",
+        );
       } else if (msg.toLowerCase().includes("not found")) {
-        toast.error(`${form.attendeeType === "lead" ? "Lead" : "Client"} not found. Check the ID.`);
+        toast.error(
+          `${form.attendeeType === "lead" ? "Lead" : "Client"} not found. Check the ID.`,
+        );
       } else {
         toast.error(msg);
       }
@@ -219,28 +267,41 @@ export default function MeetingPrepPage() {
     setForm(INITIAL_FORM);
   }, []);
 
-  const setField = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const setField = useCallback(
+    <K extends keyof FormState>(key: K, value: FormState[K]) => {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const handleMeetingTitleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setField("meetingTitle", e.target.value),
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setField("meetingTitle", e.target.value),
     [setField],
   );
   const handleAttendeeIdChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setField("attendeeId", e.target.value),
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setField("attendeeId", e.target.value),
     [setField],
   );
   const handleScheduledAtChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setField("scheduledAt", e.target.value),
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setField("scheduledAt", e.target.value),
     [setField],
   );
   const handleNotesChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => setField("notes", e.target.value),
+    (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+      setField("notes", e.target.value),
     [setField],
   );
-  const handleSetAttendeeTypeLead = useCallback(() => setField("attendeeType", "lead"), [setField]);
-  const handleSetAttendeeTypeClient = useCallback(() => setField("attendeeType", "client"), [setField]);
+  const handleSetAttendeeTypeLead = useCallback(
+    () => setField("attendeeType", "lead"),
+    [setField],
+  );
+  const handleSetAttendeeTypeClient = useCallback(
+    () => setField("attendeeType", "client"),
+    [setField],
+  );
 
   if (result) {
     return (
@@ -283,7 +344,8 @@ export default function MeetingPrepPage() {
               Meeting Details
             </CardTitle>
             <CardDescription>
-              Fill in the meeting details and the AI will generate a comprehensive pre-meeting brief.
+              Fill in the meeting details and the AI will generate a
+              comprehensive pre-meeting brief.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -301,7 +363,9 @@ export default function MeetingPrepPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Attendee Type <span className="text-destructive">*</span></Label>
+              <Label>
+                Attendee Type <span className="text-destructive">*</span>
+              </Label>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -311,7 +375,7 @@ export default function MeetingPrepPage() {
                     "flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all",
                     form.attendeeType === "lead"
                       ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground",
                   )}
                 >
                   Lead (Prospect)
@@ -324,7 +388,7 @@ export default function MeetingPrepPage() {
                     "flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all",
                     form.attendeeType === "client"
                       ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground",
                   )}
                 >
                   Client (Existing)
@@ -346,21 +410,29 @@ export default function MeetingPrepPage() {
                   value={form.attendeeId}
                   onChange={handleAttendeeIdChange}
                   className="max-w-xs"
-                  aria-label={form.attendeeType === "lead" ? "Lead ID" : "Client ID"}
+                  aria-label={
+                    form.attendeeType === "lead" ? "Lead ID" : "Client ID"
+                  }
                 />
                 <Badge variant="secondary" className="text-xs shrink-0">
-                  {form.attendeeType === "lead" ? "From Lead Pipeline" : "From Client Accounts"}
+                  {form.attendeeType === "lead"
+                    ? "From Lead Pipeline"
+                    : "From Client Accounts"}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
                 Find the ID from the{" "}
-                {form.attendeeType === "lead" ? "Lead Pipeline" : "Client Accounts"} list.
+                {form.attendeeType === "lead"
+                  ? "Lead Pipeline"
+                  : "Client Accounts"}{" "}
+                list.
               </p>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="scheduled-at">
-                Scheduled Date &amp; Time <span className="text-destructive">*</span>
+                Scheduled Date &amp; Time{" "}
+                <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="scheduled-at"
@@ -375,7 +447,9 @@ export default function MeetingPrepPage() {
             <div className="space-y-1.5">
               <Label htmlFor="meeting-notes">
                 Additional Notes{" "}
-                <span className="text-muted-foreground text-xs">(optional)</span>
+                <span className="text-muted-foreground text-xs">
+                  (optional)
+                </span>
               </Label>
               <Textarea
                 id="meeting-notes"
@@ -411,7 +485,9 @@ export default function MeetingPrepPage() {
 
         <Card className="mt-4">
           <CardContent className="pt-4">
-            <p className="text-xs font-medium text-foreground mb-2">The brief will include</p>
+            <p className="text-xs font-medium text-foreground mb-2">
+              The brief will include
+            </p>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {[
                 "Meeting overview & objectives",
@@ -422,7 +498,10 @@ export default function MeetingPrepPage() {
                 "Suggested questions to ask",
                 "Pre-meeting checklist",
               ].map((item) => (
-                <li key={item} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <li
+                  key={item}
+                  className="flex items-start gap-1.5 text-xs text-muted-foreground"
+                >
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                   {item}
                 </li>

@@ -57,7 +57,10 @@ const TXN_TYPE_COLORS: Record<TransactionType, string> = {
 
 type DatePreset = "7d" | "30d" | "90d" | "all";
 
-function getDateRange(preset: DatePreset): { fromDate?: string; toDate?: string } {
+function getDateRange(preset: DatePreset): {
+  fromDate?: string;
+  toDate?: string;
+} {
   if (preset === "all") return {};
   const now = new Date();
   const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
@@ -107,7 +110,9 @@ function MovementsTableSkeleton() {
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
             {Array.from({ length: 8 }).map((_, i) => (
-              <TableHead key={i}><Skeleton className="h-3 w-16" /></TableHead>
+              <TableHead key={i}>
+                <Skeleton className="h-3 w-16" />
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -115,7 +120,9 @@ function MovementsTableSkeleton() {
           {Array.from({ length: 10 }).map((_, i) => (
             <TableRow key={i}>
               {Array.from({ length: 8 }).map((__, j) => (
-                <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                <TableCell key={j}>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
               ))}
             </TableRow>
           ))}
@@ -127,7 +134,9 @@ function MovementsTableSkeleton() {
 
 export default function MovementsPage() {
   const [datePreset, setDatePreset] = useState<DatePreset>("30d");
-  const [txnTypeFilter, setTxnTypeFilter] = useState<TransactionType | "all">("all");
+  const [txnTypeFilter, setTxnTypeFilter] = useState<TransactionType | "all">(
+    "all",
+  );
 
   const dateRange = useMemo(() => getDateRange(datePreset), [datePreset]);
 
@@ -139,11 +148,18 @@ export default function MovementsPage() {
     [dateRange, txnTypeFilter],
   );
 
-  const { data: txnData, isLoading, isError, refetch } = useStockTransactions(filters);
+  const {
+    data: txnData,
+    isLoading,
+    isError,
+    refetch,
+  } = useStockTransactions(filters);
 
   const transactions: StockTransaction[] = txnData?.items ?? [];
 
-  function handleRetry() { void refetch(); }
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleResetFilters() {
     setDatePreset("30d");
@@ -197,7 +213,12 @@ export default function MovementsPage() {
       ) : isError ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
-            illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+            illustration={
+              <AlertCircle
+                className="h-12 w-12 text-muted-foreground/40"
+                aria-hidden="true"
+              />
+            }
             title="Failed to load movements"
             description="An error occurred while fetching stock transactions. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
@@ -206,27 +227,52 @@ export default function MovementsPage() {
       ) : transactions.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
-            illustration={<ArrowUpDown className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+            illustration={
+              <ArrowUpDown
+                className="h-12 w-12 text-muted-foreground/40"
+                aria-hidden="true"
+              />
+            }
             title="No transactions found"
             description="No stock movements match the selected filters."
             action={{ label: "Clear Filters", onClick: handleResetFilters }}
           />
         </motion.div>
       ) : (
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           <motion.div variants={fadeUp}>
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="text-xs font-semibold">Date</TableHead>
-                    <TableHead className="text-xs font-semibold">Product</TableHead>
-                    <TableHead className="text-xs font-semibold">Type</TableHead>
-                    <TableHead className="text-xs font-semibold text-right">Qty Change</TableHead>
-                    <TableHead className="text-xs font-semibold text-right">Before</TableHead>
-                    <TableHead className="text-xs font-semibold text-right">After</TableHead>
-                    <TableHead className="text-xs font-semibold">Reference</TableHead>
-                    <TableHead className="text-xs font-semibold">User</TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Product
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Type
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-right">
+                      Qty Change
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-right">
+                      Before
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-right">
+                      After
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Reference
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      User
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -238,11 +284,16 @@ export default function MovementsPage() {
                     return (
                       <TableRow key={txn.id} className="text-sm">
                         <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
-                          {format(new Date(txn.createdAt), "dd MMM yyyy, HH:mm")}
+                          {format(
+                            new Date(txn.createdAt),
+                            "dd MMM yyyy, HH:mm",
+                          )}
                         </TableCell>
                         <TableCell className="py-2.5">
                           <div className="font-medium text-foreground truncate max-w-[180px]">
-                            {txn.productVariant?.product?.name ?? txn.productVariant?.name ?? "—"}
+                            {txn.productVariant?.product?.name ??
+                              txn.productVariant?.name ??
+                              "—"}
                           </div>
                           <div className="text-[11px] font-mono text-muted-foreground">
                             {txn.productVariant?.sku ?? "—"}

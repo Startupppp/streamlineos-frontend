@@ -21,10 +21,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ListToolbar, LoadingState, ErrorState, DataTablePagination } from "@/components/shared";
+import {
+  ListToolbar,
+  LoadingState,
+  ErrorState,@/hooks/api/inventory
+  DataTablePagination,
+} from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import { useProducts, useCategories } from "@/hooks/api/inventory";
+import { useProducts, useCategories } from "@/hooks/hooks/inventory";
 
 interface Category {
   id: number;
@@ -127,7 +132,10 @@ export default function ProductsPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={categoryFilter} onValueChange={handleCategoryChange}>
+              <Select
+                value={categoryFilter}
+                onValueChange={handleCategoryChange}
+              >
                 <SelectTrigger className="h-9 w-[160px] text-sm">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
@@ -180,9 +188,15 @@ export default function ProductsPage() {
                     <TableHead className="w-[130px]">SKU</TableHead>
                     <TableHead className="w-[140px]">Category</TableHead>
                     <TableHead className="w-[80px]">UOM</TableHead>
-                    <TableHead className="w-[120px] text-right">Cost Price</TableHead>
-                    <TableHead className="w-[120px] text-right">Selling Price</TableHead>
-                    <TableHead className="w-[100px] text-right">Stock</TableHead>
+                    <TableHead className="w-[120px] text-right">
+                      Cost Price
+                    </TableHead>
+                    <TableHead className="w-[120px] text-right">
+                      Selling Price
+                    </TableHead>
+                    <TableHead className="w-[100px] text-right">
+                      Stock
+                    </TableHead>
                     <TableHead className="w-[90px]">Status</TableHead>
                     <TableHead className="w-[80px]"></TableHead>
                   </TableRow>
@@ -218,7 +232,11 @@ export default function ProductsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={product.status === "ACTIVE" ? "default" : "secondary"}
+                          variant={
+                            product.status === "ACTIVE"
+                              ? "default"
+                              : "secondary"
+                          }
                         >
                           {product.status === "ACTIVE" ? "Active" : "Inactive"}
                         </Badge>

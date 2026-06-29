@@ -67,11 +67,12 @@ function LocationCell({
         {label}
       </p>
       {location.warehouse && (
-        <p className="text-sm font-semibold text-foreground">{location.warehouse.name}</p>
+        <p className="text-sm font-semibold text-foreground">
+          {location.warehouse.name}
+        </p>
       )}
       <p className="text-xs text-muted-foreground">
-        {location.name}{" "}
-        <span className="font-mono">({location.code})</span>
+        {location.name} <span className="font-mono">({location.code})</span>
       </p>
     </div>
   );
@@ -95,7 +96,9 @@ function TransferDetailSkeleton() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><Skeleton className="h-4 w-20" /></CardHeader>
+          <CardHeader className="pb-2">
+            <Skeleton className="h-4 w-20" />
+          </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -117,12 +120,19 @@ export default function TransferDetailPage({
   const { transferId: transferIdStr } = use(params);
   const transferId = Number(transferIdStr);
 
-  const { data: transferData, isLoading, isError, refetch } = useTransfer(transferId);
+  const {
+    data: transferData,
+    isLoading,
+    isError,
+    refetch,
+  } = useTransfer(transferId);
   const completeMutation = useCompleteTransfer();
 
   const transfer = transferData ?? undefined;
 
-  function handleRetry() { void refetch(); }
+  function handleRetry() {
+    void refetch();
+  }
 
   const handleComplete = useCallback(() => {
     if (!transfer) return;
@@ -146,7 +156,12 @@ export default function TransferDetailPage({
     return (
       <PageWrapper title="Transfer" eyebrow="Inventory / Transfers">
         <EmptyState
-          illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+          illustration={
+            <AlertCircle
+              className="h-12 w-12 text-muted-foreground/40"
+              aria-hidden="true"
+            />
+          }
           title="Failed to load transfer"
           description="An error occurred while fetching this transfer. Please try again."
           action={{ label: "Retry", onClick: handleRetry }}
@@ -161,13 +176,17 @@ export default function TransferDetailPage({
         <EmptyState
           title="Transfer not found"
           description="This transfer does not exist or you do not have access."
-          action={{ label: "Back to Transfers", href: "/inventory/stock/transfers" }}
+          action={{
+            label: "Back to Transfers",
+            href: "/inventory/stock/transfers",
+          }}
         />
       </PageWrapper>
     );
   }
 
-  const canComplete = transfer.status === "PENDING" || transfer.status === "IN_TRANSIT";
+  const canComplete =
+    transfer.status === "PENDING" || transfer.status === "IN_TRANSIT";
   const lines = transfer.lines ?? [];
 
   return (
@@ -231,13 +250,20 @@ export default function TransferDetailPage({
                 </div>
                 {transfer.completedAt && (
                   <div>
-                    <span className="font-medium text-foreground">Completed: </span>
-                    {format(new Date(transfer.completedAt), "dd MMM yyyy, HH:mm")}
+                    <span className="font-medium text-foreground">
+                      Completed:{" "}
+                    </span>
+                    {format(
+                      new Date(transfer.completedAt),
+                      "dd MMM yyyy, HH:mm",
+                    )}
                   </div>
                 )}
                 {transfer.createdByName && (
                   <div>
-                    <span className="font-medium text-foreground">Created by: </span>
+                    <span className="font-medium text-foreground">
+                      Created by:{" "}
+                    </span>
                     {transfer.createdByName}
                   </div>
                 )}
@@ -256,7 +282,10 @@ export default function TransferDetailPage({
           <Card>
             <CardHeader className="pb-2 pt-4 px-4">
               <div className="flex items-center gap-2">
-                <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <Package
+                  className="h-4 w-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <span className="text-sm font-semibold">Line Items</span>
                 <span className="text-xs text-muted-foreground tabular-nums">
                   ({lines.length})
@@ -275,12 +304,24 @@ export default function TransferDetailPage({
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/50 hover:bg-muted/50">
-                        <TableHead className="text-xs font-semibold">Product</TableHead>
-                        <TableHead className="text-xs font-semibold">SKU</TableHead>
-                        <TableHead className="text-xs font-semibold text-right">Requested</TableHead>
-                        <TableHead className="text-xs font-semibold text-right">Received</TableHead>
-                        <TableHead className="text-xs font-semibold text-right">Variance</TableHead>
-                        <TableHead className="text-xs font-semibold">Notes</TableHead>
+                        <TableHead className="text-xs font-semibold">
+                          Product
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold">
+                          SKU
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-right">
+                          Requested
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-right">
+                          Received
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-right">
+                          Variance
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold">
+                          Notes
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

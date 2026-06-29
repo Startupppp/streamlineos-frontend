@@ -8,7 +8,11 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useUpdateDocument, useHrEmployees } from "@/hooks/api/hr";
-import { formSchema, type DocumentFormData, DocumentFormFields } from "@/features/hr/documents/document-form-fields";
+import {
+  formSchema,
+  type DocumentFormData,
+  DocumentFormFields,
+} from "@/features/hr/documents/document-form-fields";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Document } from "@/types/hr";
 
@@ -16,7 +20,11 @@ interface EditDocumentSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   document: Document | null;
-  documentTypes: { value: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
+  documentTypes: {
+    value: string;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }[];
   categories: string[];
   isAdmin: boolean;
 }
@@ -41,17 +49,22 @@ export function EditDocumentSheet({
   );
 
   const filteredDocumentTypes = useMemo(
-    () => documentTypes
-      .filter((type) => type.value && type.value.trim() !== "")
-      .map(({ value, label }) => ({ value, label })),
+    () =>
+      documentTypes
+        .filter((type) => type.value && type.value.trim() !== "")
+        .map(({ value, label }) => ({ value, label })),
     [documentTypes],
   );
 
   const filteredEmployees = useMemo(() => {
     if (!employees || !Array.isArray(employees)) return [];
-    return (employees as { id: string; firstName: string | null; lastName: string | null }[]).filter(
-      (emp) => emp.id && emp.id.trim() !== "",
-    );
+    return (
+      employees as {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+      }[]
+    ).filter((emp) => emp.id && emp.id.trim() !== "");
   }, [employees]);
 
   const form = useForm<DocumentFormData>({
@@ -81,54 +94,78 @@ export function EditDocumentSheet({
     }
   }, [open, document, form]);
 
-  const handleTagInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setTagInput(e.target.value);
-  }, []);
+  const handleTagInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setTagInput(e.target.value);
+    },
+    [],
+  );
 
   const handleAddTag = useCallback(() => {
     const trimmed = tagInput.trim().toLowerCase();
     if (!trimmed) return;
-    if (tags.includes(trimmed)) { toast.error("Tag already exists"); setTagInput(""); return; }
+    if (tags.includes(trimmed)) {
+      toast.error("Tag already exists");
+      setTagInput("");
+      return;
+    }
     const newTags = [...tags, trimmed];
     setTags(newTags);
     form.setValue("tags", newTags);
     setTagInput("");
   }, [tagInput, tags, form]);
 
-  const handleRemoveTag = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const tag = e.currentTarget.dataset.tag;
-    if (!tag) return;
-    setTags((prev) => {
-      const updated = prev.filter((t) => t !== tag);
-      form.setValue("tags", updated);
-      return updated;
-    });
-  }, [form]);
+  const handleRemoveTag = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const tag = e.currentTarget.dataset.tag;
+      if (!tag) return;
+      setTags((prev) => {
+        const updated = prev.filter((t) => t !== tag);
+        form.setValue("tags", updated);
+        return updated;
+      });
+    },
+    [form],
+  );
 
-  const handleTagKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") { e.preventDefault(); handleAddTag(); }
-  }, [handleAddTag]);
+  const handleTagKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleAddTag();
+      }
+    },
+    [handleAddTag],
+  );
 
-  const onSubmit = useCallback(async (data: DocumentFormData) => {
-    if (!document) return;
-    updateDocument.mutate(
-      {
-        id: document.id,
-        name: data.name,
-        description: data.description ?? null,
-        type: data.type,
-        category: data.category ?? null,
-        userId: data.userId ?? null,
-        isPublic: data.isPublic,
-        tags: data.tags,
-        expiryDate: data.expiryDate ? format(data.expiryDate, "yyyy-MM-dd") : null,
-      },
-      {
-        onSuccess: () => { toast.success("Document updated"); onOpenChange(false); },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [document, updateDocument, onOpenChange]);
+  const onSubmit = useCallback(
+    async (data: DocumentFormData) => {
+      if (!document) return;
+      updateDocument.mutate(
+        {
+          id: document.id,
+          name: data.name,
+          description: data.description ?? null,
+          type: data.type,
+          category: data.category ?? null,
+          userId: data.userId ?? null,
+          isPublic: data.isPublic,
+          tags: data.tags,
+          expiryDate: data.expiryDate
+            ? format(data.expiryDate, "yyyy-MM-dd")
+            : null,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Document updated");
+            onOpenChange(false);
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [document, updateDocument, onOpenChange],
+  );
 
   return (
     <HrSheet

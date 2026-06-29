@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useMemo, useCallback } from "react";
-import { useProject } from "@/lib/api/hooks";
+import { useProject } from "@/hooks/api";
 import { GanttView } from "@/components/projects/gantt-view";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,10 +55,7 @@ export default function TimelinePage({ params }: PageProps) {
   return (
     <PageWrapper title="Timeline" subtitle={`${tickets.length} tickets`}>
       <div className="h-full overflow-auto px-4 pb-4">
-        <GanttView
-          tickets={tickets}
-          onTicketClick={handleTicketClick}
-        />
+        <GanttView tickets={tickets} onTicketClick={handleTicketClick} />
       </div>
     </PageWrapper>
   );

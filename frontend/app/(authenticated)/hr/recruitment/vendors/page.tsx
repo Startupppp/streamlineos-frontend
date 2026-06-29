@@ -12,15 +12,30 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/hooks/apiui/alert-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -35,7 +50,7 @@ import {
   type VendorSubmission,
   type CreateVendorInput,
   type UpdateVendorInput,
-} from "@/lib/api/hooks";
+} from "@/hooks/hooks";
 
 const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER"];
 
@@ -53,13 +68,18 @@ function VendorSheet({ initial, onClose }: VendorSheetProps) {
   const [feePercent, setFeePercent] = useState(
     initial?.feePercent ? String(parseFloat(initial.feePercent)) : "",
   );
-  const [status, setStatus] = useState<"ACTIVE" | "INACTIVE">(initial?.status ?? "ACTIVE");
+  const [status, setStatus] = useState<"ACTIVE" | "INACTIVE">(
+    initial?.status ?? "ACTIVE",
+  );
 
   const create = useCreateVendor();
   const update = useUpdateVendor(initial?.id ?? 0);
 
   const handleSubmit = useCallback(() => {
-    if (!name.trim()) { toast.error("Vendor name is required"); return; }
+    if (!name.trim()) {
+      toast.error("Vendor name is required");
+      return;
+    }
     const fee = feePercent ? parseFloat(feePercent) : undefined;
     if (fee !== undefined && (isNaN(fee) || fee < 0 || fee > 100)) {
       toast.error("Fee percent must be between 0 and 100");
@@ -77,45 +97,89 @@ function VendorSheet({ initial, onClose }: VendorSheetProps) {
 
     if (initial) {
       update.mutate(payload, {
-        onSuccess: () => { toast.success("Vendor updated"); onClose(); },
+        onSuccess: () => {
+          toast.success("Vendor updated");
+          onClose();
+        },
         onError: (e) => toast.error(getErrorMessage(e)),
       });
     } else {
       create.mutate(payload, {
-        onSuccess: () => { toast.success("Vendor added"); onClose(); },
+        onSuccess: () => {
+          toast.success("Vendor added");
+          onClose();
+        },
         onError: (e) => toast.error(getErrorMessage(e)),
       });
     }
-  }, [name, contactName, contactEmail, contactPhone, website, feePercent, status, initial, create, update, onClose]);
+  }, [
+    name,
+    contactName,
+    contactEmail,
+    contactPhone,
+    website,
+    feePercent,
+    status,
+    initial,
+    create,
+    update,
+    onClose,
+  ]);
 
   const isPending = create.isPending || update.isPending;
 
   return (
-    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet
+      open
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>{initial ? "Edit Vendor" : "Add Vendor"}</SheetTitle>
-          <SheetDescription>Staffing agency or recruitment vendor details</SheetDescription>
+          <SheetDescription>
+            Staffing agency or recruitment vendor details
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 space-y-3">
           <div className="space-y-1.5">
-            <Label>Agency Name <span className="text-destructive">*</span></Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. TalentBridge Inc." />
+            <Label>
+              Agency Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. TalentBridge Inc."
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Contact Name</Label>
-              <Input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Account manager" />
+              <Input
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+                placeholder="Account manager"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Contact Email</Label>
-              <Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="manager@agency.com" />
+              <Input
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="manager@agency.com"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Phone</Label>
-              <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+1 555 0100" />
+              <Input
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="+1 555 0100"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Fee %</Label>
@@ -132,13 +196,22 @@ function VendorSheet({ initial, onClose }: VendorSheetProps) {
           </div>
           <div className="space-y-1.5">
             <Label>Website</Label>
-            <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://agency.com" />
+            <Input
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder="https://agency.com"
+            />
           </div>
           {initial && (
             <div className="space-y-1.5">
               <Label>Status</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as "ACTIVE" | "INACTIVE")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={status}
+                onValueChange={(v) => setStatus(v as "ACTIVE" | "INACTIVE")}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ACTIVE">Active</SelectItem>
                   <SelectItem value="INACTIVE">Inactive</SelectItem>
@@ -148,8 +221,19 @@ function VendorSheet({ initial, onClose }: VendorSheetProps) {
           )}
         </div>
         <SheetFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={onClose} disabled={isPending} className="flex-1">Cancel</Button>
-          <Button onClick={handleSubmit} disabled={isPending} className="flex-1">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isPending}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isPending}
+            className="flex-1"
+          >
             {isPending ? "Saving..." : initial ? "Save Changes" : "Add Vendor"}
           </Button>
         </SheetFooter>
@@ -167,7 +251,11 @@ function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
   const { data: submissions = [], isLoading } = useVendorSubmissions(vendor.id);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  function StatusBadge({ status }: { status: VendorSubmission["placementStatus"] }) {
+  function StatusBadge({
+    status,
+  }: {
+    status: VendorSubmission["placementStatus"];
+  }) {
     const map: Record<string, string> = {
       SUBMITTED: "bg-blue-100 text-blue-700",
       INTERVIEWING: "bg-yellow-100 text-yellow-700",
@@ -175,13 +263,19 @@ function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
       REJECTED: "bg-red-100 text-red-700",
     };
     return (
-      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${map[status] ?? ""}`}>
+      <span
+        className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${map[status] ?? ""}`}
+      >
         {status}
       </span>
     );
   }
 
-  function InvoiceBadge({ status }: { status: VendorSubmission["invoiceStatus"] }) {
+  function InvoiceBadge({
+    status,
+  }: {
+    status: VendorSubmission["invoiceStatus"];
+  }) {
     const map: Record<string, string> = {
       NOT_INVOICED: "bg-muted text-muted-foreground",
       INVOICED: "bg-orange-100 text-orange-700",
@@ -193,41 +287,71 @@ function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
       PAID: "Paid",
     };
     return (
-      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${map[status] ?? ""}`}>
+      <span
+        className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${map[status] ?? ""}`}
+      >
         {label[status]}
       </span>
     );
   }
 
-  const updateSubmission = useUpdateVendorSubmission(vendor.id, updatingId ?? 0);
+  const updateSubmission = useUpdateVendorSubmission(
+    vendor.id,
+    updatingId ?? 0,
+  );
 
-  const handleMarkPaid = useCallback((sub: VendorSubmission) => {
-    setUpdatingId(sub.id);
-    updateSubmission.mutate(
-      { invoiceStatus: "PAID", paidAt: new Date().toISOString().split("T")[0] },
-      {
-        onSuccess: () => { toast.success("Marked as paid"); setUpdatingId(null); },
-        onError: (e) => { toast.error(getErrorMessage(e)); setUpdatingId(null); },
-      },
-    );
-  }, [updateSubmission]);
+  const handleMarkPaid = useCallback(
+    (sub: VendorSubmission) => {
+      setUpdatingId(sub.id);
+      updateSubmission.mutate(
+        {
+          invoiceStatus: "PAID",
+          paidAt: new Date().toISOString().split("T")[0],
+        },
+        {
+          onSuccess: () => {
+            toast.success("Marked as paid");
+            setUpdatingId(null);
+          },
+          onError: (e) => {
+            toast.error(getErrorMessage(e));
+            setUpdatingId(null);
+          },
+        },
+      );
+    },
+    [updateSubmission],
+  );
 
   return (
-    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet
+      open
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <SheetContent className="w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>{vendor.name} — Submissions</SheetTitle>
-          <SheetDescription>Candidates submitted by this vendor and invoice status</SheetDescription>
+          <SheetDescription>
+            Candidates submitted by this vendor and invoice status
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 space-y-3 overflow-y-auto flex-1">
           {isLoading ? (
-            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)
+            Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 rounded-lg" />
+            ))
           ) : submissions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">No submissions yet</p>
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No submissions yet
+            </p>
           ) : (
             submissions.map((sub) => {
               const candidateName =
-                [sub.candidateFirstName, sub.candidateLastName].filter(Boolean).join(" ") ||
+                [sub.candidateFirstName, sub.candidateLastName]
+                  .filter(Boolean)
+                  .join(" ") ||
                 sub.candidateEmail ||
                 `Candidate #${sub.candidateId}`;
               return (
@@ -236,7 +360,9 @@ function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
                     <div>
                       <p className="text-sm font-medium">{candidateName}</p>
                       {sub.jobTitle && (
-                        <p className="text-xs text-muted-foreground">{sub.jobTitle}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {sub.jobTitle}
+                        </p>
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-1">
@@ -245,22 +371,28 @@ function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Submitted {format(new Date(sub.submittedAt), "MMM d, yyyy")}</span>
+                    <span>
+                      Submitted{" "}
+                      {format(new Date(sub.submittedAt), "MMM d, yyyy")}
+                    </span>
                     {sub.invoiceAmount && (
-                      <span className="font-medium">${parseFloat(sub.invoiceAmount).toLocaleString()}</span>
+                      <span className="font-medium">
+                        ${parseFloat(sub.invoiceAmount).toLocaleString()}
+                      </span>
                     )}
                   </div>
-                  {sub.placementStatus === "PLACED" && sub.invoiceStatus !== "PAID" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs h-7"
-                      disabled={updatingId === sub.id}
-                      onClick={() => handleMarkPaid(sub)}
-                    >
-                      Mark Invoice Paid
-                    </Button>
-                  )}
+                  {sub.placementStatus === "PLACED" &&
+                    sub.invoiceStatus !== "PAID" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7"
+                        disabled={updatingId === sub.id}
+                        onClick={() => handleMarkPaid(sub)}
+                      >
+                        Mark Invoice Paid
+                      </Button>
+                    )}
                 </div>
               );
             })
@@ -279,7 +411,13 @@ interface VendorCardProps {
   onDelete: (id: number) => void;
 }
 
-function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }: VendorCardProps) {
+function VendorCard({
+  vendor,
+  isHr,
+  onEdit,
+  onViewSubmissions,
+  onDelete,
+}: VendorCardProps) {
   return (
     <Card className="shadow-sm">
       <CardContent className="pt-4 pb-3 space-y-2.5">
@@ -287,10 +425,15 @@ function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }: Vendo
           <div>
             <p className="font-semibold text-sm">{vendor.name}</p>
             {vendor.contactName && (
-              <p className="text-xs text-muted-foreground">{vendor.contactName}</p>
+              <p className="text-xs text-muted-foreground">
+                {vendor.contactName}
+              </p>
             )}
           </div>
-          <Badge variant={vendor.status === "ACTIVE" ? "default" : "secondary"} className="text-[10px] shrink-0">
+          <Badge
+            variant={vendor.status === "ACTIVE" ? "default" : "secondary"}
+            className="text-[10px] shrink-0"
+          >
             {vendor.status === "ACTIVE" ? "Active" : "Inactive"}
           </Badge>
         </div>
@@ -318,14 +461,28 @@ function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }: Vendo
         </div>
 
         <div className="flex flex-wrap gap-2 pt-1">
-          <Button size="sm" variant="outline" onClick={() => onViewSubmissions(vendor)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onViewSubmissions(vendor)}
+          >
             Submissions
           </Button>
           {isHr && (
             <>
-              <Button size="sm" variant="outline" onClick={() => onEdit(vendor)}>Edit</Button>
-              <Button size="sm" variant="ghost" onClick={() => onDelete(vendor.id)}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onEdit(vendor)}
+              >
+                Edit
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onDelete(vendor.id)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
                 Delete
               </Button>
             </>
@@ -345,8 +502,12 @@ export default function VendorsPage() {
   const deleteVendor = useDeleteVendor();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingVendor, setEditingVendor] = useState<RecruitmentVendor | null>(null);
-  const [viewingVendor, setViewingVendor] = useState<RecruitmentVendor | null>(null);
+  const [editingVendor, setEditingVendor] = useState<RecruitmentVendor | null>(
+    null,
+  );
+  const [viewingVendor, setViewingVendor] = useState<RecruitmentVendor | null>(
+    null,
+  );
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const handleAdd = useCallback(() => {
@@ -367,16 +528,27 @@ export default function VendorsPage() {
   const handleDeleteConfirm = useCallback(() => {
     if (deletingId === null) return;
     deleteVendor.mutate(deletingId, {
-      onSuccess: () => { toast.success("Vendor deleted"); setDeletingId(null); },
-      onError: (e) => { toast.error(getErrorMessage(e)); setDeletingId(null); },
+      onSuccess: () => {
+        toast.success("Vendor deleted");
+        setDeletingId(null);
+      },
+      onError: (e) => {
+        toast.error(getErrorMessage(e));
+        setDeletingId(null);
+      },
     });
   }, [deletingId, deleteVendor]);
 
   if (isLoading) {
     return (
-      <PageWrapper title="Vendors" subtitle="Recruitment agencies and staffing partners">
+      <PageWrapper
+        title="Vendors"
+        subtitle="Recruitment agencies and staffing partners"
+      >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-44 rounded-xl" />
+          ))}
         </div>
       </PageWrapper>
     );
@@ -390,8 +562,18 @@ export default function VendorsPage() {
       actions={
         isHr ? (
           <Button size="sm" onClick={handleAdd}>
-            <svg className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="mr-1.5 h-3.5 w-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             Add Vendor
           </Button>
@@ -403,7 +585,9 @@ export default function VendorsPage() {
           illustration={<EmptyTeamIllustration />}
           title="No vendors yet"
           description="Add a recruitment agency or staffing partner to track submissions and placements."
-          action={isHr ? { label: "Add Vendor", onClick: handleAdd } : undefined}
+          action={
+            isHr ? { label: "Add Vendor", onClick: handleAdd } : undefined
+          }
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -424,21 +608,35 @@ export default function VendorsPage() {
         <VendorSheet initial={editingVendor} onClose={handleCloseSheet} />
       )}
       {viewingVendor && (
-        <SubmissionSheet vendor={viewingVendor} onClose={() => setViewingVendor(null)} />
+        <SubmissionSheet
+          vendor={viewingVendor}
+          onClose={() => setViewingVendor(null)}
+        />
       )}
       {deletingId !== null && (
-        <AlertDialog open onOpenChange={(v) => { if (!v) setDeletingId(null); }}>
+        <AlertDialog
+          open
+          onOpenChange={(v) => {
+            if (!v) setDeletingId(null);
+          }}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete the vendor and all submission records. This action cannot be undone.
+                This will permanently delete the vendor and all submission
+                records. This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeletingId(null)}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteConfirm} disabled={deleteVendor.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              <AlertDialogCancel onClick={() => setDeletingId(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                disabled={deleteVendor.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
                 {deleteVendor.isPending ? "Deleting..." : "Delete"}
               </AlertDialogAction>
             </AlertDialogFooter>

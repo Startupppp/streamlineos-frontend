@@ -16,7 +16,7 @@ import {
   useAgingDeals,
   useSalesCycleLength,
   useLostDealAnalysis,
-} from "@/lib/api/hooks";
+} from "@/hooks/api";
 import { useSession } from "next-auth/react";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { safeMax } from "@/lib/format-utils";
@@ -58,7 +58,10 @@ function getPresetRange(preset: DatePreset): { from?: string; to?: string } {
     case "today":
       return { from: fmt(startOfDay(now)), to: fmt(endOfDay(now)) };
     case "this_week":
-      return { from: fmt(startOfWeek(now, { weekStartsOn: 1 })), to: fmt(endOfWeek(now, { weekStartsOn: 1 })) };
+      return {
+        from: fmt(startOfWeek(now, { weekStartsOn: 1 })),
+        to: fmt(endOfWeek(now, { weekStartsOn: 1 })),
+      };
     case "this_month":
       return { from: fmt(startOfMonth(now)), to: fmt(endOfMonth(now)) };
     case "last_month": {
@@ -97,8 +100,12 @@ export default function SalesDashboardPage() {
   const { data: revenueVsGoalData } = useRevenueVsGoal();
   const { data: velocityData } = useDealVelocity(dateRange);
   const { data: agingData } = useAgingDeals(14);
-  const { data: cycleData } = useSalesCycleLength(repId !== undefined ? String(repId) : undefined);
-  const { data: lostData } = useLostDealAnalysis(repId !== undefined ? String(repId) : undefined);
+  const { data: cycleData } = useSalesCycleLength(
+    repId !== undefined ? String(repId) : undefined,
+  );
+  const { data: lostData } = useLostDealAnalysis(
+    repId !== undefined ? String(repId) : undefined,
+  );
 
   const salesStats = data?.salesStats;
   const revenueTimeline = data?.revenueTimeline ?? [];
@@ -140,37 +147,58 @@ export default function SalesDashboardPage() {
     return reps.map((r) => ({ id: r.repId, name: r.name }));
   }, [leaderboardData]);
 
-  const kpiPipeline = kpisData?.pipelineValue ?? salesStats?.pipeline.value ?? 0;
+  const kpiPipeline =
+    kpisData?.pipelineValue ?? salesStats?.pipeline.value ?? 0;
   const kpiDealsWon = kpisData?.dealsWon ?? salesStats?.dealsWon.value ?? 0;
-  const kpiCloseRate = kpisData?.closeRate ?? salesStats?.conversionRate.value ?? 0;
-  const kpiAvgDeal = kpisData?.avgDealSize ?? salesStats?.avgDealSize.value ?? 0;
+  const kpiCloseRate =
+    kpisData?.closeRate ?? salesStats?.conversionRate.value ?? 0;
+  const kpiAvgDeal =
+    kpisData?.avgDealSize ?? salesStats?.avgDealSize.value ?? 0;
 
   const kpiPipelineTrend = kpisData
     ? {
-        value: Math.round(Math.abs(((kpisData.totalRevenue - kpisData.prevRevenue) / Math.max(kpisData.prevRevenue, 1)) * 1000) / 10),
+        value: Math.round(
+          Math.abs(
+            ((kpisData.totalRevenue - kpisData.prevRevenue) /
+              Math.max(kpisData.prevRevenue, 1)) *
+              1000,
+          ) / 10,
+        ),
         isPositive: kpisData.totalRevenue >= kpisData.prevRevenue,
       }
-    : salesStats?.pipeline.trend ?? { value: 0, isPositive: true };
+    : (salesStats?.pipeline.trend ?? { value: 0, isPositive: true });
 
   const kpiCloseRateTrend = kpisData
     ? {
-        value: Math.round(Math.abs(kpisData.closeRate - kpisData.prevCloseRate) * 10) / 10,
+        value:
+          Math.round(
+            Math.abs(kpisData.closeRate - kpisData.prevCloseRate) * 10,
+          ) / 10,
         isPositive: kpisData.closeRate >= kpisData.prevCloseRate,
       }
-    : salesStats?.conversionRate.trend ?? { value: 0, isPositive: true };
+    : (salesStats?.conversionRate.trend ?? { value: 0, isPositive: true });
 
   const kpiAvgDealTrend = kpisData
     ? {
-        value: Math.round(Math.abs(((kpisData.avgDealSize - kpisData.prevAvgDealSize) / Math.max(kpisData.prevAvgDealSize, 1)) * 1000) / 10),
+        value: Math.round(
+          Math.abs(
+            ((kpisData.avgDealSize - kpisData.prevAvgDealSize) /
+              Math.max(kpisData.prevAvgDealSize, 1)) *
+              1000,
+          ) / 10,
+        ),
         isPositive: kpisData.avgDealSize >= kpisData.prevAvgDealSize,
       }
-    : salesStats?.avgDealSize.trend ?? { value: 0, isPositive: true };
+    : (salesStats?.avgDealSize.trend ?? { value: 0, isPositive: true });
 
   const activeLeaderboard = leaderboardData ?? salesLeaderboard;
 
   if (isLoading || !salesStats) {
     return (
-      <PageWrapper title="Sales Dashboard" subtitle="Pipeline overview and sales performance metrics">
+      <PageWrapper
+        title="Sales Dashboard"
+        subtitle="Pipeline overview and sales performance metrics"
+      >
         <div className="space-y-4 pb-2">
           <div className="space-y-1">
             <Skeleton className="h-8 w-48" />
@@ -194,12 +222,20 @@ export default function SalesDashboardPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
             <Card className="lg:col-span-7">
-              <CardHeader><Skeleton className="h-5 w-36" /></CardHeader>
-              <CardContent><Skeleton className="h-[240px] w-full" /></CardContent>
+              <CardHeader>
+                <Skeleton className="h-5 w-36" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-[240px] w-full" />
+              </CardContent>
             </Card>
             <Card className="lg:col-span-5">
-              <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
-              <CardContent><Skeleton className="h-[240px] w-full" /></CardContent>
+              <CardHeader>
+                <Skeleton className="h-5 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-[240px] w-full" />
+              </CardContent>
             </Card>
           </div>
         </div>

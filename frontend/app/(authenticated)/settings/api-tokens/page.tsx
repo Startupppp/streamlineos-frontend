@@ -4,15 +4,24 @@ import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Key, Plus, Trash2, Copy, Check, Clock, Shield, ShieldOff } from "lucide-react";
+import {
+  Key,
+  Plus,
+  Trash2,
+  Copy,
+  Check,
+  Clock,
+  Shield,
+  Shield@/hooks/api/api-tokens
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   useApiTokens,
   useCreateApiToken,
   useRevokeApiToken,
   useDeleteApiToken,
-  type CreateApiTokenInput,
-} from "@/hooks/api/api-tokens";
+  type C@/hooks/api/user-api-tokens
+} from "@/hooks/hooks/api-tokens";
 import {
   useUserApiTokens,
   useCreateUserApiToken,
@@ -20,7 +29,7 @@ import {
   type CreateUserApiTokenInput,
   type CreateUserApiTokenResponse,
   type UserApiToken,
-} from "@/hooks/api/user-api-tokens";
+} from "@/hooks/hooks/user-api-tokens";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -52,7 +61,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } fro@/hooks/api/api-tokens;
 import {
   Table,
   TableBody,
@@ -61,7 +70,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { ApiToken, CreateApiTokenResponse } from "@/hooks/api/api-tokens";
+import type {
+  ApiToken,
+  CreateApiTokenResponse,
+} from "@/hooks/hooks/api-tokens";
 
 const AVAILABLE_SCOPES = [
   "read:all",
@@ -132,9 +144,22 @@ function TokenCreatedDialog({
             Copy this token now. You won&apos;t be able to see it again.
           </div>
           <div className="flex items-center gap-2">
-            <Input readOnly value={rawToken ?? ""} className="font-mono text-xs" />
-            <Button size="sm" variant="outline" onClick={handleCopy} className="shrink-0">
-              {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+            <Input
+              readOnly
+              value={rawToken ?? ""}
+              className="font-mono text-xs"
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCopy}
+              className="shrink-0"
+            >
+              {copied ? (
+                <Check className="h-4 w-4 text-green-600" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
@@ -156,7 +181,11 @@ function OrgTokenCreatedDialog({
   onClose: () => void;
 }) {
   return (
-    <TokenCreatedDialog open={open} rawToken={result?.token ?? null} onClose={onClose} />
+    <TokenCreatedDialog
+      open={open}
+      rawToken={result?.token ?? null}
+      onClose={onClose}
+    />
   );
 }
 
@@ -243,7 +272,11 @@ function CreateOrgTokenSheet({
           <SheetTitle>New Organization Token</SheetTitle>
         </SheetHeader>
         <Form {...form}>
-          <form id="org-token-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
+          <form
+            id="org-token-form"
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4 py-2"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -264,7 +297,11 @@ function CreateOrgTokenSheet({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea rows={2} placeholder="What is this token used for?" {...field} />
+                    <Textarea
+                      rows={2}
+                      placeholder="What is this token used for?"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -279,7 +316,9 @@ function CreateOrgTokenSheet({
                   <FormControl>
                     <Input type="datetime-local" {...field} />
                   </FormControl>
-                  <FormDescription>Leave blank for a non-expiring token.</FormDescription>
+                  <FormDescription>
+                    Leave blank for a non-expiring token.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -290,13 +329,20 @@ function CreateOrgTokenSheet({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Scopes</FormLabel>
-                  <ScopeSelector value={field.value} onChange={field.onChange} />
+                  <ScopeSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
             />
             <SheetFooter>
-              <Button type="submit" form="org-token-form" disabled={create.isPending}>
+              <Button
+                type="submit"
+                form="org-token-form"
+                disabled={create.isPending}
+              >
                 {create.isPending ? "Creating…" : "Create Token"}
               </Button>
             </SheetFooter>
@@ -348,7 +394,11 @@ function CreateUserTokenSheet({
           <SheetTitle>New Personal Access Token</SheetTitle>
         </SheetHeader>
         <Form {...form}>
-          <form id="user-token-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
+          <form
+            id="user-token-form"
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4 py-2"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -371,7 +421,9 @@ function CreateUserTokenSheet({
                   <FormControl>
                     <Input type="datetime-local" {...field} />
                   </FormControl>
-                  <FormDescription>Leave blank for a non-expiring token.</FormDescription>
+                  <FormDescription>
+                    Leave blank for a non-expiring token.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -382,13 +434,20 @@ function CreateUserTokenSheet({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Scopes</FormLabel>
-                  <ScopeSelector value={field.value} onChange={field.onChange} />
+                  <ScopeSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
             />
             <SheetFooter>
-              <Button type="submit" form="user-token-form" disabled={create.isPending}>
+              <Button
+                type="submit"
+                form="user-token-form"
+                disabled={create.isPending}
+              >
                 {create.isPending ? "Creating…" : "Create Token"}
               </Button>
             </SheetFooter>
@@ -405,7 +464,8 @@ function OrgTokensTab() {
   const del = useDeleteApiToken();
 
   const [showCreate, setShowCreate] = useState(false);
-  const [createdResult, setCreatedResult] = useState<CreateApiTokenResponse | null>(null);
+  const [createdResult, setCreatedResult] =
+    useState<CreateApiTokenResponse | null>(null);
   const [revoking, setRevoking] = useState<ApiToken | null>(null);
   const [deleting, setDeleting] = useState<ApiToken | null>(null);
 
@@ -445,7 +505,8 @@ function OrgTokensTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Tokens with access to your organization&apos;s resources. Visible to administrators.
+          Tokens with access to your organization&apos;s resources. Visible to
+          administrators.
         </p>
         <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1.5" />
@@ -485,7 +546,10 @@ function OrgTokensTab() {
             {tokens.map((t) => {
               const expired = isExpired(t.expiresAt);
               return (
-                <TableRow key={t.id} className={t.isRevoked ? "opacity-60" : ""}>
+                <TableRow
+                  key={t.id}
+                  className={t.isRevoked ? "opacity-60" : ""}
+                >
                   <TableCell className="font-medium">
                     <div className="flex flex-col">
                       <span>{t.name}</span>
@@ -497,17 +561,26 @@ function OrgTokensTab() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{t.keyPrefix}…</code>
+                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                      {t.keyPrefix}…
+                    </code>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1 max-w-[200px]">
                       {t.scopes.slice(0, 3).map((s) => (
-                        <Badge key={s} variant="outline" className="text-xs px-1.5 py-0">
+                        <Badge
+                          key={s}
+                          variant="outline"
+                          className="text-xs px-1.5 py-0"
+                        >
                           {s}
                         </Badge>
                       ))}
                       {t.scopes.length > 3 && (
-                        <Badge variant="outline" className="text-xs px-1.5 py-0">
+                        <Badge
+                          variant="outline"
+                          className="text-xs px-1.5 py-0"
+                        >
                           +{t.scopes.length - 3}
                         </Badge>
                       )}
@@ -515,22 +588,37 @@ function OrgTokensTab() {
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      {expired && <Clock className="h-3.5 w-3.5 text-destructive" />}
-                      <span className={expired ? "text-destructive" : ""}>{formatDate(t.expiresAt)}</span>
+                      {expired && (
+                        <Clock className="h-3.5 w-3.5 text-destructive" />
+                      )}
+                      <span className={expired ? "text-destructive" : ""}>
+                        {formatDate(t.expiresAt)}
+                      </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(t.lastUsedAt)}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(t.lastUsedAt)}
+                  </TableCell>
                   <TableCell>
                     {t.isRevoked ? (
-                      <Badge variant="secondary" className="text-destructive border-destructive/20 bg-destructive/10">
+                      <Badge
+                        variant="secondary"
+                        className="text-destructive border-destructive/20 bg-destructive/10"
+                      >
                         Revoked
                       </Badge>
                     ) : expired ? (
-                      <Badge variant="secondary" className="text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400">
+                      <Badge
+                        variant="secondary"
+                        className="text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                      >
                         Expired
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400">
+                      <Badge
+                        variant="outline"
+                        className="text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
+                      >
                         <Shield className="h-3 w-3 mr-1" />
                         Active
                       </Badge>
@@ -565,8 +653,16 @@ function OrgTokensTab() {
         </Table>
       )}
 
-      <CreateOrgTokenSheet open={showCreate} onOpenChange={setShowCreate} onCreated={handleCreated} />
-      <OrgTokenCreatedDialog open={!!createdResult} result={createdResult} onClose={handleCloseCreated} />
+      <CreateOrgTokenSheet
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        onCreated={handleCreated}
+      />
+      <OrgTokenCreatedDialog
+        open={!!createdResult}
+        result={createdResult}
+        onClose={handleCloseCreated}
+      />
       <ConfirmDialog
         open={!!revoking}
         onOpenChange={(o) => !o && setRevoking(null)}
@@ -665,32 +761,49 @@ function PersonalTokensTab() {
                 <TableRow key={t.id}>
                   <TableCell className="font-medium">{t.name}</TableCell>
                   <TableCell>
-                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{t.prefix}…</code>
+                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                      {t.prefix}…
+                    </code>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1 max-w-[200px]">
                       {t.scopes.slice(0, 3).map((s) => (
-                        <Badge key={s} variant="outline" className="text-xs px-1.5 py-0">
+                        <Badge
+                          key={s}
+                          variant="outline"
+                          className="text-xs px-1.5 py-0"
+                        >
                           {s}
                         </Badge>
                       ))}
                       {t.scopes.length > 3 && (
-                        <Badge variant="outline" className="text-xs px-1.5 py-0">
+                        <Badge
+                          variant="outline"
+                          className="text-xs px-1.5 py-0"
+                        >
                           +{t.scopes.length - 3}
                         </Badge>
                       )}
                       {t.scopes.length === 0 && (
-                        <span className="text-xs text-muted-foreground">No scopes</span>
+                        <span className="text-xs text-muted-foreground">
+                          No scopes
+                        </span>
                       )}
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      {expired && <Clock className="h-3.5 w-3.5 text-destructive" />}
-                      <span className={expired ? "text-destructive" : ""}>{formatDate(t.expiresAt)}</span>
+                      {expired && (
+                        <Clock className="h-3.5 w-3.5 text-destructive" />
+                      )}
+                      <span className={expired ? "text-destructive" : ""}>
+                        {formatDate(t.expiresAt)}
+                      </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(t.lastUsedAt)}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(t.lastUsedAt)}
+                  </TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
@@ -708,8 +821,16 @@ function PersonalTokensTab() {
         </Table>
       )}
 
-      <CreateUserTokenSheet open={showCreate} onOpenChange={setShowCreate} onCreated={handleCreated} />
-      <TokenCreatedDialog open={!!createdRawToken} rawToken={createdRawToken} onClose={handleCloseCreated} />
+      <CreateUserTokenSheet
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        onCreated={handleCreated}
+      />
+      <TokenCreatedDialog
+        open={!!createdRawToken}
+        rawToken={createdRawToken}
+        onClose={handleCloseCreated}
+      />
       <ConfirmDialog
         open={!!revoking}
         onOpenChange={(o) => !o && setRevoking(null)}

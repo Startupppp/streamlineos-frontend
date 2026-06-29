@@ -75,7 +75,9 @@ export function PreviewDialog({ template }: { template: DocumentTemplate }) {
             </AlertDialogHeader>
             <div
               className="max-h-[60vh] overflow-y-auto rounded-xl border bg-white dark:bg-neutral-950 p-4 text-sm prose prose-sm dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(template.htmlContent) }}
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(template.htmlContent),
+              }}
             />
             <AlertDialogFooter>
               <AlertDialogCancel>Close</AlertDialogCancel>
@@ -96,7 +98,10 @@ export function DeleteConfirm({
   onDelete: (id: number) => void;
   isPending: boolean;
 }) {
-  const handleDelete = useCallback(() => onDelete(template.id), [template.id, onDelete]);
+  const handleDelete = useCallback(
+    () => onDelete(template.id),
+    [template.id, onDelete],
+  );
   const handleSelectPrevent = useCallback((e: Event) => e.preventDefault(), []);
 
   return (
@@ -114,7 +119,8 @@ export function DeleteConfirm({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete template?</AlertDialogTitle>
           <AlertDialogDescription>
-            &ldquo;{template.title}&rdquo; will be permanently deleted. This action cannot be undone.
+            &ldquo;{template.title}&rdquo; will be permanently deleted. This
+            action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -151,13 +157,18 @@ export function DefaultStarButton({
   const hasExistingDefault = !!currentDefault && !isCurrentDefault;
 
   const handleClick = useCallback(() => setConfirmOpen(true), []);
-  const handleConfirmOpenChange = useCallback((val: boolean) => setConfirmOpen(val), []);
+  const handleConfirmOpenChange = useCallback(
+    (val: boolean) => setConfirmOpen(val),
+    [],
+  );
   const handleConfirm = useCallback(() => {
     onSetDefault(template.id, !isCurrentDefault);
     setConfirmOpen(false);
   }, [template.id, isCurrentDefault, onSetDefault]);
 
-  const confirmTitle = isCurrentDefault ? "Remove default status?" : "Set as default template?";
+  const confirmTitle = isCurrentDefault
+    ? "Remove default status?"
+    : "Set as default template?";
 
   const confirmDescription = isCurrentDefault
     ? "Are you sure you want to remove the default status from this template?"
@@ -178,7 +189,9 @@ export function DefaultStarButton({
         )}
         onClick={handleClick}
         disabled={isPending}
-        aria-label={isCurrentDefault ? "Remove default status" : "Set as default"}
+        aria-label={
+          isCurrentDefault ? "Remove default status" : "Set as default"
+        }
         title={isCurrentDefault ? "Remove default status" : "Set as default"}
       >
         <Star className={cn("h-4 w-4", isCurrentDefault && "fill-amber-500")} />

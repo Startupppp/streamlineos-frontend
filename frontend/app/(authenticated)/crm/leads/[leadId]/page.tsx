@@ -10,8 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/hooks/api/leads";
-import { useCreateTask } from "@/hooks/api/tasks";
+import {@/hooks/api/leads
+  useLeadDetail,
+  useLeadTimeline,
+  useUpdateLead,
+  useUpdateLeadStatus,
+  useLogLeadActivity,
+} from "@/hooks/hooks/leads";
+import { useCreateTask } from "@/hooks/hooks/tasks";
 import { toast } from "sonner";
 
 import { LeadDetailHeader } from "@/features/crm/leads/detail/lead-detail-header";
@@ -43,7 +49,10 @@ export default function LeadDetailPage({
   const router = useRouter();
 
   const { data: lead, isLoading } = useLeadDetail(leadId);
-  const { data: timeline, isLoading: timelineLoading } = useLeadTimeline(leadId, 50);
+  const { data: timeline, isLoading: timelineLoading } = useLeadTimeline(
+    leadId,
+    50,
+  );
 
   const [isEditing, setIsEditing] = useState(false);
   const [activeAction, setActiveAction] = useState<QuickAction>(null);
@@ -91,7 +100,7 @@ export default function LeadDetailPage({
         error: (err: Error) => err?.message || "Failed to update status",
       });
     },
-    [leadId, updateStatusMutation, lead]
+    [leadId, updateStatusMutation, lead],
   );
 
   const onEditSubmit = useCallback(
@@ -99,25 +108,37 @@ export default function LeadDetailPage({
       updateLeadMutation.mutate(
         { id: leadId, ...data },
         {
-          onSuccess: () => { toast.success("Lead updated"); setIsEditing(false); },
+          onSuccess: () => {
+            toast.success("Lead updated");
+            setIsEditing(false);
+          },
           onError: (err) => toast.error(err.message),
-        }
+        },
       );
     },
-    [leadId, updateLeadMutation]
+    [leadId, updateLeadMutation],
   );
 
   const onNoteSubmit = useCallback(
     (data: NoteForm) => {
       logActivityMutation.mutate(
-        { leadId, type: "note", date: new Date().toISOString(), notes: data.body },
         {
-          onSuccess: () => { toast.success("Note added"); setActiveAction(null); noteForm.reset(); },
+          leadId,
+          type: "note",
+          date: new Date().toISOString(),
+          notes: data.body,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Note added");
+            setActiveAction(null);
+            noteForm.reset();
+          },
           onError: (err) => toast.error(err.message),
-        }
+        },
       );
     },
-    [leadId, logActivityMutation, noteForm]
+    [leadId, logActivityMutation, noteForm],
   );
 
   const onTaskSubmit = useCallback(
@@ -135,28 +156,44 @@ export default function LeadDetailPage({
           dueDate,
         },
         {
-          onSuccess: () => { toast.success("Task created"); setActiveAction(null); taskForm.reset(); },
+          onSuccess: () => {
+            toast.success("Task created");
+            setActiveAction(null);
+            taskForm.reset();
+          },
           onError: (err) => toast.error(err.message),
-        }
+        },
       );
     },
-    [leadId, createTaskMutation, taskForm]
+    [leadId, createTaskMutation, taskForm],
   );
 
   const onEmailSubmit = useCallback(
     (data: EmailForm) => {
       logActivityMutation.mutate(
-        { leadId, type: "email", date: new Date().toISOString(), subject: data.subject, notes: `To: ${data.to}\n\n${data.body}` },
         {
-          onSuccess: () => { toast.success("Email sent"); setActiveAction(null); },
+          leadId,
+          type: "email",
+          date: new Date().toISOString(),
+          subject: data.subject,
+          notes: `To: ${data.to}\n\n${data.body}`,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Email sent");
+            setActiveAction(null);
+          },
           onError: (err) => toast.error(err.message),
-        }
+        },
       );
     },
-    [leadId, logActivityMutation]
+    [leadId, logActivityMutation],
   );
 
-  const handleBackToPipeline = useCallback(() => router.push("/crm/leads"), [router]);
+  const handleBackToPipeline = useCallback(
+    () => router.push("/crm/leads"),
+    [router],
+  );
   const handleToggleEdit = useCallback(() => setIsEditing((prev) => !prev), []);
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
 
@@ -183,12 +220,16 @@ export default function LeadDetailPage({
           notes: data.notes || undefined,
         },
         {
-          onSuccess: () => { toast.success("Call logged"); setActiveAction(null); callForm.reset(); },
+          onSuccess: () => {
+            toast.success("Call logged");
+            setActiveAction(null);
+            callForm.reset();
+          },
           onError: (err) => toast.error(err.message),
-        }
+        },
       );
     },
-    [leadId, logActivityMutation, callForm]
+    [leadId, logActivityMutation, callForm],
   );
 
   if (isLoading) {
@@ -272,7 +313,9 @@ export default function LeadDetailPage({
               isCallPending={logActivityMutation.isPending}
               leadName={lead.name}
               leadEmail={lead.email ?? ""}
-              leadContext={[lead.status, lead.priority, lead.potentialValue].filter(Boolean).join(", ")}
+              leadContext={[lead.status, lead.priority, lead.potentialValue]
+                .filter(Boolean)
+                .join(", ")}
               onDraftEmail={handleDraftEmail}
             />
           </div>

@@ -32,7 +32,6 @@ import { useDocumentTemplates } from "@/hooks/api/hr/document-templates";
 import { useGenerateAndRollout } from "@/hooks/api/hr/recruitment";
 import { extractVariables } from "@/lib/utils/document-variables";
 
-
 export interface RolloutDocumentsDialogProps {
   candidateId: number;
   candidateName: string;
@@ -41,15 +40,15 @@ export interface RolloutDocumentsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-
 const rolloutFormSchema = z.object({
-  selectedTemplateIds: z.array(z.number()).min(1, "Select at least one template"),
+  selectedTemplateIds: z
+    .array(z.number())
+    .min(1, "Select at least one template"),
   variables: z.record(z.string(), z.string()),
   sendEmail: z.boolean(),
 });
 
 type RolloutFormValues = z.infer<typeof rolloutFormSchema>;
-
 
 export function RolloutDocumentsDialog({
   candidateId,
@@ -61,7 +60,8 @@ export function RolloutDocumentsDialog({
   const [succeeded, setSucceeded] = useState(false);
   const [resultCount, setResultCount] = useState(0);
 
-  const { data: templates, isLoading: templatesLoading } = useDocumentTemplates();
+  const { data: templates, isLoading: templatesLoading } =
+    useDocumentTemplates();
   const rollout = useGenerateAndRollout(candidateId);
 
   const form = useForm<RolloutFormValues>({
@@ -94,10 +94,10 @@ export function RolloutDocumentsDialog({
       form.setValue(
         "selectedTemplateIds",
         checked ? [...current, id] : current.filter((x) => x !== id),
-        { shouldValidate: true }
+        { shouldValidate: true },
       );
     },
-    [form]
+    [form],
   );
 
   const handleClose = useCallback(() => {
@@ -118,7 +118,7 @@ export function RolloutDocumentsDialog({
         setResultCount(result.count);
         setSucceeded(true);
         toast.success(
-          `${result.count} document${result.count !== 1 ? "s" : ""} generated${values.sendEmail ? " and sent" : ""} successfully`
+          `${result.count} document${result.count !== 1 ? "s" : ""} generated${values.sendEmail ? " and sent" : ""} successfully`,
         );
       } catch (error: unknown) {
         const message =
@@ -128,7 +128,7 @@ export function RolloutDocumentsDialog({
         toast.error(message);
       }
     },
-    [rollout]
+    [rollout],
   );
 
   return (
@@ -148,9 +148,13 @@ export function RolloutDocumentsDialog({
 
         {succeeded ? (
           <div className="flex flex-col items-center gap-4 py-8 text-center">
-            <CheckCircle2 className="h-12 w-12 text-green-500" aria-hidden="true" />
+            <CheckCircle2
+              className="h-12 w-12 text-green-500"
+              aria-hidden="true"
+            />
             <p className="text-lg font-semibold">
-              {resultCount} document{resultCount !== 1 ? "s" : ""} generated successfully
+              {resultCount} document{resultCount !== 1 ? "s" : ""} generated
+              successfully
             </p>
             <p className="text-sm text-muted-foreground">
               {form.getValues("sendEmail")
@@ -166,7 +170,10 @@ export function RolloutDocumentsDialog({
                 <p className="text-sm font-medium">Select Templates</p>
                 {templatesLoading ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    <Loader2
+                      className="h-4 w-4 animate-spin"
+                      aria-hidden="true"
+                    />
                     Loading templates…
                   </div>
                 ) : !templates || templates.length === 0 ? (
@@ -188,7 +195,9 @@ export function RolloutDocumentsDialog({
                             }
                             aria-label={`Select ${tpl.title}`}
                           />
-                          <span className="flex-1 text-sm font-medium">{tpl.title}</span>
+                          <span className="flex-1 text-sm font-medium">
+                            {tpl.title}
+                          </span>
                           <Badge variant="secondary" className="text-xs">
                             {tpl.type}
                           </Badge>
@@ -284,7 +293,10 @@ export function RolloutDocumentsDialog({
                 >
                   {rollout.isPending ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />
+                      <Loader2
+                        className="h-4 w-4 animate-spin mr-2"
+                        aria-hidden="true"
+                      />
                       Generating…
                     </>
                   ) : (

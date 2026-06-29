@@ -202,7 +202,9 @@ export default function CategoriesPage() {
           />
         ) : categories.length === 0 ? (
           <EmptyState
-            illustration={<Tag className="h-12 w-12 text-muted-foreground/40" />}
+            illustration={
+              <Tag className="h-12 w-12 text-muted-foreground/40" />
+            }
             title="No categories yet"
             description="Use the form above to add your first product category."
           />
@@ -224,7 +226,7 @@ export default function CategoriesPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {cat.parentCategoryId != null
-                        ? categoryNameById.get(cat.parentCategoryId) ?? "—"
+                        ? (categoryNameById.get(cat.parentCategoryId) ?? "—")
                         : "—"}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-xs truncate">

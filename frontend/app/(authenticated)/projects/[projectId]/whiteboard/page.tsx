@@ -68,7 +68,11 @@ const PALETTE = [
   "#E2E8F0",
 ] as const;
 
-const TOOL_DEFS: { type: ElementType; label: string; icon: typeof StickyNote }[] = [
+const TOOL_DEFS: {
+  type: ElementType;
+  label: string;
+  icon: typeof StickyNote;
+}[] = [
   { type: "note", label: "Note", icon: StickyNote },
   { type: "rect", label: "Rectangle", icon: Square },
   { type: "ellipse", label: "Ellipse", icon: Circle },
@@ -96,7 +100,11 @@ interface PaletteButtonProps {
   onSelect: (color: string) => void;
 }
 
-const PaletteButton = memo(function PaletteButton({ color, isActive, onSelect }: PaletteButtonProps) {
+const PaletteButton = memo(function PaletteButton({
+  color,
+  isActive,
+  onSelect,
+}: PaletteButtonProps) {
   const handleClick = useCallback(() => onSelect(color), [onSelect, color]);
   return (
     <button
@@ -121,7 +129,11 @@ function nextElementId(elements: WhiteboardElement[]): string {
   return `el-${max + 1}`;
 }
 
-function defaultElement(type: ElementType, id: string, color: string): WhiteboardElement {
+function defaultElement(
+  type: ElementType,
+  id: string,
+  color: string,
+): WhiteboardElement {
   const base = { id, type, x: 80, y: 80, color };
   if (type === "note") return { ...base, w: 160, h: 120, text: "New note" };
   if (type === "text") return { ...base, w: 160, h: 40, text: "Text" };
@@ -129,7 +141,10 @@ function defaultElement(type: ElementType, id: string, color: string): Whiteboar
   return { ...base, w: 160, h: 100, text: "" };
 }
 
-function elementsEqual(a: WhiteboardElement[], b: WhiteboardElement[]): boolean {
+function elementsEqual(
+  a: WhiteboardElement[],
+  b: WhiteboardElement[],
+): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
@@ -148,7 +163,10 @@ function CanvasElement({
 }: {
   element: WhiteboardElement;
   selected: boolean;
-  onPointerDown: (event: ReactPointerEvent<SVGGElement>, element: WhiteboardElement) => void;
+  onPointerDown: (
+    event: ReactPointerEvent<SVGGElement>,
+    element: WhiteboardElement,
+  ) => void;
   onDoubleClick: (element: WhiteboardElement) => void;
 }) {
   function handlePointerDown(event: ReactPointerEvent<SVGGElement>) {
@@ -212,7 +230,9 @@ function CanvasElement({
           <div
             className={cn(
               "h-full w-full px-2 py-1 text-[12px] leading-snug break-words overflow-hidden",
-              element.type === "text" ? "font-medium text-foreground" : "text-slate-800",
+              element.type === "text"
+                ? "font-medium text-foreground"
+                : "text-slate-800",
             )}
           >
             {element.text}
@@ -290,16 +310,25 @@ function BoardCanvas({
   projectId: number;
   board: { id: number; name: string };
 }) {
-  const { data, isLoading, isError, refetch } = useWhiteboard(projectId, board.id);
+  const { data, isLoading, isError, refetch } = useWhiteboard(
+    projectId,
+    board.id,
+  );
   const update = useUpdateWhiteboard(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
-  const [elements, setElements] = useState<WhiteboardElement[]>(() => data?.data ?? []);
+  const [elements, setElements] = useState<WhiteboardElement[]>(
+    () => data?.data ?? [],
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeColor, setActiveColor] = useState<string>(PALETTE[0]);
-  const [editing, setEditing] = useState<{ id: string; value: string } | null>(null);
-  const [syncedData, setSyncedData] = useState<WhiteboardElement[] | null>(() => data?.data ?? null);
+  const [editing, setEditing] = useState<{ id: string; value: string } | null>(
+    null,
+  );
+  const [syncedData, setSyncedData] = useState<WhiteboardElement[] | null>(
+    () => data?.data ?? null,
+  );
   const dragRef = useRef<DragState | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -371,13 +400,16 @@ function BoardCanvas({
     [toSvgPoint],
   );
 
-  const handleCanvasPointerUp = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
-    const drag = dragRef.current;
-    if (drag && drag.pointerId === event.pointerId) {
-      svgRef.current?.releasePointerCapture(event.pointerId);
-      dragRef.current = null;
-    }
-  }, []);
+  const handleCanvasPointerUp = useCallback(
+    (event: ReactPointerEvent<SVGSVGElement>) => {
+      const drag = dragRef.current;
+      if (drag && drag.pointerId === event.pointerId) {
+        svgRef.current?.releasePointerCapture(event.pointerId);
+        dragRef.current = null;
+      }
+    },
+    [],
+  );
 
   const handleCanvasPointerDown = useCallback(() => {
     setSelectedId(null);
@@ -390,17 +422,22 @@ function BoardCanvas({
     setEditing({ id: element.id, value: element.text });
   }, []);
 
-  const handleEditChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = event.target.value;
-    setEditing((current) => (current ? { ...current, value } : current));
-  }, []);
+  const handleEditChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = event.target.value;
+      setEditing((current) => (current ? { ...current, value } : current));
+    },
+    [],
+  );
 
   const commitEdit = useCallback(() => {
     setEditing((current) => {
       if (!current) return null;
       setElements((els) =>
         els.map((element) =>
-          element.id === current.id ? { ...element, text: current.value } : element,
+          element.id === current.id
+            ? { ...element, text: current.value }
+            : element,
         ),
       );
       return null;
@@ -416,28 +453,29 @@ function BoardCanvas({
     });
   }, []);
 
-  const handleColorSelect = useCallback(
-    (color: string) => {
-      setActiveColor(color);
-      setSelectedId((current) => {
-        if (current) {
-          setElements((els) =>
-            els.map((element) =>
-              element.id === current ? { ...element, color } : element,
-            ),
-          );
-        }
-        return current;
-      });
-    },
-    [],
-  );
+  const handleColorSelect = useCallback((color: string) => {
+    setActiveColor(color);
+    setSelectedId((current) => {
+      if (current) {
+        setElements((els) =>
+          els.map((element) =>
+            element.id === current ? { ...element, color } : element,
+          ),
+        );
+      }
+      return current;
+    });
+  }, []);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (editing) return;
       const target = event.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+      if (
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
+      )
+        return;
       if ((event.key === "Delete" || event.key === "Backspace") && selectedId) {
         event.preventDefault();
         handleDeleteSelected();
@@ -470,7 +508,7 @@ function BoardCanvas({
   }
 
   const editingElement = editing
-    ? elements.find((element) => element.id === editing.id) ?? null
+    ? (elements.find((element) => element.id === editing.id) ?? null)
     : null;
 
   return (
@@ -503,9 +541,16 @@ function BoardCanvas({
             Delete
           </Button>
           {dirty && (
-            <span className="text-xs text-amber-600 font-medium">Unsaved changes</span>
+            <span className="text-xs text-amber-600 font-medium">
+              Unsaved changes
+            </span>
           )}
-          <Button size="sm" className="h-8" onClick={handleSave} disabled={!dirty || update.isPending}>
+          <Button
+            size="sm"
+            className="h-8"
+            onClick={handleSave}
+            disabled={!dirty || update.isPending}
+          >
             <Save className="h-3.5 w-3.5 mr-1" />
             {update.isPending ? "Saving…" : "Save"}
           </Button>
@@ -521,8 +566,18 @@ function BoardCanvas({
           onPointerUp={handleCanvasPointerUp}
         >
           <defs>
-            <pattern id="wb-grid" width="24" height="24" patternUnits="userSpaceOnUse">
-              <path d="M 24 0 L 0 0 0 24" fill="none" stroke="var(--border)" strokeWidth="0.5" />
+            <pattern
+              id="wb-grid"
+              width="24"
+              height="24"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M 24 0 L 0 0 0 24"
+                fill="none"
+                stroke="var(--border)"
+                strokeWidth="0.5"
+              />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#wb-grid)" />
@@ -572,12 +627,23 @@ interface BoardItemProps {
   onDelete: (board: WhiteboardSummary) => void;
 }
 
-const BoardItem = memo(function BoardItem({ board, isSelected, onSelect, onDelete }: BoardItemProps) {
-  const handleSelect = useCallback(() => onSelect(board.id), [onSelect, board.id]);
-  const handleDelete = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    onDelete(board);
-  }, [onDelete, board]);
+const BoardItem = memo(function BoardItem({
+  board,
+  isSelected,
+  onSelect,
+  onDelete,
+}: BoardItemProps) {
+  const handleSelect = useCallback(
+    () => onSelect(board.id),
+    [onSelect, board.id],
+  );
+  const handleDelete = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      onDelete(board);
+    },
+    [onDelete, board],
+  );
 
   return (
     <li>
@@ -608,17 +674,28 @@ const BoardItem = memo(function BoardItem({ board, isSelected, onSelect, onDelet
   );
 });
 
-export default function WhiteboardPage({ params }: { params: Promise<{ projectId: string }> }) {
+export default function WhiteboardPage({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
   const { projectId: projectIdStr } = use(params);
   const projectId = Number(projectIdStr);
 
-  const { data: boards, isLoading, isError, refetch } = useWhiteboards(projectId);
+  const {
+    data: boards,
+    isLoading,
+    isError,
+    refetch,
+  } = useWhiteboards(projectId);
   const createBoard = useCreateWhiteboard(projectId);
   const deleteBoard = useDeleteWhiteboard(projectId);
 
   const [chosenBoardId, setChosenBoardId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<WhiteboardSummary | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WhiteboardSummary | null>(
+    null,
+  );
 
   const selectedBoard = useMemo(() => {
     if (!boards || boards.length === 0) return null;
@@ -626,8 +703,14 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
   }, [boards, chosenBoardId]);
   const selectedBoardId = selectedBoard?.id ?? null;
 
-  const handleBoardSelect = useCallback((id: number) => setChosenBoardId(id), []);
-  const handleBoardDelete = useCallback((board: WhiteboardSummary) => setDeleteTarget(board), []);
+  const handleBoardSelect = useCallback(
+    (id: number) => setChosenBoardId(id),
+    [],
+  );
+  const handleBoardDelete = useCallback(
+    (board: WhiteboardSummary) => setDeleteTarget(board),
+    [],
+  );
   const handleAlertOpenChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
   }, []);
@@ -705,7 +788,11 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
 
           <div className="flex flex-1 min-h-0 flex-col">
             {selectedBoard ? (
-              <BoardCanvas key={selectedBoard.id} projectId={projectId} board={selectedBoard} />
+              <BoardCanvas
+                key={selectedBoard.id}
+                projectId={projectId}
+                board={selectedBoard}
+              />
             ) : (
               <div className="flex flex-1 items-center justify-center">
                 <EmptyState
@@ -727,15 +814,13 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
         isPending={createBoard.isPending}
       />
 
-      <AlertDialog
-        open={!!deleteTarget}
-        onOpenChange={handleAlertOpenChange}
-      >
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete board?</AlertDialogTitle>
             <AlertDialogDescription>
-              &ldquo;{deleteTarget?.name}&rdquo; and all of its elements will be permanently deleted.
+              &ldquo;{deleteTarget?.name}&rdquo; and all of its elements will be
+              permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

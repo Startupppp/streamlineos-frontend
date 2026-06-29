@@ -14,16 +14,25 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
   const { data: requests, isLoading } = useHrWfhRequests();
 
   const stats = useMemo(() => {
-    if (!requests) return { approved: 0, pending: 0, remaining: WFH_MONTHLY_QUOTA };
+    if (!requests)
+      return { approved: 0, pending: 0, remaining: WFH_MONTHLY_QUOTA };
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     const thisMonthRequests = requests.filter((r) => {
       const d = new Date(r.date);
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
-    const approved = thisMonthRequests.filter((r) => r.status === "APPROVED").length;
-    const pending = thisMonthRequests.filter((r) => r.status === "PENDING").length;
-    return { approved, pending, remaining: Math.max(0, WFH_MONTHLY_QUOTA - approved) };
+    const approved = thisMonthRequests.filter(
+      (r) => r.status === "APPROVED",
+    ).length;
+    const pending = thisMonthRequests.filter(
+      (r) => r.status === "PENDING",
+    ).length;
+    return {
+      approved,
+      pending,
+      remaining: Math.max(0, WFH_MONTHLY_QUOTA - approved),
+    };
   }, [requests]);
 
   if (isLoading) {
@@ -75,25 +84,34 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
             <p className="text-3xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400 leading-none mb-1">
               {stats.remaining}
             </p>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Left</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Left
+            </p>
           </div>
           <div className="rounded-xl bg-violet-100 dark:bg-violet-950/40 p-3 text-center">
             <p className="text-3xl font-bold tabular-nums text-violet-700 dark:text-violet-400 leading-none mb-1">
               {stats.approved}
             </p>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Used</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Used
+            </p>
           </div>
           <div className="rounded-xl bg-amber-100 dark:bg-amber-950/40 p-3 text-center">
             <p className="text-3xl font-bold tabular-nums text-amber-700 dark:text-amber-400 leading-none mb-1">
               {stats.pending}
             </p>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Pending</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Pending
+            </p>
           </div>
         </div>
 
         <RequestWfhDialog
           trigger={
-            <Button className="w-full gap-1.5 h-9 duration-200" variant="outline">
+            <Button
+              className="w-full gap-1.5 h-9 duration-200"
+              variant="outline"
+            >
               <Home className="h-4 w-4" />
               Apply for WFH
             </Button>

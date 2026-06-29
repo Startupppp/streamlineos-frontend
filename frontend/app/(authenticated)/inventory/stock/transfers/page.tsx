@@ -75,14 +75,25 @@ const STATUS_LABELS: Record<TransferStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
-const ALL_STATUSES: TransferStatus[] = ["PENDING", "IN_TRANSIT", "COMPLETED", "CANCELLED"];
+const ALL_STATUSES: TransferStatus[] = [
+  "PENDING",
+  "IN_TRANSIT",
+  "COMPLETED",
+  "CANCELLED",
+];
 
 function isTransferStatusOrAll(val: string): val is TransferStatus | "all" {
   return val === "all" || val in STATUS_LABELS;
 }
 
 function blankForm(): TransferFormState {
-  return { fromWarehouseId: "", toWarehouseId: "", productId: "", quantity: "", notes: "" };
+  return {
+    fromWarehouseId: "",
+    toWarehouseId: "",
+    productId: "",
+    quantity: "",
+    notes: "",
+  };
 }
 
 function TransfersTableSkeleton() {
@@ -92,7 +103,9 @@ function TransfersTableSkeleton() {
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
             {Array.from({ length: 7 }).map((_, i) => (
-              <TableHead key={i}><Skeleton className="h-3 w-16" /></TableHead>
+              <TableHead key={i}>
+                <Skeleton className="h-3 w-16" />
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -100,7 +113,9 @@ function TransfersTableSkeleton() {
           {Array.from({ length: 6 }).map((_, i) => (
             <TableRow key={i}>
               {Array.from({ length: 7 }).map((__, j) => (
-                <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                <TableCell key={j}>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
               ))}
             </TableRow>
           ))}
@@ -111,7 +126,9 @@ function TransfersTableSkeleton() {
 }
 
 export default function TransfersPage() {
-  const [statusFilter, setStatusFilter] = useState<TransferStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<TransferStatus | "all">(
+    "all",
+  );
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<TransferFormState>(blankForm());
 
@@ -119,9 +136,14 @@ export default function TransfersPage() {
   const { data: warehousesData } = useWarehouses();
   const createMutation = useCreateTransfer();
 
-  const warehouses: WarehouseOption[] = Array.isArray(warehousesData) ? warehousesData : [];
+  const warehouses: WarehouseOption[] = Array.isArray(warehousesData)
+    ? warehousesData
+    : [];
 
-  const allTransfers = useMemo<TransferListItem[]>(() => transfersData ?? [], [transfersData]);
+  const allTransfers = useMemo<TransferListItem[]>(
+    () => transfersData ?? [],
+    [transfersData],
+  );
 
   const transfers = useMemo(() => {
     if (statusFilter === "all") return allTransfers;
@@ -129,7 +151,10 @@ export default function TransfersPage() {
   }, [allTransfers, statusFilter]);
 
   const setField = useCallback(
-    <K extends keyof TransferFormState>(key: K, value: TransferFormState[K]) => {
+    <K extends keyof TransferFormState>(
+      key: K,
+      value: TransferFormState[K],
+    ) => {
       setForm((prev) => ({ ...prev, [key]: value }));
     },
     [],
@@ -147,31 +172,48 @@ export default function TransfersPage() {
     }
   }, []);
 
-  function handleRetry() { void refetch(); }
+  function handleRetry() {
+    void refetch();
+  }
 
   const handleStatusFilterChange = useCallback((val: string) => {
     if (isTransferStatusOrAll(val)) setStatusFilter(val);
   }, []);
 
-  const handleFromWarehouseChange = useCallback((v: string) => {
-    setField("fromWarehouseId", v);
-  }, [setField]);
+  const handleFromWarehouseChange = useCallback(
+    (v: string) => {
+      setField("fromWarehouseId", v);
+    },
+    [setField],
+  );
 
-  const handleToWarehouseChange = useCallback((v: string) => {
-    setField("toWarehouseId", v);
-  }, [setField]);
+  const handleToWarehouseChange = useCallback(
+    (v: string) => {
+      setField("toWarehouseId", v);
+    },
+    [setField],
+  );
 
-  const handleProductIdChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("productId", e.target.value);
-  }, [setField]);
+  const handleProductIdChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setField("productId", e.target.value);
+    },
+    [setField],
+  );
 
-  const handleQtyChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("quantity", e.target.value);
-  }, [setField]);
+  const handleQtyChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setField("quantity", e.target.value);
+    },
+    [setField],
+  );
 
-  const handleNotesChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    setField("notes", e.target.value);
-  }, [setField]);
+  const handleNotesChange = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      setField("notes", e.target.value);
+    },
+    [setField],
+  );
 
   const handleCancelSheet = useCallback(() => {
     setSheetOpen(false);
@@ -184,11 +226,26 @@ export default function TransfersPage() {
     const productId = Number(form.productId);
     const quantity = Number(form.quantity);
 
-    if (!fromWarehouseId) { toast.error("From warehouse is required"); return; }
-    if (!toWarehouseId) { toast.error("To warehouse is required"); return; }
-    if (fromWarehouseId === toWarehouseId) { toast.error("From and to warehouses must differ"); return; }
-    if (!productId) { toast.error("Product ID is required"); return; }
-    if (!quantity || isNaN(quantity) || quantity <= 0) { toast.error("Quantity must be a positive number"); return; }
+    if (!fromWarehouseId) {
+      toast.error("From warehouse is required");
+      return;
+    }
+    if (!toWarehouseId) {
+      toast.error("To warehouse is required");
+      return;
+    }
+    if (fromWarehouseId === toWarehouseId) {
+      toast.error("From and to warehouses must differ");
+      return;
+    }
+    if (!productId) {
+      toast.error("Product ID is required");
+      return;
+    }
+    if (!quantity || isNaN(quantity) || quantity <= 0) {
+      toast.error("Quantity must be a positive number");
+      return;
+    }
 
     createMutation.mutate(
       {
@@ -240,7 +297,12 @@ export default function TransfersPage() {
       ) : isError ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
-            illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+            illustration={
+              <AlertCircle
+                className="h-12 w-12 text-muted-foreground/40"
+                aria-hidden="true"
+              />
+            }
             title="Failed to load transfers"
             description="An error occurred while fetching transfer records. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
@@ -250,7 +312,10 @@ export default function TransfersPage() {
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
             illustration={
-              <ArrowRightLeft className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
+              <ArrowRightLeft
+                className="h-12 w-12 text-muted-foreground/40"
+                aria-hidden="true"
+              />
             }
             title="No transfers found"
             description={
@@ -262,20 +327,38 @@ export default function TransfersPage() {
           />
         </motion.div>
       ) : (
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           <motion.div variants={fadeUp}>
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="text-xs font-semibold">Reference</TableHead>
-                    <TableHead className="text-xs font-semibold">Status</TableHead>
-                    <TableHead className="text-xs font-semibold">From</TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Reference
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Status
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      From
+                    </TableHead>
                     <TableHead className="text-xs font-semibold">To</TableHead>
-                    <TableHead className="text-xs font-semibold">Lines</TableHead>
-                    <TableHead className="text-xs font-semibold">Created</TableHead>
-                    <TableHead className="text-xs font-semibold">Completed</TableHead>
-                    <TableHead className="text-xs font-semibold">Created By</TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Lines
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Created
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Completed
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Created By
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -314,7 +397,10 @@ export default function TransfersPage() {
                       </TableCell>
                       <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                         {transfer.completedAt
-                          ? format(new Date(transfer.completedAt), "dd MMM yyyy")
+                          ? format(
+                              new Date(transfer.completedAt),
+                              "dd MMM yyyy",
+                            )
                           : "—"}
                       </TableCell>
                       <TableCell className="py-2.5 text-xs text-muted-foreground">
@@ -330,7 +416,10 @@ export default function TransfersPage() {
       )}
 
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col gap-0 p-0">
+        <SheetContent
+          side="right"
+          className="sm:max-w-md w-full flex flex-col gap-0 p-0"
+        >
           <SheetHeader className="px-6 pt-6 pb-4 border-b">
             <SheetTitle>New Transfer</SheetTitle>
             <SheetDescription>
@@ -339,8 +428,13 @@ export default function TransfersPage() {
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="tf-from">From Warehouse <span className="text-destructive">*</span></Label>
-              <Select value={form.fromWarehouseId} onValueChange={handleFromWarehouseChange}>
+              <Label htmlFor="tf-from">
+                From Warehouse <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.fromWarehouseId}
+                onValueChange={handleFromWarehouseChange}
+              >
                 <SelectTrigger id="tf-from">
                   <SelectValue placeholder="Select source warehouse" />
                 </SelectTrigger>
@@ -354,8 +448,13 @@ export default function TransfersPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="tf-to">To Warehouse <span className="text-destructive">*</span></Label>
-              <Select value={form.toWarehouseId} onValueChange={handleToWarehouseChange}>
+              <Label htmlFor="tf-to">
+                To Warehouse <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.toWarehouseId}
+                onValueChange={handleToWarehouseChange}
+              >
                 <SelectTrigger id="tf-to">
                   <SelectValue placeholder="Select destination warehouse" />
                 </SelectTrigger>
@@ -369,7 +468,9 @@ export default function TransfersPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="tf-product">Product ID <span className="text-destructive">*</span></Label>
+              <Label htmlFor="tf-product">
+                Product ID <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="tf-product"
                 type="number"
@@ -379,7 +480,9 @@ export default function TransfersPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="tf-qty">Quantity <span className="text-destructive">*</span></Label>
+              <Label htmlFor="tf-qty">
+                Quantity <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="tf-qty"
                 type="number"

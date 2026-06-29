@@ -3,7 +3,7 @@
 import { use, useMemo, useCallback, memo } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
-import { useProject } from "@/lib/api/hooks";
+import { useProject } from "@/hooks/api";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { TicketFilterBar } from "@/components/projects/shared/ticket-filter-bar";
 import { TicketTypeIcon } from "@/components/projects/shared/ticket-type-icon";
@@ -37,15 +37,23 @@ interface MyTicketRowProps {
   onSelect: (id: number) => void;
 }
 
-const TicketRow = memo(function TicketRow({ ticket, onSelect }: MyTicketRowProps) {
-  const handleClick = useCallback(() => onSelect(ticket.id), [onSelect, ticket.id]);
+const TicketRow = memo(function TicketRow({
+  ticket,
+  onSelect,
+}: MyTicketRowProps) {
+  const handleClick = useCallback(
+    () => onSelect(ticket.id),
+    [onSelect, ticket.id],
+  );
 
   return (
-    <TableRow className="cursor-pointer hover:bg-muted/50" onClick={handleClick}>
+    <TableRow
+      className="cursor-pointer hover:bg-muted/50"
+      onClick={handleClick}
+    >
       <TableCell className="font-mono text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <TicketTypeIcon type={ticket.type} />
-          #{ticket.ticketNumber}
+          <TicketTypeIcon type={ticket.type} />#{ticket.ticketNumber}
         </span>
       </TableCell>
       <TableCell className="max-w-md">
@@ -67,9 +75,7 @@ const TicketRow = memo(function TicketRow({ ticket, onSelect }: MyTicketRowProps
         )}
       </TableCell>
       <TableCell className="text-xs text-muted-foreground">
-        {ticket.dueDate
-          ? format(new Date(ticket.dueDate), "MMM d")
-          : "—"}
+        {ticket.dueDate ? format(new Date(ticket.dueDate), "MMM d") : "—"}
       </TableCell>
     </TableRow>
   );
@@ -100,7 +106,6 @@ export default function MyTicketsPage({ params }: PageProps) {
   const myTickets = useMemo(() => {
     if (!data?.tickets || !userId) return [];
     return data.tickets.filter((t) => {
-
       if (t.assigneeId === userId) return true;
 
       if (t.assignees?.some((a) => a.userId === userId)) return true;
@@ -117,11 +122,12 @@ export default function MyTicketsPage({ params }: PageProps) {
       result = result.filter(
         (t) =>
           t.title?.toLowerCase().includes(lower) ||
-          t.description?.toLowerCase().includes(lower)
+          t.description?.toLowerCase().includes(lower),
       );
     }
     if (filterStatus) result = result.filter((t) => t.status === filterStatus);
-    if (filterPriority) result = result.filter((t) => t.priority === filterPriority);
+    if (filterPriority)
+      result = result.filter((t) => t.priority === filterPriority);
     if (filterType) result = result.filter((t) => t.type === filterType);
     return result;
   }, [myTickets, q, filterStatus, filterPriority, filterType]);
@@ -132,7 +138,7 @@ export default function MyTicketsPage({ params }: PageProps) {
       p.set("ticket", String(id));
       router.replace(`?${p.toString()}`, { scroll: false });
     },
-    [router, searchParams]
+    [router, searchParams],
   );
 
   const handleTicketClose = useCallback(
@@ -143,16 +149,23 @@ export default function MyTicketsPage({ params }: PageProps) {
         router.replace(`?${p.toString()}`, { scroll: false });
       }
     },
-    [router, searchParams]
+    [router, searchParams],
   );
 
   const statuses =
     data && "statuses" in data
-      ? (data.statuses as { id: number; name: string; color: string | null; order: number }[])
+      ? (data.statuses as {
+          id: number;
+          name: string;
+          color: string | null;
+          order: number;
+        }[])
       : undefined;
 
   const todoCount = myTickets.filter((t) => t.status === "TODO").length;
-  const inProgressCount = myTickets.filter((t) => t.status === "IN_PROGRESS").length;
+  const inProgressCount = myTickets.filter(
+    (t) => t.status === "IN_PROGRESS",
+  ).length;
   const doneCount = myTickets.filter((t) => t.status === "DONE").length;
 
   if (isLoading) {
@@ -181,16 +194,15 @@ export default function MyTicketsPage({ params }: PageProps) {
         </div>
       }
       filters={
-        <TicketFilterBar
-          showSprintFilter={false}
-          showAssigneeFilter={false}
-        />
+        <TicketFilterBar showSprintFilter={false} showAssigneeFilter={false} />
       }
     >
       {myTickets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <EmptyTasksIllustration className="mb-4 h-40 w-40 opacity-95" />
-          <p className="font-medium text-foreground mb-1">No tickets assigned to you</p>
+          <p className="font-medium text-foreground mb-1">
+            No tickets assigned to you
+          </p>
           <p className="text-sm text-muted-foreground">
             Tickets you create or get assigned to will appear here.
           </p>
@@ -201,18 +213,31 @@ export default function MyTicketsPage({ params }: PageProps) {
             <caption className="sr-only">My tickets</caption>
             <TableHeader>
               <TableRow className="text-xs">
-                <TableHead className="w-[80px]" scope="col">ID</TableHead>
+                <TableHead className="w-[80px]" scope="col">
+                  ID
+                </TableHead>
                 <TableHead scope="col">Title</TableHead>
-                <TableHead className="w-[120px]" scope="col">Status</TableHead>
-                <TableHead className="w-[100px]" scope="col">Priority</TableHead>
-                <TableHead className="w-[80px]" scope="col">Points</TableHead>
-                <TableHead className="w-[100px]" scope="col">Due Date</TableHead>
+                <TableHead className="w-[120px]" scope="col">
+                  Status
+                </TableHead>
+                <TableHead className="w-[100px]" scope="col">
+                  Priority
+                </TableHead>
+                <TableHead className="w-[80px]" scope="col">
+                  Points
+                </TableHead>
+                <TableHead className="w-[100px]" scope="col">
+                  Due Date
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredTickets.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-8 text-muted-foreground text-sm"
+                  >
                     <div className="flex flex-col items-center justify-center gap-2">
                       <EmptyTasksIllustration className="h-32 w-32 opacity-95" />
                       <p>No tickets match your filters.</p>

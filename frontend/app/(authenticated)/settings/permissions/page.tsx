@@ -7,13 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Info, CheckCircle2, XCircle, Lock, AlertTriangle, ShieldOff } from "lucide-react";
+import {
+  Info,
+  CheckCircle2,
+  XCircle,
+  Lock,
+  AlertTriangle,@/hooks/api/roles
+  ShieldOff,@/hooks/api/roles
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
-import { useRolePermissionsMatrix } from "@/hooks/api/roles";
-import type { RolePermissionsMatrixEntry } from "@/hooks/api/roles";
+import { useRolePermissionsMatrix } from "@/hooks/hooks/roles";
+import type { RolePermissionsMatrixEntry } from "@/hooks/hooks/roles";
 import { cn } from "@/lib/utils";
 
 function groupByResource(permissions: typeof PERMISSIONS) {
@@ -48,7 +55,9 @@ export default function PermissionsPage() {
 function PermissionsContent() {
   const { data: session } = useSession();
   const matrixQuery = useRolePermissionsMatrix();
-  const handleRetry = useCallback(() => { void matrixQuery.refetch(); }, [matrixQuery.refetch]);
+  const handleRetry = useCallback(() => {
+    void matrixQuery.refetch();
+  }, [matrixQuery.refetch]);
 
   const permissionGroups = useMemo(() => groupByResource(PERMISSIONS), []);
 
@@ -61,7 +70,9 @@ function PermissionsContent() {
   }, [matrixQuery.data]);
 
   const roles = matrixQuery.data ?? [];
-  const currentUserRoleId = roles.find((r) => r.roleName === session?.user?.role)?.roleId;
+  const currentUserRoleId = roles.find(
+    (r) => r.roleName === session?.user?.role,
+  )?.roleId;
 
   if (matrixQuery.isLoading) {
     return (
@@ -108,7 +119,10 @@ function PermissionsContent() {
             <p className="text-sm font-medium">No roles found</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               Create roles in{" "}
-              <Link href="/settings/roles" className="underline underline-offset-2">
+              <Link
+                href="/settings/roles"
+                className="underline underline-offset-2"
+              >
                 Roles &amp; Permissions
               </Link>{" "}
               to see them here.
@@ -128,9 +142,12 @@ function PermissionsContent() {
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
           <Info className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            This is a read-only view of all role permissions. To edit permissions or assign custom
-            roles, go to{" "}
-            <Link href="/settings/roles" className="underline underline-offset-2 font-medium">
+            This is a read-only view of all role permissions. To edit
+            permissions or assign custom roles, go to{" "}
+            <Link
+              href="/settings/roles"
+              className="underline underline-offset-2 font-medium"
+            >
               Roles &amp; Permissions
             </Link>
             .
@@ -141,10 +158,13 @@ function PermissionsContent() {
           {roles.map((role) => (
             <Badge
               key={role.roleId}
-              variant={role.roleId === currentUserRoleId ? "default" : "outline"}
+              variant={
+                role.roleId === currentUserRoleId ? "default" : "outline"
+              }
               className={cn(
                 "text-[11px]",
-                role.roleId === currentUserRoleId && "bg-primary text-primary-foreground"
+                role.roleId === currentUserRoleId &&
+                  "bg-primary text-primary-foreground",
               )}
             >
               {role.roleName}
@@ -156,7 +176,8 @@ function PermissionsContent() {
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Lock className="h-4 w-4 text-blue-600" />
-              Permission Matrix ({PERMISSIONS.length} permissions · {roles.length} roles)
+              Permission Matrix ({PERMISSIONS.length} permissions ·{" "}
+              {roles.length} roles)
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -164,7 +185,9 @@ function PermissionsContent() {
               <div className="min-w-[900px]">
                 <div
                   className="grid bg-muted/50 border-b border-border/40 sticky top-0 z-10"
-                  style={{ gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))` }}
+                  style={{
+                    gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))`,
+                  }}
                 >
                   <div className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">
                     Permission
@@ -174,7 +197,7 @@ function PermissionsContent() {
                       key={role.roleId}
                       className={cn(
                         "px-2 py-2.5 text-center text-[11px] font-semibold leading-tight text-muted-foreground",
-                        role.roleId === currentUserRoleId && "text-primary"
+                        role.roleId === currentUserRoleId && "text-primary",
                       )}
                     >
                       {role.roleName}
@@ -186,7 +209,9 @@ function PermissionsContent() {
                   <div key={resource}>
                     <div
                       className="grid bg-muted/20 border-b border-border/30"
-                      style={{ gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))` }}
+                      style={{
+                        gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))`,
+                      }}
                     >
                       <div className="px-4 py-1.5 col-span-full text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                         {formatResource(resource)}
@@ -235,29 +260,40 @@ function PermissionRow({
   return (
     <div
       className="grid border-b border-border/20 hover:bg-muted/10 transition-colors"
-      style={{ gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))` }}
+      style={{
+        gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))`,
+      }}
     >
       <div className="px-4 py-2 flex flex-col justify-center">
-        <p className="text-[12px] font-medium leading-snug">{permDescription}</p>
+        <p className="text-[12px] font-medium leading-snug">
+          {permDescription}
+        </p>
         <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
           {formatAction(permAction)}
         </p>
       </div>
 
       {roles.map((role) => {
-        const hasPermission = rolePermSets.get(role.roleId)?.has(permName) ?? false;
+        const hasPermission =
+          rolePermSets.get(role.roleId)?.has(permName) ?? false;
         return (
           <div
             key={role.roleId}
             className={cn(
               "flex items-center justify-center py-2",
-              role.roleId === currentUserRoleId && "bg-primary/5"
+              role.roleId === currentUserRoleId && "bg-primary/5",
             )}
           >
             {hasPermission ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-label="Allowed" />
+              <CheckCircle2
+                className="h-4 w-4 text-emerald-500"
+                aria-label="Allowed"
+              />
             ) : (
-              <XCircle className="h-3.5 w-3.5 text-muted-foreground/30" aria-label="Not allowed" />
+              <XCircle
+                className="h-3.5 w-3.5 text-muted-foreground/30"
+                aria-label="Not allowed"
+              />
             )}
           </div>
         );

@@ -8,9 +8,21 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings, List, CalendarDays, ChevronLeft, ChevronRight, CalendarClock, BarChart2, Plus } from "lucide-react";
+import {
+  Settings,
+  List,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  CalendarClock,
+  BarChart2,
+  Plus,
+} from "lucide-react";
 import dynamic from "next/dynamic";
-import type { BigCalEvent, View } from "@/features/calendar/big-calendar-wrapper";
+import type {
+  BigCalEvent,
+  View,
+} from "@/features/calendar/big-calendar-wrapper";
 
 const BigCalendarWrapper = dynamic(
   () =>
@@ -19,7 +31,13 @@ const BigCalendarWrapper = dynamic(
     })),
   { ssr: false },
 );
-import { addMonths, subMonths, addWeeks, subWeeks, format as fmtDate } from "date-fns";
+import {
+  addMonths,
+  subMonths,
+  addWeeks,
+  subWeeks,
+  format as fmtDate,
+} from "date-fns";
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
 import { InterviewList } from "@/features/hr/recruitment/interviews/interview-list";
 import { InterviewFormSheet } from "@/features/hr/recruitment/interviews/interview-form-sheet";
@@ -30,42 +48,51 @@ export default function InterviewsPage() {
   const { data: interviews, isLoading, isError, refetch } = useInterviews();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(null);
+  const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(
+    null,
+  );
   const [pageView, setPageView] = useState<"list" | "calendar">("list");
   const [calView, setCalView] = useState<View>("month");
   const [calDate, setCalDate] = useState(new Date());
 
   const calEvents = useMemo(
     () =>
-      (interviews ?? []).map((iv): BigCalEvent => ({
-        id: iv.id,
-        title: `${iv.candidate?.firstName ?? ""} ${iv.candidate?.lastName ?? ""} — ${iv.type ?? "Interview"}`,
-        start: new Date(iv.scheduledAt),
-        end: new Date(new Date(iv.scheduledAt).getTime() + (iv.duration ?? 60) * 60_000),
-        resource: {
-          color:
-            iv.result === "PASSED"
-              ? "#10b981"
-              : iv.result === "FAILED"
-                ? "#ef4444"
-                : "#1e40af",
-        },
-      })),
+      (interviews ?? []).map(
+        (iv): BigCalEvent => ({
+          id: iv.id,
+          title: `${iv.candidate?.firstName ?? ""} ${iv.candidate?.lastName ?? ""} — ${iv.type ?? "Interview"}`,
+          start: new Date(iv.scheduledAt),
+          end: new Date(
+            new Date(iv.scheduledAt).getTime() + (iv.duration ?? 60) * 60_000,
+          ),
+          resource: {
+            color:
+              iv.result === "PASSED"
+                ? "#10b981"
+                : iv.result === "FAILED"
+                  ? "#ef4444"
+                  : "#1e40af",
+          },
+        }),
+      ),
     [interviews],
   );
 
   const handleCalNavigatePrev = useCallback(() => {
-    setCalDate((d) => calView === "month" ? subMonths(d, 1) : subWeeks(d, 1));
+    setCalDate((d) => (calView === "month" ? subMonths(d, 1) : subWeeks(d, 1)));
   }, [calView]);
 
   const handleCalNavigateNext = useCallback(() => {
-    setCalDate((d) => calView === "month" ? addMonths(d, 1) : addWeeks(d, 1));
+    setCalDate((d) => (calView === "month" ? addMonths(d, 1) : addWeeks(d, 1)));
   }, [calView]);
 
-  const handleCalEventSelect = useCallback((e: BigCalEvent) => {
-    const iv = interviews?.find((i) => i.id === e.id);
-    if (iv) setFeedbackInterview(iv);
-  }, [interviews]);
+  const handleCalEventSelect = useCallback(
+    (e: BigCalEvent) => {
+      const iv = interviews?.find((i) => i.id === e.id);
+      if (iv) setFeedbackInterview(iv);
+    },
+    [interviews],
+  );
 
   const handleFeedbackClose = useCallback((open: boolean) => {
     if (!open) setFeedbackInterview(null);
@@ -139,7 +166,9 @@ export default function InterviewsPage() {
           <button
             className={cn(
               "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              pageView === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+              pageView === "list"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted",
             )}
             onClick={handlePageViewList}
           >
@@ -149,7 +178,9 @@ export default function InterviewsPage() {
           <button
             className={cn(
               "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              pageView === "calendar" ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+              pageView === "calendar"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted",
             )}
             onClick={handlePageViewCalendar}
           >
@@ -180,7 +211,9 @@ export default function InterviewsPage() {
               <button
                 className={cn(
                   "rounded px-2 py-0.5 text-xs capitalize",
-                  calView === "month" ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+                  calView === "month"
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted",
                 )}
                 onClick={handleMonthView}
               >
@@ -189,7 +222,9 @@ export default function InterviewsPage() {
               <button
                 className={cn(
                   "rounded px-2 py-0.5 text-xs capitalize",
-                  calView === "week" ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+                  calView === "week"
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted",
                 )}
                 onClick={handleWeekView}
               >
@@ -213,7 +248,8 @@ export default function InterviewsPage() {
               onSelectEvent={handleCalEventSelect}
               eventPropGetter={(e) => ({
                 style: {
-                  backgroundColor: (e as BigCalEvent).resource?.color ?? "#1e40af",
+                  backgroundColor:
+                    (e as BigCalEvent).resource?.color ?? "#1e40af",
                   color: "#fff",
                   borderRadius: 4,
                   border: "none",
