@@ -6,10 +6,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiClient } from "@/lib/api-client";
-import type { EmailTemplateConfig } from "./template-registry";
+import type { EmailTemplatePreview } from "./template-registry";
 
 interface TemplateFormSheetProps {
-  selectedTemplate: EmailTemplateConfig | null;
+  selectedTemplate: EmailTemplatePreview | null;
 }
 
 export function TemplateFormSheet({ selectedTemplate }: TemplateFormSheetProps) {

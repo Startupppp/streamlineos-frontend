@@ -12,14 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, type EmailTemplateConfig } from "./template-registry";
-
+import type { EmailTemplatePreview } from "./template-registry";
 
 interface TemplateListProps {
   activeCategory: string;
   selectedId: string;
   preview: { subject: string; html: string } | null;
-  categoryTemplates: EmailTemplateConfig[];
+  categories: string[];
+  categoryTemplates: EmailTemplatePreview[];
   onCategoryChange: (cat: string) => void;
   onSelectId: (id: string) => void;
 }
@@ -28,6 +28,7 @@ export function TemplateList({
   activeCategory,
   selectedId,
   preview,
+  categories,
   categoryTemplates,
   onCategoryChange,
   onSelectId,
@@ -36,7 +37,7 @@ export function TemplateList({
     <div className="flex flex-col gap-4">
       <Tabs value={activeCategory} onValueChange={onCategoryChange}>
         <TabsList className="flex-wrap h-auto gap-1">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <TabsTrigger key={cat} value={cat} className="text-xs">
               {cat}
             </TabsTrigger>
