@@ -59,6 +59,7 @@ import { UserInviteDialog } from "./user-invite-dialog";
 import { UserBulkInviteDialog } from "./user-bulk-invite-dialog";
 import { UserStatsCards } from "./user-stats-cards";
 import { UserImportDialog } from "./user-import-dialog";
+import { UserCreateDialog } from "./user-create-dialog";
 import { toast } from "sonner";
 import {
   Search,
@@ -243,6 +244,7 @@ export function UsersPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [assignRole, setAssignRole] = useState("all");
@@ -455,6 +457,15 @@ export function UsersPage() {
               onClick={() => setBulkInviteOpen(true)}
             >
               Bulk Invite
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs"
+              onClick={() => setCreateOpen(true)}
+            >
+              <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+              Create User
             </Button>
             <Button
               size="sm"
@@ -825,6 +836,7 @@ export function UsersPage() {
       <UserInviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
       <UserBulkInviteDialog open={bulkInviteOpen} onOpenChange={setBulkInviteOpen} />
       <UserImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <UserCreateDialog open={createOpen} onOpenChange={setCreateOpen} onSuccess={() => setCreateOpen(false)} />
 
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
         <DialogContent className="sm:max-w-sm">

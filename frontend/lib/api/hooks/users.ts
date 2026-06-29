@@ -343,6 +343,32 @@ export const useInviteUser = () => {
   });
 };
 
+export const useCreateUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { userId?: string; invitationId?: string; created?: boolean },
+    Error,
+    {
+      email: string;
+      firstName?: string;
+      lastName?: string;
+      role?: string;
+      designation?: string;
+      phone?: string;
+      departmentId?: number;
+      branchId?: number;
+      sendInvite?: boolean;
+    }
+  >({
+    mutationFn: (data) =>
+      apiClient.post<{ userId?: string; invitationId?: string; created?: boolean }>("/users", data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+    },
+  });
+};
+
 export const useBulkInviteUsers = () => {
   const queryClient = useQueryClient();
   return useMutation<
