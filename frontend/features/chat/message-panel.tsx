@@ -17,6 +17,7 @@ import {
   Bookmark,
   Hash,
   Mic,
+  Paperclip,
   PanelLeftOpen,
   Users,
   Video,
@@ -55,6 +56,7 @@ import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
 import { ThreadPanel } from "./thread-panel";
 import { SavedMessagesPanel } from "./saved-messages-panel";
+import { SharedFilesPanel } from "./shared-files-panel";
 import { ForwardMessageDialog } from "./forward-message-dialog";
 import { NotificationCenter } from "./notification-center";
 
@@ -134,6 +136,7 @@ export function MessagePanel({
   const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
   const [showMeeting, setShowMeeting] = useState(false);
   const [showSavedPanel, setShowSavedPanel] = useState(false);
+  const [showFilesPanel, setShowFilesPanel] = useState(false);
   const [forwardMessage, setForwardMessage] = useState<{ content: string | null } | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -212,8 +215,29 @@ export function MessagePanel({
     setShowEmojiPicker(false);
     setShowMentions(false);
     setThreadMessageId(null);
+    setShowFilesPanel(false);
     inputRef.current?.focus();
   }, [channelId]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key === "k") {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("chat:open-search"));
+        return;
+      }
+      if (e.key === "Escape") {
+        if (threadMessageId !== null) { setThreadMessageId(null); return; }
+        if (showSavedPanel) { setShowSavedPanel(false); return; }
+        if (showFilesPanel) { setShowFilesPanel(false); return; }
+        if (showNotifications) { setShowNotifications(false); return; }
+        if (showMeeting) { setShowMeeting(false); return; }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [threadMessageId, showSavedPanel, showFilesPanel, showNotifications, showMeeting]);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
@@ -437,6 +461,16 @@ export function MessagePanel({
     return groups;
   }, [messages]);
 
+  const firstUnreadMessageId = useMemo(() => {
+    const currentMember = channel?.members?.find((m) => m.user?.id === currentUserId);
+    const lastReadAt = currentMember?.lastReadAt;
+    if (!lastReadAt) return undefined;
+    const lastReadTime = new Date(lastReadAt).getTime();
+    return messages.find(
+      (m) => m.createdAt && new Date(m.createdAt).getTime() > lastReadTime && m.senderId !== currentUserId,
+    )?.id;
+  }, [messages, channel, currentUserId]);
+
   return (
     <div className="flex flex-1 min-w-0 overflow-hidden">
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
@@ -551,7 +585,15 @@ export function MessagePanel({
             <Video className={cn("h-4 w-4", activeHuddle?.hasVideo ? "text-blue-500" : "")} />
           </button>
           <button
-            onClick={() => { setShowSavedPanel(p => !p); setShowNotifications(false); }}
+            onClick={() => { setShowFilesPanel((p) => !p); setShowSavedPanel(false); setShowNotifications(false); }}
+            className={cn("h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors", showFilesPanel ? "bg-muted text-blue-500" : "text-muted-foreground hover:text-foreground")}
+            title="Shared files"
+            aria-label="Shared files"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => { setShowSavedPanel(p => !p); setShowNotifications(false); setShowFilesPanel(false); }}
             className={cn("h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors", showSavedPanel ? "bg-muted text-amber-500" : "text-muted-foreground hover:text-foreground")}
             title="Saved messages"
             aria-label="Saved messages"
@@ -594,6 +636,7 @@ export function MessagePanel({
         pinnedMessageIds={pinnedMessageIds}
         savedMessageIds={savedMessageIds}
         replyCountMap={replyCountMap}
+        firstUnreadMessageId={firstUnreadMessageId}
         onEditInputChange={setEditInput}
         onStartEdit={(msg) => { setEditingMessage(msg); setEditInput(msg.content ?? ""); }}
         onCancelEdit={() => { setEditingMessage(null); setEditInput(""); }}
@@ -695,6 +738,23 @@ export function MessagePanel({
             <SavedMessagesPanel
               onClose={() => setShowSavedPanel(false)}
               onJumpToChannel={() => setShowSavedPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showFilesPanel && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+          >
+            <SharedFilesPanel
+              channelId={channelId}
+              onClose={() => setShowFilesPanel(false)}
             />
           </motion.div>
         )}

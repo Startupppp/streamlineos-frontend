@@ -100,6 +100,12 @@ export function ChannelSidebar({
     }
   }, [autoFocusSearch, onSearchFocused]);
 
+  useEffect(() => {
+    const handler = () => setChatSearchOpen(true);
+    window.addEventListener("chat:open-search", handler);
+    return () => window.removeEventListener("chat:open-search", handler);
+  }, []);
+
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers]

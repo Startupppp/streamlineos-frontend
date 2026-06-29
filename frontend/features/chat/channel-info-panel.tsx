@@ -8,11 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Bookmark, Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
+import { BellOff, BellRing, Bookmark, Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
-import { useChatChannel, useChatOnlineUsers, useUpdateChannel, useChatPins, useUnpinMessage, useArchiveChannel, useUnarchiveChannel } from "@/lib/api/hooks";
+import { useChatChannel, useChatOnlineUsers, useUpdateChannel, useChatPins, useUnpinMessage, useArchiveChannel, useUnarchiveChannel, useMuteChannel, useUnmuteChannel } from "@/lib/api/hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
@@ -33,6 +33,8 @@ export function ChannelInfoPanel({
   const unpinMessage = useUnpinMessage();
   const archiveChannel = useArchiveChannel();
   const unarchiveChannel = useUnarchiveChannel();
+  const muteChannel = useMuteChannel();
+  const unmuteChannel = useUnmuteChannel();
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers]
@@ -266,6 +268,57 @@ export function ChannelInfoPanel({
               })}
             </div>
           </div>
+
+          {channel?.type !== "DIRECT" && (() => {
+            const myMember = channel?.members?.find((m) => m.user?.id === currentUserId);
+            const mutedUntil = myMember?.mutedUntil;
+            const isMuted = mutedUntil !== null && mutedUntil !== undefined && new Date(mutedUntil) > new Date();
+            const MUTE_OPTIONS = [
+              { label: "15 minutes", value: "15m" },
+              { label: "1 hour", value: "1h" },
+              { label: "8 hours", value: "8h" },
+              { label: "24 hours", value: "24h" },
+              { label: "Forever", value: "forever" },
+            ];
+            return (
+              <div className="mt-4 pt-4 border-t border-border/30">
+                <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
+                  {isMuted ? <BellOff className="h-3 w-3" /> : <BellRing className="h-3 w-3" />}
+                  Notifications
+                </h5>
+                {isMuted ? (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-[12px] text-muted-foreground px-1">
+                      Muted until {mutedUntil && new Date(mutedUntil).getFullYear() >= 2099 ? "forever" : mutedUntil ? new Date(mutedUntil).toLocaleString() : ""}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full h-8 text-[12px]"
+                      onClick={() => unmuteChannel.mutate(channelId)}
+                      disabled={unmuteChannel.isPending}
+                    >
+                      {unmuteChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : null}
+                      Unmute
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {MUTE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => muteChannel.mutate({ channelId, duration: opt.value })}
+                        disabled={muteChannel.isPending}
+                        className="h-7 px-2 rounded-lg border border-border/50 text-[11px] font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {channel?.createdAt && (
             <div className="mt-6 pt-4 border-t border-border/30">

@@ -41,6 +41,8 @@ export interface Channel {
   createdBy: string;
   isArchived: boolean;
   isPrivate: boolean;
+  entityType: string | null;
+  entityId: string | null;
   lastMessageAt: Date | string | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;

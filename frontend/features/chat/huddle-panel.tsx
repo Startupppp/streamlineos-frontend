@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown, CameraOff, Monitor, MonitorOff, UserMinus } from "lucide-react";
+import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown, CameraOff, Monitor, MonitorOff, Settings, UserMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant, use
 import type { Huddle, HuddleParticipant } from "@/types/chat";
 import { getInitials } from "./chat-helpers";
 import { useWebRTCHuddle } from "./webrtc-huddle";
+import { DeviceSelector } from "./device-selector";
 import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
 import { useSession } from "next-auth/react";
@@ -118,6 +119,7 @@ interface HuddlePanelProps {
 
 export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelProps) {
   const [expanded, setExpanded] = useState(false);
+  const [showDeviceSelector, setShowDeviceSelector] = useState(false);
   const leaveHuddle = useLeaveHuddle();
   const setMuteMutation = useSetHuddleMute();
   const raiseHandMutation = useRaiseHand();
@@ -256,7 +258,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             ))}
           </div>
 
-          <div className="flex items-center justify-center gap-2">
+          <div className="relative flex items-center justify-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -299,6 +301,19 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             <Button
               variant="ghost"
               size="sm"
+              className={cn(
+                "h-9 w-9 rounded-full p-0",
+                showDeviceSelector && "bg-muted/60",
+              )}
+              onClick={() => setShowDeviceSelector((p) => !p)}
+              aria-label="Audio & video settings"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-9 w-9 rounded-full p-0 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-500"
               onClick={handleLeave}
               aria-label="Leave huddle"
@@ -306,6 +321,8 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             >
               <PhoneOff className="h-4 w-4" />
             </Button>
+
+            <DeviceSelector show={showDeviceSelector} onClose={() => setShowDeviceSelector(false)} />
           </div>
         </div>
       )}

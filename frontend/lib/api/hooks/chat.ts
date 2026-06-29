@@ -511,6 +511,60 @@ export function useMarkChannelUnread() {
   });
 }
 
+export function useEntityChannel(entityType: string | null, entityId: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.all, "entity", entityType, entityId] as const,
+    queryFn: () => apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`),
+    enabled: Boolean(entityType && entityId),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useMuteChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ channelId, duration }: { channelId: number; duration: string }) =>
+      apiClient.post<{ ok: boolean; mutedUntil: string }>(`/chat/channels/${channelId}/mute`, { duration }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export function useUnmuteChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unmute`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export interface ChannelFile {
+  id: number;
+  messageId: number;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  fileUrl: string;
+}
+
+export function useChannelFiles(channelId: number) {
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.chat.all, "channelFiles", channelId] as const,
+    queryFn: ({ pageParam }) =>
+      apiClient.get<{ files: ChannelFile[]; nextCursor?: number }>(
+        `/chat/channels/${channelId}/files`,
+        pageParam !== undefined ? { cursor: String(pageParam) } : undefined,
+      ),
+    getNextPageParam: (last) => last.nextCursor,
+    initialPageParam: undefined as number | undefined,
+    enabled: channelId > 0,
+  });
+}
+
 interface LinkMeta {
   url: string;
   title: string | null;

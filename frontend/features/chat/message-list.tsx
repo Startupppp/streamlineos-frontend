@@ -116,6 +116,7 @@ interface MessageListProps {
   pinnedMessageIds: Set<number>;
   savedMessageIds: Set<number>;
   replyCountMap: Map<number, number>;
+  firstUnreadMessageId?: number;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
   onCancelEdit: () => void;
@@ -152,6 +153,7 @@ export function MessageList({
   pinnedMessageIds,
   savedMessageIds,
   replyCountMap,
+  firstUnreadMessageId,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
@@ -232,33 +234,42 @@ export function MessageList({
                       new Date(prevMsg.createdAt).getTime()
                     : 0;
                 const showHeader = !isSameSender || timeDiff > 2 * 60 * 1000;
+                const showUnreadDivider = firstUnreadMessageId !== undefined && msg.id === firstUnreadMessageId;
 
                 return (
-                  <MessageItem
-                    key={msg.id}
-                    msg={msg}
-                    isOwn={isOwn}
-                    showHeader={showHeader}
-                    currentUserId={currentUserId}
-                    editingMessageId={editingMessage?.id}
-                    editInput={editInput}
-                    pinnedMessageIds={pinnedMessageIds}
-                    savedMessageIds={savedMessageIds}
-                    replyCountMap={replyCountMap}
-                    onEditInputChange={onEditInputChange}
-                    onStartEdit={onStartEdit}
-                    onCancelEdit={onCancelEdit}
-                    onSaveEdit={onSaveEdit}
-                    onReply={onReply}
-                    onOpenThread={onOpenThread}
-                    onDelete={onDelete}
-                    onReact={onReact}
-                    onPin={onPin}
-                    onUnpin={onUnpin}
-                    onSave={onSave}
-                    onUnsaveMsg={onUnsaveMsg}
-                    onForward={onForward}
-                  />
+                  <Fragment key={msg.id}>
+                    {showUnreadDivider && (
+                      <div className="flex items-center gap-3 my-2 px-2">
+                        <div className="flex-1 h-px bg-red-400/60" />
+                        <span className="text-[10px] font-bold text-red-500 whitespace-nowrap px-2">New Messages</span>
+                        <div className="flex-1 h-px bg-red-400/60" />
+                      </div>
+                    )}
+                    <MessageItem
+                      msg={msg}
+                      isOwn={isOwn}
+                      showHeader={showHeader}
+                      currentUserId={currentUserId}
+                      editingMessageId={editingMessage?.id}
+                      editInput={editInput}
+                      pinnedMessageIds={pinnedMessageIds}
+                      savedMessageIds={savedMessageIds}
+                      replyCountMap={replyCountMap}
+                      onEditInputChange={onEditInputChange}
+                      onStartEdit={onStartEdit}
+                      onCancelEdit={onCancelEdit}
+                      onSaveEdit={onSaveEdit}
+                      onReply={onReply}
+                      onOpenThread={onOpenThread}
+                      onDelete={onDelete}
+                      onReact={onReact}
+                      onPin={onPin}
+                      onUnpin={onUnpin}
+                      onSave={onSave}
+                      onUnsaveMsg={onUnsaveMsg}
+                      onForward={onForward}
+                    />
+                  </Fragment>
                 );
               })}
             </Fragment>

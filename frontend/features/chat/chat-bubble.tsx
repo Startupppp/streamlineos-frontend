@@ -22,6 +22,64 @@ import { LinkPreviewCard } from "./link-preview-card";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
+function renderFormattedContent(content: string, isOwn: boolean): React.ReactNode {
+  const lines = content.split("\n");
+  const result: React.ReactNode[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line.startsWith("```")) {
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].startsWith("```")) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      result.push(
+        <pre
+          key={i}
+          className={cn(
+            "font-mono text-[12px] rounded-lg p-2.5 mt-1.5 overflow-x-auto whitespace-pre",
+            isOwn ? "bg-black/20 text-white/90" : "bg-muted text-foreground",
+          )}
+        >
+          {codeLines.join("\n")}
+        </pre>,
+      );
+    } else {
+      const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+      result.push(
+        <span key={i} className="block">
+          {parts.map((part, j) => {
+            if (part.startsWith("**") && part.endsWith("**")) {
+              return <strong key={j}>{part.slice(2, -2)}</strong>;
+            }
+            if (part.startsWith("*") && part.endsWith("*")) {
+              return <em key={j}>{part.slice(1, -1)}</em>;
+            }
+            if (part.startsWith("`") && part.endsWith("`")) {
+              return (
+                <code
+                  key={j}
+                  className={cn(
+                    "font-mono text-[12px] px-1.5 py-0.5 rounded",
+                    isOwn ? "bg-black/20 text-white/90" : "bg-muted",
+                  )}
+                >
+                  {part.slice(1, -1)}
+                </code>
+              );
+            }
+            return <span key={j}>{part}</span>;
+          })}
+        </span>,
+      );
+    }
+    i++;
+  }
+  return result;
+}
+
 export function ChatBubble({
   message,
   isOwn,
@@ -176,12 +234,9 @@ export function ChatBubble({
             )}
           >
             {message.content && (
-              <p className={cn(
-                "text-[14px] whitespace-pre-wrap break-words leading-[1.55]",
-                isOwn ? "text-white" : "text-foreground"
-              )}>
-                {message.content}
-              </p>
+              <div className={cn("text-[14px] leading-[1.55] break-words", isOwn ? "text-white" : "text-foreground")}>
+                {renderFormattedContent(message.content, isOwn)}
+              </div>
             )}
 
             {message.content && /https?:\/\//.test(message.content) && (
