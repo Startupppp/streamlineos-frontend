@@ -13,6 +13,10 @@ import {
   type ScorecardTemplate,
   type InterviewScorecard,
 } from "@/hooks/api/hr/recruitment";
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 
 const DEFAULT_CRITERIA = [
   "Technical Skills",

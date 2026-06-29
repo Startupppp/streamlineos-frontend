@@ -25,10 +25,14 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+<<<<<<< Updated upstream
 import {
   useSalesOrders,
   type SalesOrderStatus,
 } from "@/hooks/api/inventory/sales-orders";
+=======
+import { useSalesOrders, type SalesOrderStatus } from "@/hooks/api/inventory/sales-orders";
+>>>>>>> Stashed changes
 
 type SoStatus = SalesOrderStatus;
 type StatusFilter = "ALL" | SoStatus;

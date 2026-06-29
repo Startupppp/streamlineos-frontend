@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+<<<<<<< Updated upstream
 import {
   useScheduleInterview,
   useCandidates,
   useJobPostings,
 } from "@/hooks/api/hr";
+=======
+import { useScheduleInterview, useCandidates, useJobPostings } from "@/hooks/api/hr";
+>>>>>>> Stashed changes
 import { useInterviewerAvailability } from "@/hooks/api/hr/recruitment";
 import { InterviewerAvailabilityGrid } from "@/components/hr/recruitment/interviewer-availability-grid";
 import { useCalendarOrgMembers } from "@/hooks/api/calendar";

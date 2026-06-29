@@ -13,11 +13,15 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+<<<<<<< Updated upstream
 import {
   useHrMonthlyAttendance,
   useHrWfhRequests,
   useHrHolidaysForCalendar,
 } from "@/hooks/api/hr";
+=======
+import { useHrMonthlyAttendance, useHrWfhRequests, useHrHolidaysForCalendar } from "@/hooks/api/hr";
+>>>>>>> Stashed changes
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { WEEKDAY_LABELS, CalendarDay, statusConfig } from "./attendance-utils";
 import { cn } from "@/lib/utils";

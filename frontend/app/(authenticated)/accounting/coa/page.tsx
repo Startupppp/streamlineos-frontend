@@ -20,7 +20,7 @@ import { useAccounts } from "@/hooks/api/accounting";
 import type { AccountType } from "@/types/accounting";
 import { CreateAccountDialog } from "@/features/accounting/create-account-dialog";
 
-type TabValue = "ALL" | AccountType
+type TabValue = "ALL" | AccountType;
 
 const TAB_VALUES: ReadonlyArray<TabValue> = [
   "ALL",

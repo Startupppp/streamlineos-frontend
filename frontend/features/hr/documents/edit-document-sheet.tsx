@@ -8,11 +8,15 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useUpdateDocument, useHrEmployees } from "@/hooks/api/hr";
+<<<<<<< Updated upstream
 import {
   formSchema,
   type DocumentFormData,
   DocumentFormFields,
 } from "@/features/hr/documents/document-form-fields";
+=======
+import { formSchema, type DocumentFormData, DocumentFormFields } from "@/features/hr/documents/document-form-fields";
+>>>>>>> Stashed changes
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Document } from "@/types/hr";
 

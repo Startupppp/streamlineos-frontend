@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
+<<<<<<< Updated upstream
 import { Shield, Users, Key, TrendingUp, ArrowRight } from "lucide-react";
+=======
+import { Shield, Users, Key, TrendingUp, ArrowRight, Loader2 } from "lucide-react";
+>>>>>>> Stashed changes
 import { useRoles, useRolesAnalytics } from "@/hooks/api/roles";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

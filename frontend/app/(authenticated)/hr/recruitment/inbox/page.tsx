@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+<<<<<<< Updated upstream
 import {
   useMessageThreads,
   useCandidateMessages,
@@ -11,6 +12,10 @@ import type {
   CandidateMessage,
   MessageChannel,
 } from "@/hooks/api/hr/recruitment";
+=======
+import { useMessageThreads, useCandidateMessages, useSendCandidateMessage } from "@/hooks/api/hr/recruitment";
+import type { MessageThread, CandidateMessage, MessageChannel } from "@/hooks/api/hr/recruitment";
+>>>>>>> Stashed changes
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";

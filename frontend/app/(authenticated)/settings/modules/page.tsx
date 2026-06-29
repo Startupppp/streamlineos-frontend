@@ -3,10 +3,14 @@
 import { useCallback } from "react";
 import { Layers } from "lucide-react";
 import { toast } from "sonner";
+<<<<<<< Updated upstream
 import {
   useOrgModules,
   useToggleOrgModule,
 } from "@/hooks/api/access/org-modules";
+=======
+import { useOrgModules, useToggleOrgModule } from "@/hooks/api/access/org-modules";
+>>>>>>> Stashed changes
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";

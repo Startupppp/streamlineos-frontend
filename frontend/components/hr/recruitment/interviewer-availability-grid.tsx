@@ -2,6 +2,11 @@
 
 import { useMemo } from "react";
 import type { InterviewerAvailability } from "@/hooks/api/hr/recruitment";
+<<<<<<< Updated upstream
+=======
+import { cn } from "@/lib/utils";
+
+>>>>>>> Stashed changes
 const WORK_START = 9;
 const WORK_END = 19;
 const TOTAL_HOURS = WORK_END - WORK_START;

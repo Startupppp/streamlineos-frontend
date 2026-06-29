@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+<<<<<<< Updated upstream
 import {
   useInvitations,
   useResendInvite,
   useCancelInvitation,
 } from "@/hooks/api/users";
+=======
+import { useInvitations, useResendInvite, useCancelInvitation } from "@/hooks/api/users";
+>>>>>>> Stashed changes
 import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
 import { Mail, RefreshCw, X, ChevronLeft, ChevronRight } from "lucide-react";

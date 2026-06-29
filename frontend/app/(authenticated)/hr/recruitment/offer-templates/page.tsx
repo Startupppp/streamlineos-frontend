@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+<<<<<<< Updated upstream
 import {
   useOfferTemplates,
   useCreateOfferTemplate,
@@ -8,6 +9,9 @@ import {
   useDeleteOfferTemplate,
   useGenerateOfferPdf,
 } from "@/hooks/api/hr/recruitment/offer-templates";
+=======
+import { useOfferTemplates, useCreateOfferTemplate, useUpdateOfferTemplate, useDeleteOfferTemplate, useGenerateOfferPdf } from "@/hooks/api/hr/recruitment/offer-templates";
+>>>>>>> Stashed changes
 import type { OfferLetterTemplate } from "@/hooks/api/hr/recruitment/offer-templates";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

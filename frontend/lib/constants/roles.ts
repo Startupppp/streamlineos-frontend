@@ -24,3 +24,8 @@ export const ADMIN_ROLES: readonly string[] = [
   ROLES.HR,
 ];
 
+export const EXPENSE_ADMIN_ROLES: readonly string[] = [
+  ROLES.OWNER,
+  ROLES.CEO,
+  ROLES.HR,
+];

@@ -68,7 +68,11 @@ function unwrapBackend<T>(body: unknown): T {
   return body as T;
 }
 
-export const { handlers, auth } = NextAuth({
+export async function invalidateUserSession(_userId: string): Promise<void> {
+  // Session invalidation is handled via JWT expiry; no-op in stateless JWT mode
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   basePath: "/api/auth",
   providers: [

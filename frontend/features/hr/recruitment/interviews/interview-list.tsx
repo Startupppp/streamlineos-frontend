@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
+<<<<<<< Updated upstream
 import { useInterviews } from "@/hooks/api/hr";
+=======
+import { useInterviews, useUpdateInterview } from "@/hooks/api/hr";
+>>>>>>> Stashed changes
 import { useBulkRescheduleInterviews } from "@/hooks/api/hr/recruitment";
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
 import type { Interview } from "@/types/hr";

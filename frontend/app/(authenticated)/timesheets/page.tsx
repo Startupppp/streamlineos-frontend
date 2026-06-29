@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useMemo, useCallback, useTransition } from "react";
+<<<<<<< Updated upstream
+=======
+import { useSession } from "next-auth/react";
+>>>>>>> Stashed changes
 import { useCan } from "@/hooks/api/access";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";

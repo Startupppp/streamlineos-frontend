@@ -38,10 +38,14 @@ import {
   useDocumentTemplates,
   type DocumentTemplate,
 } from "@/hooks/api/hr/document-templates";
+<<<<<<< Updated upstream
 import {
   extractVariables,
   substituteVariables,
 } from "@/lib/utils/document-variables";
+=======
+import { extractVariables, substituteVariables } from "@/lib/utils/document-variables";
+>>>>>>> Stashed changes
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   TEMPLATE_TYPES,

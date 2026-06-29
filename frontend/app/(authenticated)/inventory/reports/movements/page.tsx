@@ -22,10 +22,14 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
+<<<<<<< Updated upstream
 import {
   useMovementsReport,
   type MovementType,
 } from "@/hooks/api/inventory/reports";
+=======
+import { useMovementsReport, type MovementType } from "@/hooks/api/inventory/reports";
+>>>>>>> Stashed changes
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
