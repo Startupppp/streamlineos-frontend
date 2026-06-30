@@ -31,7 +31,12 @@ export function loadWizardState(): WizardState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...WIZARD_DEFAULTS };
     const parsed = JSON.parse(raw) as Partial<WizardState>;
-    const state = { ...WIZARD_DEFAULTS, ...parsed };
+    const state: WizardState = {
+      ...WIZARD_DEFAULTS,
+      ...parsed,
+      goals: Array.isArray(parsed.goals) ? parsed.goals : WIZARD_DEFAULTS.goals,
+      installedModules: Array.isArray(parsed.installedModules) ? parsed.installedModules : WIZARD_DEFAULTS.installedModules,
+    };
     return { ...state, currentStep: sanitizeStep(state) };
   } catch {
     return { ...WIZARD_DEFAULTS };
@@ -42,7 +47,6 @@ export function saveWizardState(state: WizardState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
-    // Storage unavailable (e.g. private browsing with full quota)
   }
 }
 
@@ -50,6 +54,5 @@ export function clearWizardState(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch {
-    // ignore
   }
 }

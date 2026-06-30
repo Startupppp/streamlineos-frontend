@@ -192,7 +192,7 @@ export function SuccessChecklist() {
           <Progress
             value={progress}
             className="h-1.5 mt-2"
-            valueLabel={`${doneCount} of ${TOTAL} tasks completed`}
+            aria-label={`${doneCount} of ${TOTAL} tasks completed`}
           />
         </div>
 

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import {
   CheckCircle2, Users, Package, ArrowRight,
-  UserPlus, FolderOpen, Settings,
+  UserPlus, FolderOpen, Settings, AlertCircle, RefreshCw,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -26,14 +26,19 @@ interface SuccessStepProps {
 }
 
 export function SuccessStep({ summary, onEnter }: SuccessStepProps) {
-  const { mutate: mutateCompleteOnboarding } = useCompleteOnboarding();
+  const { mutate, isError, reset } = useCompleteOnboarding();
   const hasFiredRef = useRef(false);
 
   useEffect(() => {
     if (hasFiredRef.current) return;
     hasFiredRef.current = true;
-    mutateCompleteOnboarding();
-  }, [mutateCompleteOnboarding]);
+    mutate();
+  }, [mutate]);
+
+  function handleRetry() {
+    reset();
+    mutate();
+  }
 
   return (
     <motion.div
@@ -100,6 +105,20 @@ export function SuccessStep({ summary, onEnter }: SuccessStepProps) {
           ))}
         </div>
       </motion.div>
+
+      {isError && (
+        <motion.div variants={fadeUp} className="w-full max-w-sm rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-start gap-3">
+          <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-destructive font-medium">Failed to mark onboarding complete</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Your workspace is ready — this will retry automatically on next login.</p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleRetry} className="shrink-0 h-7 text-xs">
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Retry
+          </Button>
+        </motion.div>
+      )}
 
       <motion.div variants={fadeUp} className="w-full max-w-sm">
         <Button onClick={onEnter} size="lg" className="w-full h-12 text-base">

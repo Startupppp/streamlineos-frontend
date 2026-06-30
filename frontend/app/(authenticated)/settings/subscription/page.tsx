@@ -20,33 +20,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 
-declare global {
-  interface Window {
-    Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
-  }
-}
-
-interface RazorpayPaymentResponse {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-}
-
-interface RazorpayOptions {
-  key: string;
-  order_id: string;
-  amount: number;
-  currency: string;
-  name: string;
-  description: string;
-  prefill?: { email?: string };
-  handler: (response: RazorpayPaymentResponse) => void;
-  modal?: { ondismiss?: () => void };
-}
-
-interface RazorpayInstance {
-  open: () => void;
-}
 
 const PLAN_CONFIG: Record<
   SubscriptionPlan,

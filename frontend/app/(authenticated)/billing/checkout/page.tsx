@@ -91,11 +91,7 @@ export default function CheckoutPage() {
             currency: "INR",
             name: "StreamlineOS",
             description: `${plan} Plan — ${cycle}`,
-            handler: (response: {
-              razorpay_payment_id: string;
-              razorpay_order_id: string;
-              razorpay_signature: string;
-            }) => {
+            handler: (response: RazorpayPaymentResponse) => {
               verifySubscription.mutate(
                 {
                   razorpay_payment_id: response.razorpay_payment_id,

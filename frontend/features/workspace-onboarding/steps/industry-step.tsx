@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Monitor, Megaphone, ShoppingBag, Factory, Heart,
   GraduationCap, HardHat, Home, UtensilsCrossed, Truck,
@@ -37,8 +37,11 @@ interface IndustryStepProps {
 
 export function IndustryStep({ onNext, onBack, defaultIndustry }: IndustryStepProps) {
   const [selected, setSelected] = useState<string>(defaultIndustry ?? "");
+  const hasFiredRef = useRef(false);
 
   function handleSelect(id: string) {
+    if (hasFiredRef.current) return;
+    hasFiredRef.current = true;
     setSelected(id);
     setTimeout(() => {
       onNext(id);

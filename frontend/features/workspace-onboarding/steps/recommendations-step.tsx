@@ -145,7 +145,7 @@ export function RecommendationsStep({ goals, industry, onNext, onBack }: Recomme
                 )}
               >
                 <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <Icon className="h-4.5 w-4.5 text-primary" />
+                  <Icon className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">

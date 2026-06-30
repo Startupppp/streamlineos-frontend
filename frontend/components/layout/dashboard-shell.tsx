@@ -3,14 +3,14 @@
 import { useState, useCallback } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
+import Image from "next/image"
+import { Menu } from "lucide-react"
 import { AppSidebar } from "./app-sidebar"
-import { TopHeader } from "./top-header"
-import { ProductSwitcher } from "./product-switcher"
+import { ActivityBar } from "./activity-bar"
 import { MobileBottomNav } from "./mobile-bottom-nav"
 import { CommandPalette } from "./command-palette"
 import { NotActivatedPage } from "../auth/not-activated-page"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/common/use-mobile"
 import { usePushSubscription } from "@/hooks/common/use-push-subscription"
 import { TrialBanner } from "@/components/billing/trial-banner"
 
@@ -32,7 +32,7 @@ const ChatUnreadNotifications = dynamic(
 
 const SIDEBAR_COOKIE = "sidebar-collapsed"
 const SIDEBAR_COLLAPSED_W = "3.5rem"
-const SIDEBAR_EXPANDED_W = "15rem"
+const SIDEBAR_EXPANDED_W = "17rem"
 
 function setSidebarCookie(collapsed: boolean) {
   document.cookie = `${SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
@@ -53,7 +53,6 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(defaultCollapsed)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const isMobile = useIsMobile()
   usePushSubscription(userId)
 
   const handleToggleSidebar = useCallback(() => {
@@ -70,7 +69,7 @@ export function DashboardShell({
   const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W
 
   return (
-    <div className="h-dvh flex flex-col bg-background overflow-hidden">
+    <div className="h-dvh flex flex-col overflow-hidden">
       {hasDashboardAccess && <ChatUnreadNotifications currentUserId={userId} />}
       <Link
         href="#dashboard-content"
@@ -81,26 +80,35 @@ export function DashboardShell({
 
       {hasDashboardAccess ? (
         <>
-          <TopHeader onMobileMenuOpen={handleOpenMobileMenu} />
-          <div className="hidden md:block">
-            <ProductSwitcher />
-          </div>
           <CommandPalette />
           <TrialBanner />
 
-          <div className="flex-1 flex overflow-hidden">
-            {!isMobile && (
-              <aside
-                aria-label="Sidebar"
-                style={{ width: sidebarW }}
-                className="hidden md:flex flex-col h-full border-r border-sidebar-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-visible relative z-30"
-              >
-                <AppSidebar
-                  isCollapsed={isSidebarCollapsed}
-                  onToggleCollapse={handleToggleSidebar}
-                />
-              </aside>
-            )}
+          <div className="md:hidden flex items-center gap-3 h-12 px-4 border-b border-border bg-background shrink-0">
+            <button
+              type="button"
+              onClick={handleOpenMobileMenu}
+              aria-label="Open navigation"
+              className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <Image src="/logo.svg" alt="StreamlineOS logo" width={28} height={28} />
+            <span className="text-sm font-semibold text-foreground">StreamlineOS</span>
+          </div>
+
+          <div className="flex-1 flex min-h-0 overflow-hidden">
+            <ActivityBar />
+
+            <aside
+              aria-label="Sidebar"
+              style={{ width: sidebarW }}
+              className="hidden md:flex flex-col h-full border-r border-sidebar-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-visible relative z-30"
+            >
+              <AppSidebar
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={handleToggleSidebar}
+              />
+            </aside>
 
             <main
               id="dashboard-content"
@@ -108,8 +116,8 @@ export function DashboardShell({
             >
               <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-16 md:pb-0">
                 {children}
+                <SuccessChecklist />
               </div>
-              <SuccessChecklist />
             </main>
           </div>
 

@@ -12,6 +12,7 @@ import {
 import { useInviteUser } from "@/hooks/api/organization";
 
 interface InviteRow {
+  id: string;
   email: string;
   role: string;
 }
@@ -25,37 +26,37 @@ interface InviteStepProps {
 }
 
 export function InviteStep({ onNext, onSkip, onBack }: InviteStepProps) {
-  const [rows, setRows] = useState<InviteRow[]>([{ email: "", role: "member" }]);
-  const [errors, setErrors] = useState<Record<number, string>>({});
+  const [rows, setRows] = useState<InviteRow[]>(() => [{ id: crypto.randomUUID(), email: "", role: "member" }]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const inviteUser = useInviteUser();
 
   function handleAddRow() {
-    setRows((prev) => [...prev, { email: "", role: "member" }]);
+    setRows((prev) => [...prev, { id: crypto.randomUUID(), email: "", role: "member" }]);
   }
 
-  function handleRemoveRow(index: number) {
-    setRows((prev) => prev.filter((_, i) => i !== index));
+  function handleRemoveRow(id: string) {
+    setRows((prev) => prev.filter((row) => row.id !== id));
     setErrors((prev) => {
       const next = { ...prev };
-      delete next[index];
+      delete next[id];
       return next;
     });
   }
 
-  function handleEmailChange(index: number, value: string) {
-    setRows((prev) => prev.map((row, i) => (i === index ? { ...row, email: value } : row)));
+  function handleEmailChange(id: string, value: string) {
+    setRows((prev) => prev.map((row) => row.id === id ? { ...row, email: value } : row));
     setErrors((prev) => {
       const next = { ...prev };
-      delete next[index];
+      delete next[id];
       return next;
     });
   }
 
-  function handleRoleChange(index: number, value: string) {
-    setRows((prev) => prev.map((row, i) => (i === index ? { ...row, role: value } : row)));
+  function handleRoleChange(id: string, value: string) {
+    setRows((prev) => prev.map((row) => row.id === id ? { ...row, role: value } : row));
   }
 
   function handleCsvUploadClick() {
@@ -72,6 +73,7 @@ export function InviteStep({ onNext, onSkip, onBack }: InviteStepProps) {
         const parsed = result.data
           .filter((row) => row.email && row.email.includes("@"))
           .map((row) => ({
+            id: crypto.randomUUID(),
             email: row.email.trim(),
             role: ROLES.includes(row.role?.trim()) ? row.role.trim() : "member",
           }));
@@ -93,10 +95,10 @@ export function InviteStep({ onNext, onSkip, onBack }: InviteStepProps) {
   }
 
   function validate(): boolean {
-    const newErrors: Record<number, string> = {};
-    rows.forEach((row, i) => {
+    const newErrors: Record<string, string> = {};
+    rows.forEach((row) => {
       if (row.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
-        newErrors[i] = "Invalid email address";
+        newErrors[row.id] = "Invalid email address";
       }
     });
     setErrors(newErrors);
@@ -137,22 +139,22 @@ export function InviteStep({ onNext, onSkip, onBack }: InviteStepProps) {
       </div>
 
       <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
-        {rows.map((row, i) => (
-          <div key={i} className="flex gap-2 items-start">
+        {rows.map((row) => (
+          <div key={row.id} className="flex gap-2 items-start">
             <div className="flex-1 space-y-0.5">
               <Input
                 placeholder="email@example.com"
                 type="email"
                 value={row.email}
-                onChange={(e) => handleEmailChange(i, e.target.value)}
-                className={errors[i] ? "border-destructive" : ""}
-                aria-invalid={Boolean(errors[i])}
+                onChange={(e) => handleEmailChange(row.id, e.target.value)}
+                className={errors[row.id] ? "border-destructive" : ""}
+                aria-invalid={Boolean(errors[row.id])}
               />
-              {errors[i] && (
-                <p className="text-xs text-destructive">{errors[i]}</p>
+              {errors[row.id] && (
+                <p className="text-xs text-destructive">{errors[row.id]}</p>
               )}
             </div>
-            <Select value={row.role} onValueChange={(v) => handleRoleChange(i, v)}>
+            <Select value={row.role} onValueChange={(v) => handleRoleChange(row.id, v)}>
               <SelectTrigger className="w-[110px] shrink-0">
                 <SelectValue />
               </SelectTrigger>
@@ -170,7 +172,7 @@ export function InviteStep({ onNext, onSkip, onBack }: InviteStepProps) {
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9 shrink-0"
-                onClick={() => handleRemoveRow(i)}
+                onClick={() => handleRemoveRow(row.id)}
                 aria-label="Remove row"
               >
                 <X className="h-4 w-4" />

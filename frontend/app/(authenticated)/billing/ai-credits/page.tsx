@@ -44,12 +44,11 @@ const TXN_LABELS: Record<
 export default function AiCreditsPage() {
   const { data, isLoading, refetch } = useAiCreditsWallet();
   const configureTopUp = useConfigureAutoTopUp();
-  const [autoTopUp, setAutoTopUp] = useState(
-    data?.wallet.autoTopUpEnabled ?? false,
-  );
+  const [localAutoTopUp, setLocalAutoTopUp] = useState<boolean | null>(null);
+  const autoTopUp = localAutoTopUp ?? (data?.wallet.autoTopUpEnabled ?? false);
 
   function handleAutoTopUpToggle(enabled: boolean) {
-    setAutoTopUp(enabled);
+    setLocalAutoTopUp(enabled);
     configureTopUp.mutate({ enabled });
   }
 

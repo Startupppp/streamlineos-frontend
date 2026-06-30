@@ -45,12 +45,6 @@ export default async function HomePage() {
     ) {
       throw error;
     }
-    if (process.env.NODE_ENV === "development") {
-      console.warn(
-        "[HomePage] Auth not configured — rendering landing only. " +
-          "Set NEXTAUTH_SECRET in .env to enable session-aware redirects.",
-      );
-    }
   }
 
   return (
