@@ -26,8 +26,8 @@ import type {
   ApprovedLeave,
 } from "./leaves-shared";
 import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
-import { ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
 import { useCan } from "@/hooks/api/access";
+import { useLeavePolicy } from "@/hooks/api/hr";
 
 const DONUT_COLORS = ["#06b6d4", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
 
@@ -38,7 +38,7 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
         .filter(
           (b) =>
             b.typeName &&
-            ALLOWED_LEAVE_TYPE_NAMES.has(b.typeName) &&
+            allowedLeaveTypeNames.has(b.typeName) &&
             (b.daysPerYear ?? 0) > 0,
         )
         .map((b) => ({
@@ -259,6 +259,8 @@ export function LeavesTabContent({
   approvedLeavesThisWeek = [],
 }: LeavesTabContentProps) {
   const isAdmin = useCan("hr:employees:manage");
+  const { data: policy } = useLeavePolicy();
+  const allowedLeaveTypeNames = new Set(policy?.leaveTypes.map((t) => t.name) ?? []);
 
   const currentYear = new Date().getFullYear();
 

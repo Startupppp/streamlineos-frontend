@@ -5,17 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useHrWfhRequests } from "@/hooks/api/hr";
-import { WFH_MONTHLY_QUOTA } from "@/lib/leave-policy";
+import { useHrWfhRequests, useLeavePolicy } from "@/hooks/api/hr";
 import { RequestWfhDialog } from "@/components/hr/request-wfh-dialog";
 import { Home } from "lucide-react";
 
 export const WfhBalancesCard = memo(function WfhBalancesCard() {
   const { data: requests, isLoading } = useHrWfhRequests();
+  const { data: policy } = useLeavePolicy();
+  const wfhQuota = policy?.wfhMonthlyQuota ?? 4;
 
   const stats = useMemo(() => {
     if (!requests)
-      return { approved: 0, pending: 0, remaining: WFH_MONTHLY_QUOTA };
+      return { approved: 0, pending: 0, remaining: wfhQuota };
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     const thisMonthRequests = requests.filter((r) => {
@@ -31,9 +32,9 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
     return {
       approved,
       pending,
-      remaining: Math.max(0, WFH_MONTHLY_QUOTA - approved),
+      remaining: Math.max(0, wfhQuota - approved),
     };
-  }, [requests]);
+  }, [requests, wfhQuota]);
 
   if (isLoading) {
     return (
@@ -52,7 +53,7 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
     );
   }
 
-  const usedPercent = (stats.approved / WFH_MONTHLY_QUOTA) * 100;
+  const usedPercent = (stats.approved / wfhQuota) * 100;
 
   return (
     <Card className="rounded-2xl border border-border border-l-4 border-l-violet-500 bg-card shadow-sm overflow-hidden">
@@ -69,13 +70,13 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
           <div className="flex justify-between text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             <span>Monthly Quota</span>
             <span className="text-foreground normal-case text-sm font-semibold tracking-normal">
-              {stats.approved} / {WFH_MONTHLY_QUOTA}
+              {stats.approved} / {wfhQuota}
             </span>
           </div>
           <Progress
             value={usedPercent}
             className="h-2.5"
-            aria-label={`${stats.approved} of ${WFH_MONTHLY_QUOTA} WFH days used`}
+            aria-label={`${stats.approved} of ${wfhQuota} WFH days used`}
           />
         </div>
 

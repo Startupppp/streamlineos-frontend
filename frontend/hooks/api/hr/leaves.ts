@@ -237,3 +237,24 @@ export function useHrLeaveAnalytics(year?: number) {
   });
 }
 
+
+
+export interface LeavePolicyType {
+  name: string;
+  daysPerYear: number;
+  carryForward: boolean;
+  expiresMonthly: boolean;
+}
+
+export interface LeavePolicyResponse {
+  wfhMonthlyQuota: number;
+  leaveTypes: LeavePolicyType[];
+}
+
+export function useLeavePolicy() {
+  return useQuery({
+    queryKey: ["hr", "leave-policy"],
+    queryFn: () => apiClient.get<LeavePolicyResponse>("/hr/leave-policy"),
+    staleTime: 10 * 60 * 1000,
+  });
+}

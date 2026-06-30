@@ -23,7 +23,6 @@ import {
 import { toast } from "sonner";
 import { useCreateInvoice } from "@/hooks/api/invoice";
 import { INDIAN_STATES } from "@/lib/accounting/indian-states";
-import { splitTaxPool } from "@/lib/accounting/posting-rules";
 
 const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 const GST_RATE_OPTIONS: ReadonlyArray<number> = [0, 5, 12, 18, 28];
@@ -86,6 +85,14 @@ function fmt(amount: number) {
 }
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
+
+function splitTaxPool(taxPool: number, supplierStateCode: string, placeOfSupplyStateCode: string) {
+  if (supplierStateCode === placeOfSupplyStateCode) {
+    const half = round2(taxPool / 2);
+    return { cgst: half, sgst: round2(taxPool - half), igst: 0, total: taxPool };
+  }
+  return { cgst: 0, sgst: 0, igst: round2(taxPool), total: taxPool };
+}
 
 const DEFAULT_ITEM = {
   description: "",
@@ -154,10 +161,7 @@ export default function NewInvoicePage() {
         ? watchedSupplierGstin.slice(0, 2)
         : placeOfSupplyStateCode;
 
-    const split = splitTaxPool(taxPool, {
-      supplierStateCode,
-      placeOfSupplyStateCode,
-    });
+    const split = splitTaxPool(taxPool, supplierStateCode, placeOfSupplyStateCode);
 
     const discount = Number(watchedDiscount) || 0;
     const total = round2(subtotal + taxPool - discount);

@@ -28,8 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FileUpload } from "@/components/storage/file-upload";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
-import { useRequestLeave } from "@/hooks/api/hr";
-import { LEAVE_MAX_DAYS } from "@/lib/leave-policy";
+import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
 import type {
   LeaveType,
   Approver,
@@ -104,6 +103,12 @@ export function LeaveRequestSheet({
   balances = [],
 }: LeaveRequestSheetProps) {
   const requestLeaveMutation = useRequestLeave();
+  const { data: policy } = useLeavePolicy();
+  const leaveMaxDays: Record<string, number> = Object.fromEntries(
+    (policy?.leaveTypes ?? [])
+      .filter((t) => t.daysPerYear > 0)
+      .map((t) => [t.name, t.daysPerYear]),
+  );
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
 
   const minDate = joiningDate
@@ -176,7 +181,7 @@ export function LeaveRequestSheet({
       (t) => t.id.toString() === watchedLeaveTypeId,
     );
     if (!selectedType) return null;
-    const maxDays = LEAVE_MAX_DAYS[selectedType.name];
+    const maxDays = leaveMaxDays[selectedType.name];
     if (maxDays === undefined) return null;
     if (requestedDays > maxDays) {
       return `${selectedType.name} cannot exceed ${maxDays} days. You selected ${requestedDays} day${requestedDays !== 1 ? "s" : ""}.`;
@@ -188,6 +193,7 @@ export function LeaveRequestSheet({
     watchedEndDate,
     requestedDays,
     leaveTypes,
+    leaveMaxDays,
   ]);
 
   const handleAttachmentUpload = useCallback(

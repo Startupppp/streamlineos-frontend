@@ -88,11 +88,9 @@ async function resolveGoogleUser(
       },
       body: JSON.stringify({ email, googleId, name: name ?? undefined, image: image ?? undefined }),
     });
-    if (!res.ok) {
-      return null;
-    }
-    const data = (await res.json()) as { userId: string };
-    return data.userId ?? null;
+    if (!res.ok) return null;
+    const raw = (await res.json()) as { success?: boolean; data?: { userId: string }; userId?: string };
+    return raw?.data?.userId ?? raw?.userId ?? null;
   } catch {
     return null;
   }

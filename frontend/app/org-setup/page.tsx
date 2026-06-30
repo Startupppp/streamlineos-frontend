@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, Plus, Trash2, Sparkles } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
@@ -17,29 +16,47 @@ import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 
 export const dynamic = "force-dynamic";
 
-const TOTAL_STEPS = 9;
+const TOTAL_STEPS = 7;
 
-const INDUSTRIES = ["Technology", "Finance & Banking", "Healthcare", "Retail & E-commerce", "Manufacturing", "Education", "Real Estate", "Logistics & Supply Chain", "Marketing & Advertising", "Consulting", "Legal", "Media & Entertainment", "Hospitality & Travel", "Non-profit", "Other"] as const;
-const COMPANY_SIZES = [{ value: "1-10", label: "1–10 employees" }, { value: "11-50", label: "11–50 employees" }, { value: "51-200", label: "51–200 employees" }, { value: "201-500", label: "201–500 employees" }, { value: "500+", label: "500+ employees" }] as const;
-const COUNTRIES = ["India", "United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Singapore", "UAE", "Other"] as const;
-const TIMEZONES = ["Asia/Kolkata", "America/New_York", "America/Chicago", "America/Los_Angeles", "Europe/London", "Europe/Paris", "Asia/Singapore", "Asia/Tokyo", "Australia/Sydney", "UTC"] as const;
-const CURRENCIES = ["INR", "USD", "EUR", "GBP", "AUD", "SGD", "AED", "CAD", "JPY"] as const;
-const LANGUAGES = ["en", "hi", "fr", "de", "es", "pt", "ar", "zh", "ja"] as const;
-const LANGUAGE_LABELS: Record<string, string> = { en: "English", hi: "Hindi", fr: "French", de: "German", es: "Spanish", pt: "Portuguese", ar: "Arabic", zh: "Chinese", ja: "Japanese" };
-const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
-const DAY_LABELS: Record<string, string> = { monday: "Mon", tuesday: "Tue", wednesday: "Wed", thursday: "Thu", friday: "Fri", saturday: "Sat", sunday: "Sun" };
-const COMMON_HOLIDAYS = [
-  { name: "New Year's Day", date: "2026-01-01" },
-  { name: "Republic Day", date: "2026-01-26" },
-  { name: "Holi", date: "2026-03-03" },
-  { name: "Good Friday", date: "2026-04-03" },
-  { name: "Labour Day", date: "2026-05-01" },
-  { name: "Independence Day", date: "2026-08-15" },
-  { name: "Gandhi Jayanti", date: "2026-10-02" },
-  { name: "Dussehra", date: "2026-10-20" },
-  { name: "Diwali", date: "2026-11-08" },
-  { name: "Christmas Day", date: "2026-12-25" },
+const INDUSTRIES = [
+  "Technology", "Finance & Banking", "Healthcare", "Retail & E-commerce",
+  "Manufacturing", "Education", "Real Estate", "Logistics & Supply Chain",
+  "Marketing & Advertising", "Consulting", "Legal", "Media & Entertainment",
+  "Hospitality & Travel", "Non-profit", "Other",
 ] as const;
+
+const COMPANY_SIZES = [
+  { value: "1-10", label: "1–10 employees" },
+  { value: "11-50", label: "11–50 employees" },
+  { value: "51-200", label: "51–200 employees" },
+  { value: "201-500", label: "201–500 employees" },
+  { value: "500+", label: "500+ employees" },
+] as const;
+
+const COUNTRIES = [
+  "India", "United States", "United Kingdom", "Canada", "Australia",
+  "Germany", "France", "Singapore", "UAE", "Other",
+] as const;
+
+const TIMEZONES = [
+  "Asia/Kolkata", "America/New_York", "America/Chicago", "America/Los_Angeles",
+  "Europe/London", "Europe/Paris", "Asia/Singapore", "Asia/Tokyo", "Australia/Sydney", "UTC",
+] as const;
+
+const CURRENCIES = ["INR", "USD", "EUR", "GBP", "AUD", "SGD", "AED", "CAD", "JPY"] as const;
+
+const LANGUAGES = ["en", "hi", "fr", "de", "es", "pt", "ar", "zh", "ja"] as const;
+
+const LANGUAGE_LABELS: Record<string, string> = {
+  en: "English", hi: "Hindi", fr: "French", de: "German",
+  es: "Spanish", pt: "Portuguese", ar: "Arabic", zh: "Chinese", ja: "Japanese",
+};
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
 const AVAILABLE_MODULES = [
   { id: "HR", label: "HR & People", description: "Employees, leaves, payroll, onboarding" },
   { id: "CRM", label: "CRM & Sales", description: "Leads, deals, contacts, pipeline" },
@@ -49,8 +66,16 @@ const AVAILABLE_MODULES = [
   { id: "HELPDESK", label: "Helpdesk", description: "Support tickets and SLA" },
 ] as const;
 
-type DayHours = { open: string; close: string; enabled: boolean };
-type BusinessHours = Record<string, DayHours>;
+const STEP_TITLES = [
+  "Welcome",
+  "Your profile",
+  "Branding",
+  "Working policies",
+  "Invite team",
+  "Module selection",
+  "Review & launch",
+];
+
 type Invitee = { email: string; role: string };
 
 type WizardData = {
@@ -66,15 +91,9 @@ type WizardData = {
   currency: string;
   language: string;
   fiscalYearStart: number;
-  businessHours: BusinessHours;
-  holidays: { name: string; date: string }[];
   invitees: Invitee[];
   enabledModules: string[];
 };
-
-const DEFAULT_BUSINESS_HOURS: BusinessHours = Object.fromEntries(
-  DAYS.map((d) => [d, { open: "09:00", close: "18:00", enabled: !["saturday", "sunday"].includes(d) }]),
-);
 
 const DEFAULT_DATA: WizardData = {
   industry: "",
@@ -89,37 +108,56 @@ const DEFAULT_DATA: WizardData = {
   currency: "INR",
   language: "en",
   fiscalYearStart: 4,
-  businessHours: DEFAULT_BUSINESS_HOURS,
-  holidays: [],
   invitees: [],
   enabledModules: ["HR", "CRM", "PROJECTS"],
 };
 
-const STEP_TITLES = [
-  "Welcome",
-  "Your profile",
-  "Branding",
-  "Working policies",
-  "Business hours",
-  "Holidays",
-  "Invite team",
-  "Module selection",
-  "Review & launch",
-];
+const DRAFT_KEY = "org-setup-draft";
+
+function isInvitee(v: unknown): v is Invitee {
+  if (typeof v !== "object" || v === null) return false;
+  const obj = v as Record<string, unknown>;
+  return typeof obj.email === "string" && typeof obj.role === "string";
+}
 
 function loadDraft(): WizardData {
   try {
-    const raw = localStorage.getItem("org-setup-draft");
-    if (raw) return { ...DEFAULT_DATA, ...JSON.parse(raw) };
-  } catch { }
-  return DEFAULT_DATA;
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return { ...DEFAULT_DATA };
+    const p = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      industry: typeof p.industry === "string" ? p.industry : DEFAULT_DATA.industry,
+      companySize: typeof p.companySize === "string" ? p.companySize : DEFAULT_DATA.companySize,
+      country: typeof p.country === "string" ? p.country : DEFAULT_DATA.country,
+      website: typeof p.website === "string" ? p.website : DEFAULT_DATA.website,
+      name: typeof p.name === "string" ? p.name : DEFAULT_DATA.name,
+      logo: typeof p.logo === "string" ? p.logo : DEFAULT_DATA.logo,
+      primaryColor: typeof p.primaryColor === "string" ? p.primaryColor : DEFAULT_DATA.primaryColor,
+      supportEmail: typeof p.supportEmail === "string" ? p.supportEmail : DEFAULT_DATA.supportEmail,
+      timezone: typeof p.timezone === "string" ? p.timezone : DEFAULT_DATA.timezone,
+      currency: typeof p.currency === "string" ? p.currency : DEFAULT_DATA.currency,
+      language: typeof p.language === "string" ? p.language : DEFAULT_DATA.language,
+      fiscalYearStart: typeof p.fiscalYearStart === "number" ? p.fiscalYearStart : DEFAULT_DATA.fiscalYearStart,
+      invitees: Array.isArray(p.invitees) ? p.invitees.filter(isInvitee) : DEFAULT_DATA.invitees,
+      enabledModules: Array.isArray(p.enabledModules)
+        ? p.enabledModules.filter((m): m is string => typeof m === "string")
+        : DEFAULT_DATA.enabledModules,
+    };
+  } catch {
+    return { ...DEFAULT_DATA };
+  }
 }
 
-function saveDraft(data: Partial<WizardData>) {
+function saveDraft(current: WizardData, updates: Partial<WizardData>): void {
   try {
-    const current = loadDraft();
-    localStorage.setItem("org-setup-draft", JSON.stringify({ ...current, ...data }));
-  } catch { }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...current, ...updates }));
+  } catch {}
+}
+
+function clearDraft(): void {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {}
 }
 
 export default function OrgSetupPage() {
@@ -145,7 +183,7 @@ export default function OrgSetupPage() {
   const patch = useCallback((updates: Partial<WizardData>) => {
     setData((prev) => {
       const next = { ...prev, ...updates };
-      saveDraft(updates);
+      saveDraft(prev, updates);
       return next;
     });
   }, []);
@@ -153,7 +191,7 @@ export default function OrgSetupPage() {
   const goNext = useCallback(() => setStep((s) => Math.min(s + 1, TOTAL_STEPS)), []);
   const goBack = useCallback(() => setStep((s) => Math.max(s - 1, 1)), []);
 
-  const addInvitee = useCallback(() => {
+  const handleAddInvitee = useCallback(() => {
     if (!newInviteeEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newInviteeEmail)) {
       toast.error("Enter a valid email address");
       return;
@@ -166,21 +204,21 @@ export default function OrgSetupPage() {
     setNewInviteeEmail("");
   }, [newInviteeEmail, newInviteeRole, data.invitees, patch]);
 
-  const removeInvitee = useCallback((email: string) => {
+  const handleRemoveInvitee = useCallback((email: string) => {
     patch({ invitees: data.invitees.filter((i) => i.email !== email) });
   }, [data.invitees, patch]);
 
-  const toggleHoliday = useCallback((h: { name: string; date: string }) => {
-    const exists = data.holidays.some((x) => x.date === h.date);
-    patch({ holidays: exists ? data.holidays.filter((x) => x.date !== h.date) : [...data.holidays, h] });
-  }, [data.holidays, patch]);
-
-  const toggleModule = useCallback((id: string) => {
+  const handleToggleModule = useCallback((id: string) => {
     const has = data.enabledModules.includes(id);
     patch({ enabledModules: has ? data.enabledModules.filter((m) => m !== id) : [...data.enabledModules, id] });
   }, [data.enabledModules, patch]);
 
   const handleSubmit = useCallback(async () => {
+    if (data.enabledModules.length === 0) {
+      toast.error("Select at least one module");
+      setStep(6);
+      return;
+    }
     setIsSubmitting(true);
     try {
       const trimmedName = data.name.trim();
@@ -188,14 +226,23 @@ export default function OrgSetupPage() {
       const firstName = spaceIdx === -1 ? trimmedName : trimmedName.slice(0, spaceIdx);
       const lastName = spaceIdx === -1 ? "" : trimmedName.slice(spaceIdx + 1).trim();
       await apiClient.patch("/org/setup", {
-        ...data,
+        industry: data.industry,
+        companySize: data.companySize,
+        country: data.country,
+        website: data.website || undefined,
         firstName,
         lastName,
-        website: data.website || undefined,
         logo: data.logo || undefined,
+        primaryColor: data.primaryColor,
         supportEmail: data.supportEmail || undefined,
+        timezone: data.timezone,
+        currency: data.currency,
+        language: data.language,
+        fiscalYearStart: data.fiscalYearStart,
+        invitees: data.invitees,
+        enabledModules: data.enabledModules,
       });
-      localStorage.removeItem("org-setup-draft");
+      clearDraft();
       setShowCelebration(true);
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -204,28 +251,42 @@ export default function OrgSetupPage() {
     }
   }, [data]);
 
-  const goToDashboard = useCallback(() => {
+  const handleGoToDashboard = useCallback(() => {
     window.location.href = "/dashboard";
   }, []);
 
+  const handleInviteeEmailKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleAddInvitee();
+      }
+    },
+    [handleAddInvitee],
+  );
+
   return (
     <div className="w-full max-w-lg relative">
-      {showCelebration && <ConfettiOverlay durationMs={2200} onDone={goToDashboard} />}
+      {showCelebration && <ConfettiOverlay durationMs={2200} onDone={handleGoToDashboard} />}
 
       <div className="mb-6 text-center">
         <h1 className="font-display text-2xl font-extrabold tracking-tight text-slate-900 leading-tight">
-          {step === 1 ? `Welcome${session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}!` : STEP_TITLES[step - 1]}
+          {step === 1
+            ? `Welcome${session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}!`
+            : STEP_TITLES[step - 1]}
         </h1>
-        <p className="text-[13px] text-slate-500 mt-1">Step {step} of {TOTAL_STEPS}</p>
+        <p className="text-[13px] text-slate-500 mt-1">
+          Step {step} of {TOTAL_STEPS}
+        </p>
       </div>
 
       <div className="mb-6">
-        <div className="flex gap-1">
+        <div className="flex gap-1" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={TOTAL_STEPS} aria-label="Setup progress">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div
               key={i}
               className={cn(
-                "h-1 flex-1 rounded-full transition-colors",
+                "h-1 flex-1 rounded-full transition-colors duration-300",
                 i < step ? "bg-blue-600" : "bg-slate-200",
               )}
             />
@@ -241,15 +302,27 @@ export default function OrgSetupPage() {
               <div className="space-y-1">
                 <Label className="text-[12px] font-medium text-slate-700">Industry *</Label>
                 <Select onValueChange={(v) => patch({ industry: v })} value={data.industry}>
-                  <SelectTrigger className="h-10"><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INDUSTRIES.map((i) => (
+                      <SelectItem key={i} value={i}>{i}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-[12px] font-medium text-slate-700">Company size *</Label>
                 <Select onValueChange={(v) => patch({ companySize: v })} value={data.companySize}>
-                  <SelectTrigger className="h-10"><SelectValue placeholder="Size" /></SelectTrigger>
-                  <SelectContent>{COMPANY_SIZES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COMPANY_SIZES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
             </div>
@@ -257,13 +330,26 @@ export default function OrgSetupPage() {
               <div className="space-y-1">
                 <Label className="text-[12px] font-medium text-slate-700">Country *</Label>
                 <Select onValueChange={(v) => patch({ country: v })} value={data.country}>
-                  <SelectTrigger className="h-10"><SelectValue placeholder="Country" /></SelectTrigger>
-                  <SelectContent>{COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRIES.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium text-slate-700">Website</Label>
-                <Input value={data.website} onChange={(e) => patch({ website: e.target.value })} placeholder="https://acme.com" className="h-10" />
+                <Label className="text-[12px] font-medium text-slate-700">
+                  Website <span className="text-slate-400 font-normal">(optional)</span>
+                </Label>
+                <Input
+                  value={data.website}
+                  onChange={(e) => patch({ website: e.target.value })}
+                  placeholder="https://acme.com"
+                  className="h-10"
+                />
               </div>
             </div>
             <Button
@@ -286,33 +372,71 @@ export default function OrgSetupPage() {
             <p className="text-[13px] text-slate-500">A few details about you, the admin.</p>
             <div className="space-y-1">
               <Label className="text-[12px] font-medium text-slate-700">Your name *</Label>
-              <Input value={data.name} onChange={(e) => patch({ name: e.target.value })} placeholder="Aditya Sharma" className="h-10" />
+              <Input
+                value={data.name}
+                onChange={(e) => patch({ name: e.target.value })}
+                placeholder="Aditya Sharma"
+                className="h-10"
+                autoFocus
+              />
             </div>
-            <NavButtons onBack={goBack} onNext={() => {
-              if (!data.name.trim()) { toast.error("Please enter your name"); return; }
-              goNext();
-            }} />
+            <NavButtons
+              onBack={goBack}
+              onNext={() => {
+                if (!data.name.trim()) {
+                  toast.error("Please enter your name");
+                  return;
+                }
+                goNext();
+              }}
+            />
           </div>
         )}
 
         {step === 3 && (
           <div className="space-y-4">
-            <p className="text-[13px] text-slate-500">Customize how your workspace looks.</p>
+            <p className="text-[13px] text-slate-500">Customize how your workspace looks. All optional.</p>
             <div className="space-y-1">
-              <Label className="text-[12px] font-medium text-slate-700">Logo URL <span className="text-slate-400 font-normal">(optional)</span></Label>
-              <Input value={data.logo} onChange={(e) => patch({ logo: e.target.value })} placeholder="https://cdn.example.com/logo.png" className="h-10" />
+              <Label className="text-[12px] font-medium text-slate-700">
+                Logo URL <span className="text-slate-400 font-normal">(optional)</span>
+              </Label>
+              <Input
+                value={data.logo}
+                onChange={(e) => patch({ logo: e.target.value })}
+                placeholder="https://cdn.example.com/logo.png"
+                className="h-10"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-[12px] font-medium text-slate-700">Primary color</Label>
                 <div className="flex items-center gap-2">
-                  <input type="color" value={data.primaryColor} onChange={(e) => patch({ primaryColor: e.target.value })} className="h-10 w-10 rounded border cursor-pointer" />
-                  <Input value={data.primaryColor} onChange={(e) => patch({ primaryColor: e.target.value })} placeholder="#2563eb" className="h-10 flex-1 font-mono text-sm" />
+                  <input
+                    type="color"
+                    value={data.primaryColor}
+                    onChange={(e) => patch({ primaryColor: e.target.value })}
+                    className="h-10 w-10 rounded border cursor-pointer"
+                    aria-label="Pick primary color"
+                  />
+                  <Input
+                    value={data.primaryColor}
+                    onChange={(e) => patch({ primaryColor: e.target.value })}
+                    placeholder="#2563eb"
+                    className="h-10 flex-1 font-mono text-sm"
+                  />
                 </div>
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium text-slate-700">Support email <span className="text-slate-400 font-normal">(optional)</span></Label>
-                <Input type="email" value={data.supportEmail} onChange={(e) => patch({ supportEmail: e.target.value })} placeholder="support@acme.com" className="h-10" />
+                <Label className="text-[12px] font-medium text-slate-700">
+                  Support email <span className="text-slate-400 font-normal">(optional)</span>
+                </Label>
+                <Input
+                  type="email"
+                  value={data.supportEmail}
+                  onChange={(e) => patch({ supportEmail: e.target.value })}
+                  placeholder="support@acme.com"
+                  className="h-10"
+                />
               </div>
             </div>
             <NavButtons onBack={goBack} onNext={goNext} />
@@ -327,29 +451,44 @@ export default function OrgSetupPage() {
                 <Label className="text-[12px] font-medium text-slate-700">Timezone</Label>
                 <Select onValueChange={(v) => patch({ timezone: v })} value={data.timezone}>
                   <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                  <SelectContent>{TIMEZONES.map((tz) => <SelectItem key={tz} value={tz}>{tz}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    {TIMEZONES.map((tz) => (
+                      <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-[12px] font-medium text-slate-700">Currency</Label>
                 <Select onValueChange={(v) => patch({ currency: v })} value={data.currency}>
                   <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                  <SelectContent>{CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    {CURRENCIES.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-[12px] font-medium text-slate-700">Language</Label>
                 <Select onValueChange={(v) => patch({ language: v })} value={data.language}>
                   <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                  <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l} value={l}>{LANGUAGE_LABELS[l]}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    {LANGUAGES.map((l) => (
+                      <SelectItem key={l} value={l}>{LANGUAGE_LABELS[l]}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-[12px] font-medium text-slate-700">Fiscal year starts</Label>
-                <Select onValueChange={(v) => patch({ fiscalYearStart: parseInt(v) })} value={String(data.fiscalYearStart)}>
+                <Select
+                  onValueChange={(v) => patch({ fiscalYearStart: parseInt(v, 10) })}
+                  value={String(data.fiscalYearStart)}
+                >
                   <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, i) => (
+                    {MONTHS.map((m, i) => (
                       <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>
                     ))}
                   </SelectContent>
@@ -361,144 +500,121 @@ export default function OrgSetupPage() {
         )}
 
         {step === 5 && (
-          <div className="space-y-3">
-            <p className="text-[13px] text-slate-500">Set the hours your team works each day.</p>
-            {DAYS.map((day) => {
-              const hours = data.businessHours[day] ?? { open: "09:00", close: "18:00", enabled: true };
-              return (
-                <div key={day} className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 w-24 shrink-0">
-                    <Checkbox
-                      checked={hours.enabled}
-                      onCheckedChange={(checked) => patch({ businessHours: { ...data.businessHours, [day]: { ...hours, enabled: !!checked } } })}
-                    />
-                    <span className="text-[13px] font-medium text-slate-700">{DAY_LABELS[day]}</span>
-                  </div>
-                  {hours.enabled ? (
-                    <div className="flex items-center gap-2 flex-1">
-                      <Input type="time" value={hours.open} onChange={(e) => patch({ businessHours: { ...data.businessHours, [day]: { ...hours, open: e.target.value } } })} className="h-8 text-sm w-28" />
-                      <span className="text-muted-foreground text-xs">to</span>
-                      <Input type="time" value={hours.close} onChange={(e) => patch({ businessHours: { ...data.businessHours, [day]: { ...hours, close: e.target.value } } })} className="h-8 text-sm w-28" />
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Closed</span>
-                  )}
-                </div>
-              );
-            })}
-            <NavButtons onBack={goBack} onNext={goNext} />
-          </div>
-        )}
-
-        {step === 6 && (
-          <div className="space-y-3">
-            <p className="text-[13px] text-slate-500">Select holidays to add to your org calendar. You can edit these later.</p>
-            <div className="space-y-2">
-              {COMMON_HOLIDAYS.map((h) => {
-                const checked = data.holidays.some((x) => x.date === h.date);
-                return (
-                  <label key={h.date} className="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-slate-50">
-                    <Checkbox checked={checked} onCheckedChange={() => toggleHoliday(h)} />
-                    <span className="flex-1 text-sm">{h.name}</span>
-                    <span className="text-xs text-muted-foreground font-mono">{h.date}</span>
-                  </label>
-                );
-              })}
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              {data.holidays.length} holiday{data.holidays.length !== 1 ? "s" : ""} selected
-            </p>
-            <NavButtons onBack={goBack} onNext={goNext} skipLabel="Skip" />
-          </div>
-        )}
-
-        {step === 7 && (
           <div className="space-y-4">
-            <p className="text-[13px] text-slate-500">Invite colleagues to join. They&apos;ll receive an email with a link to accept.</p>
+            <p className="text-[13px] text-slate-500">
+              Invite colleagues to join. They&apos;ll receive an email with a link to accept.
+            </p>
             <div className="flex items-center gap-2">
               <Input
                 type="email"
                 value={newInviteeEmail}
                 onChange={(e) => setNewInviteeEmail(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addInvitee(); } }}
+                onKeyDown={handleInviteeEmailKeyDown}
                 placeholder="colleague@company.com"
                 className="h-9 flex-1"
               />
               <Select value={newInviteeRole} onValueChange={setNewInviteeRole}>
                 <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {["ADMIN", "MANAGER", "EMPLOYEE", "HR", "FINANCE"].map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                  {["ADMIN", "MANAGER", "EMPLOYEE", "HR", "FINANCE"].map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              <Button type="button" size="sm" onClick={addInvitee} className="h-9 gap-1">
+              <Button type="button" size="sm" onClick={handleAddInvitee} className="h-9 gap-1">
                 <Plus className="h-3.5 w-3.5" /> Add
               </Button>
             </div>
             {data.invitees.length > 0 && (
-              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+              <ul className="space-y-1.5 max-h-48 overflow-y-auto" aria-label="Invited colleagues">
                 {data.invitees.map((inv) => (
-                  <div key={inv.email} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200">
+                  <li key={inv.email} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200">
                     <span className="flex-1 text-sm truncate">{inv.email}</span>
                     <Badge variant="secondary" className="text-[10px] h-4">{inv.role}</Badge>
-                    <button type="button" onClick={() => removeInvitee(inv.email)} className="text-muted-foreground hover:text-destructive">
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveInvitee(inv.email)}
+                      aria-label={`Remove ${inv.email}`}
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
             <NavButtons onBack={goBack} onNext={goNext} skipLabel="Skip" />
           </div>
         )}
 
-        {step === 8 && (
+        {step === 6 && (
           <div className="space-y-3">
-            <p className="text-[13px] text-slate-500">Select the modules your organization will use. You can change these later.</p>
-            <div className="grid grid-cols-2 gap-2">
+            <p className="text-[13px] text-slate-500">
+              Select the modules your organization will use. You can change these later.
+            </p>
+            <div className="grid grid-cols-2 gap-2" role="group" aria-label="Module selection">
               {AVAILABLE_MODULES.map((m) => {
                 const enabled = data.enabledModules.includes(m.id);
                 return (
                   <button
                     key={m.id}
                     type="button"
-                    onClick={() => toggleModule(m.id)}
+                    role="checkbox"
+                    aria-checked={enabled}
+                    onClick={() => handleToggleModule(m.id)}
                     className={cn(
                       "text-left p-3 rounded-xl border-2 transition-colors",
-                      enabled ? "border-blue-500 bg-blue-50" : "border-slate-200 bg-white hover:border-blue-300",
+                      enabled
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-slate-200 bg-white hover:border-blue-300",
                     )}
                   >
                     <div className="flex items-start justify-between gap-1">
                       <span className="text-[13px] font-semibold text-slate-900">{m.label}</span>
-                      {enabled && <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />}
+                      {enabled && <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" aria-hidden="true" />}
                     </div>
                     <p className="text-[11px] text-slate-500 mt-0.5">{m.description}</p>
                   </button>
                 );
               })}
             </div>
-            <NavButtons onBack={goBack} onNext={goNext} />
+            <NavButtons
+              onBack={goBack}
+              onNext={() => {
+                if (data.enabledModules.length === 0) {
+                  toast.error("Select at least one module to continue");
+                  return;
+                }
+                goNext();
+              }}
+            />
           </div>
         )}
 
-        {step === 9 && (
+        {step === 7 && (
           <div className="space-y-5">
             <p className="text-[13px] text-slate-500">Everything looks good? Launch your workspace.</p>
-            <div className="space-y-3 text-sm">
+            <dl className="space-y-3 text-sm">
               <ReviewRow label="Industry" value={`${data.industry} · ${data.companySize}`} />
               <ReviewRow label="Country" value={data.country} />
               <ReviewRow label="Admin" value={data.name} />
               <ReviewRow label="Timezone" value={`${data.timezone} · ${data.currency}`} />
-              <ReviewRow label="Business hours" value={`${Object.values(data.businessHours).filter((h) => h.enabled).length} days/week`} />
-              <ReviewRow label="Holidays" value={`${data.holidays.length} selected`} />
-              <ReviewRow label="Invited" value={data.invitees.length > 0 ? `${data.invitees.length} colleague${data.invitees.length !== 1 ? "s" : ""}` : "None"} />
+              <ReviewRow
+                label="Invited"
+                value={data.invitees.length > 0 ? `${data.invitees.length} colleague${data.invitees.length !== 1 ? "s" : ""}` : "None"}
+              />
               <ReviewRow label="Modules" value={data.enabledModules.join(", ") || "None"} />
-            </div>
+            </dl>
             <div className="flex gap-2 pt-2">
               <Button type="button" variant="outline" onClick={goBack} className="flex-1 h-10">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
               <Button className="flex-1 h-10 gap-2" onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
                 {isSubmitting ? "Launching…" : "Launch workspace"}
               </Button>
             </div>
@@ -509,7 +625,15 @@ export default function OrgSetupPage() {
   );
 }
 
-function NavButtons({ onBack, onNext, skipLabel }: { onBack: () => void; onNext: () => void; skipLabel?: string }) {
+function NavButtons({
+  onBack,
+  onNext,
+  skipLabel,
+}: {
+  onBack: () => void;
+  onNext: () => void;
+  skipLabel?: string;
+}) {
   return (
     <div className="flex gap-2 pt-2">
       <Button type="button" variant="outline" onClick={onBack} className="flex-1 h-10">
@@ -530,8 +654,8 @@ function NavButtons({ onBack, onNext, skipLabel }: { onBack: () => void; onNext:
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-muted-foreground w-28 shrink-0 text-[12px]">{label}</span>
-      <span className="flex-1 font-medium text-[13px] truncate">{value}</span>
+      <dt className="text-muted-foreground w-28 shrink-0 text-[12px]">{label}</dt>
+      <dd className="flex-1 font-medium text-[13px] truncate">{value}</dd>
     </div>
   );
 }
