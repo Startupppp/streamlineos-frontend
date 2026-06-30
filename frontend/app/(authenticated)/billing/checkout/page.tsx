@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, ChevronRight, CreditCard, Loader2 } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronRight,
+  CreditCard,
+  Loader2,
+  Lock,
+  RefreshCcw,
+  ShieldCheck,
+} from "lucide-react";
 import Script from "next/script";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -853,6 +861,21 @@ export default function CheckoutPage() {
                   <span>{formatPrice(grandTotal)}</span>
                 </div>
               </div>
+              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="h-3.5 w-3.5 text-green-600" />
+                  256-bit SSL Encrypted
+                </span>
+                <span className="flex items-center gap-1">
+                  <Lock className="h-3.5 w-3.5 text-green-600" />
+                  PCI DSS Compliant
+                </span>
+                <span className="flex items-center gap-1">
+                  <RefreshCcw className="h-3.5 w-3.5 text-blue-600" />
+                  Cancel Anytime
+                </span>
+              </div>
+
               <Button
                 className="w-full"
                 size="lg"

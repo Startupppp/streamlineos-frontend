@@ -301,7 +301,7 @@ export function useSetIncentiveConfig() {
   });
 }
 
-export function useNotificationPreferences() {
+export function useHrNotificationPreferences() {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "notificationPreferences"] as const,
     queryFn: () =>
@@ -310,7 +310,7 @@ export function useNotificationPreferences() {
   });
 }
 
-export function useUpdateNotificationPreferences() {
+export function useUpdateHrNotificationPreferences() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: Partial<NotificationPreferences>) =>

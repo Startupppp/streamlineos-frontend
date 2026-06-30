@@ -80,6 +80,9 @@ import {
   LayoutGrid,
   Store,
   Users2,
+  Workflow,
+  PlayCircle,
+  CheckSquare,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -113,6 +116,48 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Calendar", icon: CalendarDays, href: "/calendar" },
       { label: "Chat", icon: MessageSquareText, href: "/chat" },
       { label: "Notifications", icon: Bell, href: "/notifications" },
+    ],
+  },
+  {
+    label: "Workflows",
+    requiredPermission: "workflows:workflows:view",
+    routes: [
+      {
+        label: "Dashboard",
+        icon: Workflow,
+        href: "/workflows",
+        requiredPermission: "workflows:workflows:view",
+      },
+      {
+        label: "Templates",
+        icon: LayoutTemplate,
+        href: "/workflows/templates",
+        requiredPermission: "workflows:templates:view",
+      },
+      {
+        label: "Executions",
+        icon: PlayCircle,
+        href: "/workflows/executions",
+        requiredPermission: "workflows:executions:view",
+      },
+      {
+        label: "Approvals",
+        icon: CheckSquare,
+        href: "/workflows/approvals",
+        requiredPermission: "workflows:approvals:view",
+      },
+      {
+        label: "Scheduler",
+        icon: Clock,
+        href: "/workflows/scheduler",
+        requiredPermission: "workflows:schedules:manage",
+      },
+      {
+        label: "Analytics",
+        icon: BarChart2,
+        href: "/workflows/analytics",
+        requiredPermission: "workflows:analytics:view",
+      },
     ],
   },
   {

@@ -30,6 +30,14 @@ const ChatUnreadNotifications = dynamic(
   { ssr: false },
 )
 
+const NotificationBell = dynamic(
+  () =>
+    import("@/features/notifications/notification-bell").then(
+      (m) => m.NotificationBell,
+    ),
+  { ssr: false },
+)
+
 const SIDEBAR_COOKIE = "sidebar-collapsed"
 const SIDEBAR_COLLAPSED_W = "3.5rem"
 const SIDEBAR_EXPANDED_W = "17rem"
@@ -83,20 +91,21 @@ export function DashboardShell({
           <CommandPalette />
           <TrialBanner />
 
-          <div className="md:hidden flex items-center gap-3 h-12 px-4 border-b border-border bg-background shrink-0 z-20 relative">
+          <div className="md:hidden flex items-center gap-2 h-12 px-4 border-b border-border bg-background shrink-0 z-20 relative">
             <button
               type="button"
               onClick={handleOpenMobileMenu}
               aria-label="Open navigation"
-              className="h-8 w-8 gap-2 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div className="w-px h-5 bg-border" />
-            <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+            <div className="w-px h-5 bg-border shrink-0" />
+            <Link href="/dashboard" className="flex items-center gap-2 min-w-0 flex-1">
               <Image src="/logo.svg" alt="StreamlineOS logo" width={28} height={28} />
               <span className="text-sm font-semibold text-foreground">StreamlineOS</span>
             </Link>
+            {hasDashboardAccess && <NotificationBell />}
           </div>
 
           <div className="flex-1 flex min-h-0">

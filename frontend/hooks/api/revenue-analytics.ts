@@ -10,6 +10,11 @@ export interface RevenueMetrics {
   churnRate: number;
   activeSubscriptions: number;
   trialSubscriptions: number;
+  ltv: number;
+  cac: number;
+  expansionRevenue: number;
+  trialConversionRate: number;
+  refundRate: number;
 }
 
 export interface TimeSeriesPoint {

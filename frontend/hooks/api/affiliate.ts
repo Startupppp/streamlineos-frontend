@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export interface AffiliateData {
   affiliate: {
@@ -55,6 +56,22 @@ export function useCreateReferral() {
       toast.success("Referral invitation sent");
     },
     onError: (e: Error) => toast.error(e.message ?? "Failed to send referral"),
+  });
+}
+
+export function useRequestAffiliatePayout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiClient.post<{ success: boolean; amount: number; message: string }>(
+        "/billing/affiliate/payout-request",
+        {},
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["billing", "affiliate"] });
+      toast.success("Payout request submitted successfully");
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 }
 

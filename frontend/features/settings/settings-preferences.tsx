@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Monitor,  Mail, Bell, BellOff, Smartphone, Moon } from "lucide-react";
-import { useNotificationPreferences, useUpdateNotificationPreferences } from "@/hooks/api/hr";
+import { useHrNotificationPreferences, useUpdateHrNotificationPreferences } from "@/hooks/api/hr";
 import { Input } from "@/components/ui/input";
 
 interface PrefRowProps {
@@ -58,8 +58,8 @@ function PrefRow({ id, icon: Icon, label, description, checked, onCheckedChange,
 }
 
 export function SettingsPreferences() {
-  const { data: prefs } = useNotificationPreferences();
-  const updatePrefs = useUpdateNotificationPreferences();
+  const { data: prefs } = useHrNotificationPreferences();
+  const updatePrefs = useUpdateHrNotificationPreferences();
 
   const isPending = updatePrefs.isPending;
 

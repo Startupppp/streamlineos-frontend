@@ -235,8 +235,16 @@ export const queryKeys = {
 
   notifications: {
     all: [...base, "notifications"] as const,
-    list: (unreadOnly?: boolean) => [...base, "notifications", "list", unreadOnly] as const,
+    list: (params?: Record<string, unknown>) => [...base, "notifications", "list", params] as const,
     unreadCount: () => [...base, "notifications", "unreadCount"] as const,
+    preferences: () => [...base, "notifications", "preferences"] as const,
+    templates: (params?: Record<string, unknown>) => [...base, "notifications", "templates", params] as const,
+    template: (id: number) => [...base, "notifications", "template", id] as const,
+    broadcasts: (params?: Record<string, unknown>) => [...base, "notifications", "broadcasts", params] as const,
+    broadcast: (id: number) => [...base, "notifications", "broadcast", id] as const,
+    analytics: (days?: number) => [...base, "notifications", "analytics", days] as const,
+    queue: () => [...base, "notifications", "queue"] as const,
+    queueFailed: () => [...base, "notifications", "queueFailed"] as const,
   },
 
   invoice: {
@@ -548,6 +556,19 @@ export const queryKeys = {
   webhooks: {
     all: [...base, "webhooks"] as const,
     list: () => [...base, "webhooks", "list"] as const,
+  },
+
+  workflows: {
+    all: [...base, "workflows"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "workflows", "list", params] as const,
+    detail: (id: string) => [...base, "workflows", id] as const,
+    executions: (workflowId: string, params?: Record<string, unknown>) => [...base, "workflows", workflowId, "executions", params] as const,
+    execution: (workflowId: string, executionId: string) => [...base, "workflows", workflowId, "executions", executionId] as const,
+    approvals: () => [...base, "workflows", "approvals"] as const,
+    templates: () => [...base, "workflows", "templates"] as const,
+    analytics: () => [...base, "workflows", "analytics"] as const,
+    schedules: (workflowId: string) => [...base, "workflows", workflowId, "schedules"] as const,
+    secrets: (workflowId: string) => [...base, "workflows", workflowId, "secrets"] as const,
   },
 
   csat: {

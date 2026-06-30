@@ -41,6 +41,19 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - Professional, modern, visually appealing, mobile-first responsive (verify 375 / 768 / 1280px), accessible (ARIA attributes, keyboard navigation).
 - Notifications: Sonner toasts for success/error/info.
 
+## Animations & UI quality (enforced on every page/component)
+- Every page and component must feel like a $10k+ SaaS product — polished, spacious, purposeful. No default-looking buttons, no flat boring cards.
+- Use Framer Motion for all page/step transitions (`AnimatePresence` + `motion.div` with slide+fade), list stagger, and element entrance animations. Import from `framer-motion`.
+- Step/route transitions: `initial={{ opacity:0, x:24 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-24 }}` with `duration:0.22, ease:"easeOut"`. Wrap with `<AnimatePresence mode="wait">`.
+- All CTA/primary buttons use a gradient: `bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200`.
+- Selection cards/chips: scale + border glow on hover and selected state (`hover:scale-[1.02] hover:shadow-md border-violet-500 bg-violet-50`).
+- Progress bars animate their fill: `transition: width 0.4s ease` with gradient fill.
+- All interactive elements have micro-interactions: hover lift/scale, `whileTap={{ scale:0.97 }}` on buttons.
+- Cards: `bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60`.
+- Full-page backgrounds: `bg-gradient-to-br from-slate-50 via-white to-violet-50/40`.
+- List items entering sequentially use staggered animation (`delay: idx * 0.08`).
+- Completion/success states: spring bounce animation + confetti where appropriate.
+
 ## Layout & states (every page must satisfy ALL)
 - Loading: skeletons matching the real layout, not lone spinners.
 - Empty state: must fill the proper available content height (flex-1 / h-full within the content area) with icon + message + primary action. Never a small floating text block.

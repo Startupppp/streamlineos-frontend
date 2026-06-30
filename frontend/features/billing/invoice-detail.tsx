@@ -551,6 +551,31 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
           </div>
         )}
 
+        {invoice.status === "PAID" && (
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            <div className="px-4 py-3 border-b border-border">
+              <p className="text-sm font-semibold">Credit Notes</p>
+            </div>
+            <div className="px-4 py-4 space-y-1">
+              <p className="text-sm text-muted-foreground">
+                No credit notes issued for this invoice.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                To issue a credit note, contact billing support.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-sm font-semibold">Refund History</p>
+          </div>
+          <div className="px-4 py-4">
+            <p className="text-sm text-muted-foreground">No refunds processed.</p>
+          </div>
+        </div>
+
         {invoice.notes && (
           <div className="rounded-lg border border-border bg-card px-4 py-3">
             <p className="text-xs font-semibold text-muted-foreground mb-1">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
+import { addMonths, format } from "date-fns";
 import {
   Package,
   RefreshCw,
@@ -195,6 +195,7 @@ export default function AiCreditsPage() {
                     <TableHead>Feature</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead className="text-right">Balance</TableHead>
+                    <TableHead className="text-right">Expires</TableHead>
                     <TableHead className="text-right">Date</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -223,6 +224,14 @@ export default function AiCreditsPage() {
                         </TableCell>
                         <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
                           {txn.balanceAfter.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground">
+                          {txn.type === "PURCHASE"
+                            ? format(
+                                addMonths(new Date(txn.createdAt), 12),
+                                "dd MMM yyyy",
+                              )
+                            : "—"}
                         </TableCell>
                         <TableCell className="text-right text-xs text-muted-foreground">
                           {format(new Date(txn.createdAt), "dd MMM yyyy")}
