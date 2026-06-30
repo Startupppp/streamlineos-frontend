@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
+import { clearBackendTokenCache } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useOrgSetupMutation } from "@/lib/api/hooks/org";
 import type { WizardData } from "../lib/types";
 import { GENERATION_STEPS } from "../lib/constants";
 
@@ -20,84 +21,112 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
   const { update } = useSession();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
-  const dataRef = useRef<WizardData>(data);
   const updateRef = useRef(update);
   const onNextRef = useRef(onNext);
-  dataRef.current = data;
+  const dataRef = useRef(data);
   updateRef.current = update;
   onNextRef.current = onNext;
+  dataRef.current = data;
 
   const total = GENERATION_STEPS.length;
   const HOLD_AT = total - 1;
 
-  useEffect(() => {
-    let cancelled = false;
-    let apiDone = false;
-    let count = 0;
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const apiDoneRef = useRef(false);
 
-    setCompletedSteps(0);
-    setError(null);
+  const { mutate } = useOrgSetupMutation();
 
-    const interval = setInterval(() => {
-      if (cancelled) { clearInterval(interval); return; }
-      if (count >= HOLD_AT && !apiDone) return;
-      count += 1;
-      setCompletedSteps(count);
-      if (count >= total) clearInterval(interval);
-    }, 650);
-
-    const d = dataRef.current;
-    const payload = {
+  function buildPayload(d: WizardData) {
+    return {
       goals: d.goals,
-      industry: d.industry,
+      industry: d.industry || "IT Services",
       companyName: d.companyName,
-      companySize: d.teamSize,
+      companySize: d.teamSize || "1-10",
       ...(d.country ? { country: d.country } : {}),
       ...(d.timezone ? { timezone: d.timezone } : {}),
       enabledModules: d.installedApps.length > 0 ? d.installedApps : ["HR", "CRM", "PROJECTS"],
       invitees: d.invitees,
     };
+  }
 
-    apiClient
-      .patch<{ orgId?: string }>("/org/setup", payload)
-      .catch(async (firstErr: unknown) => {
-        // If the session has a stale orgId (org no longer in DB), clear it and retry.
-        const msg = getErrorMessage(firstErr).toLowerCase();
-        if (msg.includes("not found") || msg.includes("organization")) {
+  async function handleSuccess(orgId: string | null) {
+    apiDoneRef.current = true;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setCompletedSteps(total);
+    try {
+      await updateRef.current({
+        ...(orgId ? { orgId } : {}),
+        orgOnboardingCompletedAt: new Date().toISOString(),
+        isOrgOwner: true,
+      });
+    } catch {}
+    clearBackendTokenCache();
+    setTimeout(() => onNextRef.current(), 600);
+  }
+
+  function handleError(msg: string) {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setError(msg);
+  }
+
+  function startAnimation() {
+    apiDoneRef.current = false;
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    let count = 0;
+    intervalRef.current = setInterval(() => {
+      if (count >= HOLD_AT && !apiDoneRef.current) return;
+      count += 1;
+      setCompletedSteps(count);
+      if (count >= total && intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }, 650);
+  }
+
+  function runSetup() {
+    setCompletedSteps(0);
+    setError(null);
+    startAnimation();
+
+    const payload = buildPayload(dataRef.current);
+
+    mutate(payload, {
+      onSuccess: (res) => {
+        void handleSuccess(res?.orgId ?? null);
+      },
+      onError: async (err) => {
+        const msg = getErrorMessage(err).toLowerCase();
+        if (
+          msg.includes("not found") ||
+          msg.includes("organization") ||
+          msg.includes("unauthorized")
+        ) {
           try { await updateRef.current({ orgId: null }); } catch {}
           clearBackendTokenCache();
-          return apiClient.patch<{ orgId?: string }>("/org/setup", payload);
-        }
-        throw firstErr;
-      })
-      .then(async (res) => {
-        if (cancelled) return;
-        apiDone = true;
-        clearInterval(interval);
-        setCompletedSteps(total);
-        const orgId = res?.orgId ?? null;
-        try {
-          await updateRef.current({
-            ...(orgId ? { orgId } : {}),
-            orgOnboardingCompletedAt: new Date().toISOString(),
-            isOrgOwner: true,
+          mutate(payload, {
+            onSuccess: (res) => { void handleSuccess(res?.orgId ?? null); },
+            onError: (retryErr) => { handleError(getErrorMessage(retryErr)); },
           });
-        } catch {}
-        setTimeout(() => onNextRef.current(), 600);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        clearInterval(interval);
-        setError(getErrorMessage(err));
-      });
-
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [attempt, total, HOLD_AT]);
-
-  function handleRetry() {
-    setAttempt((a) => a + 1);
+        } else {
+          handleError(getErrorMessage(err));
+        }
+      },
+    });
   }
+
+  useEffect(() => {
+    runSetup();
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   const progress = Math.round((completedSteps / total) * 100);
   const companyName = dataRef.current.companyName?.trim();
@@ -197,7 +226,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
             <Button
               size="sm"
               variant="outline"
-              onClick={handleRetry}
+              onClick={runSetup}
               className="h-7 text-xs gap-1"
             >
               <RefreshCw className="h-3 w-3" /> Try again

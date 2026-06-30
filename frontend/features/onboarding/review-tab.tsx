@@ -14,7 +14,7 @@ import {
   Shield,
   type LucideIcon,
 } from "lucide-react";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
@@ -78,6 +78,7 @@ export function ReviewTab({
         try {
           await update({ userOnboardingCompletedAt: new Date().toISOString() });
         } catch {}
+        clearBackendTokenCache();
         window.location.replace("/dashboard");
       } else {
         toast.error(res.error || "Failed to submit onboarding");

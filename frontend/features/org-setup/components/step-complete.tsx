@@ -8,6 +8,7 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 import type { WizardData } from "../lib/types";
 import { NEXT_ACTIONS } from "../lib/constants";
 import { clearAll } from "../lib/draft";
+import { clearBackendTokenCache } from "@/lib/api-client";
 
 type StepCompleteProps = {
   data: WizardData;
@@ -28,6 +29,7 @@ export function StepComplete({ data }: StepCompleteProps) {
     async function attemptRedirect(): Promise<void> {
       if (cancelled) return;
       if (sessionRef.current?.orgOnboardingCompletedAt) {
+        clearBackendTokenCache();
         clearAll();
         window.location.replace("/dashboard");
         return;
@@ -36,6 +38,7 @@ export function StepComplete({ data }: StepCompleteProps) {
         const s = await updateRef.current();
         if (cancelled) return;
         if (s?.orgOnboardingCompletedAt) {
+          clearBackendTokenCache();
           clearAll();
           window.location.replace("/dashboard");
           return;
@@ -45,6 +48,7 @@ export function StepComplete({ data }: StepCompleteProps) {
       if (retries < MAX_RETRIES && !cancelled) {
         setTimeout(attemptRedirect, 800);
       } else if (!cancelled) {
+        clearBackendTokenCache();
         clearAll();
         window.location.replace("/dashboard");
       }

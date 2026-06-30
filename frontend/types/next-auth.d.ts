@@ -12,6 +12,7 @@ declare module "next-auth" {
     enabledModules?: string[];
     daysUntilExpiry?: number;
     orgOnboardingCompletedAt?: string | null;
+    userOnboardingCompletedAt?: string | null;
     backendJwt?: string;
     user: {
       id: string;

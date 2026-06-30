@@ -38,7 +38,9 @@ const GOAL_ICONS: Record<string, LucideIcon> = {
 export function StepGoals({ goals, onToggle, onBack, onNext }: StepGoalsProps) {
   return (
     <div className="space-y-4">
-      <p className="text-[13px] text-muted-foreground">Select all that apply.</p>
+      <p className="text-[13px] text-muted-foreground">
+        Select all that apply.
+      </p>
 
       <div className="grid grid-cols-2 gap-1.5">
         {GOALS.map((goal, i) => {
@@ -61,7 +63,12 @@ export function StepGoals({ goals, onToggle, onBack, onNext }: StepGoalsProps) {
                   : "border-border bg-card text-foreground hover:border-blue-300 hover:bg-muted/40",
               )}
             >
-              <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-blue-600" : "text-muted-foreground")} />
+              <Icon
+                className={cn(
+                  "h-3.5 w-3.5 shrink-0",
+                  selected ? "text-blue-600" : "text-muted-foreground",
+                )}
+              />
               <span className="truncate">{goal.label}</span>
               {selected && (
                 <Check className="h-3 w-3 text-blue-600 ml-auto shrink-0" />
@@ -70,13 +77,6 @@ export function StepGoals({ goals, onToggle, onBack, onNext }: StepGoalsProps) {
           );
         })}
       </div>
-
-      {goals.length > 0 && (
-        <p className="text-[12px] text-blue-600">
-          {goals.length} selected
-        </p>
-      )}
-
       <NavButtons
         onBack={onBack}
         onNext={onNext}

@@ -7,7 +7,6 @@ export type WizardData = {
   teamSize: string;
   country?: string;
   timezone?: string;
-  currency?: string;
   installedApps: string[];
   invitees: Invitee[];
 };

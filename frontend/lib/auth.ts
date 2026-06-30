@@ -195,7 +195,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             isActive: sessionData.isActive,
             hasDashboardAccess: sessionData.hasDashboardAccess,
             daysUntilExpiry: data.daysUntilExpiry,
-            rememberMe: credentials.rememberMe === "true",
             orgId: sessionData.orgId ?? null,
             isOrgOwner: sessionData.isOrgOwner,
             orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt ?? null,
@@ -290,8 +289,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.orgId = session.orgId as string | null;
         if (session?.orgOnboardingCompletedAt !== undefined)
           token.orgOnboardingCompletedAt = session.orgOnboardingCompletedAt as string | null;
+        if (session?.userOnboardingCompletedAt !== undefined)
+          token.userOnboardingCompletedAt = session.userOnboardingCompletedAt as string | null;
         if (session?.isOrgOwner !== undefined)
           token.isOrgOwner = session.isOrgOwner as boolean;
+      }
+
+      if (!token.sessionId) {
+        token.sessionId = randomUUID();
       }
 
       return token;
@@ -317,27 +322,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.enabledModules = (token.enabledModules as string[] | undefined) ?? [];
       session.orgOnboardingCompletedAt =
         (token.orgOnboardingCompletedAt as string | null | undefined) ?? null;
+      session.userOnboardingCompletedAt =
+        (token.userOnboardingCompletedAt as string | null | undefined) ?? null;
       if (token.daysUntilExpiry !== undefined)
         session.daysUntilExpiry = token.daysUntilExpiry as number;
-      const backendSecret = process.env.BACKEND_JWT_SECRET;
-      if (backendSecret && session.user?.id) {
+
+      const jwtSecret = process.env.BACKEND_JWT_SECRET;
+      const sessionId = (token.sessionId as string | undefined)?.trim();
+      if (jwtSecret && token.id && sessionId) {
         session.backendJwt = await new SignJWT({
-          orgId: session.orgId ?? null,
-          branchId: session.branchId ?? null,
-          role: session.user.role,
-          permissions: session.permissions ?? [],
-          enabledModules: session.enabledModules ?? [],
-          plan: session.plan ?? null,
-          isPlatformAdmin: session.user.isPlatformAdmin === true,
-          isOrgOwner: session.user.isOrgOwner === true,
-          sessionId: session.sessionId ?? "",
+          orgId: (token.orgId as string | null | undefined) ?? null,
+          branchId: (token.branchId as number | null | undefined) ?? null,
+          role: (token.role as string | undefined) ?? "",
+          permissions: (token.permissions as string[] | undefined) ?? [],
+          enabledModules: (token.enabledModules as string[] | undefined) ?? [],
+          plan: (token.plan as Plan | null | undefined) ?? null,
+          isPlatformAdmin: (token.isPlatformAdmin as boolean | undefined) === true,
+          isOrgOwner: (token.isOrgOwner as boolean | undefined) === true,
+          sessionId,
         })
           .setProtectedHeader({ alg: "HS256" })
-          .setSubject(session.user.id)
+          .setSubject(token.id as string)
           .setIssuedAt()
           .setExpirationTime("10m")
-          .sign(new TextEncoder().encode(backendSecret));
+          .sign(new TextEncoder().encode(jwtSecret));
       }
+
       return session;
     },
   },

@@ -5,8 +5,9 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
-import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
+import { clearBackendTokenCache } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useOrgSetupMutation } from "@/lib/api/hooks/org";
 import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 import {
   TOTAL_STEPS,
@@ -35,6 +36,7 @@ export default function OrgSetupPage() {
   const { data: session, update } = useSession();
   const updateRef = useRef(update);
   updateRef.current = update;
+  const { mutateAsync: setupOrg } = useOrgSetupMutation();
 
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
@@ -118,13 +120,13 @@ export default function OrgSetupPage() {
     try {
       let res: { orgId?: string } | undefined;
       try {
-        res = await apiClient.patch<{ orgId?: string }>("/org/setup", payload);
+        res = await setupOrg(payload);
       } catch (firstErr) {
         const msg = getErrorMessage(firstErr).toLowerCase();
         if (msg.includes("not found") || msg.includes("organization")) {
           try { await updateRef.current({ orgId: null }); } catch {}
           clearBackendTokenCache();
-          res = await apiClient.patch<{ orgId?: string }>("/org/setup", payload);
+          res = await setupOrg(payload);
         } else {
           throw firstErr;
         }
@@ -137,12 +139,13 @@ export default function OrgSetupPage() {
           isOrgOwner: true,
         });
       } catch {}
+      clearBackendTokenCache();
       clearAll();
       window.location.replace("/dashboard");
     } catch {
       setIsSkipping(false);
     }
-  }, []);
+  }, [setupOrg]);
 
   useEffect(() => {
     if (step === TOTAL_STEPS) setShowCelebration(true);
