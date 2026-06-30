@@ -1,4 +1,4 @@
-export type InvoiceStatus = "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
+export type InvoiceStatus = "DRAFT" | "ISSUED" | "PAID" | "FAILED" | "VOIDED";
 export type PaymentMethod = "bank_transfer" | "upi" | "cheque" | "cash" | "card" | "other";
 
 export interface InvoiceItem {
@@ -56,10 +56,10 @@ export interface Invoice {
 
 export interface InvoiceStats {
   draft: number;
-  sent: number;
+  issued: number;
   paid: number;
-  overdue: number;
-  cancelled: number;
+  failed: number;
+  voided: number;
   totalOutstanding: number;
   totalPaid: number;
 }

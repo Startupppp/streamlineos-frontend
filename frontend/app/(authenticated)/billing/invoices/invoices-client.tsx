@@ -33,6 +33,7 @@ import {
   IndianRupee,
   AlertCircle,
   RefreshCw,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -82,10 +83,10 @@ const STATUS_CONFIG: Record<
   }
 > = {
   DRAFT: { label: "Draft", variant: "secondary", icon: FileText },
-  SENT: { label: "Sent", variant: "default", icon: Send },
+  ISSUED: { label: "Issued", variant: "default", icon: Send },
   PAID: { label: "Paid", variant: "default", icon: Check },
-  OVERDUE: { label: "Overdue", variant: "destructive", icon: Clock },
-  CANCELLED: { label: "Cancelled", variant: "outline", icon: Ban },
+  FAILED: { label: "Failed", variant: "destructive", icon: XCircle },
+  VOIDED: { label: "Voided", variant: "outline", icon: Ban },
 };
 
 export function InvoicesClient() {
@@ -161,10 +162,10 @@ export function InvoicesClient() {
       <SelectContent>
         <SelectItem value="all">All Statuses</SelectItem>
         <SelectItem value="DRAFT">Draft</SelectItem>
-        <SelectItem value="SENT">Sent</SelectItem>
+        <SelectItem value="ISSUED">Issued</SelectItem>
         <SelectItem value="PAID">Paid</SelectItem>
-        <SelectItem value="OVERDUE">Overdue</SelectItem>
-        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+        <SelectItem value="FAILED">Failed</SelectItem>
+        <SelectItem value="VOIDED">Voided</SelectItem>
       </SelectContent>
     </Select>
   );
@@ -192,7 +193,7 @@ export function InvoicesClient() {
                 {formatCurrencyFull(stats?.totalOutstanding ?? 0)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {(stats?.sent ?? 0) + (stats?.overdue ?? 0)} invoices
+                {(stats?.issued ?? 0) + (stats?.failed ?? 0)} invoices
               </p>
             </CardContent>
           </Card>
@@ -212,12 +213,12 @@ export function InvoicesClient() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+              <CardTitle className="text-sm font-medium">Failed</CardTitle>
               <Clock className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-destructive">
-                {stats?.overdue ?? 0}
+                {stats?.failed ?? 0}
               </div>
               <p className="text-xs text-muted-foreground">Need attention</p>
             </CardContent>
@@ -343,16 +344,16 @@ function InvoiceTableRow({
   onDelete,
 }: InvoiceTableRowProps) {
   const config = STATUS_CONFIG[inv.status];
-  const handleMarkSent = useCallback(
-    () => onUpdateStatus(inv.id, "SENT"),
+  const handleMarkIssued = useCallback(
+    () => onUpdateStatus(inv.id, "ISSUED"),
     [inv.id, onUpdateStatus],
   );
   const handleMarkPaid = useCallback(
     () => onUpdateStatus(inv.id, "PAID"),
     [inv.id, onUpdateStatus],
   );
-  const handleMarkCancelled = useCallback(
-    () => onUpdateStatus(inv.id, "CANCELLED"),
+  const handleMarkVoided = useCallback(
+    () => onUpdateStatus(inv.id, "VOIDED"),
     [inv.id, onUpdateStatus],
   );
   const handleDelete = useCallback(() => onDelete(inv.id), [inv.id, onDelete]);
@@ -393,21 +394,21 @@ function InvoiceTableRow({
               <Link href={`/billing/invoices/${inv.id}`}>View Detail</Link>
             </DropdownMenuItem>
             {inv.status === "DRAFT" && (
-              <DropdownMenuItem onClick={handleMarkSent}>
-                <Send className="h-3.5 w-3.5 mr-2" /> Mark as Sent
+              <DropdownMenuItem onClick={handleMarkIssued}>
+                <Send className="h-3.5 w-3.5 mr-2" /> Mark as Issued
               </DropdownMenuItem>
             )}
-            {(inv.status === "SENT" || inv.status === "OVERDUE") && (
+            {(inv.status === "ISSUED" || inv.status === "FAILED") && (
               <DropdownMenuItem onClick={handleMarkPaid}>
                 <Check className="h-3.5 w-3.5 mr-2" /> Mark as Paid
               </DropdownMenuItem>
             )}
-            {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
+            {inv.status !== "PAID" && inv.status !== "VOIDED" && (
               <DropdownMenuItem
-                onClick={handleMarkCancelled}
+                onClick={handleMarkVoided}
                 className="text-destructive"
               >
-                <Ban className="h-3.5 w-3.5 mr-2" /> Cancel
+                <Ban className="h-3.5 w-3.5 mr-2" /> Void
               </DropdownMenuItem>
             )}
             {inv.status !== "PAID" && (

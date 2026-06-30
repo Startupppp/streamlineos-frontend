@@ -55,15 +55,14 @@ function VerifyEmailForm() {
   const verifyEmail = useVerifyEmail();
   const resendVerification = useResendVerificationEmail();
 
-  const verifyMutateRef = useRef(verifyEmail.mutate);
-  verifyMutateRef.current = verifyEmail.mutate;
+  const { mutate: verifyMutate } = verifyEmail;
 
   useEffect(() => {
     if (!token) return;
     if (attemptedTokens.has(token)) return;
     attemptedTokens.add(token);
 
-    verifyMutateRef.current(
+    verifyMutate(
       { token },
       {
         onSuccess: async (data) => {

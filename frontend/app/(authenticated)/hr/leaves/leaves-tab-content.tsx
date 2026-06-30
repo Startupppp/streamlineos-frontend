@@ -31,14 +31,14 @@ import { useLeavePolicy } from "@/hooks/api/hr";
 
 const DONUT_COLORS = ["#06b6d4", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
 
-function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
+function LeaveBalanceDonut({ balances, allowedNames }: { balances: LeaveBalance[]; allowedNames: Set<string> }) {
   const data = useMemo(
     () =>
       balances
         .filter(
           (b) =>
             b.typeName &&
-            allowedLeaveTypeNames.has(b.typeName) &&
+            (allowedNames.size === 0 || allowedNames.has(b.typeName)) &&
             (b.daysPerYear ?? 0) > 0,
         )
         .map((b) => ({
@@ -50,7 +50,7 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
           ),
           total: b.daysPerYear ?? 0,
         })),
-    [balances],
+    [balances, allowedNames],
   );
 
   if (data.length === 0) return null;
@@ -260,7 +260,10 @@ export function LeavesTabContent({
 }: LeavesTabContentProps) {
   const isAdmin = useCan("hr:employees:manage");
   const { data: policy } = useLeavePolicy();
-  const allowedLeaveTypeNames = new Set(policy?.leaveTypes.map((t) => t.name) ?? []);
+  const allowedLeaveTypeNames = useMemo(
+    () => new Set(policy?.leaveTypes.map((t) => t.name) ?? []),
+    [policy],
+  );
 
   const currentYear = new Date().getFullYear();
 
@@ -379,7 +382,7 @@ export function LeavesTabContent({
       >
         {balances
           .filter(
-            (bal) => bal.typeName && ALLOWED_LEAVE_TYPE_NAMES.has(bal.typeName),
+            (bal) => bal.typeName && allowedLeaveTypeNames.has(bal.typeName),
           )
           .map((bal, index) => (
             <BalanceCard
@@ -392,7 +395,7 @@ export function LeavesTabContent({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <LeaveBalanceDonut balances={balances} />
+        <LeaveBalanceDonut balances={balances} allowedNames={allowedLeaveTypeNames} />
         <LeaveCalendarWidget approvedLeaves={approvedLeavesThisWeek} />
       </div>
 

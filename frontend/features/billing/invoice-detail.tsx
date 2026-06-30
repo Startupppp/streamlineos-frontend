@@ -58,20 +58,20 @@ const STATUS_BADGE: Record<
     label: "Draft",
     className: "bg-slate-100 text-slate-700 border-slate-200",
   },
-  SENT: {
-    label: "Sent",
+  ISSUED: {
+    label: "Issued",
     className: "bg-blue-50 text-blue-700 border-blue-200",
   },
   PAID: {
     label: "Paid",
     className: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
-  OVERDUE: {
-    label: "Overdue",
+  FAILED: {
+    label: "Failed",
     className: "bg-red-50 text-red-700 border-red-200",
   },
-  CANCELLED: {
-    label: "Cancelled",
+  VOIDED: {
+    label: "Voided",
     className: "bg-muted text-muted-foreground border-border",
   },
 };
@@ -193,16 +193,16 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
     [invoiceId, updateInvoice],
   );
 
-  const handleMarkSent = useCallback(
-    () => handleStatusUpdate("SENT"),
+  const handleMarkIssued = useCallback(
+    () => handleStatusUpdate("ISSUED"),
     [handleStatusUpdate],
   );
   const handleMarkPaid = useCallback(
     () => handleStatusUpdate("PAID"),
     [handleStatusUpdate],
   );
-  const handleCancel = useCallback(
-    () => handleStatusUpdate("CANCELLED"),
+  const handleVoid = useCallback(
+    () => handleStatusUpdate("VOIDED"),
     [handleStatusUpdate],
   );
 
@@ -360,18 +360,18 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
             <Button
               size="sm"
               variant="outline"
-              onClick={handleMarkSent}
+              onClick={handleMarkIssued}
               disabled={updateInvoice.isPending}
             >
-              <Send className="h-3.5 w-3.5 mr-1.5" /> Mark Sent
+              <Send className="h-3.5 w-3.5 mr-1.5" /> Mark Issued
             </Button>
           )}
-          {(invoice.status === "SENT" || invoice.status === "OVERDUE") && (
+          {(invoice.status === "ISSUED" || invoice.status === "FAILED") && (
             <Button size="sm" variant="outline" onClick={handleOpenPayment}>
               <Plus className="h-3.5 w-3.5 mr-1.5" /> Record Payment
             </Button>
           )}
-          {invoice.status === "SENT" && (
+          {invoice.status === "ISSUED" && (
             <Button
               size="sm"
               variant="outline"
@@ -381,14 +381,14 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
               <Check className="h-3.5 w-3.5 mr-1.5" /> Mark Paid
             </Button>
           )}
-          {invoice.status !== "CANCELLED" && invoice.status !== "PAID" && (
+          {invoice.status !== "VOIDED" && invoice.status !== "PAID" && (
             <Button
               size="sm"
               variant="outline"
-              onClick={handleCancel}
+              onClick={handleVoid}
               disabled={updateInvoice.isPending}
             >
-              <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel
+              <Ban className="h-3.5 w-3.5 mr-1.5" /> Void
             </Button>
           )}
           {invoice.status === "PAID" && outstanding <= 0 && (
@@ -510,7 +510,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <p className="text-sm font-semibold">Payment History</p>
-              {(invoice.status === "SENT" || invoice.status === "OVERDUE") && (
+              {(invoice.status === "ISSUED" || invoice.status === "FAILED") && (
                 <Button size="sm" variant="outline" onClick={handleOpenPayment}>
                   <Plus className="h-3.5 w-3.5 mr-1" /> Add Payment
                 </Button>

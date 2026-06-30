@@ -1,0 +1,273 @@
+"use client";
+
+import Link from "next/link";
+import { AlertCircle, Info, Users, UserCheck, UserMinus, TrendingUp } from "lucide-react";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useSeatInfo, useSubscription } from "@/hooks/api/subscription";
+import type { StatColor } from "@/components/ui/stat-card";
+
+function utilizationColor(percent: number): string {
+  if (percent >= 90) return "text-red-600";
+  if (percent >= 70) return "text-amber-600";
+  return "text-green-600";
+}
+
+function progressBarColor(percent: number): string {
+  if (percent >= 90) return "bg-red-500";
+  if (percent >= 70) return "bg-amber-500";
+  return "bg-green-500";
+}
+
+function utilizationStatColor(percent: number): StatColor {
+  if (percent >= 90) return "red";
+  if (percent >= 70) return "amber";
+  return "green";
+}
+
+function utilizationLabel(percent: number): string {
+  if (percent >= 90) return "Near limit";
+  if (percent >= 70) return "Moderate usage";
+  return "Healthy";
+}
+
+function capitalize(str: string): string {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+function SeatsPageSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="space-y-2 rounded-xl border border-border bg-card p-4"
+          >
+            <Skeleton className="h-3.5 w-20" />
+            <Skeleton className="h-7 w-12" />
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-3 rounded-lg border border-border bg-card p-5">
+        <div className="flex justify-between">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-10" />
+        </div>
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3.5 w-40" />
+      </div>
+
+      <div className="space-y-3 rounded-lg border border-border bg-card p-5">
+        <Skeleton className="h-4 w-24" />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex justify-between">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SeatsErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-10 text-center">
+      <AlertCircle className="h-8 w-8 text-destructive" />
+      <div>
+        <p className="font-medium text-foreground">
+          Failed to load seat information
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          There was a problem fetching your seat data.
+        </p>
+      </div>
+      <Button variant="outline" size="sm" onClick={onRetry}>
+        Retry
+      </Button>
+    </div>
+  );
+}
+
+export default function SeatsPage() {
+  const {
+    data: seatInfo,
+    isLoading: seatsLoading,
+    isError: seatsError,
+    refetch: refetchSeats,
+  } = useSeatInfo();
+
+  const { data: subscriptionData, isLoading: subLoading } = useSubscription();
+
+  const isLoading = seatsLoading || subLoading;
+
+  if (isLoading) {
+    return (
+      <PageWrapper
+        title="Seats & Licenses"
+        subtitle="Manage seat allocation and team capacity"
+      >
+        <SeatsPageSkeleton />
+      </PageWrapper>
+    );
+  }
+
+  if (seatsError) {
+    return (
+      <PageWrapper
+        title="Seats & Licenses"
+        subtitle="Manage seat allocation and team capacity"
+      >
+        <SeatsErrorState onRetry={refetchSeats} />
+      </PageWrapper>
+    );
+  }
+
+  const total = seatInfo?.total ?? 0;
+  const used = seatInfo?.used ?? 0;
+  const available = seatInfo?.available ?? 0;
+  const utilizationPercent = total > 0 ? Math.round((used / total) * 100) : 0;
+  const planName = subscriptionData?.subscription?.plan ?? "STARTER";
+  const isEnterprise = planName === "ENTERPRISE";
+
+  return (
+    <PageWrapper
+      title="Seats & Licenses"
+      subtitle="Manage seat allocation and team capacity"
+    >
+      <div className="space-y-8">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatCard
+            label="Total Seats"
+            value={total}
+            icon={Users}
+            color="blue"
+            index={0}
+          />
+          <StatCard
+            label="Used Seats"
+            value={used}
+            icon={UserCheck}
+            color="green"
+            index={1}
+          />
+          <StatCard
+            label="Available Seats"
+            value={available}
+            icon={UserMinus}
+            color="cyan"
+            index={2}
+          />
+          <StatCard
+            label="Utilization"
+            value={`${utilizationPercent}%`}
+            icon={TrendingUp}
+            color={utilizationStatColor(utilizationPercent)}
+            index={3}
+          />
+        </div>
+
+        <div className="space-y-3 rounded-lg border border-border bg-card p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-foreground">
+              Seat Utilization
+            </h3>
+            <span
+              className={cn(
+                "text-sm font-semibold",
+                utilizationColor(utilizationPercent),
+              )}
+            >
+              {utilizationPercent}%
+            </span>
+          </div>
+          <div className="h-3 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500",
+                progressBarColor(utilizationPercent),
+              )}
+              style={{ width: `${utilizationPercent}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {used} of {total} seats in use · {available} seat
+            {available !== 1 ? "s" : ""} available
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-5">
+          <h3 className="mb-3 text-sm font-medium text-foreground">
+            Plan Details
+          </h3>
+          <dl className="space-y-2.5 text-sm">
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Current plan</dt>
+              <dd className="font-medium text-foreground">
+                {capitalize(planName)}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Seat limit</dt>
+              <dd className="font-medium text-foreground">{total} seats</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Usage status</dt>
+              <dd
+                className={cn(
+                  "font-medium",
+                  utilizationColor(utilizationPercent),
+                )}
+              >
+                {utilizationLabel(utilizationPercent)}
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">
+              Need more seats?
+            </h3>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Add more seats to your plan. Billed monthly, prorated for the
+              current period.
+            </p>
+          </div>
+          <div className="shrink-0">
+            {isEnterprise ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link href="mailto:sales@streamlineos.com">Contact Sales</Link>
+              </Button>
+            ) : (
+              <Button size="sm" asChild>
+                <Link href="/billing/checkout">Upgrade Plan</Link>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Info className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium text-foreground">
+              How seats work
+            </h3>
+          </div>
+          <ul className="list-inside list-disc space-y-1.5 text-sm text-muted-foreground">
+            <li>Seats are reserved when you send invitations</li>
+            <li>Active members consume one seat each</li>
+            <li>Reduce seats at next billing cycle renewal</li>
+          </ul>
+        </div>
+      </div>
+    </PageWrapper>
+  );
+}

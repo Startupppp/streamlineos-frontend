@@ -60,10 +60,10 @@ const STATUS_BADGE: Record<
   }
 > = {
   DRAFT: { label: "Draft", variant: "secondary" },
-  SENT: { label: "Sent", variant: "default" },
+  ISSUED: { label: "Issued", variant: "default" },
   PAID: { label: "Paid", variant: "outline" },
-  OVERDUE: { label: "Overdue", variant: "destructive" },
-  CANCELLED: { label: "Cancelled", variant: "secondary" },
+  FAILED: { label: "Failed", variant: "destructive" },
+  VOIDED: { label: "Voided", variant: "secondary" },
 };
 
 function fmt(amount: string | number) {
@@ -80,7 +80,7 @@ export default function BillingPage() {
   const { data: recentData, isLoading: recentLoading } = useInvoices({
     limit: 5,
   });
-  const { data: overdueData } = useInvoices({ status: "OVERDUE", limit: 5 });
+  const { data: overdueData } = useInvoices({ status: "FAILED", limit: 5 });
   const { data: subData } = useSubscription();
 
   // eslint-disable-next-line react-hooks/purity
@@ -215,8 +215,8 @@ export default function BillingPage() {
                     color="amber"
                   />
                   <StatCard
-                    label="Overdue"
-                    value={`${stats?.overdue ?? 0} invoices`}
+                    label="Failed"
+                    value={`${stats?.failed ?? 0} invoices`}
                     icon={AlertCircle}
                     color="red"
                   />
@@ -238,19 +238,19 @@ export default function BillingPage() {
                 : (
                     [
                       "DRAFT",
-                      "SENT",
+                      "ISSUED",
                       "PAID",
-                      "OVERDUE",
-                      "CANCELLED",
+                      "FAILED",
+                      "VOIDED",
                     ] as InvoiceStatus[]
                   ).map((s) => {
                     const badge = STATUS_BADGE[s];
                     const statusCountMap: Record<InvoiceStatus, number> = {
                       DRAFT: stats?.draft ?? 0,
-                      SENT: stats?.sent ?? 0,
+                      ISSUED: stats?.issued ?? 0,
                       PAID: stats?.paid ?? 0,
-                      OVERDUE: stats?.overdue ?? 0,
-                      CANCELLED: stats?.cancelled ?? 0,
+                      FAILED: stats?.failed ?? 0,
+                      VOIDED: stats?.voided ?? 0,
                     };
                     const count = statusCountMap[s];
                     return (
@@ -292,10 +292,10 @@ export default function BillingPage() {
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-destructive" />
                 <p className="text-sm font-semibold text-destructive">
-                  Overdue Invoices
+                  Failed Invoices
                 </p>
               </div>
-              <Link href="/billing/invoices?status=OVERDUE">
+              <Link href="/billing/invoices?status=FAILED">
                 <Button variant="ghost" size="sm" className="text-xs gap-1">
                   View all <ChevronRight className="h-3 w-3" />
                 </Button>
@@ -378,7 +378,7 @@ function InvoiceTable({
             const badge = STATUS_BADGE[inv.status];
             const overdue =
               inv.status !== "PAID" &&
-              inv.status !== "CANCELLED" &&
+              inv.status !== "VOIDED" &&
               inv.dueDate &&
               isPast(new Date(inv.dueDate));
             return (

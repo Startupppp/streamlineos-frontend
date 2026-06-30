@@ -38,7 +38,7 @@ interface CreateInvoiceInput {
   currency?: string;
   dueDate?: string;
   notes?: string;
-  status?: "DRAFT" | "SENT";
+  status?: "DRAFT" | "ISSUED";
   placeOfSupply?: string;
   customerGstin?: string;
   supplierGstin?: string;

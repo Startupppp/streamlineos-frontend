@@ -265,7 +265,7 @@ export default function Gstr1Page() {
           <EmptyState
             illustration={<EmptyExpensesIllustration />}
             title="No outward supplies in the selected period"
-            description="Issue invoices marked SENT, PAID, or OVERDUE within the date range to populate this report."
+            description="Issue invoices marked ISSUED, PAID, or FAILED within the date range to populate this report."
           />
         ) : (
           <div className="space-y-4">

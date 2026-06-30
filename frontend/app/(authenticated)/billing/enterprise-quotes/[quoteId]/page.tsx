@@ -6,7 +6,6 @@ import { format } from "date-fns";
 import {
   ArrowLeft,
   CheckCircle2,
-  Clock,
   Send,
   ThumbsUp,
   XCircle,
