@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { flattenNavRoutes, type NavGroup, type NavRoute } from "./sidebar-nav-items";
 
-/** When a section has only one top-level route with children, show the hub link + children as peers (no extra expand level). */
 function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
   if (routes.length !== 1) return routes;
   const [sole] = routes;
@@ -17,7 +16,6 @@ function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
   return [{ ...sole, children: undefined }, ...kids];
 }
 
-/** Collapsed view flattens every route to an icon; drop hrefs that repeat (a hub parent sharing its first child's href) so React keys stay unique and no duplicate icon renders. */
 function dedupeByHref(routes: NavRoute[]): NavRoute[] {
   const seen = new Set<string>();
   const result: NavRoute[] = [];
@@ -33,8 +31,9 @@ interface SidebarSectionProps {
   group: NavGroup;
   groupIndex: number;
   isCollapsed: boolean;
-  isGroupCollapsed: boolean;
-  onToggleGroup: () => void;
+  showLabel?: boolean;
+  isGroupCollapsed?: boolean;
+  onToggleGroup?: () => void;
   pendingLeaves: number;
   unreadChatCount: number;
   onNavigate?: () => void;
@@ -56,6 +55,7 @@ export function SidebarSection({
   group,
   groupIndex,
   isCollapsed,
+  showLabel,
   isGroupCollapsed,
   onToggleGroup,
   pendingLeaves,
@@ -67,22 +67,30 @@ export function SidebarSection({
 
   return (
     <div className={cn(groupIndex > 0 && "mt-2")}>
-      {!isCollapsed && (
-        <button
-          type="button"
-          onClick={onToggleGroup}
-          className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors"
-        >
-          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground group-hover/header:text-sidebar-foreground select-none transition-colors">
-            {group.label}
-          </span>
-          <ChevronDown
-            className={cn(
-              "h-3 w-3 text-sidebar-foreground/20 group-hover/header:text-sidebar-foreground/40 transition-all duration-200 shrink-0",
-              isGroupCollapsed && "-rotate-90",
-            )}
-          />
-        </button>
+      {!isCollapsed && showLabel && (
+        onToggleGroup ? (
+          <button
+            type="button"
+            onClick={onToggleGroup}
+            className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors"
+          >
+            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none transition-colors">
+              {group.label}
+            </span>
+            <ChevronDown
+              className={cn(
+                "h-3 w-3 text-sidebar-foreground/20 group-hover/header:text-sidebar-foreground/40 transition-all duration-200 shrink-0",
+                isGroupCollapsed && "-rotate-90",
+              )}
+            />
+          </button>
+        ) : (
+          <div className="px-2 pt-3 pb-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none">
+              {group.label}
+            </span>
+          </div>
+        )
       )}
 
       {isCollapsed && groupIndex > 0 && (
@@ -154,7 +162,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, unreadChatCount, onNavi
           )}
         </Link>
       </TooltipTrigger>
-      <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
+      <TooltipContent side="right" sideOffset={10} className="z-[9999] text-xs font-medium" style={{ zIndex: 9999 }}>
         {route.label}
         {hasBadge && <span className="ml-1.5 opacity-70">({isChat && count > 99 ? "99+" : count})</span>}
       </TooltipContent>
@@ -168,12 +176,12 @@ interface ExpandedItemProps extends ItemProps {
 
 function ExpandedItem({ route, depth, pathname, pendingLeaves, unreadChatCount, onNavigate }: ExpandedItemProps) {
   const isActive = routeIsActive(route, pathname);
-  const hasChildren = !!route.children && route.children.length > 0;
-  const containsActive = hasChildren && routeContainsActive(route, pathname);
+  const hasChildren = !!route.children && route.children.length > 1;
+  const singleChild = !!route.children && route.children.length === 1;
+  const containsActive = (hasChildren || singleChild) && routeContainsActive(route, pathname);
   const [expanded, setExpanded] = useState<boolean>(isActive || containsActive);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (containsActive || isActive) setExpanded(true);
   }, [containsActive, isActive]);
 
@@ -235,7 +243,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, unreadChatCount, 
         )}
       </Link>
 
-      {hasChildren && expanded && (
+      {(hasChildren && expanded || singleChild) && (
         <div className="mt-0.5 space-y-0.5">
           {route.children!.map((child) => (
             <ExpandedItem

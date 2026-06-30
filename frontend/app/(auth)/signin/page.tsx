@@ -11,7 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, ArrowRight, Lock, Mail, ShieldCheck } from "lucide-react";
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Lock,
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
@@ -42,7 +50,11 @@ export default function SignInPage() {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
   const [mfaError, setMfaError] = useState<string | null>(null);
-  const pendingCredentials = useRef<{ email: string; password: string; rememberMe: boolean } | null>(null);
+  const pendingCredentials = useRef<{
+    email: string;
+    password: string;
+    rememberMe: boolean;
+  } | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(signinSchema),
@@ -60,14 +72,20 @@ export default function SignInPage() {
         return;
       }
       const oauthMessages: Record<string, string> = {
-        AccessDenied: "No account found with that identity. Please sign up first or use email and password.",
+        AccessDenied:
+          "No account found with that identity. Please sign up first or use email and password.",
         OAuthSignin: "Could not start Google sign-in. Please try again.",
-        OAuthCallback: "Google sign-in failed. Please try again or use email and password.",
-        OAuthCreateAccount: "Account setup failed. Please use email and password instead.",
-        OAuthAccountNotLinked: "This email is already registered. Sign in with your password, then link Google in settings.",
-        Configuration: "Authentication is misconfigured. Please contact support.",
+        OAuthCallback:
+          "Google sign-in failed. Please try again or use email and password.",
+        OAuthCreateAccount:
+          "Account setup failed. Please use email and password instead.",
+        OAuthAccountNotLinked:
+          "This email is already registered. Sign in with your password, then link Google in settings.",
+        Configuration:
+          "Authentication is misconfigured. Please contact support.",
       };
-      const message = oauthMessages[errorParam] ?? "Authentication failed. Please try again.";
+      const message =
+        oauthMessages[errorParam] ?? "Authentication failed. Please try again.";
       toast.error(message);
     }
   }, []);
@@ -83,8 +101,16 @@ export default function SignInPage() {
     return "/post-signin";
   };
 
-  const doSignIn = async (email: string, password: string, rememberMe: boolean, totpCode?: string) => {
-    if (!navigator.onLine) throw new Error("No internet connection. Check your network and try again.");
+  const doSignIn = async (
+    email: string,
+    password: string,
+    rememberMe: boolean,
+    totpCode?: string,
+  ) => {
+    if (!navigator.onLine)
+      throw new Error(
+        "No internet connection. Check your network and try again.",
+      );
     try {
       const result = await signIn("credentials", {
         email,
@@ -98,18 +124,26 @@ export default function SignInPage() {
         if (result.error.startsWith("ACCOUNT_LOCKED:")) {
           const secs = parseInt(result.error.split(":")[1] ?? "0", 10);
           setLockedSeconds(isNaN(secs) ? null : secs);
-          throw new Error(`Account locked. Try again in ${formatLockoutTime(isNaN(secs) ? 900 : secs)}.`);
+          throw new Error(
+            `Account locked. Try again in ${formatLockoutTime(isNaN(secs) ? 900 : secs)}.`,
+          );
         }
-        if (result.error === "SUBSCRIPTION_INACTIVE") throw new Error("SUBSCRIPTION_INACTIVE");
+        if (result.error === "SUBSCRIPTION_INACTIVE")
+          throw new Error("SUBSCRIPTION_INACTIVE");
         if (result.error === "REQUIRES_MFA") throw new Error("REQUIRES_MFA");
-        if (result.error === "INVALID_MFA_CODE") throw new Error("INVALID_MFA_CODE");
+        if (result.error === "INVALID_MFA_CODE")
+          throw new Error("INVALID_MFA_CODE");
         setShowVerificationHint(true);
-        throw new Error("Invalid email or password. If you just signed up, check your inbox to verify your email first.");
+        throw new Error(
+          "Invalid email or password. If you just signed up, check your inbox to verify your email first.",
+        );
       }
       return result;
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
-        throw new Error("No internet connection. Check your network and try again.");
+        throw new Error(
+          "No internet connection. Check your network and try again.",
+        );
       }
       throw error;
     }
@@ -122,7 +156,8 @@ export default function SignInPage() {
     onSuccess: (result) => {
       toast.success("Welcome back!");
       if (result?.ok) {
-        const target = result.url && result.url.length > 0 ? result.url : getCallbackUrl();
+        const target =
+          result.url && result.url.length > 0 ? result.url : getCallbackUrl();
         window.location.href = target;
       }
     },
@@ -133,7 +168,11 @@ export default function SignInPage() {
       }
       if (error instanceof Error && error.message === "REQUIRES_MFA") {
         const vals = form.getValues();
-        pendingCredentials.current = { email: vals.email, password: vals.password, rememberMe: vals.rememberMe ?? false };
+        pendingCredentials.current = {
+          email: vals.email,
+          password: vals.password,
+          rememberMe: vals.rememberMe ?? false,
+        };
         setMfaRequired(true);
         return;
       }
@@ -150,13 +189,16 @@ export default function SignInPage() {
     onSuccess: (result) => {
       toast.success("Welcome back!");
       if (result?.ok) {
-        const target = result.url && result.url.length > 0 ? result.url : getCallbackUrl();
+        const target =
+          result.url && result.url.length > 0 ? result.url : getCallbackUrl();
         window.location.href = target;
       }
     },
     onError: (error) => {
       if (error instanceof Error && error.message === "INVALID_MFA_CODE") {
-        setMfaError("Invalid code. Check your authenticator app and try again.");
+        setMfaError(
+          "Invalid code. Check your authenticator app and try again.",
+        );
         setMfaCode("");
         return;
       }
@@ -252,17 +294,21 @@ export default function SignInPage() {
                 setMfaError(null);
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && mfaCode.length === 6) mfaMutation.mutate();
+                if (e.key === "Enter" && mfaCode.length === 6)
+                  mfaMutation.mutate();
               }}
               disabled={mfaMutation.isPending}
               className={cn(
                 "h-9 text-sm text-center tracking-[0.4em] font-mono",
-                mfaError && "border-destructive focus-visible:ring-destructive/30",
+                mfaError &&
+                  "border-destructive focus-visible:ring-destructive/30",
               )}
               autoFocus
             />
             {mfaError && (
-              <p role="alert" className="text-[12px] text-destructive">{mfaError}</p>
+              <p role="alert" className="text-[12px] text-destructive">
+                {mfaError}
+              </p>
             )}
           </div>
 
@@ -287,7 +333,12 @@ export default function SignInPage() {
 
           <button
             type="button"
-            onClick={() => { setMfaRequired(false); setMfaCode(""); setMfaError(null); pendingCredentials.current = null; }}
+            onClick={() => {
+              setMfaRequired(false);
+              setMfaCode("");
+              setMfaError(null);
+              pendingCredentials.current = null;
+            }}
             className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
             Back to sign in
@@ -298,7 +349,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="w-full max-w-sm animate-fade-up">
+    <div className="w-full max-w-sm animate-fade-up overflow-auto">
       <div className="mb-4 sm:mb-6 text-center">
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
           Sign in to your account
@@ -309,7 +360,7 @@ export default function SignInPage() {
       </div>
 
       {lockedSeconds !== null && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
+        <div className="mb-2 flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
           <Lock className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
           <p className="text-sm text-destructive">
             Your account has been temporarily locked due to too many failed
@@ -336,13 +387,15 @@ export default function SignInPage() {
               onClick={handleResendVerification}
               disabled={isResendingVerification}
             >
-              {isResendingVerification ? "Sending…" : "Resend verification email"}
+              {isResendingVerification
+                ? "Sending…"
+                : "Resend verification email"}
             </Button>
           </div>
         </div>
       )}
 
-      <div className="rounded-xl p-4 sm:p-6 space-y-3">
+      <div className="rounded-xl p-4 space-y-3">
         <form
           onSubmit={form.handleSubmit((v) => signInMutation.mutate(v))}
           aria-busy={isPending}
@@ -500,7 +553,11 @@ export default function SignInPage() {
                 disabled={!magicLinkEmail || magicLinkMutation.isPending}
                 onClick={() => magicLinkMutation.mutate(magicLinkEmail)}
               >
-                {magicLinkMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Send"}
+                {magicLinkMutation.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  "Send"
+                )}
               </Button>
             </div>
           )}
@@ -531,11 +588,27 @@ export default function SignInPage() {
                   {googleSignInMutation.isPending ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        fill="#4285F4"
+                      />
+                      <path
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        fill="#34A853"
+                      />
+                      <path
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                        fill="#FBBC05"
+                      />
+                      <path
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                        fill="#EA4335"
+                      />
                     </svg>
                   )}
                   Continue with Google
@@ -552,7 +625,11 @@ export default function SignInPage() {
                   {microsoftSignInMutation.isPending ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <svg className="h-4 w-4" viewBox="0 0 21 21" aria-hidden="true">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 21 21"
+                      aria-hidden="true"
+                    >
                       <rect x="1" y="1" width="9" height="9" fill="#f25022" />
                       <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
                       <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />

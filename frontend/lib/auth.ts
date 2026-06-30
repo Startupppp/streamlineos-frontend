@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import axios, { AxiosError } from "axios";
 import { randomUUID } from "crypto";
 import type { Plan } from "@/lib/billing/feature-gates";
@@ -72,10 +73,42 @@ export async function invalidateUserSession(_userId: string): Promise<void> {
   // Session invalidation is handled via JWT expiry; no-op in stateless JWT mode
 }
 
+async function resolveGoogleUser(
+  email: string,
+  googleId: string,
+  name?: string | null,
+  image?: string | null,
+): Promise<string | null> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/auth/google`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": INTERNAL_SECRET,
+      },
+      body: JSON.stringify({ email, googleId, name: name ?? undefined, image: image ?? undefined }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error(`[auth] /auth/google returned ${res.status}: ${body}`);
+      return null;
+    }
+    const data = (await res.json()) as { userId: string };
+    return data.userId ?? null;
+  } catch (err) {
+    console.error("[auth] resolveGoogleUser network error:", err);
+    return null;
+  }
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   basePath: "/api/auth",
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
@@ -188,6 +221,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/signin",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        const userId = await resolveGoogleUser(
+          user.email ?? "",
+          account.providerAccountId,
+          user.name,
+          user.image,
+        );
+        if (!userId) return false;
+        user.id = userId;
+      }
+      return true;
+    },
+
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;

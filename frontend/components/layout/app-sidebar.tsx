@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback, useEffect } from "react"
+import { useMemo, useRef, useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -38,9 +38,9 @@ import { usePendingApprovals } from "@/hooks/api/dashboard"
 import { useChatUnreadTotal } from "@/hooks/api/chat"
 import { useUnreadNotificationCount } from "@/hooks/api/notifications"
 import {
-  flattenNavRoutes,
   getNavGroupsForProduct,
   getProductFromPathname,
+  flattenNavRoutes,
 } from "./sidebar/sidebar-nav-items"
 import { SidebarSection } from "./sidebar/sidebar-section"
 import { usePermissions } from "@/lib/rbac/hooks"
@@ -94,7 +94,7 @@ export function AppSidebar({
   useEffect(() => {
     try {
       const stored = localStorage.getItem("sidebar-groups")
-      if (stored) setCollapsedGroups(JSON.parse(stored))
+      if (stored) setCollapsedGroups(JSON.parse(stored) as Record<string, boolean>)
     } catch {}
   }, [])
 
@@ -319,17 +319,16 @@ export function AppSidebar({
         <ScrollArea className="flex-1 min-h-0">
           <nav className={cn("py-2", isCollapsed ? "px-1.5" : "px-3")}>
             {navGroups.map((group, i) => {
-              const groupLabel = group.label
-              const isGroupCollapsed =
-                groupLabel in collapsedGroups ? collapsedGroups[groupLabel] : true
+              const multiGroup = navGroups.length > 1
               return (
                 <SidebarSection
-                  key={groupLabel}
+                  key={group.label}
                   group={group}
                   groupIndex={i}
                   isCollapsed={isCollapsed}
-                  isGroupCollapsed={isGroupCollapsed}
-                  onToggleGroup={() => toggleGroup(groupLabel)}
+                  showLabel={multiGroup}
+                  isGroupCollapsed={multiGroup ? (collapsedGroups[group.label] ?? false) : false}
+                  onToggleGroup={multiGroup ? () => toggleGroup(group.label) : undefined}
                   pendingLeaves={pendingLeaves}
                   unreadChatCount={unreadChatCount}
                   onNavigate={onNavigate}
@@ -356,12 +355,12 @@ export function AppSidebar({
                     type="button"
                     onClick={handleSearchClick}
                     aria-label="Search"
-                    className="h-8 w-8 w-full rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+                    className="h-8 w-full rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
                   >
                     <Search className="h-4 w-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10} className="text-xs z-[200]">
+                <TooltipContent side="right" sideOffset={10} className="z-[9999] text-xs" style={{ zIndex: 9999 }}>
                   Search (⌘K)
                 </TooltipContent>
               </Tooltip>
@@ -371,7 +370,7 @@ export function AppSidebar({
                     href="/notifications"
                     onClick={onNavigate}
                     aria-label="Notifications"
-                    className="relative h-8 w-8 w-full rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+                    className="relative h-8 w-full rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
                   >
                     <Bell className="h-4 w-4" />
                     {unreadNotifCount > 0 && (
@@ -379,7 +378,7 @@ export function AppSidebar({
                     )}
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10} className="text-xs z-[200]">
+                <TooltipContent side="right" sideOffset={10} className="z-[9999] text-xs" style={{ zIndex: 9999 }}>
                   Notifications{unreadNotifCount > 0 ? ` (${unreadNotifCount})` : ""}
                 </TooltipContent>
               </Tooltip>

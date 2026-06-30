@@ -58,6 +58,8 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/billing/ai-credits` — AI Credits wallet: balance stats, auto top-up toggle, credit pack cards, usage history table with transaction types
 - [x] `/billing/analytics` — Revenue Analytics (platform admin): MRR/ARR/ARPU/churn KPI cards, MRR trend BarChart, period selector (3m/6m/12m)
 - [x] `/billing/affiliate` — Affiliate Dashboard: register CTA, referral link copy, send invite email, commission history table; empty state when not registered
+- [x] `/billing/enterprise-quotes` — Enterprise Quotes list: status filter, table (ref/subject/status/seats/value/valid-until/deal), New Quote Sheet (seat negotiation + custom pricing + contract terms + Zod validation + live total preview), skeleton + empty + error states
+- [x] `/billing/enterprise-quotes/[quoteId]` — Enterprise Quote detail: two-column layout, Quote Details card (seats/pricing/contract term/total value), Contract Terms + Notes cards, Approval Workflow sidebar timeline, context-sensitive actions (Submit/Approve+Reject/Send/Accept), Print button; gated behind `billing:enterprise-quotes:approve` for approve/reject
 - [x] `/marketplace` — App Marketplace: category filter tabs, app cards with install/trial/uninstall actions, skeleton loading, empty state per category
 - [x] `/accounting` — Accounting overview
 - [x] `/accounting/coa` — Chart of accounts

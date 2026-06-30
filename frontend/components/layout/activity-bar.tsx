@@ -88,7 +88,7 @@ export function ActivityBar() {
                     />
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="z-[200] text-xs font-medium">
+                <TooltipContent side="right" sideOffset={8} className="z-[9999] text-xs font-medium" style={{ zIndex: 9999 }}>
                   {product.label}
                 </TooltipContent>
               </Tooltip>
