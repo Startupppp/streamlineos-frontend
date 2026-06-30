@@ -15,21 +15,21 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight, Plus, Upload, X } from "lucide-react";
 import type { Invitee } from "../lib/types";
+import { useInvitationsMutation } from "@/lib/api/hooks/org";
 
 type StepInviteProps = {
-  invitees: Invitee[];
-  onAdd: (inv: Invitee) => void;
-  onRemove: (email: string) => void;
   onBack: () => void;
   onNext: () => void;
 };
 
 const ROLES = ["ADMIN", "MANAGER", "EMPLOYEE", "HR", "FINANCE"];
 
-export function StepInvite({ invitees, onAdd, onRemove, onBack, onNext }: StepInviteProps) {
+export function StepInvite({ onBack, onNext }: StepInviteProps) {
+  const [invitations, setInvitations] = useState<Invitee[]>([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("EMPLOYEE");
   const csvInputRef = useRef<HTMLInputElement>(null);
+  const { mutateAsync, isPending } = useInvitationsMutation();
 
   const handleAdd = useCallback(() => {
     const trimmed = email.trim();
@@ -37,16 +37,20 @@ export function StepInvite({ invitees, onAdd, onRemove, onBack, onNext }: StepIn
       toast.error("Enter a valid email address");
       return;
     }
-    if (invitees.some((i) => i.email === trimmed)) {
+    if (invitations.some((i) => i.email === trimmed)) {
       toast.error("Email already added");
       return;
     }
-    onAdd({ email: trimmed, role });
+    setInvitations((prev) => [...prev, { email: trimmed, role }]);
     setEmail("");
-  }, [email, role, invitees, onAdd]);
+  }, [email, role, invitations]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") { e.preventDefault(); handleAdd(); }
+  }
+
+  function handleRemove(targetEmail: string) {
+    setInvitations((prev) => prev.filter((i) => i.email !== targetEmail));
   }
 
   const handleCsvUpload = useCallback(
@@ -64,15 +68,30 @@ export function StepInvite({ invitees, onAdd, onRemove, onBack, onNext }: StepIn
           email: cols[0] ?? "",
           role: cols[1] ?? "EMPLOYEE",
         }));
-        const fresh = newInvitees.filter((ni) => !invitees.some((ei) => ei.email === ni.email));
-        fresh.forEach((inv) => onAdd(inv));
-        toast.success(`Added ${fresh.length} invitees from CSV`);
+        setInvitations((prev) => {
+          const fresh = newInvitees.filter((ni) => !prev.some((ei) => ei.email === ni.email));
+          toast.success(`Added ${fresh.length} invitees from CSV`);
+          return [...prev, ...fresh];
+        });
       };
       reader.readAsText(file);
       if (csvInputRef.current) csvInputRef.current.value = "";
     },
-    [invitees, onAdd],
+    [],
   );
+
+  async function handleSend() {
+    if (invitations.length === 0) {
+      onNext();
+      return;
+    }
+    try {
+      await mutateAsync({ invitees: invitations });
+      onNext();
+    } catch {
+      toast.error("Failed to send invitations. Please try again.");
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -117,7 +136,7 @@ export function StepInvite({ invitees, onAdd, onRemove, onBack, onNext }: StepIn
       </div>
 
       <AnimatePresence>
-        {invitees.length > 0 && (
+        {invitations.length > 0 && (
           <motion.ul
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -126,7 +145,7 @@ export function StepInvite({ invitees, onAdd, onRemove, onBack, onNext }: StepIn
             aria-label="Invited colleagues"
           >
             <AnimatePresence initial={false}>
-              {invitees.map((inv) => (
+              {invitations.map((inv) => (
                 <motion.li
                   key={inv.email}
                   initial={{ opacity: 0, x: -8 }}
@@ -139,7 +158,7 @@ export function StepInvite({ invitees, onAdd, onRemove, onBack, onNext }: StepIn
                   <Badge variant="secondary" className="text-[10px] h-4 shrink-0 font-normal">{inv.role}</Badge>
                   <button
                     type="button"
-                    onClick={() => onRemove(inv.email)}
+                    onClick={() => handleRemove(inv.email)}
                     aria-label={`Remove ${inv.email}`}
                     className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
                   >
@@ -153,17 +172,19 @@ export function StepInvite({ invitees, onAdd, onRemove, onBack, onNext }: StepIn
       </AnimatePresence>
 
       <div className="flex gap-1.5 pt-1">
-        <Button type="button" variant="outline" onClick={onBack} className="h-9 px-3 text-sm">
+        <Button type="button" variant="outline" onClick={onBack} disabled={isPending} className="h-9 px-3 text-sm">
           <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
         </Button>
-        <Button type="button" variant="ghost" onClick={onNext} className="h-9 px-3 text-sm text-muted-foreground">
+        <Button type="button" variant="ghost" onClick={onNext} disabled={isPending} className="h-9 px-3 text-sm text-muted-foreground">
           Skip
         </Button>
-        <Button type="button" onClick={onNext} className="flex-1 h-9 text-sm gap-1.5">
-          {invitees.length > 0
-            ? `Send ${invitees.length} Invite${invitees.length !== 1 ? "s" : ""}`
-            : "Continue"}
-          <ArrowRight className="h-3.5 w-3.5" />
+        <Button type="button" onClick={handleSend} disabled={isPending} className="flex-1 h-9 text-sm gap-1.5">
+          {isPending
+            ? "Sending…"
+            : invitations.length > 0
+              ? `Send ${invitations.length} Invite${invitations.length !== 1 ? "s" : ""}`
+              : "Continue"}
+          {!isPending && <ArrowRight className="h-3.5 w-3.5" />}
         </Button>
       </div>
     </div>

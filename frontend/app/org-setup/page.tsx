@@ -22,7 +22,7 @@ import {
   loadStep,
   saveStep,
 } from "@/features/org-setup/lib/draft";
-import type { WizardData, Invitee } from "@/features/org-setup/lib/types";
+import type { WizardData } from "@/features/org-setup/lib/types";
 import { WizardShell } from "@/features/org-setup/components/wizard-shell";
 import { StepWelcome } from "@/features/org-setup/components/step-welcome";
 import { StepGoals } from "@/features/org-setup/components/step-goals";
@@ -91,25 +91,6 @@ export default function OrgSetupPage() {
     [patch],
   );
 
-  const handleAddInvitee = useCallback((inv: Invitee) => {
-    setData((prev) => {
-      const next = { ...prev, invitees: [...prev.invitees, inv] };
-      saveDraft(next);
-      return next;
-    });
-  }, []);
-
-  const handleRemoveInvitee = useCallback((email: string) => {
-    setData((prev) => {
-      const next = {
-        ...prev,
-        invitees: prev.invitees.filter((i) => i.email !== email),
-      };
-      saveDraft(next);
-      return next;
-    });
-  }, []);
-
   const handleSkipToDashboard = useCallback(async () => {
     setIsSkipping(true);
     const payload = {
@@ -157,7 +138,6 @@ export default function OrgSetupPage() {
     setMounted(true);
   }, []);
 
-  // On mount: refresh JWT. If the org is already set up (stale cookie), skip the wizard.
   useEffect(() => {
     updateRef
       .current()
@@ -232,9 +212,6 @@ export default function OrgSetupPage() {
         {step === 5 && <StepGeneration data={data} onNext={goNext} />}
         {step === 6 && (
           <StepInvite
-            invitees={data.invitees}
-            onAdd={handleAddInvitee}
-            onRemove={handleRemoveInvitee}
             onBack={goBack}
             onNext={goNext}
           />

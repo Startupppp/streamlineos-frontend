@@ -3,12 +3,6 @@ import { DEFAULT_DATA, DRAFT_KEY } from "./constants";
 
 const STEP_KEY = "org-setup-step";
 
-function isInvitee(v: unknown): v is { email: string; role: string } {
-  if (typeof v !== "object" || v === null) return false;
-  const obj = v as Record<string, unknown>;
-  return typeof obj.email === "string" && typeof obj.role === "string";
-}
-
 export function loadDraft(): WizardData {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
@@ -21,12 +15,11 @@ export function loadDraft(): WizardData {
       industry: typeof p.industry === "string" ? p.industry : DEFAULT_DATA.industry,
       companyName: typeof p.companyName === "string" ? p.companyName : DEFAULT_DATA.companyName,
       teamSize: typeof p.teamSize === "string" ? p.teamSize : DEFAULT_DATA.teamSize,
+      country: typeof p.country === "string" ? p.country : undefined,
+      timezone: typeof p.timezone === "string" ? p.timezone : undefined,
       installedApps: Array.isArray(p.installedApps)
         ? p.installedApps.filter((m): m is string => typeof m === "string")
         : DEFAULT_DATA.installedApps,
-      invitees: Array.isArray(p.invitees)
-        ? p.invitees.filter(isInvitee)
-        : DEFAULT_DATA.invitees,
     };
   } catch {
     return { ...DEFAULT_DATA };

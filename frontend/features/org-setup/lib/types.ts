@@ -8,5 +8,4 @@ export type WizardData = {
   country?: string;
   timezone?: string;
   installedApps: string[];
-  invitees: Invitee[];
 };

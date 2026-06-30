@@ -32,7 +32,6 @@ declare module "next-auth" {
     isActive?: boolean;
     hasDashboardAccess?: boolean;
     daysUntilExpiry?: number;
-    rememberMe?: boolean;
     orgId?: string | null;
     isOrgOwner?: boolean;
     orgOnboardingCompletedAt?: string | null;
@@ -58,7 +57,6 @@ declare module "next-auth/jwt" {
     isOrgOwner?: boolean;
     enabledModules?: string[];
     daysUntilExpiry?: number;
-    rememberMe?: boolean;
     orgOnboardingCompletedAt?: string | null;
     userOnboardingCompletedAt?: string | null;
   }

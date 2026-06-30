@@ -90,7 +90,6 @@ export function StepComplete({ data }: StepCompleteProps) {
         {[
           { label: "Industry", value: data.industry || "General" },
           { label: "Modules", value: `${data.installedApps.length} active` },
-          { label: "Invites", value: data.invitees.length > 0 ? `${data.invitees.length} sent` : "None" },
         ].map(({ label, value }) => (
           <div key={label} className="flex justify-between items-center px-3 py-2">
             <dt className="text-[12px] text-muted-foreground">{label}</dt>

@@ -38,15 +38,6 @@ export function deriveAppsFromGoals(goals: string[]): string[] {
   return apps.size > 0 ? Array.from(apps) : DEFAULT_APPS;
 }
 
-export const APP_SUITES: readonly { id: string; label: string; description: string }[] = [
-  { id: "CRM", label: "CRM", description: "Leads, deals & pipeline" },
-  { id: "HR", label: "HR", description: "Employees, payroll & leave" },
-  { id: "PROJECTS", label: "Projects", description: "Tasks, sprints & timelines" },
-  { id: "FINANCE", label: "Finance", description: "Invoices & accounting" },
-  { id: "INVENTORY", label: "Inventory", description: "Stock & procurement" },
-  { id: "HELPDESK", label: "Helpdesk", description: "Tickets & customer support" },
-] as const;
-
 export const INDUSTRIES: readonly string[] = [
   "IT Services",
   "Agency",
@@ -101,5 +92,4 @@ export const DEFAULT_DATA: WizardData = {
   companyName: "",
   teamSize: "",
   installedApps: DEFAULT_APPS,
-  invitees: [],
 };

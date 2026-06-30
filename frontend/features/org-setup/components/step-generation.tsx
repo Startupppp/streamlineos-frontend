@@ -45,7 +45,6 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
       ...(d.country ? { country: d.country } : {}),
       ...(d.timezone ? { timezone: d.timezone } : {}),
       enabledModules: d.installedApps.length > 0 ? d.installedApps : ["HR", "CRM", "PROJECTS"],
-      invitees: d.invitees,
     };
   }
 

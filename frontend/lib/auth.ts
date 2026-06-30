@@ -249,12 +249,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isOrgOwner = user.isOrgOwner ?? false;
         token.orgOnboardingCompletedAt = user.orgOnboardingCompletedAt ?? null;
         token.sessionId = randomUUID();
-        token.rememberMe = user.rememberMe ?? false;
         if (user.daysUntilExpiry !== undefined)
           token.daysUntilExpiry = user.daysUntilExpiry;
       }
 
-      if (token.id) {
+      if (user && token.id) {
         const data = await fetchSessionData(token.id as string);
         if (data) {
           token.email = data.email;

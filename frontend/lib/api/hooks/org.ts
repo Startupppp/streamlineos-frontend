@@ -11,15 +11,28 @@ export type OrgSetupPayload = {
   country?: string;
   timezone?: string;
   enabledModules: string[];
-  invitees?: { email: string; role: string }[];
 };
 
 export type OrgSetupResponse = { orgId?: string };
 
 export function useOrgSetupMutation() {
   return useMutation({
+    mutationKey: ["org", "setup"],
     mutationFn: (payload: OrgSetupPayload) =>
       apiClient.patch<OrgSetupResponse>("/org/setup", payload),
+    retry: false,
+  });
+}
+
+export type InvitePayload = {
+  invitees: { email: string; role: string }[];
+};
+
+export function useInvitationsMutation() {
+  return useMutation({
+    mutationKey: ["org", "invite"],
+    mutationFn: (payload: InvitePayload) =>
+      apiClient.post<void>("/org/invite", payload),
     retry: false,
   });
 }
