@@ -55,30 +55,35 @@ function ActivitiesContent() {
 
   const hasActiveFilters = !!(typeFilter || entityTypeFilter || statusFilter);
 
-  function setParam(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    params.delete("page");
-    router.push(`?${params.toString()}`, { scroll: false });
-  }
-
-  function setPage(p: number) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (p <= 1) {
+  const handleTypeChange = useCallback(
+    (v: CrmActivityType | "") => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (v) params.set("type", v); else params.delete("type");
       params.delete("page");
-    } else {
-      params.set("page", String(p));
-    }
-    router.push(`?${params.toString()}`, { scroll: false });
-  }
+      router.push(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
 
-  const handleTypeChange       = useCallback((v: CrmActivityType | "")       => setParam("type",       v), [searchParams]);
-  const handleEntityTypeChange = useCallback((v: CrmActivityEntityType | "") => setParam("entityType", v), [searchParams]);
-  const handleStatusChange     = useCallback((v: CrmActivityStatus | "")     => setParam("status",     v), [searchParams]);
+  const handleEntityTypeChange = useCallback(
+    (v: CrmActivityEntityType | "") => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (v) params.set("entityType", v); else params.delete("entityType");
+      params.delete("page");
+      router.push(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
+
+  const handleStatusChange = useCallback(
+    (v: CrmActivityStatus | "") => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (v) params.set("status", v); else params.delete("status");
+      params.delete("page");
+      router.push(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
 
   const handleClearFilters = useCallback(() => {
     router.push("?", { scroll: false });
@@ -126,8 +131,18 @@ function ActivitiesContent() {
     [logActivity],
   );
 
-  const handlePrev = useCallback(() => setPage(page - 1), [page]);
-  const handleNext = useCallback(() => setPage(page + 1), [page]);
+  const handlePrev = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    const prev = page - 1;
+    if (prev <= 1) params.delete("page"); else params.set("page", String(prev));
+    router.push(`?${params.toString()}`, { scroll: false });
+  }, [page, searchParams, router]);
+
+  const handleNext = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(page + 1));
+    router.push(`?${params.toString()}`, { scroll: false });
+  }, [page, searchParams, router]);
 
   const totalCount  = data?.total ?? 0;
   const totalPages  = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
