@@ -66,7 +66,7 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
               </Link>
             </Button>
             <Button asChild variant="outline" className="flex-1">
-              <Link href="/hr/helpdesk">
+              <Link href="/support">
                 <Mail className="h-4 w-4 mr-1.5" />
                 Request access
               </Link>

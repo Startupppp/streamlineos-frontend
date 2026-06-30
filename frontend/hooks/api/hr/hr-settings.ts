@@ -8,25 +8,15 @@ import type {
   Document,
   PerformanceReview,
   Goal,
-  HelpdeskTicket,
   WfhRequest,
-  IncentivesResult,
-  IncentiveStats,
-  IncentiveConfig,
   DocumentType,
-  TicketStatus,
   CreateAssetInput,
   UpdateAssetInput,
   AssignAssetInput,
   CreateDocumentInput,
   CreateGoalInput,
-  CreateHelpdeskTicketInput,
   CreateWfhRequestInput,
   ProcessWfhRequestInput,
-  GetIncentivesInput,
-  ApproveIncentiveInput,
-  RejectIncentiveInput,
-  SetIncentiveConfigInput,
 } from "@/types/hr";
 
 export interface NotificationPreferences {
@@ -170,34 +160,6 @@ export function useCreateGoal() {
   });
 }
 
-export function useHrHelpdeskTickets(userId?: string, status?: TicketStatus) {
-  const params: Record<string, unknown> = {};
-  if (userId) params.userId = userId;
-  if (status) params.status = status;
-
-  return useQuery({
-    queryKey: queryKeys.hr.helpdeskTickets(
-      Object.keys(params).length ? params : undefined,
-    ),
-    queryFn: () =>
-      apiClient.get<HelpdeskTicket[]>(
-        "/hr/helpdesk",
-        Object.keys(params).length ? params : undefined,
-      ),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCreateHelpdeskTicket() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateHelpdeskTicketInput) =>
-      apiClient.post<HelpdeskTicket>("/hr/helpdesk", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.helpdeskTickets() }),
-  });
-}
-
 export function useHrWfhRequests() {
   return useQuery({
     queryKey: queryKeys.hr.wfhRequests(),
@@ -235,69 +197,6 @@ export function useProcessWfhRequest() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.wfhRequests() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.pendingWfhRequests() });
     },
-  });
-}
-
-export function useHrIncentives(params?: GetIncentivesInput) {
-  return useQuery({
-    queryKey: queryKeys.hr.incentives(
-      params as Record<string, unknown> | undefined,
-    ),
-    queryFn: () =>
-      apiClient.get<IncentivesResult>(
-        "/hr/incentives",
-        params as Record<string, unknown> | undefined,
-      ),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useHrIncentiveStats() {
-  return useQuery({
-    queryKey: queryKeys.hr.incentiveStats(),
-    queryFn: () => apiClient.get<IncentiveStats>("/hr/incentives/stats"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useHrIncentiveConfigs() {
-  return useQuery({
-    queryKey: queryKeys.hr.incentiveConfigs(),
-    queryFn: () => apiClient.get<IncentiveConfig[]>("/hr/incentives/config"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useApproveIncentive() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...data }: ApproveIncentiveInput) =>
-      apiClient.patch<{ success: boolean }>(
-        `/hr/incentives/${id}/approve`,
-        data,
-      ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.incentives() }),
-  });
-}
-
-export function useRejectIncentive() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id }: RejectIncentiveInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/reject`),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.incentives() }),
-  });
-}
-
-export function useSetIncentiveConfig() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: SetIncentiveConfigInput) =>
-      apiClient.post<IncentiveConfig>("/hr/incentives/config", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.incentiveConfigs() }),
   });
 }
 

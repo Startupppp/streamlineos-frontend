@@ -7,6 +7,7 @@ import { ListView } from "@/components/projects/list-view";
 import { TableView } from "@/components/projects/table-view";
 import { CalendarView } from "@/components/projects/calendar-view";
 import { GanttView } from "@/components/projects/gantt-view";
+import { WorkloadView } from "@/components/projects/workload-view";
 import {
   ViewSwitcher,
   type ViewType,
@@ -148,6 +149,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
         name: m.user!.name ?? null,
         firstName: m.user!.firstName ?? null,
         lastName: m.user!.lastName ?? null,
+        image: m.user!.image ?? null,
       }));
   }, [data]);
 
@@ -252,6 +254,16 @@ export default function ProjectBoardPage({ params }: PageProps) {
           <GanttView
             tickets={filteredTickets}
             onTicketClick={handleTicketSelect}
+          />
+        </div>
+      )}
+
+      {view === "workload" && (
+        <div className="h-full overflow-y-auto">
+          <WorkloadView
+            tickets={filteredTickets}
+            projectId={projectId}
+            members={members}
           />
         </div>
       )}

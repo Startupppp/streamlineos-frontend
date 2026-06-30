@@ -95,7 +95,7 @@ export function useDashboardStatCards(
             label: "Target Progress",
             value: `${rs?.targetProgress ?? 0}%`,
             icon: Target,
-            href: "/crm/targets",
+            href: "/crm/reports",
           },
         ];
       case "CUSTOMER_SUPPORT":
