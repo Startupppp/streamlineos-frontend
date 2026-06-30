@@ -278,12 +278,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       if (trigger === "update") {
-        if (session?.forceChangePassword !== undefined) {
+        if (session?.forceChangePassword !== undefined)
           token.forceChangePassword = session.forceChangePassword as boolean;
-        }
-        if (session?.orgId !== undefined) {
+        if (session?.orgId !== undefined)
           token.orgId = session.orgId as string | null;
-        }
+        if (session?.orgOnboardingCompletedAt !== undefined)
+          token.orgOnboardingCompletedAt = session.orgOnboardingCompletedAt as string | null;
+        if (session?.isOrgOwner !== undefined)
+          token.isOrgOwner = session.isOrgOwner as boolean;
       }
 
       return token;

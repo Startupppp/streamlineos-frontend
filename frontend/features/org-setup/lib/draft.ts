@@ -58,6 +58,13 @@ export function saveStep(step: number): void {
 export function clearDraft(): void {
   try {
     localStorage.removeItem(DRAFT_KEY);
+    // STEP_KEY intentionally kept so StepComplete remains as retry safety net
+  } catch {}
+}
+
+export function clearAll(): void {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
     localStorage.removeItem(STEP_KEY);
   } catch {}
 }

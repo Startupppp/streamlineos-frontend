@@ -2,11 +2,21 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
-import { TOTAL_STEPS, STEP_TITLES, deriveAppsFromGoals } from "@/features/org-setup/lib/constants";
-import { loadDraft, clearDraft, saveDraft, loadStep, saveStep } from "@/features/org-setup/lib/draft";
+import {
+  TOTAL_STEPS,
+  STEP_TITLES,
+  deriveAppsFromGoals,
+} from "@/features/org-setup/lib/constants";
+import {
+  loadDraft,
+  clearAll,
+  saveDraft,
+  loadStep,
+  saveStep,
+} from "@/features/org-setup/lib/draft";
 import type { WizardData, Invitee } from "@/features/org-setup/lib/types";
 import { WizardShell } from "@/features/org-setup/components/wizard-shell";
 import { StepWelcome } from "@/features/org-setup/components/step-welcome";
@@ -18,7 +28,9 @@ import { StepInvite } from "@/features/org-setup/components/step-invite";
 import { StepComplete } from "@/features/org-setup/components/step-complete";
 
 export default function OrgSetupPage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
+  const updateRef = useRef(update);
+  updateRef.current = update;
   const [step, setStep] = useState(() => loadStep());
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>(() => loadDraft());
@@ -50,7 +62,9 @@ export default function OrgSetupPage() {
   const handleToggleGoal = useCallback((id: string) => {
     setData((prev) => {
       const has = prev.goals.includes(id);
-      const newGoals = has ? prev.goals.filter((g) => g !== id) : [...prev.goals, id];
+      const newGoals = has
+        ? prev.goals.filter((g) => g !== id)
+        : [...prev.goals, id];
       const next = {
         ...prev,
         goals: newGoals,
@@ -93,10 +107,23 @@ export default function OrgSetupPage() {
 
   useEffect(() => {
     if (step === TOTAL_STEPS) {
-      clearDraft();
       setShowCelebration(true);
     }
   }, [step]);
+
+  // On mount: refresh JWT. If the org is already set up (stale cookie), skip the wizard.
+  useEffect(() => {
+    updateRef
+      .current()
+      .then((s) => {
+        if (s?.orgOnboardingCompletedAt) {
+          clearAll();
+          window.location.replace("/dashboard");
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     saveStep(step);

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Monitor, Palette, ShoppingBag, Cog, Heart, BookOpen, Building, Building2, Utensils, Truck } from "lucide-react";
+import { ArrowLeft, Monitor, Palette, ShoppingBag, Cog, Heart, BookOpen, Building, Building2, Utensils, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,11 @@ const INDUSTRY_ICONS: Record<string, LucideIcon> = {
 };
 
 export function StepIndustry({ industry, onSelect, onBack, onNext }: StepIndustryProps) {
+  function handleSelect(ind: string) {
+    onSelect(ind);
+    setTimeout(onNext, 220);
+  }
+
   return (
     <div className="space-y-4">
       <p className="text-[13px] text-muted-foreground">
@@ -44,7 +49,7 @@ export function StepIndustry({ industry, onSelect, onBack, onNext }: StepIndustr
               type="button"
               role="radio"
               aria-checked={selected}
-              onClick={() => onSelect(ind)}
+              onClick={() => handleSelect(ind)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: i * 0.03 }}
@@ -62,24 +67,14 @@ export function StepIndustry({ industry, onSelect, onBack, onNext }: StepIndustr
         })}
       </div>
 
-      <div className="space-y-1.5">
-        <Button
-          type="button"
-          onClick={onNext}
-          disabled={!industry}
-          className="w-full h-9 text-sm gap-1.5"
-        >
-          Continue <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onBack}
-          className="w-full h-9 text-sm text-muted-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
-        </Button>
-      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={onBack}
+        className="w-full h-9 text-sm text-muted-foreground"
+      >
+        <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
+      </Button>
     </div>
   );
 }

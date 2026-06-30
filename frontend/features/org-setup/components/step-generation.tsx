@@ -49,7 +49,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
 
     const d = dataRef.current;
     apiClient
-      .patch("/org/setup", {
+      .patch<{ orgId?: string }>("/org/setup", {
         goals: d.goals,
         industry: d.industry,
         companyName: d.companyName,
@@ -59,12 +59,19 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
         enabledModules: d.installedApps.length > 0 ? d.installedApps : ["HR", "CRM", "PROJECTS"],
         invitees: d.invitees,
       })
-      .then(async () => {
+      .then(async (res) => {
         if (cancelled) return;
         apiDone = true;
         clearInterval(interval);
         setCompletedSteps(total);
-        try { await updateRef.current(); } catch {}
+        const orgId = res?.orgId ?? null;
+        try {
+          await updateRef.current({
+            ...(orgId ? { orgId } : {}),
+            orgOnboardingCompletedAt: new Date().toISOString(),
+            isOrgOwner: true,
+          });
+        } catch {}
         setTimeout(() => onNextRef.current(), 600);
       })
       .catch((err: unknown) => {

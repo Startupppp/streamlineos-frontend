@@ -140,6 +140,7 @@ export default async function RootLayout({
           forcedTheme="light"
           enableSystem={false}
           disableTransitionOnChange
+          nonce={nonce}
         >
           <SessionProvider>
             <QueryProvider>

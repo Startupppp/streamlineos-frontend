@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 import { motion } from "framer-motion";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import type { WizardData } from "../lib/types";
@@ -13,18 +14,43 @@ type StepCompleteProps = {
 };
 
 export function StepComplete({ data }: StepCompleteProps) {
-  const { update } = useSession();
+  const { update, data: sessionData } = useSession();
   const updateRef = useRef(update);
+  const sessionRef = useRef<Session | null>(sessionData ?? null);
   updateRef.current = update;
+  sessionRef.current = sessionData ?? null;
 
   useEffect(() => {
     let cancelled = false;
-    async function redirect() {
-      clearDraft();
-      try { await updateRef.current(); } catch {}
-      if (!cancelled) window.location.href = "/dashboard";
+    let retries = 0;
+    const MAX_RETRIES = 5;
+
+    async function attemptRedirect(): Promise<void> {
+      if (cancelled) return;
+      if (sessionRef.current?.orgOnboardingCompletedAt) {
+        clearDraft();
+        window.location.replace("/dashboard");
+        return;
+      }
+      try {
+        const s = await updateRef.current();
+        if (cancelled) return;
+        if (s?.orgOnboardingCompletedAt) {
+          clearDraft();
+          window.location.replace("/dashboard");
+          return;
+        }
+      } catch {}
+      retries += 1;
+      if (retries < MAX_RETRIES && !cancelled) {
+        setTimeout(attemptRedirect, 800);
+      } else if (!cancelled) {
+        clearDraft();
+        window.location.replace("/dashboard");
+      }
     }
-    const timer = setTimeout(redirect, 2200);
+
+    const timer = setTimeout(attemptRedirect, 2200);
     return () => { cancelled = true; clearTimeout(timer); };
   }, []);
 
