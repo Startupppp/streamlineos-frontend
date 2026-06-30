@@ -232,3 +232,57 @@ export interface TimeEntryFilters {
   limit?: number;
   status?: import("./shared").TimesheetStatus;
 }
+
+export interface ChecklistItem {
+  id: number;
+  checklistId: number;
+  text: string;
+  isCompleted: boolean;
+  assigneeId: string | null;
+  dueDate: string | null;
+  order: number;
+  createdAt: string;
+}
+
+export interface Checklist {
+  id: number;
+  ticketId: number;
+  orgId: string;
+  title: string;
+  items: ChecklistItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CustomFieldType =
+  | "text"
+  | "number"
+  | "date"
+  | "user"
+  | "select"
+  | "multi_select"
+  | "checkbox"
+  | "url"
+  | "currency";
+
+export interface ProjectCustomField {
+  id: number;
+  projectId: number;
+  orgId: string;
+  name: string;
+  type: CustomFieldType;
+  options: string[] | null;
+  required: boolean;
+  position: number;
+  createdAt: string;
+}
+
+export interface TicketCustomFieldValue {
+  id: number;
+  ticketId: number;
+  fieldId: number;
+  field: ProjectCustomField;
+  value: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

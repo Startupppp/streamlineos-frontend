@@ -77,6 +77,8 @@ export interface Lead {
   assignedTo?: LeadUser | null;
   assignedBy?: { id: string; name: string | null } | null;
   campaign?: LeadCampaign | null;
+  qualificationNotes?: string | null;
+  customFields?: Record<string, unknown>;
 }
 
 export interface LeadWithActivities extends Lead {
@@ -299,6 +301,7 @@ export interface UpdateLeadInput {
   tags?: string[];
   lostReason?: string;
   priority?: LeadPriority;
+  qualificationNotes?: string;
 }
 
 export interface UpdateLeadStatusInput {

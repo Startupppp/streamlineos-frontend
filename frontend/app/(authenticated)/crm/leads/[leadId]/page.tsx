@@ -18,6 +18,7 @@ import { LeadDetailHeader } from "@/features/crm/leads/detail/lead-detail-header
 import { LeadInfoCard } from "@/features/crm/leads/detail/lead-info-card";
 import { LeadQuickActions } from "@/features/crm/leads/detail/lead-quick-actions";
 import { LeadSidebar } from "@/features/crm/leads/detail/lead-sidebar";
+import { LeadQualificationPanel } from "@/features/crm/leads/detail/lead-qualification-panel";
 import {
   noteSchema,
   taskSchema,
@@ -311,11 +312,15 @@ export default function LeadDetailPage({
             />
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-4">
             <LeadSidebar
               lead={lead}
               timeline={timeline}
               timelineLoading={timelineLoading}
+            />
+            <LeadQualificationPanel
+              leadId={leadId}
+              qualificationJson={lead.qualificationNotes ?? null}
             />
           </div>
         </motion.div>

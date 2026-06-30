@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Plus, Download, LayoutGrid, TableIcon } from "lucide-react";
+import { Plus, Download, LayoutGrid, TableIcon, TrendingUp } from "lucide-react";
 import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -347,6 +348,12 @@ export default function DealsPage() {
                 <LayoutGrid className="h-4 w-4" />
               </Button>
             </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/crm/deals/forecast">
+                <TrendingUp className="h-4 w-4 mr-1.5" />
+                Forecast
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="h-4 w-4 mr-2" />
               Export

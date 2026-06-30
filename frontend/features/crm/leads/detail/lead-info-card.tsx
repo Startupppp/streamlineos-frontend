@@ -36,6 +36,7 @@ import {
 import { cn } from "@/lib/utils";
 import { type EditForm } from "./lead-types";
 import { useState } from "react";
+import { CustomFieldsSection } from "@/features/crm/shared/custom-fields-section";
 import { toast } from "sonner";
 
 interface LeadInfoCardProps {
@@ -51,6 +52,7 @@ interface LeadInfoCardProps {
     investmentInterest?: string | null;
     notes?: string | null;
     tags?: string[] | null;
+    customFields?: Record<string, unknown>;
   };
   isEditing: boolean;
   editForm: UseFormReturn<EditForm>;
@@ -418,6 +420,12 @@ export function LeadInfoCard({
             ))}
           </div>
         )}
+
+        <CustomFieldsSection
+          entityType="lead"
+          values={lead.customFields ?? {}}
+          className="pt-2"
+        />
       </CardContent>
     </Card>
   );

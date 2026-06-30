@@ -22,6 +22,7 @@ import {
   ReassignDialog,
   DangerZoneSection,
 } from "@/features/projects/settings/project-members-section";
+import { CustomFieldsSettings } from "@/features/projects/settings/custom-fields-settings";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -181,6 +182,8 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           onSubmit={handleSubmit}
           MembersSelector={MembersSelector}
         />
+
+        <CustomFieldsSettings projectId={projectId} />
 
         {isOwner && (
           <DangerZoneSection

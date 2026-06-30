@@ -42,6 +42,7 @@ export interface Contact {
   tags: string[];
   createdAt: string | null;
   updatedAt: string | null;
+  customFields?: Record<string, unknown>;
   crmOrganization?: CrmOrganization | null;
   lead?: { id: number; name: string } | null;
   deal?: { id: number; name: string } | null;

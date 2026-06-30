@@ -27,6 +27,8 @@ import { TicketTimeTracker } from "./ticket-time-tracker";
 import { WatcherList } from "./watcher-list";
 import { ActivityFeed } from "./activity-feed";
 import { TicketActivityLog } from "@/components/projects/ticket-activity-log";
+import { TicketChecklists } from "./ticket-checklists";
+import { TicketCustomFields } from "./ticket-custom-fields";
 import type { TicketDetailsDialogProps, ProjectMember } from "./types";
 
 interface AttachmentImageProps {
@@ -328,6 +330,10 @@ export function TicketDetailsDialog({
                     </div>
                   </div>
                 )}
+
+                <TicketChecklists projectId={projectId} ticketId={ticketId!} />
+
+                <TicketCustomFields projectId={projectId} ticketId={ticketId!} />
 
                 <TicketRelations ticketId={ticketId!} projectId={projectId} />
 

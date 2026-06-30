@@ -13,7 +13,6 @@ import {
   useCreateTask,
   useUpdateTask,
   type Task,
-  type TaskEntityType,
   type CreateTaskInput,
 } from "@/hooks/api/tasks";
 
@@ -29,13 +28,17 @@ const taskSchema = z.object({
 
 type TaskFormValues = z.infer<typeof taskSchema>;
 
+type CrmEntityType = "LEAD" | "DEAL" | "CONTACT";
+
 interface CreateTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: Task;
+  defaultEntityType?: CrmEntityType;
+  defaultEntityId?: number;
 }
 
-export function CreateTaskDialog({ open, onOpenChange, task }: CreateTaskDialogProps) {
+export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, defaultEntityId }: CreateTaskDialogProps) {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
 
@@ -46,8 +49,8 @@ export function CreateTaskDialog({ open, onOpenChange, task }: CreateTaskDialogP
     title: task?.title ?? "",
     type: (task?.type as TaskFormValues["type"]) ?? "CUSTOM",
     notes: task?.notes ?? "",
-    entityType: (task?.entityType as TaskFormValues["entityType"]) ?? undefined,
-    entityIdRaw: task?.entityId != null ? String(task.entityId) : "",
+    entityType: (task?.entityType as TaskFormValues["entityType"]) ?? defaultEntityType ?? undefined,
+    entityIdRaw: task?.entityId != null ? String(task.entityId) : defaultEntityId != null ? String(defaultEntityId) : "",
     assigneeId: task?.assigneeId ?? "",
     dueDate: task?.dueDate ?? "",
   };
@@ -55,7 +58,7 @@ export function CreateTaskDialog({ open, onOpenChange, task }: CreateTaskDialogP
   const handleSubmit = useCallback(
     (values: TaskFormValues) => {
       const entityId = values.entityIdRaw ? parseInt(values.entityIdRaw, 10) : undefined;
-      const entityType = values.entityType as TaskEntityType | undefined;
+      const entityType = values.entityType;
 
       if (isEditing && task) {
         updateTask.mutate(

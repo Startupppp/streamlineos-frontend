@@ -440,9 +440,12 @@ export default function ContactsPage() {
                                   <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[9px] font-bold text-blue-600 shrink-0">
                                     {contact.name[0]?.toUpperCase() ?? "?"}
                                   </div>
-                                  <span className="text-[12px] font-medium truncate max-w-[120px]">
+                                  <Link
+                                    href={`/crm/contacts/${contact.id}`}
+                                    className="text-[12px] font-medium truncate max-w-[120px] hover:text-blue-600 hover:underline transition-colors"
+                                  >
                                     {contact.name}
-                                  </span>
+                                  </Link>
                                 </div>
                               </TableCell>
                               <TableCell className="px-2 py-1 truncate max-w-[140px]">

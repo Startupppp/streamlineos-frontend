@@ -9,6 +9,7 @@ const TABS = [
   { label: "Assignment Rules", href: "/crm/settings/assignment-rules" },
   { label: "SLA Policies", href: "/crm/settings/sla" },
   { label: "Email Templates", href: "/crm/settings/email-templates" },
+  { label: "Custom Fields", href: "/crm/settings/custom-fields" },
 ] as const;
 
 export default function CrmSettingsLayout({ children }: { children: React.ReactNode }) {
