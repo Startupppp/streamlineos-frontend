@@ -4,10 +4,12 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { Loader2 } from "lucide-react";
 import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 import {
   TOTAL_STEPS,
   STEP_TITLES,
+  DEFAULT_DATA,
   deriveAppsFromGoals,
 } from "@/features/org-setup/lib/constants";
 import {
@@ -31,10 +33,18 @@ export default function OrgSetupPage() {
   const { data: session, update } = useSession();
   const updateRef = useRef(update);
   updateRef.current = update;
-  const [step, setStep] = useState(() => loadStep());
+
+  const [mounted, setMounted] = useState(false);
+  const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
-  const [data, setData] = useState<WizardData>(() => loadDraft());
+  const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
   const [showCelebration, setShowCelebration] = useState(false);
+
+  useEffect(() => {
+    setStep(loadStep());
+    setData(loadDraft());
+    setMounted(true);
+  }, []);
 
   const firstName =
     session?.user?.name?.split(" ")[0] ??
@@ -122,12 +132,20 @@ export default function OrgSetupPage() {
         }
       })
       .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     saveStep(step);
-  }, [step]);
+  }, [step, mounted]);
+
+  if (!mounted) {
+    return (
+      <div className="w-full max-w-sm flex items-center justify-center py-16">
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   const stepTitle =
     step === 1
