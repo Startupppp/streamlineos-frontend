@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useMemo, useRef, useCallback, useEffect, useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
+import { useMemo, useRef, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,43 +13,47 @@ import {
   Settings,
   LogOut,
   ChevronUp,
-} from "lucide-react"
-import { useSession } from "next-auth/react"
-import { usePathname } from "next/navigation"
-import { cn, resolveImageUrl } from "@/lib/utils"
-import { useGetOrganizations, useSwitchOrg, useSignOut } from "@/hooks/common/auth-hooks"
+} from "lucide-react";
+import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
+import { cn, resolveImageUrl } from "@/lib/utils";
+import {
+  useGetOrganizations,
+  useSwitchOrg,
+  useSignOut,
+} from "@/hooks/common/auth-hooks";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Skeleton } from "@/components/ui/skeleton"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   TooltipProvider,
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-} from "@/components/ui/tooltip"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { usePendingApprovals } from "@/hooks/api/dashboard"
-import { useChatUnreadTotal } from "@/hooks/api/chat"
-import { useUnreadNotificationCount } from "@/hooks/api/notifications"
+} from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { usePendingApprovals } from "@/hooks/api/dashboard";
+import { useChatUnreadTotal } from "@/hooks/api/chat";
+import { useUnreadNotificationCount } from "@/hooks/api/notifications";
 import {
   getNavGroupsForProduct,
   getProductFromPathname,
   flattenNavRoutes,
-} from "./sidebar/sidebar-nav-items"
-import { SidebarSection } from "./sidebar/sidebar-section"
-import { usePermissions } from "@/lib/rbac/hooks"
-import { useCan } from "@/hooks/api/access"
+} from "./sidebar/sidebar-nav-items";
+import { SidebarSection } from "./sidebar/sidebar-section";
+import { usePermissions } from "@/lib/rbac/hooks";
+import { useCan } from "@/hooks/api/access";
 
 interface AppSidebarProps {
-  isCollapsed?: boolean
-  onToggleCollapse?: () => void
-  onNavigate?: () => void
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  onNavigate?: () => void;
 }
 
 export function AppSidebar({
@@ -57,98 +61,107 @@ export function AppSidebar({
   onToggleCollapse,
   onNavigate,
 }: AppSidebarProps) {
-  const { data: session, status } = useSession()
-  const { data: organizations } = useGetOrganizations()
-  const switchOrg = useSwitchOrg()
-  const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut()
-  const role = session?.user?.role
+  const { data: session, status } = useSession();
+  const { data: organizations } = useGetOrganizations();
+  const switchOrg = useSwitchOrg();
+  const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
+  const role = session?.user?.role;
+  const isOrgOwner =
+    session?.user?.isOrgOwner === true ||
+    session?.user?.isPlatformAdmin === true;
 
-  const lastKnownRoleRef = useRef<string | undefined>(role)
-  if (role) lastKnownRoleRef.current = role
-  const effectiveRole = role || lastKnownRoleRef.current
+  const lastKnownRoleRef = useRef<string | undefined>(role);
+  if (role) lastKnownRoleRef.current = role;
+  const rawRole = role || lastKnownRoleRef.current;
+  const effectiveRole = isOrgOwner ? "OWNER" : rawRole;
 
-  const pathname = usePathname()
-  const activeProduct = getProductFromPathname(pathname)
+  const pathname = usePathname();
+  const activeProduct = getProductFromPathname(pathname);
 
-  const { permissions, isLoading: permissionsLoading } = usePermissions()
-  const isAdmin = useCan("settings:manage")
+  const { permissions } = usePermissions();
+  const isAdmin = useCan("settings:manage");
 
   const navGroups = useMemo(
     () => getNavGroupsForProduct(activeProduct, effectiveRole, permissions),
     [activeProduct, effectiveRole, permissions],
-  )
+  );
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
       const match = flattenNavRoutes(group.routes).some((route) => {
-        if (route.isProjectsList) return pathname.startsWith("/projects/")
-        return pathname === route.href || pathname.startsWith(route.href + "/")
-      })
-      if (match) return group.label
+        if (route.isProjectsList) return pathname.startsWith("/projects/");
+        return pathname === route.href || pathname.startsWith(route.href + "/");
+      });
+      if (match) return group.label;
     }
-    return null
-  }, [navGroups, pathname])
+    return null;
+  }, [navGroups, pathname]);
 
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({})
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("sidebar-groups")
-      if (stored) setCollapsedGroups(JSON.parse(stored) as Record<string, boolean>)
+      const stored = localStorage.getItem("sidebar-groups");
+      if (stored)
+        setCollapsedGroups(JSON.parse(stored) as Record<string, boolean>);
     } catch {}
-  }, [])
+  }, []);
 
   useEffect(() => {
-    if (!activeGroupLabel) return
+    if (!activeGroupLabel) return;
     setCollapsedGroups((prev) => {
-      if (prev[activeGroupLabel] === false) return prev
-      const next = { ...prev, [activeGroupLabel]: false }
+      if (prev[activeGroupLabel] === false) return prev;
+      const next = { ...prev, [activeGroupLabel]: false };
       try {
-        localStorage.setItem("sidebar-groups", JSON.stringify(next))
+        localStorage.setItem("sidebar-groups", JSON.stringify(next));
       } catch {}
-      return next
-    })
-  }, [activeGroupLabel])
+      return next;
+    });
+  }, [activeGroupLabel]);
 
   const toggleGroup = useCallback((label: string) => {
     setCollapsedGroups((prev) => {
-      const next = { ...prev, [label]: !prev[label] }
+      const next = { ...prev, [label]: !prev[label] };
       try {
-        localStorage.setItem("sidebar-groups", JSON.stringify(next))
+        localStorage.setItem("sidebar-groups", JSON.stringify(next));
       } catch {}
-      return next
-    })
-  }, [])
+      return next;
+    });
+  }, []);
 
   const { data: pendingApprovalsData } = usePendingApprovals({
     enabled: isAdmin && !!session?.user,
     refetchIntervalInBackground: false,
-  })
-  const pendingLeaves = pendingApprovalsData?.pendingLeaves ?? 0
+  });
+  const pendingLeaves = pendingApprovalsData?.pendingLeaves ?? 0;
 
-  const { data: chatUnread } = useChatUnreadTotal()
-  const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0
+  const { data: chatUnread } = useChatUnreadTotal();
+  const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
 
-  const { data: notifData } = useUnreadNotificationCount()
-  const unreadNotifCount = notifData?.count ?? 0
+  const { data: notifData } = useUnreadNotificationCount();
+  const unreadNotifCount = notifData?.count ?? 0;
 
   useEffect(() => {
-    const base = "StreamlineOS"
-    const total = unreadChatCount + unreadNotifCount
-    document.title = total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base
-  }, [unreadChatCount, unreadNotifCount])
+    const base = "StreamlineOS";
+    const total = unreadChatCount + unreadNotifCount;
+    document.title =
+      total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
+  }, [unreadChatCount, unreadNotifCount]);
 
-  const activeOrgId = session?.orgId as string | null | undefined
-  const activeOrg = organizations?.find((o) => o.id === activeOrgId) ?? organizations?.[0]
-  const orgName = activeOrg?.name
-  const otherOrgs = organizations?.filter((o) => o.id !== activeOrg?.id) ?? []
+  const activeOrgId = session?.orgId as string | null | undefined;
+  const activeOrg =
+    organizations?.find((o) => o.id === activeOrgId) ?? organizations?.[0];
+  const orgName = activeOrg?.name;
+  const otherOrgs = organizations?.filter((o) => o.id !== activeOrg?.id) ?? [];
 
   const handleSwitchOrg = useCallback(
     (orgId: string) => {
-      switchOrg.mutate(orgId)
+      switchOrg.mutate(orgId);
     },
     [switchOrg],
-  )
+  );
 
   const handleSearchClick = useCallback(() => {
     document.dispatchEvent(
@@ -158,16 +171,16 @@ export function AppSidebar({
         ctrlKey: !(navigator.platform?.toUpperCase().includes("MAC") ?? true),
         bubbles: true,
       }),
-    )
-  }, [])
+    );
+  }, []);
 
-  const name = session?.user?.name ?? "User"
-  const email = session?.user?.email ?? ""
-  const image = resolveImageUrl(session?.user?.image)
-  const initials = name.charAt(0).toUpperCase()
-  const userRole = session?.user?.role ?? ""
+  const name = session?.user?.name ?? "User";
+  const email = session?.user?.email ?? "";
+  const image = resolveImageUrl(session?.user?.image);
+  const initials = name.charAt(0).toUpperCase();
+  const userRole = session?.user?.role ?? "";
 
-  if (status === "loading" || permissionsLoading) {
+  if (status === "loading") {
     return (
       <div className="flex flex-col h-full bg-sidebar">
         <div className="px-3 py-4 flex-1 space-y-6">
@@ -191,7 +204,7 @@ export function AppSidebar({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -262,7 +275,11 @@ export function AppSidebar({
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Link href="/dashboard" onClick={onNavigate} className="min-w-0 group">
+                <Link
+                  href="/dashboard"
+                  onClick={onNavigate}
+                  className="min-w-0 group"
+                >
                   <span className="text-[15px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
                     StreamlineOS
                   </span>
@@ -319,7 +336,7 @@ export function AppSidebar({
         <ScrollArea className="flex-1 min-h-0">
           <nav className={cn("py-2", isCollapsed ? "px-1.5" : "px-3")}>
             {navGroups.map((group, i) => {
-              const multiGroup = navGroups.length > 1
+              const multiGroup = navGroups.length > 1;
               return (
                 <SidebarSection
                   key={group.label}
@@ -327,13 +344,17 @@ export function AppSidebar({
                   groupIndex={i}
                   isCollapsed={isCollapsed}
                   showLabel={multiGroup}
-                  isGroupCollapsed={multiGroup ? (collapsedGroups[group.label] ?? false) : false}
-                  onToggleGroup={multiGroup ? () => toggleGroup(group.label) : undefined}
+                  isGroupCollapsed={
+                    multiGroup ? (collapsedGroups[group.label] ?? false) : false
+                  }
+                  onToggleGroup={
+                    multiGroup ? () => toggleGroup(group.label) : undefined
+                  }
                   pendingLeaves={pendingLeaves}
                   unreadChatCount={unreadChatCount}
                   onNavigate={onNavigate}
                 />
-              )
+              );
             })}
           </nav>
         </ScrollArea>
@@ -360,7 +381,12 @@ export function AppSidebar({
                     <Search className="h-4 w-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10} className="z-[9999] text-xs" style={{ zIndex: 9999 }}>
+                <TooltipContent
+                  side="right"
+                  sideOffset={10}
+                  className="z-[9999] text-xs"
+                  style={{ zIndex: 9999 }}
+                >
                   Search (⌘K)
                 </TooltipContent>
               </Tooltip>
@@ -378,8 +404,14 @@ export function AppSidebar({
                     )}
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10} className="z-[9999] text-xs" style={{ zIndex: 9999 }}>
-                  Notifications{unreadNotifCount > 0 ? ` (${unreadNotifCount})` : ""}
+                <TooltipContent
+                  side="right"
+                  sideOffset={10}
+                  className="z-[9999] text-xs"
+                  style={{ zIndex: 9999 }}
+                >
+                  Notifications
+                  {unreadNotifCount > 0 ? ` (${unreadNotifCount})` : ""}
                 </TooltipContent>
               </Tooltip>
             </>
@@ -411,7 +443,11 @@ export function AppSidebar({
                     )}
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={6} className="text-xs z-[200]">
+                <TooltipContent
+                  side="right"
+                  sideOffset={6}
+                  className="text-xs z-[200]"
+                >
                   Notifications
                 </TooltipContent>
               </Tooltip>
@@ -420,7 +456,12 @@ export function AppSidebar({
         </div>
 
         {/* User profile */}
-        <div className={cn("border-t border-sidebar-border", isCollapsed ? "p-2" : "px-2 py-2")}>
+        <div
+          className={cn(
+            "border-t border-sidebar-border",
+            isCollapsed ? "p-2" : "px-2 py-2",
+          )}
+        >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -459,12 +500,20 @@ export function AppSidebar({
               className="w-56 z-[200]"
             >
               <div className="px-2 py-1.5">
-                <p className="text-xs font-semibold text-foreground truncate">{name}</p>
-                <p className="text-[11px] text-muted-foreground truncate mt-0.5">{email}</p>
+                <p className="text-xs font-semibold text-foreground truncate">
+                  {name}
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                  {email}
+                </p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/settings" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                <Link
+                  href="/settings"
+                  className="gap-2 cursor-pointer"
+                  onClick={onNavigate}
+                >
                   <Settings className="h-3.5 w-3.5" />
                   Settings
                 </Link>
@@ -483,5 +532,5 @@ export function AppSidebar({
         </div>
       </div>
     </TooltipProvider>
-  )
+  );
 }
