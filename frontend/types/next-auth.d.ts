@@ -31,6 +31,8 @@ declare module "next-auth" {
     hasDashboardAccess?: boolean;
     daysUntilExpiry?: number;
     rememberMe?: boolean;
+    orgId?: string | null;
+    isOrgOwner?: boolean;
   }
 }
 

@@ -498,7 +498,7 @@ export default function OrgSetupPage() {
                 <span className="font-semibold text-slate-900">3–5 minutes</span>
               </p>
               <p className="text-[13px] text-slate-400">
-                We'll help you set up everything your team needs to get started.
+                We&apos;ll help you set up everything your team needs to get started.
               </p>
             </div>
             <div className="space-y-2">
@@ -848,7 +848,7 @@ export default function OrgSetupPage() {
         {step === 7 && (
           <div className="space-y-4">
             <p className="text-[13px] text-slate-500">
-              Invite colleagues — they'll get an email to join your workspace.
+              Invite colleagues — they&apos;ll get an email to join your workspace.
             </p>
             <div className="flex items-center gap-2">
               <Input
@@ -1044,7 +1044,7 @@ export default function OrgSetupPage() {
                 onClick={goNext}
                 disabled={isAiLoading}
               >
-                Skip, I'll do it later
+                Skip, I&apos;ll do it later
               </Button>
             </div>
             <Button

@@ -135,6 +135,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               forceChangePassword: data.forceChangePassword,
               isActive: sessionData.isActive,
               hasDashboardAccess: sessionData.hasDashboardAccess,
+              orgId: sessionData.orgId ?? null,
+              isOrgOwner: sessionData.isOrgOwner,
             };
           } catch {
             return null;
@@ -239,7 +241,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.forceChangePassword = user.forceChangePassword ?? false;
         token.isActive = user.isActive ?? true;
         token.hasDashboardAccess = user.hasDashboardAccess ?? true;
-        token.orgId = null;
+        token.orgId = user.orgId ?? null;
+        token.isOrgOwner = user.isOrgOwner ?? false;
         token.sessionId = randomUUID();
         token.rememberMe = user.rememberMe ?? false;
         if (user.daysUntilExpiry !== undefined)

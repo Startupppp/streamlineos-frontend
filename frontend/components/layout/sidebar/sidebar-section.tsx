@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, startTransition } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -182,7 +182,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, unreadChatCount, 
   const [expanded, setExpanded] = useState<boolean>(isActive || containsActive);
 
   useEffect(() => {
-    if (containsActive || isActive) setExpanded(true);
+    if (containsActive || isActive) startTransition(() => setExpanded(true));
   }, [containsActive, isActive]);
 
   const toggle = useCallback((e: React.MouseEvent) => {

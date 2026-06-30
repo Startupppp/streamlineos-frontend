@@ -107,7 +107,7 @@ function VerifyEmailForm() {
     if (!token) return;
     attemptedTokens.delete(token);
     setVerifyError(null);
-    verifyMutateRef.current(
+    verifyMutate(
       { token },
       {
         onSuccess: async (data) => {

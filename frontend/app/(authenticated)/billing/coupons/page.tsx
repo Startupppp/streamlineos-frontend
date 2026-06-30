@@ -7,7 +7,6 @@ import { z } from "zod";
 import { format, isAfter, addDays } from "date-fns";
 import { Plus, Copy, MoreHorizontal, RefreshCw, Tag } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,9 +63,7 @@ const PLAN_OPTIONS = ["STARTER", "PROFESSIONAL", "ENTERPRISE"] as const;
 const createCouponSchema = z.object({
   code: z.string().min(1, "Code is required").max(50),
   type: z.enum(["PERCENTAGE", "FIXED"]),
-  value: z
-    .number({ invalid_type_error: "Enter a valid number" })
-    .positive("Must be positive"),
+  value: z.number({ error: "Enter a valid number" }).positive("Must be positive"),
   maxUses: z.number().int().positive().optional(),
   applicablePlans: z.array(z.string()).optional(),
   expiresAt: z.string().optional(),
