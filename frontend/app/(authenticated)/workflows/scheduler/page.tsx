@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Clock, Link2, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
@@ -12,10 +11,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import {
+  useAllSchedules,
   useUpdateSchedule,
   useDeleteSchedule,
   type WorkflowSchedule,
@@ -30,14 +28,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-function useAllSchedules() {
-  return useQuery({
-    queryKey: [...queryKeys.workflows.all, "all-schedules"],
-    queryFn: () => apiClient.get<WorkflowSchedule[]>("/workflows/schedules"),
-    staleTime: 30_000,
-  });
-}
 
 function CronBadge({ cron }: { cron: string }) {
   return (

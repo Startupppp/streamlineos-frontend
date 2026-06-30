@@ -234,7 +234,31 @@ export function useWorkflowExecution(workflowId: string, executionId: string) {
 export function usePendingApprovals() {
   return useQuery({
     queryKey: queryKeys.workflows.approvals(),
-    queryFn: () => apiClient.get<WorkflowApproval[]>("/workflows/approvals"),
+    queryFn: () => apiClient.get<WorkflowApproval[]>("/workflows/approvals/pending"),
+    staleTime: 30_000,
+  });
+}
+
+export function useAllExecutions(params?: ExecutionListParams) {
+  return useQuery({
+    queryKey: [...queryKeys.workflows.all, "all-executions", params],
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<WorkflowExecution>>("/workflows/executions", params as Record<string, unknown>),
+    staleTime: 15_000,
+    refetchInterval: (query) => {
+      if (!query.state.data) return false;
+      const hasRunning = query.state.data.data.some(
+        (e) => e.status === "running" || e.status === "waiting",
+      );
+      return hasRunning ? 10_000 : false;
+    },
+  });
+}
+
+export function useAllSchedules() {
+  return useQuery({
+    queryKey: [...queryKeys.workflows.all, "all-schedules"],
+    queryFn: () => apiClient.get<WorkflowSchedule[]>("/workflows/schedules"),
     staleTime: 30_000,
   });
 }

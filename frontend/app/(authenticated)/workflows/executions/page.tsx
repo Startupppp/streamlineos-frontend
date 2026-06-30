@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -11,10 +10,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import {
+  useAllExecutions,
   useCancelExecution,
   type WorkflowExecution,
   type ExecutionStatus,
@@ -40,32 +38,6 @@ const STATUS_TABS: Array<{ label: string; value: ExecutionStatus | "all" }> = [
   { label: "Pending", value: "pending" },
   { label: "Cancelled", value: "cancelled" },
 ];
-
-interface AllExecutionsParams {
-  page?: number;
-  limit?: number;
-  status?: ExecutionStatus;
-  [key: string]: unknown;
-}
-
-function useAllExecutions(params?: AllExecutionsParams) {
-  return useQuery({
-    queryKey: [...queryKeys.workflows.all, "executions", params],
-    queryFn: () =>
-      apiClient.get<{ data: WorkflowExecution[]; total: number; page: number; limit: number }>(
-        "/workflows/executions",
-        params,
-      ),
-    staleTime: 15_000,
-    refetchInterval: (query) => {
-      if (!query.state.data) return false;
-      const hasRunning = query.state.data.data.some(
-        (e) => e.status === "running" || e.status === "waiting",
-      );
-      return hasRunning ? 10_000 : false;
-    },
-  });
-}
 
 function formatDuration(ms: number | null): string {
   if (ms === null) return "—";

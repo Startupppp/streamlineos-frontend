@@ -33,6 +33,7 @@ declare module "next-auth" {
     rememberMe?: boolean;
     orgId?: string | null;
     isOrgOwner?: boolean;
+    orgOnboardingCompletedAt?: string | null;
   }
 }
 

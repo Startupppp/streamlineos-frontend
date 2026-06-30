@@ -137,6 +137,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               hasDashboardAccess: sessionData.hasDashboardAccess,
               orgId: sessionData.orgId ?? null,
               isOrgOwner: sessionData.isOrgOwner,
+              orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt ?? null,
             };
           } catch {
             return null;
@@ -194,6 +195,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             hasDashboardAccess: sessionData.hasDashboardAccess,
             daysUntilExpiry: data.daysUntilExpiry,
             rememberMe: credentials.rememberMe === "true",
+            orgId: sessionData.orgId ?? null,
+            isOrgOwner: sessionData.isOrgOwner,
+            orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt ?? null,
           };
         } catch (err) {
           if (
@@ -243,6 +247,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.hasDashboardAccess = user.hasDashboardAccess ?? true;
         token.orgId = user.orgId ?? null;
         token.isOrgOwner = user.isOrgOwner ?? false;
+        token.orgOnboardingCompletedAt = user.orgOnboardingCompletedAt ?? null;
         token.sessionId = randomUUID();
         token.rememberMe = user.rememberMe ?? false;
         if (user.daysUntilExpiry !== undefined)

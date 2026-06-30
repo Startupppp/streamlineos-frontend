@@ -34,17 +34,11 @@ export default function OrgSetupPage() {
   const updateRef = useRef(update);
   updateRef.current = update;
 
-  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState(1);
+  const [mounted, setMounted] = useState(false);
   const [direction, setDirection] = useState(1);
-  const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
   const [showCelebration, setShowCelebration] = useState(false);
-
-  useEffect(() => {
-    setStep(loadStep());
-    setData(loadDraft());
-    setMounted(true);
-  }, []);
+  const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
 
   const firstName =
     session?.user?.name?.split(" ")[0] ??
@@ -116,10 +110,14 @@ export default function OrgSetupPage() {
   }, []);
 
   useEffect(() => {
-    if (step === TOTAL_STEPS) {
-      setShowCelebration(true);
-    }
+    if (step === TOTAL_STEPS) setShowCelebration(true);
   }, [step]);
+
+  useEffect(() => {
+    setStep(loadStep());
+    setData(loadDraft());
+    setMounted(true);
+  }, []);
 
   // On mount: refresh JWT. If the org is already set up (stale cookie), skip the wizard.
   useEffect(() => {

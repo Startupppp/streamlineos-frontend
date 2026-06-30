@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import type { WizardData } from "../lib/types";
 import { NEXT_ACTIONS } from "../lib/constants";
-import { clearDraft } from "../lib/draft";
+import { clearAll } from "../lib/draft";
 
 type StepCompleteProps = {
   data: WizardData;
@@ -28,7 +28,7 @@ export function StepComplete({ data }: StepCompleteProps) {
     async function attemptRedirect(): Promise<void> {
       if (cancelled) return;
       if (sessionRef.current?.orgOnboardingCompletedAt) {
-        clearDraft();
+        clearAll();
         window.location.replace("/dashboard");
         return;
       }
@@ -36,7 +36,7 @@ export function StepComplete({ data }: StepCompleteProps) {
         const s = await updateRef.current();
         if (cancelled) return;
         if (s?.orgOnboardingCompletedAt) {
-          clearDraft();
+          clearAll();
           window.location.replace("/dashboard");
           return;
         }
@@ -45,7 +45,7 @@ export function StepComplete({ data }: StepCompleteProps) {
       if (retries < MAX_RETRIES && !cancelled) {
         setTimeout(attemptRedirect, 800);
       } else if (!cancelled) {
-        clearDraft();
+        clearAll();
         window.location.replace("/dashboard");
       }
     }
