@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   Users,
   Briefcase,
-  Settings,
   Clock,
   CalendarCheck,
   CalendarDays,
@@ -78,11 +77,16 @@ import {
   Truck,
   Library,
   LayoutGrid,
-  Store,
-  Users2,
   Workflow,
   PlayCircle,
   CheckSquare,
+  Palette,
+  Lock,
+  Key,
+  Terminal,
+  Upload,
+  Smartphone,
+  Plug,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -103,21 +107,6 @@ export interface NavGroup {
 }
 
 export const NAV_GROUPS: NavGroup[] = [
-  {
-    label: "Core",
-    routes: [
-      { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-      {
-        label: "AI Hub",
-        icon: Sparkles,
-        href: "/ai",
-        requiredPermission: "settings:manage",
-      },
-      { label: "Calendar", icon: CalendarDays, href: "/calendar" },
-      { label: "Chat", icon: MessageSquareText, href: "/chat" },
-      { label: "Notifications", icon: Bell, href: "/notifications" },
-    ],
-  },
   {
     label: "Workflows",
     requiredPermission: "workflows:workflows:view",
@@ -157,102 +146,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: BarChart2,
         href: "/workflows/analytics",
         requiredPermission: "workflows:analytics:view",
-      },
-    ],
-  },
-  {
-    label: "People",
-    requiredPermission: ["settings:manage", "settings:view"],
-    routes: [
-      {
-        label: "Users",
-        icon: UserCog,
-        href: "/users",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Suspended",
-        icon: ShieldAlert,
-        href: "/users/suspended",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Archived",
-        icon: UserX,
-        href: "/users/archived",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Invitations",
-        icon: MailOpen,
-        href: "/users/invitations",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Audit Log",
-        icon: History,
-        href: "/users/audit",
-        requiredPermission: "settings:manage",
-      },
-    ],
-  },
-  {
-    label: "Organization",
-    requiredPermission: ["settings:manage", "settings:view"],
-    routes: [
-      {
-        label: "Overview",
-        icon: Building2,
-        href: "/organization",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Business Units",
-        icon: Network,
-        href: "/organization/business-units",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Branches",
-        icon: GitBranch,
-        href: "/organization/branches",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Departments",
-        icon: Briefcase,
-        href: "/organization/departments",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Teams",
-        icon: Users,
-        href: "/organization/teams",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Locations",
-        icon: Map,
-        href: "/organization/locations",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Cost Centers",
-        icon: Coins,
-        href: "/organization/cost-centers",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Org Tree",
-        icon: Network,
-        href: "/organization/tree",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Audit Log",
-        icon: FileSearch,
-        href: "/organization/audit",
-        requiredPermission: "settings:manage",
       },
     ],
   },
@@ -703,6 +596,8 @@ export const NAV_GROUPS: NavGroup[] = [
       "crm:leads:view",
       "crm:targets:view",
       "crm:clients:read",
+      "dashboard:sales:view",
+      "dashboard:customer-executive:view",
     ],
     routes: [
       {
@@ -865,115 +760,6 @@ export const NAV_GROUPS: NavGroup[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    label: "Billing",
-    requiredPermission: "settings:manage",
-    routes: [
-      {
-        label: "Billing",
-        icon: CreditCard,
-        href: "/billing",
-        requiredPermission: "settings:manage",
-        children: [
-          {
-            label: "Invoices",
-            icon: FileText,
-            href: "/billing/invoices",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Recurring Invoices",
-            icon: RefreshCcw,
-            href: "/billing/recurring",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "AI Credits",
-            icon: Zap,
-            href: "/billing/ai-credits",
-            requiredPermission: "billing:ai-credits:view",
-          },
-          {
-            label: "Checkout",
-            icon: CreditCard,
-            href: "/billing/checkout",
-          },
-          {
-            label: "Affiliate",
-            icon: Users2,
-            href: "/billing/affiliate",
-            requiredPermission: "billing:affiliate:manage",
-          },
-          {
-            label: "Analytics",
-            icon: BarChart2,
-            href: "/billing/analytics",
-            requiredPermission: "billing:analytics:view",
-          },
-          {
-            label: "Enterprise Quotes",
-            icon: ClipboardList,
-            href: "/billing/enterprise-quotes",
-            requiredPermission: "billing:enterprise-quotes:view",
-          },
-          {
-            label: "Bundles",
-            icon: Package,
-            href: "/billing/bundles",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Seats",
-            icon: Users,
-            href: "/billing/seats",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Add-ons",
-            icon: LayoutGrid,
-            href: "/billing/addons",
-            requiredPermission: "billing:marketplace:view",
-          },
-          {
-            label: "Coupons",
-            icon: Tag,
-            href: "/billing/coupons",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Trials",
-            icon: Timer,
-            href: "/billing/trials",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Referrals",
-            icon: Share2,
-            href: "/billing/referrals",
-            requiredPermission: "settings:manage",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    label: "Marketplace",
-    requiredPermission: "billing:marketplace:view",
-    routes: [
-      {
-        label: "Marketplace",
-        icon: Store,
-        href: "/marketplace",
-        requiredPermission: "billing:marketplace:view",
-      },
-    ],
-  },
-  {
-    label: "Sales",
-    requiredPermission: "dashboard:sales:view",
-    routes: [
       {
         label: "Sales",
         icon: BarChart3,
@@ -1030,14 +816,8 @@ export const NAV_GROUPS: NavGroup[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    label: "Customer Success",
-    requiredPermission: "dashboard:customer-executive:view",
-    routes: [
       {
-        label: "Customer Exec",
+        label: "Customer Success",
         icon: Handshake,
         href: "/customer-executive",
         requiredPermission: "dashboard:customer-executive:view",
@@ -1341,115 +1121,189 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Knowledge Base",
-    requiredPermission: "kb:articles:view",
+    label: "Organization",
+    requiredPermission: ["settings:manage", "settings:view"],
     routes: [
       {
-        label: "Knowledge Base",
-        icon: Library,
-        href: "/knowledge-base",
-        requiredPermission: "kb:articles:view",
-        children: [
-          {
-            label: "Help Widget",
-            icon: Globe,
-            href: "/knowledge-base/settings/widget",
-            requiredPermission: "settings:manage",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    label: "System",
-    defaultCollapsed: true,
-    requiredPermission: [
-      "settings:view",
-      "settings:manage",
-      "settings:rbac:manage",
-    ],
-    routes: [
-      {
-        label: "Settings",
-        icon: Settings,
-        href: "/settings",
+        label: "Overview",
+        icon: Building2,
+        href: "/organization",
         requiredPermission: "settings:view",
-        children: [
-          {
-            label: "Organization",
-            icon: Building2,
-            href: "/settings/organization",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Members",
-            icon: UserCog,
-            href: "/settings/members",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Subscription",
-            icon: CreditCard,
-            href: "/settings/subscription",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Notifications",
-            icon: Bell,
-            href: "/settings/notifications",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Custom Fields",
-            icon: Sliders,
-            href: "/settings/custom-fields",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Recruitment Integrations",
-            icon: Globe,
-            href: "/settings/integrations/recruitment",
-            requiredPermission: "settings:manage",
-          },
-          {
-            label: "Calendar Integration",
-            icon: CalendarCheck,
-            href: "/settings/integrations/calendar",
-          },
-          {
-            label: "Git Integration",
-            icon: GitBranch,
-            href: "/settings/integrations/git",
-            requiredPermission: "settings:manage",
-          },
-        ],
+      },
+      {
+        label: "Structure",
+        icon: Network,
+        href: "/organization/structure",
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Business Units",
+        icon: Network,
+        href: "/organization/business-units",
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Departments",
+        icon: Briefcase,
+        href: "/organization/departments",
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Teams",
+        icon: Users,
+        href: "/organization/teams",
+        requiredPermission: "settings:view",
       },
       {
         label: "Branches",
         icon: GitBranch,
         href: "/organization/branches",
-        requiredPermission: ["settings:manage", "branch:read"],
+        requiredPermission: "settings:view",
       },
       {
-        label: "Roles & Permissions",
+        label: "Locations",
+        icon: Map,
+        href: "/organization/locations",
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Cost Centers",
+        icon: Coins,
+        href: "/organization/cost-centers",
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Organization Chart",
+        icon: Network,
+        href: "/organization/tree",
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Branding",
+        icon: Palette,
+        href: "/settings/organization",
+        requiredPermission: "settings:manage",
+      },
+    ],
+  },
+  {
+    label: "People",
+    requiredPermission: ["settings:manage", "settings:view"],
+    routes: [
+      {
+        label: "Users",
+        icon: UserCog,
+        href: "/users",
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Invitations",
+        icon: MailOpen,
+        href: "/users/invitations",
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Suspended Users",
+        icon: ShieldAlert,
+        href: "/users/suspended",
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Archived Users",
+        icon: UserX,
+        href: "/users/archived",
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Import / Export",
+        icon: Upload,
+        href: "/users/import",
+        requiredPermission: "settings:manage",
+      },
+    ],
+  },
+  {
+    label: "Access Control",
+    requiredPermission: ["settings:rbac:manage", "settings:manage"],
+    routes: [
+      {
+        label: "Roles",
         icon: Shield,
         href: "/settings/roles",
         requiredPermission: "settings:rbac:manage",
-        children: [
-          {
-            label: "Permission Matrix",
-            icon: ShieldAlert,
-            href: "/settings/permissions",
-            requiredPermission: "settings:rbac:manage",
-          },
-          {
-            label: "RBAC Overview",
-            icon: BarChart2,
-            href: "/settings/rbac",
-            requiredPermission: "settings:rbac:manage",
-          },
-        ],
       },
+      {
+        label: "Permission Matrix",
+        icon: ShieldAlert,
+        href: "/settings/permissions",
+        requiredPermission: "settings:rbac:manage",
+      },
+      {
+        label: "Role Assignment",
+        icon: UserCheck,
+        href: "/settings/rbac",
+        requiredPermission: "settings:rbac:manage",
+      },
+      {
+        label: "Access Policies",
+        icon: ShieldCheck,
+        href: "/settings/delegations",
+        requiredPermission: "settings:manage",
+      },
+    ],
+  },
+  {
+    label: "Subscription",
+    requiredPermission: "settings:manage",
+    routes: [
+      {
+        label: "Current Plan",
+        icon: CreditCard,
+        href: "/settings/subscription",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Usage",
+        icon: BarChart2,
+        href: "/settings/subscription/usage",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Seats",
+        icon: Users,
+        href: "/billing/seats",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "AI Credits",
+        icon: Zap,
+        href: "/billing/ai-credits",
+        requiredPermission: "billing:ai-credits:view",
+      },
+      {
+        label: "Billing",
+        icon: Wallet,
+        href: "/billing",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Invoices",
+        icon: FileText,
+        href: "/billing/invoices",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Payment Methods",
+        icon: CreditCard,
+        href: "/billing/payment-methods",
+        requiredPermission: "settings:manage",
+      },
+    ],
+  },
+  {
+    label: "Platform",
+    requiredPermission: "settings:manage",
+    routes: [
       {
         label: "Modules",
         icon: LayoutGrid,
@@ -1457,9 +1311,27 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:manage",
       },
       {
-        label: "Audit Log",
-        icon: ShieldCheck,
-        href: "/settings/audit-log",
+        label: "Custom Fields",
+        icon: Sliders,
+        href: "/settings/custom-fields",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Automation",
+        icon: Workflow,
+        href: "/settings/automations",
+        requiredPermission: "settings:automations:view",
+      },
+      {
+        label: "Notification Templates",
+        icon: MailOpen,
+        href: "/settings/email-templates",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Integrations",
+        icon: Plug,
+        href: "/settings/integrations/recruitment",
         requiredPermission: "settings:manage",
       },
       {
@@ -1469,13 +1341,13 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:manage",
       },
       {
-        label: "Automations",
-        icon: Zap,
-        href: "/settings/automations",
-        requiredPermission: "settings:automations:view",
+        label: "API Keys",
+        icon: Key,
+        href: "/settings/api-tokens",
+        requiredPermission: "settings:manage",
       },
       {
-        label: "AI Settings",
+        label: "AI Configuration",
         icon: Brain,
         href: "/settings/ai",
         requiredPermission: "settings:manage",
@@ -1486,11 +1358,95 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/settings/data-hub",
         requiredPermission: "settings:manage",
       },
+    ],
+  },
+  {
+    label: "Security",
+    requiredPermission: "settings:manage",
+    routes: [
       {
-        label: "Reports",
-        icon: BarChart2,
-        href: "/reports",
-        requiredPermission: "reports:view",
+        label: "Password Policy",
+        icon: Lock,
+        href: "/settings/security",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "MFA Policy",
+        icon: Smartphone,
+        href: "/settings/security/mfa",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "SSO",
+        icon: Key,
+        href: "/settings/security/sso",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "SCIM",
+        icon: RefreshCcw,
+        href: "/settings/security/scim",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Domain Verification",
+        icon: Globe,
+        href: "/settings/security/domains",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Session Policy",
+        icon: Clock,
+        href: "/settings/sessions",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "IP Allow List",
+        icon: Shield,
+        href: "/settings/security/ip-allowlist",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Audit Logs",
+        icon: History,
+        href: "/settings/audit-log",
+        requiredPermission: "settings:manage",
+      },
+    ],
+  },
+  {
+    label: "Developer",
+    requiredPermission: "settings:manage",
+    routes: [
+      {
+        label: "Events",
+        icon: Bell,
+        href: "/settings/developer/events",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Webhooks",
+        icon: Zap,
+        href: "/settings/webhooks",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "API Tokens",
+        icon: Key,
+        href: "/settings/api-tokens",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Logs",
+        icon: FileText,
+        href: "/settings/audit-log",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Sandbox",
+        icon: Terminal,
+        href: "/settings/developer/sandbox",
+        requiredPermission: "settings:manage",
       },
     ],
   },
@@ -1569,6 +1525,7 @@ export type ProductKey =
   | "finance"
   | "helpdesk"
   | "documents"
+  | "analytics"
   | "ai"
   | "administration";
 
@@ -1587,21 +1544,31 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "finance", label: "Finance", href: "/accounting" },
   { key: "helpdesk", label: "Helpdesk", href: "/support" },
   { key: "documents", label: "Documents", href: "/knowledge-base" },
+  { key: "analytics", label: "Analytics", href: "/analytics" },
   { key: "ai", label: "AI", href: "/ai" },
   { key: "administration", label: "Admin", href: "/organization" },
 ];
 
 const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   home: [],
-  crm: ["CRM", "Sales", "Customer Success"],
+  crm: ["CRM"],
   hrms: ["HR – People", "HR – Growth", "HR – Compensation", "Recruitment"],
   projects: ["Projects & Time"],
   inventory: ["Inventory"],
-  finance: ["Accounting", "Billing"],
-  helpdesk: ["Support", "Knowledge Base"],
-  documents: ["Knowledge Base"],
+  finance: ["Accounting"],
+  helpdesk: ["Support"],
+  documents: [],
+  analytics: [],
   ai: [],
-  administration: ["People", "Organization", "System"],
+  administration: [
+    "Organization",
+    "People",
+    "Access Control",
+    "Subscription",
+    "Platform",
+    "Security",
+    "Developer",
+  ],
 };
 
 export function getNavGroupsForProduct(
@@ -1609,7 +1576,6 @@ export function getNavGroupsForProduct(
   role: string | undefined,
   permissions: string[] | undefined,
 ): NavGroup[] {
-  const allGroups = getNavGroupsForUser(role, permissions);
   if (productKey === "home") {
     return [
       {
@@ -1624,16 +1590,44 @@ export function getNavGroupsForProduct(
     ];
   }
   if (productKey === "ai") {
-    const coreGroup = allGroups.find((g) => g.label === "Core");
-    if (!coreGroup) return [];
     return [
       {
-        ...coreGroup,
         label: "AI",
-        routes: coreGroup.routes.filter((r) => r.href === "/ai"),
+        routes: [
+          {
+            label: "AI Hub",
+            icon: Sparkles,
+            href: "/ai",
+            requiredPermission: "settings:manage",
+          },
+        ],
       },
     ];
   }
+  if (productKey === "analytics")
+    return [
+      {
+        label: "Analytics",
+        routes: [{ label: "Analytics", icon: BarChart3, href: "/analytics" }],
+      },
+    ];
+
+  if (productKey === "documents")
+    return [
+      {
+        label: "Documents",
+        routes: [
+          {
+            label: "Knowledge Base",
+            icon: Library,
+            href: "/knowledge-base",
+            requiredPermission: "support:kb:view",
+          },
+        ],
+      },
+    ];
+
+  const allGroups = getNavGroupsForUser(role, permissions);
   const labels = PRODUCT_NAV_GROUP_LABELS[productKey];
   return allGroups.filter((g) => labels.includes(g.label));
 }
@@ -1655,8 +1649,8 @@ export function getProductFromPathname(pathname: string): ProductKey {
   )
     return "projects";
   if (pathname.startsWith("/inventory")) return "inventory";
-  if (pathname.startsWith("/accounting") || pathname.startsWith("/billing"))
-    return "finance";
+  if (pathname.startsWith("/accounting")) return "finance";
+  if (pathname.startsWith("/analytics")) return "analytics";
   if (pathname.startsWith("/support") || pathname.startsWith("/knowledge-base"))
     return "helpdesk";
   if (pathname.startsWith("/ai")) return "ai";
@@ -1664,6 +1658,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||
     pathname.startsWith("/settings") ||
+    pathname.startsWith("/billing") ||
     pathname.startsWith("/reports")
   )
     return "administration";

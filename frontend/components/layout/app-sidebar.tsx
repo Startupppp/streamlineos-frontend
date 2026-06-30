@@ -13,6 +13,17 @@ import {
   Settings,
   LogOut,
   ChevronUp,
+  User,
+  Shield,
+  Lock,
+  Smartphone,
+  Monitor,
+  Globe,
+  Clock,
+  Key,
+  Palette,
+  Eye,
+  Link2,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
@@ -509,15 +520,90 @@ export function AppSidebar({
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link
-                  href="/settings"
-                  className="gap-2 cursor-pointer"
-                  onClick={onNavigate}
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                  Settings
+                <Link href="/settings/profile" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <User className="h-3.5 w-3.5" />
+                  My Profile
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Settings className="h-3.5 w-3.5" />
+                  My Account
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/settings/security" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Shield className="h-3.5 w-3.5" />
+                  Security
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/security" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Lock className="h-3.5 w-3.5" />
+                  Password
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/devices" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Smartphone className="h-3.5 w-3.5" />
+                  MFA
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/sessions" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Monitor className="h-3.5 w-3.5" />
+                  Sessions & Devices
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/connected-accounts" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Link2 className="h-3.5 w-3.5" />
+                  Connected Accounts
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/settings/notifications" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Bell className="h-3.5 w-3.5" />
+                  Notification Preferences
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/appearance" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Palette className="h-3.5 w-3.5" />
+                  Appearance
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/language" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Globe className="h-3.5 w-3.5" />
+                  Language
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/timezone" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Clock className="h-3.5 w-3.5" />
+                  Time Zone
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/accessibility" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                  <Eye className="h-3.5 w-3.5" />
+                  Accessibility
+                </Link>
+              </DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings/api-tokens" className="gap-2 cursor-pointer" onClick={onNavigate}>
+                      <Key className="h-3.5 w-3.5" />
+                      API Keys
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="gap-2 text-destructive focus:text-destructive cursor-pointer"
