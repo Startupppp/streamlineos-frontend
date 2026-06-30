@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ArrowRight, ArrowLeft, Monitor, Palette, ShoppingBag, Cog, Heart, BookOpen, Building, Building2, Utensils, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Monitor, Palette, ShoppingBag, Cog, Heart, BookOpen, Building, Building2, Utensils, Truck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { INDUSTRIES } from "../_lib/constants";
@@ -11,6 +11,7 @@ type StepIndustryProps = {
   industry: string;
   onSelect: (industry: string) => void;
   onBack: () => void;
+  onNext: () => void;
 };
 
 const INDUSTRY_ICONS: Record<string, LucideIcon> = {
@@ -26,7 +27,7 @@ const INDUSTRY_ICONS: Record<string, LucideIcon> = {
   "Logistics": Truck,
 };
 
-export function StepIndustry({ industry, onSelect, onBack }: StepIndustryProps) {
+export function StepIndustry({ industry, onSelect, onBack, onNext }: StepIndustryProps) {
   return (
     <div className="space-y-4">
       <p className="text-[13px] text-muted-foreground">
@@ -61,14 +62,24 @@ export function StepIndustry({ industry, onSelect, onBack }: StepIndustryProps) 
         })}
       </div>
 
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={onBack}
-        className="w-full h-9 text-sm text-muted-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
-      </Button>
+      <div className="space-y-1.5">
+        <Button
+          type="button"
+          onClick={onNext}
+          disabled={!industry}
+          className="w-full h-9 text-sm gap-1.5"
+        >
+          Continue <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onBack}
+          className="w-full h-9 text-sm text-muted-foreground"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
+        </Button>
+      </div>
     </div>
   );
 }

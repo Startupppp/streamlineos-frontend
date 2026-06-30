@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Sheet,
   SheetContent,
@@ -37,9 +36,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import {
@@ -215,21 +212,19 @@ function TemplateSheet({
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="locale"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Locale</FormLabel>
-                    <FormControl>
-                      <Input placeholder="en" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="locale"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Locale</FormLabel>
+                  <FormControl>
+                    <Input placeholder="en" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             {needsSubject && (
               <FormField
                 control={form.control}
@@ -419,9 +414,14 @@ export default function NotificationTemplatesPage() {
       }
     >
       {isLoading ? (
-        <div className="space-y-2">
+        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-lg" />
+            <div key={i} className="flex items-start gap-3 px-3 py-2.5">
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-40" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
           ))}
         </div>
       ) : isError ? (
@@ -431,78 +431,84 @@ export default function NotificationTemplatesPage() {
           onRetry={handleRetry}
         />
       ) : !templates?.length ? (
-        <EmptyState
-          illustration={<LayoutTemplate className="h-16 w-16 text-muted-foreground/40" />}
-          title="No templates yet"
-          description="Create reusable notification templates to standardize messages sent to your team."
-          action={{ label: "Create Template", onClick: handleCreate }}
-        />
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <LayoutTemplate className="h-10 w-10 text-muted-foreground/25 mb-3" />
+          <p className="text-sm font-medium text-foreground">No templates yet</p>
+          <p className="text-xs text-muted-foreground mt-1 mb-4 max-w-xs">
+            Create reusable notification templates to standardize messages sent to your team.
+          </p>
+          <Button size="sm" onClick={handleCreate}>
+            <Plus className="mr-2 h-3.5 w-3.5" />
+            Create Template
+          </Button>
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
           {templates.map((t) => {
             const catConfig = t.category ? NOTIFICATION_CATEGORY_CONFIG[t.category] : null;
             return (
-              <Card key={t.id} className="group">
-                <CardContent className="p-4 flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium">{t.name}</span>
-                      <Badge variant="outline" className="text-[10px] h-4 px-1.5">
-                        {t.channel}
+              <div key={t.id} className="group flex items-start gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm font-medium">{t.name}</span>
+                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0">
+                      {t.channel}
+                    </Badge>
+                    {catConfig && (
+                      <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+                        {catConfig.label}
                       </Badge>
-                      {catConfig && (
-                        <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
-                          {catConfig.label}
-                        </Badge>
-                      )}
-                      <Badge
-                        variant="outline"
-                        className={cn("text-[10px] h-4 px-1.5", t.isActive ? "border-emerald-300 text-emerald-600" : "text-muted-foreground")}
-                      >
-                        {t.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                    <p className="mt-0.5 text-xs font-mono text-muted-foreground">{t.templateKey}</p>
-                    {t.subject && (
-                      <p className="mt-1 text-xs text-muted-foreground truncate">
-                        Subject: {t.subject}
-                      </p>
                     )}
-                    <p className="text-[11px] text-muted-foreground/70 mt-0.5">
-                      v{t.version} · {t.locale}
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-[10px] h-4 px-1.5 shrink-0",
+                        t.isActive ? "border-emerald-300 text-emerald-600" : "text-muted-foreground",
+                      )}
+                    >
+                      {t.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                  <p className="mt-0.5 text-[11px] font-mono text-muted-foreground/70">{t.templateKey}</p>
+                  {t.subject && (
+                    <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                      Subject: {t.subject}
                     </p>
-                  </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => setPreviewTarget(t)}
-                      title="Preview"
-                    >
-                      <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => handleEdit(t)}
-                      title="Edit"
-                    >
-                      <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 hover:text-destructive"
-                      onClick={() => setDeleteTarget(t)}
-                      title="Delete"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  )}
+                  <p className="text-[11px] text-muted-foreground/50 mt-0.5">
+                    v{t.version} · {t.locale}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => setPreviewTarget(t)}
+                    title="Preview"
+                  >
+                    <Eye className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => handleEdit(t)}
+                    title="Edit"
+                  >
+                    <Edit2 className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 hover:text-destructive"
+                    onClick={() => setDeleteTarget(t)}
+                    title="Delete"
+                  >
+                    <Trash2 className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                </div>
+              </div>
             );
           })}
         </div>
@@ -521,7 +527,7 @@ export default function NotificationTemplatesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete template?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{deleteTarget?.name}" will be permanently deleted. Notifications using this template will continue with their last rendered content.
+              &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted. Notifications using this template will continue with their last rendered content.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

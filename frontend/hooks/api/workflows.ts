@@ -19,6 +19,7 @@ export interface Workflow {
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
+  definitionJson?: Record<string, unknown> | null;
 }
 
 export interface WorkflowVersion {

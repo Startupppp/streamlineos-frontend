@@ -1,38 +1,25 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -43,12 +30,11 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { ArrowRightLeft, Plus, Trash2, Users, Clock } from "lucide-react";
+import { Plus, ArrowLeftRight, X, Loader2 } from "lucide-react";
 import { formatRelative } from "date-fns";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
-import { useHrEmployees } from "@/hooks/api/hr/employees";
+import { useOrgMembers } from "@/hooks/api/organization";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
-import type { Employee } from "@/types/hr";
 
 interface Delegation {
   id: string;
@@ -90,18 +76,28 @@ export default function DelegationsPage() {
 
 function DelegationsContent() {
   const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
 
-  const { data: received, isLoading: loadingReceived } = useQuery<Delegation[]>({
-    queryKey: ["delegations", "received"],
-    queryFn: () => apiClient.get<Delegation[]>("/access/delegations"),
-    staleTime: 60_000,
-  });
+  const { data: membersData } = useOrgMembers(1, 200);
+  const members = membersData?.data ?? [];
+  const memberMap = useMemo(
+    () => new Map(members.map((m) => [m.userId, m.name ?? m.email])),
+    [members],
+  );
+
+  const { data: received, isLoading: loadingReceived } = useQuery<Delegation[]>(
+    {
+      queryKey: ["delegations", "received"],
+      queryFn: () => apiClient.get<Delegation[]>("/access/delegations"),
+      staleTime: 60_000,
+    },
+  );
 
   const { data: given, isLoading: loadingGiven } = useQuery<Delegation[]>({
     queryKey: ["delegations", "given"],
-    queryFn: () => apiClient.get<Delegation[]>("/access/delegations/given"),
+    queryFn: () =>
+      apiClient.get<Delegation[]>("/access/delegations/given"),
     staleTime: 60_000,
   });
 
@@ -127,58 +123,78 @@ function DelegationsContent() {
   );
 
   const handleGrantSuccess = useCallback(() => {
-    setDialogOpen(false);
+    setSheetOpen(false);
     void queryClient.invalidateQueries({ queryKey: ["delegations"] });
   }, [queryClient]);
 
-  const activeGiven = (given ?? []).filter(
-    (d) => d.status === "ACTIVE" && new Date(d.endsAt) > new Date(),
+  const now = new Date();
+  const activeGiven = useMemo(
+    () =>
+      (given ?? []).filter(
+        (d) => d.status === "ACTIVE" && new Date(d.endsAt) > now,
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [given],
   );
-  const expiredOrRevoked = (given ?? []).filter(
-    (d) => d.status !== "ACTIVE" || new Date(d.endsAt) <= new Date(),
+  const inactiveGiven = useMemo(
+    () =>
+      (given ?? []).filter(
+        (d) => d.status !== "ACTIVE" || new Date(d.endsAt) <= now,
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [given],
   );
 
   return (
     <PageWrapper
-      title="Permission Delegations"
-      subtitle="Manage permissions you've delegated to others or received from others"
+      title="Delegations"
+      subtitle="Share specific permissions with other team members for a period of time"
       actions={
-        <Button className="gap-2" onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4" /> Delegate permissions
+        <Button
+          size="sm"
+          className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
+          onClick={() => setSheetOpen(true)}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Delegate
         </Button>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Delegated to you
+          <CardHeader className="px-4 pt-4 pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <ArrowLeftRight className="h-3.5 w-3.5 text-muted-foreground" />
+                Received from others
+              </span>
+              {!loadingReceived && (received?.length ?? 0) > 0 && (
+                <Badge variant="secondary" className="text-xs font-medium">
+                  {received!.length}
+                </Badge>
+              )}
             </CardTitle>
-            <CardDescription>
-              Active permissions another user has delegated to you.
-            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {loadingReceived ? (
-              <div className="space-y-3">
-                {[...Array(2)].map((_, i) => (
-                  <Skeleton key={i} className="h-14 rounded-lg" />
-                ))}
-              </div>
+              <DelegationSkeletons count={2} />
             ) : !received?.length ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <ArrowRightLeft className="h-9 w-9 text-muted-foreground mb-3 opacity-40" />
+                <ArrowLeftRight className="h-8 w-8 text-muted-foreground/30 mb-2" />
                 <p className="text-sm font-medium">No delegations received</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  When another user delegates permissions to you they will appear
-                  here.
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Permissions delegated to you will appear here
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-border/30">
                 {received.map((d) => (
-                  <DelegationRow key={d.id} delegation={d} />
+                  <DelegationRow
+                    key={d.id}
+                    delegation={d}
+                    memberMap={memberMap}
+                    nameField="delegatorId"
+                  />
                 ))}
               </div>
             )}
@@ -186,43 +202,48 @@ function DelegationsContent() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <ArrowRightLeft className="h-4 w-4" />
-              Delegations you granted
+          <CardHeader className="px-4 pt-4 pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center justify-between">
+              <span>Granted by you</span>
+              {!loadingGiven && activeGiven.length > 0 && (
+                <Badge variant="secondary" className="text-xs font-medium">
+                  {activeGiven.length} active
+                </Badge>
+              )}
             </CardTitle>
-            <CardDescription>
-              Permissions you have delegated to other users.
-            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {loadingGiven ? (
-              <div className="space-y-3">
-                {[...Array(2)].map((_, i) => (
-                  <Skeleton key={i} className="h-14 rounded-lg" />
-                ))}
-              </div>
-            ) : !activeGiven.length && !expiredOrRevoked.length ? (
+              <DelegationSkeletons count={2} />
+            ) : !activeGiven.length && !inactiveGiven.length ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <Clock className="h-9 w-9 text-muted-foreground mb-3 opacity-40" />
+                <ArrowLeftRight className="h-8 w-8 text-muted-foreground/30 mb-2" />
                 <p className="text-sm font-medium">No delegations granted</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  You haven&apos;t delegated any permissions to other users.
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Delegate permissions to share access with colleagues
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-border/30">
                 {activeGiven.map((d) => (
                   <DelegationRow
                     key={d.id}
                     delegation={d}
+                    memberMap={memberMap}
+                    nameField="delegateeId"
                     canRevoke
                     onRevoke={handleRevoke}
                     isRevoking={revoking === d.id}
                   />
                 ))}
-                {expiredOrRevoked.map((d) => (
-                  <DelegationRow key={d.id} delegation={d} isExpired />
+                {inactiveGiven.map((d) => (
+                  <DelegationRow
+                    key={d.id}
+                    delegation={d}
+                    memberMap={memberMap}
+                    nameField="delegateeId"
+                    isInactive
+                  />
                 ))}
               </div>
             )}
@@ -230,120 +251,141 @@ function DelegationsContent() {
         </Card>
       </div>
 
-      <GrantDelegationDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+      <GrantDelegationSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
         onSuccess={handleGrantSuccess}
+        memberMap={memberMap}
+        members={members}
       />
     </PageWrapper>
   );
 }
 
+function DelegationSkeletons({ count }: { count: number }) {
+  return (
+    <div className="divide-y divide-border/30">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 px-4 py-2.5">
+          <div className="space-y-1.5 flex-1">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface DelegationRowProps {
   delegation: Delegation;
+  memberMap: Map<string, string>;
+  nameField: "delegatorId" | "delegateeId";
   canRevoke?: boolean;
   onRevoke?: (id: string) => void;
   isRevoking?: boolean;
-  isExpired?: boolean;
+  isInactive?: boolean;
 }
 
 function DelegationRow({
   delegation,
+  memberMap,
+  nameField,
   canRevoke,
   onRevoke,
   isRevoking,
-  isExpired,
+  isInactive,
 }: DelegationRowProps) {
   const handleRevoke = useCallback(
     () => onRevoke?.(delegation.id),
     [delegation.id, onRevoke],
   );
+
+  const principalId = delegation[nameField];
+  const displayName = memberMap.get(principalId) ?? principalId.slice(0, 12);
   const isRevoked = delegation.status === "REVOKED";
-  const isExpiredByTime =
+  const isExpired =
     !isRevoked && new Date(delegation.endsAt) <= new Date();
 
   return (
-    <div className="flex items-center justify-between rounded-lg border p-3 gap-3">
-      <div className="flex-1 min-w-0">
+    <div className="flex items-center gap-3 px-4 py-2.5">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium truncate">
-            {delegation.delegateeId}
+          <span className="text-sm font-medium leading-none">{displayName}</span>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {delegation.permissions.length} permission
+            {delegation.permissions.length !== 1 ? "s" : ""}
           </span>
-          <div className="flex gap-1 flex-wrap">
-            {delegation.permissions.slice(0, 3).map((p) => (
-              <Badge key={p} variant="outline" className="text-xs font-mono">
-                {p}
-              </Badge>
-            ))}
-            {delegation.permissions.length > 3 && (
-              <Badge
-                variant="outline"
-                className="text-xs text-muted-foreground"
-              >
-                +{delegation.permissions.length - 3} more
-              </Badge>
-            )}
-          </div>
-          {(isExpired || isRevoked || isExpiredByTime) && (
-            <Badge variant="outline" className="text-xs text-muted-foreground">
+          {isInactive && (
+            <Badge
+              variant="outline"
+              className="text-xs text-muted-foreground shrink-0"
+            >
               {isRevoked ? "Revoked" : "Expired"}
             </Badge>
           )}
         </div>
-        <div className="text-xs text-muted-foreground mt-0.5 flex gap-3 flex-wrap">
-          {delegation.reason && <span>{delegation.reason}</span>}
-          <span
-            className={isExpired || isExpiredByTime ? "text-red-500" : ""}
-          >
-            {isExpired || isExpiredByTime || isRevoked ? "Ended" : "Ends"}{" "}
-            {formatRelative(new Date(delegation.endsAt), new Date())}
-          </span>
-        </div>
+        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+          {isInactive ? "Ended" : "Ends"}{" "}
+          {formatRelative(new Date(delegation.endsAt), new Date())}
+          {delegation.reason && (
+            <span className="text-muted-foreground/60">
+              {" "}
+              · {delegation.reason}
+            </span>
+          )}
+        </p>
       </div>
-      {canRevoke && !isExpired && (
+      {canRevoke && !isInactive && onRevoke && (
         <Button
           variant="ghost"
-          size="sm"
-          className="h-8 text-destructive hover:bg-destructive/10"
+          size="icon"
+          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           onClick={handleRevoke}
           disabled={isRevoking}
+          aria-label="Revoke delegation"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          {isRevoking ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <X className="h-3.5 w-3.5" />
+          )}
         </Button>
       )}
     </div>
   );
 }
 
-interface GrantDelegationDialogProps {
+interface Member {
+  userId: string;
+  name: string | null;
+  email: string;
+}
+
+interface GrantDelegationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  memberMap: Map<string, string>;
+  members: Member[];
 }
 
-function GrantDelegationDialog({
+function GrantDelegationSheet({
   open,
   onOpenChange,
   onSuccess,
-}: GrantDelegationDialogProps) {
-  const employeesQuery = useHrEmployees({ limit: 500 });
+  members,
+}: GrantDelegationSheetProps) {
   const [permSearch, setPermSearch] = useState("");
 
-  const employees: Employee[] = (() => {
-    const data = employeesQuery.data;
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    return (data as { data?: Employee[] }).data ?? [];
-  })();
-
-  const filteredPermissions = PERMISSIONS.filter(
-    (p) =>
-      !permSearch ||
-      p.name.toLowerCase().includes(permSearch.toLowerCase()) ||
-      p.description.toLowerCase().includes(permSearch.toLowerCase()),
-  );
-
-  const form = useForm<DelegationFormValues>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<DelegationFormValues>({
     resolver: zodResolver(delegationSchema),
     defaultValues: {
       delegateeId: "",
@@ -353,6 +395,9 @@ function GrantDelegationDialog({
       reason: "",
     },
   });
+
+  const delegateeId = watch("delegateeId");
+  const selectedPerms = watch("permissions");
 
   const mutation = useMutation({
     mutationFn: (values: DelegationFormValues) =>
@@ -365,197 +410,238 @@ function GrantDelegationDialog({
       }),
     onSuccess: () => {
       toast.success("Delegation created");
-      form.reset();
+      reset();
       setPermSearch("");
       onSuccess();
     },
     onError: (error) => toast.error(getApiError(error)),
   });
 
-  const handleSubmit = useCallback(
+  const handleDelegateeChange = useCallback(
+    (v: string) => setValue("delegateeId", v, { shouldValidate: true }),
+    [setValue],
+  );
+
+  const handlePermToggle = useCallback(
+    (permName: string, checked: boolean) => {
+      const current = selectedPerms ?? [];
+      setValue(
+        "permissions",
+        checked
+          ? [...current, permName]
+          : current.filter((p) => p !== permName),
+        { shouldValidate: true },
+      );
+    },
+    [selectedPerms, setValue],
+  );
+
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (!next) {
+        reset();
+        setPermSearch("");
+      }
+      onOpenChange(next);
+    },
+    [reset, onOpenChange],
+  );
+
+  const onSubmit = useCallback(
     (values: DelegationFormValues) => mutation.mutate(values),
     [mutation],
   );
 
-  const handleOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        form.reset();
-        setPermSearch("");
-      }
-      onOpenChange(open);
-    },
-    [form, onOpenChange],
+  const filteredPerms = useMemo(
+    () =>
+      PERMISSIONS.filter(
+        (p) =>
+          !permSearch ||
+          p.name.toLowerCase().includes(permSearch.toLowerCase()) ||
+          p.description.toLowerCase().includes(permSearch.toLowerCase()),
+      ),
+    [permSearch],
   );
 
   const today = new Date().toISOString().slice(0, 16);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Delegate Permissions</DialogTitle>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent className="sm:max-w-[400px] flex flex-col">
+        <SheetHeader className="pb-4">
+          <SheetTitle>Delegate permissions</SheetTitle>
+          <SheetDescription className="text-xs">
+            Share specific permissions with a team member for a set period.
+          </SheetDescription>
+        </SheetHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="delegateeId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Delegate to</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select employee…" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {employees.map((e) => (
-                        <SelectItem key={e.id} value={e.id}>
-                          {e.name ?? e.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          className="flex flex-col gap-3 flex-1 overflow-hidden"
+        >
+          <div className="space-y-1.5">
+            <Label htmlFor="del-to" className="text-xs">
+              Delegate to
+            </Label>
+            <Select value={delegateeId} onValueChange={handleDelegateeChange}>
+              <SelectTrigger id="del-to" className="h-9">
+                <SelectValue placeholder="Select team member…" />
+              </SelectTrigger>
+              <SelectContent>
+                {members.map((m) => (
+                  <SelectItem key={m.userId} value={m.userId}>
+                    {m.name ?? m.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.delegateeId && (
+              <p className="text-xs text-destructive">
+                {errors.delegateeId.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1.5 flex-1 min-h-0 flex flex-col">
+            <Label className="text-xs">
+              Permissions{" "}
+              {selectedPerms.length > 0 && (
+                <span className="text-muted-foreground font-normal">
+                  ({selectedPerms.length} selected)
+                </span>
               )}
-            />
-
-            <FormField
-              control={form.control}
-              name="permissions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Permissions ({field.value.length} selected)
-                  </FormLabel>
-                  <div className="border rounded-md">
-                    <div className="p-2 border-b">
-                      <Input
-                        placeholder="Search permissions…"
-                        value={permSearch}
-                        onChange={(e) => setPermSearch(e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                    <ScrollArea className="h-40">
-                      <div className="p-2 space-y-1">
-                        {filteredPermissions.map((perm) => (
-                          <PermissionCheckboxItem
-                            key={perm.name}
-                            perm={perm}
-                            checked={field.value.includes(perm.name)}
-                            onCheckedChange={(checked) => {
-                              const next = checked
-                                ? [...field.value, perm.name]
-                                : field.value.filter((p) => p !== perm.name);
-                              field.onChange(next);
-                            }}
-                          />
-                        ))}
-                        {filteredPermissions.length === 0 && (
-                          <p className="text-xs text-muted-foreground text-center py-4">
-                            No permissions match
-                          </p>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="startsAt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Starts at</FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" min={today} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="endsAt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ends at</FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" min={today} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="reason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reason (optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g. Covering annual leave"
-                      {...field}
+            </Label>
+            <div className="border rounded-md flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-2 border-b shrink-0">
+                <Input
+                  placeholder="Search permissions…"
+                  value={permSearch}
+                  onChange={(e) => setPermSearch(e.target.value)}
+                  className="h-7 text-xs"
+                />
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-1.5 space-y-0.5">
+                  {filteredPerms.map((perm) => (
+                    <PermissionItem
+                      key={perm.name}
+                      perm={perm}
+                      checked={selectedPerms.includes(perm.name)}
+                      onToggle={handlePermToggle}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  ))}
+                  {filteredPerms.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-4">
+                      No permissions match
+                    </p>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+            {errors.permissions && (
+              <p className="text-xs text-destructive">
+                {errors.permissions.message}
+              </p>
+            )}
+          </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-                disabled={mutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Delegating…" : "Delegate"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          <div className="grid grid-cols-2 gap-3 shrink-0">
+            <div className="space-y-1.5">
+              <Label htmlFor="del-start" className="text-xs">
+                Starts at
+              </Label>
+              <Input
+                id="del-start"
+                type="datetime-local"
+                min={today}
+                className="h-9"
+                aria-invalid={Boolean(errors.startsAt)}
+                {...register("startsAt")}
+              />
+              {errors.startsAt && (
+                <p className="text-xs text-destructive">
+                  {errors.startsAt.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="del-end" className="text-xs">
+                Ends at
+              </Label>
+              <Input
+                id="del-end"
+                type="datetime-local"
+                min={today}
+                className="h-9"
+                aria-invalid={Boolean(errors.endsAt)}
+                {...register("endsAt")}
+              />
+              {errors.endsAt && (
+                <p className="text-xs text-destructive">
+                  {errors.endsAt.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1.5 shrink-0">
+            <Label
+              htmlFor="del-reason"
+              className="text-xs text-muted-foreground"
+            >
+              Reason <span className="font-normal">(optional)</span>
+            </Label>
+            <Input
+              id="del-reason"
+              className="h-9"
+              placeholder="e.g. Covering annual leave"
+              {...register("reason")}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-1 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleOpenChange(false)}
+              disabled={mutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={mutation.isPending}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              {mutation.isPending && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+              )}
+              Delegate
+            </Button>
+          </div>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 }
 
-interface PermissionCheckboxItemProps {
+interface PermissionItemProps {
   perm: { name: string; description: string };
   checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
+  onToggle: (name: string, checked: boolean) => void;
 }
 
-function PermissionCheckboxItem({
-  perm,
-  checked,
-  onCheckedChange,
-}: PermissionCheckboxItemProps) {
+function PermissionItem({ perm, checked, onToggle }: PermissionItemProps) {
   const handleChange = useCallback(
-    (v: boolean | "indeterminate") => onCheckedChange(v === true),
-    [onCheckedChange],
+    (v: boolean | "indeterminate") => onToggle(perm.name, v === true),
+    [perm.name, onToggle],
   );
 
   return (
-    <label className="flex items-start gap-2 cursor-pointer rounded p-1 hover:bg-muted/50">
+    <label className="flex items-start gap-2 cursor-pointer rounded px-1.5 py-1 hover:bg-muted/50 transition-colors">
       <Checkbox
         checked={checked}
         onCheckedChange={handleChange}

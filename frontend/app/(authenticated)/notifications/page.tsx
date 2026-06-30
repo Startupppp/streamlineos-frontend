@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, Loader2, Filter, X } from "lucide-react";
+import { CheckCheck, Loader2, Filter, X, Inbox } from "lucide-react";
 import {
   useNotifications,
   useUnreadNotificationCount,
@@ -27,8 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyInboxIllustration } from "@/components/illustrations";
 import { NotificationCard } from "@/features/notifications/notification-card";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 import { ErrorState } from "@/components/shared/error-state";
@@ -177,9 +175,9 @@ export default function NotificationsPage() {
   }, [activeSection]);
 
   const emptyDescription = useMemo(() => {
-    if (activeSection === "UNREAD") return "All your notifications have been read. Check back later for new updates.";
+    if (activeSection === "UNREAD") return "All notifications have been read.";
     if (activeSection === "ARCHIVED") return "Notifications you archive will appear here.";
-    if (activeSection === "PINNED") return "Pin important notifications to keep them at the top.";
+    if (activeSection === "PINNED") return "Pin important notifications to keep them visible.";
     return "When something important happens, you'll see it here.";
   }, [activeSection]);
 
@@ -244,10 +242,7 @@ export default function NotificationsPage() {
 
           {showFilters && (
             <div className="flex items-center gap-2 pt-3 flex-wrap">
-              <Select
-                value={activeCategory ?? "ALL"}
-                onValueChange={handleCategoryChange}
-              >
+              <Select value={activeCategory ?? "ALL"} onValueChange={handleCategoryChange}>
                 <SelectTrigger className="h-8 w-[140px] text-xs">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
@@ -261,10 +256,7 @@ export default function NotificationsPage() {
                 </SelectContent>
               </Select>
 
-              <Select
-                value={activePriority ?? "ALL"}
-                onValueChange={handlePriorityChange}
-              >
+              <Select value={activePriority ?? "ALL"} onValueChange={handlePriorityChange}>
                 <SelectTrigger className="h-8 w-[130px] text-xs">
                   <SelectValue placeholder="Priority" />
                 </SelectTrigger>
@@ -294,17 +286,17 @@ export default function NotificationsPage() {
         </div>
       }
     >
-      <div className="space-y-3">
+      <div className="space-y-2">
         {selectedIds.size > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-muted/50">
-            <span className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5 px-3 py-2 border rounded-lg bg-muted/40 flex-wrap">
+            <span className="text-xs text-muted-foreground mr-1">
               {selectedIds.size} selected
             </span>
-            <div className="h-4 w-px bg-border" />
+            <div className="h-3.5 w-px bg-border" />
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-xs"
+              className="h-6 text-xs px-2"
               onClick={handleBulkMarkRead}
               disabled={bulkMarkRead.isPending}
             >
@@ -313,7 +305,7 @@ export default function NotificationsPage() {
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-xs"
+              className="h-6 text-xs px-2"
               onClick={handleBulkArchive}
               disabled={bulkArchive.isPending}
             >
@@ -322,29 +314,19 @@ export default function NotificationsPage() {
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-xs text-destructive hover:text-destructive"
+              className="h-6 text-xs px-2 text-destructive hover:text-destructive"
               onClick={handleBulkDelete}
               disabled={bulkDelete.isPending}
             >
               Delete
             </Button>
-            <div className="h-4 w-px bg-border" />
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 text-xs"
-              onClick={handleSelectAll}
-            >
+            <div className="h-3.5 w-px bg-border" />
+            <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={handleSelectAll}>
               Select all
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 text-xs text-muted-foreground"
-              onClick={handleDeselectAll}
-            >
+            <button type="button" onClick={handleDeselectAll} className="ml-auto text-muted-foreground hover:text-foreground">
               <X className="h-3 w-3" />
-            </Button>
+            </button>
           </div>
         )}
 
@@ -357,13 +339,13 @@ export default function NotificationsPage() {
             onRetry={handleRetry}
           />
         ) : items.length === 0 ? (
-          <EmptyState
-            illustration={<EmptyInboxIllustration className="h-32 w-32" />}
-            title={emptyTitle}
-            description={emptyDescription}
-          />
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Inbox className="h-10 w-10 text-muted-foreground/25 mb-3" />
+            <p className="text-sm font-medium text-foreground">{emptyTitle}</p>
+            <p className="text-xs text-muted-foreground mt-1 max-w-xs">{emptyDescription}</p>
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
             {items.map((n: Notification) => (
               <NotificationCard
                 key={n.id}

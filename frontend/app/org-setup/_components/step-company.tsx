@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { WizardData } from "../_lib/types";
-import { TEAM_SIZES, COUNTRIES, TIMEZONES, CURRENCIES } from "../_lib/constants";
+import { TEAM_SIZES } from "../_lib/constants";
 import { NavButtons } from "./nav-buttons";
 
 type StepCompanyProps = {
@@ -29,10 +29,6 @@ export function StepCompany({ data, patch, onBack, onNext }: StepCompanyProps) {
     }
     if (!data.teamSize) {
       toast.error("Select your team size");
-      return;
-    }
-    if (!data.country) {
-      toast.error("Select your country");
       return;
     }
     onNext();
@@ -77,51 +73,6 @@ export function StepCompany({ data, patch, onBack, onNext }: StepCompanyProps) {
             ))}
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-[13px] font-medium">
-          Country <span className="text-destructive">*</span>
-        </Label>
-        <Select onValueChange={(v) => patch({ country: v })} value={data.country}>
-          <SelectTrigger className="h-9 text-sm">
-            <SelectValue placeholder="Select country" />
-          </SelectTrigger>
-          <SelectContent>
-            {COUNTRIES.map((c) => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1.5">
-          <Label className="text-[13px] font-medium">Timezone</Label>
-          <Select onValueChange={(v) => patch({ timezone: v })} value={data.timezone}>
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TIMEZONES.map((tz) => (
-                <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-[13px] font-medium">Currency</Label>
-          <Select onValueChange={(v) => patch({ currency: v })} value={data.currency}>
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCIES.map((c) => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <NavButtons onBack={onBack} onNext={handleNext} />

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { toast } from "sonner";
 import {
   ReactFlow,
@@ -36,7 +35,6 @@ import {
   ArrowLeft,
   Save,
   Upload,
-  ChevronRight,
   Settings,
   X,
 } from "lucide-react";
@@ -44,11 +42,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   useWorkflow,
   usePublishWorkflow,
   useUpdateWorkflow,
+  type Workflow,
   type NodeType,
   type WorkflowStatus,
 } from "@/hooks/api/workflows";
@@ -165,13 +163,34 @@ const NODE_PALETTE: Array<{
   },
 ];
 
-const NODE_PALETTE_MAP = Object.fromEntries(NODE_PALETTE.map((n) => [n.nodeType, n])) as Record<NodeType, typeof NODE_PALETTE[0]>;
+const NODE_PALETTE_MAP = Object.fromEntries(NODE_PALETTE.map((n) => [n.nodeType, n])) as Record<
+  NodeType,
+  (typeof NODE_PALETTE)[0]
+>;
 
 const STATUS_BADGE: Record<WorkflowStatus, { label: string; cls: string }> = {
   draft: { label: "Draft", cls: "bg-slate-100 text-slate-600 border-slate-200" },
   published: { label: "Published", cls: "bg-green-50 text-green-700 border-green-200" },
   disabled: { label: "Disabled", cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
   archived: { label: "Archived", cls: "bg-red-50 text-red-700 border-red-200" },
+};
+
+const DEFAULT_NODES: WorkflowNode[] = [
+  {
+    id: "trigger-1",
+    type: "workflowNode",
+    position: { x: 200, y: 120 },
+    data: {
+      label: "Trigger",
+      nodeType: "trigger",
+      configuration: {},
+      description: "Start your workflow here",
+    },
+  },
+];
+
+const DEFAULT_EDGE_OPTIONS = {
+  style: { stroke: "#94a3b8", strokeWidth: 1.5 },
 };
 
 function WorkflowNodeComponent({
@@ -183,12 +202,13 @@ function WorkflowNodeComponent({
 }) {
   const palette = NODE_PALETTE_MAP[data.nodeType];
   if (!palette) return null;
-
   return (
     <div
       className={cn(
         "rounded-xl border-2 bg-white shadow-md min-w-[160px] max-w-[220px] transition-all duration-150",
-        selected ? "border-violet-500 shadow-violet-200/60 shadow-lg ring-2 ring-violet-200" : palette.border,
+        selected
+          ? "border-violet-500 shadow-violet-200/60 shadow-lg ring-2 ring-violet-200"
+          : palette.border,
       )}
     >
       <div className={cn("flex items-center gap-2 px-3 py-2 rounded-t-[10px]", palette.bg)}>
@@ -204,14 +224,7 @@ function WorkflowNodeComponent({
   );
 }
 
-const nodeTypes: NodeTypes = {
-  workflowNode: WorkflowNodeComponent,
-};
-
-const defaultEdgeOptions = {
-  style: { stroke: "#94a3b8", strokeWidth: 1.5 },
-  animated: false,
-};
+const nodeTypes: NodeTypes = { workflowNode: WorkflowNodeComponent };
 
 interface NodeConfigPanelProps {
   node: WorkflowNode;
@@ -248,11 +261,7 @@ function NodeConfigPanel({ node, onChange, onClose }: NodeConfigPanelProps) {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-foreground">Label</label>
-          <Input
-            value={node.data.label}
-            onChange={handleLabelChange}
-            className="h-8 text-sm"
-          />
+          <Input value={node.data.label} onChange={handleLabelChange} className="h-8 text-sm" />
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-foreground">Description</label>
@@ -279,11 +288,7 @@ function NodeConfigPanel({ node, onChange, onClose }: NodeConfigPanelProps) {
   );
 }
 
-interface PaletteItemProps {
-  item: typeof NODE_PALETTE[0];
-}
-
-function PaletteItem({ item }: PaletteItemProps) {
+function PaletteItem({ item }: { item: (typeof NODE_PALETTE)[0] }) {
   function handleDragStart(e: React.DragEvent) {
     e.dataTransfer.setData("application/reactflow", JSON.stringify({ nodeType: item.nodeType }));
     e.dataTransfer.effectAllowed = "move";
@@ -308,49 +313,46 @@ function PaletteItem({ item }: PaletteItemProps) {
   );
 }
 
-const initialNodes: WorkflowNode[] = [
-  {
-    id: "trigger-1",
-    type: "workflowNode",
-    position: { x: 200, y: 120 },
-    data: {
-      label: "Trigger",
-      nodeType: "trigger",
-      configuration: {},
-      description: "Start your workflow here",
-    },
-  },
-];
+function extractDefinitionNodes(workflow: Workflow): WorkflowNode[] {
+  const def = workflow.definitionJson;
+  if (!def) return DEFAULT_NODES;
+  const nodes = def['nodes'];
+  return Array.isArray(nodes) && nodes.length > 0 ? (nodes as WorkflowNode[]) : DEFAULT_NODES;
+}
 
-function BuilderCanvas({ workflowId }: { workflowId: string }) {
+function extractDefinitionEdges(workflow: Workflow): WorkflowEdge[] {
+  const def = workflow.definitionJson;
+  if (!def) return [];
+  const edges = def['edges'];
+  return Array.isArray(edges) ? (edges as WorkflowEdge[]) : [];
+}
+
+interface BuilderCanvasProps {
+  workflow: Workflow;
+  workflowId: string;
+}
+
+function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
   const router = useRouter();
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
 
-  const { data: workflow } = useWorkflow(workflowId);
   const updateWorkflow = useUpdateWorkflow();
   const publishWorkflow = usePublishWorkflow();
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<WorkflowNode>(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<WorkflowEdge>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<WorkflowNode>(
+    extractDefinitionNodes(workflow),
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState<WorkflowEdge>(
+    extractDefinitionEdges(workflow),
+  );
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
-  const [workflowName, setWorkflowName] = useState("");
+  const [workflowName, setWorkflowName] = useState(workflow.name);
   const [editingName, setEditingName] = useState(false);
 
-  useEffect(() => {
-    if (!workflow) return;
-    setWorkflowName(workflow.name);
-    const def = workflow as unknown as { definitionJson?: { nodes?: WorkflowNode[]; edges?: WorkflowEdge[] } };
-    if (def.definitionJson?.nodes?.length) {
-      setNodes(def.definitionJson.nodes);
-    }
-    if (def.definitionJson?.edges?.length) {
-      setEdges(def.definitionJson.edges);
-    }
-  }, [workflow, setNodes, setEdges]);
-
   const onConnect = useCallback(
-    (connection: Connection) => setEdges((eds) => addEdge({ ...connection, ...defaultEdgeOptions }, eds)),
+    (connection: Connection) =>
+      setEdges((eds) => addEdge({ ...connection, ...DEFAULT_EDGE_OPTIONS }, eds)),
     [setEdges],
   );
 
@@ -365,11 +367,7 @@ function BuilderCanvas({ workflowId }: { workflowId: string }) {
       id: `${nodeType}-${Date.now()}`,
       type: "workflowNode",
       position,
-      data: {
-        label: palette?.label ?? nodeType,
-        nodeType,
-        configuration: {},
-      },
+      data: { label: palette?.label ?? nodeType, nodeType, configuration: {} },
     };
     setNodes((nds) => [...nds, newNode]);
   }
@@ -388,9 +386,7 @@ function BuilderCanvas({ workflowId }: { workflowId: string }) {
   }
 
   function handleNodeDataChange(id: string, data: Partial<WorkflowNodeData>) {
-    setNodes((nds) =>
-      nds.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...data } } : n)),
-    );
+    setNodes((nds) => nds.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...data } } : n)));
     setSelectedNode((prev) =>
       prev?.id === id ? { ...prev, data: { ...prev.data, ...data } } : prev,
     );
@@ -413,13 +409,21 @@ function BuilderCanvas({ workflowId }: { workflowId: string }) {
   function handleNameKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Escape") {
       setEditingName(false);
-      setWorkflowName(workflow?.name ?? "");
+      setWorkflowName(workflow.name);
     }
+  }
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setWorkflowName(e.target.value);
+  }
+
+  function handleStartEditing() {
+    setEditingName(true);
   }
 
   function handleSave() {
     updateWorkflow.mutate(
-      { id: workflowId, name: workflowName || (workflow?.name ?? "Untitled") },
+      { id: workflowId, name: workflowName },
       {
         onSuccess: () => toast.success("Draft saved"),
         onError: () => toast.error("Failed to save"),
@@ -441,17 +445,16 @@ function BuilderCanvas({ workflowId }: { workflowId: string }) {
     router.push(`/workflows/${workflowId}`);
   }
 
-  const status = workflow?.status;
-  const statusBadge = status ? STATUS_BADGE[status] : null;
+  const statusBadge = STATUS_BADGE[workflow.status];
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-50">
       <div className="w-56 shrink-0 border-r border-slate-200 bg-white flex flex-col shadow-sm">
         <div className="px-3 py-3 border-b border-slate-100">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Nodes
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            Node Palette
           </p>
-          <p className="text-[10px] text-muted-foreground">Drag onto canvas</p>
+          <p className="text-[10px] text-muted-foreground">Drag nodes onto canvas</p>
         </div>
         <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
           {NODE_PALETTE.map((item) => (
@@ -469,15 +472,13 @@ function BuilderCanvas({ workflowId }: { workflowId: string }) {
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-
           <div className="h-4 w-px bg-slate-200" />
-
           {editingName ? (
             <form onSubmit={handleNameSubmit} className="flex-1 max-w-xs">
               <Input
                 autoFocus
                 value={workflowName}
-                onChange={(e) => setWorkflowName(e.target.value)}
+                onChange={handleNameChange}
                 onBlur={handleNameSubmit}
                 onKeyDown={handleNameKeyDown}
                 className="h-7 text-sm font-medium"
@@ -485,21 +486,22 @@ function BuilderCanvas({ workflowId }: { workflowId: string }) {
             </form>
           ) : (
             <button
-              onClick={() => setEditingName(true)}
+              onClick={handleStartEditing}
               className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-violet-600 transition-colors group"
               title="Click to rename"
             >
-              {workflowName || workflow?.name || "Untitled Workflow"}
+              {workflowName}
               <Settings className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           )}
-
-          {statusBadge && (
-            <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border", statusBadge.cls)}>
-              {statusBadge.label}
-            </span>
-          )}
-
+          <span
+            className={cn(
+              "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border",
+              statusBadge.cls,
+            )}
+          >
+            {statusBadge.label}
+          </span>
           <div className="ml-auto flex items-center gap-2">
             <Button
               variant="outline"
@@ -525,7 +527,7 @@ function BuilderCanvas({ workflowId }: { workflowId: string }) {
 
         <div className="flex-1 min-h-0 flex">
           <div
-            ref={reactFlowWrapper}
+            ref={canvasRef}
             className="flex-1"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -539,26 +541,14 @@ function BuilderCanvas({ workflowId }: { workflowId: string }) {
               onNodeClick={handleNodeClick}
               onPaneClick={handlePaneClick}
               nodeTypes={nodeTypes}
-              defaultEdgeOptions={defaultEdgeOptions}
+              defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
               fitView
               deleteKeyCode="Delete"
               className="bg-slate-50"
             >
-              <Background
-                variant={BackgroundVariant.Dots}
-                gap={20}
-                size={1}
-                color="#cbd5e1"
-              />
+              <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#cbd5e1" />
               <Controls className="border border-slate-200 shadow-sm rounded-lg overflow-hidden" />
-              <MiniMap
-                className="border border-slate-200 shadow-sm rounded-lg overflow-hidden"
-                nodeColor={(n) => {
-                  const nt = (n.data as WorkflowNodeData)?.nodeType;
-                  const p = nt ? NODE_PALETTE_MAP[nt] : null;
-                  return p ? "" : "#e2e8f0";
-                }}
-              />
+              <MiniMap className="border border-slate-200 shadow-sm rounded-lg overflow-hidden" />
               <Panel position="bottom-center">
                 <div className="bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full px-4 py-1.5 shadow-sm flex items-center gap-3 text-[11px] text-muted-foreground">
                   <span>{nodes.length} node{nodes.length !== 1 ? "s" : ""}</span>
@@ -584,11 +574,42 @@ function BuilderCanvas({ workflowId }: { workflowId: string }) {
   );
 }
 
-export default function WorkflowBuilderPage() {
-  const params = useParams<{ workflowId: string }>();
+function BuilderGate({ workflowId }: { workflowId: string }) {
+  const { data: workflow, isLoading, isError } = useWorkflow(workflowId);
+  const router = useRouter();
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-slate-50 h-screen">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-slate-500">Loading workflow builder…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !workflow) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-slate-50 h-screen">
+        <div className="text-center space-y-3">
+          <p className="text-sm font-medium text-foreground">Workflow not found</p>
+          <Button variant="outline" size="sm" onClick={() => router.push("/workflows")}>
+            Back to Workflows
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ReactFlowProvider>
-      <BuilderCanvas workflowId={params.workflowId} />
+      <BuilderCanvas workflow={workflow} workflowId={workflowId} />
     </ReactFlowProvider>
   );
+}
+
+export default function WorkflowBuilderPage() {
+  const params = useParams<{ workflowId: string }>();
+  return <BuilderGate workflowId={params.workflowId} />;
 }

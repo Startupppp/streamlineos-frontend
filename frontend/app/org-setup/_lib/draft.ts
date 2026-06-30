@@ -1,6 +1,8 @@
 import type { WizardData } from "./types";
 import { DEFAULT_DATA, DRAFT_KEY } from "./constants";
 
+const STEP_KEY = "org-setup-step";
+
 function isInvitee(v: unknown): v is { email: string; role: string } {
   if (typeof v !== "object" || v === null) return false;
   const obj = v as Record<string, unknown>;
@@ -19,9 +21,6 @@ export function loadDraft(): WizardData {
       industry: typeof p.industry === "string" ? p.industry : DEFAULT_DATA.industry,
       companyName: typeof p.companyName === "string" ? p.companyName : DEFAULT_DATA.companyName,
       teamSize: typeof p.teamSize === "string" ? p.teamSize : DEFAULT_DATA.teamSize,
-      country: typeof p.country === "string" ? p.country : DEFAULT_DATA.country,
-      timezone: typeof p.timezone === "string" ? p.timezone : DEFAULT_DATA.timezone,
-      currency: typeof p.currency === "string" ? p.currency : DEFAULT_DATA.currency,
       installedApps: Array.isArray(p.installedApps)
         ? p.installedApps.filter((m): m is string => typeof m === "string")
         : DEFAULT_DATA.installedApps,
@@ -40,8 +39,25 @@ export function saveDraft(data: WizardData): void {
   } catch {}
 }
 
+export function loadStep(): number {
+  try {
+    const raw = localStorage.getItem(STEP_KEY);
+    const n = raw ? parseInt(raw, 10) : 1;
+    return Number.isFinite(n) && n >= 1 ? n : 1;
+  } catch {
+    return 1;
+  }
+}
+
+export function saveStep(step: number): void {
+  try {
+    localStorage.setItem(STEP_KEY, String(step));
+  } catch {}
+}
+
 export function clearDraft(): void {
   try {
     localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(STEP_KEY);
   } catch {}
 }

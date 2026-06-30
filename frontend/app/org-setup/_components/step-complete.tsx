@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback } from "react";
+import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import type { WizardData } from "../_lib/types";
 import { NEXT_ACTIONS } from "../_lib/constants";
 import { clearDraft } from "../_lib/draft";
@@ -16,10 +15,16 @@ type StepCompleteProps = {
 export function StepComplete({ data }: StepCompleteProps) {
   const { update } = useSession();
 
-  const handleEnterWorkspace = useCallback(async () => {
-    clearDraft();
-    try { await update(); } catch {}
-    window.location.href = "/dashboard";
+  useEffect(() => {
+    let cancelled = false;
+    async function redirect() {
+      clearDraft();
+      try { await update(); } catch {}
+      if (!cancelled) window.location.href = "/dashboard";
+    }
+    // Small delay so the user sees the success screen briefly
+    const timer = setTimeout(redirect, 2200);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [update]);
 
   return (
@@ -49,7 +54,7 @@ export function StepComplete({ data }: StepCompleteProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="space-y-0 text-left border border-border rounded-lg divide-y divide-border"
+        className="text-left border border-border rounded-lg divide-y divide-border"
       >
         {[
           { label: "Industry", value: data.industry || "General" },
@@ -81,7 +86,7 @@ export function StepComplete({ data }: StepCompleteProps) {
               transition={{ delay: 0.32 + i * 0.06 }}
               className="flex items-center gap-2 text-[13px] text-foreground"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 shrink-0" />
+              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
               {action}
             </motion.li>
           ))}
@@ -89,16 +94,13 @@ export function StepComplete({ data }: StepCompleteProps) {
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.55 }}
+        className="flex items-center justify-center gap-2 text-[13px] text-muted-foreground"
       >
-        <Button
-          className="w-full h-9 text-sm gap-1.5"
-          onClick={handleEnterWorkspace}
-        >
-          Enter Workspace <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Redirecting to your workspace…
       </motion.div>
     </div>
   );

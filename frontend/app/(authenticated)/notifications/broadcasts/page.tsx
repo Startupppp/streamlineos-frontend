@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Sheet,
@@ -33,7 +32,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import {
@@ -375,22 +373,32 @@ export default function BroadcastsPage() {
       }
     >
       {isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-lg" />
+        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-3 px-3 py-2.5">
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-48" />
+                <Skeleton className="h-3 w-full max-w-sm" />
+              </div>
+            </div>
           ))}
         </div>
       ) : isError ? (
         <ErrorState title="Failed to load broadcasts" description="Could not load broadcasts." onRetry={handleRetry} />
       ) : items.length === 0 ? (
-        <EmptyState
-          illustration={<Megaphone className="h-16 w-16 text-muted-foreground/40" />}
-          title="No broadcasts"
-          description="Send an announcement to your entire team or specific groups."
-          action={{ label: "New Broadcast", onClick: handleCreate }}
-        />
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <Megaphone className="h-10 w-10 text-muted-foreground/25 mb-3" />
+          <p className="text-sm font-medium text-foreground">No broadcasts</p>
+          <p className="text-xs text-muted-foreground mt-1 mb-4 max-w-xs">
+            Send an announcement to your entire team or specific groups.
+          </p>
+          <Button size="sm" onClick={handleCreate}>
+            <Plus className="mr-2 h-3.5 w-3.5" />
+            New Broadcast
+          </Button>
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
           {items.map((b) => {
             const statusCfg = STATUS_CONFIG[b.status] ?? STATUS_CONFIG.DRAFT;
             const canPublish = b.status === "DRAFT" || b.status === "SCHEDULED";
@@ -398,76 +406,74 @@ export default function BroadcastsPage() {
             const canEdit = b.status === "DRAFT" || b.status === "SCHEDULED";
             const canDelete = b.status === "DRAFT" || b.status === "FAILED" || b.status === "CANCELLED" || b.status === "SENT";
             return (
-              <Card key={b.id} className="group">
-                <CardContent className="p-4 flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium truncate">{b.title}</span>
-                      <Badge variant="outline" className={cn("text-[10px] h-4 px-1.5", statusCfg.className)}>
-                        {statusCfg.label}
-                      </Badge>
-                      <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
-                        {NOTIFICATION_CATEGORY_CONFIG[b.category]?.label ?? b.category}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{b.message}</p>
-                    <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground/70">
-                      {b.status === "SENT" && (
-                        <span>{b.deliveredCount} / {b.recipientCount} delivered</span>
-                      )}
-                      {b.scheduledAt && <span>Scheduled {formatDate(b.scheduledAt)}</span>}
-                      {b.sentAt && <span>Sent {formatDate(b.sentAt)}</span>}
-                      <span>Audience: {b.audience?.type ?? "all"}</span>
-                    </div>
+              <div key={b.id} className="group flex items-start gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm font-medium truncate">{b.title}</span>
+                    <Badge variant="outline" className={cn("text-[10px] h-4 px-1.5 shrink-0", statusCfg.className)}>
+                      {statusCfg.label}
+                    </Badge>
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+                      {NOTIFICATION_CATEGORY_CONFIG[b.category]?.label ?? b.category}
+                    </Badge>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    {canPublish && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => setPublishTarget(b)}
-                      >
-                        <Send className="h-3 w-3" />
-                        Send
-                      </Button>
+                  <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{b.message}</p>
+                  <div className="flex items-center gap-3 mt-0.5 text-[11px] text-muted-foreground/60">
+                    {b.status === "SENT" && (
+                      <span>{b.deliveredCount} / {b.recipientCount} delivered</span>
                     )}
-                    {canCancel && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => setCancelTarget(b)}
-                        title="Cancel"
-                      >
-                        <X className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Button>
-                    )}
-                    {canEdit && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleEdit(b)}
-                        title="Edit"
-                      >
-                        <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Button>
-                    )}
-                    {canDelete && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 hover:text-destructive"
-                        onClick={() => setDeleteTarget(b)}
-                        title="Delete"
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Button>
-                    )}
+                    {b.scheduledAt && <span>Scheduled {formatDate(b.scheduledAt)}</span>}
+                    {b.sentAt && <span>Sent {formatDate(b.sentAt)}</span>}
+                    <span>Audience: {b.audience?.type ?? "all"}</span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  {canPublish && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-xs gap-1 px-2"
+                      onClick={() => setPublishTarget(b)}
+                    >
+                      <Send className="h-3 w-3" />
+                      Send
+                    </Button>
+                  )}
+                  {canCancel && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setCancelTarget(b)}
+                      title="Cancel"
+                    >
+                      <X className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  )}
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleEdit(b)}
+                      title="Edit"
+                    >
+                      <Edit2 className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  )}
+                  {canDelete && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 hover:text-destructive"
+                      onClick={() => setDeleteTarget(b)}
+                      title="Delete"
+                    >
+                      <Trash2 className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>
@@ -480,8 +486,10 @@ export default function BroadcastsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Send broadcast?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{publishTarget?.title}" will be sent to{" "}
-              {publishTarget?.scheduledAt ? `all recipients at ${formatDate(publishTarget.scheduledAt)}` : "all recipients immediately"}.
+              &ldquo;{publishTarget?.title}&rdquo; will be sent to{" "}
+              {publishTarget?.scheduledAt
+                ? `all recipients at ${formatDate(publishTarget.scheduledAt)}`
+                : "all recipients immediately"}.
               This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -499,7 +507,7 @@ export default function BroadcastsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel broadcast?</AlertDialogTitle>
             <AlertDialogDescription>
-              Stop sending "{cancelTarget?.title}". Recipients who already received it will not be affected.
+              Stop sending &ldquo;{cancelTarget?.title}&rdquo;. Recipients who already received it will not be affected.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -520,7 +528,7 @@ export default function BroadcastsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete broadcast?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{deleteTarget?.title}" will be permanently deleted.
+              &ldquo;{deleteTarget?.title}&rdquo; will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

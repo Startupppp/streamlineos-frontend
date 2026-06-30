@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { BarChart3, TrendingUp, Mail, CheckCircle2 } from "lucide-react";
+import { BarChart3, TrendingUp, Mail, BookOpen } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,34 +25,35 @@ const DAY_OPTIONS = [
   { value: "90", label: "Last 90 days" },
 ];
 
-function StatCard({
-  title,
+const PRIORITY_COLORS: Record<string, string> = {
+  CRITICAL: "bg-red-500",
+  HIGH: "bg-amber-500",
+  NORMAL: "bg-blue-500",
+  LOW: "bg-slate-400",
+};
+
+function MetricItem({
+  label,
   value,
   subtitle,
   icon: Icon,
-  color,
 }: {
-  title: string;
+  label: string;
   value: string | number;
   subtitle?: string;
   icon: React.ElementType;
-  color: string;
 }) {
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <p className="text-xs text-muted-foreground font-medium">{title}</p>
-            <p className="text-2xl font-bold mt-0.5">{value}</p>
-            {subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</p>}
-          </div>
-          <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center shrink-0", color)}>
-            <Icon className="h-5 w-5 text-white" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex items-start gap-3 px-3 py-3 bg-card">
+      <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-lg font-bold text-foreground leading-tight">{value}</p>
+        {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
+      </div>
+    </div>
   );
 }
 
@@ -69,14 +70,14 @@ function BarRow({
 }) {
   const pct = max > 0 ? Math.round((count / max) * 100) : 0;
   return (
-    <div className="space-y-1">
+    <div className="px-3 py-2.5 space-y-1 bg-card">
       <div className="flex items-center justify-between text-xs">
-        <span className="font-medium">{label}</span>
-        <span className="text-muted-foreground">{count.toLocaleString()}</span>
+        <span className="font-medium text-foreground">{label}</span>
+        <span className="text-muted-foreground tabular-nums">{count.toLocaleString()}</span>
       </div>
-      <div className="h-2 rounded-full bg-muted overflow-hidden">
+      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
         <div
-          className={cn("h-full rounded-full transition-all", colorClass)}
+          className={cn("h-full rounded-full transition-all duration-300", colorClass)}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -118,7 +119,6 @@ export default function NotificationAnalyticsPage() {
     void refetchPrio();
   }
 
-  const isLoading = overviewLoading || catLoading || prioLoading;
   const isError = overviewError || catError || prioError;
 
   const catMax = byCategory?.length ? Math.max(...byCategory.map((c) => c.count)) : 0;
@@ -148,60 +148,64 @@ export default function NotificationAnalyticsPage() {
           onRetry={handleRetry}
         />
       ) : (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {isLoading || !overview ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-xl" />
-              ))
-            ) : (
-              <>
-                <StatCard
-                  title="Total Sent"
-                  value={overview.total.toLocaleString()}
-                  icon={BarChart3}
-                  color="bg-blue-500"
-                />
-                <StatCard
-                  title="Delivered"
-                  value={overview.delivered.toLocaleString()}
-                  subtitle={`${overview.deliveryRate}% delivery rate`}
-                  icon={TrendingUp}
-                  color="bg-emerald-500"
-                />
-                <StatCard
-                  title="Read"
-                  value={overview.read.toLocaleString()}
-                  subtitle={`${overview.readRate}% read rate`}
-                  icon={CheckCircle2}
-                  color="bg-violet-500"
-                />
-                <StatCard
-                  title="Archived"
-                  value={overview.archived.toLocaleString()}
-                  icon={Mail}
-                  color="bg-amber-500"
-                />
-              </>
-            )}
+        <div className="space-y-4">
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
+            <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-border">
+              {overviewLoading || !overview ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="p-3">
+                    <Skeleton className="h-3 w-20 mb-2" />
+                    <Skeleton className="h-6 w-12" />
+                  </div>
+                ))
+              ) : (
+                <>
+                  <MetricItem
+                    label="Total Sent"
+                    value={overview.total.toLocaleString()}
+                    icon={BarChart3}
+                  />
+                  <MetricItem
+                    label="Delivered"
+                    value={overview.delivered.toLocaleString()}
+                    subtitle={`${overview.deliveryRate}% delivery rate`}
+                    icon={TrendingUp}
+                  />
+                  <MetricItem
+                    label="Read"
+                    value={overview.read.toLocaleString()}
+                    subtitle={`${overview.readRate}% read rate`}
+                    icon={BookOpen}
+                  />
+                  <MetricItem
+                    label="Archived"
+                    value={overview.archived.toLocaleString()}
+                    icon={Mail}
+                  />
+                </>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold">By Category</CardTitle>
+              <CardHeader className="px-3 py-2.5 border-b border-border">
+                <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">By Category</CardTitle>
               </CardHeader>
-              <CardContent className="p-4 pt-0">
+              <CardContent className="p-0">
                 {catLoading ? (
-                  <div className="space-y-3">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <Skeleton key={i} className="h-8 rounded" />
+                  <div className="divide-y divide-border">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="px-3 py-2.5 space-y-1.5">
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-1.5 rounded-full" />
+                      </div>
                     ))}
                   </div>
                 ) : !byCategory?.length ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No data</p>
+                  <p className="text-sm text-muted-foreground text-center py-6">No data</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="divide-y divide-border">
                     {byCategory.map((item) => {
                       const config = NOTIFICATION_CATEGORY_CONFIG[item.category as NotificationCategory];
                       return (
@@ -210,7 +214,7 @@ export default function NotificationAnalyticsPage() {
                           label={config?.label ?? item.category}
                           count={item.count}
                           max={catMax}
-                          colorClass={cn("bg-blue-500")}
+                          colorClass="bg-blue-500"
                         />
                       );
                     })}
@@ -220,35 +224,32 @@ export default function NotificationAnalyticsPage() {
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold">By Priority</CardTitle>
+              <CardHeader className="px-3 py-2.5 border-b border-border">
+                <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">By Priority</CardTitle>
               </CardHeader>
-              <CardContent className="p-4 pt-0">
+              <CardContent className="p-0">
                 {prioLoading ? (
-                  <div className="space-y-3">
+                  <div className="divide-y divide-border">
                     {Array.from({ length: 4 }).map((_, i) => (
-                      <Skeleton key={i} className="h-8 rounded" />
+                      <div key={i} className="px-3 py-2.5 space-y-1.5">
+                        <Skeleton className="h-3 w-20" />
+                        <Skeleton className="h-1.5 rounded-full" />
+                      </div>
                     ))}
                   </div>
                 ) : !byPriority?.length ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No data</p>
+                  <p className="text-sm text-muted-foreground text-center py-6">No data</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="divide-y divide-border">
                     {byPriority.map((item) => {
                       const config = NOTIFICATION_PRIORITY_CONFIG[item.priority as NotificationPriority];
-                      const colorMap: Record<string, string> = {
-                        CRITICAL: "bg-red-500",
-                        HIGH: "bg-amber-500",
-                        NORMAL: "bg-blue-500",
-                        LOW: "bg-slate-400",
-                      };
                       return (
                         <BarRow
                           key={item.priority}
                           label={config?.label ?? item.priority}
                           count={item.count}
                           max={prioMax}
-                          colorClass={colorMap[item.priority] ?? "bg-muted-foreground"}
+                          colorClass={PRIORITY_COLORS[item.priority] ?? "bg-muted-foreground"}
                         />
                       );
                     })}

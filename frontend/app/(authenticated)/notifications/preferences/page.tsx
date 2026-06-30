@@ -4,7 +4,6 @@ import { useCallback } from "react";
 import { Bell, Mail, Smartphone, MessageSquare, Slack, Volume2, Moon } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -119,15 +118,16 @@ export default function NotificationPreferencesPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Notification Preferences" subtitle="Control how and when you receive notifications">
-        <div className="space-y-6">
-          <Skeleton className="h-6 w-24" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
+        <div className="space-y-6 max-w-2xl">
+          <Skeleton className="h-5 w-20" />
+          <div className="rounded-lg border border-border overflow-hidden">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between px-3 py-3 border-b border-border last:border-0">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-5 w-9 rounded-full" />
+              </div>
             ))}
           </div>
-          <Skeleton className="h-6 w-24 mt-4" />
-          <Skeleton className="h-32 rounded-xl" />
         </div>
       </PageWrapper>
     );
@@ -150,81 +150,66 @@ export default function NotificationPreferencesPage() {
       title="Notification Preferences"
       subtitle="Control how and when you receive notifications"
     >
-      <div className="space-y-8 max-w-4xl">
+      <div className="space-y-6 max-w-2xl">
         <section>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Channels</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Channels</h2>
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
             {CHANNELS.map(({ key, label, description, icon: Icon }) => {
               const enabled = prefs ? (prefs[key as keyof typeof prefs] as boolean) : false;
               return (
-                <Card
-                  key={key}
-                  className={cn(
-                    "transition-colors",
-                    enabled ? "border-blue-400/40 bg-blue-500/[0.02]" : "",
-                  )}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", enabled ? "bg-blue-500/10" : "bg-muted")}>
-                          <Icon className={cn("h-4 w-4", enabled ? "text-blue-600" : "text-muted-foreground")} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{label}</p>
-                          <p className="text-[11px] text-muted-foreground leading-tight">{description}</p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={enabled}
-                        onCheckedChange={(v) => handleChannelToggle(key, v)}
-                        disabled={updatePreferences.isPending}
-                        className="shrink-0 mt-0.5"
-                      />
+                <div key={key} className="flex items-center justify-between px-3 py-2.5 gap-3 bg-card">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Icon className={cn("h-4 w-4 shrink-0", enabled ? "text-blue-600" : "text-muted-foreground/60")} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium leading-snug">{label}</p>
+                      <p className="text-[11px] text-muted-foreground">{description}</p>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <Switch
+                    checked={enabled}
+                    onCheckedChange={(v) => handleChannelToggle(key, v)}
+                    disabled={updatePreferences.isPending}
+                    className="shrink-0"
+                  />
+                </div>
               );
             })}
           </div>
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Quiet Hours</h2>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-start gap-2 mb-4">
-                <Moon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <p className="text-sm text-muted-foreground">
-                  Suppress non-critical notifications during the specified window. Critical security notifications always go through.
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Quiet Hours</h2>
+          <div className="rounded-lg border border-border overflow-hidden">
+            <div className="px-3 py-3 bg-card">
+              <div className="flex items-start gap-2 mb-3">
+                <Moon className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  Suppress non-critical notifications during this window. Critical security alerts always go through.
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Start time</Label>
                   <input
                     type="time"
                     defaultValue={prefs?.quietHoursStart ?? ""}
                     onBlur={(e) => handleQuietHours("quietHoursStart", e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">End time</Label>
                   <input
                     type="time"
                     defaultValue={prefs?.quietHoursEnd ?? ""}
                     onBlur={(e) => handleQuietHours("quietHoursEnd", e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Timezone</Label>
-                  <Select
-                    value={prefs?.quietHoursTimezone ?? "UTC"}
-                    onValueChange={handleTimezone}
-                  >
-                    <SelectTrigger className="h-9 text-sm">
+                  <Select value={prefs?.quietHoursTimezone ?? "UTC"} onValueChange={handleTimezone}>
+                    <SelectTrigger className="h-8 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -235,64 +220,55 @@ export default function NotificationPreferencesPage() {
                   </Select>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Digest Mode</h2>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium">Notification digest</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Bundle low-priority notifications into a single periodic digest instead of individual alerts.
-                  </p>
-                </div>
-                <Select
-                  value={prefs?.digestMode ?? "disabled"}
-                  onValueChange={handleDigestMode}
-                >
-                  <SelectTrigger className="w-52 shrink-0 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DIGEST_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Digest Mode</h2>
+          <div className="rounded-lg border border-border overflow-hidden">
+            <div className="flex items-center justify-between gap-4 px-3 py-2.5 bg-card">
+              <div className="min-w-0">
+                <p className="text-sm font-medium">Notification digest</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Bundle low-priority notifications into a single periodic digest.
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <Select value={prefs?.digestMode ?? "disabled"} onValueChange={handleDigestMode}>
+                <SelectTrigger className="w-48 shrink-0 text-sm h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DIGEST_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Categories</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Categories</h2>
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
             {NOTIFICATION_CATEGORIES.map((cat) => {
               const config = NOTIFICATION_CATEGORY_CONFIG[cat];
               const Icon = config.icon;
               const enabled = prefs?.categories?.[cat] !== false;
               return (
-                <Card key={cat} className={cn(!enabled && "opacity-60")}>
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className={cn("h-7 w-7 rounded-md flex items-center justify-center shrink-0", config.bg)}>
-                          <Icon className={cn("h-3.5 w-3.5", config.color)} />
-                        </div>
-                        <p className="text-sm font-medium">{config.label}</p>
-                      </div>
-                      <Switch
-                        checked={enabled}
-                        onCheckedChange={(v) => handleCategoryToggle(cat, v)}
-                        disabled={updatePreferences.isPending}
-                      />
+                <div key={cat} className={cn("flex items-center justify-between px-3 py-2.5 bg-card gap-3", !enabled && "opacity-50")}>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={cn("h-6 w-6 rounded-md flex items-center justify-center shrink-0", config.bg)}>
+                      <Icon className={cn("h-3 w-3", config.color)} />
                     </div>
-                  </CardContent>
-                </Card>
+                    <p className="text-sm font-medium">{config.label}</p>
+                  </div>
+                  <Switch
+                    checked={enabled}
+                    onCheckedChange={(v) => handleCategoryToggle(cat, v)}
+                    disabled={updatePreferences.isPending}
+                  />
+                </div>
               );
             })}
           </div>

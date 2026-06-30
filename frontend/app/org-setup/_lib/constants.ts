@@ -35,44 +35,6 @@ export const TEAM_SIZES = [
   { value: "500+", label: "500+ employees" },
 ] as const;
 
-export const COUNTRIES: readonly string[] = [
-  "India",
-  "United States",
-  "United Kingdom",
-  "Canada",
-  "Australia",
-  "Germany",
-  "France",
-  "Singapore",
-  "UAE",
-  "Other",
-];
-
-export const TIMEZONES: readonly string[] = [
-  "Asia/Kolkata",
-  "America/New_York",
-  "America/Chicago",
-  "America/Los_Angeles",
-  "Europe/London",
-  "Europe/Paris",
-  "Asia/Singapore",
-  "Asia/Tokyo",
-  "Australia/Sydney",
-  "UTC",
-];
-
-export const CURRENCIES: readonly string[] = [
-  "INR",
-  "USD",
-  "EUR",
-  "GBP",
-  "AUD",
-  "SGD",
-  "AED",
-  "CAD",
-  "JPY",
-];
-
 export const APP_SUITES = [
   { id: "CRM", label: "Sales Suite", description: "Leads, deals, contacts, pipeline" },
   { id: "HR", label: "People Suite", description: "Employees, leaves, payroll, onboarding" },
@@ -124,9 +86,6 @@ export const DEFAULT_DATA: WizardData = {
   industry: "",
   companyName: "",
   teamSize: "",
-  country: "",
-  timezone: "Asia/Kolkata",
-  currency: "INR",
   installedApps: ["CRM", "HR", "PROJECTS"],
   invitees: [],
 };
