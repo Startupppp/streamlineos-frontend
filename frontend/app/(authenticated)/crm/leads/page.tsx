@@ -134,7 +134,7 @@ export default function LeadsPipelinePage() {
     const q = debouncedSearchQuery.toLowerCase();
     for (const [status, leads] of Object.entries(board)) {
       result[status] = leads.filter(
-        (l) =>
+        (l: BoardLead) =>
           l.name.toLowerCase().includes(q) ||
           l.email?.toLowerCase().includes(q) ||
           l.phone?.includes(q) ||

@@ -12,20 +12,6 @@ import {
 import { motion } from "framer-motion";
 import { format, endOfWeek } from "date-fns";
 
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 interface CrmCalendarHeaderProps {
   year: number;

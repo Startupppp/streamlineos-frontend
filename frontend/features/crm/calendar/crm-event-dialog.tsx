@@ -151,13 +151,12 @@ export function CrmEventDialog({
   const allDay = form.watch("allDay");
   const watchedAttendeeIds = form.watch("attendeeIds");
   const watchedEntityType = form.watch("entityType");
-  const watchedColor = form.watch("color");
 
   useEffect(() => {
     if (open) {
       form.reset(isEdit ? buildEditValues(event!) : buildDefaults(defaultDate));
     }
-  }, [open, defaultDate, event, isEdit]);
+  }, [open, defaultDate, event, isEdit, form]);
 
   useEffect(() => {
     if (open && isEdit && existingAttendees && existingAttendees.length > 0) {
@@ -166,7 +165,7 @@ export function CrmEventDialog({
         .filter((id): id is string => !!id);
       form.setValue("attendeeIds", ids);
     }
-  }, [open, isEdit, existingAttendees]);
+  }, [open, isEdit, existingAttendees, form]);
 
   const handleToggleAttendee = useCallback(
     (id: string) => {
