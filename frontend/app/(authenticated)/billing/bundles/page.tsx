@@ -234,7 +234,7 @@ export default function BundlesPage() {
               Build Your Own Bundle
             </h2>
             <p className="text-sm text-muted-foreground">
-              Select any combination of apps. We'll calculate the price and show
+              Select any combination of apps. We&apos;ll calculate the price and show
               your savings.
             </p>
           </div>

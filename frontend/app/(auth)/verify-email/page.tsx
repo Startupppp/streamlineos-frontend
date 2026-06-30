@@ -85,7 +85,7 @@ function VerifyEmailForm() {
         },
       },
     );
-  }, [token, router]);
+  }, [token, router, verifyMutate]);
 
   const handleResend = useCallback(() => {
     if (!email || cooldown > 0) return;
@@ -130,7 +130,7 @@ function VerifyEmailForm() {
         },
       },
     );
-  }, [token, router]);
+  }, [token, router, verifyMutate]);
 
   if (isVerified) {
     return (

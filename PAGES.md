@@ -60,6 +60,13 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/billing/affiliate` — Affiliate Dashboard: register CTA, referral link copy, send invite email, commission history table; empty state when not registered
 - [x] `/billing/enterprise-quotes` — Enterprise Quotes list: status filter, table (ref/subject/status/seats/value/valid-until/deal), New Quote Sheet (seat negotiation + custom pricing + contract terms + Zod validation + live total preview), skeleton + empty + error states
 - [x] `/billing/enterprise-quotes/[quoteId]` — Enterprise Quote detail: two-column layout, Quote Details card (seats/pricing/contract term/total value), Contract Terms + Notes cards, Approval Workflow sidebar timeline, context-sensitive actions (Submit/Approve+Reject/Send/Accept), Print button; gated behind `billing:enterprise-quotes:approve` for approve/reject
+- [x] `/billing/bundles` — Solution Suites (Sales/People/Operations/Finance) with savings badges + individual vs bundle pricing; Custom Module Bundle builder with 11 modules, tiered 15%/20% discount, live price calculator
+- [x] `/billing/seats` — Seat utilization dashboard: 4 stat cards (total/used/available/utilization%), dynamic color-coded progress bar, plan details, upgrade/contact-sales CTA, seat rules info; uses `useSeatInfo()` + `useSubscription()`
+- [x] `/billing/addons` — Add-ons store: 9 add-on cards (AI Credits/Extra Storage/WhatsApp/SMS/Voice AI/White-label/Custom Domain/Premium Support/API Capacity), Coming Soon badges for unavailable, Manage Credits link for AI credits
+- [x] `/billing/coupons` — Coupon management: 4-stat row, table with Active/Inactive/Expired badges, copy/deactivate actions, Create Coupon Sheet (code/type/value/maxUses/applicablePlans/expiresAt), `useCan("settings:manage")` gate; uses `coupons` table
+- [x] `/billing/trials` — Trial management: TRIAL status shows countdown + days remaining + progress bar + upgrade CTA + trial type info cards; paid plan shows renewal date; no-subscription shows plan CTA
+- [x] `/billing/referrals` — Referral program: rewards flow banner, email invite form, 3 stat cards (invites/active/rewarded), status-badged table (PENDING/SIGNED_UP/ACTIVATED/REWARDED/EXPIRED)
+- [x] `/billing/checkout` — **Rebuilt to 8 steps**: Platform → Apps&Bundles → Seats → AI Credits → Review Pricing (coupon, annual/monthly toggle) → Tax Details (GSTIN/state/GST calc) → Payment (Razorpay) → Confirmation; invoice statuses updated to DRAFT/ISSUED/PAID/FAILED/VOIDED
 - [x] `/marketplace` — App Marketplace: category filter tabs, app cards with install/trial/uninstall actions, skeleton loading, empty state per category
 - [x] `/accounting` — Accounting overview
 - [x] `/accounting/coa` — Chart of accounts
