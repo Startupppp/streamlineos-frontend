@@ -5,6 +5,9 @@ export type WizardData = {
   industry: string;
   companyName: string;
   teamSize: string;
+  country?: string;
+  timezone?: string;
+  currency?: string;
   installedApps: string[];
   invitees: Invitee[];
 };

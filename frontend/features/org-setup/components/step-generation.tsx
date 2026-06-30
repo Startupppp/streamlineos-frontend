@@ -8,8 +8,8 @@ import { Check, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { WizardData } from "../_lib/types";
-import { GENERATION_STEPS } from "../_lib/constants";
+import type { WizardData } from "../lib/types";
+import { GENERATION_STEPS } from "../lib/constants";
 
 type StepGenerationProps = {
   data: WizardData;
@@ -22,10 +22,13 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const dataRef = useRef<WizardData>(data);
+  const updateRef = useRef(update);
+  const onNextRef = useRef(onNext);
   dataRef.current = data;
+  updateRef.current = update;
+  onNextRef.current = onNext;
 
   const total = GENERATION_STEPS.length;
-  // Hold tick at this count until the API responds — last step stays "active" (spinner)
   const HOLD_AT = total - 1;
 
   useEffect(() => {
@@ -38,7 +41,6 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
 
     const interval = setInterval(() => {
       if (cancelled) { clearInterval(interval); return; }
-      // Pause before the final step until API is actually done
       if (count >= HOLD_AT && !apiDone) return;
       count += 1;
       setCompletedSteps(count);
@@ -52,9 +54,8 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
         industry: d.industry,
         companyName: d.companyName,
         companySize: d.teamSize,
-        country: d.country,
-        timezone: d.timezone,
-        currency: d.currency,
+        ...(d.country ? { country: d.country } : {}),
+        ...(d.timezone ? { timezone: d.timezone } : {}),
         enabledModules: d.installedApps.length > 0 ? d.installedApps : ["HR", "CRM", "PROJECTS"],
         invitees: d.invitees,
       })
@@ -62,10 +63,9 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
         if (cancelled) return;
         apiDone = true;
         clearInterval(interval);
-        // Complete the final step visually
         setCompletedSteps(total);
-        try { await update(); } catch {}
-        setTimeout(onNext, 600);
+        try { await updateRef.current(); } catch {}
+        setTimeout(() => onNextRef.current(), 600);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -74,7 +74,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
       });
 
     return () => { cancelled = true; clearInterval(interval); };
-  }, [attempt, onNext, update, total, HOLD_AT]);
+  }, [attempt, total, HOLD_AT]);
 
   function handleRetry() {
     setAttempt((a) => a + 1);
@@ -85,13 +85,11 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="space-y-2">
         <p className="text-[13px] font-medium text-foreground">
           {companyName ? `Setting up ${companyName}` : "Setting up your workspace"}
         </p>
 
-        {/* Progress bar */}
         <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
           <motion.div
             className="h-full gradient-wizard rounded-full"
@@ -110,7 +108,6 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
         </div>
       </div>
 
-      {/* Step list */}
       <ul className="space-y-1" aria-label="Setup progress">
         {GENERATION_STEPS.map((label, i) => {
           const done = i < completedSteps;
@@ -128,7 +125,6 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
                 active && "bg-blue-50",
               )}
             >
-              {/* Icon */}
               <span
                 className={cn(
                   "h-5 w-5 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
@@ -155,7 +151,6 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
                 </AnimatePresence>
               </span>
 
-              {/* Label */}
               <span
                 className={cn(
                   "text-[13px] transition-colors duration-300",
@@ -171,7 +166,6 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
         })}
       </ul>
 
-      {/* Error state */}
       <AnimatePresence>
         {error && (
           <motion.div

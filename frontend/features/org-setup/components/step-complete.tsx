@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import type { WizardData } from "../_lib/types";
-import { NEXT_ACTIONS } from "../_lib/constants";
-import { clearDraft } from "../_lib/draft";
+import type { WizardData } from "../lib/types";
+import { NEXT_ACTIONS } from "../lib/constants";
+import { clearDraft } from "../lib/draft";
 
 type StepCompleteProps = {
   data: WizardData;
@@ -14,18 +14,19 @@ type StepCompleteProps = {
 
 export function StepComplete({ data }: StepCompleteProps) {
   const { update } = useSession();
+  const updateRef = useRef(update);
+  updateRef.current = update;
 
   useEffect(() => {
     let cancelled = false;
     async function redirect() {
       clearDraft();
-      try { await update(); } catch {}
+      try { await updateRef.current(); } catch {}
       if (!cancelled) window.location.href = "/dashboard";
     }
-    // Small delay so the user sees the success screen briefly
     const timer = setTimeout(redirect, 2200);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [update]);
+  }, []);
 
   return (
     <div className="space-y-5 text-center">

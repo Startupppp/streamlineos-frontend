@@ -1,6 +1,6 @@
 import type { WizardData } from "./types";
 
-export const TOTAL_STEPS = 10;
+export const TOTAL_STEPS = 7;
 export const DRAFT_KEY = "org-setup-draft";
 
 export const GOALS = [
@@ -12,6 +12,39 @@ export const GOALS = [
   { id: "projects", label: "Projects" },
   { id: "ai", label: "AI Automation" },
   { id: "everything", label: "Build Everything" },
+] as const;
+
+export const GOAL_TO_APPS: Record<string, string[]> = {
+  sales: ["CRM"],
+  hr: ["HR"],
+  inventory: ["INVENTORY"],
+  finance: ["FINANCE"],
+  support: ["HELPDESK"],
+  projects: ["PROJECTS"],
+  ai: ["CRM", "HR", "PROJECTS"],
+  everything: ["CRM", "HR", "PROJECTS", "FINANCE", "INVENTORY", "HELPDESK"],
+};
+
+export const DEFAULT_APPS = ["CRM", "HR", "PROJECTS"];
+
+export function deriveAppsFromGoals(goals: string[]): string[] {
+  if (goals.length === 0) return DEFAULT_APPS;
+  const apps = new Set<string>();
+  for (const g of goals) {
+    for (const app of (GOAL_TO_APPS[g] ?? [])) {
+      apps.add(app);
+    }
+  }
+  return apps.size > 0 ? Array.from(apps) : DEFAULT_APPS;
+}
+
+export const APP_SUITES: readonly { id: string; label: string; description: string }[] = [
+  { id: "CRM", label: "CRM", description: "Leads, deals & pipeline" },
+  { id: "HR", label: "HR", description: "Employees, payroll & leave" },
+  { id: "PROJECTS", label: "Projects", description: "Tasks, sprints & timelines" },
+  { id: "FINANCE", label: "Finance", description: "Invoices & accounting" },
+  { id: "INVENTORY", label: "Inventory", description: "Stock & procurement" },
+  { id: "HELPDESK", label: "Helpdesk", description: "Tickets & customer support" },
 ] as const;
 
 export const INDUSTRIES: readonly string[] = [
@@ -35,15 +68,6 @@ export const TEAM_SIZES = [
   { value: "500+", label: "500+ employees" },
 ] as const;
 
-export const APP_SUITES = [
-  { id: "CRM", label: "Sales Suite", description: "Leads, deals, contacts, pipeline" },
-  { id: "HR", label: "People Suite", description: "Employees, leaves, payroll, onboarding" },
-  { id: "PROJECTS", label: "Operations Suite", description: "Tasks, sprints, milestones" },
-  { id: "FINANCE", label: "Finance Suite", description: "Expenses, invoices, accounting" },
-  { id: "INVENTORY", label: "Inventory", description: "Assets, stock, warehouses" },
-  { id: "HELPDESK", label: "Helpdesk", description: "Support tickets and SLA" },
-] as const;
-
 export const GENERATION_STEPS: readonly string[] = [
   "Creating organization",
   "Setting up departments",
@@ -54,23 +78,13 @@ export const GENERATION_STEPS: readonly string[] = [
   "Installing recommended apps",
 ];
 
-export const IMPORT_TYPES = [
-  { id: "customers", label: "Customers" },
-  { id: "employees", label: "Employees" },
-  { id: "inventory", label: "Inventory" },
-  { id: "projects", label: "Projects" },
-] as const;
-
 export const STEP_TITLES: readonly string[] = [
   "Welcome",
   "Business Goals",
   "Industry",
   "Company Profile",
   "Building Your Workspace",
-  "Recommended Apps",
   "Invite Team",
-  "Import Data",
-  "AI Personalization",
   "Workspace Ready",
 ];
 
@@ -86,6 +100,6 @@ export const DEFAULT_DATA: WizardData = {
   industry: "",
   companyName: "",
   teamSize: "",
-  installedApps: ["CRM", "HR", "PROJECTS"],
+  installedApps: DEFAULT_APPS,
   invitees: [],
 };

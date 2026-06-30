@@ -175,6 +175,9 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      countries-and-timezones:
+        specifier: ^3.9.0
+        version: 3.9.0
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -3315,6 +3318,10 @@ packages:
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
+
+  countries-and-timezones@3.9.0:
+    resolution: {integrity: sha512-3upkVtUfZgdp5xOQI/Deg1ye73ae6bygJMO4UvtUi6wLjwcj7cBqx2PzSZ1VL8i5iveBbjhsQp2Judx7kPKivA==}
+    engines: {node: '>=8.x', npm: '>=5.x'}
 
   country-flag-icons@1.6.15:
     resolution: {integrity: sha512-92HoA8l6DluEidku8tKBftjuFRj4Rv3zDW1lXxCuNnqAxhUSkvso9gM/Afj4F5BnK+wneHIe3ydI+s+4NA29/Q==}
@@ -9230,6 +9237,8 @@ snapshots:
     optional: true
 
   core-util-is@1.0.3: {}
+
+  countries-and-timezones@3.9.0: {}
 
   country-flag-icons@1.6.15: {}
 

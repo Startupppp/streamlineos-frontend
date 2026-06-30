@@ -297,7 +297,7 @@ Ordered money-path first. Check off each page after fixing.
 ## Chat & Communication
 - [x] `/chat` — Chat
 - [x] `/calendar` — Calendar
-- [x] `/notifications` — Notifications
+- [x] `/notifications` — Notifications: full PRD implementation — sections (ALL/UNREAD/READ/ARCHIVED/SYSTEM/PINNED), bulk actions, category+priority filters, compact divide-y list with inline action buttons; `/notifications/preferences` — channel toggles + quiet hours + digest mode in compact list layout; `/notifications/templates` — CRUD with preview dialog, divide-y list; `/notifications/broadcasts` — create/publish/cancel/delete with status tabs; `/notifications/analytics` — metrics + per-category/priority bar charts; `/notifications/queue` — active + failed tabs with retry; notification bell with popover, Lucide icons, blue-600 badge; all pages follow ink-style design system (blue-500 accent, divide-y lists, no colored stat boxes)
 
 ---
 

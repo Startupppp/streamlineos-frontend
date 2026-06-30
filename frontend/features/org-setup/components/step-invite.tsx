@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight, Plus, Upload, X } from "lucide-react";
-import type { Invitee } from "../_lib/types";
+import type { Invitee } from "../lib/types";
 
 type StepInviteProps = {
   invitees: Invitee[];

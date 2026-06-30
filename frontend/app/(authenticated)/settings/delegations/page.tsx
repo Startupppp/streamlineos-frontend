@@ -255,7 +255,6 @@ function DelegationsContent() {
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         onSuccess={handleGrantSuccess}
-        memberMap={memberMap}
         members={members}
       />
     </PageWrapper>
@@ -366,7 +365,6 @@ interface GrantDelegationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  memberMap: Map<string, string>;
   members: Member[];
 }
 

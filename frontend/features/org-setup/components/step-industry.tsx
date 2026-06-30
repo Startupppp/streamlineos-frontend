@@ -5,7 +5,7 @@ import { ArrowRight, ArrowLeft, Monitor, Palette, ShoppingBag, Cog, Heart, BookO
 import { Button } from "@/components/ui/button";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { INDUSTRIES } from "../_lib/constants";
+import { INDUSTRIES } from "../lib/constants";
 
 type StepIndustryProps = {
   industry: string;

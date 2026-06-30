@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { toast } from "sonner";
 import {
   TrendingUp,
   Users,
@@ -15,7 +14,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { GOALS } from "../_lib/constants";
+import { GOALS } from "../lib/constants";
 import { NavButtons } from "./nav-buttons";
 
 type StepGoalsProps = {
@@ -37,14 +36,6 @@ const GOAL_ICONS: Record<string, LucideIcon> = {
 };
 
 export function StepGoals({ goals, onToggle, onBack, onNext }: StepGoalsProps) {
-  function handleNext() {
-    if (goals.length === 0) {
-      toast.error("Select at least one goal to continue");
-      return;
-    }
-    onNext();
-  }
-
   return (
     <div className="space-y-4">
       <p className="text-[13px] text-muted-foreground">Select all that apply.</p>
@@ -86,7 +77,11 @@ export function StepGoals({ goals, onToggle, onBack, onNext }: StepGoalsProps) {
         </p>
       )}
 
-      <NavButtons onBack={onBack} onNext={handleNext} />
+      <NavButtons
+        onBack={onBack}
+        onNext={onNext}
+        nextDisabled={goals.length === 0}
+      />
     </div>
   );
 }

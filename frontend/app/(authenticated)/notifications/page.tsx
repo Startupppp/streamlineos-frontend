@@ -68,7 +68,7 @@ export default function NotificationsPage() {
   const bulkDelete = useBulkDelete();
 
   const unreadCount = unreadData?.count ?? 0;
-  const items = notifications ?? [];
+  const items = useMemo(() => notifications ?? [], [notifications]);
   const hasFilters = !!activeCategory || !!activePriority;
 
   const handleNotificationClick = useCallback(

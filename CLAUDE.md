@@ -25,6 +25,7 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - Component priority: @custom/ or @shared/ if available → fallback to @ui/ (shadcn/ui). For error/loading/empty states use @pre-ui/ if it exists, else create minimal ones styled from the design tokens.
 - Always reuse existing components. Never create a new component if an existing one (or a variant) can serve.
 - Lazy-load heavy client components (dynamic import). Use React.memo/useMemo only for measured performance-critical parts.
+- **Folder structure (STRICT):** Feature-specific components MUST live under `features/<featurename>/components/` and feature libs under `features/<featurename>/lib/`. NEVER use `_components/` or `_lib/` inside `app/` route folders — these conventions are banned. The `app/` folder contains only route files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`). All reusable UI components go in `components/`, feature components in `features/<featurename>/`.
 
 ## State & effects
 - Minimize useState and useEffect. No useEffect data fetching.
