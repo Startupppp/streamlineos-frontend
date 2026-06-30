@@ -1561,106 +1561,111 @@ export function flattenNavRoutes(routes: NavRoute[]): NavRoute[] {
 }
 
 export type ProductKey =
-  | 'home'
-  | 'crm'
-  | 'hrms'
-  | 'projects'
-  | 'inventory'
-  | 'finance'
-  | 'helpdesk'
-  | 'documents'
-  | 'analytics'
-  | 'ai'
-  | 'administration'
+  | "home"
+  | "crm"
+  | "hrms"
+  | "projects"
+  | "inventory"
+  | "finance"
+  | "helpdesk"
+  | "documents"
+  | "ai"
+  | "administration";
 
 export interface ProductDefinition {
-  key: ProductKey
-  label: string
-  href: string
+  key: ProductKey;
+  label: string;
+  href: string;
 }
 
 export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
-  { key: 'home', label: 'Home', href: '/dashboard' },
-  { key: 'crm', label: 'CRM', href: '/crm' },
-  { key: 'hrms', label: 'HRMS', href: '/hr' },
-  { key: 'projects', label: 'Projects', href: '/projects' },
-  { key: 'inventory', label: 'Inventory', href: '/inventory' },
-  { key: 'finance', label: 'Finance', href: '/accounting' },
-  { key: 'helpdesk', label: 'Helpdesk', href: '/support' },
-  { key: 'documents', label: 'Documents', href: '/knowledge-base' },
-  { key: 'analytics', label: 'Analytics', href: '/reports' },
-  { key: 'ai', label: 'AI', href: '/ai' },
-  { key: 'administration', label: 'Admin', href: '/organization' },
-]
+  { key: "home", label: "Home", href: "/dashboard" },
+  { key: "crm", label: "CRM", href: "/crm" },
+  { key: "hrms", label: "HRMS", href: "/hr" },
+  { key: "projects", label: "Projects", href: "/projects" },
+  { key: "inventory", label: "Inventory", href: "/inventory" },
+  { key: "finance", label: "Finance", href: "/accounting" },
+  { key: "helpdesk", label: "Helpdesk", href: "/support" },
+  { key: "documents", label: "Documents", href: "/knowledge-base" },
+  { key: "ai", label: "AI", href: "/ai" },
+  { key: "administration", label: "Admin", href: "/organization" },
+];
 
 const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   home: [],
-  crm: ['CRM', 'Sales', 'Customer Success'],
-  hrms: ['HR – People', 'HR – Growth', 'HR – Compensation', 'Recruitment'],
-  projects: ['Projects & Time'],
-  inventory: ['Inventory'],
-  finance: ['Accounting', 'Billing'],
-  helpdesk: ['Support', 'Knowledge Base'],
-  documents: ['Knowledge Base'],
-  analytics: [],
+  crm: ["CRM", "Sales", "Customer Success"],
+  hrms: ["HR – People", "HR – Growth", "HR – Compensation", "Recruitment"],
+  projects: ["Projects & Time"],
+  inventory: ["Inventory"],
+  finance: ["Accounting", "Billing"],
+  helpdesk: ["Support", "Knowledge Base"],
+  documents: ["Knowledge Base"],
   ai: [],
-  administration: ['People', 'Organization', 'System'],
-}
+  administration: ["People", "Organization", "System"],
+};
 
 export function getNavGroupsForProduct(
   productKey: ProductKey,
   role: string | undefined,
   permissions: string[] | undefined,
 ): NavGroup[] {
-  const allGroups = getNavGroupsForUser(role, permissions)
-  if (productKey === 'home') {
+  const allGroups = getNavGroupsForUser(role, permissions);
+  if (productKey === "home") {
     return [
       {
-        label: 'Overview',
+        label: "Overview",
         routes: [
-          { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-          { label: 'Calendar', href: '/calendar', icon: CalendarDays },
-          { label: 'Chat', href: '/chat', icon: MessageSquareText },
-          { label: 'Notifications', href: '/notifications', icon: Bell },
+          { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+          { label: "Calendar", href: "/calendar", icon: CalendarDays },
+          { label: "Chat", href: "/chat", icon: MessageSquareText },
+          { label: "Notifications", href: "/notifications", icon: Bell },
         ],
       },
-    ]
+    ];
   }
-  if (productKey === 'analytics') return []
-  if (productKey === 'ai') {
-    const coreGroup = allGroups.find((g) => g.label === 'Core')
-    if (!coreGroup) return []
-    return [{ ...coreGroup, label: 'AI', routes: coreGroup.routes.filter((r) => r.href === '/ai') }]
+  if (productKey === "ai") {
+    const coreGroup = allGroups.find((g) => g.label === "Core");
+    if (!coreGroup) return [];
+    return [
+      {
+        ...coreGroup,
+        label: "AI",
+        routes: coreGroup.routes.filter((r) => r.href === "/ai"),
+      },
+    ];
   }
-  const labels = PRODUCT_NAV_GROUP_LABELS[productKey]
-  return allGroups.filter((g) => labels.includes(g.label))
+  const labels = PRODUCT_NAV_GROUP_LABELS[productKey];
+  return allGroups.filter((g) => labels.includes(g.label));
 }
 
 export function getProductFromPathname(pathname: string): ProductKey {
-  if (pathname === '/dashboard' || pathname === '/') return 'home'
+  if (pathname === "/dashboard" || pathname === "/") return "home";
   if (
-    pathname.startsWith('/crm') ||
-    pathname.startsWith('/sales') ||
-    pathname.startsWith('/customer-executive')
+    pathname.startsWith("/crm") ||
+    pathname.startsWith("/sales") ||
+    pathname.startsWith("/customer-executive")
   )
-    return 'crm'
-  if (pathname.startsWith('/hr') || pathname.startsWith('/recruitment')) return 'hrms'
+    return "crm";
+  if (pathname.startsWith("/hr") || pathname.startsWith("/recruitment"))
+    return "hrms";
   if (
-    pathname.startsWith('/projects') ||
-    pathname.startsWith('/goals') ||
-    pathname.startsWith('/timesheets')
+    pathname.startsWith("/projects") ||
+    pathname.startsWith("/goals") ||
+    pathname.startsWith("/timesheets")
   )
-    return 'projects'
-  if (pathname.startsWith('/inventory')) return 'inventory'
-  if (pathname.startsWith('/accounting') || pathname.startsWith('/billing')) return 'finance'
-  if (pathname.startsWith('/support') || pathname.startsWith('/knowledge-base')) return 'helpdesk'
-  if (pathname.startsWith('/ai')) return 'ai'
+    return "projects";
+  if (pathname.startsWith("/inventory")) return "inventory";
+  if (pathname.startsWith("/accounting") || pathname.startsWith("/billing"))
+    return "finance";
+  if (pathname.startsWith("/support") || pathname.startsWith("/knowledge-base"))
+    return "helpdesk";
+  if (pathname.startsWith("/ai")) return "ai";
   if (
-    pathname.startsWith('/organization') ||
-    pathname.startsWith('/users') ||
-    pathname.startsWith('/settings') ||
-    pathname.startsWith('/reports')
+    pathname.startsWith("/organization") ||
+    pathname.startsWith("/users") ||
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/reports")
   )
-    return 'administration'
-  return 'home'
+    return "administration";
+  return "home";
 }
