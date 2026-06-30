@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -11,6 +11,7 @@ import { BankDetailsTab } from "@/features/onboarding/bank-details-tab";
 import { DocumentsTab } from "@/features/onboarding/documents-tab";
 import { ReviewTab } from "@/features/onboarding/review-tab";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
 import type { Variants } from "framer-motion";
 
 const STEP_IDS = {
@@ -40,7 +41,11 @@ const DATA_STEPS = [
   { id: STEP_IDS.DOCS, label: "Documents", icon: FileText },
 ] as const;
 
-const REVIEW_STEP = { id: STEP_IDS.REVIEW, label: "Review & Sign", icon: ClipboardCheck } as const;
+const REVIEW_STEP = {
+  id: STEP_IDS.REVIEW,
+  label: "Review & Sign",
+  icon: ClipboardCheck,
+} as const;
 
 const ONBOARDING_STEPS = [...DATA_STEPS, REVIEW_STEP];
 
@@ -51,13 +56,19 @@ const fadeUpVariants = fadeUp as Variants;
 export default function OnboardingPage() {
   const [activeTab, setActiveTab] = useState<StepId>(STEP_IDS.PERSONAL);
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
-  const [savedFormData, setSavedFormData] = useState<Record<string, FormValues>>({});
+  const [savedFormData, setSavedFormData] = useState<
+    Record<string, FormValues>
+  >({});
 
-  const currentStepIndex = Math.max(0, ONBOARDING_STEPS.findIndex((s) => s.id === activeTab));
+  const currentStepIndex = Math.max(
+    0,
+    ONBOARDING_STEPS.findIndex((s) => s.id === activeTab),
+  );
   const progressPercentage = useMemo(
-    () => DATA_STEPS.length > 0
-      ? Math.round((completedSteps.size / DATA_STEPS.length) * 100)
-      : 0,
+    () =>
+      DATA_STEPS.length > 0
+        ? Math.round((completedSteps.size / DATA_STEPS.length) * 100)
+        : 0,
     [completedSteps.size],
   );
 
@@ -81,19 +92,25 @@ export default function OnboardingPage() {
     } as const;
   }, []);
 
-  const goToHandlers = useMemo(() => ({
-    [STEP_IDS.PERSONAL]: () => setActiveTab(STEP_IDS.PERSONAL),
-    [STEP_IDS.BANK]: () => setActiveTab(STEP_IDS.BANK),
-    [STEP_IDS.DOCS]: () => setActiveTab(STEP_IDS.DOCS),
-  }), []);
+  const goToHandlers = useMemo(
+    () => ({
+      [STEP_IDS.PERSONAL]: () => setActiveTab(STEP_IDS.PERSONAL),
+      [STEP_IDS.BANK]: () => setActiveTab(STEP_IDS.BANK),
+      [STEP_IDS.DOCS]: () => setActiveTab(STEP_IDS.DOCS),
+    }),
+    [],
+  );
 
   const handleTabChange = useCallback((v: string) => {
     if (isStepId(v)) setActiveTab(v);
   }, []);
 
-  const handleStepClick = useCallback((stepId: StepId) => () => {
-    setActiveTab(stepId);
-  }, []);
+  const handleStepClick = useCallback(
+    (stepId: StepId) => () => {
+      setActiveTab(stepId);
+    },
+    [],
+  );
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -107,15 +124,24 @@ export default function OnboardingPage() {
       </div>
 
       <div className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-4 sm:px-6 lg:px-8 pt-4 pb-4 space-y-3">
-        <motion.div variants={fadeUpVariants} initial="hidden" animate="visible">
+        <motion.div
+          variants={fadeUpVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-display text-xl sm:text-2xl font-extrabold tracking-[-0.02em] text-foreground">Employee Onboarding</h1>
+              <h1 className="font-display text-xl sm:text-2xl font-extrabold tracking-[-0.02em] text-foreground">
+                Employee Onboarding
+              </h1>
               <p className="text-sm text-slate-600">
-                Complete your profile to get started · Step {currentStepIndex + 1} of {ONBOARDING_STEPS.length}
+                Complete your profile to get started · Step{" "}
+                {currentStepIndex + 1} of {ONBOARDING_STEPS.length}
               </p>
             </div>
-            <span className="text-sm font-medium text-muted-foreground tabular-nums">{progressPercentage}%</span>
+            <span className="text-sm font-medium text-muted-foreground tabular-nums">
+              {progressPercentage}%
+            </span>
           </div>
         </motion.div>
 
@@ -128,7 +154,10 @@ export default function OnboardingPage() {
               const isPast = index < currentStepIndex;
 
               return (
-                <li key={step.id} className="flex items-center flex-1 last:flex-initial min-w-0">
+                <li
+                  key={step.id}
+                  className="flex items-center flex-1 last:flex-initial min-w-0"
+                >
                   <button
                     type="button"
                     onClick={handleStepClick(step.id)}
@@ -136,25 +165,39 @@ export default function OnboardingPage() {
                     aria-current={isCurrent ? "step" : undefined}
                     aria-label={`${step.label}${isCompleted ? " (completed)" : ""}`}
                   >
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 transition-all shrink-0 ${
-                      isCompleted
-                        ? "bg-emerald-500 border-emerald-500 text-white"
-                        : isCurrent
-                        ? "bg-primary border-primary text-primary-foreground"
-                        : "bg-muted border-border text-muted-foreground group-hover:border-primary/50"
-                    }`}>
-                      {isCompleted ? <Check className="h-3.5 w-3.5" /> : <StepIcon className="h-3.5 w-3.5" />}
+                    <div
+                      className={`h-8 w-8 rounded-full flex items-center justify-center border-2 transition-all shrink-0 ${
+                        isCompleted
+                          ? "bg-emerald-500 border-emerald-500 text-white"
+                          : isCurrent
+                            ? "bg-primary border-primary text-primary-foreground"
+                            : "bg-muted border-border text-muted-foreground group-hover:border-primary/50"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <StepIcon className="h-3.5 w-3.5" />
+                      )}
                     </div>
-                    <span className={`text-[10px] font-medium text-center leading-tight hidden sm:block ${
-                      isCurrent ? "text-primary" : isCompleted ? "text-emerald-600" : "text-muted-foreground"
-                    }`}>
+                    <span
+                      className={`text-[10px] font-medium text-center leading-tight hidden sm:block ${
+                        isCurrent
+                          ? "text-primary"
+                          : isCompleted
+                            ? "text-emerald-600"
+                            : "text-muted-foreground"
+                      }`}
+                    >
                       {step.label}
                     </span>
                   </button>
                   {index < ONBOARDING_STEPS.length - 1 && (
                     <div
                       className={`flex-1 h-0.5 mx-1 mt-[-0.75rem] hidden sm:block transition-colors ${
-                        isPast || (isCompleted && index < currentStepIndex) ? "bg-emerald-500" : "bg-border"
+                        isPast || (isCompleted && index < currentStepIndex)
+                          ? "bg-emerald-500"
+                          : "bg-border"
                       }`}
                       aria-hidden="true"
                     />

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { WizardData } from "../lib/types";
 import { GENERATION_STEPS } from "../lib/constants";
@@ -48,16 +48,28 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
     }, 650);
 
     const d = dataRef.current;
+    const payload = {
+      goals: d.goals,
+      industry: d.industry,
+      companyName: d.companyName,
+      companySize: d.teamSize,
+      ...(d.country ? { country: d.country } : {}),
+      ...(d.timezone ? { timezone: d.timezone } : {}),
+      enabledModules: d.installedApps.length > 0 ? d.installedApps : ["HR", "CRM", "PROJECTS"],
+      invitees: d.invitees,
+    };
+
     apiClient
-      .patch<{ orgId?: string }>("/org/setup", {
-        goals: d.goals,
-        industry: d.industry,
-        companyName: d.companyName,
-        companySize: d.teamSize,
-        ...(d.country ? { country: d.country } : {}),
-        ...(d.timezone ? { timezone: d.timezone } : {}),
-        enabledModules: d.installedApps.length > 0 ? d.installedApps : ["HR", "CRM", "PROJECTS"],
-        invitees: d.invitees,
+      .patch<{ orgId?: string }>("/org/setup", payload)
+      .catch(async (firstErr: unknown) => {
+        // If the session has a stale orgId (org no longer in DB), clear it and retry.
+        const msg = getErrorMessage(firstErr).toLowerCase();
+        if (msg.includes("not found") || msg.includes("organization")) {
+          try { await updateRef.current({ orgId: null }); } catch {}
+          clearBackendTokenCache();
+          return apiClient.patch<{ orgId?: string }>("/org/setup", payload);
+        }
+        throw firstErr;
       })
       .then(async (res) => {
         if (cancelled) return;

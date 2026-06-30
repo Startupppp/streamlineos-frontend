@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 import {
   TOTAL_STEPS,
@@ -109,12 +110,25 @@ export default function OrgSetupPage() {
 
   const handleSkipToDashboard = useCallback(async () => {
     setIsSkipping(true);
+    const payload = {
+      industry: "IT Services",
+      companySize: "1-10",
+      enabledModules: ["HR", "CRM", "PROJECTS"],
+    };
     try {
-      const res = await apiClient.patch<{ orgId?: string }>("/org/setup", {
-        industry: "IT Services",
-        companySize: "1-10",
-        enabledModules: ["HR", "CRM", "PROJECTS"],
-      });
+      let res: { orgId?: string } | undefined;
+      try {
+        res = await apiClient.patch<{ orgId?: string }>("/org/setup", payload);
+      } catch (firstErr) {
+        const msg = getErrorMessage(firstErr).toLowerCase();
+        if (msg.includes("not found") || msg.includes("organization")) {
+          try { await updateRef.current({ orgId: null }); } catch {}
+          clearBackendTokenCache();
+          res = await apiClient.patch<{ orgId?: string }>("/org/setup", payload);
+        } else {
+          throw firstErr;
+        }
+      }
       const orgId = res?.orgId ?? null;
       try {
         await updateRef.current({

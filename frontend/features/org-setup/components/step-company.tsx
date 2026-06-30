@@ -69,8 +69,6 @@ export function StepCompany({ data, patch, onBack, onNext }: StepCompanyProps) {
     onNext();
   }
 
-  const isNextDisabled = !data.companyName.trim() || !data.teamSize;
-
   return (
     <div className="space-y-3">
       <p className="text-[13px] text-muted-foreground">
@@ -164,7 +162,7 @@ export function StepCompany({ data, patch, onBack, onNext }: StepCompanyProps) {
         )}
       </div>
 
-      <NavButtons onBack={onBack} onNext={handleNext} nextDisabled={isNextDisabled} />
+      <NavButtons onBack={onBack} onNext={handleNext} />
     </div>
   );
 }

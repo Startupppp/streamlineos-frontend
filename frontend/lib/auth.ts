@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import axios, { AxiosError } from "axios";
 import { randomUUID } from "crypto";
+import { SignJWT } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
@@ -318,6 +319,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         (token.orgOnboardingCompletedAt as string | null | undefined) ?? null;
       if (token.daysUntilExpiry !== undefined)
         session.daysUntilExpiry = token.daysUntilExpiry as number;
+      const backendSecret = process.env.BACKEND_JWT_SECRET;
+      if (backendSecret && session.user?.id) {
+        session.backendJwt = await new SignJWT({
+          orgId: session.orgId ?? null,
+          branchId: session.branchId ?? null,
+          role: session.user.role,
+          permissions: session.permissions ?? [],
+          enabledModules: session.enabledModules ?? [],
+          plan: session.plan ?? null,
+          isPlatformAdmin: session.user.isPlatformAdmin === true,
+          isOrgOwner: session.user.isOrgOwner === true,
+          sessionId: session.sessionId ?? "",
+        })
+          .setProtectedHeader({ alg: "HS256" })
+          .setSubject(session.user.id)
+          .setIssuedAt()
+          .setExpirationTime("10m")
+          .sign(new TextEncoder().encode(backendSecret));
+      }
       return session;
     },
   },

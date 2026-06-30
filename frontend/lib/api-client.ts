@@ -183,11 +183,12 @@ async function getBackendToken(): Promise<string | null> {
   const now = Date.now();
   if (cachedToken && cachedToken.expiresAt - 30_000 > now) return cachedToken.value;
   try {
-    const res = await fetch(`${SAME_ORIGIN}/auth/backend-token`, { credentials: "include" });
+    const res = await fetch(`${SAME_ORIGIN}/auth/session`, { credentials: "include" });
     if (!res.ok) return null;
-    const data = (await res.json()) as { token: string; expiresIn: number };
-    cachedToken = { value: data.token, expiresAt: now + data.expiresIn * 1000 };
-    return data.token;
+    const data = (await res.json()) as { backendJwt?: string };
+    if (!data.backendJwt) return null;
+    cachedToken = { value: data.backendJwt, expiresAt: now + 540_000 };
+    return data.backendJwt;
   } catch {
     return null;
   }
