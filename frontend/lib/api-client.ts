@@ -206,6 +206,11 @@ async function authedFetch(url: string, init: RequestInit, useBackend: boolean, 
       headers.set("Authorization", `Bearer ${token}`);
       res = await fetch(url, { ...init, headers, credentials });
     }
+    if (res.status === 401 && typeof window !== "undefined") {
+      void import("next-auth/react").then(({ signOut }) => {
+        void signOut({ callbackUrl: "/signin" });
+      });
+    }
   }
   return res;
 }
