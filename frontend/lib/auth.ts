@@ -89,14 +89,11 @@ async function resolveGoogleUser(
       body: JSON.stringify({ email, googleId, name: name ?? undefined, image: image ?? undefined }),
     });
     if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.error(`[auth] /auth/google returned ${res.status}: ${body}`);
       return null;
     }
     const data = (await res.json()) as { userId: string };
     return data.userId ?? null;
-  } catch (err) {
-    console.error("[auth] resolveGoogleUser network error:", err);
+  } catch {
     return null;
   }
 }

@@ -1541,7 +1541,6 @@ export function getNavGroupsForProduct(
           { label: 'Calendar', href: '/calendar', icon: CalendarDays },
           { label: 'Chat', href: '/chat', icon: MessageSquareText },
           { label: 'Notifications', href: '/notifications', icon: Bell },
-          { label: 'Reports', href: '/reports', icon: BarChart3 },
         ],
       },
     ]

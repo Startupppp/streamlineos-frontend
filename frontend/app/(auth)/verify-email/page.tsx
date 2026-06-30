@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,12 @@ import {
   ArrowLeft,
   RefreshCw,
   AlertCircle,
+  XCircle,
 } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { signIn } from "next-auth/react";
+
+const attemptedTokens = new Set<string>();
 
 function VerifyEmailForm() {
   const router = useRouter();
@@ -26,9 +29,9 @@ function VerifyEmailForm() {
   const token = searchParams.get("token");
   const email = searchParams.get("email");
   const [isVerified, setIsVerified] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
-  const hasVerified = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -36,7 +39,7 @@ function VerifyEmailForm() {
     };
   }, []);
 
-  const startCooldown = () => {
+  const startCooldown = useCallback(() => {
     setCooldown(60);
     cooldownRef.current = setInterval(() => {
       setCooldown((prev) => {
@@ -47,39 +50,45 @@ function VerifyEmailForm() {
         return prev - 1;
       });
     }, 1000);
-  };
+  }, []);
 
   const verifyEmail = useVerifyEmail();
   const resendVerification = useResendVerificationEmail();
 
-  useEffect(() => {
-    if (token && !hasVerified.current) {
-      hasVerified.current = true;
-      verifyEmail.mutate(
-        { token },
-        {
-          onSuccess: async (data) => {
-            setIsVerified(true);
-            toast.success("Email verified! Signing you in…");
-            const result = await signIn("credentials", {
-              magicToken: data.autoLoginToken,
-              redirect: false,
-            });
-            if (result?.ok) {
-              window.location.href = "/org-setup";
-            } else {
-              setTimeout(() => router.push("/signin"), 1500);
-            }
-          },
-          onError: (error) => {
-            toast.error(getErrorMessage(error));
-          },
-        },
-      );
-    }
-  }, [token, router, verifyEmail]);
+  const verifyMutateRef = useRef(verifyEmail.mutate);
+  verifyMutateRef.current = verifyEmail.mutate;
 
-  const handleResend = () => {
+  useEffect(() => {
+    if (!token) return;
+    if (attemptedTokens.has(token)) return;
+    attemptedTokens.add(token);
+
+    verifyMutateRef.current(
+      { token },
+      {
+        onSuccess: async (data) => {
+          setIsVerified(true);
+          toast.success("Email verified! Signing you in…");
+          const result = await signIn("credentials", {
+            magicToken: data.autoLoginToken,
+            redirect: false,
+          });
+          if (result?.ok) {
+            window.location.href = "/org-setup";
+          } else {
+            setTimeout(() => router.push("/signin"), 1500);
+          }
+        },
+        onError: (error) => {
+          const msg = getErrorMessage(error);
+          setVerifyError(msg);
+          toast.error(msg);
+        },
+      },
+    );
+  }, [token, router]);
+
+  const handleResend = useCallback(() => {
     if (!email || cooldown > 0) return;
     resendVerification.mutate(
       { email },
@@ -93,13 +102,42 @@ function VerifyEmailForm() {
         },
       },
     );
-  };
+  }, [email, cooldown, resendVerification, startCooldown]);
+
+  const handleRetry = useCallback(() => {
+    if (!token) return;
+    attemptedTokens.delete(token);
+    setVerifyError(null);
+    verifyMutateRef.current(
+      { token },
+      {
+        onSuccess: async (data) => {
+          setIsVerified(true);
+          toast.success("Email verified! Signing you in…");
+          const result = await signIn("credentials", {
+            magicToken: data.autoLoginToken,
+            redirect: false,
+          });
+          if (result?.ok) {
+            window.location.href = "/org-setup";
+          } else {
+            setTimeout(() => router.push("/signin"), 1500);
+          }
+        },
+        onError: (error) => {
+          const msg = getErrorMessage(error);
+          setVerifyError(msg);
+          toast.error(msg);
+        },
+      },
+    );
+  }, [token, router]);
 
   if (isVerified) {
     return (
       <div className="w-full max-w-md animate-fade-up">
         <div className="text-center mb-5 sm:mb-8">
-          <div className="mx-auto h-10 w-10 rounded-xl bg-muted flex items-center justify-center mb-3">
+          <div className="mx-auto h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center mb-3">
             <CheckCircle2 className="h-5 w-5 text-green-600" />
           </div>
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
@@ -143,6 +181,66 @@ function VerifyEmailForm() {
           <p className="animate-pulse text-sm text-muted-foreground text-center">
             This will only take a moment...
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (verifyError) {
+    return (
+      <div className="w-full max-w-md animate-fade-up">
+        <div className="text-center mb-5 sm:mb-8">
+          <div className="mx-auto h-10 w-10 rounded-xl bg-destructive/10 flex items-center justify-center mb-3">
+            <XCircle className="h-5 w-5 text-destructive" />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+            Verification Failed
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2">
+            The link may have expired or already been used.
+          </p>
+        </div>
+
+        <div className="rounded-xl border bg-card shadow-soft p-4 sm:p-6 space-y-4">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" aria-hidden="true" />
+            <p className="text-sm text-destructive">{verifyError}</p>
+          </div>
+
+          {email && (
+            <Button
+              variant="default"
+              className="w-full"
+              onClick={handleResend}
+              disabled={resendVerification.isPending || cooldown > 0}
+              aria-label={
+                cooldown > 0
+                  ? `Resend available in ${cooldown} seconds`
+                  : "Send a new verification link"
+              }
+            >
+              {resendVerification.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              {cooldown > 0
+                ? `Resend available in ${cooldown}s`
+                : "Send a new verification link"}
+            </Button>
+          )}
+
+          <Button variant="ghost" className="w-full" onClick={handleRetry} disabled={verifyEmail.isPending}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try again
+          </Button>
+
+          <Link href="/signin" className="block">
+            <Button variant="outline" className="w-full">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Sign In
+            </Button>
+          </Link>
         </div>
       </div>
     );

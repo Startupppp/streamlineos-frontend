@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Mail } from "lucide-react";
+import { Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -19,8 +19,6 @@ import { useMutation } from "@tanstack/react-query";
 export const dynamic = "force-dynamic";
 
 const signupSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  companyName: z.string().min(1, "Company name is required"),
   email: z.string().email("Please enter a valid email"),
   password: z
     .string()
@@ -36,16 +34,18 @@ const signupSchema = z.object({
 
 type FormValues = z.infer<typeof signupSchema>;
 
-function splitFullName(name: string): { firstName: string; lastName: string } {
-  const trimmed = name.trim();
-  const spaceIndex = trimmed.indexOf(" ");
-  if (spaceIndex === -1) {
-    return { firstName: trimmed, lastName: "" };
-  }
-  return {
-    firstName: trimmed.slice(0, spaceIndex),
-    lastName: trimmed.slice(spaceIndex + 1).trim(),
-  };
+function deriveFirstName(email: string): string {
+  const prefix = email.split("@")[0] ?? "";
+  const firstPart = prefix.split(/[._-]/)[0] ?? prefix;
+  return firstPart.charAt(0).toUpperCase() + firstPart.slice(1).toLowerCase();
+}
+
+function deriveCompanyName(email: string): string {
+  const domain = email.split("@")[1] ?? "";
+  const parts = domain.split(".");
+  const name = parts.length > 1 ? (parts[parts.length - 2] ?? parts[0]) : parts[0];
+  if (!name) return "My Organization";
+  return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
 const hasGoogleProvider = !!process.env.NEXT_PUBLIC_GOOGLE_ENABLED;
@@ -68,8 +68,6 @@ export default function SignupPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      name: "",
-      companyName: "",
       email: "",
       password: "",
       terms: false,
@@ -79,28 +77,16 @@ export default function SignupPage() {
   const handleSubmit = useCallback(async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      const { firstName, lastName } = splitFullName(data.name);
       await apiClient.post("/auth/register", {
-        firstName,
-        lastName,
-        companyName: data.companyName,
+        firstName: deriveFirstName(data.email),
+        lastName: "",
+        companyName: deriveCompanyName(data.email),
         email: data.email,
         password: data.password,
         plan: "STARTER",
       });
-      toast.success("Account created! Signing you in…");
-
-      const result = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      });
-
-      if (result?.ok) {
-        window.location.href = "/org-setup";
-      } else {
-        setRegisteredEmail(data.email);
-      }
+      setRegisteredEmail(data.email);
+      toast.success("Account created! Check your email to verify.");
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -123,20 +109,22 @@ export default function SignupPage() {
     }
   }, [registeredEmail]);
 
+  const handleTogglePassword = useCallback(() => {
+    setShowPassword((v) => !v);
+  }, []);
+
   if (registeredEmail) {
     return (
       <div className="w-full max-w-sm text-center animate-fade-up">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
-          <Mail className="h-7 w-7 text-blue-600" />
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
+          <CheckCircle2 className="h-7 w-7 text-green-600" />
         </div>
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
           Check your email
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           We sent a verification link to{" "}
-          <span className="font-semibold text-foreground">
-            {registeredEmail}
-          </span>
+          <span className="font-semibold text-foreground">{registeredEmail}</span>
           . Click it to activate your account.
         </p>
         <div className="mt-6 space-y-3">
@@ -230,51 +218,6 @@ export default function SignupPage() {
           noValidate
         >
           <div className="space-y-1.5">
-            <Label htmlFor="name" className="text-[13px] font-medium">
-              Name
-            </Label>
-            <Input
-              id="name"
-              autoComplete="name"
-              {...form.register("name")}
-              placeholder="Aditya Sharma"
-              disabled={isSubmitting}
-              className={cn(
-                "h-9 text-sm",
-                form.formState.errors.name &&
-                  "border-destructive focus-visible:ring-destructive/30",
-              )}
-            />
-            {form.formState.errors.name && (
-              <p className="text-[12px] text-destructive">
-                {form.formState.errors.name.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="companyName" className="text-[13px] font-medium">
-              Company
-            </Label>
-            <Input
-              id="companyName"
-              {...form.register("companyName")}
-              placeholder="Acme Inc."
-              disabled={isSubmitting}
-              className={cn(
-                "h-9 text-sm",
-                form.formState.errors.companyName &&
-                  "border-destructive focus-visible:ring-destructive/30",
-              )}
-            />
-            {form.formState.errors.companyName && (
-              <p className="text-[12px] text-destructive">
-                {form.formState.errors.companyName.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
             <Label htmlFor="email" className="text-[13px] font-medium">
               Work email
             </Label>
@@ -318,7 +261,7 @@ export default function SignupPage() {
               />
               <button
                 type="button"
-                onClick={() => setShowPassword((v) => !v)}
+                onClick={handleTogglePassword}
                 tabIndex={-1}
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
