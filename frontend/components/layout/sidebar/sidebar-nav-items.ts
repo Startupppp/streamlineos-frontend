@@ -11,7 +11,6 @@ import {
   IndianRupee,
   Handshake,
   Contact2,
-  Trophy,
   BarChart3,
   UserCheck,
   Network,
@@ -65,7 +64,6 @@ import {
   Search,
   ShieldAlert,
   Sliders,
-  FormInput,
   FileSearch,
   LayoutTemplate,
   Grid3X3,
@@ -87,6 +85,7 @@ import {
   Upload,
   Smartphone,
   Plug,
+  Activity,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -592,13 +591,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "CRM",
-    requiredPermission: [
-      "crm:leads:view",
-      "crm:targets:view",
-      "crm:clients:read",
-      "dashboard:sales:view",
-      "dashboard:customer-executive:view",
-    ],
+    requiredPermission: ["crm:leads:view", "crm:reports:view"],
     routes: [
       {
         label: "Overview",
@@ -616,33 +609,35 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Smart Search",
             icon: Search,
             href: "/crm/leads/smart-search",
-            requiredPermission: "crm:leads:view",
-          },
-          {
-            label: "Web Forms",
-            icon: FormInput,
-            href: "/crm/web-forms",
-            requiredPermission: "crm:leads:create",
           },
           {
             label: "Distribute Leads",
             icon: Share2,
             href: "/crm/leads/distribute",
-            requiredPermission: "crm:leads:assign",
           },
           {
             label: "Duplicate Detection",
             icon: Copy,
             href: "/crm/leads/duplicates",
-            requiredPermission: "crm:leads:update",
           },
           {
             label: "Source Report",
             icon: BarChart2,
             href: "/crm/leads/source-report",
-            requiredPermission: "crm:reports:view",
           },
         ],
+      },
+      {
+        label: "Contacts",
+        icon: Users,
+        href: "/crm/contacts",
+        requiredPermission: "crm:leads:view",
+      },
+      {
+        label: "Companies",
+        icon: Building2,
+        href: "/crm/companies",
+        requiredPermission: "crm:leads:view",
       },
       {
         label: "Deals",
@@ -654,77 +649,47 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Deal Approvals",
             icon: Briefcase,
             href: "/crm/deals/approvals",
-            requiredPermission: "crm:leads:update",
           },
           {
             label: "Deal Aging",
             icon: Clock,
             href: "/crm/deals/aging",
-            requiredPermission: "crm:leads:view",
           },
           {
             label: "Win/Loss Analysis",
             icon: TrendingUp,
             href: "/crm/deals/win-loss",
-            requiredPermission: "crm:reports:view",
           },
         ],
       },
       {
-        label: "Quotes",
-        icon: FileText,
-        href: "/crm/quotes",
+        label: "Activities",
+        icon: Activity,
+        href: "/crm/activities",
         requiredPermission: "crm:leads:view",
       },
       {
-        label: "Contacts",
-        icon: Users,
-        href: "/crm/contacts",
-        requiredPermission: "crm:clients:read",
+        label: "Calendar",
+        icon: CalendarDays,
+        href: "/crm/calendar",
+        requiredPermission: "crm:leads:view",
       },
       {
-        label: "Clients",
-        icon: UserCheck,
-        href: "/crm/clients",
-        requiredPermission: "crm:clients:read",
-        children: [
-          {
-            label: "Organizations",
-            icon: Network,
-            href: "/crm/organizations",
-            requiredPermission: "crm:clients:read",
-          },
-          {
-            label: "Territories",
-            icon: Map,
-            href: "/crm/territories",
-            requiredPermission: "branch:read",
-          },
-          {
-            label: "CSAT Surveys",
-            icon: Smile,
-            href: "/crm/csat",
-            requiredPermission: "crm:clients:read",
-          },
-        ],
+        label: "Tasks",
+        icon: CheckSquare,
+        href: "/crm/tasks",
+        requiredPermission: "crm:leads:view",
       },
       {
-        label: "Targets",
-        icon: Trophy,
-        href: "/crm/targets",
-        requiredPermission: "crm:targets:view",
-      },
-      {
-        label: "Analytics",
+        label: "Reports",
         icon: BarChart3,
-        href: "/crm/analytics",
+        href: "/crm/reports",
         requiredPermission: "crm:reports:view",
         children: [
           {
-            label: "Reports",
+            label: "Analytics",
             icon: BarChart2,
-            href: "/crm/reports",
-            requiredPermission: "crm:reports:view",
+            href: "/crm/analytics",
           },
         ],
       },
@@ -738,143 +703,21 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Assignment Rules",
             icon: SlidersHorizontal,
             href: "/crm/settings/assignment-rules",
-            requiredPermission: "settings:manage",
           },
           {
             label: "Email Templates",
             icon: MailOpen,
             href: "/crm/settings/email-templates",
-            requiredPermission: "settings:manage",
           },
           {
             label: "Scoring Rules",
             icon: Star,
             href: "/crm/settings/scoring-rules",
-            requiredPermission: "settings:manage",
           },
           {
             label: "SLA Rules",
             icon: Clock,
             href: "/crm/settings/sla",
-            requiredPermission: "settings:manage",
-          },
-        ],
-      },
-      {
-        label: "Sales",
-        icon: BarChart3,
-        href: "/sales",
-        requiredPermission: "dashboard:sales:view",
-        children: [
-          {
-            label: "Quotas",
-            icon: Target,
-            href: "/sales/quotas",
-            requiredPermission: "crm:targets:view",
-          },
-          {
-            label: "Commissions",
-            icon: IndianRupee,
-            href: "/sales/commissions",
-            requiredPermission: "crm:incentives:read",
-          },
-          {
-            label: "Forecast Report",
-            icon: TrendingUp,
-            href: "/sales/forecast-report",
-            requiredPermission: "dashboard:sales:view",
-          },
-          {
-            label: "Sales Playbook",
-            icon: BookOpen,
-            href: "/sales/playbook",
-            requiredPermission: "dashboard:sales:view",
-          },
-          {
-            label: "Report Narrator",
-            icon: FileSearch,
-            href: "/sales/report-narrator",
-            requiredPermission: "dashboard:sales:view",
-          },
-          {
-            label: "Meeting Prep",
-            icon: CalendarCheck,
-            href: "/sales/meeting-prep",
-            requiredPermission: "dashboard:sales:view",
-          },
-          {
-            label: "Cohort Analysis",
-            icon: BarChart3,
-            href: "/sales/cohort-analysis",
-            requiredPermission: "dashboard:sales:view",
-          },
-          {
-            label: "Rep Comparison",
-            icon: Users,
-            href: "/sales/rep-comparison",
-            requiredPermission: "dashboard:sales:view",
-          },
-        ],
-      },
-      {
-        label: "Customer Success",
-        icon: Handshake,
-        href: "/customer-executive",
-        requiredPermission: "dashboard:customer-executive:view",
-        children: [
-          {
-            label: "Renewal Pipeline",
-            icon: RefreshCcw,
-            href: "/customer-executive/renewals",
-            requiredPermission: "dashboard:customer-executive:view",
-          },
-          {
-            label: "Upsell Tracker",
-            icon: TrendingUp,
-            href: "/customer-executive/upsell",
-            requiredPermission: "dashboard:customer-executive:view",
-          },
-          {
-            label: "Client Onboarding",
-            icon: ClipboardList,
-            href: "/customer-executive/client-onboarding",
-            requiredPermission: "dashboard:customer-executive:view",
-          },
-          {
-            label: "CSAT Surveys",
-            icon: Star,
-            href: "/customer-executive/surveys",
-            requiredPermission: "dashboard:customer-executive:view",
-          },
-          {
-            label: "Sentiment Analysis",
-            icon: Brain,
-            href: "/customer-executive/sentiment",
-            requiredPermission: "dashboard:customer-executive:view",
-          },
-          {
-            label: "SLA Compliance",
-            icon: ShieldAlert,
-            href: "/customer-executive/sla",
-            requiredPermission: "dashboard:customer-executive:view",
-          },
-          {
-            label: "Account Health",
-            icon: Heart,
-            href: "/customer-executive/health",
-            requiredPermission: "dashboard:customer-executive:view",
-          },
-          {
-            label: "NPS Surveys",
-            icon: Smile,
-            href: "/customer-executive/nps",
-            requiredPermission: "dashboard:customer-executive:view",
-          },
-          {
-            label: "Account Summary",
-            icon: FileText,
-            href: "/customer-executive/account-summary",
-            requiredPermission: "dashboard:customer-executive:view",
           },
         ],
       },
@@ -1335,12 +1178,6 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:manage",
       },
       {
-        label: "Webhooks",
-        icon: Zap,
-        href: "/settings/webhooks",
-        requiredPermission: "settings:manage",
-      },
-      {
         label: "API Keys",
         icon: Key,
         href: "/settings/api-tokens",
@@ -1427,19 +1264,19 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Webhooks",
         icon: Zap,
-        href: "/settings/webhooks",
+        href: "/settings/developer/webhooks",
         requiredPermission: "settings:manage",
       },
       {
         label: "API Tokens",
         icon: Key,
-        href: "/settings/api-tokens",
+        href: "/settings/developer/api-tokens",
         requiredPermission: "settings:manage",
       },
       {
         label: "Logs",
         icon: FileText,
-        href: "/settings/audit-log",
+        href: "/settings/developer/logs",
         requiredPermission: "settings:manage",
       },
       {
@@ -1543,7 +1380,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "inventory", label: "Inventory", href: "/inventory" },
   { key: "finance", label: "Finance", href: "/accounting" },
   { key: "helpdesk", label: "Helpdesk", href: "/support" },
-  { key: "documents", label: "Documents", href: "/knowledge-base" },
+  { key: "documents", label: "Documents", href: "/support/kb" },
   { key: "analytics", label: "Analytics", href: "/analytics" },
   { key: "ai", label: "AI", href: "/ai" },
   { key: "administration", label: "Admin", href: "/organization" },
@@ -1620,7 +1457,7 @@ export function getNavGroupsForProduct(
           {
             label: "Knowledge Base",
             icon: Library,
-            href: "/knowledge-base",
+            href: "/support/kb",
             requiredPermission: "support:kb:view",
           },
         ],
@@ -1651,7 +1488,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/inventory")) return "inventory";
   if (pathname.startsWith("/accounting")) return "finance";
   if (pathname.startsWith("/analytics")) return "analytics";
-  if (pathname.startsWith("/support") || pathname.startsWith("/knowledge-base"))
+  if (pathname.startsWith("/support"))
     return "helpdesk";
   if (pathname.startsWith("/ai")) return "ai";
   if (

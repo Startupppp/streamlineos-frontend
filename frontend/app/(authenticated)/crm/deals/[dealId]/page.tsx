@@ -179,7 +179,8 @@ export default function DealDetailPage({
 
   const handleStagePipelineClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      const stage = e.currentTarget.dataset.stage as DealStage;
+      const raw = e.currentTarget.dataset.stage;
+      const stage = STAGES.find((s) => s.key === raw)?.key;
       if (stage) handleStageChange(stage);
     },
     [handleStageChange],
@@ -187,9 +188,11 @@ export default function DealDetailPage({
 
   const handleQuickActionClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      const type = e.currentTarget.dataset.actionType as "call" | "note" | "email" | "meeting";
+      const raw = e.currentTarget.dataset.actionType;
       const label = e.currentTarget.dataset.actionLabel ?? "";
-      setPendingAction({ type, label });
+      if (raw === "call" || raw === "note" || raw === "email" || raw === "meeting") {
+        setPendingAction({ type: raw, label });
+      }
     },
     [],
   );

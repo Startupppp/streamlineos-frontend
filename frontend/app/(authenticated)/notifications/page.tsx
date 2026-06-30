@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, Loader2, Filter, X, Inbox } from "lucide-react";
+import { CheckCheck, Loader2, Filter, X, Inbox, Search } from "lucide-react";
 import {
   useNotifications,
   useUnreadNotificationCount,
@@ -15,10 +15,13 @@ import {
   useBulkMarkRead,
   useBulkArchive,
   useBulkDelete,
+  useApproveNotification,
+  useRejectNotification,
 } from "@/hooks/api/notifications";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -49,11 +52,29 @@ export default function NotificationsPage() {
   const [activePriority, setActivePriority] = useState<NotificationPriority | undefined>(undefined);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const searchTimeoutRef = useMemo(() => ({ current: null as ReturnType<typeof setTimeout> | null }), []);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearch(value);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => setDebouncedSearch(value), 300);
+  }, [searchTimeoutRef]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearch("");
+    setDebouncedSearch("");
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+  }, [searchTimeoutRef]);
 
   const { data: notifications, isLoading, isError, refetch } = useNotifications({
     section: activeSection,
     category: activeCategory,
     priority: activePriority,
+    search: debouncedSearch || undefined,
     limit: 50,
   });
   const { data: unreadData } = useUnreadNotificationCount();
@@ -66,6 +87,8 @@ export default function NotificationsPage() {
   const bulkMarkRead = useBulkMarkRead();
   const bulkArchive = useBulkArchive();
   const bulkDelete = useBulkDelete();
+  const approve = useApproveNotification();
+  const reject = useRejectNotification();
 
   const unreadCount = unreadData?.count ?? 0;
   const items = useMemo(() => notifications ?? [], [notifications]);
@@ -112,11 +135,8 @@ export default function NotificationsPage() {
   const handleSelect = useCallback((id: number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }, []);
@@ -134,11 +154,8 @@ export default function NotificationsPage() {
   }, [archive]);
 
   const handlePin = useCallback((id: number, isPinned: boolean) => {
-    if (isPinned) {
-      unpin.mutate(id);
-    } else {
-      pin.mutate(id);
-    }
+    if (isPinned) unpin.mutate(id);
+    else pin.mutate(id);
   }, [pin, unpin]);
 
   const handleDelete = useCallback((id: number) => {
@@ -165,21 +182,39 @@ export default function NotificationsPage() {
     setSelectedIds(new Set());
   }, [bulkDelete, selectedIds]);
 
+  const handleApprove = useCallback((id: number) => {
+    approve.mutate(id);
+  }, [approve]);
+
+  const handleReject = useCallback((id: number) => {
+    reject.mutate(id);
+  }, [reject]);
+
   const showMarkAllRead = activeSection === "ALL" || activeSection === "UNREAD";
+  const isApprovalSection = activeSection === "APPROVALS";
 
   const emptyTitle = useMemo(() => {
+    if (debouncedSearch) return "No matching notifications";
     if (activeSection === "UNREAD") return "You're all caught up";
     if (activeSection === "ARCHIVED") return "No archived notifications";
-    if (activeSection === "PINNED") return "No pinned notifications";
+    if (activeSection === "APPROVALS") return "No pending approvals";
+    if (activeSection === "MENTIONS") return "No mentions yet";
+    if (activeSection === "ASSIGNED_TO_ME") return "Nothing assigned to you";
+    if (activeSection === "BROADCASTS") return "No broadcasts";
+    if (activeSection === "SYSTEM") return "No system notifications";
     return "No notifications yet";
-  }, [activeSection]);
+  }, [activeSection, debouncedSearch]);
 
   const emptyDescription = useMemo(() => {
+    if (debouncedSearch) return "Try different search terms or clear the search.";
     if (activeSection === "UNREAD") return "All notifications have been read.";
     if (activeSection === "ARCHIVED") return "Notifications you archive will appear here.";
-    if (activeSection === "PINNED") return "Pin important notifications to keep them visible.";
+    if (activeSection === "APPROVALS") return "Approval requests will appear here when they need your attention.";
+    if (activeSection === "MENTIONS") return "You'll see notifications when someone mentions you.";
+    if (activeSection === "ASSIGNED_TO_ME") return "Tasks and items assigned to you will appear here.";
+    if (activeSection === "BROADCASTS") return "Organization-wide announcements will appear here.";
     return "When something important happens, you'll see it here.";
-  }, [activeSection]);
+  }, [activeSection, debouncedSearch]);
 
   return (
     <PageWrapper
@@ -224,65 +259,86 @@ export default function NotificationsPage() {
         </div>
       }
       filters={
-        <div className="space-y-0">
-          <Tabs value={activeSection} onValueChange={handleSectionChange}>
-            <TabsList className="bg-card border border-border">
-              {SECTION_TABS.map((tab) => (
-                <TabsTrigger key={tab.value} value={tab.value}>
-                  {tab.label}
-                  {tab.value === "UNREAD" && unreadCount > 0 && (
-                    <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-semibold text-white">
-                      {unreadCount}
-                    </span>
-                  )}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search notifications…"
+              className="h-8 pl-8 pr-8 text-sm"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
 
-          {showFilters && (
-            <div className="flex items-center gap-2 pt-3 flex-wrap">
-              <Select value={activeCategory ?? "ALL"} onValueChange={handleCategoryChange}>
-                <SelectTrigger className="h-8 w-[140px] text-xs">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All Categories</SelectItem>
-                  {NOTIFICATION_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {NOTIFICATION_CATEGORY_CONFIG[cat].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-0">
+            <Tabs value={activeSection} onValueChange={handleSectionChange}>
+              <TabsList className="bg-card border border-border">
+                {SECTION_TABS.map((tab) => (
+                  <TabsTrigger key={tab.value} value={tab.value}>
+                    {tab.label}
+                    {tab.value === "UNREAD" && unreadCount > 0 && (
+                      <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-semibold text-white">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
 
-              <Select value={activePriority ?? "ALL"} onValueChange={handlePriorityChange}>
-                <SelectTrigger className="h-8 w-[130px] text-xs">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All Priorities</SelectItem>
-                  {NOTIFICATION_PRIORITIES.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {NOTIFICATION_PRIORITY_CONFIG[p].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {showFilters && (
+              <div className="flex items-center gap-2 pt-3 flex-wrap">
+                <Select value={activeCategory ?? "ALL"} onValueChange={handleCategoryChange}>
+                  <SelectTrigger className="h-8 w-[140px] text-xs">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Categories</SelectItem>
+                    {NOTIFICATION_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {NOTIFICATION_CATEGORY_CONFIG[cat].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              {hasFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-xs text-muted-foreground"
-                  onClick={handleClearFilters}
-                >
-                  <X className="mr-1 h-3 w-3" />
-                  Clear
-                </Button>
-              )}
-            </div>
-          )}
+                <Select value={activePriority ?? "ALL"} onValueChange={handlePriorityChange}>
+                  <SelectTrigger className="h-8 w-[130px] text-xs">
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Priorities</SelectItem>
+                    {NOTIFICATION_PRIORITIES.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {NOTIFICATION_PRIORITY_CONFIG[p].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {hasFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs text-muted-foreground"
+                    onClick={handleClearFilters}
+                  >
+                    <X className="mr-1 h-3 w-3" />
+                    Clear
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       }
     >
@@ -362,11 +418,14 @@ export default function NotificationsPage() {
                 createdAt={n.createdAt}
                 link={n.link}
                 selected={selectedIds.has(n.id)}
+                isApproval={isApprovalSection}
                 onSelect={handleSelect}
                 onClick={handleNotificationClick}
                 onArchive={handleArchive}
                 onPin={handlePin}
                 onDelete={handleDelete}
+                onApprove={isApprovalSection ? handleApprove : undefined}
+                onReject={isApprovalSection ? handleReject : undefined}
               />
             ))}
           </div>

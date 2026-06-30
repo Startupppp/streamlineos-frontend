@@ -50,8 +50,7 @@ interface LeadInfoCardProps {
     potentialValue?: string | null;
     investmentInterest?: string | null;
     notes?: string | null;
-    tags?: unknown;
-    [key: string]: unknown;
+    tags?: string[] | null;
   };
   isEditing: boolean;
   editForm: UseFormReturn<EditForm>;
@@ -410,9 +409,9 @@ export function LeadInfoCard({
           </div>
         )}
 
-        {Array.isArray(lead.tags) && (lead.tags as string[]).length > 0 && (
+        {lead.tags && lead.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {(lead.tags as string[]).map((tag) => (
+            {lead.tags.map((tag) => (
               <Badge key={tag} variant="secondary" className="text-xs">
                 {tag}
               </Badge>

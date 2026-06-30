@@ -19,7 +19,7 @@ const STAGE_PROBABILITIES: Record<DealStage, number> = {
 
 interface Deal {
   id: number;
-  stage: string;
+  stage: DealStage;
   value: string | null;
   probability: number | null;
   expectedCloseDate: string | null;
@@ -45,7 +45,7 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
       const raw = Number(deal.value ?? 0);
       const prob = (deal.probability != null && deal.probability > 0)
         ? deal.probability
-        : (STAGE_PROBABILITIES[deal.stage as DealStage] ?? 0);
+        : (STAGE_PROBABILITIES[deal.stage] ?? 0);
       const weighted = raw * (prob / 100);
 
       total += weighted;
@@ -63,11 +63,11 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
       }
     }
 
-    const stageBreakdown = Object.entries(stageMap)
-      .map(([stage, data]) => ({
-        stage: stage as DealStage,
-        probability: STAGE_PROBABILITIES[stage as DealStage] ?? 0,
-        ...data,
+    const stageBreakdown = (Object.keys(stageMap) as DealStage[])
+      .map((stage) => ({
+        stage,
+        probability: STAGE_PROBABILITIES[stage] ?? 0,
+        ...stageMap[stage]!,
       }))
       .sort((a, b) => {
         const order: DealStage[] = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON"];

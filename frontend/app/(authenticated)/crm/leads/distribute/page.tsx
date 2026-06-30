@@ -69,7 +69,7 @@ export default function LeadDistributionPage() {
   });
 
   const refetch = useCallback(() => {
-    qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+    void qc.invalidateQueries({ queryKey: queryKeys.leads.all });
   }, [qc]);
 
   const filteredLeads = useMemo(() => data?.leads ?? [], [data]);
@@ -99,7 +99,6 @@ export default function LeadDistributionPage() {
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), []);
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
   const handleShowDistribute = useCallback(() => setShowDistribute(true), []);
-  const handleRefetch = useCallback(() => refetch(), [refetch]);
   const handleDistributeSuccess = useCallback(() => {
     setSelectedIds(new Set());
     refetch();
@@ -138,7 +137,7 @@ export default function LeadDistributionPage() {
       }
       actions={
         <>
-          <CsvUploadDialog onSuccess={handleRefetch} />
+          <CsvUploadDialog onSuccess={refetch} />
           <Button
             size="sm"
             variant="outline"
@@ -174,7 +173,7 @@ export default function LeadDistributionPage() {
             <p className="text-sm text-muted-foreground">
               {error instanceof Error ? error.message : "Failed to load leads. Please try again."}
             </p>
-            <Button variant="outline" size="sm" onClick={handleRefetch}>
+            <Button variant="outline" size="sm" onClick={refetch}>
               Retry
             </Button>
           </div>

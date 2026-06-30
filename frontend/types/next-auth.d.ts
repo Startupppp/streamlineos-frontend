@@ -14,6 +14,7 @@ declare module "next-auth" {
     orgOnboardingCompletedAt?: string | null;
     userOnboardingCompletedAt?: string | null;
     backendJwt?: string;
+    authProvider?: string;
     user: {
       id: string;
       role: string;
@@ -68,5 +69,6 @@ declare module "next-auth/jwt" {
     daysUntilExpiry?: number;
     orgOnboardingCompletedAt?: string | null;
     userOnboardingCompletedAt?: string | null;
+    authProvider?: string;
   }
 }

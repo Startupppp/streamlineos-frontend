@@ -254,7 +254,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
 
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, account, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -277,6 +277,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isPlatformAdmin = user.isPlatformAdmin ?? false;
         token.sessionId = randomUUID();
         if (user.daysUntilExpiry !== undefined) token.daysUntilExpiry = user.daysUntilExpiry;
+        token.authProvider = account?.provider ?? "credentials";
       }
 
       if (trigger === "update") {
@@ -323,6 +324,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         (token.userOnboardingCompletedAt as string | null | undefined) ?? null;
       if (token.daysUntilExpiry !== undefined)
         session.daysUntilExpiry = token.daysUntilExpiry as number;
+      session.authProvider = (token.authProvider as string | undefined) ?? "credentials";
 
       const jwtSecret = process.env.BACKEND_JWT_SECRET;
       const sessionId = (token.sessionId as string | undefined)?.trim();

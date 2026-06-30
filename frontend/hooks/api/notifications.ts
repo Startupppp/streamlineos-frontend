@@ -43,6 +43,7 @@ export const useNotifications = (
         "/notifications",
         params ? toStringParams(params as Record<string, unknown>) : undefined,
       ),
+    staleTime: 30_000,
     ...options,
   });
 };
@@ -65,6 +66,7 @@ export const useUnreadNotificationCount = (
 export const useMarkNotificationRead = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "mark-read"],
     mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/read`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -80,6 +82,7 @@ export const useMarkAllNotificationsRead = () => {
     void,
     { previousCount: UnreadCount | undefined }
   >({
+    mutationKey: ["notifications", "mark-all-read"],
     mutationFn: () => apiClient.patch<{ success: boolean }>("/notifications/read-all"),
     onMutate: async () => {
       const unreadKey = queryKeys.notifications.unreadCount();
@@ -102,6 +105,7 @@ export const useMarkAllNotificationsRead = () => {
 export const useArchiveNotification = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "archive"],
     mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/archive`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -122,6 +126,7 @@ export const useUnarchiveNotification = () => {
 export const useDeleteNotification = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "delete"],
     mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notifications/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -132,6 +137,7 @@ export const useDeleteNotification = () => {
 export const usePinNotification = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "pin"],
     mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/pin`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -142,6 +148,7 @@ export const usePinNotification = () => {
 export const useUnpinNotification = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "unpin"],
     mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/unpin`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -163,6 +170,7 @@ export const useSnoozeNotification = () => {
 export const useBulkMarkRead = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number[]>({
+    mutationKey: ["notifications", "bulk-mark-read"],
     mutationFn: (ids) => apiClient.post<{ success: boolean }>("/notifications/bulk/read", { ids }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -173,6 +181,7 @@ export const useBulkMarkRead = () => {
 export const useBulkArchive = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number[]>({
+    mutationKey: ["notifications", "bulk-archive"],
     mutationFn: (ids) => apiClient.post<{ success: boolean }>("/notifications/bulk/archive", { ids }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -183,6 +192,7 @@ export const useBulkArchive = () => {
 export const useBulkDelete = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number[]>({
+    mutationKey: ["notifications", "bulk-delete"],
     mutationFn: (ids) => apiClient.post<{ success: boolean }>("/notifications/bulk/delete", { ids }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -427,6 +437,28 @@ export const useRetryNotification = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.queue() });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.queueFailed() });
+    },
+  });
+};
+
+export const useApproveNotification = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "approve"],
+    mutationFn: (id) => apiClient.post<{ success: boolean }>(`/notifications/${id}/approve`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+    },
+  });
+};
+
+export const useRejectNotification = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "reject"],
+    mutationFn: (id) => apiClient.post<{ success: boolean }>(`/notifications/${id}/reject`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },
   });
 };

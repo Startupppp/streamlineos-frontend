@@ -10,7 +10,17 @@ export type NotificationCategory =
   | "WORKFLOW"
   | "MARKETING"
   | "SYSTEM";
-export type NotificationSection = "ALL" | "UNREAD" | "READ" | "ARCHIVED" | "SYSTEM" | "PINNED";
+export type NotificationSection =
+  | "ALL"
+  | "UNREAD"
+  | "READ"
+  | "MENTIONS"
+  | "ASSIGNED_TO_ME"
+  | "APPROVALS"
+  | "BROADCASTS"
+  | "ARCHIVED"
+  | "SYSTEM"
+  | "PINNED";
 export type NotificationChannel =
   | "IN_APP"
   | "EMAIL"
@@ -61,6 +71,7 @@ export interface NotificationListParams {
   category?: NotificationCategory;
   priority?: NotificationPriority;
   sourceModule?: string;
+  search?: string;
   limit?: number;
   cursor?: number;
 }

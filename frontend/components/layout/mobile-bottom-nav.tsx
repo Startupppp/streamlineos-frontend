@@ -46,6 +46,17 @@ export function MobileBottomNav() {
     )
   }, [])
 
+  const handleCreateClick = useCallback(() => {
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "k",
+        metaKey: navigator.platform?.toUpperCase().includes("MAC") ?? true,
+        ctrlKey: !(navigator.platform?.toUpperCase().includes("MAC") ?? true),
+        bubbles: true,
+      }),
+    )
+  }, [])
+
   return (
     <nav
       className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background/95 backdrop-blur-md border-t border-border z-50"
@@ -78,6 +89,7 @@ export function MobileBottomNav() {
               <button
                 key={item.key}
                 type="button"
+                onClick={handleCreateClick}
                 className="flex flex-col items-center gap-0.5 min-w-[44px] py-1"
                 aria-label={item.label}
               >

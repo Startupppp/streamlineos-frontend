@@ -8,15 +8,15 @@ import {
   TrendingUp,
   Building2,
   BarChart3,
-  Target,
   ArrowRight,
   UserPlus,
-  Settings,
   IndianRupee,
   AlertTriangle,
-  FileText,
   Briefcase,
   RefreshCw,
+  Activity,
+  CalendarDays,
+  CheckSquare,
 } from "lucide-react";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
@@ -27,12 +27,7 @@ import { cn } from "@/lib/utils";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
 import { formatINRCompact } from "@/lib/format-utils";
 import { useLeadStats } from "@/hooks/api/leads";
-import {
-  useDeals,
-  useDealStats,
-  useContacts,
-  useCrmOrganizations,
-} from "@/hooks/api/crm";
+import { useDeals, useDealStats, useContacts } from "@/hooks/api/crm";
 import { CrmPipelineMini } from "@/features/crm/shared/crm-pipeline-mini";
 import { CrmRecentActivity } from "@/features/crm/shared/crm-recent-activity";
 
@@ -46,14 +41,6 @@ const NAV_CARDS = [
     bg: "bg-blue-500/10",
   },
   {
-    title: "Deals",
-    description: "Proposal to close",
-    href: "/crm/deals",
-    icon: Briefcase,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-  },
-  {
     title: "Contacts",
     description: "People directory",
     href: "/crm/contacts",
@@ -62,42 +49,50 @@ const NAV_CARDS = [
     bg: "bg-purple-500/10",
   },
   {
-    title: "Clients",
-    description: "Account management",
-    href: "/crm/clients",
+    title: "Companies",
+    description: "Organizations & accounts",
+    href: "/crm/companies",
     icon: Building2,
     color: "text-amber-400",
     bg: "bg-amber-500/10",
   },
   {
-    title: "Analytics",
-    description: "Charts & metrics",
-    href: "/crm/analytics",
-    icon: BarChart3,
+    title: "Deals",
+    description: "Pipeline to close",
+    href: "/crm/deals",
+    icon: Briefcase,
+    color: "text-emerald-400",
+    bg: "bg-emerald-500/10",
+  },
+  {
+    title: "Activities",
+    description: "Calls, emails & meetings",
+    href: "/crm/activities",
+    icon: Activity,
     color: "text-cyan-400",
     bg: "bg-cyan-500/10",
   },
   {
-    title: "Reports",
-    description: "Export & SLA",
-    href: "/crm/reports",
-    icon: FileText,
+    title: "Calendar",
+    description: "Schedule & meetings",
+    href: "/crm/calendar",
+    icon: CalendarDays,
+    color: "text-indigo-400",
+    bg: "bg-indigo-500/10",
+  },
+  {
+    title: "Tasks",
+    description: "Follow-ups & to-dos",
+    href: "/crm/tasks",
+    icon: CheckSquare,
     color: "text-rose-400",
     bg: "bg-rose-500/10",
   },
   {
-    title: "Targets",
-    description: "Goals & leaderboard",
-    href: "/crm/targets",
-    icon: Target,
-    color: "text-blue-600",
-    bg: "bg-blue-500/10",
-  },
-  {
-    title: "Settings",
-    description: "Rules & SLA",
-    href: "/crm/settings/scoring-rules",
-    icon: Settings,
+    title: "Reports",
+    description: "Analytics & insights",
+    href: "/crm/reports",
+    icon: BarChart3,
     color: "text-slate-400",
     bg: "bg-slate-500/10",
   },
@@ -119,16 +114,9 @@ export default function CrmHubPage() {
   const { data: contactsData, isLoading: contactsLoading } = useContacts({
     limit: 1,
   });
-  const { data: orgsData, isLoading: orgsLoading } = useCrmOrganizations({
-    limit: 1,
-  });
 
   const isLoading =
-    statsLoading ||
-    dealsLoading ||
-    activityLoading ||
-    contactsLoading ||
-    orgsLoading;
+    statsLoading || dealsLoading || activityLoading || contactsLoading;
   const error = statsError ?? dealsError;
 
   const handleRetry = useCallback(() => {
@@ -151,7 +139,7 @@ export default function CrmHubPage() {
           </div>
 
           <div className="flex items-center gap-4 flex-wrap px-1">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-3.5 w-24" />
             ))}
           </div>
@@ -291,12 +279,6 @@ export default function CrmHubPage() {
                 <span className="text-muted-foreground">Contacts</span>{" "}
                 <span className="font-bold ml-1">
                   {contactsData?.total ?? 0}
-                </span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Orgs</span>{" "}
-                <span className="font-bold ml-1">
-                  {orgsData?.totalCount ?? 0}
                 </span>
               </div>
             </div>

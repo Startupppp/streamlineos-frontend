@@ -121,7 +121,6 @@ export function MeetingDialog({ open, onOpenChange, onSubmit, isPending }: Meeti
   );
 }
 
-
 interface CreateProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

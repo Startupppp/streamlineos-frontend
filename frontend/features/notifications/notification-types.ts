@@ -31,6 +31,10 @@ export type NotificationSection =
   | "ALL"
   | "UNREAD"
   | "READ"
+  | "MENTIONS"
+  | "ASSIGNED_TO_ME"
+  | "APPROVALS"
+  | "BROADCASTS"
   | "ARCHIVED"
   | "SYSTEM"
   | "PINNED";
@@ -165,15 +169,16 @@ export const NOTIFICATION_PRIORITY_CONFIG: Record<
   },
 };
 
-export const SECTION_TABS: Array<{ value: NotificationSection; label: string }> =
-  [
-    { value: "ALL", label: "All" },
-    { value: "UNREAD", label: "Unread" },
-    { value: "READ", label: "Read" },
-    { value: "ARCHIVED", label: "Archived" },
-    { value: "SYSTEM", label: "System" },
-    { value: "PINNED", label: "Pinned" },
-  ];
+export const SECTION_TABS: Array<{ value: NotificationSection; label: string }> = [
+  { value: "ALL", label: "All" },
+  { value: "UNREAD", label: "Unread" },
+  { value: "MENTIONS", label: "Mentions" },
+  { value: "ASSIGNED_TO_ME", label: "Assigned to Me" },
+  { value: "APPROVALS", label: "Approvals" },
+  { value: "BROADCASTS", label: "Broadcasts" },
+  { value: "ARCHIVED", label: "Archived" },
+  { value: "SYSTEM", label: "System" },
+];
 
 export const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
   "SECURITY",

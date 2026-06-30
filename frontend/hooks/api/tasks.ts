@@ -7,10 +7,10 @@ import { queryKeys } from "@/lib/query-keys";
 
 export type TaskEntityType = "LEAD" | "DEAL" | "CONTACT" | "PROJECT";
 export type TaskType = "CALL" | "EMAIL" | "MEETING" | "CUSTOM";
-type TaskStatus = "pending" | "completed" | "cancelled";
-type TaskBucket = "OVERDUE" | "TODAY" | "THIS_WEEK" | "UPCOMING" | "NO_DATE";
+export type TaskStatus = "pending" | "completed" | "cancelled";
+export type TaskBucket = "OVERDUE" | "TODAY" | "THIS_WEEK" | "UPCOMING" | "NO_DATE";
 
-interface Task {
+export interface Task {
   id: number;
   orgId: string;
   title: string;
@@ -29,7 +29,7 @@ interface Task {
   updatedAt: string | null;
 }
 
-interface TaskWithBucket extends Task {
+export interface TaskWithBucket extends Task {
   bucket: TaskBucket;
 }
 
@@ -40,7 +40,7 @@ interface TasksListResponse {
   limit: number;
 }
 
-interface CreateTaskInput {
+export interface CreateTaskInput {
   title: string;
   notes?: string;
   entityType?: TaskEntityType;
@@ -52,7 +52,18 @@ interface CreateTaskInput {
   timezone?: string;
 }
 
-interface TasksFilters {
+export interface UpdateTaskInput {
+  title?: string;
+  notes?: string;
+  entityType?: TaskEntityType;
+  entityId?: number;
+  type?: TaskType;
+  assigneeId?: string;
+  dueDate?: string;
+  status?: TaskStatus;
+}
+
+export interface TasksFilters {
   assigneeId?: string;
   status?: TaskStatus;
   type?: TaskType;
@@ -75,7 +86,32 @@ export function useTasks(filters?: TasksFilters) {
 export function useCreateTask() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["tasks", "create"],
     mutationFn: (input: CreateTaskInput) => apiClient.post<Task>("/tasks", input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+  });
+}
+
+export function useUpdateTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["tasks", "update"],
+    mutationFn: ({ taskId, input }: { taskId: number; input: UpdateTaskInput }) =>
+      apiClient.patch<Task>(`/tasks/${taskId}`, input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+  });
+}
+
+export function useDeleteTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["tasks", "delete"],
+    mutationFn: (taskId: number) =>
+      apiClient.delete<{ success: boolean }>(`/tasks/${taskId}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
     },
@@ -85,6 +121,7 @@ export function useCreateTask() {
 export function useCompleteTask() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["tasks", "complete"],
     mutationFn: ({ taskId, completedAt }: { taskId: number; completedAt?: string }) =>
       apiClient.post<Task>(`/tasks/${taskId}/complete`, { completedAt }),
     onMutate: async ({ taskId }) => {
@@ -183,6 +220,7 @@ export function useTaskSequences() {
 export function useCreateTaskSequence() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["tasks", "sequences", "create"],
     mutationFn: (input: CreateTaskSequenceInput) =>
       apiClient.post<TaskSequence>("/tasks/sequences", input),
     onSuccess: () => {
@@ -194,6 +232,7 @@ export function useCreateTaskSequence() {
 export function useDeleteTaskSequence() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["tasks", "sequences", "delete"],
     mutationFn: (sequenceId: number) =>
       apiClient.delete<{ success: boolean }>(`/tasks/sequences/${sequenceId}`),
     onSuccess: () => {
@@ -205,6 +244,7 @@ export function useDeleteTaskSequence() {
 export function useApplyTaskSequence() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["tasks", "sequences", "apply"],
     mutationFn: ({ sequenceId, input }: { sequenceId: number; input: ApplySequenceInput }) =>
       apiClient.post<{ created: Task[]; count: number }>(
         `/tasks/sequences/${sequenceId}/apply`,
@@ -215,5 +255,3 @@ export function useApplyTaskSequence() {
     },
   });
 }
-
-

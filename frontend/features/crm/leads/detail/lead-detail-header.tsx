@@ -28,12 +28,17 @@ import {
 
 interface LeadDetailHeaderProps {
   lead: {
+    id: number;
     name: string;
     company?: string | null;
     designation?: string | null;
     status: string;
     priority?: string | null;
-    [key: string]: unknown;
+    score?: number | null;
+    slaDeadline?: string | null;
+    potentialValue?: string | null;
+    email?: string | null;
+    city?: string | null;
   };
   isEditing: boolean;
   isStatusPending?: boolean;
@@ -148,12 +153,8 @@ export function LeadDetailHeader({
   const currentStatusIndex = STATUS_PIPELINE.indexOf(
     lead.status as PipelineStatus
   );
-  const scoreBadge = getScoreBadge(
-    (lead as Record<string, unknown>).score as number | null
-  );
-  const sla = getSlaCountdown(
-    (lead as Record<string, unknown>).slaDeadline as string | null
-  );
+  const scoreBadge = getScoreBadge(lead.score ?? null);
+  const sla = getSlaCountdown(lead.slaDeadline ?? null);
   const priorityStyle =
     PRIORITY_STYLES[lead.priority ?? "WARM"] ?? PRIORITY_STYLES.WARM;
 
@@ -178,7 +179,7 @@ export function LeadDetailHeader({
                 {lead.name}
               </h2>
               <span className="text-xs font-mono text-muted-foreground/60 shrink-0">
-                LD-{String((lead as Record<string, unknown>).id as number ?? 0).padStart(5, "0")}
+                LD-{String(lead.id).padStart(5, "0")}
               </span>
             </div>
             {(lead.company || lead.designation) && (
@@ -232,9 +233,7 @@ export function LeadDetailHeader({
                 className={cn("text-xs px-2 py-0.5 font-semibold", scoreBadge.bg, scoreBadge.color)}
               >
                 <Flame className="h-3 w-3 mr-1" />
-                {String(
-                  (lead as Record<string, unknown>).score ?? 0
-                )}{" "}
+                {String(lead.score ?? 0)}{" "}
                 · {scoreBadge.label}
               </Badge>
 
@@ -248,34 +247,26 @@ export function LeadDetailHeader({
 
             <div className="flex items-center gap-1 flex-wrap sm:justify-end">
               <AIScoreButton
-                leadId={(lead as Record<string, unknown>).id as number}
-                currentScore={
-                  (lead as Record<string, unknown>).score as number | null
-                }
+                leadId={lead.id}
+                currentScore={lead.score ?? null}
                 compact
               />
               <AIEmailDialog
                 leadName={lead.name}
                 company={lead.company}
                 designation={lead.designation}
-                potentialValue={
-                  (lead as Record<string, unknown>).potentialValue as string | undefined
-                }
+                potentialValue={lead.potentialValue ?? undefined}
               />
               <AINextActionButton
-                leadId={(lead as Record<string, unknown>).id as number}
+                leadId={lead.id}
                 compact
               />
               <AIEnrichLeadButton
                 leadName={lead.name}
                 company={lead.company}
-                email={
-                  (lead as Record<string, unknown>).email as string | null | undefined
-                }
+                email={lead.email}
                 designation={lead.designation}
-                city={
-                  (lead as Record<string, unknown>).city as string | null | undefined
-                }
+                city={lead.city}
               />
 
               <Button variant="outline" size="sm" onClick={onToggleEdit}>

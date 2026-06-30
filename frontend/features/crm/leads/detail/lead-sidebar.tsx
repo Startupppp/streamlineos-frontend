@@ -22,7 +22,6 @@ interface LeadSidebarProps {
     updatedAt?: Date | string | null;
     assignedAt?: Date | string | null;
     convertedAt?: Date | string | null;
-    [key: string]: unknown;
   };
   timeline: TimelineItem[] | undefined;
   timelineLoading: boolean;

@@ -144,7 +144,6 @@ export default function LeadSourceReportPage() {
                   illustration={<EmptySearchIllustration className="h-40 w-40" />}
                   title="No source data"
                   description="No lead source data is available yet."
-
                   className="min-h-[300px]"
                 />
               ) : (

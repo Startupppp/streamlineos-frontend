@@ -158,14 +158,6 @@ export const queryKeys = {
     items: (clientId: number) => [...base, "clientOnboarding", "items", clientId] as const,
   },
 
-  targets: {
-    all: [...base, "targets"] as const,
-    list: (params?: Record<string, unknown>) => [...base, "targets", "list", params] as const,
-    myTargets: () => [...base, "targets", "myTargets"] as const,
-    leaderboard: (metricType?: string) => [...base, "targets", "leaderboard", metricType] as const,
-    history: (targetId: number) => [...base, "targets", "history", targetId] as const,
-  },
-
   projects: {
     all: [...base, "projects"] as const,
     list: () => [...base, "projects", "list"] as const,
@@ -362,18 +354,6 @@ export const queryKeys = {
     list: () => [...base, "sessions", "list"] as const,
   },
 
-  webLeadForms: {
-    all: [...base, "webLeadForms"] as const,
-    list: () => [...base, "webLeadForms", "list"] as const,
-    detail: (id: number) => [...base, "webLeadForms", "detail", id] as const,
-  },
-
-  quotes: {
-    all: [...base, "quotes"] as const,
-    list: (params?: Record<string, unknown>) => [...base, "quotes", "list", params] as const,
-    detail: (id: number) => [...base, "quotes", "detail", id] as const,
-  },
-
   tasks: {
     all: [...base, "tasks"] as const,
     list: (params?: Record<string, unknown>) => [...base, "tasks", "list", params] as const,
@@ -382,6 +362,11 @@ export const queryKeys = {
     overdue: () => [...base, "tasks", "overdue"] as const,
     overdueCount: () => [...base, "tasks", "overdueCount"] as const,
     sequences: () => [...base, "tasks", "sequences"] as const,
+  },
+
+  crmActivities: {
+    all: [...base, "crmActivities"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "crmActivities", "list", params] as const,
   },
 
   blog: {
@@ -522,12 +507,6 @@ export const queryKeys = {
     publicBoard: (orgId: string) => [...base, "roadmap", "publicBoard", orgId] as const,
   },
 
-  csHealth: {
-    all: [...base, "csHealth"] as const,
-    scores: (params?: Record<string, unknown>) => [...base, "csHealth", "scores", params] as const,
-    config: () => [...base, "csHealth", "config"] as const,
-  },
-
   automations: {
     all: [...base, "automations"] as const,
     list: (params?: Record<string, unknown>) => [...base, "automations", "list", params] as const,
@@ -615,11 +594,6 @@ export const queryKeys = {
     featureFlags: () => [...base, "settings", "featureFlags"] as const,
     aiUsage: () => [...base, "settings", "aiUsage"] as const,
     customFields: (entityType: string) => [...base, "settings", "customFields", entityType] as const,
-  },
-
-  territories: {
-    all: [...base, "territories"] as const,
-    list: () => [...base, "territories", "list"] as const,
   },
 
   salesAnalytics: {

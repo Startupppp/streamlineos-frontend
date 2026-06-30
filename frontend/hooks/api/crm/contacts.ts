@@ -8,6 +8,7 @@ import type {
   PaginatedContacts,
   ContactFilters,
   CreateContactInput,
+  UpdateContactInput,
 } from "@/types/crm";
 
 export function useContacts(filters?: ContactFilters) {
@@ -19,13 +20,38 @@ export function useContacts(filters?: ContactFilters) {
   });
 }
 
+export function useContactDetail(id: number) {
+  return useQuery({
+    queryKey: queryKeys.contacts.detail(id),
+    queryFn: () => apiClient.get<Contact>(`/contacts/${id}`),
+    enabled: id > 0,
+    staleTime: 2 * 60_000,
+  });
+}
+
 export function useCreateContact() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["contacts", "create"] as const,
     mutationFn: (input: CreateContactInput) =>
       apiClient.post<Contact>("/contacts", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
+    },
+  });
+}
+
+export function useUpdateContact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["contacts", "update"] as const,
+    mutationFn: (input: UpdateContactInput) =>
+      apiClient.patch<Contact>(`/contacts/${input.id}`, input),
+    onSuccess: (_data, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.contacts.detail(variables.id),
+      });
     },
   });
 }
@@ -33,11 +59,11 @@ export function useCreateContact() {
 export function useDeleteContact() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["contacts", "delete"] as const,
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/contacts/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
     },
   });
 }
-

@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import type { DealStage } from "@/types/crm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +44,7 @@ export type EditFormValues = z.infer<typeof editSchema>;
 export interface DealForEditForm {
   name: string;
   value?: string | null;
-  stage: string;
+  stage: DealStage;
   probability?: number | null;
   contactPerson?: string | null;
   contactEmail?: string | null;
@@ -66,7 +67,7 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
     values: {
       name: deal.name,
       value: deal.value ??"0",
-      stage: deal.stage as EditFormValues["stage"],
+      stage: deal.stage,
       probability: deal.probability != null ? String(deal.probability) : "",
       contactPerson: deal.contactPerson ??"",
       contactEmail: deal.contactEmail ??"",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Archive, Pin, PinOff, Trash2 } from "lucide-react";
+import { Archive, Pin, PinOff, Trash2, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -29,11 +29,14 @@ export interface NotificationCardProps {
   createdAt: Date | string | null;
   link?: string | null;
   selected?: boolean;
+  isApproval?: boolean;
   onSelect?: (id: number) => void;
   onClick: (n: { id: number; isRead: boolean; link: string | null }) => void;
   onArchive?: (id: number) => void;
   onPin?: (id: number, pinned: boolean) => void;
   onDelete?: (id: number) => void;
+  onApprove?: (id: number) => void;
+  onReject?: (id: number) => void;
 }
 
 export function NotificationCard({
@@ -50,11 +53,14 @@ export function NotificationCard({
   createdAt,
   link,
   selected = false,
+  isApproval = false,
   onSelect,
   onClick,
   onArchive,
   onPin,
   onDelete,
+  onApprove,
+  onReject,
 }: NotificationCardProps) {
   const categoryKey = (category ?? "SYSTEM") as NotificationCategory;
   const typeKey = (type ?? "INFO") as NotificationType;
@@ -92,6 +98,16 @@ export function NotificationCard({
     e.stopPropagation();
     onDelete?.(id);
   }, [id, onDelete]);
+
+  const handleApprove = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onApprove?.(id);
+  }, [id, onApprove]);
+
+  const handleReject = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onReject?.(id);
+  }, [id, onReject]);
 
   return (
     <div
@@ -156,6 +172,33 @@ export function NotificationCard({
           <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5 pr-16">
             {message}
           </p>
+        )}
+
+        {isApproval && (onApprove || onReject) && (
+          <div className="flex items-center gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
+            {onApprove && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 text-xs px-2.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300"
+                onClick={handleApprove}
+              >
+                <Check className="h-3 w-3 mr-1" />
+                Approve
+              </Button>
+            )}
+            {onReject && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 text-xs px-2.5 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300"
+                onClick={handleReject}
+              >
+                <X className="h-3 w-3 mr-1" />
+                Reject
+              </Button>
+            )}
+          </div>
         )}
       </div>
 

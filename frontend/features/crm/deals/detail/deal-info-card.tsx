@@ -1,6 +1,7 @@
 "use client";
 
 import { Calendar, User, Phone, Mail, Clock } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function formatINR(v: number) {
@@ -29,12 +30,12 @@ interface DealInfoCardProps {
 export function DealInfoCard({ deal }: DealInfoCardProps) {
   const dealValue = Number(deal.value ?? 0);
 
-  const fields = [
+  const fields: Array<{ icon: LucideIcon; label: string; value: string | null | undefined; href: string | undefined }> = [
     {
       icon: User,
       label: "Contact Person",
       value: deal.contactPerson,
-      href: undefined as string | undefined,
+      href: undefined,
     },
     {
       icon: Mail,

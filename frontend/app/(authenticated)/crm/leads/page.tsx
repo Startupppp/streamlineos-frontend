@@ -122,21 +122,26 @@ export default function LeadsPipelinePage() {
     [setView],
   );
 
-  const filteredBoard = useMemo(() => {
+  const filteredBoard = useMemo<Record<string, BoardLead[]> | null>(() => {
     if (!board) return null;
-    if (!debouncedSearchQuery) return board;
+    const result: Record<string, BoardLead[]> = {};
+    if (!debouncedSearchQuery) {
+      for (const [status, leads] of Object.entries(board)) {
+        result[status] = leads;
+      }
+      return result;
+    }
     const q = debouncedSearchQuery.toLowerCase();
-    const filtered: Record<string, (typeof board)[keyof typeof board]> = {};
     for (const [status, leads] of Object.entries(board)) {
-      filtered[status] = leads.filter(
-        (l: BoardLead) =>
+      result[status] = leads.filter(
+        (l) =>
           l.name.toLowerCase().includes(q) ||
           l.email?.toLowerCase().includes(q) ||
           l.phone?.includes(q) ||
           l.company?.toLowerCase().includes(q),
       );
     }
-    return filtered;
+    return result;
   }, [board, debouncedSearchQuery]);
 
   const handleCreateLead = useCallback(
@@ -452,9 +457,7 @@ export default function LeadsPipelinePage() {
         {view === "kanban" && (
           <div className="flex-1 min-h-0 mt-2 overflow-auto">
             <LeadsKanban
-              filteredBoard={
-                filteredBoard as Record<string, BoardLead[]> | null
-              }
+              filteredBoard={filteredBoard}
               onDragEnd={handleDragEnd}
               onOpenLead={setSelectedLeadId}
               onMoveStatus={handleMoveStatus}

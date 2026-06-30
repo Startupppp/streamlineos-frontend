@@ -297,7 +297,7 @@ Ordered money-path first. Check off each page after fixing.
 ## Chat & Communication
 - [x] `/chat` — Chat
 - [x] `/calendar` — Calendar
-- [x] `/notifications` — Notifications: full PRD implementation — sections (ALL/UNREAD/READ/ARCHIVED/SYSTEM/PINNED), bulk actions, category+priority filters, compact divide-y list with inline action buttons; `/notifications/preferences` — channel toggles + quiet hours + digest mode in compact list layout; `/notifications/templates` — CRUD with preview dialog, divide-y list; `/notifications/broadcasts` — create/publish/cancel/delete with status tabs; `/notifications/analytics` — metrics + per-category/priority bar charts; `/notifications/queue` — active + failed tabs with retry; notification bell with popover, Lucide icons, blue-600 badge; all pages follow ink-style design system (blue-500 accent, divide-y lists, no colored stat boxes)
+- [x] `/notifications` — Notifications: PRD-aligned sections (ALL/UNREAD/MENTIONS/ASSIGNED_TO_ME/APPROVALS/BROADCASTS/ARCHIVED/SYSTEM), search bar with 300ms debounce, bulk actions (mark-read/archive/delete), category+priority filters, inline approve/reject for APPROVALS section, compact divide-y list; `/notifications/preferences` — channel toggles + quiet hours + timezone + digest mode; `/notifications/templates` — CRUD with preview dialog; `/notifications/broadcasts` — create/publish/cancel/delete with status tabs; `/notifications/analytics` — metrics + per-category/priority bar charts; `/notifications/queue` — active + failed tabs with retry; `/notifications/audit` — audit log; GlobalHeader added (logo+workspace switcher+product switcher+search+AI/calendar/chat links+bell+quick-create+avatar); approve/reject hooks added; notification bell with popover
 
 ---
 
@@ -316,7 +316,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/settings/modules` — Org module management: enable/disable feature modules via `useOrgModules`/`useToggleOrgModule`, responsive grid with Switch per module, gated `settings:manage`
 - [x] `/settings/permissions` — Permission Matrix — replaced `DashboardGate allowedRoles` with `permission="settings:rbac:manage"`, added `GET /roles/permissions/matrix` backend endpoint, `useRolePermissionsMatrix()` hook, page now renders live role/permission data with loading skeleton, error state, and empty state
 - [x] `/settings/branches` — Branches (E2E fix: empty state fills content height with in-card primary CTA)
-- [x] `/settings/notifications` — Notifications settings
+- [x] `/settings/notifications` — Redirects to `/notifications/preferences`
 - [x] `/settings/audit-log` — Audit log
 - [x] `/settings/webhooks` — Webhooks (E2E fix: empty state fills content height with in-card primary CTA)
 - [x] `/settings/email-templates` — Email templates

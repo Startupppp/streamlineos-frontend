@@ -34,8 +34,6 @@ import {
   useVerifySubscription,
 } from "@/hooks/api/subscription";
 import type { BillingCycle, SubscriptionPlan } from "@/hooks/api/subscription";
-import { useMarketplace } from "@/hooks/api/marketplace";
-
 const STEPS = [
   "Select Platform",
   "Apps & Bundles",
@@ -152,6 +150,13 @@ const VALID_PLANS: readonly SubscriptionPlan[] = [
 
 const EXTRA_SEAT_PRICE = 29900;
 
+interface MarketplaceApp {
+  id: number;
+  name: string;
+  category: string;
+  monthlyPrice: number;
+}
+
 function isSubscriptionPlan(value: string): value is SubscriptionPlan {
   return (VALID_PLANS as readonly string[]).includes(value);
 }
@@ -176,7 +181,7 @@ export default function CheckoutPage() {
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
   const { data: plansData } = useBillingPlans();
-  const { data: apps } = useMarketplace();
+  const apps: MarketplaceApp[] = [];
   const createOrder = useCreateSubscriptionOrder();
   const verifySubscription = useVerifySubscription();
   const { data: coupon, isLoading: validatingCoupon } = useValidateCoupon(
@@ -199,7 +204,7 @@ export default function CheckoutPage() {
   }, 0);
 
   const appsTotal = selectedApps.reduce((sum, id) => {
-    const app = apps?.find((a) => a.id === id);
+    const app = apps.find((a) => a.id === id);
     return sum + (app?.monthlyPrice ?? 0);
   }, 0);
 
@@ -515,7 +520,7 @@ export default function CheckoutPage() {
               </TabsContent>
               <TabsContent value="apps" className="mt-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {(apps ?? []).map((app) => {
+                  {apps.map((app) => {
                     const isSelected = selectedApps.includes(app.id);
                     return (
                       <button
@@ -692,7 +697,7 @@ export default function CheckoutPage() {
                   );
                 })}
                 {selectedApps.map((id) => {
-                  const app = apps?.find((a) => a.id === id);
+                  const app = apps.find((a) => a.id === id);
                   if (!app) return null;
                   return (
                     <div key={id} className="flex justify-between">
@@ -924,10 +929,10 @@ export default function CheckoutPage() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </Link>
                 <Link
-                  href="/marketplace"
+                  href="/dashboard"
                   className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors"
                 >
-                  <span className="text-sm">Explore the marketplace</span>
+                  <span className="text-sm">Explore integrations</span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </Link>
               </div>

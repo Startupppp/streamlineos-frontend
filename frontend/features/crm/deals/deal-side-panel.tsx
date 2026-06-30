@@ -16,9 +16,7 @@ import {
   useDealDetail,
   useUpdateDeal,
   useDealActivities,
-  type DealActivity,
 } from "@/hooks/api/crm";
-import type { DealStage } from "@/types/crm";
 import { ActivityTimeline } from "./detail/activity-timeline";
 import { DealEditForm, type EditFormValues } from "./detail/deal-edit-form";
 import { toast } from "sonner";
@@ -54,7 +52,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
           probability: values.probability
             ? Number(values.probability)
             : undefined,
-          stage: values.stage as DealStage,
+          stage: values.stage,
           expectedCloseDate: values.expectedCloseDate ?? null,
           contactPerson: values.contactPerson,
           notes: values.notes,
@@ -151,7 +149,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                       </div>
                     ) : (
                       <ActivityTimeline
-                        activities={(activities as DealActivity[]) ?? []}
+                        activities={activities ?? []}
                       />
                     )}
                   </div>

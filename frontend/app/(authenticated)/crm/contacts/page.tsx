@@ -23,6 +23,7 @@ import {
   Twitter,
   Globe,
   Plus,
+  Download,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,15 +62,26 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useContacts, useDeleteContact } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { CreateContactDialog } from "@/features/crm/contacts/create-contact-dialog";
+import { EditContactSheet } from "@/features/crm/contacts/edit-contact-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 import type { LeadEnrichmentResult } from "@/lib/ai/schemas";
+import type { Contact } from "@/types/crm";
 
 const PAGE_SIZE = 20;
 
+const SOURCE_LABELS: Record<string, string> = {
+  website: "Website",
+  referral: "Referral",
+  cold_call: "Cold Call",
+  social_media: "Social Media",
+  other: "Other",
+};
+
 function useEnrichContact() {
   return useMutation({
+    mutationKey: ["contacts", "enrich"] as const,
     mutationFn: (input: {
       name: string;
       email?: string | null;
@@ -83,18 +95,12 @@ function useEnrichContact() {
   });
 }
 
-interface ContactActionItem {
-  id: number;
-  name: string;
-  email: string | null;
-  company: string | null;
-}
-
 interface ContactActionsMenuProps {
-  contact: ContactActionItem;
+  contact: Contact;
   isEnrichPending: boolean;
   onDelete: (id: number) => void;
-  onEnrich: (contact: ContactActionItem) => void;
+  onEdit: (contact: Contact) => void;
+  onEnrich: (contact: Contact) => void;
   triggerClassName?: string;
 }
 
@@ -102,6 +108,7 @@ function ContactActionsMenu({
   contact,
   isEnrichPending,
   onDelete,
+  onEdit,
   onEnrich,
   triggerClassName,
 }: ContactActionsMenuProps) {
@@ -110,6 +117,10 @@ function ContactActionsMenu({
   const handleView = useCallback(() => {
     router.push(`/crm/contacts/${contact.id}`);
   }, [contact.id, router]);
+
+  const handleEdit = useCallback(() => {
+    onEdit(contact);
+  }, [contact, onEdit]);
 
   const handleEnrich = useCallback(() => {
     onEnrich(contact);
@@ -133,8 +144,12 @@ function ContactActionsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleView}>
+          <Link2 className="h-3.5 w-3.5 mr-2" />
+          View details
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleEdit}>
           <Pencil className="h-3.5 w-3.5 mr-2" />
-          View / Edit
+          Edit
         </DropdownMenuItem>
         <DropdownMenuItem disabled={isEnrichPending} onClick={handleEnrich}>
           <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-600" />
@@ -157,6 +172,7 @@ export default function ContactsPage() {
   const [, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editContact, setEditContact] = useState<Contact | null>(null);
   const deleteContact = useDeleteContact();
   const enrichContact = useEnrichContact();
 
@@ -194,7 +210,10 @@ export default function ContactsPage() {
     void refetch();
   }, [refetch]);
 
-  const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const firstItem = total > 0 ? (page - 1) * PAGE_SIZE + 1 : 0;
+  const lastItem = Math.min(page * PAGE_SIZE, total);
 
   const handleViewTable = useCallback(
     () => updateParams({ view: null }),
@@ -213,8 +232,20 @@ export default function ContactsPage() {
     [updateParams],
   );
 
+  const handleExport = useCallback(() => {
+    toast.info("Export not yet supported");
+  }, []);
+
+  const handleEdit = useCallback((contact: Contact) => {
+    setEditContact(contact);
+  }, []);
+
+  const handleEditOpenChange = useCallback((open: boolean) => {
+    if (!open) setEditContact(null);
+  }, []);
+
   const handleEnrich = useCallback(
-    (contact: ContactActionItem) => {
+    (contact: Contact) => {
       enrichContact.mutate(
         { name: contact.name, email: contact.email, company: contact.company },
         {
@@ -267,7 +298,7 @@ export default function ContactsPage() {
       <PageWrapper title="Contacts" subtitle="People directory">
         <SkeletonTable
           rows={8}
-          columns={9}
+          columns={7}
           className="h-[calc(100dvh-16rem)]"
         />
       </PageWrapper>
@@ -291,7 +322,7 @@ export default function ContactsPage() {
     <>
       <PageWrapper
         title="Contacts"
-        subtitle={`${data?.total ?? 0} contacts`}
+        subtitle={`${total} contacts`}
         actions={
           <>
             <div className="flex items-center border border-border rounded-md">
@@ -312,6 +343,10 @@ export default function ContactsPage() {
                 <LayoutGrid className="h-4 w-4" />
               </Button>
             </div>
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
             <Button onClick={handleOpenCreate}>
               <Plus className="h-4 w-4 mr-2" /> New Contact
             </Button>
@@ -360,24 +395,18 @@ export default function ContactsPage() {
                             Company
                           </TableHead>
                           <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                            Title
+                            Source
                           </TableHead>
                           <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                            Tags
+                            Created
                           </TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                            Social
-                          </TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                            Linked To
-                          </TableHead>
-                          <TableHead className="text-[10px] w-8 px-2"></TableHead>
+                          <TableHead className="text-[10px] w-8 px-2" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {(data?.items ?? []).length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={9} className="p-0">
+                            <TableCell colSpan={7} className="p-0">
                               <EmptyState
                                 illustration={
                                   <EmptyTeamIllustration className="w-28 h-28" />
@@ -416,109 +445,56 @@ export default function ContactsPage() {
                                   </span>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[140px]">
-                                {contact.email || "—"}
+                              <TableCell className="px-2 py-1 truncate max-w-[140px]">
+                                {contact.email ? (
+                                  <a
+                                    href={`mailto:${contact.email}`}
+                                    className="text-[11px] text-blue-600 hover:underline truncate"
+                                  >
+                                    {contact.email}
+                                  </a>
+                                ) : (
+                                  <span className="text-[11px] text-muted-foreground">—</span>
+                                )}
                               </TableCell>
-                              <TableCell className="text-[11px] text-muted-foreground font-mono px-2 py-1">
-                                {contact.phone || "—"}
+                              <TableCell className="px-2 py-1">
+                                {contact.phone ? (
+                                  <a
+                                    href={`tel:${contact.phone}`}
+                                    className="text-[11px] text-muted-foreground font-mono hover:text-foreground transition-colors"
+                                  >
+                                    {contact.phone}
+                                  </a>
+                                ) : (
+                                  <span className="text-[11px] text-muted-foreground">—</span>
+                                )}
                               </TableCell>
                               <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">
                                 {contact.company || "—"}
                               </TableCell>
-                              <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">
-                                {contact.title || "—"}
-                              </TableCell>
                               <TableCell className="px-2 py-1">
-                                {contact.tags.length > 0 && (
-                                  <div className="flex flex-wrap gap-0.5">
-                                    {contact.tags.slice(0, 2).map((tag) => (
-                                      <Badge
-                                        key={tag}
-                                        variant="secondary"
-                                        className="text-[8px] px-1 py-0 h-4"
-                                      >
-                                        {tag}
-                                      </Badge>
-                                    ))}
-                                  </div>
+                                {contact.source ? (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-[9px] px-1.5 py-0 h-4"
+                                  >
+                                    {SOURCE_LABELS[contact.source] ?? contact.source}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-[11px] text-muted-foreground">—</span>
                                 )}
                               </TableCell>
-                              <TableCell className="px-2 py-1">
-                                <div className="flex items-center gap-1.5">
-                                  {contact.linkedinUrl && (
-                                    <a
-                                      href={contact.linkedinUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      aria-label="LinkedIn profile"
-                                      className="text-muted-foreground hover:text-blue-500 transition-colors"
-                                    >
-                                      <Linkedin className="h-3 w-3" />
-                                    </a>
-                                  )}
-                                  {contact.twitterUrl && (
-                                    <a
-                                      href={contact.twitterUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      aria-label="Twitter profile"
-                                      className="text-muted-foreground hover:text-sky-500 transition-colors"
-                                    >
-                                      <Twitter className="h-3 w-3" />
-                                    </a>
-                                  )}
-                                  {contact.websiteUrl && (
-                                    <a
-                                      href={contact.websiteUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      aria-label="Website"
-                                      className="text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                      <Globe className="h-3 w-3" />
-                                    </a>
-                                  )}
-                                  {!contact.linkedinUrl &&
-                                    !contact.twitterUrl &&
-                                    !contact.websiteUrl && (
-                                      <span className="text-[10px] text-muted-foreground">
-                                        —
-                                      </span>
-                                    )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="px-2 py-1">
-                                <div className="flex flex-col gap-0.5">
-                                  {contact.lead && (
-                                    <Link
-                                      href={`/crm/leads/${contact.lead.id}`}
-                                      className="inline-flex items-center gap-1 text-[9px] font-medium text-blue-600 hover:text-blue-700 hover:underline truncate max-w-[90px]"
-                                    >
-                                      <Link2 className="h-2.5 w-2.5 shrink-0" />
-                                      Lead: {contact.lead.name}
-                                    </Link>
-                                  )}
-                                  {contact.deal && (
-                                    <Link
-                                      href={`/crm/deals/${contact.deal.id}`}
-                                      className="inline-flex items-center gap-1 text-[9px] font-medium text-blue-600 hover:text-blue-600/80 hover:underline truncate max-w-[90px]"
-                                    >
-                                      <Link2 className="h-2.5 w-2.5 shrink-0" />
-                                      Deal: {contact.deal.name}
-                                    </Link>
-                                  )}
-                                  {!contact.lead && !contact.deal && (
-                                    <span className="text-[10px] text-muted-foreground">
-                                      —
-                                    </span>
-                                  )}
-                                </div>
+                              <TableCell className="text-[11px] text-muted-foreground px-2 py-1 whitespace-nowrap">
+                                {contact.createdAt
+                                  ? new Date(contact.createdAt).toLocaleDateString()
+                                  : "—"}
                               </TableCell>
                               <TableCell className="px-2 py-1">
                                 <ContactActionsMenu
                                   contact={contact}
                                   isEnrichPending={enrichContact.isPending}
                                   onDelete={handleRequestDelete}
+                                  onEdit={handleEdit}
                                   onEnrich={handleEnrich}
                                 />
                               </TableCell>
@@ -529,11 +505,15 @@ export default function ContactsPage() {
                     </table>
                   </div>
                 </div>
-                {totalPages > 1 && (
-                  <div className="shrink-0 flex items-center justify-between p-4 border-t">
+                <div className="shrink-0 flex items-center justify-between px-4 py-2 border-t">
+                  {total > 0 ? (
                     <span className="text-xs text-muted-foreground">
-                      Page {page} of {totalPages}
+                      Showing {firstItem}–{lastItem} of {total} contacts
                     </span>
+                  ) : (
+                    <span />
+                  )}
+                  {totalPages > 1 && (
                     <div className="flex gap-1">
                       <Button
                         variant="outline"
@@ -552,8 +532,8 @@ export default function ContactsPage() {
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
@@ -588,6 +568,7 @@ export default function ContactsPage() {
                           contact={contact}
                           isEnrichPending={enrichContact.isPending}
                           onDelete={handleRequestDelete}
+                          onEdit={handleEdit}
                           onEnrich={handleEnrich}
                           triggerClassName="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                         />
@@ -596,13 +577,23 @@ export default function ContactsPage() {
                         {contact.email && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Mail className="h-3 w-3 shrink-0" />
-                            <span className="truncate">{contact.email}</span>
+                            <a
+                              href={`mailto:${contact.email}`}
+                              className="truncate hover:text-foreground transition-colors"
+                            >
+                              {contact.email}
+                            </a>
                           </div>
                         )}
                         {contact.phone && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Phone className="h-3 w-3 shrink-0" />
-                            <span>{contact.phone}</span>
+                            <a
+                              href={`tel:${contact.phone}`}
+                              className="hover:text-foreground transition-colors"
+                            >
+                              {contact.phone}
+                            </a>
                           </div>
                         )}
                         {contact.company && (
@@ -651,19 +642,25 @@ export default function ContactsPage() {
                           )}
                         </div>
                       )}
-                      {contact.tags.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {contact.tags.slice(0, 3).map((tag) => (
-                            <Badge
-                              key={tag}
-                              variant="secondary"
-                              className="text-[9px] px-1.5 py-0 h-4"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                        {contact.source && (
+                          <Badge
+                            variant="secondary"
+                            className="text-[9px] px-1.5 py-0 h-4"
+                          >
+                            {SOURCE_LABELS[contact.source] ?? contact.source}
+                          </Badge>
+                        )}
+                        {contact.tags.slice(0, 2).map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="text-[9px] px-1.5 py-0 h-4"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
                       {(contact.lead || contact.deal) && (
                         <div className="mt-3 flex flex-wrap gap-1.5">
                           {contact.lead && (
@@ -716,33 +713,47 @@ export default function ContactsPage() {
               {totalPages > 1 && (
                 <motion.div
                   variants={fadeUp}
-                  className="flex items-center justify-center gap-2"
+                  className="flex items-center justify-between"
                 >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page <= 1}
-                    onClick={handlePrevPage}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Page {page} of {totalPages}
+                  <span className="text-xs text-muted-foreground">
+                    Showing {firstItem}–{lastItem} of {total} contacts
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page >= totalPages}
-                    onClick={handleNextPage}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page <= 1}
+                      onClick={handlePrevPage}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {page} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page >= totalPages}
+                      onClick={handleNextPage}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </motion.div>
               )}
             </>
           )}
         </motion.div>
       </PageWrapper>
+
+      {editContact && (
+        <EditContactSheet
+          key={editContact.id}
+          contact={editContact}
+          open
+          onOpenChange={handleEditOpenChange}
+        />
+      )}
 
       <AlertDialog
         open={deleteId !== null}

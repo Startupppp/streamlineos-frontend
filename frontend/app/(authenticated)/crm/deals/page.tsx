@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DealTableView } from "@/features/crm/deals/deal-table-view";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useDeals, useUpdateDealStage, useDeleteDeal } from "@/hooks/api/crm";
+import type { Deal } from "@/types/crm";
 import { useHrEmployees } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -37,9 +37,11 @@ export default function DealsPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
 
-  const view = (searchParams.get("view") || "table") as "table" | "kanban";
+  const rawView = searchParams.get("view");
+  const view: "table" | "kanban" = rawView === "kanban" ? "kanban" : "table";
   const dealSortCol = searchParams.get("sort") || "createdAt";
-  const dealSortDir = (searchParams.get("dir") || "desc") as "asc" | "desc";
+  const rawDir = searchParams.get("dir");
+  const dealSortDir: "asc" | "desc" = rawDir === "asc" ? "asc" : "desc";
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -276,11 +278,11 @@ export default function DealsPage() {
   }, [allDeals, appliedFilters]);
 
   const dealsByStage = useMemo(() => {
-    const map: Record<string, typeof allDeals> = {};
+    const map: Record<string, Deal[]> = {};
     for (const s of DEAL_STAGES) map[s.key] = [];
-    filteredDeals.forEach((d) => {
-      if (map[d.stage]) map[d.stage]!.push(d);
-    });
+    for (const d of filteredDeals) {
+      if (map[d.stage]) map[d.stage].push(d);
+    }
     return map;
   }, [filteredDeals]);
 
@@ -331,7 +333,7 @@ export default function DealsPage() {
               <Button
                 variant={view === "table" ? "default" : "ghost"}
                 size="sm"
-                className={cn("rounded-r-none", view === "table" && "")}
+                className="rounded-r-none"
                 onClick={handleViewTable}
               >
                 <TableIcon className="h-4 w-4" />
@@ -339,7 +341,7 @@ export default function DealsPage() {
               <Button
                 variant={view === "kanban" ? "default" : "ghost"}
                 size="sm"
-                className={cn("rounded-l-none", view === "kanban" && "")}
+                className="rounded-l-none"
                 onClick={handleViewKanban}
               >
                 <LayoutGrid className="h-4 w-4" />

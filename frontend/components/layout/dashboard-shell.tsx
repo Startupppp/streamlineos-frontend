@@ -7,6 +7,7 @@ import Image from "next/image"
 import { Menu } from "lucide-react"
 import { AppSidebar } from "./app-sidebar"
 import { ActivityBar } from "./activity-bar"
+import { GlobalHeader } from "./header/global-header"
 import { MobileBottomNav } from "./mobile-bottom-nav"
 import { CommandPalette } from "./command-palette"
 import { NotActivatedPage } from "../auth/not-activated-page"
@@ -90,6 +91,8 @@ export function DashboardShell({
         <>
           <CommandPalette />
           <TrialBanner />
+
+          <GlobalHeader />
 
           <div className="md:hidden flex items-center gap-2 h-12 px-4 border-b border-border bg-background shrink-0 z-20 relative">
             <button

@@ -77,6 +77,19 @@ function timeAgo(date: string | Date | null | undefined): string {
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
+interface SortIconProps {
+  column: string;
+  sortColumn: string;
+  sortDirection: "asc" | "desc";
+}
+
+function SortIcon({ column, sortColumn, sortDirection }: SortIconProps) {
+  if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
+  return sortDirection === "asc"
+    ? <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
+    : <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />;
+}
+
 interface SortableHeadProps {
   col: { key: string; label: string; sortable: boolean };
   sortColumn: string;
@@ -86,12 +99,6 @@ interface SortableHeadProps {
 
 function SortableHead({ col, sortColumn, sortDirection, onSort }: SortableHeadProps) {
   const handleClick = useCallback(() => { if (col.sortable) onSort(col.key); }, [col.key, col.sortable, onSort]);
-  function SortIcon({ column }: { column: string }) {
-    if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
-    return sortDirection === "asc"
-      ? <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
-      : <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />;
-  }
   return (
     <TableHead
       className={cn(
@@ -102,7 +109,7 @@ function SortableHead({ col, sortColumn, sortDirection, onSort }: SortableHeadPr
     >
       <span className="flex items-center">
         {col.label}
-        {col.sortable && <SortIcon column={col.key} />}
+        {col.sortable && <SortIcon column={col.key} sortColumn={sortColumn} sortDirection={sortDirection} />}
       </span>
     </TableHead>
   );

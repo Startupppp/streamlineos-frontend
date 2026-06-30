@@ -250,9 +250,6 @@ export default function LeadDetailPage({
     );
   }
 
-  type LeadData = NonNullable<typeof lead> & { [key: string]: unknown };
-  const leadData = lead as LeadData;
-
   return (
     <PageWrapper
       title={lead.name}
@@ -271,7 +268,7 @@ export default function LeadDetailPage({
       >
         <motion.div variants={fadeUp}>
           <LeadDetailHeader
-            lead={leadData}
+            lead={lead}
             isEditing={isEditing}
             onToggleEdit={handleToggleEdit}
             onStatusChange={handleStatusChange}
@@ -282,7 +279,7 @@ export default function LeadDetailPage({
         <motion.div variants={fadeUp} className="grid gap-4 lg:grid-cols-5">
           <div className="lg:col-span-3 space-y-4">
             <LeadInfoCard
-              lead={leadData}
+              lead={lead}
               isEditing={isEditing}
               editForm={editForm}
               isUpdatePending={updateLeadMutation.isPending}
@@ -316,7 +313,7 @@ export default function LeadDetailPage({
 
           <div className="lg:col-span-2">
             <LeadSidebar
-              lead={leadData}
+              lead={lead}
               timeline={timeline}
               timelineLoading={timelineLoading}
             />

@@ -35,6 +35,10 @@ export interface Contact {
   avatarUrl: string | null;
   leadId: number | null;
   dealId: number | null;
+  source: string | null;
+  status: string | null;
+  notes: string | null;
+  ownerId: string | null;
   tags: string[];
   createdAt: string | null;
   updatedAt: string | null;
@@ -78,6 +82,9 @@ export interface CreateContactInput {
   websiteUrl?: string;
   leadId?: number;
   dealId?: number;
+  source?: string;
+  status?: string;
+  notes?: string;
   tags?: string[];
 }
 
@@ -94,6 +101,9 @@ export interface UpdateContactInput {
   twitterUrl?: string | null;
   websiteUrl?: string | null;
   avatarUrl?: string | null;
+  source?: string | null;
+  status?: string | null;
+  notes?: string | null;
   tags?: string[];
 }
 
