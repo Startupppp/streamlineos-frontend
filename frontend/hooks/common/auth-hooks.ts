@@ -81,10 +81,13 @@ type OrgSummary = {
 };
 
 export function useGetOrganizations() {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useQuery<OrgSummary[]>({
     queryKey: queryKeys.organization.all,
     queryFn: () => apiClient.get<OrgSummary[]>("/organization"),
     staleTime: 60_000,
+    enabled: !!orgId,
   });
 }
 

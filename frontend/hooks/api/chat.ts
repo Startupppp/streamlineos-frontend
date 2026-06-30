@@ -91,11 +91,13 @@ export function useChatPoll(channelId: number, since: string, enabled: boolean) 
 }
 
 export function useChatUnreadTotal(enabled = true) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useQuery({
     queryKey: queryKeys.chat.unreadTotal(),
     queryFn: () => apiClient.get<{ total: number }>("/chat/unread"),
     staleTime: 2 * 60_000,
-    enabled,
+    enabled: !!orgId && enabled,
   });
 }
 

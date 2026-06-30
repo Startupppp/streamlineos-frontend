@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 
@@ -72,10 +73,13 @@ const SUBSCRIPTION_QUERY_KEY = ["subscription"] as const;
 const BILLING_SUMMARY_QUERY_KEY = ["billing", "summary"] as const;
 
 export function useSubscription() {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useQuery<SubscriptionResponse, Error>({
     queryKey: SUBSCRIPTION_QUERY_KEY,
     queryFn: () => apiClient.get<SubscriptionResponse>("/billing/razorpay"),
     staleTime: 5 * 60_000,
+    enabled: !!orgId,
   });
 }
 

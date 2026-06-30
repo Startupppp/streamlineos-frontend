@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
 import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 import {
   TOTAL_STEPS,
@@ -36,6 +37,7 @@ export default function OrgSetupPage() {
 
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
   const [direction, setDirection] = useState(1);
   const [showCelebration, setShowCelebration] = useState(false);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
@@ -105,8 +107,27 @@ export default function OrgSetupPage() {
     });
   }, []);
 
-  const handleSkipToDashboard = useCallback(() => {
-    window.location.href = "/dashboard";
+  const handleSkipToDashboard = useCallback(async () => {
+    setIsSkipping(true);
+    try {
+      const res = await apiClient.patch<{ orgId?: string }>("/org/setup", {
+        industry: "IT Services",
+        companySize: "1-10",
+        enabledModules: ["HR", "CRM", "PROJECTS"],
+      });
+      const orgId = res?.orgId ?? null;
+      try {
+        await updateRef.current({
+          ...(orgId ? { orgId } : {}),
+          orgOnboardingCompletedAt: new Date().toISOString(),
+          isOrgOwner: true,
+        });
+      } catch {}
+      clearAll();
+      window.location.replace("/dashboard");
+    } catch {
+      setIsSkipping(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -165,7 +186,7 @@ export default function OrgSetupPage() {
         direction={direction}
       >
         {step === 1 && (
-          <StepWelcome onNext={goNext} onSkip={handleSkipToDashboard} />
+          <StepWelcome onNext={goNext} onSkip={handleSkipToDashboard} isSkipping={isSkipping} />
         )}
         {step === 2 && (
           <StepGoals

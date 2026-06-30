@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -48,12 +49,15 @@ export const useNotifications = (
 export const useUnreadNotificationCount = (
   options?: Omit<UseQueryOptions<UnreadCount, Error>, "queryKey" | "queryFn">,
 ) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useQuery<UnreadCount, Error>({
     queryKey: queryKeys.notifications.unreadCount(),
     queryFn: () => apiClient.get<UnreadCount>("/notifications/unread-count"),
     refetchInterval: 60_000,
     staleTime: 30_000,
     ...options,
+    enabled: !!orgId,
   });
 };
 

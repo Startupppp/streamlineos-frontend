@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -42,11 +43,14 @@ export interface PublicDoc {
 export const useDashboardStats = (
   options?: Omit<UseQueryOptions<DashboardStats, Error>, "queryKey" | "queryFn">
 ) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useQuery<DashboardStats, Error>({
     queryKey: queryKeys.dashboard.stats(),
     queryFn: () => apiClient.get<DashboardStats>("/dashboard/stats"),
     staleTime: 5 * 60 * 1000,
     ...options,
+    enabled: !!orgId,
   });
 };
 
@@ -97,11 +101,14 @@ export const useRecentProjects = (
     "queryKey" | "queryFn"
   >
 ) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useQuery<RecentProject[], Error>({
     queryKey: queryKeys.dashboard.recentProjects(),
     queryFn: () => apiClient.get<RecentProject[]>("/dashboard/recent-projects"),
     staleTime: 5 * 60 * 1000,
     ...options,
+    enabled: !!orgId,
   });
 };
 

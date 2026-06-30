@@ -326,7 +326,7 @@ export default async function middleware(req: NextRequest) {
 
   if (
     isAuthenticated &&
-    token?.orgId === null &&
+    token?.orgId == null &&
     startsWithAny(pathname, PROTECTED_ROUTES) &&
     !pathname.startsWith("/org-setup")
   ) {
