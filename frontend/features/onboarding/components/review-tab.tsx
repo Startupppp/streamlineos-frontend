@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -14,18 +13,10 @@ import {
   Shield,
   type LucideIcon,
 } from "lucide-react";
-import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
+import { clearBackendTokenCache } from "@/lib/api-client";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-
-async function submitOnboarding(): Promise<{ success: boolean; error?: string }> {
-  try {
-    await apiClient.post("/onboarding/submit");
-    return { success: true };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to submit onboarding" };
-  }
-}
+import { useSubmitOnboardingMutation } from "@/lib/api/hooks/onboarding";
 
 const ROLE_LABELS: Record<string, string> = {
   CEO: "CEO",
@@ -63,32 +54,27 @@ export function ReviewTab({
   onBack,
 }: ReviewTabProps) {
   const { data: session, update } = useSession();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const userRole = session?.user?.role || "ENGINEERING";
-  const roleLabel = ROLE_LABELS[userRole] || userRole;
+  const { mutate: submitOnboarding, isPending: isSubmitting } = useSubmitOnboardingMutation();
+  const userRole = session?.user?.role ?? "ENGINEERING";
+  const roleLabel = ROLE_LABELS[userRole] ?? userRole;
   const dataSteps = steps.filter((s) => s.id !== reviewStepId);
   const allDataStepsComplete = dataSteps.every((s) => completedSteps.has(s.id));
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      const res = await submitOnboarding();
-      if (res.success) {
+  function handleSubmit() {
+    submitOnboarding(undefined, {
+      onSuccess: async () => {
         toast.success("Onboarding submitted! Redirecting…");
         try {
           await update({ userOnboardingCompletedAt: new Date().toISOString() });
         } catch {}
         clearBackendTokenCache();
         window.location.replace("/dashboard");
-      } else {
-        toast.error(res.error || "Failed to submit onboarding");
-        setIsSubmitting(false);
-      }
-    } catch {
-      toast.error("An unexpected error occurred. Please try again.");
-      setIsSubmitting(false);
-    }
-  };
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : "Failed to submit onboarding");
+      },
+    });
+  }
 
   return (
     <Card className="border-border text-center py-8">

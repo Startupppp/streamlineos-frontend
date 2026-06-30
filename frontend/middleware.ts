@@ -227,8 +227,7 @@ export default async function middleware(req: NextRequest) {
   }
   if (
     isAuthenticated &&
-    token?.isActive !== undefined &&
-    token.isActive === false &&
+    token?.isActive === false &&
     !pathname.startsWith("/api/auth/signout")
   ) {
     const url = req.nextUrl.clone();
@@ -315,8 +314,7 @@ export default async function middleware(req: NextRequest) {
     startsWithAny(pathname, PROTECTED_ROUTES) &&
     !pathname.startsWith("/settings") &&
     !pathname.startsWith("/onboarding") &&
-    !pathname.startsWith("/api/auth/") &&
-    !pathname.startsWith("/api/auth/mfa/")
+    !pathname.startsWith("/api/auth/")
   ) {
     const url = req.nextUrl.clone();
     url.pathname = "/settings";

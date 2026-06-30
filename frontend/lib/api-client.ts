@@ -174,24 +174,32 @@ function isPublicPath(path: string): boolean {
 }
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
+let fetchingTokenPromise: Promise<string | null> | null = null;
 
 export function clearBackendTokenCache(): void {
   cachedToken = null;
+  fetchingTokenPromise = null;
 }
 
 async function getBackendToken(): Promise<string | null> {
   const now = Date.now();
   if (cachedToken && cachedToken.expiresAt - 30_000 > now) return cachedToken.value;
-  try {
-    const res = await fetch(`${SAME_ORIGIN}/auth/session`, { credentials: "include" });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { backendJwt?: string };
-    if (!data.backendJwt) return null;
-    cachedToken = { value: data.backendJwt, expiresAt: now + 540_000 };
-    return data.backendJwt;
-  } catch {
-    return null;
-  }
+  if (fetchingTokenPromise) return fetchingTokenPromise;
+  fetchingTokenPromise = (async () => {
+    try {
+      const res = await fetch(`${SAME_ORIGIN}/auth/session`, { credentials: "include" });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { backendJwt?: string };
+      if (!data.backendJwt) return null;
+      cachedToken = { value: data.backendJwt, expiresAt: now + 540_000 };
+      return data.backendJwt;
+    } catch {
+      return null;
+    } finally {
+      fetchingTokenPromise = null;
+    }
+  })();
+  return fetchingTokenPromise;
 }
 
 async function authedFetch(url: string, init: RequestInit, useBackend: boolean, path: string): Promise<Response> {

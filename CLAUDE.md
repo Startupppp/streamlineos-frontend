@@ -28,9 +28,10 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - **Folder structure (STRICT):** Feature-specific components MUST live under `features/<featurename>/components/` and feature libs under `features/<featurename>/lib/`. NEVER use `_components/` or `_lib/` inside `app/` route folders — these conventions are banned. The `app/` folder contains only route files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`). All reusable UI components go in `components/`, feature components in `features/<featurename>/`.
 
 ## State & effects
-- Minimize useState and useEffect. No useEffect data fetching.
+- Minimize useState and useEffect. **NEVER use useEffect to trigger API calls** — use TanStack Query (`useQuery` for fetching, `useMutation` for writes) exclusively. `useEffect` is for DOM synchronization, subscriptions, and framework-level concerns only; it is never a trigger for network requests.
 - Global/shared state: Zustand (or the repo's existing state management if different).
 - No prop drilling more than 2 levels — use composition or context.
+- Any `useEffect` that fires a mutation, API call, or irreversible side-effect MUST guard against React StrictMode double-invoke: `const calledRef = useRef(false); if (calledRef.current) return; calledRef.current = true;`. Reset the ref only inside a user-initiated retry handler — never unconditionally on re-render.
 
 ## Forms & validation
 - react-hook-form + Zod schemas for every form. Proper per-field validation with visible error messages.
@@ -79,6 +80,9 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - Backend Drizzle + Neon: efficient queries — select only needed fields, no N+1 (proper joins), pagination on all lists, indexes where queries demand, transactions for multi-step writes, proper connection handling.
 - Caching: backend uses Redis for read-heavy data with explicit invalidation on every mutation; the frontend uses sensible TanStack Query staleTime per data type. NEVER cache user/permission-specific data in shared caches.
 - async/await everywhere; minimize globals.
+- Schema normalization (enforced): entities with their own lifecycle — invitations, approvals, events, documents, audit entries, tasks — MUST be normalized into separate DB tables with their own PK, org_id FK, status, created_at, and indexes. Never store them as JSONB arrays embedded in a parent record; JSON arrays cannot be individually indexed, paginated, updated atomically, or soft-deleted.
+- API efficiency (enforced): deduplicate concurrent identical inflight requests (e.g. token fetch, session fetch) with a shared Promise variable — never let N simultaneous callers each kick off the same network call. All `useMutation` hooks MUST include `mutationKey`; all `useQuery` hooks MUST include a `staleTime` calibrated to data volatility (session/org: 5min, permissions: 30s, list data: 30s–2min).
+- Backend API quality standard (senior engineer level): every table has UUID/BIGSERIAL PK; every org-scoped table has a non-nullable `org_id` FK with index; composite indexes `(org_id, status, created_at DESC)` for common list queries; multi-step writes always in a single DB transaction; atomic upserts (`INSERT … ON CONFLICT DO UPDATE`) for counters/idempotent creates; no full-table scans; all list endpoints paginated (hard cap 100/page); soft-delete with `deleted_at` for audit trail; Zod validation on every body/param.
 
 ## Security
 - Every protected backend endpoint verifies session + permission server-side (requirePermission()); frontend server actions / auth-bridge routes do the same where they exist. Client-side checks are UX only — middleware.ts alone is never sufficient.

@@ -15,10 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { apiClient } from "@/lib/api-client";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useOnboardingSubmit } from "@/hooks/common/use-onboarding-submit";
+import { toast } from "sonner";
+import { usePersonalInfoMutation } from "@/lib/api/hooks/onboarding";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 import type { Variants } from "framer-motion";
 
@@ -46,17 +46,6 @@ const personalSchema = z.object({
 
 type PersonalFormValues = z.infer<typeof personalSchema>;
 
-type ActionResult = { success: true } | { success: false; error: string };
-
-async function updatePersonalDetails(formData: FormData): Promise<ActionResult> {
-  try {
-    await apiClient.upload("/onboarding/personal-info", formData);
-    return { success: true };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to save personal details" };
-  }
-}
-
 interface PersonalInfoTabProps {
   onComplete: (values: Record<string, string | undefined>) => void;
   defaultValues?: Record<string, string | undefined>;
@@ -69,13 +58,8 @@ export function PersonalInfoTab({
   onComplete,
   defaultValues,
 }: PersonalInfoTabProps) {
-  const { isLoading, handleSubmit } = useOnboardingSubmit(
-    updatePersonalDetails,
-    {
-      successMessage: "Personal details saved!",
-      onSuccess: onComplete,
-    },
-  );
+  const { mutate, isPending } = usePersonalInfoMutation();
+
   const form = useForm<PersonalFormValues>({
     resolver: zodResolver(personalSchema),
     defaultValues: {
@@ -96,6 +80,26 @@ export function PersonalInfoTab({
 
   const { errors } = form.formState;
 
+  function buildFormData(values: PersonalFormValues): FormData {
+    const fd = new FormData();
+    Object.entries(values).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) fd.append(k, String(v));
+    });
+    return fd;
+  }
+
+  function handleFormSubmit(values: PersonalFormValues) {
+    mutate(buildFormData(values), {
+      onSuccess: () => {
+        toast.success("Personal details saved!");
+        onComplete(values as Record<string, string | undefined>);
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : "Failed to save personal details");
+      },
+    });
+  }
+
   return (
     <div>
       <motion.div variants={staggerVariants} initial="hidden" animate="visible">
@@ -107,7 +111,7 @@ export function PersonalInfoTab({
             Tell us a bit about yourself to get started.
           </p>
         </motion.div>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-5">
           <motion.div
             variants={fadeUpVariants}
             className="grid grid-cols-1 sm:grid-cols-2 gap-4"
@@ -312,7 +316,7 @@ export function PersonalInfoTab({
           </motion.div>
 
           <motion.div variants={fadeUpVariants}>
-            <FormNavButtons isLoading={isLoading} />
+            <FormNavButtons isLoading={isPending} />
           </motion.div>
         </form>
       </motion.div>

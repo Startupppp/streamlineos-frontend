@@ -70,10 +70,6 @@ function unwrapBackend<T>(body: unknown): T {
   return body as T;
 }
 
-export async function invalidateUserSession(_userId: string): Promise<void> {
-  // Session invalidation is handled via JWT expiry; no-op in stateless JWT mode
-}
-
 async function resolveGoogleUser(
   email: string,
   googleId: string,
@@ -97,6 +93,34 @@ async function resolveGoogleUser(
   }
 }
 
+function buildUserFromSessionData(userId: string, sessionData: SessionData, extra?: { forceChangePassword?: boolean; daysUntilExpiry?: number }) {
+  return {
+    id: userId,
+    email: sessionData.email,
+    name:
+      sessionData.firstName && sessionData.lastName
+        ? `${sessionData.firstName} ${sessionData.lastName}`
+        : (sessionData.name ?? sessionData.email),
+    image: sessionData.image,
+    role: sessionData.role ?? undefined,
+    forceChangePassword: extra?.forceChangePassword ?? false,
+    isActive: sessionData.isActive,
+    hasDashboardAccess: sessionData.hasDashboardAccess,
+    orgId: sessionData.orgId ?? null,
+    isOrgOwner: sessionData.isOrgOwner,
+    orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt ?? null,
+    branchId: sessionData.branchId ?? null,
+    totpEnabled: sessionData.totpEnabled,
+    mfaEnforced: sessionData.mfaEnforced,
+    permissions: sessionData.permissions,
+    plan: sessionData.plan ?? null,
+    enabledModules: sessionData.enabledModules,
+    userOnboardingCompletedAt: sessionData.userOnboardingCompletedAt ?? null,
+    isPlatformAdmin: isPlatformAdminEmail(sessionData.email),
+    ...(extra?.daysUntilExpiry !== undefined ? { daysUntilExpiry: extra.daysUntilExpiry } : {}),
+  };
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   basePath: "/api/auth",
@@ -109,7 +133,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        rememberMe: { label: "Remember me", type: "text" },
         magicToken: { label: "Magic token", type: "text" },
         totpCode: { label: "MFA code", type: "text" },
       },
@@ -124,22 +147,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             const data = unwrapBackend<{ userId: string; forceChangePassword: boolean }>(raw);
             const sessionData = await fetchSessionData(data.userId);
             if (!sessionData) return null;
-            return {
-              id: data.userId,
-              email: sessionData.email,
-              name:
-                sessionData.firstName && sessionData.lastName
-                  ? `${sessionData.firstName} ${sessionData.lastName}`
-                  : (sessionData.name ?? sessionData.email),
-              image: sessionData.image,
-              role: sessionData.role ?? undefined,
+            return buildUserFromSessionData(data.userId, sessionData, {
               forceChangePassword: data.forceChangePassword,
-              isActive: sessionData.isActive,
-              hasDashboardAccess: sessionData.hasDashboardAccess,
-              orgId: sessionData.orgId ?? null,
-              isOrgOwner: sessionData.isOrgOwner,
-              orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt ?? null,
-            };
+            });
           } catch {
             return null;
           }
@@ -154,7 +164,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               email: credentials.email,
               password: credentials.password,
               totpCode: credentials.totpCode ?? undefined,
-              rememberMe: credentials.rememberMe === "true",
             });
             raw = response.data;
           } catch (loginErr: unknown) {
@@ -182,23 +191,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const sessionData = await fetchSessionData(data.userId);
           if (!sessionData) return null;
 
-          return {
-            id: data.userId,
-            email: sessionData.email,
-            name:
-              sessionData.firstName && sessionData.lastName
-                ? `${sessionData.firstName} ${sessionData.lastName}`
-                : (sessionData.name ?? sessionData.email),
-            image: sessionData.image,
-            role: sessionData.role ?? undefined,
+          return buildUserFromSessionData(data.userId, sessionData, {
             forceChangePassword: data.forceChangePassword,
-            isActive: sessionData.isActive,
-            hasDashboardAccess: sessionData.hasDashboardAccess,
             daysUntilExpiry: data.daysUntilExpiry,
-            orgId: sessionData.orgId ?? null,
-            isOrgOwner: sessionData.isOrgOwner,
-            orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt ?? null,
-          };
+          });
         } catch (err) {
           if (
             err instanceof Error &&
@@ -232,6 +228,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
         if (!userId) return false;
         user.id = userId;
+        const sessionData = await fetchSessionData(userId);
+        if (sessionData) {
+          user.name =
+            sessionData.firstName && sessionData.lastName
+              ? `${sessionData.firstName} ${sessionData.lastName}`
+              : (sessionData.name ?? user.name ?? user.email ?? "");
+          user.image = sessionData.image ?? user.image;
+          user.role = sessionData.role ?? undefined;
+          user.isActive = sessionData.isActive;
+          user.hasDashboardAccess = sessionData.hasDashboardAccess;
+          user.orgId = sessionData.orgId ?? null;
+          user.isOrgOwner = sessionData.isOrgOwner;
+          user.orgOnboardingCompletedAt = sessionData.orgOnboardingCompletedAt ?? null;
+          user.branchId = sessionData.branchId ?? null;
+          user.totpEnabled = sessionData.totpEnabled;
+          user.mfaEnforced = sessionData.mfaEnforced;
+          user.permissions = sessionData.permissions;
+          user.plan = sessionData.plan ?? null;
+          user.enabledModules = sessionData.enabledModules;
+          user.userOnboardingCompletedAt = sessionData.userOnboardingCompletedAt ?? null;
+          user.isPlatformAdmin = isPlatformAdminEmail(sessionData.email);
+        }
       }
       return true;
     },
@@ -240,6 +258,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        token.name = user.name ?? null;
         token.role = user.role;
         token.image = user.image ?? null;
         token.forceChangePassword = user.forceChangePassword ?? false;
@@ -248,37 +267,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.orgId = user.orgId ?? null;
         token.isOrgOwner = user.isOrgOwner ?? false;
         token.orgOnboardingCompletedAt = user.orgOnboardingCompletedAt ?? null;
+        token.branchId = user.branchId ?? null;
+        token.totpEnabled = user.totpEnabled ?? false;
+        token.mfaEnforced = user.mfaEnforced ?? false;
+        token.permissions = user.permissions ?? [];
+        token.plan = user.plan ?? null;
+        token.enabledModules = user.enabledModules ?? [];
+        token.userOnboardingCompletedAt = user.userOnboardingCompletedAt ?? null;
+        token.isPlatformAdmin = user.isPlatformAdmin ?? false;
         token.sessionId = randomUUID();
-        if (user.daysUntilExpiry !== undefined)
-          token.daysUntilExpiry = user.daysUntilExpiry;
-      }
-
-      if (user && token.id) {
-        const data = await fetchSessionData(token.id as string);
-        if (data) {
-          token.email = data.email;
-          token.isActive = data.isActive;
-          token.hasDashboardAccess = data.hasDashboardAccess;
-          token.forceChangePassword = data.isPasswordChangeRequired;
-          token.role = data.role ?? (token.role as string | undefined);
-          token.image = data.image ?? null;
-          token.orgId = data.orgId ?? null;
-          token.branchId = data.branchId ?? null;
-          token.totpEnabled = data.totpEnabled;
-          token.mfaEnforced = data.mfaEnforced;
-          token.permissions = data.permissions;
-          token.plan = data.plan ?? null;
-          token.isOrgOwner = data.isOrgOwner;
-          token.enabledModules = data.enabledModules;
-          token.orgOnboardingCompletedAt = data.orgOnboardingCompletedAt ?? null;
-          token.userOnboardingCompletedAt = data.userOnboardingCompletedAt ?? null;
-          token.isPlatformAdmin = isPlatformAdminEmail(data.email);
-          if (data.firstName && data.lastName) {
-            token.name = `${data.firstName} ${data.lastName}`;
-          } else if (data.name) {
-            token.name = data.name;
-          }
-        }
+        if (user.daysUntilExpiry !== undefined) token.daysUntilExpiry = user.daysUntilExpiry;
       }
 
       if (trigger === "update") {

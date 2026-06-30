@@ -1,5 +1,6 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -36,6 +37,11 @@ const GOAL_ICONS: Record<string, LucideIcon> = {
 };
 
 export function StepGoals({ goals, onToggle, onBack, onNext }: StepGoalsProps) {
+  function handleGoalToggle(e: MouseEvent<HTMLButtonElement>) {
+    const id = e.currentTarget.dataset.goalId;
+    if (id) onToggle(id);
+  }
+
   return (
     <div className="space-y-4">
       <p className="text-[13px] text-muted-foreground">
@@ -52,7 +58,8 @@ export function StepGoals({ goals, onToggle, onBack, onNext }: StepGoalsProps) {
               type="button"
               role="checkbox"
               aria-checked={selected}
-              onClick={() => onToggle(goal.id)}
+              data-goal-id={goal.id}
+              onClick={handleGoalToggle}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: i * 0.04 }}

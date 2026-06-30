@@ -60,7 +60,11 @@ export default function OrgSetupPage() {
 
   const goNext = useCallback(() => {
     setDirection(1);
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+    setStep((s) => {
+      const next = Math.min(s + 1, TOTAL_STEPS);
+      if (next === TOTAL_STEPS) setShowCelebration(true);
+      return next;
+    });
   }, []);
 
   const goBack = useCallback(() => {
@@ -128,9 +132,7 @@ export default function OrgSetupPage() {
     }
   }, [setupOrg]);
 
-  useEffect(() => {
-    if (step === TOTAL_STEPS) setShowCelebration(true);
-  }, [step]);
+  const sessionCheckCalledRef = useRef(false);
 
   useEffect(() => {
     setStep(loadStep());
@@ -139,6 +141,8 @@ export default function OrgSetupPage() {
   }, []);
 
   useEffect(() => {
+    if (sessionCheckCalledRef.current) return;
+    sessionCheckCalledRef.current = true;
     updateRef
       .current()
       .then((s) => {
@@ -154,6 +158,10 @@ export default function OrgSetupPage() {
     if (!mounted) return;
     saveStep(step);
   }, [step, mounted]);
+
+  function handleCelebrationDone() {
+    setShowCelebration(false);
+  }
 
   if (!mounted) {
     return (
@@ -173,7 +181,7 @@ export default function OrgSetupPage() {
       {showCelebration && (
         <ConfettiOverlay
           durationMs={2600}
-          onDone={() => setShowCelebration(false)}
+          onDone={handleCelebrationDone}
         />
       )}
       <WizardShell

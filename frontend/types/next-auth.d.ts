@@ -35,6 +35,15 @@ declare module "next-auth" {
     orgId?: string | null;
     isOrgOwner?: boolean;
     orgOnboardingCompletedAt?: string | null;
+    branchId?: number | null;
+    totpEnabled?: boolean;
+    mfaEnforced?: boolean;
+    permissions?: string[];
+    plan?: Plan | null;
+    enabledModules?: string[];
+    userOnboardingCompletedAt?: string | null;
+    isPlatformAdmin?: boolean;
+    name?: string | null;
   }
 }
 

@@ -2,24 +2,13 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Label } from "@/components/ui/label";
-import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { CheckCircle, Upload, Loader2 } from "lucide-react";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 import { Button } from "@/components/ui/button";
-
-type ActionResult = { success: true } | { success: false; error: string };
-
-async function uploadOnboardingDocument(formData: FormData): Promise<ActionResult> {
-  try {
-    await apiClient.upload("/onboarding/documents", formData);
-    return { success: true };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Upload failed" };
-  }
-}
+import { useDocumentUploadMutation } from "@/lib/api/hooks/onboarding";
 
 const DOCUMENT_TYPES = [
   {
@@ -71,6 +60,7 @@ export function DocumentsTab({
   );
   const [validationError, setValidationError] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const { mutateAsync } = useDocumentUploadMutation();
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,25 +78,22 @@ export function DocumentsTab({
         return;
       }
 
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", type);
+
       setLoadingDoc(type);
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("type", type);
-        const res = await uploadOnboardingDocument(formData);
-        if (res.success) {
-          toast.success(`${type} uploaded successfully!`);
-          setUploadedFiles((prev) => ({ ...prev, [type]: file.name }));
-        } else {
-          toast.error(res.error || "Upload failed");
-        }
-      } catch {
-        toast.error("Upload failed. Please try again.");
+        await mutateAsync(formData);
+        toast.success(`${type} uploaded successfully!`);
+        setUploadedFiles((prev) => ({ ...prev, [type]: file.name }));
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Upload failed");
       } finally {
         setLoadingDoc(null);
       }
     },
-    [],
+    [mutateAsync],
   );
 
   const handleSelectClick = useCallback(

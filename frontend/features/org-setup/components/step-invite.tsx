@@ -31,6 +31,10 @@ export function StepInvite({ onBack, onNext }: StepInviteProps) {
   const csvInputRef = useRef<HTMLInputElement>(null);
   const { mutateAsync, isPending } = useInvitationsMutation();
 
+  function handleEmailChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setEmail(e.target.value);
+  }
+
   const handleAdd = useCallback(() => {
     const trimmed = email.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
@@ -103,7 +107,7 @@ export function StepInvite({ onBack, onNext }: StepInviteProps) {
         <Input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           onKeyDown={handleKeyDown}
           placeholder="colleague@company.com"
           className="h-9 text-sm flex-1"

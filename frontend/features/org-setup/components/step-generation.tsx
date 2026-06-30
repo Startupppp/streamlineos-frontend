@@ -33,6 +33,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const apiDoneRef = useRef(false);
+  const hasRunRef = useRef(false);
 
   const { mutate } = useOrgSetupMutation();
 
@@ -71,6 +72,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    hasRunRef.current = false;
     setError(msg);
   }
 
@@ -90,6 +92,8 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
   }
 
   function runSetup() {
+    if (hasRunRef.current) return;
+    hasRunRef.current = true;
     setCompletedSteps(0);
     setError(null);
     startAnimation();

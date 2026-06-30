@@ -5,10 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiClient } from "@/lib/api-client";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useOnboardingSubmit } from "@/hooks/common/use-onboarding-submit";
+import { toast } from "sonner";
+import { useBankDetailsMutation } from "@/lib/api/hooks/onboarding";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 
 const bankSchema = z.object({
@@ -32,17 +32,6 @@ const bankSchema = z.object({
 
 type BankFormValues = z.infer<typeof bankSchema>;
 
-type ActionResult = { success: true } | { success: false; error: string };
-
-async function updateBankDetails(formData: FormData): Promise<ActionResult> {
-  try {
-    await apiClient.upload("/onboarding/bank-details", formData);
-    return { success: true };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to save bank details" };
-  }
-}
-
 interface BankDetailsTabProps {
   onComplete: (values: Record<string, string | undefined>) => void;
   onBack: () => void;
@@ -54,10 +43,8 @@ export function BankDetailsTab({
   onBack,
   defaultValues,
 }: BankDetailsTabProps) {
-  const { isLoading, handleSubmit } = useOnboardingSubmit(updateBankDetails, {
-    successMessage: "Bank details saved!",
-    onSuccess: onComplete,
-  });
+  const { mutate, isPending } = useBankDetailsMutation();
+
   const form = useForm<BankFormValues>({
     resolver: zodResolver(bankSchema),
     defaultValues: {
@@ -71,6 +58,26 @@ export function BankDetailsTab({
   });
 
   const { errors } = form.formState;
+
+  function buildFormData(values: BankFormValues): FormData {
+    const fd = new FormData();
+    Object.entries(values).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) fd.append(k, String(v));
+    });
+    return fd;
+  }
+
+  function handleFormSubmit(values: BankFormValues) {
+    mutate(buildFormData(values), {
+      onSuccess: () => {
+        toast.success("Bank details saved!");
+        onComplete(values as Record<string, string | undefined>);
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : "Failed to save bank details");
+      },
+    });
+  }
 
   return (
     <div>
@@ -87,7 +94,7 @@ export function BankDetailsTab({
             Required for payroll processing.
           </p>
         </motion.div>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
           <motion.div
             variants={fadeUp}
             className="grid grid-cols-1 sm:grid-cols-2 gap-4"
@@ -213,7 +220,7 @@ export function BankDetailsTab({
             </p>
           </motion.div>
           <motion.div variants={fadeUp}>
-            <FormNavButtons onBack={onBack} isLoading={isLoading} />
+            <FormNavButtons onBack={onBack} isLoading={isPending} />
           </motion.div>
         </form>
       </motion.div>
