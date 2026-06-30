@@ -83,17 +83,20 @@ export function DashboardShell({
           <CommandPalette />
           <TrialBanner />
 
-          <div className="md:hidden flex items-center gap-3 h-12 px-4 border-b border-border bg-background shrink-0">
+          <div className="md:hidden flex items-center gap-3 h-12 px-4 border-b border-border bg-background shrink-0 z-20 relative">
             <button
               type="button"
               onClick={handleOpenMobileMenu}
               aria-label="Open navigation"
-              className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="h-8 w-8 gap-2 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <Image src="/logo.svg" alt="StreamlineOS logo" width={28} height={28} />
-            <span className="text-sm font-semibold text-foreground">StreamlineOS</span>
+            <div className="w-px h-5 bg-border" />
+            <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+              <Image src="/logo.svg" alt="StreamlineOS logo" width={28} height={28} />
+              <span className="text-sm font-semibold text-foreground">StreamlineOS</span>
+            </Link>
           </div>
 
           <div className="flex-1 flex min-h-0 overflow-hidden">

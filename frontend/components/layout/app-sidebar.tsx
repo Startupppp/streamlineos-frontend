@@ -16,8 +16,7 @@ import {
 } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { resolveImageUrl } from "@/lib/utils"
+import { cn, resolveImageUrl } from "@/lib/utils"
 import { useGetOrganizations, useSwitchOrg, useSignOut } from "@/hooks/common/auth-hooks"
 import {
   DropdownMenu,
@@ -65,11 +64,7 @@ export function AppSidebar({
   const role = session?.user?.role
 
   const lastKnownRoleRef = useRef<string | undefined>(role)
-  const hasEverLoadedRef = useRef(false)
-  if (role) {
-    lastKnownRoleRef.current = role
-    hasEverLoadedRef.current = true
-  }
+  if (role) lastKnownRoleRef.current = role
   const effectiveRole = role || lastKnownRoleRef.current
 
   const pathname = usePathname()
@@ -210,7 +205,7 @@ export function AppSidebar({
         {/* Header: logo + workspace */}
         <div
           className={cn(
-            "relative flex items-center h-14 shrink-0 border-b border-sidebar-border",
+            "relative flex items-center h-14 shrink-0 border-b border-sidebar-border overflow-hidden",
             isCollapsed ? "justify-center px-0" : "justify-between px-4",
           )}
         >
@@ -219,7 +214,7 @@ export function AppSidebar({
               <Link
                 href="/dashboard"
                 onClick={onNavigate}
-                className="relative h-10 w-10 rounded-xl overflow-hidden shrink-0"
+                className="relative h-10 w-10 rounded-lg overflow-hidden shrink-0 hover:ring-2 hover:ring-blue-500/20 transition-all"
               >
                 <Image
                   src="/logo.svg"
@@ -237,10 +232,10 @@ export function AppSidebar({
                       disabled={switchOrg.isPending}
                     >
                       <div className="min-w-0 text-left">
-                        <span className="text-[17px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
+                        <span className="text-[15px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
                           StreamlineOS
                         </span>
-                        <span className="text-[11px] text-sidebar-foreground/40 truncate block mt-0.5 leading-none max-w-[100px]">
+                        <span className="text-[11px] text-sidebar-foreground/50 truncate block mt-0.5 leading-none max-w-[100px]">
                           {orgName ?? "Select org"}
                         </span>
                       </div>
@@ -268,10 +263,10 @@ export function AppSidebar({
                 </DropdownMenu>
               ) : (
                 <Link href="/dashboard" onClick={onNavigate} className="min-w-0 group">
-                  <span className="text-[17px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
+                  <span className="text-[15px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
                     StreamlineOS
                   </span>
-                  <span className="text-[11px] text-sidebar-foreground/40 truncate block mt-0.5 leading-none max-w-[120px]">
+                  <span className="text-[11px] text-sidebar-foreground/50 truncate block mt-0.5 leading-none max-w-[120px]">
                     {orgName ?? ""}
                   </span>
                 </Link>
@@ -361,12 +356,12 @@ export function AppSidebar({
                     type="button"
                     onClick={handleSearchClick}
                     aria-label="Search"
-                    className="h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+                    className="h-8 w-8 w-full rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
                   >
                     <Search className="h-4 w-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10} className="text-xs">
+                <TooltipContent side="right" sideOffset={10} className="text-xs z-[200]">
                   Search (⌘K)
                 </TooltipContent>
               </Tooltip>
@@ -376,15 +371,15 @@ export function AppSidebar({
                     href="/notifications"
                     onClick={onNavigate}
                     aria-label="Notifications"
-                    className="relative h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+                    className="relative h-8 w-8 w-full rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
                   >
                     <Bell className="h-4 w-4" />
                     {unreadNotifCount > 0 && (
-                      <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-blue-500 ring-1 ring-sidebar" />
+                      <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-blue-500 ring-1 ring-sidebar" />
                     )}
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10} className="text-xs">
+                <TooltipContent side="right" sideOffset={10} className="text-xs z-[200]">
                   Notifications{unreadNotifCount > 0 ? ` (${unreadNotifCount})` : ""}
                 </TooltipContent>
               </Tooltip>
@@ -395,7 +390,7 @@ export function AppSidebar({
                 type="button"
                 onClick={handleSearchClick}
                 aria-label="Search"
-                className="flex-1 flex items-center gap-2 h-8 rounded-lg bg-muted border border-sidebar-border px-2.5 text-sidebar-foreground/55 text-xs hover:text-sidebar-foreground/85 hover:bg-sidebar-accent hover:border-sidebar-ring/30 transition-colors"
+                className="flex-1 flex items-center gap-2 h-8 rounded-lg bg-sidebar-accent/60 border border-sidebar-border/80 px-2.5 text-sidebar-foreground/55 text-xs hover:text-sidebar-foreground/85 hover:bg-sidebar-accent hover:border-sidebar-ring/40 transition-colors"
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <span className="flex-1 text-left">Search…</span>
@@ -413,11 +408,11 @@ export function AppSidebar({
                   >
                     <Bell className="h-4 w-4" />
                     {unreadNotifCount > 0 && (
-                      <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-blue-500 ring-1 ring-sidebar" />
+                      <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-blue-500 ring-1 ring-sidebar" />
                     )}
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={6} className="text-xs">
+                <TooltipContent side="right" sideOffset={6} className="text-xs z-[200]">
                   Notifications
                 </TooltipContent>
               </Tooltip>
@@ -433,11 +428,11 @@ export function AppSidebar({
                 type="button"
                 className={cn(
                   "group flex items-center gap-2.5 w-full rounded-lg outline-none transition-colors duration-150",
-                  "hover:bg-sidebar-accent focus-visible:ring-1 focus-visible:ring-sidebar-ring",
+                  "hover:bg-sidebar-accent/70 focus-visible:ring-1 focus-visible:ring-sidebar-ring",
                   isCollapsed ? "justify-center p-2" : "px-2.5 py-2",
                 )}
               >
-                <Avatar className="h-7 w-7 shrink-0 ring-1 ring-sidebar-border">
+                <Avatar className="h-7 w-7 shrink-0 ring-2 ring-sidebar-border/50">
                   <AvatarImage src={image} alt={name} />
                   <AvatarFallback className="text-[11px] font-bold bg-blue-500/15 text-blue-600">
                     {initials}
@@ -446,10 +441,10 @@ export function AppSidebar({
                 {!isCollapsed && (
                   <>
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="text-[0.8125rem] font-medium text-sidebar-foreground/85 truncate leading-none">
+                      <p className="text-sm font-medium text-sidebar-foreground/85 truncate leading-none">
                         {name}
                       </p>
-                      <p className="text-[0.6875rem] text-sidebar-foreground/35 truncate mt-0.5 leading-none">
+                      <p className="text-xs text-sidebar-foreground/35 truncate mt-0.5 leading-none">
                         {userRole}
                       </p>
                     </div>

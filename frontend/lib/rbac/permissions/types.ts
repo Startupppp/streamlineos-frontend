@@ -133,4 +133,13 @@ export type PermissionKey =
   | "branch:read"
   | "branch:update"
   | "branch:manage_targets"
-  | "chat:submit_lead";
+  | "chat:submit_lead"
+  | "billing:enterprise-quotes:view"
+  | "billing:enterprise-quotes:create"
+  | "billing:enterprise-quotes:update"
+  | "billing:enterprise-quotes:approve"
+  | "billing:enterprise-quotes:manage"
+  | "billing:affiliate:manage"
+  | "billing:analytics:view"
+  | "billing:ai-credits:view"
+  | "billing:marketplace:view";

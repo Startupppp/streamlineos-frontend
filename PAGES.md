@@ -7,7 +7,7 @@ Ordered money-path first. Check off each page after fixing.
 ---
 
 ## Global Navigation (Platform Shell)
-- [x] `layout` — Implemented PRD navigation: TopHeader (workspace/search/AI/calendar/chat/notifications/profile), ProductSwitcher (11-product animated tab rail with @phosphor-icons/react fill/regular weight transitions + framer-motion spring indicator), context-aware sidebar (shows only current product's nav groups derived from pathname), MobileBottomNav (Home/Search/Create/Alerts/Me fixed bottom); deleted orphaned NotificationBell and SidebarUserMenu; merged Sales+CustomerSuccess→CRM, KB→Helpdesk, People+Org→Administration per PRD
+- [x] `layout` — Activity Bar approach (VS Code/Linear style): thin 48px vertical icon rail (ActivityBar) for product switching using @phosphor-icons/react fill/regular weight + framer-motion spring indicator; full sidebar restored (logo+workspace, context-aware nav via getNavGroupsForProduct, search+bell footer, inline user profile dropdown); MobileBottomNav preserved; home product now shows Overview nav (Dashboard/Calendar/Chat/Notifications/Reports); tooltips z-[200]; deleted TopHeader, ProductSwitcher, orphaned NotificationBell and SidebarUserMenu
 
 ---
 
@@ -54,6 +54,11 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/billing/invoices` — Invoices list with status filters
 - [x] `/billing/invoices/new` — New invoice creation
 - [x] `/billing/invoices/[invoiceId]` — Invoice detail: line items table, totals, payments history, record-payment dialog, send/mark-paid/delete actions
+- [x] `/billing/checkout` — Multi-step checkout wizard: plan selector → billing cycle → coupon → review & pay with Razorpay; 20% annual discount; coupon validation
+- [x] `/billing/ai-credits` — AI Credits wallet: balance stats, auto top-up toggle, credit pack cards, usage history table with transaction types
+- [x] `/billing/analytics` — Revenue Analytics (platform admin): MRR/ARR/ARPU/churn KPI cards, MRR trend BarChart, period selector (3m/6m/12m)
+- [x] `/billing/affiliate` — Affiliate Dashboard: register CTA, referral link copy, send invite email, commission history table; empty state when not registered
+- [x] `/marketplace` — App Marketplace: category filter tabs, app cards with install/trial/uninstall actions, skeleton loading, empty state per category
 - [x] `/accounting` — Accounting overview
 - [x] `/accounting/coa` — Chart of accounts
 - [x] `/accounting/coa/[accountId]` — Account detail: type badge, edit dialog (name/description/isActive), recent journal entries
@@ -357,6 +362,19 @@ Ordered money-path first. Check off each page after fixing.
 
 ## Onboarding
 - [x] `/onboarding` — Employee onboarding wizard. Fixed ID-proof upload (sent `ID` vs DB enum `ID_PROOF`); added server-side Zod validation for doc type/mime/size and personal details; trimmed personal step to standard HR fields (removed experience/skills, added home address + emergency contact); compacted document cards. All access gating moved to middleware (owners/platform admins redirected away; completed users redirected to /dashboard via new `users.onboardingCompletedAt`, set on submit + surfaced in JWT) — no page-level role checks.
+
+---
+
+## Workspace Setup Wizard (2026-06-29 → 2026-06-30)
+- [x] `/setup` — 8-step customer workspace onboarding wizard (Welcome → Goals → Industry → Company Profile → AI Workspace Generation → Module Recommendations → Invite Team → Success). Full implementation end-to-end:
+  - **Backend**: `WorkspaceOnboardingModule` with `POST /workspace-onboarding/generate` (idempotent industry-template workspace creation: BU/branch/depts/teams) and `POST /workspace-onboarding/complete` (sets `onboardingCompletedAt`). Both gated `settings:organization:manage`. `updateOrgSettingsSchema` extended with `companySize`, `country`, `enabledModules`. Permission key added to catalog.
+  - **Frontend steps**: WelcomeStep (skip option), GoalsStep (8 goal cards, min 1 required), IndustryStep (10 industries, auto-advance with double-click guard via `hasFiredRef`), CompanyProfileStep (react-hook-form + Zod, saves to server), GenerationStep (animated task list, idempotent API call, retry on error), RecommendationsStep (goal→module mapping, enable/skip per module), InviteStep (stable-ID rows keyed by `crypto.randomUUID()`, CSV upload, per-row validation), SuccessStep (auto-calls `completeOnboarding`, error UI with retry).
+  - **Persistence**: `wizard-storage.ts` — all wizard state in `localStorage` (`streamline:onboarding-wizard`), written on every step transition, cleared on completion or "Enter Workspace".
+  - **Step gating**: `sanitizeStep()` enforces: no goals → max step 1, no industry → max step 2, no orgName → max step 3, never restores to step 7 (success). Prevents localStorage/URL manipulation to jump ahead.
+  - **State**: 7 useState → 2 useState (consolidated `WizardState` object + `direction`); 1 useEffect loads localStorage + merges server seed in one pass; server data (`orgSettings.name`, `orgSettings.industry`) seeds localStorage on load, redirect if `onboardingCompletedAt` set.
+  - **Post-setup**: `SuccessChecklist` floating widget (bottom-right, 5 items, localStorage-persisted done/dismissed state) injected into `dashboard-shell.tsx`.
+  - **Removed steps**: IntegrationsStep and ImportStep removed (files deleted) — too complex/low-value for initial onboarding.
+  - **Bug fixes (12 audit issues)**: invalid Tailwind class `h-4.5` fixed, `valueLabel` non-existent Progress prop replaced with `aria-label`, stable row IDs in InviteStep (index → UUID), `completeOnboarding` error surfaced with retry, double-click guard in IndustryStep, array guards in `loadWizardState` for corrupted localStorage.
 
 ---
 

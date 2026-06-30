@@ -867,6 +867,12 @@ export const NAV_GROUPS: NavGroup[] = [
             href: "/billing/analytics",
             requiredPermission: "billing:analytics:view",
           },
+          {
+            label: "Enterprise Quotes",
+            icon: ClipboardList,
+            href: "/billing/enterprise-quotes",
+            requiredPermission: "billing:enterprise-quotes:view",
+          },
         ],
       },
     ],
@@ -1526,7 +1532,21 @@ export function getNavGroupsForProduct(
   permissions: string[] | undefined,
 ): NavGroup[] {
   const allGroups = getNavGroupsForUser(role, permissions)
-  if (productKey === 'home' || productKey === 'analytics') return []
+  if (productKey === 'home') {
+    return [
+      {
+        label: 'Overview',
+        routes: [
+          { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+          { label: 'Calendar', href: '/calendar', icon: CalendarDays },
+          { label: 'Chat', href: '/chat', icon: MessageSquareText },
+          { label: 'Notifications', href: '/notifications', icon: Bell },
+          { label: 'Reports', href: '/reports', icon: BarChart3 },
+        ],
+      },
+    ]
+  }
+  if (productKey === 'analytics') return []
   if (productKey === 'ai') {
     const coreGroup = allGroups.find((g) => g.label === 'Core')
     if (!coreGroup) return []

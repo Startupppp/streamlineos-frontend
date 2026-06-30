@@ -53,12 +53,12 @@ export function ActivityBar() {
   const activeProduct = getProductFromPathname(pathname)
 
   return (
-    <TooltipProvider>
-      <aside
-        aria-label="Product switcher"
-        className="hidden md:flex w-11 flex-col items-center border-r border-sidebar-border bg-sidebar shrink-0 h-full z-30 py-2"
-      >
-        <nav className="flex flex-col items-center gap-0.5 w-full px-1">
+    <aside
+      aria-label="Product switcher"
+      className="hidden md:flex w-12 flex-col items-center border-r border-sidebar-border/60 bg-sidebar shrink-0 h-full z-30 py-3"
+    >
+      <TooltipProvider>
+        <nav className="flex flex-col items-center gap-1 w-full px-1.5">
           {PRODUCT_DEFINITIONS.map((product) => {
             const isActive = activeProduct === product.key
             const Icon = PRODUCT_ICONS[product.key]
@@ -69,33 +69,33 @@ export function ActivityBar() {
                     href={product.href}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "relative h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-150",
+                      "relative h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-150",
                       isActive
-                        ? "text-blue-600 bg-blue-500/10"
+                        ? "text-blue-600 bg-blue-500/12"
                         : "text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent",
                     )}
                   >
                     {isActive && (
                       <motion.span
                         layoutId="activity-bar-indicator"
-                        className="absolute -left-1 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-blue-500"
+                        className="absolute -left-1.5 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-blue-500"
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                       />
                     )}
                     <Icon
-                      className="h-[18px] w-[18px] transition-all duration-150"
+                      className="h-5 w-5 transition-all duration-150"
                       weight={isActive ? "fill" : "regular"}
                     />
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="text-xs font-medium">
+                <TooltipContent side="right" sideOffset={8} className="z-[200] text-xs font-medium">
                   {product.label}
                 </TooltipContent>
               </Tooltip>
             )
           })}
         </nav>
-      </aside>
-    </TooltipProvider>
+      </TooltipProvider>
+    </aside>
   )
 }
