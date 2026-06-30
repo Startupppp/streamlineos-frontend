@@ -1,5 +1,6 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Monitor, Palette, ShoppingBag, Cog, Heart, BookOpen, Building, Building2, Utensils, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,9 @@ const INDUSTRY_ICONS: Record<string, LucideIcon> = {
 };
 
 export function StepIndustry({ industry, onSelect, onBack, onNext }: StepIndustryProps) {
-  function handleSelect(ind: string) {
+  function handleIndustryClick(e: MouseEvent<HTMLButtonElement>) {
+    const ind = e.currentTarget.dataset.industry;
+    if (!ind) return;
     onSelect(ind);
     setTimeout(onNext, 220);
   }
@@ -49,7 +52,8 @@ export function StepIndustry({ industry, onSelect, onBack, onNext }: StepIndustr
               type="button"
               role="radio"
               aria-checked={selected}
-              onClick={() => handleSelect(ind)}
+              data-industry={ind}
+              onClick={handleIndustryClick}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: i * 0.03 }}

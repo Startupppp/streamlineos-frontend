@@ -51,6 +51,14 @@ export function StepCompany({ data, patch, onBack, onNext }: StepCompanyProps) {
     [data.country],
   );
 
+  function handleCompanyNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    patch({ companyName: e.target.value });
+  }
+
+  function handleTeamSizeChange(v: string) {
+    patch({ teamSize: v });
+  }
+
   function handleCountrySelect(name: string) {
     const tz = ALL_COUNTRIES.find((c) => c.name === name)?.timezone ?? "";
     patch({ country: name, timezone: tz });
@@ -82,7 +90,7 @@ export function StepCompany({ data, patch, onBack, onNext }: StepCompanyProps) {
         <Input
           id="company-name"
           value={data.companyName}
-          onChange={(e) => patch({ companyName: e.target.value })}
+          onChange={handleCompanyNameChange}
           placeholder="Acme Corp"
           className="h-9 text-sm"
           autoFocus
@@ -98,7 +106,7 @@ export function StepCompany({ data, patch, onBack, onNext }: StepCompanyProps) {
         <Label className="text-[13px] font-medium">
           Team size <span className="text-destructive">*</span>
         </Label>
-        <Select onValueChange={(v) => patch({ teamSize: v })} value={data.teamSize}>
+        <Select onValueChange={handleTeamSizeChange} value={data.teamSize}>
           <SelectTrigger className="h-9 text-sm">
             <SelectValue placeholder="Select team size" />
           </SelectTrigger>
