@@ -198,3 +198,25 @@ export interface NotificationAnalyticsByPriority {
   priority: string;
   count: number;
 }
+
+export interface NotificationAuditLog {
+  id: number;
+  notificationId: number | null;
+  broadcastId: number | null;
+  actorId: string | null;
+  actorName: string | null;
+  actorEmail: string | null;
+  action: string;
+  sourceModule: string | null;
+  channel: string | null;
+  metadata: Record<string, unknown> | null;
+  ipAddress: string | null;
+  createdAt: Date | string;
+}
+
+export interface NotificationAuditLogListResult {
+  logs: NotificationAuditLog[];
+  total: number;
+  page: number;
+  totalPages: number;
+}

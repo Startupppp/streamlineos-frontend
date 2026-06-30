@@ -245,6 +245,7 @@ export const queryKeys = {
     analytics: (days?: number) => [...base, "notifications", "analytics", days] as const,
     queue: () => [...base, "notifications", "queue"] as const,
     queueFailed: () => [...base, "notifications", "queueFailed"] as const,
+    auditLogs: (params?: Record<string, unknown>) => [...base, "notifications", "auditLogs", params] as const,
   },
 
   invoice: {

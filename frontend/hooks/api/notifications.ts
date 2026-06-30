@@ -21,6 +21,7 @@ import type {
   NotificationAnalyticsOverview,
   NotificationAnalyticsByCategory,
   NotificationAnalyticsByPriority,
+  NotificationAuditLogListResult,
 } from "@/types/notifications";
 
 function toStringParams(params: Record<string, unknown>): Record<string, string> {
@@ -427,5 +428,21 @@ export const useRetryNotification = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.queue() });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.queueFailed() });
     },
+  });
+};
+
+export const useNotificationAuditLogs = (
+  params?: { page?: number; pageSize?: number; action?: string; dateFrom?: string; dateTo?: string },
+  options?: Omit<UseQueryOptions<NotificationAuditLogListResult, Error>, "queryKey" | "queryFn">,
+) => {
+  return useQuery<NotificationAuditLogListResult, Error>({
+    queryKey: queryKeys.notifications.auditLogs(params as Record<string, unknown>),
+    queryFn: () =>
+      apiClient.get<NotificationAuditLogListResult>(
+        "/notifications/audit",
+        params ? toStringParams(params as Record<string, unknown>) : undefined,
+      ),
+    staleTime: 30_000,
+    ...options,
   });
 };

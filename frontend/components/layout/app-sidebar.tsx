@@ -70,7 +70,7 @@ export function AppSidebar({
   const pathname = usePathname()
   const activeProduct = getProductFromPathname(pathname)
 
-  const { permissions } = usePermissions()
+  const { permissions, isLoading: permissionsLoading } = usePermissions()
   const isAdmin = useCan("settings:manage")
 
   const navGroups = useMemo(
@@ -167,7 +167,7 @@ export function AppSidebar({
   const initials = name.charAt(0).toUpperCase()
   const userRole = session?.user?.role ?? ""
 
-  if (status === "loading") {
+  if (status === "loading" || permissionsLoading) {
     return (
       <div className="flex flex-col h-full bg-sidebar">
         <div className="px-3 py-4 flex-1 space-y-6">

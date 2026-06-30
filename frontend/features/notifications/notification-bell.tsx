@@ -19,6 +19,7 @@ import {
   type NotificationCategory,
 } from "./notification-types";
 import { formatRelativeTime } from "./format-relative-time";
+import { useNotificationEvents } from "./use-notification-events";
 import type { Notification } from "@/types/notifications";
 
 function BellBadge({ count }: { count: number }) {
@@ -93,6 +94,7 @@ function PopoverSkeleton() {
 
 export function NotificationBell() {
   const router = useRouter();
+  useNotificationEvents();
   const { data: unreadData } = useUnreadNotificationCount();
   const { data: notifications, isLoading } = useNotifications({ section: "ALL", limit: 10 });
   const markRead = useMarkNotificationRead();
