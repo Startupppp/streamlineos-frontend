@@ -66,6 +66,16 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
     setDirty(true);
   }, []);
 
+  const handleCriterionClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const criterion = BANT_CRITERIA.find(
+        (c) => c.key === e.currentTarget.dataset.criterion
+      );
+      if (criterion) handleToggle(criterion.key);
+    },
+    [handleToggle]
+  );
+
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setBant((prev) => ({ ...prev, notes: e.target.value }));
     setDirty(true);

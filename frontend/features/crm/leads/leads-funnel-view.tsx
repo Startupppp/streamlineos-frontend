@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, TrendingDown } from "lucide-react";
 import type { BoardLead } from "@/features/crm/leads/leads-types";
 
 type LeadBoard = Record<string, BoardLead[]>;
@@ -40,8 +40,16 @@ interface LeadsFunnelViewProps {
 export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
   if (!board) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading funnel data...</p>
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 text-center">
+        <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
+          <TrendingDown className="h-7 w-7 text-slate-400" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-slate-700">No funnel data</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Add leads to the pipeline to see the conversion funnel
+          </p>
+        </div>
       </div>
     );
   }

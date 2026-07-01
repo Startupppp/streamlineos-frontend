@@ -151,6 +151,7 @@ export function CrmEventDialog({
   const allDay = form.watch("allDay");
   const watchedAttendeeIds = form.watch("attendeeIds");
   const watchedEntityType = form.watch("entityType");
+  const watchedColor = form.watch("color");
 
   useEffect(() => {
     if (open) {
@@ -174,6 +175,14 @@ export function CrmEventDialog({
   }, [watchedEntityType, form]);
 
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleColorButtonClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const color = e.currentTarget.dataset.color as EventFormValues["color"] | undefined;
+      if (color) form.setValue("color", color);
+    },
+    [form],
+  );
 
   const handleToggleAttendee = useCallback(
     (id: string) => {

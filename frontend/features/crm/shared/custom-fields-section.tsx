@@ -11,7 +11,7 @@ interface CustomFieldsSectionProps {
 }
 
 export function CustomFieldsSection({ entityType, values, className }: CustomFieldsSectionProps) {
-  const { data, isLoading } = useCustomFields(entityType);
+  const { data, isLoading, isError, refetch } = useCustomFields(entityType);
   const fields = data?.fields ?? [];
   const activeFields = fields.filter((f) => f.isActive);
 
@@ -21,6 +21,21 @@ export function CustomFieldsSection({ entityType, values, className }: CustomFie
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-8 w-full" />
         <Skeleton className="h-8 w-full" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span>Failed to load custom fields.</span>
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          className="text-xs text-blue-500 hover:underline"
+        >
+          Retry
+        </button>
       </div>
     );
   }

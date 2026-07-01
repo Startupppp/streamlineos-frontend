@@ -301,7 +301,8 @@ export default function CrmAuditLogPage() {
     if (fromDate) params.set("from", fromDate);
     if (toDate) params.set("to", toDate);
     const qs = params.toString();
-    window.open(`/crm/audit-logs/export${qs ? `?${qs}` : ""}`, "_blank");
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
+    window.open(`${baseUrl}/crm/audit-logs/export${qs ? `?${qs}` : ""}`, "_blank");
   }, [entityType, action, fromDate, toDate]);
 
   const handleRetry = useCallback(() => {
