@@ -6,7 +6,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Menu } from "lucide-react"
 import { AppSidebar } from "./app-sidebar"
-import { ActivityBar } from "./activity-bar"
 import { GlobalHeader } from "./header/global-header"
 import { MobileBottomNav } from "./mobile-bottom-nav"
 import { CommandPalette } from "./command-palette"
@@ -112,8 +111,6 @@ export function DashboardShell({
           </div>
 
           <div className="flex-1 flex min-h-0">
-            <ActivityBar />
-
             <aside
               aria-label="Sidebar"
               style={{ width: sidebarW }}

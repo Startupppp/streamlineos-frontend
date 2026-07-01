@@ -35,7 +35,6 @@ interface SidebarSectionProps {
   isGroupCollapsed?: boolean;
   onToggleGroup?: () => void;
   pendingLeaves: number;
-  unreadChatCount: number;
   onNavigate?: () => void;
 }
 
@@ -59,7 +58,6 @@ export function SidebarSection({
   isGroupCollapsed,
   onToggleGroup,
   pendingLeaves,
-  unreadChatCount,
   onNavigate,
 }: SidebarSectionProps) {
   const pathname = usePathname();
@@ -106,7 +104,6 @@ export function SidebarSection({
                   route={route}
                   pathname={pathname}
                   pendingLeaves={pendingLeaves}
-                  unreadChatCount={unreadChatCount}
                   onNavigate={onNavigate}
                 />
               ))
@@ -117,7 +114,6 @@ export function SidebarSection({
                   depth={0}
                   pathname={pathname}
                   pendingLeaves={pendingLeaves}
-                  unreadChatCount={unreadChatCount}
                   onNavigate={onNavigate}
                 />
               ))}
@@ -131,20 +127,17 @@ interface ItemProps {
   route: NavRoute;
   pathname: string;
   pendingLeaves: number;
-  unreadChatCount: number;
   onNavigate?: () => void;
 }
 
-function computeBadge(route: NavRoute, pendingLeaves: number, unreadChatCount: number) {
-  const chatBadge = route.href === "/chat" && unreadChatCount > 0 ? unreadChatCount : 0;
+function computeBadge(route: NavRoute, pendingLeaves: number) {
   const leavesBadge = route.badge === "leaves" && pendingLeaves > 0 ? pendingLeaves : 0;
-  const count = chatBadge || leavesBadge;
-  return { count, isChat: chatBadge > 0 };
+  return { count: leavesBadge, isChat: false };
 }
 
-function CollapsedItem({ route, pathname, pendingLeaves, unreadChatCount, onNavigate }: ItemProps) {
+function CollapsedItem({ route, pathname, pendingLeaves, onNavigate }: ItemProps) {
   const isActive = routeIsActive(route, pathname);
-  const { count, isChat } = computeBadge(route, pendingLeaves, unreadChatCount);
+  const { count, isChat } = computeBadge(route, pendingLeaves);
   const hasBadge = count > 0;
 
   return (
@@ -174,7 +167,7 @@ interface ExpandedItemProps extends ItemProps {
   depth: number;
 }
 
-function ExpandedItem({ route, depth, pathname, pendingLeaves, unreadChatCount, onNavigate }: ExpandedItemProps) {
+function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate }: ExpandedItemProps) {
   const isActive = routeIsActive(route, pathname);
   const hasChildren = !!route.children && route.children.length > 1;
   const singleChild = !!route.children && route.children.length === 1;
@@ -191,7 +184,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, unreadChatCount, 
     setExpanded((v) => !v);
   }, []);
 
-  const { count, isChat } = computeBadge(route, pendingLeaves, unreadChatCount);
+  const { count, isChat } = computeBadge(route, pendingLeaves);
   const hasBadge = count > 0;
   const paddingLeft = depth === 0 ? "0.625rem" : `${0.625 + depth * 0.75}rem`;
 
@@ -252,7 +245,6 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, unreadChatCount, 
               depth={depth + 1}
               pathname={pathname}
               pendingLeaves={pendingLeaves}
-              unreadChatCount={unreadChatCount}
               onNavigate={onNavigate}
             />
           ))}

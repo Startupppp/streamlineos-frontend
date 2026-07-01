@@ -1420,17 +1420,7 @@ export function getNavGroupsForProduct(
   permissions: string[] | undefined,
 ): NavGroup[] {
   if (productKey === "home") {
-    return [
-      {
-        label: "Overview",
-        routes: [
-          { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-          { label: "Calendar", href: "/calendar", icon: CalendarDays },
-          { label: "Chat", href: "/chat", icon: MessageSquareText },
-          { label: "Notifications", href: "/notifications", icon: Bell },
-        ],
-      },
-    ];
+    return [];
   }
   if (productKey === "ai") {
     return [
