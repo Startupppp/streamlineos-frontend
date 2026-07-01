@@ -194,26 +194,28 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                 <Plus className="h-4 w-4 mr-1" /> New Item
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-              <SheetHeader>
+            <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
+              <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
                 <SheetTitle>Create Intake Item</SheetTitle>
               </SheetHeader>
-              <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4 p-4">
-                <div>
-                  <Label htmlFor="intake-title">Title</Label>
-                  <Input id="intake-title" {...createForm.register("title")} />
-                  {createForm.formState.errors.title && (
-                    <p className="text-xs text-destructive mt-1">{createForm.formState.errors.title.message}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="intake-desc">Description</Label>
-                  <Textarea id="intake-desc" {...createForm.register("description")} />
-                </div>
-                <Button type="submit" disabled={createMutation.isPending} className="w-full">
-                  {createMutation.isPending ? "Creating..." : "Create Item"}
-                </Button>
-              </form>
+              <div className="flex-1 overflow-y-auto px-6 py-5">
+                <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+                  <div>
+                    <Label htmlFor="intake-title">Title</Label>
+                    <Input id="intake-title" {...createForm.register("title")} />
+                    {createForm.formState.errors.title && (
+                      <p className="text-xs text-destructive mt-1">{createForm.formState.errors.title.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="intake-desc">Description</Label>
+                    <Textarea id="intake-desc" {...createForm.register("description")} />
+                  </div>
+                  <Button type="submit" disabled={createMutation.isPending} className="w-full">
+                    {createMutation.isPending ? "Creating..." : "Create Item"}
+                  </Button>
+                </form>
+              </div>
             </SheetContent>
           </Sheet>
         </div>

@@ -1,6 +1,5 @@
 "use client"
 
-import { useCallback } from "react"
 import Link from "next/link"
 import { User, Settings, Bell, Palette, Key, LogOut } from "lucide-react"
 import { useSession } from "next-auth/react"
@@ -25,8 +24,6 @@ export function UserAvatarMenu() {
   const email = session?.user?.email ?? ""
   const image = resolveImageUrl(session?.user?.image)
   const initials = name.charAt(0).toUpperCase()
-
-  const handleSignOutClick = useCallback(() => { handleSignOut() }, [handleSignOut])
 
   return (
     <DropdownMenu>

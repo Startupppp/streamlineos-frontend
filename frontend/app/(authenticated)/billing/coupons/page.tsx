@@ -169,14 +169,16 @@ function CreateCouponSheet({ open, onOpenChange }: CreateCouponSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>Create Coupon</SheetTitle>
         </SheetHeader>
+        <div className="flex-1 overflow-y-auto px-6 py-5">
         <Form {...form}>
           <form
+            id="create-coupon-form"
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="flex flex-col gap-4 py-4"
+            className="flex flex-col gap-4"
           >
             <FormField
               control={form.control}

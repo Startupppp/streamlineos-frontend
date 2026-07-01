@@ -56,14 +56,14 @@ function BonusSheet({ referral, onClose }: BonusSheetProps) {
 
   return (
     <Sheet open onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="w-full sm:max-w-md">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>Mark Bonus Paid</SheetTitle>
           <SheetDescription>
             Referral by {referral.referrer?.name ?? "Unknown"} for {referral.candidate?.firstName} {referral.candidate?.lastName}
           </SheetDescription>
         </SheetHeader>
-        <div className="py-4 space-y-3">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="bonus-amount">Bonus Amount (₹)</Label>
             <Input
@@ -76,7 +76,7 @@ function BonusSheet({ referral, onClose }: BonusSheetProps) {
             />
           </div>
         </div>
-        <SheetFooter>
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleMarkPaid} disabled={updateMutation.isPending}>
             {updateMutation.isPending ? "Saving..." : "Mark Paid"}

@@ -67,7 +67,11 @@ export function AppSidebar({
   const { data: session, status } = useSession();
   const { data: organizations } = useGetOrganizations();
   const switchOrg = useSwitchOrg();
-  const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
+  const { mutate: signOut, isPending: isSigningOut } = useSignOut();
+
+  function handleSignOut() {
+    signOut();
+  }
   const role = session?.user?.role;
   const isOrgOwner =
     session?.user?.isOrgOwner === true ||

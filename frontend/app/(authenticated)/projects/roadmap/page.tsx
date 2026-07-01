@@ -203,13 +203,13 @@ function RoadmapItemSheet({
 
   return (
     <Sheet open onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>
             {isEdit ? "Edit Roadmap Item" : "New Roadmap Item"}
           </SheetTitle>
         </SheetHeader>
-        <div className="space-y-4 px-4 py-2">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           <div className="space-y-1">
             <Label>Title *</Label>
             <Input
@@ -269,7 +269,7 @@ function RoadmapItemSheet({
             <Switch checked={isPublic} onCheckedChange={setIsPublic} />
           </div>
         </div>
-        <SheetFooter className="flex-row gap-2 border-t pt-4">
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" className="flex-1" onClick={onClose}>
             Cancel
           </Button>
@@ -776,13 +776,13 @@ function ChangelogSheet({
 
   return (
     <Sheet open onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>
             {isEdit ? "Edit Changelog Entry" : "New Changelog Entry"}
           </SheetTitle>
         </SheetHeader>
-        <div className="space-y-4 px-4 py-2">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           <div className="space-y-1">
             <Label>Title *</Label>
             <Input
@@ -830,7 +830,7 @@ function ChangelogSheet({
             <Switch checked={isPublished} onCheckedChange={setIsPublished} />
           </div>
         </div>
-        <SheetFooter className="flex-row gap-2 border-t pt-4">
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" className="flex-1" onClick={onClose}>
             Cancel
           </Button>

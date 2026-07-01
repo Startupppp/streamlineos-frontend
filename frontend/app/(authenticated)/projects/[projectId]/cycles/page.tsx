@@ -128,42 +128,44 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
               <Plus className="h-4 w-4 mr-1" /> New Cycle
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-            <SheetHeader>
+          <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
               <SheetTitle>Create Cycle</SheetTitle>
             </SheetHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 p-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Enter cycle name..." {...form.register("name")} className="capitalize" />
-                {form.formState.errors.name && (
-                  <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" placeholder="Optional description..." {...form.register("description")} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 <div className="space-y-1.5">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <DatePicker id="startDate" value={form.watch("startDate") || ""} onChange={handleSetStartDate} placeholder="Start date" />
-                  {form.formState.errors.startDate && (
-                    <p className="text-xs text-destructive mt-1">{form.formState.errors.startDate.message}</p>
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" placeholder="Enter cycle name..." {...form.register("name")} className="capitalize" />
+                  {form.formState.errors.name && (
+                    <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="endDate">End Date</Label>
-                  <DatePicker id="endDate" value={form.watch("endDate") || ""} onChange={handleSetEndDate} placeholder="End date" />
-                  {form.formState.errors.endDate && (
-                    <p className="text-xs text-destructive mt-1">{form.formState.errors.endDate.message}</p>
-                  )}
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea id="description" placeholder="Optional description..." {...form.register("description")} />
                 </div>
-              </div>
-              <Button type="submit" disabled={createMutation.isPending} className="w-full">
-                {createMutation.isPending ? "Creating..." : "Create Cycle"}
-              </Button>
-            </form>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="startDate">Start Date</Label>
+                    <DatePicker id="startDate" value={form.watch("startDate") || ""} onChange={handleSetStartDate} placeholder="Start date" />
+                    {form.formState.errors.startDate && (
+                      <p className="text-xs text-destructive mt-1">{form.formState.errors.startDate.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="endDate">End Date</Label>
+                    <DatePicker id="endDate" value={form.watch("endDate") || ""} onChange={handleSetEndDate} placeholder="End date" />
+                    {form.formState.errors.endDate && (
+                      <p className="text-xs text-destructive mt-1">{form.formState.errors.endDate.message}</p>
+                    )}
+                  </div>
+                </div>
+                <Button type="submit" disabled={createMutation.isPending} className="w-full">
+                  {createMutation.isPending ? "Creating..." : "Create Cycle"}
+                </Button>
+              </form>
+            </div>
           </SheetContent>
         </Sheet>
       }

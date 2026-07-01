@@ -139,12 +139,13 @@ function BroadcastSheet({
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader className="pb-4">
+      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{isEdit ? "Edit Broadcast" : "New Broadcast"}</SheetTitle>
         </SheetHeader>
+        <div className="flex-1 overflow-y-auto px-6 py-5">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form id="broadcast-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="title"
@@ -272,14 +273,15 @@ function BroadcastSheet({
                 </FormItem>
               )}
             />
-            <SheetFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Draft"}
-              </Button>
-            </SheetFooter>
           </form>
         </Form>
+        </div>
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
+          <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
+          <Button type="submit" form="broadcast-form" disabled={isPending}>
+            {isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Draft"}
+          </Button>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

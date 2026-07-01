@@ -159,13 +159,14 @@ export default function ModulesPage({
               <Plus className="h-4 w-4 mr-1" /> New Module
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-            <SheetHeader>
+          <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
               <SheetTitle>Create Module</SheetTitle>
             </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-6 py-5">
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4 p-4"
+              className="space-y-4"
             >
               <div>
                 <Label htmlFor="mod-name">Name</Label>
@@ -243,6 +244,7 @@ export default function ModulesPage({
                 {createMutation.isPending ? "Creating..." : "Create Module"}
               </Button>
             </form>
+            </div>
           </SheetContent>
         </Sheet>
       }

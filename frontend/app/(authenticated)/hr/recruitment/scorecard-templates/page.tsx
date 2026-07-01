@@ -177,11 +177,11 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="w-full sm:max-w-md flex flex-col">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-md flex flex-col p-0 gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{editTemplate ? "Edit Template" : "New Scorecard Template"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto space-y-4 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           <div>
             <Label className="text-xs font-medium">Template Name <span className="text-destructive">*</span></Label>
             <Input
@@ -221,7 +221,7 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
             </Button>
           </div>
         </div>
-        <SheetFooter>
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose} disabled={isPending} type="button">Cancel</Button>
           <Button onClick={handleSubmit} disabled={isPending} type="button">
             {isPending ? "Saving…" : editTemplate ? "Save Changes" : "Create Template"}

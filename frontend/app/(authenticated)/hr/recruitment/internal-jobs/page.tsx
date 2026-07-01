@@ -67,12 +67,12 @@ function ApplySheet({ job, onClose, onSuccess }: ApplySheetProps) {
 
   return (
     <Sheet open onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="w-full sm:max-w-md">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>Apply Internally — {job.title}</SheetTitle>
           <SheetDescription>Submit your internal application. HR will be notified.</SheetDescription>
         </SheetHeader>
-        <div className="py-4 space-y-3">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="cover-letter">Cover Letter (optional)</Label>
             <Textarea
@@ -84,7 +84,7 @@ function ApplySheet({ job, onClose, onSuccess }: ApplySheetProps) {
             />
           </div>
         </div>
-        <SheetFooter>
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>Cancel</Button>
           <Button onClick={handleSubmitApplication} disabled={mutation.isPending}>
             {mutation.isPending ? "Submitting..." : "Submit Application"}

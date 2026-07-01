@@ -9,6 +9,11 @@ export interface TicketUser {
   image: string | null;
 }
 
+export interface CommentReaction {
+  emoji: string;
+  userId: string;
+}
+
 export interface TicketComment {
   id: number;
   orgId: string;
@@ -19,6 +24,7 @@ export interface TicketComment {
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
   user?: TicketUser;
+  reactions?: CommentReaction[];
 }
 
 export interface TicketAttachment {

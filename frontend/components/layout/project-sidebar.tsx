@@ -78,6 +78,7 @@ function useSections(baseUrl: string): NavSection[] {
         { label: "Whiteboard", icon: PenTool, href: `${baseUrl}/whiteboard` },
         { label: "Budget", icon: IndianRupee, href: `${baseUrl}/budget` },
         { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
+        { label: "Automations", icon: Zap, href: `${baseUrl}/automations` },
         { label: "Webhooks", icon: Zap, href: `${baseUrl}/webhooks` },
         { label: "Audit Log", icon: History, href: `${baseUrl}/audit` },
         { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },

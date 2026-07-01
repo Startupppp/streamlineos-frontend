@@ -1,5 +1,6 @@
 export * from "./projects";
 export * from "./tickets";
+export * from "./reactions";
 export * from "./sprints";
 export * from "./time-entries";
 export * from "./advanced";
@@ -14,3 +15,5 @@ export * from "./checklists";
 export * from "./custom-fields";
 export * from "./labels";
 export * from "./custom-states";
+export * from "./automations";
+export * from "./recurring";

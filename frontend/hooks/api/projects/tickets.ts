@@ -142,15 +142,22 @@ export function useLabels(options?: Omit<UseQueryOptions<TicketLabel[]>, "queryK
   return useProjectLabels(undefined, options);
 }
 
+export interface AddCommentInput {
+  ticketId: number;
+  projectId?: number;
+  content: string;
+  parentCommentId?: number;
+}
+
 export function useAddComment(
-  options?: Omit<UseMutationOptions<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; projectId?: number; content: string }>, "mutationFn">
+  options?: Omit<UseMutationOptions<{ id: number; content: string; createdAt: string }, Error, AddCommentInput>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; projectId?: number; content: string }>({
-    mutationFn: ({ ticketId, projectId = 0, content }) =>
+  return useMutation<{ id: number; content: string; createdAt: string }, Error, AddCommentInput>({
+    mutationFn: ({ ticketId, projectId = 0, content, parentCommentId }) =>
       apiClient.post<{ id: number; content: string; createdAt: string }>(
         `/projects/${projectId}/tickets/${ticketId}/comments`,
-        { content }
+        { content, parentCommentId }
       ),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

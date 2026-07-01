@@ -28,6 +28,8 @@ import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import { useEpics, useModules } from "@/hooks/api/projects";
 import { LabelPicker } from "../tickets/label-picker";
+import { RecurrencePicker } from "../tickets/recurrence-picker";
+import { useSetRecurrence, type RecurrenceRule } from "@/hooks/api/projects/recurring";
 import type { ProjectMember } from "./types";
 
 interface DisplayedAssignee {
@@ -77,6 +79,8 @@ interface TicketSidebarProps {
     } | null;
     createdAt?: Date | string | null;
     updatedAt?: Date | string | null;
+    isRecurring?: boolean | null;
+    recurrenceRule?: RecurrenceRule | null;
   };
   ticketId: number;
   projectId?: number;
@@ -113,6 +117,7 @@ export function TicketSidebar({
 }: TicketSidebarProps) {
   const { data: epics } = useEpics(projectId ?? 0);
   const { data: modules } = useModules(projectId ?? 0);
+  const setRecurrence = useSetRecurrence(projectId ?? 0, ticketId);
   const selectableEpics = (epics ?? []).filter((e) => e.id !== ticket.id);
 
   const handleStartDateChange = (value: string) =>
