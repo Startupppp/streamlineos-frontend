@@ -313,17 +313,19 @@ function CreateCouponSheet({ open, onOpenChange }: CreateCouponSheetProps) {
               )}
             />
 
-            <SheetFooter className="mt-2">
-              <Button
-                type="submit"
-                disabled={createCoupon.isPending}
-                className="w-full"
-              >
-                {createCoupon.isPending ? "Creating..." : "Create Coupon"}
-              </Button>
-            </SheetFooter>
           </form>
         </Form>
+        </div>
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
+          <Button
+            type="submit"
+            form="create-coupon-form"
+            disabled={createCoupon.isPending}
+            className="w-full"
+          >
+            {createCoupon.isPending ? "Creating..." : "Create Coupon"}
+          </Button>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

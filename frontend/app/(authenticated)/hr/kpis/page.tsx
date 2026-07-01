@@ -200,11 +200,11 @@ function KpiLibraryTab() {
               </Button>
             </motion.div>
           </SheetTrigger>
-          <SheetContent className="w-[420px] overflow-y-auto">
-            <SheetHeader>
+          <SheetContent className="w-[420px] p-0 flex flex-col gap-0">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
               <SheetTitle>Create KPI</SheetTitle>
             </SheetHeader>
-            <div className="space-y-4 mt-6">
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               <div className="space-y-1.5">
                 <Label>Name *</Label>
                 <Input value={form.name} onChange={(e) => handleFormChange("name", e.target.value)} placeholder="KPI name" />
@@ -418,11 +418,11 @@ function CompetencyFrameworksTab() {
               </Button>
             </motion.div>
           </SheetTrigger>
-          <SheetContent className="w-[480px] overflow-y-auto">
-            <SheetHeader>
+          <SheetContent className="w-[480px] p-0 flex flex-col gap-0">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
               <SheetTitle>Create Competency Framework</SheetTitle>
             </SheetHeader>
-            <div className="space-y-4 mt-6">
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               <div className="space-y-1.5">
                 <Label>Name *</Label>
                 <Input value={frameworkForm.name} onChange={(e) => handleFrameworkFormChange("name", e.target.value)} placeholder="Framework name" />

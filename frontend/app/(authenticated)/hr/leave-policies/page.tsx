@@ -298,12 +298,13 @@ export default function LeavePoliciesPage() {
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>{editingPolicy ? "Edit Policy" : "New Leave Policy"}</SheetTitle>
           </SheetHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4 py-4">
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -436,7 +437,8 @@ export default function LeavePoliciesPage() {
                   </FormItem>
                 )}
               />
-              <SheetFooter className="pt-4">
+              </div>
+              <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
                 <Button
                   type="submit"
                   disabled={isPending}

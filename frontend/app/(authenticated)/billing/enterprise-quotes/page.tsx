@@ -390,20 +390,21 @@ function NewQuoteSheet({
               )}
             />
 
-            <SheetFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createQuote.isPending}>
-                {createQuote.isPending ? "Creating…" : "Create Quote"}
-              </Button>
-            </SheetFooter>
           </form>
         </Form>
+        </div>
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" form="new-quote-form" disabled={createQuote.isPending}>
+            {createQuote.isPending ? "Creating…" : "Create Quote"}
+          </Button>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

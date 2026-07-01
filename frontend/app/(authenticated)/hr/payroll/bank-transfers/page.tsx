@@ -507,8 +507,8 @@ export default function BankTransfersPage() {
       )}
 
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>New Transfer Run</SheetTitle>
             <SheetDescription>
               Create a bank transfer disbursement run for a payroll month.
@@ -517,7 +517,8 @@ export default function BankTransfersPage() {
             </SheetDescription>
           </SheetHeader>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="bt-month" className="text-xs font-medium">
                 Month (YYYY-MM)
@@ -577,13 +578,16 @@ export default function BankTransfersPage() {
               </p>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full h-10 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-              disabled={createMutation.isPending}
-            >
-              {createMutation.isPending ? "Creating…" : "Create Transfer Run"}
-            </Button>
+            </div>
+            <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
+              <Button
+                type="submit"
+                className="w-full h-10 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                disabled={createMutation.isPending}
+              >
+                {createMutation.isPending ? "Creating…" : "Create Transfer Run"}
+              </Button>
+            </SheetFooter>
           </form>
         </SheetContent>
       </Sheet>

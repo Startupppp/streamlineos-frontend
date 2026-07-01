@@ -277,30 +277,32 @@ function FlowFormSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="w-full sm:max-w-md flex flex-col">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{editFlow ? "Edit Hiring Flow" : "New Hiring Flow"}</SheetTitle>
         </SheetHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col gap-4 py-4 overflow-y-auto">
-          <div>
-            <Label className="text-xs font-medium">Flow Name <span className="text-destructive">*</span></Label>
-            <Input className="mt-1" placeholder="e.g. Engineering Hiring Flow" {...register("name")} />
-            {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
-          </div>
-          <div className="flex items-center justify-between rounded-md border px-4 py-3">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-4">
             <div>
-              <p className="text-sm font-medium">Set as Default</p>
-              <p className="text-xs text-muted-foreground">Use this flow for new job postings automatically</p>
+              <Label className="text-xs font-medium">Flow Name <span className="text-destructive">*</span></Label>
+              <Input className="mt-1" placeholder="e.g. Engineering Hiring Flow" {...register("name")} />
+              {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
             </div>
-            <Controller
-              name="isDefault"
-              control={control}
-              render={({ field }) => (
-                <Switch checked={field.value} onCheckedChange={field.onChange} />
-              )}
-            />
+            <div className="flex items-center justify-between rounded-md border px-4 py-3">
+              <div>
+                <p className="text-sm font-medium">Set as Default</p>
+                <p className="text-xs text-muted-foreground">Use this flow for new job postings automatically</p>
+              </div>
+              <Controller
+                name="isDefault"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                )}
+              />
+            </div>
           </div>
-          <SheetFooter className="mt-auto">
+          <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? "Saving…" : editFlow ? "Update" : "Create"}
@@ -393,49 +395,51 @@ function RoundFormSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="w-full sm:max-w-md flex flex-col">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{editRound ? "Edit Round" : "Add Round"}</SheetTitle>
         </SheetHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col gap-4 py-4 overflow-y-auto">
-          <div>
-            <Label className="text-xs font-medium">Round Name <span className="text-destructive">*</span></Label>
-            <Input className="mt-1" placeholder="e.g. Technical Interview" {...register("name")} />
-            {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-4">
+            <div>
+              <Label className="text-xs font-medium">Round Name <span className="text-destructive">*</span></Label>
+              <Input className="mt-1" placeholder="e.g. Technical Interview" {...register("name")} />
+              {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
+            </div>
+            <div>
+              <Label className="text-xs font-medium">Round Type <span className="text-destructive">*</span></Label>
+              <Select value={roundType} onValueChange={handleRoundTypeChange}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  {ROUND_TYPES.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs font-medium">Mode <span className="text-destructive">*</span></Label>
+              <Select value={mode} onValueChange={handleModeChange}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  {ROUND_MODES.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs font-medium">Duration (minutes) <span className="text-destructive">*</span></Label>
+              <Input className="mt-1" type="number" min={15} max={480} {...register("durationMinutes", { valueAsNumber: true })} />
+              {errors.durationMinutes && <p className="text-xs text-destructive mt-1">{errors.durationMinutes.message}</p>}
+            </div>
+            <div>
+              <Label className="text-xs font-medium">SLA Days</Label>
+              <Input className="mt-1" type="number" min={1} max={30} placeholder="e.g. 3" {...register("slaDays", { valueAsNumber: true, setValueAs: (v) => (v === "" || isNaN(Number(v)) ? undefined : Number(v)) })} />
+              <p className="text-[10px] text-muted-foreground mt-1">Max days to complete this round</p>
+            </div>
           </div>
-          <div>
-            <Label className="text-xs font-medium">Round Type <span className="text-destructive">*</span></Label>
-            <Select value={roundType} onValueChange={handleRoundTypeChange}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                {ROUND_TYPES.map(({ value, label }) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs font-medium">Mode <span className="text-destructive">*</span></Label>
-            <Select value={mode} onValueChange={handleModeChange}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                {ROUND_MODES.map(({ value, label }) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs font-medium">Duration (minutes) <span className="text-destructive">*</span></Label>
-            <Input className="mt-1" type="number" min={15} max={480} {...register("durationMinutes", { valueAsNumber: true })} />
-            {errors.durationMinutes && <p className="text-xs text-destructive mt-1">{errors.durationMinutes.message}</p>}
-          </div>
-          <div>
-            <Label className="text-xs font-medium">SLA Days</Label>
-            <Input className="mt-1" type="number" min={1} max={30} placeholder="e.g. 3" {...register("slaDays", { valueAsNumber: true, setValueAs: (v) => (v === "" || isNaN(Number(v)) ? undefined : Number(v)) })} />
-            <p className="text-[10px] text-muted-foreground mt-1">Max days to complete this round</p>
-          </div>
-          <SheetFooter className="mt-auto">
+          <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? "Saving…" : editRound ? "Update" : "Add Round"}

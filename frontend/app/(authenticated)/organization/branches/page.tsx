@@ -495,29 +495,31 @@ export default function OrgBranchesPage() {
       </Sheet>
 
       <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-        <SheetContent className="overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Edit Branch</SheetTitle>
           </SheetHeader>
-          {editing && (
-            <BranchForm
-              defaultValues={{
-                name: editing.name,
-                code: editing.code,
-                businessUnitId: editing.businessUnitId ?? "",
-                managerUserId: editing.managerUserId ?? "",
-                city: editing.city ?? "",
-                state: editing.state ?? "",
-                country: editing.country ?? "",
-                address: editing.address ?? "",
-                phone: editing.phone ?? "",
-                email: editing.email ?? "",
-              }}
-              businessUnits={businessUnits}
-              onSubmit={handleUpdate}
-              isPending={update.isPending}
-            />
-          )}
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            {editing && (
+              <BranchForm
+                defaultValues={{
+                  name: editing.name,
+                  code: editing.code,
+                  businessUnitId: editing.businessUnitId ?? "",
+                  managerUserId: editing.managerUserId ?? "",
+                  city: editing.city ?? "",
+                  state: editing.state ?? "",
+                  country: editing.country ?? "",
+                  address: editing.address ?? "",
+                  phone: editing.phone ?? "",
+                  email: editing.email ?? "",
+                }}
+                businessUnits={businessUnits}
+                onSubmit={handleUpdate}
+                isPending={update.isPending}
+              />
+            )}
+          </div>
         </SheetContent>
       </Sheet>
 

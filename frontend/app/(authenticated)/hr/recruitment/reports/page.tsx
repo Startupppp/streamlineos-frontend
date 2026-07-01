@@ -227,7 +227,7 @@ function ScheduleReportSheet({
             </div>
           </div>
         </div>
-        <SheetFooter className="flex-col sm:flex-row gap-2">
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button
             variant="outline"
             onClick={onClose}

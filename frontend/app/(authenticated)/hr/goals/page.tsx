@@ -279,11 +279,11 @@ export default function GoalsPage() {
               </Button>
             </motion.div>
           </SheetTrigger>
-          <SheetContent className="w-[420px] overflow-y-auto">
-            <SheetHeader>
+          <SheetContent className="w-[420px] p-0 flex flex-col gap-0">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
               <SheetTitle>Create Goal</SheetTitle>
             </SheetHeader>
-            <div className="space-y-4 mt-6">
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               <div className="space-y-1.5">
                 <Label>Title *</Label>
                 <Input

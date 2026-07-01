@@ -403,13 +403,14 @@ export default function AllowancesPage() {
       </motion.div>
 
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>{editingItem ? "Edit Component" : "Add Component"}</SheetTitle>
           </SheetHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="mt-6 space-y-5">
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
               <FormField
                 control={form.control}
                 name="name"
@@ -528,7 +529,8 @@ export default function AllowancesPage() {
                 )}
               />
 
-              <SheetFooter className="pt-2 gap-2">
+              </div>
+              <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
                 <Button
                   type="button"
                   variant="outline"

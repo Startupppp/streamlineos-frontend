@@ -29,7 +29,10 @@ import { resolveImageUrl } from "@/lib/utils";
 import { useEpics, useModules } from "@/hooks/api/projects";
 import { LabelPicker } from "../tickets/label-picker";
 import { RecurrencePicker } from "../tickets/recurrence-picker";
-import { useSetRecurrence, type RecurrenceRule } from "@/hooks/api/projects/recurring";
+import {
+  useSetRecurrence,
+  type RecurrenceRule,
+} from "@/hooks/api/projects/recurring";
 import type { ProjectMember } from "./types";
 
 interface DisplayedAssignee {
@@ -122,10 +125,16 @@ export function TicketSidebar({
 
   const handleStartDateChange = (value: string) =>
     onAutoSave({ startDate: value || null });
+
   const handleDueDateChange = (value: string) =>
     onAutoSave({ dueDate: value || null });
+
   const handleClearStartDate = () => onAutoSave({ startDate: null });
+
   const handleClearDueDate = () => onAutoSave({ dueDate: null });
+
+  const handleRecurrenceChange = (rule: RecurrenceRule | null) =>
+    setRecurrence.mutate(rule);
 
   const handleStatusChange = (v: string) => onAutoSave({ status: v });
   const handlePriorityChange = (v: string) => onAutoSave({ priority: v });
@@ -185,7 +194,6 @@ export function TicketSidebar({
 
   return (
     <div className="px-4 py-3 space-y-1 bg-muted/10">
-
       <div className="grid grid-cols-2 gap-3">
         <div>
           <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
@@ -217,7 +225,8 @@ export function TicketSidebar({
                   </SelectItem>
                   <SelectItem value="IN_REVIEW">
                     <span className="flex items-center gap-1.5">
-                      <AlertCircle className="h-3 w-3 text-purple-500" /> In Review
+                      <AlertCircle className="h-3 w-3 text-purple-500" /> In
+                      Review
                     </span>
                   </SelectItem>
                   <SelectItem value="DONE">
@@ -396,7 +405,9 @@ export function TicketSidebar({
               value={ticket.dueDate ?? undefined}
               onChange={handleDueDateChange}
               placeholder="Set due"
-              fromDate={ticket.startDate ? new Date(ticket.startDate) : undefined}
+              fromDate={
+                ticket.startDate ? new Date(ticket.startDate) : undefined
+              }
               className="h-8 text-xs"
             />
             {ticket.dueDate && (
@@ -411,6 +422,13 @@ export function TicketSidebar({
             )}
           </div>
         </div>
+      </div>
+
+      <div className="pt-2">
+        <RecurrencePicker
+          value={ticket.recurrenceRule ?? null}
+          onChange={handleRecurrenceChange}
+        />
       </div>
 
       <div className="pt-1">
@@ -431,9 +449,7 @@ export function TicketSidebar({
                     {person.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-[11px]">
-                  {person.firstName}
-                </span>
+                <span className="text-[11px]">{person.firstName}</span>
                 <button
                   className="text-muted-foreground hover:text-destructive transition-colors leading-none"
                   onClick={() => handleRemoveAssignee(person.id)}
@@ -462,7 +478,9 @@ export function TicketSidebar({
                         {member.lastName?.[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-xs">{member.firstName} {member.lastName}</span>
+                    <span className="text-xs">
+                      {member.firstName} {member.lastName}
+                    </span>
                   </div>
                 </SelectItem>
               ))}
@@ -489,10 +507,14 @@ export function TicketSidebar({
               <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
               <span>{timeSpent}h logged</span>
               {originalEstimate > 0 && (
-                <span className="text-muted-foreground">/ {originalEstimate}h est</span>
+                <span className="text-muted-foreground">
+                  / {originalEstimate}h est
+                </span>
               )}
             </div>
-            {originalEstimate > 0 && <Progress value={timeProgress} className="h-1 mt-1" />}
+            {originalEstimate > 0 && (
+              <Progress value={timeProgress} className="h-1 mt-1" />
+            )}
           </PropertyRow>
         </div>
       )}
@@ -500,24 +522,30 @@ export function TicketSidebar({
       <div className="grid grid-cols-2 gap-3 pt-1">
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Calendar className="h-3 w-3 shrink-0" />
-          {ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d, yyyy") : "—"}
+          {ticket.createdAt
+            ? format(new Date(ticket.createdAt), "MMM d, yyyy")
+            : "—"}
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Clock className="h-3 w-3 shrink-0" />
-          {ticket.updatedAt ? format(new Date(ticket.updatedAt), "MMM d, yyyy") : "—"}
+          {ticket.updatedAt
+            ? format(new Date(ticket.updatedAt), "MMM d, yyyy")
+            : "—"}
         </div>
       </div>
 
       {ticket.reporter && (
         <div className="flex items-center gap-2 pt-1">
           <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide shrink-0">
-            <User className="h-3 w-3 inline mr-0.5" />Reporter
+            <User className="h-3 w-3 inline mr-0.5" />
+            Reporter
           </span>
           <div className="flex items-center gap-1.5 min-w-0">
             <Avatar className="h-5 w-5">
               <AvatarImage src={resolveImageUrl(ticket.reporter.image)} />
               <AvatarFallback className="text-[7px] bg-primary/10 text-primary">
-                {ticket.reporter.firstName?.[0]}{ticket.reporter.lastName?.[0]}
+                {ticket.reporter.firstName?.[0]}
+                {ticket.reporter.lastName?.[0]}
               </AvatarFallback>
             </Avatar>
             <span className="text-xs truncate">

@@ -570,11 +570,11 @@ export default function SignaturesPage() {
       </Dialog>
 
       <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>New Signature Request</SheetTitle>
           </SheetHeader>
-          <div className="mt-6 space-y-5">
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="sig-title" className="text-xs font-medium">
                 Title
@@ -678,7 +678,7 @@ export default function SignaturesPage() {
               </div>
             </div>
           </div>
-          <SheetFooter className="mt-8">
+          <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
             <Button
               variant="outline"
               onClick={() => setIsSheetOpen(false)}

@@ -388,11 +388,11 @@ export default function PayrollPage() {
       </div>
 
       <Sheet open={!!previewPayroll} onOpenChange={handlePreviewSheetOpenChange}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Payslip Preview</SheetTitle>
           </SheetHeader>
-          <div className="mt-4">
+          <div className="flex-1 overflow-y-auto px-6 py-5">
             <PayslipDetailSheet
               payslip={previewPayroll ? {
                 month: previewPayroll.month,

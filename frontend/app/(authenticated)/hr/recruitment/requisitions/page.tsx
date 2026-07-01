@@ -241,14 +241,14 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent className="w-full sm:max-w-xl flex flex-col">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-xl flex flex-col p-0 gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>New Job Requisition</SheetTitle>
           <SheetDescription>Create a headcount request for approval</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
-          <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
             <FormField
               control={form.control}
               name="title"
@@ -424,7 +424,7 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
           </div>
         </Form>
 
-        <SheetFooter className="flex-row gap-2 pt-4 border-t border-border">
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={form.handleSubmit(handleSaveDraft)} disabled={isPending} className="flex-1">
             Save Draft
           </Button>

@@ -135,14 +135,14 @@ function VendorSheet({ initial, onClose }: VendorSheetProps) {
         if (!v) onClose();
       }}
     >
-      <SheetContent className="w-full sm:max-w-md">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-md flex flex-col p-0 gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{initial ? "Edit Vendor" : "Add Vendor"}</SheetTitle>
           <SheetDescription>
             Staffing agency or recruitment vendor details
           </SheetDescription>
         </SheetHeader>
-        <div className="py-4 space-y-3">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
           <div className="space-y-1.5">
             <Label>
               Agency Name <span className="text-destructive">*</span>
@@ -220,7 +220,7 @@ function VendorSheet({ initial, onClose }: VendorSheetProps) {
             </div>
           )}
         </div>
-        <SheetFooter className="flex-col sm:flex-row gap-2">
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button
             variant="outline"
             onClick={onClose}
@@ -330,14 +330,14 @@ function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
         if (!v) onClose();
       }}
     >
-      <SheetContent className="w-full sm:max-w-lg">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-lg flex flex-col p-0 gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{vendor.name} — Submissions</SheetTitle>
           <SheetDescription>
             Candidates submitted by this vendor and invoice status
           </SheetDescription>
         </SheetHeader>
-        <div className="py-4 space-y-3 overflow-y-auto flex-1">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-16 rounded-lg" />

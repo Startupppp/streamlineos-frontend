@@ -171,11 +171,12 @@ export function AppSidebar({
   );
 
   const handleSearchClick = useCallback(() => {
+    const isMac = navigator.userAgent.toLowerCase().includes("mac")
     document.dispatchEvent(
       new KeyboardEvent("keydown", {
         key: "k",
-        metaKey: navigator.platform?.toUpperCase().includes("MAC") ?? true,
-        ctrlKey: !(navigator.platform?.toUpperCase().includes("MAC") ?? true),
+        metaKey: isMac,
+        ctrlKey: !isMac,
         bubbles: true,
       }),
     );

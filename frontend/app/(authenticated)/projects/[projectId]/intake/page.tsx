@@ -279,106 +279,110 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
       </div>
 
       <Sheet open={acceptOpen} onOpenChange={setAcceptOpen}>
-        <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-          <SheetHeader>
+        <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Accept Intake Item</SheetTitle>
           </SheetHeader>
-          <form onSubmit={acceptForm.handleSubmit(onAcceptSubmit)} className="space-y-4 p-4">
-            <div>
-              <Label>State</Label>
-              <Controller
-                control={acceptForm.control}
-                name="state"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue placeholder="Select state..." /></SelectTrigger>
-                    <SelectContent>
-                      {WORK_STATES.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <form onSubmit={acceptForm.handleSubmit(onAcceptSubmit)} className="space-y-4">
+              <div>
+                <Label>State</Label>
+                <Controller
+                  control={acceptForm.control}
+                  name="state"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder="Select state..." /></SelectTrigger>
+                      <SelectContent>
+                        {WORK_STATES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {acceptForm.formState.errors.state && (
+                  <p className="text-xs text-destructive mt-1">{acceptForm.formState.errors.state.message}</p>
                 )}
-              />
-              {acceptForm.formState.errors.state && (
-                <p className="text-xs text-destructive mt-1">{acceptForm.formState.errors.state.message}</p>
-              )}
-            </div>
-            <div>
-              <Label>Assignee</Label>
-              <Select
-                value={assigneeIdField.value ?? ""}
-                onValueChange={handleAssigneeChange}
-              >
-                <SelectTrigger><SelectValue placeholder="Select assignee..." /></SelectTrigger>
-                <SelectContent>
-                  {members?.map((m) => (
-                    <SelectItem key={m.userId} value={m.userId}>
-                      {m.user?.name ?? m.user?.email ?? m.userId}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Cycle</Label>
-              <Select
-                value={cycleIdField.value?.toString() ?? ""}
-                onValueChange={handleCycleChange}
-              >
-                <SelectTrigger><SelectValue placeholder="Select cycle..." /></SelectTrigger>
-                <SelectContent>
-                  {cycles?.map((c) => (
-                    <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Module</Label>
-              <Select
-                value={moduleIdField.value?.toString() ?? ""}
-                onValueChange={handleModuleChange}
-              >
-                <SelectTrigger><SelectValue placeholder="Select module..." /></SelectTrigger>
-                <SelectContent>
-                  {modules?.map((m) => (
-                    <SelectItem key={m.id} value={m.id.toString()}>{m.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" disabled={updateMutation.isPending} className="w-full">
-              {updateMutation.isPending ? "Accepting..." : "Accept & Create Work Item"}
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </form>
+              </div>
+              <div>
+                <Label>Assignee</Label>
+                <Select
+                  value={assigneeIdField.value ?? ""}
+                  onValueChange={handleAssigneeChange}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select assignee..." /></SelectTrigger>
+                  <SelectContent>
+                    {members?.map((m) => (
+                      <SelectItem key={m.userId} value={m.userId}>
+                        {m.user?.name ?? m.user?.email ?? m.userId}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Cycle</Label>
+                <Select
+                  value={cycleIdField.value?.toString() ?? ""}
+                  onValueChange={handleCycleChange}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select cycle..." /></SelectTrigger>
+                  <SelectContent>
+                    {cycles?.map((c) => (
+                      <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Module</Label>
+                <Select
+                  value={moduleIdField.value?.toString() ?? ""}
+                  onValueChange={handleModuleChange}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select module..." /></SelectTrigger>
+                  <SelectContent>
+                    {modules?.map((m) => (
+                      <SelectItem key={m.id} value={m.id.toString()}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" disabled={updateMutation.isPending} className="w-full">
+                {updateMutation.isPending ? "Accepting..." : "Accept & Create Work Item"}
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </form>
+          </div>
         </SheetContent>
       </Sheet>
 
       <Sheet open={declineOpen} onOpenChange={setDeclineOpen}>
-        <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-          <SheetHeader>
+        <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Decline Intake Item</SheetTitle>
           </SheetHeader>
-          <form onSubmit={declineForm.handleSubmit(onDeclineSubmit)} className="space-y-4 p-4">
-            <div>
-              <Label htmlFor="decline-reason">Reason</Label>
-              <Textarea
-                id="decline-reason"
-                placeholder="Why is this being declined?"
-                {...declineForm.register("reason")}
-              />
-              {declineForm.formState.errors.reason && (
-                <p className="text-xs text-destructive mt-1">{declineForm.formState.errors.reason.message}</p>
-              )}
-            </div>
-            <Button type="submit" variant="destructive" disabled={updateMutation.isPending} className="w-full">
-              {updateMutation.isPending ? "Declining..." : "Decline Item"}
-            </Button>
-          </form>
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <form onSubmit={declineForm.handleSubmit(onDeclineSubmit)} className="space-y-4">
+              <div>
+                <Label htmlFor="decline-reason">Reason</Label>
+                <Textarea
+                  id="decline-reason"
+                  placeholder="Why is this being declined?"
+                  {...declineForm.register("reason")}
+                />
+                {declineForm.formState.errors.reason && (
+                  <p className="text-xs text-destructive mt-1">{declineForm.formState.errors.reason.message}</p>
+                )}
+              </div>
+              <Button type="submit" variant="destructive" disabled={updateMutation.isPending} className="w-full">
+                {updateMutation.isPending ? "Declining..." : "Decline Item"}
+              </Button>
+            </form>
+          </div>
         </SheetContent>
       </Sheet>
     </PageWrapper>

@@ -54,12 +54,12 @@ function ActivitySheet({ recruiter, onClose }: ActivitySheetProps) {
 
   return (
     <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{recruiter.name ?? recruiter.email} — Activity</SheetTitle>
           <SheetDescription>Recent recruiter activity log</SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto py-4 space-y-2 pr-1">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-2">
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-14 w-full rounded-lg" />

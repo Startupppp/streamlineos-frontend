@@ -129,12 +129,12 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
 
   return (
     <Sheet open onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="w-full sm:max-w-md">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{initial ? "Edit" : "New"} Headcount Request</SheetTitle>
           <SheetDescription>Submit a request to hire for a new or replacement position</SheetDescription>
         </SheetHeader>
-        <div className="py-4 space-y-3">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
           <div className="space-y-1.5">
             <Label>Role <span className="text-destructive">*</span></Label>
             <Input value={role} onChange={handleRoleChange} placeholder="e.g. Senior Software Engineer" />
@@ -168,12 +168,12 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
             />
           </div>
         </div>
-        <SheetFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={onClose} disabled={isPending} className="flex-1">Cancel</Button>
-          <Button variant="secondary" onClick={handleSaveDraft} disabled={isPending} className="flex-1">
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
+          <Button variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
+          <Button variant="secondary" onClick={handleSaveDraft} disabled={isPending}>
             Save Draft
           </Button>
-          <Button onClick={handleSubmitForApproval} disabled={isPending} className="flex-1">
+          <Button onClick={handleSubmitForApproval} disabled={isPending}>
             {isPending ? "Saving..." : "Submit for Approval"}
           </Button>
         </SheetFooter>

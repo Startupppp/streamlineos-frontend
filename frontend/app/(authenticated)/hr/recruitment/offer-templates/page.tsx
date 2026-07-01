@@ -243,21 +243,21 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
 
   return (
     <Sheet open onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-2xl p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>Preview — {template.name}</SheetTitle>
           <SheetDescription>
             Sample data applied. Actual values will be filled at generation
             time.
           </SheetDescription>
         </SheetHeader>
-        <div className="py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-5">
           <div
             className="prose prose-sm max-w-none border rounded-lg p-4 bg-white text-black"
             dangerouslySetInnerHTML={{ __html: preview }}
           />
         </div>
-        <SheetFooter>
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
