@@ -260,10 +260,12 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  const orgSetupDone = req.cookies.get("org-setup-done")?.value;
   if (
     isAuthenticated &&
     token?.isOrgOwner &&
     !token?.orgOnboardingCompletedAt &&
+    !orgSetupDone &&
     token?.orgId &&
     startsWithAny(pathname, PROTECTED_ROUTES) &&
     !pathname.startsWith("/org-setup")
@@ -285,9 +287,11 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  const onboardingDone = req.cookies.get("onboarding-done")?.value;
   if (
     isAuthenticated &&
     !token?.userOnboardingCompletedAt &&
+    !onboardingDone &&
     token?.isOrgOwner !== true &&
     token?.role !== ROLES.OWNER &&
     token?.isPlatformAdmin !== true &&

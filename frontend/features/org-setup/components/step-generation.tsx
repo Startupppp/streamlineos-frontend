@@ -56,13 +56,14 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
       intervalRef.current = null;
     }
     setCompletedSteps(total);
-    try {
-      await updateRef.current({
+    await Promise.race([
+      updateRef.current({
         ...(orgId ? { orgId } : {}),
         orgOnboardingCompletedAt: new Date().toISOString(),
         isOrgOwner: true,
-      });
-    } catch {}
+      }).catch(() => null),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+    ]);
     clearBackendTokenCache();
     setTimeout(() => onNextRef.current(), 600);
   }

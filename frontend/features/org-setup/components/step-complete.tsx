@@ -31,15 +31,20 @@ export function StepComplete({ data }: StepCompleteProps) {
       if (sessionRef.current?.orgOnboardingCompletedAt) {
         clearBackendTokenCache();
         clearAll();
+        document.cookie = "org-setup-done=1; path=/; max-age=60; SameSite=Lax";
         window.location.replace("/dashboard");
         return;
       }
       try {
-        const s = await updateRef.current();
+        const s = await Promise.race([
+          updateRef.current(),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+        ]);
         if (cancelled) return;
         if (s?.orgOnboardingCompletedAt) {
           clearBackendTokenCache();
           clearAll();
+          document.cookie = "org-setup-done=1; path=/; max-age=60; SameSite=Lax";
           window.location.replace("/dashboard");
           return;
         }
@@ -50,6 +55,7 @@ export function StepComplete({ data }: StepCompleteProps) {
       } else if (!cancelled) {
         clearBackendTokenCache();
         clearAll();
+        document.cookie = "org-setup-done=1; path=/; max-age=60; SameSite=Lax";
         window.location.replace("/dashboard");
       }
     }

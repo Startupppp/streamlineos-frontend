@@ -64,10 +64,12 @@ export function ReviewTab({
     submitOnboarding(undefined, {
       onSuccess: async () => {
         toast.success("Onboarding submitted! Redirecting…");
-        try {
-          await update({ userOnboardingCompletedAt: new Date().toISOString() });
-        } catch {}
         clearBackendTokenCache();
+        document.cookie = "onboarding-done=1; path=/; max-age=60; SameSite=Lax";
+        await Promise.race([
+          update({ userOnboardingCompletedAt: new Date().toISOString() }).catch(() => null),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+        ]);
         window.location.replace("/dashboard");
       },
       onError: (err) => {

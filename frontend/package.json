@@ -21,6 +21,7 @@
     "load-test:all": "bash scripts/load-tests/run.sh scripts/load-tests/all.js"
   },
   "dependencies": {
+    "@animateicons/react": "^0.3.4",
     "@auth/drizzle-adapter": "^1.11.2",
     "@aws-sdk/client-s3": "^3.1075.0",
     "@aws-sdk/s3-request-presigner": "^3.1075.0",

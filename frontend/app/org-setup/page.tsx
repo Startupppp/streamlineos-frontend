@@ -117,15 +117,17 @@ export default function OrgSetupPage() {
         }
       }
       const orgId = res?.orgId ?? null;
-      try {
-        await updateRef.current({
+      await Promise.race([
+        updateRef.current({
           ...(orgId ? { orgId } : {}),
           orgOnboardingCompletedAt: new Date().toISOString(),
           isOrgOwner: true,
-        });
-      } catch {}
+        }).catch(() => null),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]);
       clearBackendTokenCache();
       clearAll();
+      document.cookie = "org-setup-done=1; path=/; max-age=60; SameSite=Lax";
       window.location.replace("/dashboard");
     } catch {
       setIsSkipping(false);

@@ -34,6 +34,9 @@ importers:
 
   .:
     dependencies:
+      '@animateicons/react':
+        specifier: ^0.3.4
+        version: 0.3.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@auth/drizzle-adapter':
         specifier: ^1.11.2
         version: 1.11.2
@@ -329,6 +332,13 @@ packages:
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
+
+  '@animateicons/react@0.3.4':
+    resolution: {integrity: sha512-7IO7aLBdp7p4awGx3sOTVVcU8s9kzHXBK2R27y1gGKfk3nI1gYh8+McVCtCkwa7ouiFwmBEDwrUEODpNOv+bSQ==}
+    engines: {node: '>=18.17.0'}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
 
   '@asamuzakjp/css-color@5.1.11':
     resolution: {integrity: sha512-KVw6qIiCTUQhByfTd78h2yD1/00waTmm9uy/R7Ck/ctUyAPj+AEDLkQIdJW0T8+qGgj3j5bpNKK7Q3G+LedJWg==}
@@ -6622,6 +6632,11 @@ snapshots:
       bops: 1.0.1
 
   '@alloc/quick-lru@5.2.0': {}
+
+  '@animateicons/react@0.3.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
 
   '@asamuzakjp/css-color@5.1.11':
     dependencies:
