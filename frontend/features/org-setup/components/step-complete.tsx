@@ -31,7 +31,7 @@ export function StepComplete({ data }: StepCompleteProps) {
       if (sessionRef.current?.orgOnboardingCompletedAt) {
         clearBackendTokenCache();
         clearAll();
-        document.cookie = "org-setup-done=1; path=/; max-age=60; SameSite=Lax";
+        document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
         window.location.replace("/dashboard");
         return;
       }
@@ -44,7 +44,7 @@ export function StepComplete({ data }: StepCompleteProps) {
         if (s?.orgOnboardingCompletedAt) {
           clearBackendTokenCache();
           clearAll();
-          document.cookie = "org-setup-done=1; path=/; max-age=60; SameSite=Lax";
+          document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
           window.location.replace("/dashboard");
           return;
         }
@@ -55,7 +55,7 @@ export function StepComplete({ data }: StepCompleteProps) {
       } else if (!cancelled) {
         clearBackendTokenCache();
         clearAll();
-        document.cookie = "org-setup-done=1; path=/; max-age=60; SameSite=Lax";
+        document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
         window.location.replace("/dashboard");
       }
     }

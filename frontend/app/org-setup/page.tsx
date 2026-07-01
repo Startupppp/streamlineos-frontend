@@ -127,7 +127,7 @@ export default function OrgSetupPage() {
       ]);
       clearBackendTokenCache();
       clearAll();
-      document.cookie = "org-setup-done=1; path=/; max-age=60; SameSite=Lax";
+      document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
       window.location.replace("/dashboard");
     } catch {
       setIsSkipping(false);

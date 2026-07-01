@@ -33,14 +33,19 @@ interface SessionData {
 }
 
 async function fetchSessionData(userId: string): Promise<SessionData | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 3000);
   try {
     const res = await fetch(`${BACKEND_URL}/auth/session-data/${userId}`, {
       headers: { "x-internal-secret": INTERNAL_SECRET },
       cache: "no-store",
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     if (!res.ok) return null;
     return res.json() as Promise<SessionData>;
   } catch {
+    clearTimeout(timeout);
     return null;
   }
 }
@@ -284,16 +289,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       if (trigger === "update") {
+        const userId = token.id as string | undefined;
+        if (userId) {
+          const fresh = await fetchSessionData(userId);
+          if (fresh) {
+            token.orgId = fresh.orgId;
+            token.isOrgOwner = fresh.isOrgOwner;
+            token.orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
+            token.userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
+            token.permissions = fresh.permissions;
+            token.enabledModules = fresh.enabledModules;
+            token.plan = fresh.plan;
+            token.role = fresh.role ?? undefined;
+            token.branchId = fresh.branchId;
+            token.mfaEnforced = fresh.mfaEnforced;
+            token.totpEnabled = fresh.totpEnabled;
+          }
+        }
         if (session?.forceChangePassword !== undefined)
           token.forceChangePassword = session.forceChangePassword as boolean;
-        if (session?.orgId !== undefined)
-          token.orgId = session.orgId as string | null;
-        if (session?.orgOnboardingCompletedAt !== undefined)
-          token.orgOnboardingCompletedAt = session.orgOnboardingCompletedAt as string | null;
-        if (session?.userOnboardingCompletedAt !== undefined)
-          token.userOnboardingCompletedAt = session.userOnboardingCompletedAt as string | null;
-        if (session?.isOrgOwner !== undefined)
-          token.isOrgOwner = session.isOrgOwner as boolean;
       }
 
       if (!token.sessionId) {
@@ -304,27 +318,50 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     async session({ session, token }) {
+      let orgId = (token.orgId as string | null | undefined) ?? null;
+      let isOrgOwner = (token.isOrgOwner as boolean | undefined) ?? false;
+      let orgOnboardingCompletedAt = (token.orgOnboardingCompletedAt as string | null | undefined) ?? null;
+      let userOnboardingCompletedAt = (token.userOnboardingCompletedAt as string | null | undefined) ?? null;
+      let permissions = (token.permissions as string[] | undefined) ?? [];
+      let enabledModules = (token.enabledModules as string[] | undefined) ?? [];
+      let plan = (token.plan as Plan | null | undefined) ?? null;
+      let role = (token.role as string | undefined) ?? "";
+      let branchId = (token.branchId as number | null | undefined) ?? null;
+
+      if (orgId === null && token.id) {
+        const fresh = await fetchSessionData(token.id as string);
+        if (fresh) {
+          orgId = fresh.orgId;
+          isOrgOwner = fresh.isOrgOwner;
+          orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
+          userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
+          permissions = fresh.permissions;
+          enabledModules = fresh.enabledModules;
+          plan = fresh.plan;
+          role = fresh.role ?? "";
+          branchId = fresh.branchId;
+        }
+      }
+
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
-        session.user.role = token.role as string;
+        session.user.role = role;
         session.user.image = (token.image as string | null) ?? null;
         session.user.forceChangePassword = token.forceChangePassword as boolean;
         session.user.isActive = token.isActive as boolean;
         session.user.hasDashboardAccess = token.hasDashboardAccess as boolean;
         session.user.isPlatformAdmin = (token.isPlatformAdmin as boolean | undefined) ?? false;
-        session.user.isOrgOwner = (token.isOrgOwner as boolean | undefined) ?? false;
+        session.user.isOrgOwner = isOrgOwner;
       }
-      session.orgId = (token.orgId as string | null | undefined) ?? null;
-      session.branchId = (token.branchId as number | null | undefined) ?? null;
+      session.orgId = orgId;
+      session.branchId = branchId;
       session.sessionId = token.sessionId as string | undefined;
-      session.plan = (token.plan as Plan | null | undefined) ?? null;
-      session.permissions = (token.permissions as string[] | undefined) ?? [];
-      session.enabledModules = (token.enabledModules as string[] | undefined) ?? [];
-      session.orgOnboardingCompletedAt =
-        (token.orgOnboardingCompletedAt as string | null | undefined) ?? null;
-      session.userOnboardingCompletedAt =
-        (token.userOnboardingCompletedAt as string | null | undefined) ?? null;
+      session.plan = plan;
+      session.permissions = permissions;
+      session.enabledModules = enabledModules;
+      session.orgOnboardingCompletedAt = orgOnboardingCompletedAt;
+      session.userOnboardingCompletedAt = userOnboardingCompletedAt;
       if (token.daysUntilExpiry !== undefined)
         session.daysUntilExpiry = token.daysUntilExpiry as number;
       session.authProvider = (token.authProvider as string | undefined) ?? "credentials";
@@ -333,14 +370,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const sessionId = (token.sessionId as string | undefined)?.trim();
       if (jwtSecret && token.id && sessionId) {
         session.backendJwt = await new SignJWT({
-          orgId: (token.orgId as string | null | undefined) ?? null,
-          branchId: (token.branchId as number | null | undefined) ?? null,
-          role: (token.role as string | undefined) ?? "",
-          permissions: (token.permissions as string[] | undefined) ?? [],
-          enabledModules: (token.enabledModules as string[] | undefined) ?? [],
-          plan: (token.plan as Plan | null | undefined) ?? null,
+          orgId,
+          branchId,
+          role,
+          permissions,
+          enabledModules,
+          plan,
           isPlatformAdmin: (token.isPlatformAdmin as boolean | undefined) === true,
-          isOrgOwner: (token.isOrgOwner as boolean | undefined) === true,
+          isOrgOwner,
           sessionId,
         })
           .setProtectedHeader({ alg: "HS256" })

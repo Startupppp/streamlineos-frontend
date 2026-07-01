@@ -195,7 +195,8 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate }: Exp
         onClick={onNavigate}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "nav-item group relative py-1.5 gap-2.5 w-full flex pr-2",
+          "nav-item group relative py-1.5 gap-2.5 flex pr-2",
+          depth === 0 ? "w-full" : "mx-2",
           isActive && "active",
         )}
         style={{ paddingLeft }}

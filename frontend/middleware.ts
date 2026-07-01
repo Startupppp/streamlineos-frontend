@@ -348,6 +348,7 @@ export default async function middleware(req: NextRequest) {
   if (
     isAuthenticated &&
     token?.orgId == null &&
+    !orgSetupDone &&
     startsWithAny(pathname, PROTECTED_ROUTES) &&
     !pathname.startsWith("/org-setup")
   ) {

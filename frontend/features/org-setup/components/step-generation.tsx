@@ -35,7 +35,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
   const apiDoneRef = useRef(false);
   const hasRunRef = useRef(false);
 
-  const { mutate } = useOrgSetupMutation();
+  const orgMutation = useOrgSetupMutation();
 
   function buildPayload(d: WizardData) {
     return {
@@ -49,23 +49,21 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
     };
   }
 
-  async function handleSuccess(orgId: string | null) {
+  function handleSuccess(orgId: string | null) {
+    if (apiDoneRef.current) return;
     apiDoneRef.current = true;
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
     setCompletedSteps(total);
-    await Promise.race([
-      updateRef.current({
-        ...(orgId ? { orgId } : {}),
-        orgOnboardingCompletedAt: new Date().toISOString(),
-        isOrgOwner: true,
-      }).catch(() => null),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
-    ]);
     clearBackendTokenCache();
-    setTimeout(() => onNextRef.current(), 600);
+    void updateRef.current({
+      ...(orgId ? { orgId } : {}),
+      orgOnboardingCompletedAt: new Date().toISOString(),
+      isOrgOwner: true,
+    }).catch(() => null);
+    setTimeout(() => onNextRef.current(), 800);
   }
 
   function handleError(msg: string) {
@@ -101,9 +99,9 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
 
     const payload = buildPayload(dataRef.current);
 
-    mutate(payload, {
+    orgMutation.mutate(payload, {
       onSuccess: (res) => {
-        void handleSuccess(res?.orgId ?? null);
+        handleSuccess(res?.orgId ?? null);
       },
       onError: async (err) => {
         const msg = getErrorMessage(err).toLowerCase();
@@ -112,10 +110,13 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
           msg.includes("organization") ||
           msg.includes("unauthorized")
         ) {
-          try { await updateRef.current({ orgId: null }); } catch {}
+          await Promise.race([
+            updateRef.current({ orgId: null }).catch(() => null),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+          ]);
           clearBackendTokenCache();
-          mutate(payload, {
-            onSuccess: (res) => { void handleSuccess(res?.orgId ?? null); },
+          orgMutation.mutate(payload, {
+            onSuccess: (res) => { handleSuccess(res?.orgId ?? null); },
             onError: (retryErr) => { handleError(getErrorMessage(retryErr)); },
           });
         } else {

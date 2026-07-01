@@ -65,7 +65,7 @@ export function ReviewTab({
       onSuccess: async () => {
         toast.success("Onboarding submitted! Redirecting…");
         clearBackendTokenCache();
-        document.cookie = "onboarding-done=1; path=/; max-age=60; SameSite=Lax";
+        document.cookie = "onboarding-done=1; path=/; max-age=1800; SameSite=Lax";
         await Promise.race([
           update({ userOnboardingCompletedAt: new Date().toISOString() }).catch(() => null),
           new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
