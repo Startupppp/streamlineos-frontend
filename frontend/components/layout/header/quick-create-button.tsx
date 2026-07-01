@@ -29,6 +29,17 @@ interface CreateAction {
   icon: LucideIcon
 }
 
+const PRODUCT_LABELS: Record<string, string> = {
+  crm: "CRM",
+  hrms: "HRMS",
+  projects: "Projects",
+  helpdesk: "Helpdesk",
+  inventory: "Inventory",
+  finance: "Finance",
+  documents: "Documents",
+  administration: "Administration",
+}
+
 const PRODUCT_ACTIONS: Record<string, CreateAction[]> = {
   crm: [
     { label: "New Lead", href: "/crm/leads?create=1", icon: UserPlus },
@@ -71,6 +82,9 @@ export function QuickCreateButton() {
   const pathname = usePathname()
   const activeProduct = getProductFromPathname(pathname)
   const productActions = PRODUCT_ACTIONS[activeProduct] ?? []
+  const visibleGlobalActions = GLOBAL_ACTIONS.filter(
+    (a) => !productActions.some((p) => p.href === a.href),
+  )
 
   return (
     <DropdownMenu>
@@ -87,7 +101,7 @@ export function QuickCreateButton() {
         {productActions.length > 0 && (
           <>
             <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-              {activeProduct.charAt(0).toUpperCase() + activeProduct.slice(1)}
+              {PRODUCT_LABELS[activeProduct] ?? activeProduct}
             </DropdownMenuLabel>
             {productActions.map((action) => (
               <DropdownMenuItem key={action.href} asChild>
@@ -97,20 +111,24 @@ export function QuickCreateButton() {
                 </Link>
               </DropdownMenuItem>
             ))}
-            <DropdownMenuSeparator />
+            {visibleGlobalActions.length > 0 && <DropdownMenuSeparator />}
           </>
         )}
-        <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-          General
-        </DropdownMenuLabel>
-        {GLOBAL_ACTIONS.map((action) => (
-          <DropdownMenuItem key={action.href} asChild>
-            <Link href={action.href} className="gap-2 cursor-pointer">
-              <action.icon className="h-3.5 w-3.5 text-muted-foreground" />
-              {action.label}
-            </Link>
-          </DropdownMenuItem>
-        ))}
+        {visibleGlobalActions.length > 0 && (
+          <>
+            <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              General
+            </DropdownMenuLabel>
+            {visibleGlobalActions.map((action) => (
+              <DropdownMenuItem key={action.href} asChild>
+                <Link href={action.href} className="gap-2 cursor-pointer">
+                  <action.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                  {action.label}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

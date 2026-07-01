@@ -26,7 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'home', label: 'Home', href: '/dashboard', Icon: House },
   { key: 'search', label: 'Search', href: null, Icon: MagnifyingGlass, isSearch: true },
   { key: 'create', label: 'Create', href: null, Icon: Plus, isCreate: true },
-  { key: 'notifications', label: 'Alerts', href: '/notifications', Icon: Bell },
+  { key: 'notifications', label: 'Notifications', href: '/notifications', Icon: Bell },
   { key: 'me', label: 'Me', href: '/settings', Icon: UserCircle },
 ]
 
@@ -35,23 +35,13 @@ export function MobileBottomNav() {
   const { data: notifData } = useUnreadNotificationCount()
   const unreadNotifCount = notifData?.count ?? 0
 
-  const handleSearchClick = useCallback(() => {
+  const handleCommandPaletteClick = useCallback(() => {
+    const isMac = navigator.userAgent.toLowerCase().includes("mac")
     document.dispatchEvent(
       new KeyboardEvent("keydown", {
         key: "k",
-        metaKey: navigator.platform?.toUpperCase().includes("MAC") ?? true,
-        ctrlKey: !(navigator.platform?.toUpperCase().includes("MAC") ?? true),
-        bubbles: true,
-      }),
-    )
-  }, [])
-
-  const handleCreateClick = useCallback(() => {
-    document.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        key: "k",
-        metaKey: navigator.platform?.toUpperCase().includes("MAC") ?? true,
-        ctrlKey: !(navigator.platform?.toUpperCase().includes("MAC") ?? true),
+        metaKey: isMac,
+        ctrlKey: !isMac,
         bubbles: true,
       }),
     )
@@ -74,7 +64,7 @@ export function MobileBottomNav() {
               <button
                 key={item.key}
                 type="button"
-                onClick={handleSearchClick}
+                onClick={handleCommandPaletteClick}
                 className="flex flex-col items-center gap-0.5 min-w-[44px] py-1 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label={item.label}
               >
@@ -89,7 +79,7 @@ export function MobileBottomNav() {
               <button
                 key={item.key}
                 type="button"
-                onClick={handleCreateClick}
+                onClick={handleCommandPaletteClick}
                 className="flex flex-col items-center gap-0.5 min-w-[44px] py-1"
                 aria-label={item.label}
               >

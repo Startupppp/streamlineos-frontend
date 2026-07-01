@@ -17,11 +17,12 @@ const NotificationBell = dynamic(
 
 function SearchButton() {
   function handleClick() {
+    const isMac = navigator.userAgent.toLowerCase().includes("mac")
     document.dispatchEvent(
       new KeyboardEvent("keydown", {
         key: "k",
-        metaKey: navigator.platform?.toUpperCase().includes("MAC") ?? true,
-        ctrlKey: !(navigator.platform?.toUpperCase().includes("MAC") ?? true),
+        metaKey: isMac,
+        ctrlKey: !isMac,
         bubbles: true,
       }),
     )
@@ -46,24 +47,24 @@ function SearchButton() {
 export function GlobalHeader() {
   return (
     <header className="hidden md:flex items-center h-14 px-4 gap-3 border-b border-border bg-background shrink-0 z-40 relative">
-      <div className="flex items-center gap-2 shrink-0">
-        <Link
-          href="/dashboard"
-          className="h-8 w-8 rounded-lg overflow-hidden shrink-0 hover:opacity-80 transition-opacity"
-          aria-label="Home"
-        >
-          <Image src="/logo.svg" alt="StreamlineOS" width={32} height={32} className="object-contain p-0.5" />
-        </Link>
-        <WorkspaceSwitcher />
-        <div className="w-px h-4 bg-border/70" />
-        <ProductSwitcherMenu />
-      </div>
-
-      <div className="flex-1 flex justify-center px-4 min-w-0">
-        <SearchButton />
-      </div>
-
       <TooltipProvider>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/dashboard"
+            className="h-8 w-8 rounded-lg overflow-hidden shrink-0 hover:opacity-80 transition-opacity"
+            aria-label="Home"
+          >
+            <Image src="/logo.svg" alt="StreamlineOS" width={32} height={32} className="object-contain p-0.5" />
+          </Link>
+          <WorkspaceSwitcher />
+          <div className="w-px h-4 bg-border/70" />
+          <ProductSwitcherMenu />
+        </div>
+
+        <div className="flex-1 flex justify-center px-4 min-w-0">
+          <SearchButton />
+        </div>
+
         <div className="flex items-center gap-0.5 shrink-0">
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>

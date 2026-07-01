@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback } from "react"
+import Link from "next/link"
 import { Check, ChevronsUpDown, Plus, Building2 } from "lucide-react"
 import { useSession } from "next-auth/react"
 import {
@@ -11,6 +12,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks"
+
+interface OrgSwitcherItemProps {
+  org: { id: string; name: string }
+  isPending: boolean
+  onSwitch: (id: string) => void
+}
+
+function OrgSwitcherItem({ org, isPending, onSwitch }: OrgSwitcherItemProps) {
+  const handleClick = useCallback(() => onSwitch(org.id), [org.id, onSwitch])
+  return (
+    <DropdownMenuItem
+      className="gap-2 cursor-pointer"
+      onClick={handleClick}
+      disabled={isPending}
+    >
+      <span className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate text-sm">{org.name}</span>
+    </DropdownMenuItem>
+  )
+}
 
 export function WorkspaceSwitcher() {
   const { data: session } = useSession()
@@ -51,24 +72,23 @@ export function WorkspaceSwitcher() {
           <>
             <DropdownMenuSeparator />
             {otherOrgs.map((org) => (
-              <DropdownMenuItem
+              <OrgSwitcherItem
                 key={org.id}
-                className="gap-2 cursor-pointer"
-                onClick={() => handleSwitch(org.id)}
-                disabled={switchOrg.isPending}
-              >
-                <span className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate text-sm">{org.name}</span>
-              </DropdownMenuItem>
+                org={org}
+                isPending={switchOrg.isPending}
+                onSwitch={handleSwitch}
+              />
             ))}
           </>
         )}
         {session?.user?.isOrgOwner && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 cursor-pointer text-muted-foreground">
-              <Plus className="h-3.5 w-3.5 shrink-0" />
-              <span className="text-sm">Add workspace</span>
+            <DropdownMenuItem asChild>
+              <Link href="/setup" className="gap-2 cursor-pointer text-muted-foreground">
+                <Plus className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-sm">Add workspace</span>
+              </Link>
             </DropdownMenuItem>
           </>
         )}
