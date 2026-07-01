@@ -457,3 +457,17 @@ Full end-to-end: backend NestJS API → TanStack Query hooks → Next.js pages +
 - [x] `/hr/travel/approvals` — Travel approvals: manager view of pending/approved/rejected requests, approve/reject actions
 - [x] `/hr/announcements` — Announcements broadcast: list with pinned/active/archived tabs, create/edit Sheet, read-count tracking
 - [x] `/hr/signatures` — Digital signatures: document sign requests list, create signature request Dialog, status tracking (pending/signed/expired)
+
+---
+
+## Workflow & Automation Platform
+- [x] `/workflows` — Workflow dashboard: analytics stats (total/active/executions/pending), workflow card list with status filters + search, create workflow Dialog (name + description), duplicate + delete, border-color per status, Framer Motion stagger
+- [x] `/workflows/[workflowId]` — Workflow detail: status badge, version, description, execution history list, trigger workflow button, edit/builder link
+- [x] `/workflows/[workflowId]/builder` — Visual workflow builder: React Flow canvas, node palette sidebar, node config panel, publish/save actions, lazy state init via BuilderGate wrapper to avoid hook-in-effect violations
+- [x] `/workflows/templates` — Template gallery: search + category filter, template cards with Use button, creates workflow from template and navigates to builder
+- [x] `/workflows/executions` — Execution monitor: paginated global execution list, status filter tabs, cancel action, auto-refetch when running
+- [x] `/workflows/approvals` — Approval center: pending approval cards, approve/reject Dialog with optional comment, pending count badge
+- [x] `/workflows/scheduler` — Cron scheduler: global schedule list, toggle enable/disable, delete with confirm Dialog, cron badge + timezone display
+- [x] `/workflows/analytics` — Analytics dashboard: 6 stat cards (total/active/executions/success-rate/avg-duration/pending-approvals), 30-day execution trend bar chart
+- [x] `/workflows/secrets` — Secrets manager: org-level encrypted secrets list, create Sheet (name/value/description, uppercase key enforced), delete with confirm
+- [x] `/workflows/variables` — Variables manager: org-wide workflow version variables list grouped with workflow link, delete with confirm

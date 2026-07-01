@@ -291,7 +291,7 @@ export default function SecretsManagerPage() {
       ) : list.length === 0 ? (
         <div className="flex flex-1 min-h-[60vh]">
           <EmptyState
-            icon={<KeyRound className="h-8 w-8 text-muted-foreground/60" />}
+            illustration={<KeyRound className="h-12 w-12 text-muted-foreground/40" />}
             title="No secrets yet"
             description="Store encrypted API keys, tokens, and credentials your workflows need."
             action={{ label: "New Secret", onClick: handleOpenSheet }}
