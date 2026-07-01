@@ -117,18 +117,26 @@ export default function OrgSetupPage() {
         }
       }
       const orgId = res?.orgId ?? null;
-      await Promise.race([
-        updateRef.current({
-          ...(orgId ? { orgId } : {}),
-          orgOnboardingCompletedAt: new Date().toISOString(),
-          isOrgOwner: true,
-        }).catch(() => null),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
-      ]);
+      let updated = false;
+      for (let i = 0; i < 3 && !updated; i++) {
+        const s = await Promise.race([
+          updateRef.current({
+            ...(orgId ? { orgId } : {}),
+            orgOnboardingCompletedAt: new Date().toISOString(),
+            isOrgOwner: true,
+          }).catch(() => null),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+        ]);
+        if (s?.orgOnboardingCompletedAt) updated = true;
+      }
       clearBackendTokenCache();
       clearAll();
-      document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
-      window.location.replace("/dashboard");
+      if (updated) {
+        document.cookie = "org-setup-done=1; path=/; max-age=300; SameSite=Lax";
+        window.location.replace("/dashboard");
+      } else {
+        window.location.href = "/api/auth/signout?callbackUrl=/signin";
+      }
     } catch {
       setIsSkipping(false);
     }
@@ -137,8 +145,15 @@ export default function OrgSetupPage() {
   const sessionCheckCalledRef = useRef(false);
 
   useEffect(() => {
-    setStep(loadStep());
-    setData(loadDraft());
+    const savedStep = loadStep();
+    if (savedStep >= 5) {
+      clearAll();
+      setStep(1);
+      setData({ ...DEFAULT_DATA });
+    } else {
+      setStep(savedStep);
+      setData(loadDraft());
+    }
     setMounted(true);
   }, []);
 

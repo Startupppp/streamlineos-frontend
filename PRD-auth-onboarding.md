@@ -133,7 +133,7 @@ Middleware must route:
 
 ### Decision
 Adopt **one** password policy across all flows:
-- **Min length**: 12
+- **Min length**: 8
 - **Max length**: 128
 - **Complexity**: must include uppercase + lowercase + number + symbol
 - **Server is source of truth**: frontend mirrors the same regex for instant feedback, but backend validates again.

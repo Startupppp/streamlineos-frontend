@@ -146,6 +146,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 
 - Colors, typography, spacing, radius, shadows come **only** from tokens extracted from those pages (`tailwind.config`/`globals.css`). Never invent colors or arbitrary values. Follow shadcn palette conventions mapped to the detected palette.
 - Compact, clean layout: remove unnecessary spacing, tighten cards, no oversized padding/margins.
+- **UI reference standard:** `/signin` and `/signup` are the canonical reference for compact card layout, consistent hover/active/focus states, and spacing. When fixing or building any new page/sheet/dialog, match their density and interaction patterns; avoid redundant padding/margins (especially in Sheets) and ensure hover text/background maintain readable contrast.
 - Modern, mobile-first responsive (verify **375 / 768 / 1280px**), accessible (ARIA, keyboard nav).
 - Notifications: **Sonner** toasts for success/error/info.
 

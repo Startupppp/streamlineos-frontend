@@ -28,7 +28,7 @@ export default function MagicLinkPage() {
       });
 
       if (result?.ok) {
-        router.replace("/dashboard");
+        router.replace("/post-signin");
       } else {
         setErrorMessage("This link is invalid, expired, or has already been used. Please request a new one.");
         setStatus("error");

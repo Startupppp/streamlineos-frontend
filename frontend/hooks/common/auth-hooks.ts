@@ -38,7 +38,7 @@ export function useAcceptInvitation() {
       firstName?: string;
       lastName?: string;
     }) =>
-      apiClient.post<{ success: boolean }>(
+      apiClient.post<{ autoLoginToken?: string }>(
         "/organization/invitations/accept",
         variables,
       ),

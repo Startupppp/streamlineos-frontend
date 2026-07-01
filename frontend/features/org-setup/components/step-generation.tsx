@@ -49,7 +49,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
     };
   }
 
-  function handleSuccess(orgId: string | null) {
+  async function handleSuccess(orgId: string | null) {
     if (apiDoneRef.current) return;
     apiDoneRef.current = true;
     if (intervalRef.current) {
@@ -58,12 +58,16 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
     }
     setCompletedSteps(total);
     clearBackendTokenCache();
-    void updateRef.current({
-      ...(orgId ? { orgId } : {}),
-      orgOnboardingCompletedAt: new Date().toISOString(),
-      isOrgOwner: true,
-    }).catch(() => null);
-    setTimeout(() => onNextRef.current(), 800);
+    document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
+    await Promise.race([
+      updateRef.current({
+        ...(orgId ? { orgId } : {}),
+        orgOnboardingCompletedAt: new Date().toISOString(),
+        isOrgOwner: true,
+      }).catch(() => null),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+    ]);
+    onNextRef.current();
   }
 
   function handleError(msg: string) {

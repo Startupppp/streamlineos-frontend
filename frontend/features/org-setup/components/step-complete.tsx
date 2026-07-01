@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import type { Session } from "next-auth";
 import { motion } from "framer-motion";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { WizardData } from "../lib/types";
 import { NEXT_ACTIONS } from "../lib/constants";
 import { clearAll } from "../lib/draft";
@@ -18,51 +19,74 @@ export function StepComplete({ data }: StepCompleteProps) {
   const { update, data: sessionData } = useSession();
   const updateRef = useRef(update);
   const sessionRef = useRef<Session | null>(sessionData ?? null);
+  const [sessionFailed, setSessionFailed] = useState(false);
   updateRef.current = update;
   sessionRef.current = sessionData ?? null;
 
   useEffect(() => {
     let cancelled = false;
     let retries = 0;
-    const MAX_RETRIES = 5;
+    const MAX_RETRIES = 6;
 
     async function attemptRedirect(): Promise<void> {
       if (cancelled) return;
       if (sessionRef.current?.orgOnboardingCompletedAt) {
         clearBackendTokenCache();
         clearAll();
-        document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
+        document.cookie = "org-setup-done=1; path=/; max-age=300; SameSite=Lax";
         window.location.replace("/dashboard");
         return;
       }
       try {
         const s = await Promise.race([
           updateRef.current(),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
         ]);
         if (cancelled) return;
         if (s?.orgOnboardingCompletedAt) {
           clearBackendTokenCache();
           clearAll();
-          document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
+          document.cookie = "org-setup-done=1; path=/; max-age=300; SameSite=Lax";
           window.location.replace("/dashboard");
           return;
         }
       } catch {}
       retries += 1;
       if (retries < MAX_RETRIES && !cancelled) {
-        setTimeout(attemptRedirect, 800);
+        setTimeout(attemptRedirect, 1000);
       } else if (!cancelled) {
-        clearBackendTokenCache();
-        clearAll();
-        document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
-        window.location.replace("/dashboard");
+        setSessionFailed(true);
       }
     }
 
-    const timer = setTimeout(attemptRedirect, 2200);
+    const timer = setTimeout(attemptRedirect, 800);
     return () => { cancelled = true; clearTimeout(timer); };
   }, []);
+
+  if (sessionFailed) {
+    return (
+      <div className="space-y-4 text-center">
+        <div className="mx-auto h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center">
+          <AlertCircle className="h-5 w-5 text-amber-600" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">Your workspace is ready</p>
+          <p className="text-[13px] text-muted-foreground">
+            We couldn&apos;t update your session automatically. Sign out and sign back in to continue.
+          </p>
+        </div>
+        <Button
+          className="w-full"
+          onClick={() => {
+            clearAll();
+            window.location.href = "/api/auth/signout?callbackUrl=/signin";
+          }}
+        >
+          Sign out &amp; continue
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 text-center">

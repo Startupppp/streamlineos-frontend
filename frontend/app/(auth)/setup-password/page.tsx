@@ -26,6 +26,7 @@ const setupSchema = z
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
+      .max(128, "Password must be at most 128 characters")
       .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
     confirmPassword: z.string(),
   })
@@ -64,7 +65,7 @@ function SetupPasswordContent() {
     try {
       await apiClient.post("/auth/reset-password", {
         token,
-        password: values.password,
+        newPassword: values.password,
       });
       toast.success("Password set successfully! You can now sign in.");
       await apiClient.post("/auth/logout", undefined).catch(() => {});

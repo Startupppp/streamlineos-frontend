@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { useAcceptInvitation } from "@/hooks/common/auth-hooks";
 import { getPasswordStrength, PASSWORD_REGEX } from "@/lib/password-utils";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
@@ -38,7 +38,7 @@ const invitationSchema = z
     lastName: z.string().optional(),
     password: z
       .string()
-      .min(12, "Password must be at least 12 characters")
+      .min(8, "Password must be at least 8 characters")
       .regex(
         PASSWORD_REGEX,
         "Must include uppercase, lowercase, number, and special character",
@@ -57,7 +57,7 @@ export default function InvitationPage() {
   const params = useParams();
   const token = typeof params.token === "string" ? params.token : "";
   const [showPassword, setShowPassword] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
 
   const form = useForm<InvitationFormValues>({
     resolver: zodResolver(invitationSchema),
@@ -99,6 +99,21 @@ export default function InvitationPage() {
 
   const acceptInvitation = useAcceptInvitation();
 
+  const autoLoginWithToken = useCallback(
+    async (autoLoginToken: string): Promise<void> => {
+      const result = await signIn("credentials", {
+        magicToken: autoLoginToken,
+        redirect: false,
+      });
+      if (result?.ok) {
+        window.location.href = "/post-signin";
+      } else {
+        router.push("/signin");
+      }
+    },
+    [router],
+  );
+
   const onSubmit = useCallback(
     (values: InvitationFormValues) => {
       if (!token || !invitation) {
@@ -113,9 +128,13 @@ export default function InvitationPage() {
           password: values.password,
         },
         {
-          onSuccess: () => {
-            toast.success("Account created! Redirecting to dashboard...");
-            router.push("/dashboard");
+          onSuccess: async (data) => {
+            toast.success("Account created! Signing you in…");
+            if (data?.autoLoginToken) {
+              await autoLoginWithToken(data.autoLoginToken);
+            } else {
+              router.push("/signin");
+            }
           },
           onError: (error) => {
             toast.error(getErrorMessage(error));
@@ -123,7 +142,7 @@ export default function InvitationPage() {
         },
       );
     },
-    [token, invitation, acceptInvitation, router],
+    [token, invitation, acceptInvitation, router, autoLoginWithToken],
   );
 
   const handleExistingUserAccept = useCallback(() => {
@@ -135,18 +154,24 @@ export default function InvitationPage() {
     acceptInvitation.mutate(
       { token },
       {
-        onSuccess: () => {
+        onSuccess: async (data) => {
           toast.success(
             `Joined ${invitation?.organizationName ?? "organization"}!`,
           );
-          router.push("/dashboard");
+          if (data?.autoLoginToken) {
+            await autoLoginWithToken(data.autoLoginToken);
+          } else {
+            clearBackendTokenCache();
+            await update().catch(() => null);
+            router.push("/dashboard");
+          }
         },
         onError: (error) => {
           toast.error(getErrorMessage(error));
         },
       },
     );
-  }, [token, session, router, acceptInvitation, invitation]);
+  }, [token, session, router, acceptInvitation, invitation, update, autoLoginWithToken]);
 
   if (!invitation) {
     return (
