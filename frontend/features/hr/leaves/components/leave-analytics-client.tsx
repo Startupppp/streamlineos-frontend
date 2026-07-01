@@ -1,0 +1,153 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { TrendingUp, Users, Clock, ArrowRight } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
+import { useHrAnalytics } from "@/hooks/api/hr/analytics";
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  index,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ElementType;
+  index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.08 }}
+      className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <div className="bg-violet-50 rounded-xl p-2">
+          <Icon className="h-4 w-4 text-violet-600" />
+        </div>
+      </div>
+      <p className="text-3xl font-bold text-slate-900">{value}</p>
+    </motion.div>
+  );
+}
+
+export function LeaveAnalyticsClient() {
+  const { data, isLoading } = useHrAnalytics();
+
+  const leavesByStatus = data?.leaves?.byStatus ?? [];
+  const leavesByMonth = data?.leaves?.byMonth ?? [];
+  const totalLeaves = leavesByStatus.reduce(
+    (sum: number, s: { count: number }) => sum + s.count,
+    0,
+  );
+  const pendingLeaves =
+    leavesByStatus.find((s: { status: string }) => s.status === "PENDING")?.count ?? 0;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40">
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Leave Analytics</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Summary from the HR Analytics module</p>
+          </div>
+          <Button asChild variant="outline">
+            <Link href="/hr/analytics">
+              Full Report <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-2xl" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard label="Total Leave Requests" value={totalLeaves} icon={Users} index={0} />
+            <StatCard label="Pending Approval" value={pendingLeaves} icon={Clock} index={1} />
+            <StatCard label="Months Tracked" value={leavesByMonth.length} icon={TrendingUp} index={2} />
+          </div>
+        )}
+
+        {!isLoading && leavesByStatus.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut", delay: 0.24 }}
+            className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5"
+          >
+            <h3 className="text-sm font-semibold text-slate-700 mb-4">Leaves by Status</h3>
+            <div className="space-y-3">
+              {leavesByStatus.map((item: { status: string; count: number }, i: number) => (
+                <div key={item.status} className="flex items-center gap-3">
+                  <span className="text-sm text-slate-600 w-24 shrink-0">{item.status}</span>
+                  <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${totalLeaves > 0 ? (item.count / totalLeaves) * 100 : 0}%` }}
+                      transition={{ duration: 0.4, ease: "easeOut", delay: i * 0.06 }}
+                      className="h-2 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-slate-900 w-8 text-right">{item.count}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {!isLoading && leavesByMonth.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut", delay: 0.32 }}
+            className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5"
+          >
+            <h3 className="text-sm font-semibold text-slate-700 mb-4">Leaves by Month</h3>
+            <div className="flex items-end gap-2 h-32">
+              {leavesByMonth.map((item: { month: string; count: number }, i: number) => {
+                const max = Math.max(...leavesByMonth.map((m: { count: number }) => m.count), 1);
+                return (
+                  <div key={item.month} className="flex-1 flex flex-col items-center gap-1">
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${(item.count / max) * 100}%` }}
+                      transition={{ duration: 0.4, ease: "easeOut", delay: i * 0.04 }}
+                      className="w-full bg-gradient-to-t from-violet-600 to-indigo-400 rounded-t-md min-h-[4px]"
+                    />
+                    <span className="text-xs text-slate-400 truncate w-full text-center">
+                      {item.month?.slice(0, 3)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: "easeOut", delay: 0.4 }}
+          className="rounded-2xl border border-violet-200 bg-violet-50/60 p-4 flex items-center justify-between"
+        >
+          <p className="text-sm text-violet-700">
+            Leave analytics data is loaded from the HR Analytics module.
+          </p>
+          <Button asChild size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shrink-0 ml-4">
+            <Link href="/hr/analytics">View Detailed Reports</Link>
+          </Button>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

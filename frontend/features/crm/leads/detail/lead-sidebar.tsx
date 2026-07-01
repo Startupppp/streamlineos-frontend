@@ -133,6 +133,11 @@ export function LeadSidebar({
       )}
 
       <LeadActivityTimeline timeline={timeline} isLoading={timelineLoading} />
+      <AiAssistantPanel
+        entityType="lead"
+        entityId={lead.id}
+        entityName={lead.name ?? undefined}
+      />
     </div>
   );
 }

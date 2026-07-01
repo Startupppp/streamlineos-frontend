@@ -34,6 +34,7 @@ export type PermissionKey =
   | "hr:goals:manage"
   | "hr:learning:view"
   | "hr:learning:manage"
+  | "hr:announcements:manage"
   | "crm:leads:view"
   | "crm:leads:create"
   | "crm:leads:update"

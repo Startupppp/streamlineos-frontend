@@ -7,7 +7,6 @@ import Link from "next/link";
 import { ActivityTimeline } from "./activity-timeline";
 import { MeetingsCard } from "./meetings-card";
 import type { DealActivity, DealMeeting } from "@/hooks/api/crm";
-import { AiAssistantPanel } from "@/features/crm/shared/ai-assistant-panel";
 
 interface AssignedTo {
   name?: string | null;
