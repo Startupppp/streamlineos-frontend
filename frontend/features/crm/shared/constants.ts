@@ -1,6 +1,7 @@
 import {
   Phone, Target, UserCheck, X, Zap, Eye,
   Share2, Megaphone, Globe, Footprints, Users, Flame, Sun, Snowflake,
+  Mail, MessageCircle,
 } from "lucide-react";
 export const PIPELINE_STAGES = [
   { key: "NEW", label: "New", dot: "bg-blue-500", bg: "bg-blue-500/10", color: "#3B82F6", icon: Zap },
@@ -40,8 +41,8 @@ export const LEAD_PRIORITIES = [
 
 export const ACTIVITY_TYPES = [
   { value: "call", label: "Call", icon: Phone },
-  { value: "email", label: "Email", icon: Target },
-  { value: "whatsapp", label: "WhatsApp", icon: Phone },
+  { value: "email", label: "Email", icon: Mail },
+  { value: "whatsapp", label: "WhatsApp", icon: MessageCircle },
   { value: "meeting", label: "Meeting", icon: Users },
   { value: "site_visit", label: "Site Visit", icon: Eye },
 ] as const;

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertCircle, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -43,7 +43,7 @@ export default function LeadDetailPage({
   const leadId = Number(leadIdStr);
   const router = useRouter();
 
-  const { data: lead, isLoading } = useLeadDetail(leadId);
+  const { data: lead, isLoading, isError: leadError, refetch: refetchLead } = useLeadDetail(leadId);
   const { data: timeline, isLoading: timelineLoading } = useLeadTimeline(
     leadId,
     50,
@@ -239,10 +239,43 @@ export default function LeadDetailPage({
     );
   }
 
+  if (leadError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
+        <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center">
+          <AlertCircle className="h-7 w-7 text-red-400" />
+        </div>
+        <div>
+          <p className="font-semibold text-slate-800">Failed to load lead</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            There was an error loading this lead. Please try again.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => void refetchLead()}>
+            Try Again
+          </Button>
+          <Button variant="ghost" onClick={handleBackToPipeline}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Pipeline
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!lead) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <p className="text-muted-foreground">Lead not found</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
+        <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
+          <SearchX className="h-7 w-7 text-slate-400" />
+        </div>
+        <div>
+          <p className="font-semibold text-slate-800">Lead not found</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            This lead may have been deleted or you may not have access to it.
+          </p>
+        </div>
         <Button variant="outline" onClick={handleBackToPipeline}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Pipeline

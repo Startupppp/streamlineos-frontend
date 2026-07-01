@@ -448,28 +448,23 @@ export function CrmEventDialog({
 
             <div className="space-y-2">
               <Label className="text-sm font-medium text-slate-700">Color</Label>
-              <Controller
-                control={form.control}
-                name="color"
-                render={({ field }) => (
-                  <div className="flex gap-2.5">
-                    {COLOR_OPTIONS.map((color) => (
-                      <button
-                        key={color.value}
-                        type="button"
-                        onClick={() => field.onChange(color.value)}
-                        className={cn(
-                          "h-7 w-7 rounded-full transition-all duration-150",
-                          field.value === color.value &&
-                            `ring-2 ring-offset-1 ${COLOR_RING_CLASSES[color.value]}`,
-                        )}
-                        style={{ backgroundColor: color.hex }}
-                        aria-label={`Select ${color.value} color`}
-                      />
-                    ))}
-                  </div>
-                )}
-              />
+              <div className="flex gap-2.5">
+                {COLOR_OPTIONS.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    data-color={color.value}
+                    onClick={handleColorButtonClick}
+                    className={cn(
+                      "h-7 w-7 rounded-full transition-all duration-150",
+                      watchedColor === color.value &&
+                        `ring-2 ring-offset-1 ${COLOR_RING_CLASSES[color.value]}`,
+                    )}
+                    style={{ backgroundColor: color.hex }}
+                    aria-label={`Select ${color.value} color`}
+                  />
+                ))}
+              </div>
             </div>
 
             <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-4">

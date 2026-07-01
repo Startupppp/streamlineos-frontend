@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronDown, Mail, Clock, Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,27 +38,30 @@ const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export function AiAssistantPanel({ entityType, entityId, entityName }: AiAssistantPanelProps) {
   const [expanded, setExpanded] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState<AiSuggestion[]>([]);
+
+  const { mutate: runGenerate, isPending: generating } = useMutation({
+    mutationKey: ["ai-crm-suggestions", entityType, entityId],
+    mutationFn: () =>
+      apiClient.post<{ suggestions: AiSuggestion[] }>(
+        `/ai/crm/${entityType}/${entityId}/suggestions`,
+        {}
+      ),
+    onSuccess: (result) => {
+      setSuggestions(result.suggestions ?? []);
+    },
+    onError: () => {
+      toast.error("AI suggestions unavailable. Check your AI credits.");
+    },
+  });
 
   const handleToggle = useCallback(() => {
     setExpanded((prev) => !prev);
   }, []);
 
-  const handleGenerate = useCallback(async () => {
-    setGenerating(true);
-    try {
-      const result = await apiClient.post<{ suggestions: AiSuggestion[] }>(
-        `/ai/crm/${entityType}/${entityId}/suggestions`,
-        {}
-      );
-      setSuggestions(result.suggestions ?? []);
-    } catch {
-      toast.error("AI suggestions unavailable. Check your AI credits.");
-    } finally {
-      setGenerating(false);
-    }
-  }, [entityType, entityId]);
+  const handleGenerate = useCallback(() => {
+    runGenerate();
+  }, [runGenerate]);
 
   return (
     <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl border border-violet-200/60 overflow-hidden">

@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, MessageSquare } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { useAddComment } from "@/hooks/api/projects";
@@ -11,14 +10,17 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
 import type { TicketComment, TicketUser } from "@/types/projects";
+import { MentionTextarea, type MentionUser } from "@/features/projects/comments/mention-textarea";
+import { formatMentionText } from "@/lib/format-mention";
 
 interface ActivityFeedProps {
   ticketId: number;
   projectId?: number;
   comments: TicketComment[];
+  members?: MentionUser[];
 }
 
-export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProps) {
+export function ActivityFeed({ ticketId, projectId, comments, members = [] }: ActivityFeedProps) {
   const [newComment, setNewComment] = useState("");
   const addComment = useAddComment({
     onSuccess: () => {
@@ -36,13 +38,13 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
   }, [newComment, ticketId, projectId, addComment]);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         handleSubmit();
       }
     },
-    [handleSubmit]
+    [handleSubmit],
   );
 
   return (
@@ -56,12 +58,13 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
       </h4>
 
       <div className="space-y-2">
-        <Textarea
+        <MentionTextarea
           value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
+          onChange={setNewComment}
           onKeyDown={handleKeyDown}
           placeholder="Write a comment... (Ctrl+Enter to send)"
-          className="min-h-[80px] text-sm resize-none"
+          className="min-h-[80px] text-sm"
+          users={members}
         />
         <div className="flex justify-end">
           <Button
@@ -129,7 +132,7 @@ function CommentItem({ comment }: CommentItemProps) {
           <span className="text-[10px] text-muted-foreground">{timeAgo}</span>
         </div>
         <p className="text-sm text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
-          {comment.content}
+          {formatMentionText(comment.content)}
         </p>
       </div>
     </div>

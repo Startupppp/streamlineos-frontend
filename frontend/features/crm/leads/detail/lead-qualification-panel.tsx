@@ -128,7 +128,8 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.06, duration: 0.22, ease: "easeOut" }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => handleToggle(criterion.key)}
+                  data-criterion={criterion.key}
+                  onClick={handleCriterionClick}
                   className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-200 text-left ${
                     checked
                       ? "bg-violet-50 border-violet-200 hover:bg-violet-100"

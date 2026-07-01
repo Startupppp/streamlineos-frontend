@@ -353,6 +353,7 @@ export function TicketDetailsDialog({
                   ticketId={ticketId!}
                   projectId={projectId}
                   comments={ticket.comments || []}
+                  members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}
                 />
 
                 {ticketId ? (

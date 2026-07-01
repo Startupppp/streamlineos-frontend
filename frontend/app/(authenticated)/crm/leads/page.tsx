@@ -3,6 +3,8 @@
 import { useState, useMemo, useCallback } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
 import { LeadTableView } from "@/features/crm/leads/lead-table-view";
@@ -39,8 +41,8 @@ import {
 import type { BoardLead, LeadStatus } from "@/features/crm/leads/leads-types";
 
 export default function LeadsPipelinePage() {
-  const { data: board, isLoading: boardLoading } = useLeadBoard();
-  const { data: stats, isLoading: statsLoading } = useLeadStats();
+  const { data: board, isLoading: boardLoading, isError: boardError, refetch: refetchBoard } = useLeadBoard();
+  const { data: stats, isLoading: statsLoading, isError: statsError } = useLeadStats();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
 
@@ -211,9 +213,7 @@ export default function LeadsPipelinePage() {
         await updateStatus.mutateAsync({ leadId, status, expectedStatus });
         toast.success(`Lead moved to ${STATUS_CONFIG[status].label}`);
       } catch (err: unknown) {
-        toast.error(
-          (err as { message?: string })?.message || "Failed to update status",
-        );
+        toast.error(err instanceof Error ? err.message : "Failed to update status");
       }
     },
     [updateStatus],
@@ -289,13 +289,21 @@ export default function LeadsPipelinePage() {
           );
         }
       } else if (status === "LOST" && extra) {
-        updateStatus.mutate({
-          leadId: id,
-          status: "LOST",
-          lostReason: extra.lostReason,
-        });
+        updateStatus.mutate(
+          { leadId: id, status: "LOST", lostReason: extra.lostReason },
+          {
+            onSuccess: () => toast.success("Lead marked as lost"),
+            onError: (err) => toast.error(err.message),
+          }
+        );
       } else {
-        updateStatus.mutate({ leadId: id, status: status as LeadStatus });
+        updateStatus.mutate(
+          { leadId: id, status: status as LeadStatus },
+          {
+            onSuccess: () => toast.success("Status updated"),
+            onError: (err) => toast.error(err.message),
+          }
+        );
       }
     },
     [updateStatus, createDealMutation],
@@ -303,10 +311,14 @@ export default function LeadsPipelinePage() {
 
   const handlePriorityChange = useCallback(
     (id: number, priority: string) => {
-      updateLeadMutation.mutate({
-        id,
-        priority: priority as "HOT" | "WARM" | "COLD",
-      });
+      if (!isLeadPriority(priority)) return;
+      updateLeadMutation.mutate(
+        { id, priority },
+        {
+          onSuccess: () => toast.success("Priority updated"),
+          onError: (err) => toast.error(err.message),
+        }
+      );
     },
     [updateLeadMutation],
   );
@@ -383,6 +395,25 @@ export default function LeadsPipelinePage() {
             <Skeleton key={i} className="h-96" />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (boardError || statsError) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-24">
+        <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center">
+          <AlertCircle className="h-7 w-7 text-red-400" />
+        </div>
+        <div>
+          <p className="font-semibold text-slate-800">Failed to load leads</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            There was an error loading the lead pipeline. Please try again.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => void refetchBoard()}>
+          Try Again
+        </Button>
       </div>
     );
   }
