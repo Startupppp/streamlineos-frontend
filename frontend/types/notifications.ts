@@ -198,16 +198,29 @@ export interface NotificationAnalyticsOverview {
   archived: number;
   readRate: number;
   deliveryRate: number;
+  days: number;
 }
 
 export interface NotificationAnalyticsByCategory {
   category: string;
-  count: number;
+  total: number;
+  read: number;
+  readRate: number;
 }
 
 export interface NotificationAnalyticsByPriority {
   priority: string;
-  count: number;
+  total: number;
+  read: number;
+  readRate: number;
+}
+
+export interface NotificationAnalyticsByChannel {
+  channel: string;
+  total: number;
+  read: number;
+  archived: number;
+  readRate: number;
 }
 
 export interface NotificationAuditLog {

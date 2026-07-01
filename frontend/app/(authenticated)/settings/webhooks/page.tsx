@@ -223,48 +223,50 @@ export default function WebhooksPage() {
       </motion.div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Add Webhook</SheetTitle>
           </SheetHeader>
-          <div className="space-y-5 mt-6">
-            <div className="space-y-1.5">
-              <Label htmlFor="webhook-url">Endpoint URL *</Label>
-              <div className="relative">
-                <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div className="space-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="webhook-url">Endpoint URL *</Label>
+                <div className="relative">
+                  <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="webhook-url"
+                    className="pl-9"
+                    placeholder="https://your-server.com/webhook"
+                    value={url}
+                    onChange={handleUrlChange}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="webhook-desc">Description (optional)</Label>
                 <Input
-                  id="webhook-url"
-                  className="pl-9"
-                  placeholder="https://your-server.com/webhook"
-                  value={url}
-                  onChange={handleUrlChange}
+                  id="webhook-desc"
+                  placeholder="e.g. Notify Slack on deal won"
+                  value={description}
+                  onChange={handleDescriptionChange}
                 />
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="webhook-desc">Description (optional)</Label>
-              <Input
-                id="webhook-desc"
-                placeholder="e.g. Notify Slack on deal won"
-                value={description}
-                onChange={handleDescriptionChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Events to send</Label>
-              <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1">
-                {AVAILABLE_EVENTS.map(ev => (
-                  <EventCheckboxItem
-                    key={ev.id}
-                    event={ev}
-                    checked={selectedEvents.includes(ev.id)}
-                    onToggle={toggleEvent}
-                  />
-                ))}
+              <div className="space-y-2">
+                <Label>Events to send</Label>
+                <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1">
+                  {AVAILABLE_EVENTS.map(ev => (
+                    <EventCheckboxItem
+                      key={ev.id}
+                      event={ev}
+                      checked={selectedEvents.includes(ev.id)}
+                      onToggle={toggleEvent}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-          <SheetFooter className="mt-6">
+          <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
             <Button variant="outline" className="flex-1" onClick={handleSheetClose}>Cancel</Button>
             <Button
               className="flex-1"

@@ -113,9 +113,9 @@ export function NotificationCard({
     <div
       onClick={handleCardClick}
       className={cn(
-        "group relative flex items-start gap-2.5 px-3 py-2.5 cursor-pointer rounded-lg border border-transparent transition-colors hover:bg-muted/40",
-        isUnread && !isArchived && "border-l-[3px] border-l-blue-500 bg-blue-50/30 hover:bg-blue-50/50",
-        selected && "bg-blue-50/50 border-blue-200",
+        "group relative flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors hover:bg-muted/40",
+        isUnread && !isArchived && "bg-blue-50/30 hover:bg-blue-50/50 shadow-[inset_3px_0_0_rgb(59,130,246)]",
+        selected && "bg-blue-50/50",
       )}
     >
       {onSelect && (

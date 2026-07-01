@@ -1,29 +1,34 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { User, Settings, Bell, Palette, Key, LogOut } from "lucide-react"
-import { useSession } from "next-auth/react"
+import { useCallback } from "react";
+import Link from "next/link";
+import { User, Settings, Bell, Palette, Key, LogOut } from "lucide-react";
+import { useSession } from "next-auth/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useSignOut } from "@/hooks/common/auth-hooks"
-import { useCan } from "@/hooks/api/access"
-import { resolveImageUrl } from "@/lib/utils"
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSignOut } from "@/hooks/common/auth-hooks";
+import { useCan } from "@/hooks/api/access";
+import { resolveImageUrl } from "@/lib/utils";
 
 export function UserAvatarMenu() {
-  const { data: session } = useSession()
-  const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut()
-  const isAdmin = useCan("settings:manage")
+  const { data: session } = useSession();
+  const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
+  const isAdmin = useCan("settings:manage");
 
-  const name = session?.user?.name ?? "User"
-  const email = session?.user?.email ?? ""
-  const image = resolveImageUrl(session?.user?.image)
-  const initials = name.charAt(0).toUpperCase()
+  const name = session?.user?.name ?? "User";
+  const email = session?.user?.email ?? "";
+  const image = resolveImageUrl(session?.user?.image);
+  const initials = name.charAt(0).toUpperCase();
+
+  const handleSignOutClick = useCallback(() => {
+    handleSignOut();
+  }, [handleSignOut]);
 
   return (
     <DropdownMenu>
@@ -43,8 +48,12 @@ export function UserAvatarMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
         <div className="px-2 py-1.5">
-          <p className="text-xs font-semibold text-foreground truncate">{name}</p>
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">{email}</p>
+          <p className="text-xs font-semibold text-foreground truncate">
+            {name}
+          </p>
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+            {email}
+          </p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
@@ -61,7 +70,10 @@ export function UserAvatarMenu() {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/notifications/preferences" className="gap-2 cursor-pointer">
+          <Link
+            href="/notifications/preferences"
+            className="gap-2 cursor-pointer"
+          >
             <Bell className="h-3.5 w-3.5" />
             Notification Preferences
           </Link>
@@ -76,7 +88,10 @@ export function UserAvatarMenu() {
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/settings/api-tokens" className="gap-2 cursor-pointer">
+              <Link
+                href="/settings/api-tokens"
+                className="gap-2 cursor-pointer"
+              >
                 <Key className="h-3.5 w-3.5" />
                 API Keys
               </Link>
@@ -86,7 +101,7 @@ export function UserAvatarMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="gap-2 text-destructive focus:text-destructive cursor-pointer"
-          onClick={handleSignOut}
+          onClick={handleSignOutClick}
           disabled={isSigningOut}
         >
           <LogOut className="h-3.5 w-3.5" />
@@ -94,5 +109,5 @@ export function UserAvatarMenu() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

@@ -366,21 +366,23 @@ export default function OrgLocationsPage() {
       </Sheet>
 
       <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-        <SheetContent>
-          <SheetHeader>
+        <SheetContent className="p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Edit Location</SheetTitle>
           </SheetHeader>
-          {editing && (
-            <LocationForm
-              defaultValues={{
-                name: editing.name,
-                type: editing.type,
-                address: editing.address ?? "",
-              }}
-              onSubmit={handleUpdate}
-              isPending={update.isPending}
-            />
-          )}
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            {editing && (
+              <LocationForm
+                defaultValues={{
+                  name: editing.name,
+                  type: editing.type,
+                  address: editing.address ?? "",
+                }}
+                onSubmit={handleUpdate}
+                isPending={update.isPending}
+              />
+            )}
+          </div>
         </SheetContent>
       </Sheet>
 

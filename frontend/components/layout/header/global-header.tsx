@@ -35,7 +35,7 @@ function SearchButton() {
       aria-label="Search (⌘K)"
       className="flex items-center gap-2 h-8 w-full max-w-xs px-3 rounded-lg bg-muted/60 border border-border/60 text-muted-foreground hover:bg-muted hover:border-border transition-colors"
     >
-      <Search className="h-3.5 w-3.5 shrink-0" />
+      <Search className="h-4 w-4 shrink-0" />
       <span className="flex-1 text-left text-xs">Search…</span>
       <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-border bg-background px-1 font-mono text-[9px] text-muted-foreground">
         ⌘K
@@ -65,7 +65,7 @@ export function GlobalHeader() {
           <SearchButton />
         </div>
 
-        <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <Link

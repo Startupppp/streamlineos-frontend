@@ -96,16 +96,17 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-[600px] overflow-y-auto">
-          <SheetHeader>
+        <SheetContent side="right" className="w-full sm:max-w-[600px] p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Time Entry Details</SheetTitle>
             <SheetDescription>
               Review the time entry and approve or reject it
             </SheetDescription>
           </SheetHeader>
 
-          <div className="mt-6 space-y-6">
-            <div className="flex items-center gap-3 pb-4 border-b px-6">
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 pb-4 border-b">
               <Avatar className="h-10 w-10">
                 <AvatarImage src={resolveImageUrl(entry.user?.image)} />
                 <AvatarFallback>
@@ -132,7 +133,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
               </Badge>
             </div>
 
-            <div className="space-y-4 px-6 pt-4">
+            <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Date</label>
                 <p className="mt-1 text-sm">{format(new Date(entry.date), "MMMM d, yyyy")}</p>
@@ -247,42 +248,43 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
               )}
             </div>
 
-            {canApproveReject && (
-              <div className="pt-4 border-t flex gap-2 px-6">
-                <Button
-                  onClick={handleApprove}
-                  disabled={approveMutation.isPending || rejectMutation.isPending}
-                  className="flex-1"
-                  variant="default"
-                >
-                  {approveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  <Check className="mr-2 h-4 w-4" />
-                  Approve
-                </Button>
-                <Button
-                  onClick={handleRejectClick}
-                  disabled={rejectMutation.isPending || approveMutation.isPending}
-                  className="flex-1"
-                  variant="destructive"
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Reject
-                </Button>
-              </div>
-            )}
           </div>
+          </div>
+          {canApproveReject && (
+            <div className="shrink-0 px-6 py-4 border-t flex gap-2">
+              <Button
+                onClick={handleApprove}
+                disabled={approveMutation.isPending || rejectMutation.isPending}
+                className="flex-1"
+                variant="default"
+              >
+                {approveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Check className="mr-2 h-4 w-4" />
+                Approve
+              </Button>
+              <Button
+                onClick={handleRejectClick}
+                disabled={rejectMutation.isPending || approveMutation.isPending}
+                className="flex-1"
+                variant="destructive"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Reject
+              </Button>
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
       <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <SheetContent className="sm:max-w-md overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="sm:max-w-md p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Reject Timesheet</SheetTitle>
             <SheetDescription>
               Please provide a reason for rejecting this timesheet entry.
             </SheetDescription>
           </SheetHeader>
-          <div className="py-4">
+          <div className="flex-1 overflow-y-auto px-6 py-5">
             <Textarea
               placeholder="Enter rejection reason..."
               value={rejectionReason}
@@ -290,7 +292,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
               rows={4}
             />
           </div>
-          <SheetFooter>
+          <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
             <Button
               variant="outline"
               className="flex-1"

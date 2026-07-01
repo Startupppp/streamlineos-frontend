@@ -21,6 +21,7 @@ import type {
   NotificationAnalyticsOverview,
   NotificationAnalyticsByCategory,
   NotificationAnalyticsByPriority,
+  NotificationAnalyticsByChannel,
   NotificationAuditLogListResult,
 } from "@/types/notifications";
 
@@ -401,6 +402,21 @@ export const useNotificationAnalyticsByPriority = (
     queryKey: [...queryKeys.notifications.analytics(days), "priorities"],
     queryFn: () =>
       apiClient.get<NotificationAnalyticsByPriority[]>("/notification-analytics/priorities", {
+        days: String(days),
+      }),
+    staleTime: 5 * 60_000,
+    ...options,
+  });
+};
+
+export const useNotificationAnalyticsByChannel = (
+  days = 30,
+  options?: Omit<UseQueryOptions<NotificationAnalyticsByChannel[], Error>, "queryKey" | "queryFn">,
+) => {
+  return useQuery<NotificationAnalyticsByChannel[], Error>({
+    queryKey: [...queryKeys.notifications.analytics(days), "channels"],
+    queryFn: () =>
+      apiClient.get<NotificationAnalyticsByChannel[]>("/notification-analytics/channels", {
         days: String(days),
       }),
     staleTime: 5 * 60_000,

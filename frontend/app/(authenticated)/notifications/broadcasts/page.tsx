@@ -143,7 +143,7 @@ function BroadcastSheet({
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{isEdit ? "Edit Broadcast" : "New Broadcast"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
         <Form {...form}>
           <form id="broadcast-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
@@ -276,7 +276,7 @@ function BroadcastSheet({
           </form>
         </Form>
         </div>
-        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
+        <SheetFooter className="px-6 py-4 justify-end">
           <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
           <Button type="submit" form="broadcast-form" disabled={isPending}>
             {isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Draft"}

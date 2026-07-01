@@ -6,7 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 
 
 export type TaskEntityType = "LEAD" | "DEAL" | "CONTACT" | "PROJECT";
-export type TaskType = "CALL" | "EMAIL" | "MEETING" | "CUSTOM";
+export type TaskType = "CALL" | "EMAIL" | "MEETING" | "DEMO" | "FOLLOW_UP" | "REMINDER" | "CUSTOM";
 export type TaskStatus = "pending" | "completed" | "cancelled";
 export type TaskBucket = "OVERDUE" | "TODAY" | "THIS_WEEK" | "UPCOMING" | "NO_DATE";
 

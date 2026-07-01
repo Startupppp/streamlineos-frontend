@@ -81,8 +81,8 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col overflow-y-auto">
-        <SheetHeader className="shrink-0 pb-3">
+      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className="text-base">User Details</SheetTitle>
             {user && !isEditing && (
@@ -110,20 +110,19 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
           </div>
         </SheetHeader>
 
+        <div className="flex-1 overflow-y-auto px-6 py-5">
         {isLoading && <ProfileSkeleton />}
 
         {!isLoading && user && (
           <>
             {isEditing ? (
-              <div className="mt-2">
-                <UserEditForm
-                  user={user}
-                  onSuccess={handleEditSuccess}
-                  onCancel={() => setIsEditing(false)}
-                />
-              </div>
+              <UserEditForm
+                user={user}
+                onSuccess={handleEditSuccess}
+                onCancel={() => setIsEditing(false)}
+              />
             ) : (
-              <Tabs defaultValue="profile" className="flex-1 flex flex-col min-h-0">
+              <Tabs defaultValue="profile" className="flex flex-col">
                 <TabsList className="shrink-0 w-full justify-start h-8 bg-muted/50 rounded-md p-0.5 gap-0.5 flex-wrap">
                   {[
                     { value: "profile", label: "Profile" },
@@ -295,6 +294,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
             )}
           </>
         )}
+        </div>
       </SheetContent>
     </Sheet>
   );

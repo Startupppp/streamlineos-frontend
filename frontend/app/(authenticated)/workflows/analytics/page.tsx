@@ -59,13 +59,13 @@ function TrendBar({ count, max, successCount }: { count: number; max: number; su
       <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-violet-400 to-indigo-400 rounded-full transition-all duration-500"
-          style={{ width: `${pct}%` }}
+          style={{ "--bar-pct": `${pct}%`, width: "var(--bar-pct)" } as React.CSSProperties}
         />
       </div>
       <div className="h-2 w-16 bg-slate-100 rounded-full overflow-hidden">
         <div
           className="h-full bg-green-400 rounded-full transition-all duration-500"
-          style={{ width: `${successPct}%` }}
+          style={{ "--success-pct": `${successPct}%`, width: "var(--success-pct)" } as React.CSSProperties}
         />
       </div>
     </div>

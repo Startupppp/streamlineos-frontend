@@ -25,6 +25,7 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -294,8 +295,8 @@ export function ExpenseExportDialog({
           )}
         </SheetTrigger>
 
-        <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
-          <SheetHeader className="mb-6">
+        <SheetContent className="sm:max-w-lg p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle className="text-xl font-semibold flex items-center gap-2">
               <Download className="h-5 w-5 text-primary" />
               Export Expenses
@@ -305,6 +306,7 @@ export function ExpenseExportDialog({
             </SheetDescription>
           </SheetHeader>
 
+          <div className="flex-1 overflow-y-auto px-6 py-5">
           <div className="space-y-5">
             <div className="space-y-3">
               <Label className="text-sm font-medium flex items-center gap-1.5">
@@ -539,7 +541,8 @@ export function ExpenseExportDialog({
             )}
           </div>
 
-          <div className="flex flex-col gap-3 pt-6 mt-2 border-t">
+          </div>
+          <SheetFooter className="shrink-0 px-6 py-4 border-t flex-col gap-3">
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
@@ -610,7 +613,7 @@ export function ExpenseExportDialog({
                 )}
               </Button>
             </div>
-          </div>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
 

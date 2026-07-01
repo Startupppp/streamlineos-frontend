@@ -449,7 +449,7 @@ export default function CrmReportsPage() {
 
         {stats && (
           <motion.div variants={fadeUp}>
-            <Card className="shadow-sm">
+            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-violet-600" />
@@ -518,7 +518,7 @@ export default function CrmReportsPage() {
         )}
 
         <motion.div variants={fadeUp}>
-          <Card className="shadow-sm">
+          <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Activity className="h-4 w-4 text-violet-600" />
@@ -595,7 +595,7 @@ export default function CrmReportsPage() {
         </motion.div>
 
         <motion.div variants={fadeUp}>
-          <Card className="shadow-sm">
+          <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Trophy className="h-4 w-4 text-amber-500" />
@@ -739,7 +739,7 @@ export default function CrmReportsPage() {
 
         {stats && (
           <motion.div variants={fadeUp}>
-            <Card className="shadow-sm">
+            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-blue-600" />

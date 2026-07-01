@@ -46,7 +46,7 @@ const formSchema = z.object({
   triggerEvent: z.string().min(1, "Select a trigger"),
   conditions: z.array(conditionSchema),
   actions: z.array(actionSchema).min(1, "At least one action required"),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;

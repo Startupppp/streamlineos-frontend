@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, AlertCircle, SearchX } from "lucide-react";
+import { ArrowLeft, AlertCircle, SearchX, Mail } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -14,6 +16,7 @@ import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, use
 import { useCreateTask } from "@/hooks/api/tasks";
 import { toast } from "sonner";
 
+import { LeadAttachmentsSection } from "@/features/crm/leads/detail/lead-attachments-section";
 import { LeadDetailHeader } from "@/features/crm/leads/detail/lead-detail-header";
 import { LeadInfoCard } from "@/features/crm/leads/detail/lead-info-card";
 import { LeadQuickActions } from "@/features/crm/leads/detail/lead-quick-actions";
@@ -352,6 +355,28 @@ export default function LeadDetailPage({
               timeline={timeline}
               timelineLoading={timelineLoading}
             />
+            <Card className="bg-amber-50/80 border-amber-200/60 shadow-sm">
+              <CardContent className="flex items-start gap-3 p-4">
+                <Mail className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-amber-800">Connect your email</p>
+                  <p className="text-[11px] text-amber-600 mt-0.5">
+                    Connect your email to view email threads with this lead.
+                  </p>
+                  <Link
+                    href="/settings/integrations"
+                    className="text-[11px] font-medium text-amber-700 underline underline-offset-2 hover:text-amber-900 mt-1 inline-block"
+                  >
+                    Go to Settings →
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-noir">
+              <CardContent className="p-4">
+                <LeadAttachmentsSection leadId={leadId} />
+              </CardContent>
+            </Card>
             <LeadQualificationPanel
               leadId={leadId}
               qualificationJson={lead.qualificationNotes ?? null}

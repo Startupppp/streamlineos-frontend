@@ -519,7 +519,7 @@ export function CrmEventDialog({
           </form>
         </ScrollArea>
 
-        <SheetFooter className="px-6 py-4 border-t border-slate-100 flex flex-row gap-2 justify-end">
+        <SheetFooter className="shrink-0 px-6 py-4 border-t border-slate-100 flex flex-row gap-2 justify-end">
           <Button
             type="button"
             variant="outline"

@@ -432,7 +432,7 @@ export function CreateLeadSheet({
           <Button
             type="submit"
             form="create-lead-form"
-            className="flex-1 h-9"
+            className="flex-1 h-9 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
             disabled={isPending}
           >
             {isPending ? "Creating..." : "Create Lead"}

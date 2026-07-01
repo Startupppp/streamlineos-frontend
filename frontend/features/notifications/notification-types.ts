@@ -172,6 +172,7 @@ export const NOTIFICATION_PRIORITY_CONFIG: Record<
 export const SECTION_TABS: Array<{ value: NotificationSection; label: string }> = [
   { value: "ALL", label: "All" },
   { value: "UNREAD", label: "Unread" },
+  { value: "READ", label: "Read" },
   { value: "MENTIONS", label: "Mentions" },
   { value: "ASSIGNED_TO_ME", label: "Assigned to Me" },
   { value: "APPROVALS", label: "Approvals" },

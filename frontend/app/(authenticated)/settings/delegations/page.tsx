@@ -465,8 +465,8 @@ function GrantDelegationSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="sm:max-w-[400px] flex flex-col">
-        <SheetHeader className="pb-4">
+      <SheetContent className="sm:max-w-[400px] p-0 flex flex-col gap-0">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>Delegate permissions</SheetTitle>
           <SheetDescription className="text-xs">
             Share specific permissions with a team member for a set period.
@@ -476,8 +476,9 @@ function GrantDelegationSheet({
         <form
           onSubmit={handleSubmit(onSubmit)}
           noValidate
-          className="flex flex-col gap-3 flex-1 overflow-hidden"
+          className="flex flex-col flex-1 overflow-hidden"
         >
+          <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-y-auto px-6 py-5">
           <div className="space-y-1.5">
             <Label htmlFor="del-to" className="text-xs">
               Delegate to
@@ -598,7 +599,8 @@ function GrantDelegationSheet({
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-1 shrink-0">
+          </div>
+          <div className="shrink-0 px-6 py-4 border-t flex justify-end gap-2">
             <Button
               type="button"
               variant="outline"

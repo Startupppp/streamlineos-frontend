@@ -349,7 +349,10 @@ export default function ContactsPage() {
               Export
             </Button>
             <ContactsCsvImportDialog onSuccess={handleRetry} />
-            <Button onClick={handleOpenCreate}>
+            <Button
+              onClick={handleOpenCreate}
+              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            >
               <Plus className="h-4 w-4 mr-2" /> New Contact
             </Button>
             <CreateContactDialog
@@ -552,7 +555,7 @@ export default function ContactsPage() {
                 {data?.items.map((contact) => (
                   <Card
                     key={contact.id}
-                    className="shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 group"
+                    className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 group"
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">

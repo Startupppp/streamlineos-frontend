@@ -18,7 +18,7 @@ import {
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
-  type: z.enum(["CALL", "EMAIL", "MEETING", "CUSTOM"]),
+  type: z.enum(["CALL", "EMAIL", "MEETING", "DEMO", "FOLLOW_UP", "REMINDER", "CUSTOM"]),
   notes: z.string().optional(),
   entityType: z.enum(["LEAD", "DEAL", "CONTACT"]).optional(),
   entityIdRaw: z.string().optional(),
@@ -48,7 +48,7 @@ export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, 
 
   const defaultValues: TaskFormValues = {
     title: task?.title ?? "",
-    type: (task?.type as TaskFormValues["type"]) ?? "CUSTOM",
+    type: task?.type ?? "CUSTOM",
     notes: task?.notes ?? "",
     entityType: (task?.entityType as TaskFormValues["entityType"]) ?? defaultEntityType ?? undefined,
     entityIdRaw: task?.entityId != null ? String(task.entityId) : defaultEntityId != null ? String(defaultEntityId) : "",
@@ -149,6 +149,9 @@ export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, 
                     <SelectItem value="CALL">Call</SelectItem>
                     <SelectItem value="EMAIL">Email</SelectItem>
                     <SelectItem value="MEETING">Meeting</SelectItem>
+                    <SelectItem value="DEMO">Demo</SelectItem>
+                    <SelectItem value="FOLLOW_UP">Follow-up</SelectItem>
+                    <SelectItem value="REMINDER">Reminder</SelectItem>
                     <SelectItem value="CUSTOM">Custom</SelectItem>
                   </SelectContent>
                 </Select>

@@ -105,6 +105,17 @@ export interface WorkflowTemplate {
   createdAt: string;
 }
 
+export interface WorkflowVariable {
+  id: string;
+  key: string;
+  valueType: string;
+  defaultValue: unknown | null;
+  workflowVersionId: string;
+  createdAt: string;
+  workflowId: string;
+  workflowName: string;
+}
+
 export interface WorkflowAnalytics {
   totalWorkflows: number;
   activeWorkflows: number;
@@ -428,5 +439,64 @@ export function useDeleteSecret() {
       ),
     onSuccess: (_data, variables) =>
       qc.invalidateQueries({ queryKey: queryKeys.workflows.secrets(variables.workflowId) }),
+  });
+}
+
+export function useGlobalSecrets() {
+  return useQuery({
+    queryKey: [...queryKeys.workflows.all, "global-secrets"],
+    queryFn: () => apiClient.get<WorkflowSecret[]>("/workflows/secrets"),
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateGlobalSecret() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateSecretInput) =>
+      apiClient.post<WorkflowSecret>("/workflows/secrets", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-secrets"] }),
+  });
+}
+
+export function useDeleteGlobalSecret() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (secretId: string) =>
+      apiClient.delete<{ success: boolean }>(`/workflows/secrets/${secretId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-secrets"] }),
+  });
+}
+
+export function useGlobalVariables() {
+  return useQuery({
+    queryKey: [...queryKeys.workflows.all, "global-variables"],
+    queryFn: () => apiClient.get<WorkflowVariable[]>("/workflows/variables"),
+    staleTime: 30_000,
+  });
+}
+
+export function useDeleteGlobalVariable() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (variableId: string) =>
+      apiClient.delete<{ success: boolean }>(`/workflows/variables/${variableId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-variables"] }),
+  });
+}
+
+export function useDisableWorkflow() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.post<Workflow>(`/workflows/${id}/disable`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
+  });
+}
+
+export function useArchiveWorkflow() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.post<Workflow>(`/workflows/${id}/archive`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
   });
 }

@@ -431,25 +431,27 @@ export default function OrgTeamsPage() {
       </Sheet>
 
       <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-        <SheetContent>
-          <SheetHeader>
+        <SheetContent className="p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Edit Team</SheetTitle>
           </SheetHeader>
-          {editing && (
-            <TeamForm
-              defaultValues={{
-                name: editing.name,
-                code: editing.code,
-                departmentId: editing.departmentId ?? "",
-                leadUserId: editing.leadUserId ?? "",
-                description: editing.description ?? "",
-                capacity: editing.capacity != null ? String(editing.capacity) : "",
-              }}
-              departments={departments}
-              onSubmit={handleUpdate}
-              isPending={update.isPending}
-            />
-          )}
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            {editing && (
+              <TeamForm
+                defaultValues={{
+                  name: editing.name,
+                  code: editing.code,
+                  departmentId: editing.departmentId ?? "",
+                  leadUserId: editing.leadUserId ?? "",
+                  description: editing.description ?? "",
+                  capacity: editing.capacity != null ? String(editing.capacity) : "",
+                }}
+                departments={departments}
+                onSubmit={handleUpdate}
+                isPending={update.isPending}
+              />
+            )}
+          </div>
         </SheetContent>
       </Sheet>
 

@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import {
   Users,
   TrendingUp,
+  TrendingDown,
   Building2,
   BarChart3,
   ArrowRight,
@@ -17,6 +18,8 @@ import {
   Activity,
   CalendarDays,
   CheckSquare,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
@@ -27,7 +30,8 @@ import { cn } from "@/lib/utils";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
 import { formatINRCompact } from "@/lib/format-utils";
 import { useLeadStats } from "@/hooks/api/leads";
-import { useDeals, useDealStats, useContacts } from "@/hooks/api/crm";
+import { useDeals, useDealStats, useContacts, useWinLossAnalysis } from "@/hooks/api/crm";
+import { useTasks } from "@/hooks/api/tasks";
 import { CrmPipelineMini } from "@/features/crm/shared/crm-pipeline-mini";
 import { CrmRecentActivity } from "@/features/crm/shared/crm-recent-activity";
 
@@ -114,10 +118,25 @@ export default function CrmHubPage() {
   const { data: contactsData, isLoading: contactsLoading } = useContacts({
     limit: 1,
   });
+  const { data: winLoss, isLoading: winLossLoading } = useWinLossAnalysis();
+  const { data: pendingTasks, isLoading: tasksLoading } = useTasks({
+    status: "pending",
+    limit: 1,
+  });
 
   const isLoading =
-    statsLoading || dealsLoading || activityLoading || contactsLoading;
+    statsLoading ||
+    dealsLoading ||
+    activityLoading ||
+    contactsLoading ||
+    winLossLoading ||
+    tasksLoading;
   const error = statsError ?? dealsError;
+
+  const wonCount = winLoss?.summary.won ?? 0;
+  const lostCount = winLoss?.summary.lost ?? 0;
+  const winRate = winLoss?.summary.winRate ?? 0;
+  const tasksDue = pendingTasks?.total ?? 0;
 
   const handleRetry = useCallback(() => {
     void refetchStats();
@@ -128,7 +147,7 @@ export default function CrmHubPage() {
       <PageWrapper title="CRM" subtitle="Command center">
         <div className="space-y-4 pb-4">
           <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <Card key={i} className="shadow-sm">
                 <CardContent className="p-3 space-y-1.5">
                   <Skeleton className="h-3 w-20" />
@@ -225,13 +244,15 @@ export default function CrmHubPage() {
             icon={UserPlus}
             color="blue"
             index={0}
+            href="/crm/leads"
           />
           <StatCard
-            label="Active Deals"
-            value={dealStats?.active ?? 0}
-            icon={Briefcase}
+            label="Qualified"
+            value={leadStats?.byStatus.QUALIFIED ?? 0}
+            icon={CheckCircle2}
             color="green"
             index={1}
+            href="/crm/leads"
           />
           <StatCard
             label="Pipeline Value"
@@ -239,13 +260,47 @@ export default function CrmHubPage() {
             icon={IndianRupee}
             color="cyan"
             index={2}
+            href="/crm/deals"
           />
           <StatCard
-            label="Conversion"
-            value={`${leadStats?.conversionRate ?? 0}%`}
-            icon={TrendingUp}
+            label="Open Deals"
+            value={dealStats?.active ?? 0}
+            icon={Briefcase}
             color="amber"
             index={3}
+            href="/crm/deals"
+          />
+          <StatCard
+            label="Won Deals"
+            value={wonCount}
+            icon={TrendingUp}
+            color="green"
+            index={4}
+            href="/crm/deals"
+          />
+          <StatCard
+            label="Lost Deals"
+            value={lostCount}
+            icon={TrendingDown}
+            color="red"
+            index={5}
+            href="/crm/deals"
+          />
+          <StatCard
+            label="Tasks Due"
+            value={tasksDue}
+            icon={Clock}
+            color="amber"
+            index={6}
+            href="/crm/tasks"
+          />
+          <StatCard
+            label="Win Rate"
+            value={`${winRate}%`}
+            icon={BarChart3}
+            color={winRate >= 50 ? "green" : "violet"}
+            index={7}
+            href="/crm/reports"
           />
         </motion.div>
 

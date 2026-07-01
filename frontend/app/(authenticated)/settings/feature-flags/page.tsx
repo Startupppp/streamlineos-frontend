@@ -324,12 +324,13 @@ function FeatureFlagsContent() {
       )}
 
       <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Create Feature Flag</SheetTitle>
           </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-5">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleCreate)} className="mt-6 space-y-4">
+            <form onSubmit={form.handleSubmit(handleCreate)} id="create-flag-form" className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -429,17 +430,18 @@ function FeatureFlagsContent() {
                 )}
               />
 
-              <SheetFooter className="mt-6 gap-2 flex-row">
-                <Button type="button" variant="outline" className="flex-1" onClick={handleCloseCreate}>
-                  Cancel
-                </Button>
-                <Button type="submit" className="flex-1" disabled={createFlag.isPending}>
-                  {createFlag.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-                  Create Flag
-                </Button>
-              </SheetFooter>
             </form>
           </Form>
+          </div>
+          <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
+            <Button type="button" variant="outline" className="flex-1" onClick={handleCloseCreate}>
+              Cancel
+            </Button>
+            <Button type="submit" form="create-flag-form" className="flex-1" disabled={createFlag.isPending}>
+              {createFlag.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Create Flag
+            </Button>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </PageWrapper>

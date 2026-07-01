@@ -257,7 +257,7 @@ function RuleSheet({ rule, members, onClose }: RuleSheetProps) {
   return (
     <Sheet open onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:max-w-xl gap-0 p-0">
-        <SheetHeader className="border-b">
+        <SheetHeader className="px-6 py-4 border-b">
           <SheetTitle>{isEdit ? "Edit Routing Rule" : "New Routing Rule"}</SheetTitle>
         </SheetHeader>
         <Form {...form}>
