@@ -38,7 +38,11 @@ const PRODUCT_ICONS: Record<ProductKey, PhosphorIcon> = {
   administration: GearSix,
 }
 
-export function ProductSwitcherMenu() {
+interface ProductSwitcherMenuProps {
+  mobile?: boolean
+}
+
+export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const { data: session } = useSession()
@@ -63,11 +67,25 @@ export function ProductSwitcherMenu() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-1.5 h-8 px-2 rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={cn(
+            "flex items-center rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            mobile
+              ? "h-11 w-11 justify-center gap-0 shrink-0"
+              : "gap-1.5 h-8 px-2",
+          )}
           aria-label="Switch product"
         >
-          <ActiveIcon className="h-3.5 w-3.5 shrink-0" weight="fill" />
-          <LayoutGrid className="h-3 w-3 shrink-0 text-muted-foreground" />
+          {mobile ? (
+            <LayoutGrid className="h-5 w-5 shrink-0" />
+          ) : (
+            <>
+              <ActiveIcon className="h-3.5 w-3.5 shrink-0" weight="fill" />
+              <span className="hidden lg:inline text-xs truncate max-w-[5rem]">
+                {PRODUCT_DEFINITIONS.find((p) => p.key === activeProduct)?.label}
+              </span>
+              <LayoutGrid className="h-3 w-3 shrink-0 text-muted-foreground" />
+            </>
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64 p-3" sideOffset={8}>

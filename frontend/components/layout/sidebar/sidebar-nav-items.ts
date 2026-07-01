@@ -1420,7 +1420,17 @@ export function getNavGroupsForProduct(
   permissions: string[] | undefined,
 ): NavGroup[] {
   if (productKey === "home") {
-    return [];
+    return [
+      {
+        label: "Overview",
+        routes: [
+          { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+          { label: "Calendar", href: "/calendar", icon: CalendarDays },
+          { label: "Chat", href: "/chat", icon: MessageSquareText },
+          { label: "Notifications", href: "/notifications", icon: Bell },
+        ],
+      },
+    ];
   }
   if (productKey === "ai") {
     return [
@@ -1466,7 +1476,14 @@ export function getNavGroupsForProduct(
 }
 
 export function getProductFromPathname(pathname: string): ProductKey {
-  if (pathname === "/dashboard" || pathname === "/") return "home";
+  if (
+    pathname === "/dashboard" ||
+    pathname === "/" ||
+    pathname.startsWith("/calendar") ||
+    pathname.startsWith("/chat") ||
+    pathname.startsWith("/notifications")
+  )
+    return "home";
   if (
     pathname.startsWith("/crm") ||
     pathname.startsWith("/sales") ||

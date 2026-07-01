@@ -2,18 +2,24 @@
 
 import dynamic from "next/dynamic"
 import Link from "next/link"
-import Image from "next/image"
-import { Search, Sparkles, CalendarDays, MessageSquare } from "lucide-react"
+import { Menu, Search, Sparkles, CalendarDays, MessageSquare } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { WorkspaceSwitcher } from "./workspace-switcher"
 import { ProductSwitcherMenu } from "./product-switcher-menu"
 import { QuickCreateButton } from "./quick-create-button"
 import { UserAvatarMenu } from "./user-avatar-menu"
+import { cn } from "@/lib/utils"
 
 const NotificationBell = dynamic(
   () => import("@/features/notifications/notification-bell").then((m) => m.NotificationBell),
   { ssr: false },
 )
+
+interface GlobalHeaderProps {
+  onOpenMobileMenu?: () => void
+}
+
+const MOBILE_ICON_BUTTON =
+  "h-11 w-11 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
 
 function SearchButton() {
   function handleClick() {
@@ -44,77 +50,105 @@ function SearchButton() {
   )
 }
 
-export function GlobalHeader() {
+function HeaderIconLink({
+  href,
+  label,
+  children,
+}: {
+  href: string
+  label: string
+  children: React.ReactNode
+}) {
   return (
-    <header className="hidden md:flex items-center h-14 px-4 gap-3 border-b border-border bg-background shrink-0 z-40 relative">
-      <TooltipProvider>
-        <div className="flex items-center gap-2 shrink-0">
-          <Link
-            href="/dashboard"
-            className="h-8 w-8 rounded-lg overflow-hidden shrink-0 hover:opacity-80 transition-opacity"
-            aria-label="Home"
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <Link
+          href={href}
+          className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          aria-label={label}
+        >
+          {children}
+        </Link>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-xs">{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function MobileHeader({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
+  return (
+    <div className="md:hidden flex items-center justify-between h-full w-full px-3 gap-1">
+      <div className="flex items-center gap-1 shrink-0 min-w-0">
+        {onOpenMobileMenu && (
+          <button
+            type="button"
+            onClick={onOpenMobileMenu}
+            aria-label="Open navigation"
+            className={MOBILE_ICON_BUTTON}
           >
-            <Image src="/logo.svg" alt="StreamlineOS" width={32} height={32} className="object-contain p-0.5" />
-          </Link>
-          <WorkspaceSwitcher />
-          <div className="w-px h-4 bg-border/70" />
-          <ProductSwitcherMenu />
-        </div>
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
+        <ProductSwitcherMenu mobile />
+      </div>
 
-        <div className="flex-1 flex justify-center px-4 min-w-0">
-          <SearchButton />
-        </div>
+      <div className="flex items-center gap-1 shrink-0 [&_button]:h-11 [&_button]:w-11">
+        <NotificationBell />
+        <UserAvatarMenu />
+      </div>
+    </div>
+  )
+}
 
-        <div className="flex items-center gap-1 shrink-0">
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Link
-                href="/ai"
-                className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                aria-label="AI Assistant"
-              >
-                <Sparkles className="h-4 w-4" />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">AI Assistant</TooltipContent>
-          </Tooltip>
+function DesktopHeader({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
+  return (
+    <div className="hidden md:flex items-center h-full w-full px-4 gap-3">
+      <div className="flex items-center gap-2 shrink-0">
+        <ProductSwitcherMenu />
+      </div>
 
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Link
-                href="/calendar"
-                className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                aria-label="Calendar"
-              >
-                <CalendarDays className="h-4 w-4" />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">Calendar</TooltipContent>
-          </Tooltip>
+      <div
+        className={cn(
+          "flex-1 flex justify-center min-w-0",
+          onOpenMobileMenu ? "px-2" : "px-4",
+        )}
+      >
+        <SearchButton />
+      </div>
 
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Link
-                href="/chat"
-                className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                aria-label="Chat"
-              >
-                <MessageSquare className="h-4 w-4" />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">Chat</TooltipContent>
-          </Tooltip>
+      <div className="flex items-center gap-1 shrink-0">
+        <HeaderIconLink href="/ai" label="AI Assistant">
+          <Sparkles className="h-4 w-4" />
+        </HeaderIconLink>
 
-          <NotificationBell />
+        <HeaderIconLink href="/calendar" label="Calendar">
+          <CalendarDays className="h-4 w-4" />
+        </HeaderIconLink>
 
-          <div className="w-px h-4 bg-border/70 mx-1" />
+        <HeaderIconLink href="/chat" label="Chat">
+          <MessageSquare className="h-4 w-4" />
+        </HeaderIconLink>
 
-          <QuickCreateButton />
+        <NotificationBell />
 
-          <div className="w-px h-4 bg-border/70 mx-1" />
+        <div className="w-px h-4 bg-border/70 mx-1" />
 
-          <UserAvatarMenu />
-        </div>
+        <QuickCreateButton />
+
+        <div className="w-px h-4 bg-border/70 mx-1" />
+
+        <UserAvatarMenu />
+      </div>
+    </div>
+  )
+}
+
+export function GlobalHeader({ onOpenMobileMenu }: GlobalHeaderProps) {
+  return (
+    <header className="h-14 border-b border-border bg-background shrink-0 z-40 relative">
+      <TooltipProvider>
+        <MobileHeader onOpenMobileMenu={onOpenMobileMenu} />
+        <DesktopHeader onOpenMobileMenu={onOpenMobileMenu} />
       </TooltipProvider>
     </header>
   )

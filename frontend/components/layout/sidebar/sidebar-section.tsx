@@ -92,11 +92,11 @@ export function SidebarSection({
       )}
 
       {isCollapsed && groupIndex > 0 && (
-        <div className="mx-auto mb-2 h-px w-6 bg-sidebar-border" />
+        <div className="mx-auto my-1.5 h-px w-5 bg-sidebar-border" />
       )}
 
       {showItems && (
-        <div className="space-y-0.5">
+        <div className="space-y-px">
           {isCollapsed
             ? dedupeByHref(flattenNavRoutes(group.routes)).map((route) => (
                 <CollapsedItem
@@ -131,13 +131,13 @@ interface ItemProps {
 }
 
 function computeBadge(route: NavRoute, pendingLeaves: number) {
-  const leavesBadge = route.badge === "leaves" && pendingLeaves > 0 ? pendingLeaves : 0;
-  return { count: leavesBadge, isChat: false };
+  if (route.badge === "leaves" && pendingLeaves > 0) return pendingLeaves;
+  return 0;
 }
 
 function CollapsedItem({ route, pathname, pendingLeaves, onNavigate }: ItemProps) {
   const isActive = routeIsActive(route, pathname);
-  const { count, isChat } = computeBadge(route, pendingLeaves);
+  const count = computeBadge(route, pendingLeaves);
   const hasBadge = count > 0;
 
   return (
@@ -147,7 +147,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate }: ItemProps
           href={route.href}
           onClick={onNavigate}
           aria-current={isActive ? "page" : undefined}
-          className={cn("nav-item group relative justify-center w-9 h-9 mx-auto flex", isActive && "active")}
+          className={cn("nav-item group relative justify-center w-8 h-8 mx-auto flex", isActive && "active")}
         >
           <route.icon className={cn("nav-icon transition-colors duration-150 h-4 w-4", isActive && "text-blue-600")} />
           {hasBadge && (
@@ -157,7 +157,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate }: ItemProps
       </TooltipTrigger>
       <TooltipContent side="right" sideOffset={10} className="z-[9999] text-xs font-medium" style={{ zIndex: 9999 }}>
         {route.label}
-        {hasBadge && <span className="ml-1.5 opacity-70">({isChat && count > 99 ? "99+" : count})</span>}
+        {hasBadge && <span className="ml-1.5 opacity-70">({count})</span>}
       </TooltipContent>
     </Tooltip>
   );
@@ -184,7 +184,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate }: Exp
     setExpanded((v) => !v);
   }, []);
 
-  const { count, isChat } = computeBadge(route, pendingLeaves);
+  const count = computeBadge(route, pendingLeaves);
   const hasBadge = count > 0;
   const paddingLeft = depth === 0 ? "0.625rem" : `${0.625 + depth * 0.75}rem`;
 
@@ -210,14 +210,9 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate }: Exp
             isActive && "text-blue-600",
           )}
         />
-        <span className="flex-1 truncate text-[0.8125rem]">{route.label}</span>
+        <span className="flex-1 min-w-0 truncate text-[0.8125rem]">{route.label}</span>
         {hasBadge && (
-          <span
-            className={cn(
-              "inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold tabular-nums leading-none",
-              isChat ? "bg-red-500 text-white" : "bg-amber-500 text-white",
-            )}
-          >
+          <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold tabular-nums leading-none bg-amber-500 text-white">
             {count > 99 ? "99+" : count}
           </span>
         )}

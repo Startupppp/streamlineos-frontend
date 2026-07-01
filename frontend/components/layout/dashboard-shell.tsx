@@ -3,8 +3,6 @@
 import { useState, useCallback } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
-import Image from "next/image"
-import { Menu } from "lucide-react"
 import { AppSidebar } from "./app-sidebar"
 import { GlobalHeader } from "./header/global-header"
 import { MobileBottomNav } from "./mobile-bottom-nav"
@@ -26,14 +24,6 @@ const ChatUnreadNotifications = dynamic(
   () =>
     import("@/components/chat/chat-unread-notifications").then(
       (m) => m.ChatUnreadNotifications,
-    ),
-  { ssr: false },
-)
-
-const NotificationBell = dynamic(
-  () =>
-    import("@/features/notifications/notification-bell").then(
-      (m) => m.NotificationBell,
     ),
   { ssr: false },
 )
@@ -91,25 +81,6 @@ export function DashboardShell({
           <CommandPalette />
           <TrialBanner />
 
-          <GlobalHeader />
-
-          <div className="md:hidden flex items-center gap-2 h-12 px-4 border-b border-border bg-background shrink-0 z-20 relative">
-            <button
-              type="button"
-              onClick={handleOpenMobileMenu}
-              aria-label="Open navigation"
-              className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <div className="w-px h-5 bg-border shrink-0" />
-            <Link href="/dashboard" className="flex items-center gap-2 min-w-0 flex-1">
-              <Image src="/logo.svg" alt="StreamlineOS logo" width={28} height={28} />
-              <span className="text-sm font-semibold text-foreground">StreamlineOS</span>
-            </Link>
-            {hasDashboardAccess && <NotificationBell />}
-          </div>
-
           <div className="flex-1 flex min-h-0">
             <aside
               aria-label="Sidebar"
@@ -122,21 +93,25 @@ export function DashboardShell({
               />
             </aside>
 
-            <main
-              id="dashboard-content"
-              className="flex-1 min-w-0 flex flex-col overflow-hidden"
-            >
-              <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-16 md:pb-0">
-                {children}
-                <SuccessChecklist />
-              </div>
-            </main>
+            <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+              <GlobalHeader onOpenMobileMenu={handleOpenMobileMenu} />
+
+              <main
+                id="dashboard-content"
+                className="flex-1 min-w-0 flex flex-col overflow-hidden"
+              >
+                <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-16 md:pb-0">
+                  {children}
+                  <SuccessChecklist />
+                </div>
+              </main>
+            </div>
           </div>
 
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
-            <SheetContent side="left" className="z-[100] p-0 w-[15rem] border-r-sidebar-border">
+            <SheetContent side="left" className="z-[100] p-0 w-[17rem] border-r-sidebar-border">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <AppSidebar onNavigate={handleCloseMobileMenu} />
+              <AppSidebar isMobile onNavigate={handleCloseMobileMenu} />
             </SheetContent>
           </Sheet>
 
