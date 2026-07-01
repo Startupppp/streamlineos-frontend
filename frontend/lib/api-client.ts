@@ -1,5 +1,5 @@
 const SAME_ORIGIN = "/api";
-const EXTERNAL_API = process.env.NEXT_PUBLIC_API_URL;
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
 
 const MIGRATED_PREFIXES = [
   "/contacts",
@@ -162,7 +162,6 @@ const PUBLIC_AUTH_PATHS = new Set([
 ]);
 
 function isMigrated(path: string): boolean {
-  if (!EXTERNAL_API) return false;
   return MIGRATED_PREFIXES.some(
     (p) => path === p || path.startsWith(`${p}/`) || path.startsWith(`${p}?`),
   );
@@ -231,7 +230,7 @@ async function authedFetch(url: string, init: RequestInit, useBackend: boolean, 
 }
 
 function buildUrl(path: string, params?: Record<string, unknown>): string {
-  const base = isMigrated(path) && EXTERNAL_API ? EXTERNAL_API : SAME_ORIGIN;
+  const base = isMigrated(path) ? BACKEND_API_URL : SAME_ORIGIN;
   const url = `${base}${path}`;
   if (!params || Object.keys(params).length === 0) return url;
   const search = new URLSearchParams(

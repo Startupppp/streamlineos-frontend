@@ -294,16 +294,20 @@ export default function SignupPage() {
               <span className="text-[12px] text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">
                 I agree to the{" "}
                 <Link
-                  href="/terms"
+                  href="/legal/terms"
                   target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                   className="text-blue-600 hover:underline font-medium"
                 >
                   Terms of Service
                 </Link>{" "}
                 and{" "}
                 <Link
-                  href="/privacy"
+                  href="/legal/privacy"
                   target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                   className="text-blue-600 hover:underline font-medium"
                 >
                   Privacy Policy
