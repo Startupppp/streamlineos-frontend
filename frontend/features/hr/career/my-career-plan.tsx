@@ -13,7 +13,7 @@ import {
   useMyCareerPlan,
   useCareerPaths,
   useSaveMyPlan,
-  useUpdateMilestone,
+  useUpdateCareerMilestone,
   type Milestone,
 } from "@/hooks/api/hr/career";
 import {
@@ -39,7 +39,7 @@ import {
 
 const schema = z.object({
   pathId: z.number().optional(),
-  currentLevel: z.number().int().min(1).default(1),
+  currentLevel: z.number().int().min(1),
   targetRole: z.string().optional(),
   targetDate: z.string().optional(),
   aspirations: z.string().optional(),
@@ -52,7 +52,7 @@ export function MyCareerPlan() {
   const planQuery = useMyCareerPlan();
   const pathsQuery = useCareerPaths();
   const savePlan = useSaveMyPlan();
-  const updateMilestone = useUpdateMilestone();
+  const updateMilestone = useUpdateCareerMilestone();
 
   const [newMilestoneTitle, setNewMilestoneTitle] = useState("");
   const [newMilestoneDue, setNewMilestoneDue] = useState("");

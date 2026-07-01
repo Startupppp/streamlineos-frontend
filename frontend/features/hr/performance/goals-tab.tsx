@@ -7,6 +7,7 @@ import {
   useUpdateGoal,
   useDeleteGoal,
   useHrEmployees,
+  type HrGoal,
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +52,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Employee, Goal } from "@/types/hr";
+import type { Employee } from "@/types/hr";
 
 export function GoalsTab() {
   const { data: goals, isLoading } = useHrGoals();
@@ -60,7 +61,7 @@ export function GoalsTab() {
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editGoal, setEditGoal] = useState<Goal | null>(null);
+  const [editGoal, setEditGoal] = useState<HrGoal | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
   const [userPickerOpen, setUserPickerOpen] = useState(false);
@@ -90,7 +91,7 @@ export function GoalsTab() {
     setEditGoal(null);
   }, []);
 
-  const handleOpenEdit = useCallback((goal: Goal) => {
+  const handleOpenEdit = useCallback((goal: HrGoal) => {
     setEditGoal(goal);
     setTitle(goal.title);
     setDescription(goal.description ?? "");
@@ -317,7 +318,7 @@ export function GoalsTab() {
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {goalsList.map((goal: Goal) => {
+          {goalsList.map((goal) => {
             const progress = goal.progress ?? 0;
             const isCompleted = goal.status === "COMPLETED" || progress >= 100;
             const accentClass = isCompleted

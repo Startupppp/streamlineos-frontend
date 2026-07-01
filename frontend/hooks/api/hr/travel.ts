@@ -23,7 +23,7 @@ export interface TravelRequest {
 export function useMyTravelRequests() {
   return useQuery<TravelRequest[]>({
     queryKey: ["hr", "travel", "mine"],
-    queryFn: () => apiClient.get("/hr/travel").then((r) => r.data),
+    queryFn: () => apiClient.get<TravelRequest[]>("/hr/travel"),
     staleTime: 60_000,
   });
 }
@@ -31,7 +31,7 @@ export function useMyTravelRequests() {
 export function usePendingTravelApprovals() {
   return useQuery<TravelRequest[]>({
     queryKey: ["hr", "travel", "approvals"],
-    queryFn: () => apiClient.get("/hr/travel/approvals").then((r) => r.data),
+    queryFn: () => apiClient.get<TravelRequest[]>("/hr/travel/approvals"),
     staleTime: 30_000,
   });
 }
@@ -41,7 +41,7 @@ export function useCreateTravelRequest() {
   return useMutation({
     mutationKey: ["hr", "travel", "create"],
     mutationFn: (data: Omit<TravelRequest, "id" | "orgId" | "userId" | "status" | "createdAt">) =>
-      apiClient.post("/hr/travel", data).then((r) => r.data),
+      apiClient.post<TravelRequest>("/hr/travel", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "travel"] }),
   });
 }
@@ -50,7 +50,7 @@ export function useManagerApproveTravelRequest() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "travel", "manager-approve"],
-    mutationFn: (id: number) => apiClient.patch(`/hr/travel/${id}/manager-approve`).then((r) => r.data),
+    mutationFn: (id: number) => apiClient.patch<TravelRequest>(`/hr/travel/${id}/manager-approve`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "travel"] }),
   });
 }
@@ -59,7 +59,7 @@ export function useFinanceApproveTravelRequest() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "travel", "finance-approve"],
-    mutationFn: (id: number) => apiClient.patch(`/hr/travel/${id}/finance-approve`).then((r) => r.data),
+    mutationFn: (id: number) => apiClient.patch<TravelRequest>(`/hr/travel/${id}/finance-approve`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "travel"] }),
   });
 }
@@ -69,7 +69,7 @@ export function useRejectTravelRequest() {
   return useMutation({
     mutationKey: ["hr", "travel", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
-      apiClient.patch(`/hr/travel/${id}/reject`, { reason }).then((r) => r.data),
+      apiClient.patch<TravelRequest>(`/hr/travel/${id}/reject`, { reason }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "travel"] }),
   });
 }

@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-export interface Announcement {
+export interface HrAnnouncement {
   id: number;
   orgId: string;
   title: string;
@@ -20,46 +20,46 @@ export interface Announcement {
   createdAt: string;
 }
 
-export type CreateAnnouncementData = Omit<Announcement, "id" | "orgId" | "authorId" | "readCount" | "createdAt">;
-export type UpdateAnnouncementData = Partial<CreateAnnouncementData> & { id: number };
+export type CreateHrAnnouncementData = Omit<HrAnnouncement, "id" | "orgId" | "authorId" | "readCount" | "createdAt">;
+export type UpdateHrAnnouncementData = Partial<CreateHrAnnouncementData> & { id: number };
 
-export function useAnnouncements() {
-  return useQuery<Announcement[]>({
+export function useHrAnnouncements() {
+  return useQuery<HrAnnouncement[]>({
     queryKey: ["hr", "announcements"],
-    queryFn: () => apiClient.get<Announcement[]>("/hr/announcements"),
+    queryFn: () => apiClient.get<HrAnnouncement[]>("/hr/announcements"),
     staleTime: 60_000,
   });
 }
 
-export function useAllAnnouncements() {
-  return useQuery<Announcement[]>({
+export function useAllHrAnnouncements() {
+  return useQuery<HrAnnouncement[]>({
     queryKey: ["hr", "announcements", "all"],
-    queryFn: () => apiClient.get<Announcement[]>("/hr/announcements/all"),
+    queryFn: () => apiClient.get<HrAnnouncement[]>("/hr/announcements/all"),
     staleTime: 30_000,
   });
 }
 
-export function useCreateAnnouncement() {
+export function useCreateHrAnnouncement() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "announcements", "create"],
-    mutationFn: (data: CreateAnnouncementData) =>
-      apiClient.post<Announcement>("/hr/announcements", data),
+    mutationFn: (data: CreateHrAnnouncementData) =>
+      apiClient.post<HrAnnouncement>("/hr/announcements", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "announcements"] }),
   });
 }
 
-export function useUpdateAnnouncement() {
+export function useUpdateHrAnnouncement() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "announcements", "update"],
-    mutationFn: ({ id, ...data }: UpdateAnnouncementData) =>
-      apiClient.patch<Announcement>(`/hr/announcements/${id}`, data),
+    mutationFn: ({ id, ...data }: UpdateHrAnnouncementData) =>
+      apiClient.patch<HrAnnouncement>(`/hr/announcements/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "announcements"] }),
   });
 }
 
-export function useDeleteAnnouncement() {
+export function useDeleteHrAnnouncement() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "announcements", "delete"],
@@ -68,7 +68,7 @@ export function useDeleteAnnouncement() {
   });
 }
 
-export function useMarkAnnouncementRead() {
+export function useMarkHrAnnouncementRead() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "announcements", "read"],

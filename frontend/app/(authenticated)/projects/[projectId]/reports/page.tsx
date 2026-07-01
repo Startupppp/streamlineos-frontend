@@ -448,7 +448,7 @@ function CycleTimeSection({ projectId }: { projectId: number }) {
               <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} unit=" d" />
               <Tooltip
                 contentStyle={TOOLTIP_STYLE}
-                formatter={(v: number) => [`${v} days`, "Avg Cycle Time"]}
+                formatter={(v) => [`${v ?? 0} days`, "Avg Cycle Time"]}
               />
               <Bar dataKey="avgDays" fill="#6366f1" radius={[4, 4, 0, 0]} name="Avg Days" />
             </BarChart>
@@ -490,7 +490,7 @@ function LeadTimeSection({ projectId }: { projectId: number }) {
               <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} unit=" d" />
               <Tooltip
                 contentStyle={TOOLTIP_STYLE}
-                formatter={(v: number) => [`${v} days`]}
+                formatter={(v) => [`${v ?? 0} days`]}
               />
               <Area dataKey="p90Days" fill="#c7d2fe" stroke="#818cf8" strokeWidth={1.5} name="P90" />
               <Area dataKey="p50Days" fill="#a5b4fc" stroke="#6366f1" strokeWidth={2} name="P50 (Median)" />

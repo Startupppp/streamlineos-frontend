@@ -33,7 +33,7 @@ import type {
   LeaveType,
   Approver,
   LeaveBalance,
-} from "@/app/(authenticated)/hr/leaves/leaves-shared";
+} from "@/features/hr/leaves/components/leaves-shared";
 
 const isSunday = (d: Date) => d.getDay() === 0;
 

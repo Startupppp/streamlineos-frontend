@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday, useUpdateHoliday } from "@/hooks/api/hr";
+import { useHrHolidaysForYear, useAddLegacyHoliday, useDeleteLegacyHoliday, useUpdateLegacyHoliday } from "@/hooks/api/hr";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Pencil, Check, X, PartyPopper } from "lucide-react";
@@ -42,9 +42,9 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
 
   const { data: holidaysList, isLoading } = useHrHolidaysForYear(selectedYear);
 
-  const addMutation = useAddHoliday();
-  const deleteMutation = useDeleteHoliday();
-  const updateMutation = useUpdateHoliday();
+  const addMutation = useAddLegacyHoliday();
+  const deleteMutation = useDeleteLegacyHoliday();
+  const updateMutation = useUpdateLegacyHoliday();
 
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
 

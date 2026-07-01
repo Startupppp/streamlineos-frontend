@@ -33,7 +33,7 @@ export interface SignatureRequest {
 export function useSentSignatureRequests() {
   return useQuery<SignatureRequest[]>({
     queryKey: ["hr", "signatures", "sent"],
-    queryFn: () => apiClient.get("/hr/signatures/sent").then((r) => r.data),
+    queryFn: () => apiClient.get<SignatureRequest[]>("/hr/signatures/sent"),
     staleTime: 30_000,
   });
 }
@@ -41,7 +41,7 @@ export function useSentSignatureRequests() {
 export function useReceivedSignatureRequests() {
   return useQuery<SignatureRequest[]>({
     queryKey: ["hr", "signatures", "received"],
-    queryFn: () => apiClient.get("/hr/signatures/received").then((r) => r.data),
+    queryFn: () => apiClient.get<SignatureRequest[]>("/hr/signatures/received"),
     staleTime: 30_000,
   });
 }
@@ -55,7 +55,7 @@ export function useCreateSignatureRequest() {
         SignatureRequest,
         "id" | "orgId" | "requestedBy" | "status" | "completedAt" | "auditTrail" | "createdAt"
       >,
-    ) => apiClient.post("/hr/signatures", data).then((r) => r.data),
+    ) => apiClient.post<SignatureRequest>("/hr/signatures", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "signatures"] }),
   });
 }
@@ -65,7 +65,7 @@ export function useSignDocument() {
   return useMutation({
     mutationKey: ["hr", "signatures", "sign"],
     mutationFn: ({ id, signatureUrl }: { id: number; signatureUrl: string }) =>
-      apiClient.post(`/hr/signatures/${id}/sign`, { signatureUrl }).then((r) => r.data),
+      apiClient.post<SignatureRequest>(`/hr/signatures/${id}/sign`, { signatureUrl }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "signatures"] }),
   });
 }
@@ -74,7 +74,7 @@ export function useVoidSignatureRequest() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "signatures", "void"],
-    mutationFn: (id: number) => apiClient.patch(`/hr/signatures/${id}/void`).then((r) => r.data),
+    mutationFn: (id: number) => apiClient.patch<SignatureRequest>(`/hr/signatures/${id}/void`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "signatures"] }),
   });
 }

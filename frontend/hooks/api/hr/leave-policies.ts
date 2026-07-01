@@ -38,7 +38,7 @@ interface CreateLeavePolicyInput {
 export function useLeavePolicies() {
   return useQuery<LeavePolicy[]>({
     queryKey: ["hr", "leave-policies"],
-    queryFn: () => apiClient.get("/hr/leave-policies").then((r) => r.data),
+    queryFn: () => apiClient.get<LeavePolicy[]>("/hr/leave-policies"),
     staleTime: 60_000,
   });
 }
@@ -48,7 +48,7 @@ export function useCreateLeavePolicy() {
   return useMutation({
     mutationKey: ["hr", "leave-policies", "create"],
     mutationFn: (data: CreateLeavePolicyInput) =>
-      apiClient.post("/hr/leave-policies", data).then((r) => r.data),
+      apiClient.post<LeavePolicy>("/hr/leave-policies", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "leave-policies"] }),
   });
 }
@@ -58,7 +58,7 @@ export function useUpdateLeavePolicy() {
   return useMutation({
     mutationKey: ["hr", "leave-policies", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateLeavePolicyInput> & { id: number }) =>
-      apiClient.patch(`/hr/leave-policies/${id}`, data).then((r) => r.data),
+      apiClient.patch<LeavePolicy>(`/hr/leave-policies/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "leave-policies"] }),
   });
 }
@@ -68,7 +68,7 @@ export function useDeleteLeavePolicy() {
   return useMutation({
     mutationKey: ["hr", "leave-policies", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete(`/hr/leave-policies/${id}`).then((r) => r.data),
+      apiClient.delete<void>(`/hr/leave-policies/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "leave-policies"] }),
   });
 }

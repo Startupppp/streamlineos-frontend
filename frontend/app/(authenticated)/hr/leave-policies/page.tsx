@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import {
   useLeavePolicies,
   useCreateLeavePolicy,
@@ -30,9 +30,9 @@ const policySchema = z.object({
   accrualType: z.enum(["ANNUAL", "MONTHLY", "DAILY"]),
   accrualRate: z.string().min(1, "Accrual rate is required"),
   maxBalance: z.string().optional(),
-  carryForwardDays: z.string().default("0"),
-  encashable: z.boolean().default(false),
-  probationRestricted: z.boolean().default(false),
+  carryForwardDays: z.string(),
+  encashable: z.boolean(),
+  probationRestricted: z.boolean(),
   effectiveFrom: z.string().min(1, "Effective date is required"),
 });
 

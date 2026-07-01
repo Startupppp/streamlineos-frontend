@@ -15,7 +15,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
 import {
   useHolidays,
   useCreateHoliday,
@@ -27,7 +27,7 @@ import {
 const holidaySchema = z.object({
   name: z.string().min(1, "Name is required"),
   date: z.string().min(1, "Date is required"),
-  recurring: z.boolean().default(false),
+  recurring: z.boolean(),
 });
 
 type HolidayFormValues = z.infer<typeof holidaySchema>;

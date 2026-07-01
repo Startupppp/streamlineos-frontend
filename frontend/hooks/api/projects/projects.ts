@@ -15,7 +15,6 @@ import type {
   CreateProjectInput,
   UpdateProjectInput,
   AddProjectMemberInput,
-  CreateLabelInput,
 } from "@/types/projects";
 
 export function useProjects(
@@ -135,23 +134,6 @@ export function useProjectLabels(
       projectId
         ? apiClient.get<TicketLabel[]>(`/projects/${projectId}/labels`)
         : apiClient.get<TicketLabel[]>("/projects/labels"),
-    ...options,
-  });
-}
-
-export function useCreateLabel(
-  projectId: number,
-  options?: Parameters<typeof useMutation>[0]
-) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateLabelInput) =>
-      apiClient.post<TicketLabel>(`/projects/${projectId}/labels`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.labels(projectId),
-      });
-    },
     ...options,
   });
 }

@@ -39,33 +39,33 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useAnnouncements,
-  useAllAnnouncements,
-  useCreateAnnouncement,
-  useUpdateAnnouncement,
-  useDeleteAnnouncement,
-  useMarkAnnouncementRead,
-  type Announcement,
-  type CreateAnnouncementData,
+  useHrAnnouncements,
+  useAllHrAnnouncements,
+  useCreateHrAnnouncement,
+  useUpdateHrAnnouncement,
+  useDeleteHrAnnouncement,
+  useMarkHrAnnouncementRead,
+  type HrAnnouncement,
+  type CreateHrAnnouncementData,
 } from "@/hooks/api/hr/announcements";
 
 type ActiveTab = "published" | "all";
 
-const TARGET_TYPE_ICONS: Record<Announcement["targetType"], React.ReactNode> = {
+const TARGET_TYPE_ICONS: Record<HrAnnouncement["targetType"], React.ReactNode> = {
   ALL: <Globe className="h-3 w-3" />,
   DEPARTMENT: <Users className="h-3 w-3" />,
   BRANCH: <Building2 className="h-3 w-3" />,
   ROLE: <Tag className="h-3 w-3" />,
 };
 
-const TARGET_TYPE_LABELS: Record<Announcement["targetType"], string> = {
+const TARGET_TYPE_LABELS: Record<HrAnnouncement["targetType"], string> = {
   ALL: "Everyone",
   DEPARTMENT: "Department",
   BRANCH: "Branch",
   ROLE: "Role",
 };
 
-const STATUS_COLORS: Record<Announcement["status"], string> = {
+const STATUS_COLORS: Record<HrAnnouncement["status"], string> = {
   DRAFT: "bg-slate-100 text-slate-600 border-slate-200",
   SCHEDULED: "bg-blue-50 text-blue-600 border-blue-200",
   PUBLISHED: "bg-emerald-50 text-emerald-600 border-emerald-200",
@@ -84,21 +84,21 @@ function formatDate(dateStr: string): string {
   });
 }
 
-interface AnnouncementCardProps {
-  announcement: Announcement;
+interface HrAnnouncementCardProps {
+  announcement: HrAnnouncement;
   canManage: boolean;
-  onEdit: (a: Announcement) => void;
+  onEdit: (a: HrAnnouncement) => void;
   onDelete: (id: number) => void;
   onMarkRead: (id: number) => void;
 }
 
-function AnnouncementCard({
+function HrAnnouncementCard({
   announcement,
   canManage,
   onEdit,
   onDelete,
   onMarkRead,
-}: AnnouncementCardProps) {
+}: HrAnnouncementCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const handleToggleExpand = useCallback(() => {
@@ -209,7 +209,7 @@ function AnnouncementCard({
   );
 }
 
-const EMPTY_FORM: CreateAnnouncementData = {
+const EMPTY_FORM: CreateHrAnnouncementData = {
   title: "",
   content: "",
   targetType: "ALL",
@@ -219,22 +219,22 @@ const EMPTY_FORM: CreateAnnouncementData = {
   attachmentUrls: [],
 };
 
-function AnnouncementsContent() {
+function HrAnnouncementsContent() {
   const canManage = useCan("hr:announcements:manage");
 
-  const { data: published, isLoading: loadingPublished, isError: errorPublished, refetch: refetchPublished } = useAnnouncements();
-  const { data: all, isLoading: loadingAll, isError: errorAll, refetch: refetchAll } = useAllAnnouncements();
+  const { data: published, isLoading: loadingPublished, isError: errorPublished, refetch: refetchPublished } = useHrAnnouncements();
+  const { data: all, isLoading: loadingAll, isError: errorAll, refetch: refetchAll } = useAllHrAnnouncements();
 
-  const create = useCreateAnnouncement();
-  const update = useUpdateAnnouncement();
-  const remove = useDeleteAnnouncement();
-  const markRead = useMarkAnnouncementRead();
+  const create = useCreateHrAnnouncement();
+  const update = useUpdateHrAnnouncement();
+  const remove = useDeleteHrAnnouncement();
+  const markRead = useMarkHrAnnouncementRead();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("published");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Announcement | null>(null);
+  const [editTarget, setEditTarget] = useState<HrAnnouncement | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<CreateAnnouncementData>(EMPTY_FORM);
+  const [formData, setFormData] = useState<CreateHrAnnouncementData>(EMPTY_FORM);
 
   const displayedList = useMemo(() => {
     if (activeTab === "all" && canManage) return all ?? [];
@@ -262,7 +262,7 @@ function AnnouncementsContent() {
     setSheetOpen(true);
   }, [resetForm]);
 
-  const handleEdit = useCallback((a: Announcement) => {
+  const handleEdit = useCallback((a: HrAnnouncement) => {
     setEditTarget(a);
     setFormData({
       title: a.title,
@@ -300,11 +300,11 @@ function AnnouncementsContent() {
   }, []);
 
   const handleTargetTypeChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, targetType: value as Announcement["targetType"] }));
+    setFormData((prev) => ({ ...prev, targetType: value as HrAnnouncement["targetType"] }));
   }, []);
 
   const handleStatusChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, status: value as Announcement["status"] }));
+    setFormData((prev) => ({ ...prev, status: value as HrAnnouncement["status"] }));
   }, []);
 
   const handlePinnedChange = useCallback((checked: boolean) => {
@@ -337,7 +337,7 @@ function AnnouncementsContent() {
           success: () => {
             setSheetOpen(false);
             resetForm();
-            return "Announcement updated";
+            return "HrAnnouncement updated";
           },
           error: getErrorMessage,
         },
@@ -350,7 +350,7 @@ function AnnouncementsContent() {
           success: () => {
             setSheetOpen(false);
             resetForm();
-            return "Announcement created";
+            return "HrAnnouncement created";
           },
           error: getErrorMessage,
         },
@@ -366,7 +366,7 @@ function AnnouncementsContent() {
         loading: "Deleting announcement...",
         success: () => {
           setDeleteId(null);
-          return "Announcement deleted";
+          return "HrAnnouncement deleted";
         },
         error: getErrorMessage,
       },
@@ -385,7 +385,7 @@ function AnnouncementsContent() {
 
   return (
     <PageWrapper
-      title="Announcements"
+      title="HrAnnouncements"
       subtitle="Stay updated with company news and updates"
       badge={`${displayedList.length}`}
       actions={
@@ -396,7 +396,7 @@ function AnnouncementsContent() {
             onClick={handleNewClick}
           >
             <Plus className="h-3.5 w-3.5" />
-            New Announcement
+            New HrAnnouncement
           </Button>
         ) : undefined
       }
@@ -487,7 +487,7 @@ function AnnouncementsContent() {
                 onClick={handleNewClick}
               >
                 <Plus className="h-3.5 w-3.5" />
-                New Announcement
+                New HrAnnouncement
               </Button>
             )}
           </div>
@@ -501,7 +501,7 @@ function AnnouncementsContent() {
             className="space-y-3"
           >
             {displayedList.map((announcement) => (
-              <AnnouncementCard
+              <HrAnnouncementCard
                 key={announcement.id}
                 announcement={announcement}
                 canManage={canManage}
@@ -517,14 +517,14 @@ function AnnouncementsContent() {
       <HrSheet
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
-        title={editTarget ? "Edit Announcement" : "New Announcement"}
+        title={editTarget ? "Edit HrAnnouncement" : "New HrAnnouncement"}
         description={
           editTarget
             ? "Update the details of this announcement."
             : "Create a new announcement for your team."
         }
         onSubmit={handleSave}
-        submitLabel={editTarget ? "Save Changes" : "Create Announcement"}
+        submitLabel={editTarget ? "Save Changes" : "Create HrAnnouncement"}
         isPending={isSubmitting}
       >
         <div className="space-y-4">
@@ -534,7 +534,7 @@ function AnnouncementsContent() {
             </Label>
             <Input
               id="ann-title"
-              placeholder="Announcement title"
+              placeholder="HrAnnouncement title"
               value={formData.title}
               onChange={handleTitleChange}
               className="h-9 text-sm"
@@ -628,7 +628,7 @@ function AnnouncementsContent() {
       <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={handleDeleteDialogOpenChange}
-        title="Delete Announcement"
+        title="Delete HrAnnouncement"
         description="Are you sure you want to delete this announcement? This action cannot be undone."
         confirmLabel="Delete"
         destructive
@@ -639,6 +639,6 @@ function AnnouncementsContent() {
   );
 }
 
-export default function AnnouncementsPage() {
-  return <AnnouncementsContent />;
+export default function HrAnnouncementsPage() {
+  return <HrAnnouncementsContent />;
 }

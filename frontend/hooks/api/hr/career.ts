@@ -93,7 +93,7 @@ export function useSaveMyPlan() {
   });
 }
 
-export function useUpdateMilestone() {
+export function useUpdateCareerMilestone() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "career", "updateMilestone"],

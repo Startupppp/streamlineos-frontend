@@ -27,7 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { Approver } from "@/app/(authenticated)/hr/leaves/leaves-shared";
+import type { Approver } from "@/features/hr/leaves/components/leaves-shared";
 
 const WFH_REASONS = [
   "Personal commitment",

@@ -20,7 +20,7 @@ interface CreateHolidayInput {
 export function useHolidays() {
   return useQuery<Holiday[]>({
     queryKey: ["hr", "holidays"],
-    queryFn: () => apiClient.get("/hr/attendance/holidays").then((r) => r.data),
+    queryFn: () => apiClient.get<Holiday[]>("/hr/attendance/holidays"),
     staleTime: 300_000,
   });
 }
@@ -30,7 +30,7 @@ export function useCreateHoliday() {
   return useMutation({
     mutationKey: ["hr", "holidays", "create"],
     mutationFn: (data: CreateHolidayInput) =>
-      apiClient.post("/hr/attendance/holidays", data).then((r) => r.data),
+      apiClient.post<Holiday>("/hr/attendance/holidays", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "holidays"] }),
   });
 }
@@ -40,7 +40,7 @@ export function useUpdateHoliday() {
   return useMutation({
     mutationKey: ["hr", "holidays", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateHolidayInput> & { id: string }) =>
-      apiClient.patch(`/hr/attendance/holidays/${id}`, data).then((r) => r.data),
+      apiClient.patch<Holiday>(`/hr/attendance/holidays/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "holidays"] }),
   });
 }
@@ -50,7 +50,7 @@ export function useDeleteHoliday() {
   return useMutation({
     mutationKey: ["hr", "holidays", "delete"],
     mutationFn: (id: string) =>
-      apiClient.delete(`/hr/attendance/holidays/${id}`).then((r) => r.data),
+      apiClient.delete<void>(`/hr/attendance/holidays/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "holidays"] }),
   });
 }

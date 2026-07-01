@@ -412,3 +412,48 @@ Completed all identified missing features across Organization and Authorization 
 - Backend: Created `api-tokens` NestJS module (controller/service/dto) with list/create/revoke/delete endpoints; registered in `app.module.ts`.
 - Backend: Added `maxConcurrentSessions` to `organizations` schema (frontend + backend), org security DTO, and session enforcement in `auth.service.ts` (oldest sessions revoked on login when limit exceeded).
 - DB: Migration `0124_max_concurrent_sessions.sql` adds `max_concurrent_sessions` column.
+
+---
+
+## HR — New HRMS Pages (2026-07-01)
+Full end-to-end: backend NestJS API → TanStack Query hooks → Next.js pages + feature components. All TypeScript errors resolved; `tsc --noEmit` clean.
+
+### Attendance & Scheduling
+- [x] `/hr/shifts` — Shifts management: list with status/time filters, create/edit/delete shift Sheet (name/start/end/days/capacity), assign-employee Dialog, active/draft/archived tabs
+- [x] `/hr/rosters` — Rosters: weekly calendar grid, employee row per day, assign/unassign shifts via slot click, week navigation
+- [x] `/hr/overtime` — Overtime requests: my requests + team requests tabs, comp-off balance card, approve/reject actions, create request Sheet
+- [x] `/hr/comp-off` — Comp-off management: balance card, request history, create comp-off request from overtime
+- [x] `/hr/geofencing` — Geofencing: office location map list, add/edit geofence Sheet (name/radius/lat/lng), GPS validation status
+- [x] `/hr/biometric` — Biometric integration: device list (ZKTeco/Suprema/eSSL), sync logs, attendance pull history, device add/remove Dialog
+
+### Leave Management
+- [x] `/hr/leave-policies` — Leave policy rules engine: accrual/carry-forward/encashment config per policy type, create/edit/delete Sheet with Zod validation
+- [x] `/hr/holidays` — Holiday calendar: global + branch holidays, recurring support, import/export, create/edit/delete with date picker
+- [x] `/hr/leaves/analytics` — Leave analytics: status distribution bar, monthly trend chart, stat cards (total/pending/months tracked)
+
+### Payroll
+- [x] `/hr/payroll/salary-structures` — Salary structures admin: list/create/edit/delete structures with grade/CTC bands, component breakdown Sheet
+- [x] `/hr/payroll/allowances` — Allowances & deductions rules engine: rule list with amount/percentage/type, create/edit/delete Sheet
+- [x] `/hr/payroll/tax` — Tax management: investment declarations per employee, proof upload, declaration approval workflow
+- [x] `/hr/payroll/bank-transfers` — Bank transfers: payroll disbursement list, initiate transfer Dialog, transfer status tracking
+
+### Recruitment
+- [x] `/hr/recruitment/requisitions` — Job requisitions pipeline: list with status filters, create/edit requisition Sheet (role/dept/headcount/priority), approval workflow
+
+### Performance
+- [x] `/hr/goals` — Goals & OKRs: list with status/type filters, create/edit goal Sheet, progress tracking, key results inline
+- [x] `/hr/kpis` — KPI & competency frameworks: KPI list with target/actual, framework categories, create/edit Sheet
+- [x] `/hr/feedback` — 360-degree feedback: feedback cycles list, create cycle Sheet, peer/manager/self review assignments
+- [x] `/hr/performance/analytics` — Performance analytics: review cycle stats (BarChart by type, PieChart by status), active cycles count
+
+### Learning
+- [x] `/hr/courses` — Courses & LMS: course catalog with category/status filters, enrollment management, create/edit Sheet
+- [x] `/hr/training` — Training programs & attendance: program list, session scheduling, attendance tracking
+- [x] `/hr/career-development` — Career development: career paths list + my career plan tab (path ladder, milestones, target role/date)
+- [x] `/hr/learning/analytics` — Learning analytics: enrollment stats, completion rates, popular courses chart
+
+### Travel & Comms
+- [x] `/hr/travel` — Travel requests: my requests list, create request Sheet (destination/dates/purpose/advance), status tracking
+- [x] `/hr/travel/approvals` — Travel approvals: manager view of pending/approved/rejected requests, approve/reject actions
+- [x] `/hr/announcements` — Announcements broadcast: list with pinned/active/archived tabs, create/edit Sheet, read-count tracking
+- [x] `/hr/signatures` — Digital signatures: document sign requests list, create signature request Dialog, status tracking (pending/signed/expired)

@@ -197,7 +197,7 @@ export function useHrHolidaysForCalendar(params: {
   });
 }
 
-export function useAddHoliday() {
+export function useAddLegacyHoliday() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: AddHolidayInput) =>
@@ -206,7 +206,7 @@ export function useAddHoliday() {
   });
 }
 
-export function useDeleteHoliday() {
+export function useDeleteLegacyHoliday() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ holidayId }: DeleteHolidayInput) =>
@@ -215,7 +215,7 @@ export function useDeleteHoliday() {
   });
 }
 
-export function useUpdateHoliday() {
+export function useUpdateLegacyHoliday() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ holidayId, ...data }: UpdateHolidayInput) =>

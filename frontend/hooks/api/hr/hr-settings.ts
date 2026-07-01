@@ -135,18 +135,6 @@ export function useHrPerformanceReviews(userId?: string) {
   });
 }
 
-export function useHrGoals(userId?: string) {
-  return useQuery({
-    queryKey: queryKeys.hr.goals(userId),
-    queryFn: () =>
-      apiClient.get<Goal[]>(
-        "/hr/performance/goals",
-        userId ? { userId } : undefined,
-      ),
-    staleTime: 2 * 60_000,
-  });
-}
-
 export function useCreateGoal() {
   const qc = useQueryClient();
   return useMutation({

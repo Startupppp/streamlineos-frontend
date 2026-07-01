@@ -7,7 +7,6 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   Ticket,
   TicketLabel,
-  CustomState,
   PaginatedResponse,
   TicketFilters,
   CreateTicketInput,
@@ -135,19 +134,6 @@ export function useMoveTicket(options?: Parameters<typeof useMutation>[0]) {
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
     },
-    ...options,
-  });
-}
-
-export function useCustomStates(
-  projectId: number,
-  options?: Omit<UseQueryOptions<CustomState[]>, "queryKey" | "queryFn" | "enabled">
-) {
-  return useQuery<CustomState[]>({
-    queryKey: [...queryKeys.projects.all, "customStates", projectId] as const,
-    queryFn: () =>
-      apiClient.get<CustomState[]>(`/projects/${projectId}/custom-states`),
-    enabled: !!projectId,
     ...options,
   });
 }

@@ -26,7 +26,7 @@ export interface JobRequisition {
 export function useJobRequisitions(status?: string) {
   return useQuery<JobRequisition[]>({
     queryKey: ["hr", "requisitions", status],
-    queryFn: () => apiClient.get("/hr/recruitment/requisitions", { params: status ? { status } : {} }).then((r) => r.data),
+    queryFn: () => apiClient.get<JobRequisition[]>("/hr/recruitment/requisitions", status ? { status } : undefined),
     staleTime: 60_000,
   });
 }
@@ -36,7 +36,7 @@ export function useCreateJobRequisition() {
   return useMutation({
     mutationKey: ["hr", "requisitions", "create"],
     mutationFn: (data: Omit<JobRequisition, "id" | "orgId" | "requestedBy" | "status" | "createdAt">) =>
-      apiClient.post("/hr/recruitment/requisitions", data).then((r) => r.data),
+      apiClient.post<JobRequisition>("/hr/recruitment/requisitions", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "requisitions"] }),
   });
 }
@@ -46,7 +46,7 @@ export function useSubmitRequisition() {
   return useMutation({
     mutationKey: ["hr", "requisitions", "submit"],
     mutationFn: (id: number) =>
-      apiClient.patch(`/hr/recruitment/requisitions/${id}/submit`).then((r) => r.data),
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/submit`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "requisitions"] }),
   });
 }
@@ -56,7 +56,7 @@ export function useApproveRequisition() {
   return useMutation({
     mutationKey: ["hr", "requisitions", "approve"],
     mutationFn: (id: number) =>
-      apiClient.patch(`/hr/recruitment/requisitions/${id}/approve`).then((r) => r.data),
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/approve`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "requisitions"] }),
   });
 }
@@ -66,7 +66,7 @@ export function useRejectRequisition() {
   return useMutation({
     mutationKey: ["hr", "requisitions", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
-      apiClient.patch(`/hr/recruitment/requisitions/${id}/reject`, { reason }).then((r) => r.data),
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/reject`, { reason }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "requisitions"] }),
   });
 }

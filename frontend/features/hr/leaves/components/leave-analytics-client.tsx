@@ -40,14 +40,10 @@ function StatCard({
 export function LeaveAnalyticsClient() {
   const { data, isLoading } = useHrAnalytics();
 
-  const leavesByStatus = data?.leaves?.byStatus ?? [];
+  const leavesByStatus = Object.entries(data?.leaves?.byStatus ?? {}).map(([status, count]) => ({ status, count }));
   const leavesByMonth = data?.leaves?.byMonth ?? [];
-  const totalLeaves = leavesByStatus.reduce(
-    (sum: number, s: { count: number }) => sum + s.count,
-    0,
-  );
-  const pendingLeaves =
-    leavesByStatus.find((s: { status: string }) => s.status === "PENDING")?.count ?? 0;
+  const totalLeaves = leavesByStatus.reduce((sum, s) => sum + s.count, 0);
+  const pendingLeaves = leavesByStatus.find((s) => s.status === "PENDING")?.count ?? 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40">
@@ -87,7 +83,7 @@ export function LeaveAnalyticsClient() {
           >
             <h3 className="text-sm font-semibold text-slate-700 mb-4">Leaves by Status</h3>
             <div className="space-y-3">
-              {leavesByStatus.map((item: { status: string; count: number }, i: number) => (
+              {leavesByStatus.map((item, i) => (
                 <div key={item.status} className="flex items-center gap-3">
                   <span className="text-sm text-slate-600 w-24 shrink-0">{item.status}</span>
                   <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">

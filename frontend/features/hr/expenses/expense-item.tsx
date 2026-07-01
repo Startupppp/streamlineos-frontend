@@ -18,7 +18,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINR } from "@/lib/format-utils";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
-import type { ExpenseToEdit } from "@/app/(authenticated)/hr/expenses/create-expense-dialog";
+import type { ExpenseToEdit } from "@/features/hr/expenses/components/create-expense-dialog";
 import {
   getCategoryConfig,
   ADMIN_CATEGORY_LABELS,

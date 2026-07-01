@@ -78,7 +78,7 @@ const requisitionSchema = z.object({
   title: z.string().min(2, "Title is required"),
   department: z.string().optional(),
   location: z.string().optional(),
-  headcount: z.coerce.number().int().min(1, "At least 1"),
+  headcount: z.number().int().min(1, "At least 1"),
   budgetMin: z.string().optional(),
   budgetMax: z.string().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
@@ -300,7 +300,15 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
                   <FormItem>
                     <FormLabel>Headcount</FormLabel>
                     <FormControl>
-                      <Input type="number" min={1} {...field} />
+                      <Input
+                        type="number"
+                        min={1}
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

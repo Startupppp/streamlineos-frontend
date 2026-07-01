@@ -66,7 +66,8 @@ export default function PerformanceAnalyticsPage() {
   const typeData = useMemo(() => {
     const counts: Record<string, number> = {};
     cycles.forEach((c: ReviewCycle) => {
-      counts[c.type] = (counts[c.type] ?? 0) + 1;
+      const key = c.type ?? "Unknown";
+      counts[key] = (counts[key] ?? 0) + 1;
     });
     return Object.entries(counts).map(([name, count]) => ({ name, count }));
   }, [cycles]);
@@ -74,7 +75,8 @@ export default function PerformanceAnalyticsPage() {
   const statusData = useMemo(() => {
     const counts: Record<string, number> = {};
     cycles.forEach((c: ReviewCycle) => {
-      counts[c.status] = (counts[c.status] ?? 0) + 1;
+      const key = c.status ?? "Unknown";
+      counts[key] = (counts[key] ?? 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [cycles]);
@@ -262,7 +264,7 @@ export default function PerformanceAnalyticsPage() {
                       <Badge className="text-xs bg-violet-100 text-violet-700">{cycle.type}</Badge>
                     </td>
                     <td className="px-6 py-3">
-                      <Badge className={`text-xs ${CYCLE_STATUS_STYLES[cycle.status] ?? "bg-slate-100 text-slate-600"}`}>
+                      <Badge className={`text-xs ${CYCLE_STATUS_STYLES[cycle.status ?? ""] ?? "bg-slate-100 text-slate-600"}`}>
                         {cycle.status}
                       </Badge>
                     </td>
