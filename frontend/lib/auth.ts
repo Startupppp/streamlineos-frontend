@@ -173,6 +173,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 typeof errData?.message === "string" ? errData.message : "Invalid credentials";
               if (msgStr.startsWith("ACCOUNT_LOCKED:") || msgStr === "SUBSCRIPTION_INACTIVE")
                 throw new Error(msgStr);
+              if (msgStr === "Please verify your email before signing in")
+                throw new Error("EMAIL_NOT_VERIFIED");
             }
             return null;
           }
@@ -201,7 +203,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             (err.message.startsWith("ACCOUNT_LOCKED:") ||
               err.message === "SUBSCRIPTION_INACTIVE" ||
               err.message === "REQUIRES_MFA" ||
-              err.message === "INVALID_MFA_CODE")
+              err.message === "INVALID_MFA_CODE" ||
+              err.message === "EMAIL_NOT_VERIFIED")
           )
             throw err;
           return null;

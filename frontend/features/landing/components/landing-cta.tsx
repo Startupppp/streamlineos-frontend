@@ -49,7 +49,7 @@ export function LandingCTA() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Magnetic strength={0.4}>
-                  <Link href="/signin">
+                  <Link href="/signup">
                     <Button
                       size="lg"
                       className="bg-white text-slate-900 hover:bg-slate-100 font-bold border-0 h-12 px-8 text-[15px]"

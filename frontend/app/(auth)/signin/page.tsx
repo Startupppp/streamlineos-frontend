@@ -34,6 +34,8 @@ const signinSchema = z.object({
 
 type FormValues = z.infer<typeof signinSchema>;
 
+const RESEND_COOLDOWN_SECONDS = 60;
+
 function formatLockoutTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -47,6 +49,8 @@ export default function SignInPage() {
   const [lockedSeconds, setLockedSeconds] = useState<number | null>(null);
   const [showVerificationHint, setShowVerificationHint] = useState(false);
   const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const resendCooldownRef = useRef<NodeJS.Timeout | null>(null);
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
   const [mfaError, setMfaError] = useState<string | null>(null);
@@ -60,6 +64,26 @@ export default function SignInPage() {
     resolver: zodResolver(signinSchema),
     defaultValues: { email: "", password: "", rememberMe: false },
   });
+
+  useEffect(() => {
+    return () => {
+      if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+    };
+  }, []);
+
+  const startResendCooldown = useCallback(() => {
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+    resendCooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -133,10 +157,13 @@ export default function SignInPage() {
         if (result.error === "REQUIRES_MFA") throw new Error("REQUIRES_MFA");
         if (result.error === "INVALID_MFA_CODE")
           throw new Error("INVALID_MFA_CODE");
-        setShowVerificationHint(true);
-        throw new Error(
-          "Invalid email or password. If you just signed up, check your inbox to verify your email first.",
-        );
+        if (result.error === "EMAIL_NOT_VERIFIED") {
+          setShowVerificationHint(true);
+          throw new Error(
+            "Please verify your email before signing in. Check your inbox or resend the verification email below.",
+          );
+        }
+        throw new Error("Invalid email or password.");
       }
       return result;
     } catch (error) {
@@ -216,19 +243,23 @@ export default function SignInPage() {
   });
 
   const handleResendVerification = useCallback(async () => {
-    const email = form.getValues("email");
-    if (!email) return;
+    const email = form.getValues("email")?.trim();
+    if (!email) {
+      toast.error("Enter your email address above first.");
+      return;
+    }
+    if (resendCooldown > 0) return;
     setIsResendingVerification(true);
     try {
       await apiClient.post("/auth/resend-verification", { email });
       toast.success("Verification email sent. Check your inbox.");
-      setShowVerificationHint(false);
-    } catch {
-      toast.error("Failed to resend verification email.");
+      startResendCooldown();
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsResendingVerification(false);
     }
-  }, [form]);
+  }, [form, resendCooldown, startResendCooldown]);
 
   const isPending = signInMutation.isPending;
 
@@ -385,11 +416,18 @@ export default function SignInPage() {
               variant="link"
               className="h-auto p-0 text-sm text-blue-700 font-semibold"
               onClick={handleResendVerification}
-              disabled={isResendingVerification}
+              disabled={isResendingVerification || resendCooldown > 0}
+              aria-label={
+                resendCooldown > 0
+                  ? `Resend available in ${resendCooldown} seconds`
+                  : "Resend verification email"
+              }
             >
               {isResendingVerification
                 ? "Sending…"
-                : "Resend verification email"}
+                : resendCooldown > 0
+                  ? `Resend available in ${resendCooldown}s`
+                  : "Resend verification email"}
             </Button>
           </div>
         </div>
