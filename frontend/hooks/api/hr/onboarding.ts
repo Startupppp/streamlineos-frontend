@@ -33,6 +33,7 @@ export function useOnboardingStatus() {
   return useQuery<OnboardingStatus[]>({
     queryKey: queryKeys.hr.onboardingStatus(),
     queryFn: () => apiClient.get<OnboardingStatus[]>("/onboarding"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -42,6 +43,7 @@ export function useUserOnboarding(userId: string) {
     queryKey: queryKeys.hr.onboardingUser(userId),
     queryFn: () => apiClient.get<OnboardingTask[]>(`/onboarding/${userId}`),
     enabled: !!userId,
+    staleTime: 60_000,
   });
 }
 
@@ -49,6 +51,7 @@ export function useUserOnboarding(userId: string) {
 export function useCompleteOnboardingTask() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["onboarding", "task", "complete"],
     mutationFn: ({ taskId, status }: { taskId: number; status: "COMPLETED" | "PENDING" }) =>
       apiClient.patch<{ success: boolean }>(`/onboarding/tasks/${taskId}`, { status }),
     onSuccess: () => {
@@ -61,6 +64,7 @@ export function useCompleteOnboardingTask() {
 export function useInitiateOnboarding() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["onboarding", "initiate"],
     mutationFn: (userId: string) =>
       apiClient.post<{ success: boolean; tasksCreated: number }>("/onboarding", { userId }),
     onSuccess: () => {

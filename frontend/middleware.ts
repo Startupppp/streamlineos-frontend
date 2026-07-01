@@ -285,6 +285,23 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (
+    isAuthenticated &&
+    !token?.userOnboardingCompletedAt &&
+    token?.isOrgOwner !== true &&
+    token?.role !== ROLES.OWNER &&
+    token?.isPlatformAdmin !== true &&
+    token?.role !== PLATFORM_OWNER_ROLE &&
+    token?.orgId &&
+    startsWithAny(pathname, PROTECTED_ROUTES) &&
+    !pathname.startsWith("/onboarding")
+  ) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/onboarding";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   if (isAuthenticated && pathname.startsWith("/onboarding")) {
     if (token?.isPlatformAdmin === true || token?.role === PLATFORM_OWNER_ROLE) {
       const url = req.nextUrl.clone();

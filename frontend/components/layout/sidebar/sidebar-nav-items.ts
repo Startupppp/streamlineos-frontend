@@ -1376,20 +1376,21 @@ export interface ProductDefinition {
   key: ProductKey;
   label: string;
   href: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
 }
 
 export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
-  { key: "home", label: "Home", href: "/dashboard" },
-  { key: "crm", label: "CRM", href: "/crm" },
-  { key: "hrms", label: "HRMS", href: "/hr" },
-  { key: "projects", label: "Projects", href: "/projects" },
-  { key: "inventory", label: "Inventory", href: "/inventory" },
-  { key: "finance", label: "Finance", href: "/accounting" },
-  { key: "helpdesk", label: "Helpdesk", href: "/support" },
-  { key: "documents", label: "Documents", href: "/support/kb" },
-  { key: "analytics", label: "Analytics", href: "/analytics" },
-  { key: "ai", label: "AI", href: "/ai" },
-  { key: "administration", label: "Admin", href: "/organization" },
+  { key: "home", label: "Home", href: "/dashboard", icon: LayoutDashboard },
+  { key: "crm", label: "CRM", href: "/crm", icon: Handshake },
+  { key: "hrms", label: "HRMS", href: "/hr", icon: Users },
+  { key: "projects", label: "Projects", href: "/projects", icon: Briefcase },
+  { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
+  { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
+  { key: "helpdesk", label: "Helpdesk", href: "/support", icon: LifeBuoy },
+  { key: "documents", label: "Documents", href: "/support/kb", icon: Library },
+  { key: "analytics", label: "Analytics", href: "/analytics", icon: BarChart3 },
+  { key: "ai", label: "AI", href: "/ai", icon: Sparkles },
+  { key: "administration", label: "Admin", href: "/organization", icon: Building2 },
 ];
 
 const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {

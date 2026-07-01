@@ -25,11 +25,10 @@ interface Role { slug: string; name: string }
 interface StepEmploymentProps {
   form: UseFormReturn<FormValues>;
   departments: Department[] | undefined;
-  allDepartmentOptions: (Department & { isCommon?: boolean })[];
   assignableRoles: Role[];
 }
 
-export function StepEmployment({ form, departments, allDepartmentOptions, assignableRoles }: StepEmploymentProps) {
+export function StepEmployment({ form, departments, assignableRoles }: StepEmploymentProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <FormField
@@ -53,9 +52,11 @@ export function StepEmployment({ form, departments, allDepartmentOptions, assign
                 {departments?.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
                 ))}
-                {allDepartmentOptions.filter((d) => d.id < 0).map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
-                ))}
+                {(!departments || departments.length === 0) && (
+                  <div className="py-2 px-2 text-xs text-muted-foreground text-center">
+                    No departments yet. Create them in Settings first.
+                  </div>
+                )}
               </SelectContent>
             </Select>
             <FormMessage />

@@ -106,6 +106,7 @@ export function useHrEmployeeTickets(userId: string) {
 export function useOnboardEmployee() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "employee", "onboard"],
     mutationFn: (data: OnboardEmployeeInput) =>
       apiClient.post<{ success: boolean; userId: string }>("/hr/employees/onboard", data),
     onSuccess: () =>

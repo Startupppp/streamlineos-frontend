@@ -57,6 +57,7 @@ function useMyOnboardingDocs() {
   return useQuery<OnboardingDoc[]>({
     queryKey: queryKeys.hr.myOnboardingDocs(),
     queryFn: () => apiClient.get<OnboardingDoc[]>("/hr/onboarding-docs"),
+    staleTime: 60_000,
   });
 }
 
@@ -64,12 +65,14 @@ function useDocumentTypes() {
   return useQuery<DocumentType[]>({
     queryKey: queryKeys.hr.documentTypes(),
     queryFn: () => apiClient.get<DocumentType[]>("/hr/document-types"),
+    staleTime: 5 * 60_000,
   });
 }
 
 function useSubmitOnboardingDoc() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "onboarding-doc", "submit"],
     mutationFn: (body: { documentTypeId: number; fileUrl: string; fileName: string }) =>
       apiClient.post("/hr/onboarding-docs", body),
     onSuccess: () => {

@@ -14,12 +14,14 @@ export function ChannelItem({
   onClick,
   currentUserId,
   onlineUserIds,
+  compact = false,
 }: {
   channel: Channel;
   isActive: boolean;
   onClick: () => void;
   currentUserId: string;
   onlineUserIds: Set<string>;
+  compact?: boolean;
 }) {
   const otherMember =
     channel.type === "DIRECT"
@@ -41,6 +43,41 @@ export function ChannelItem({
     e.stopPropagation();
     markUnread.mutate(channel.id);
   }, [markUnread, channel.id]);
+
+  if (compact) {
+    return (
+      <div className="relative flex justify-center">
+        <button
+          onClick={onClick}
+          title={displayName}
+          aria-label={displayName}
+          className={cn(
+            "relative flex items-center justify-center rounded-xl p-1 transition-all duration-100",
+            isActive ? "bg-blue-500/10 shadow-sm" : "hover:bg-muted/40",
+          )}
+        >
+          {channel.type === "DIRECT" ? (
+            <Avatar className="h-8 w-8 border-2 border-background shadow-sm">
+              <AvatarImage src={resolveImageUrl(otherMember?.image)} />
+              <AvatarFallback className="text-[10px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
+                {getInitials(otherMember?.name)}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border-2 border-background shadow-sm">
+              <Hash className="h-3.5 w-3.5 text-blue" />
+            </div>
+          )}
+          {isOnline && (
+            <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+          )}
+          {hasUnread && (
+            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-background" />
+          )}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative group/item">

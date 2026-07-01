@@ -3,6 +3,7 @@
 import { useMemo, useRef, useCallback, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { usePathname } from "next/navigation"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -14,6 +15,7 @@ import {
   getNavGroupsForProduct,
   getProductFromPathname,
   flattenNavRoutes,
+  PRODUCT_DEFINITIONS,
 } from "./sidebar/sidebar-nav-items"
 import { SidebarSection } from "./sidebar/sidebar-section"
 import { SidebarHeader } from "./sidebar/sidebar-header"
@@ -47,6 +49,12 @@ export function AppSidebar({
 
   const pathname = usePathname()
   const activeProduct = getProductFromPathname(pathname)
+
+  const productLabel = useMemo(() => {
+    if (activeProduct === "home") return "StreamlineOS"
+    const definition = PRODUCT_DEFINITIONS.find((p) => p.key === activeProduct)
+    return definition?.label ?? "StreamlineOS"
+  }, [activeProduct])
 
   const { permissions } = usePermissions()
   const isAdmin = useCan("settings:manage")
@@ -123,6 +131,10 @@ export function AppSidebar({
   const showCollapseToggle = !isMobile && !!onToggleCollapse
   const effectiveCollapsed = isMobile ? false : isCollapsed
 
+  function handleToggleClick() {
+    onToggleCollapse?.()
+  }
+
   if (status === "loading") {
     return (
       <div className="flex flex-col h-full bg-sidebar">
@@ -156,10 +168,24 @@ export function AppSidebar({
           isMobile ? "w-full" : effectiveCollapsed ? "w-[3.5rem]" : "w-[17rem]",
         )}
       >
+        {showCollapseToggle && (
+          <button
+            type="button"
+            onClick={handleToggleClick}
+            aria-label={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="absolute top-[1.75rem] -translate-y-1/2 -right-3 z-[60] h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-blue-600 hover:border-blue-500/40 hover:bg-sidebar-accent transition-colors"
+          >
+            {effectiveCollapsed ? (
+              <ChevronRight className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronLeft className="h-3.5 w-3.5" />
+            )}
+          </button>
+        )}
+
         <SidebarHeader
           isCollapsed={effectiveCollapsed}
-          onToggleCollapse={onToggleCollapse}
-          showCollapseToggle={showCollapseToggle}
+          productLabel={productLabel}
         />
 
         <SidebarWorkspaceRow isCollapsed={effectiveCollapsed} />

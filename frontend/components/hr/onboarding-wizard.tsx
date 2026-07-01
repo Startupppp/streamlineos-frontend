@@ -197,7 +197,6 @@ export function OnboardingWizard() {
               <StepEmployment
                 form={form}
                 departments={departments}
-                allDepartmentOptions={allDepartmentOptions}
                 assignableRoles={assignableRoles}
               />
             )}

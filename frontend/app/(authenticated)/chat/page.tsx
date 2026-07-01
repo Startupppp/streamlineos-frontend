@@ -14,6 +14,19 @@ import { NewDMDialog } from "@/features/chat/new-dm-dialog";
 import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
 
+const CHAT_SIDEBAR_COOKIE = "chat-sidebar-collapsed";
+
+function readChatSidebarCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie
+    .split("; ")
+    .some((entry) => entry === `${CHAT_SIDEBAR_COOKIE}=true`);
+}
+
+function setChatSidebarCookie(collapsed: boolean) {
+  document.cookie = `${CHAT_SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+}
+
 function ChatNotifications({
   activeChannelId,
   currentUserId,
@@ -35,7 +48,7 @@ export default function ChatPage() {
   const [emptyDMOpen, setEmptyDMOpen] = useState(false);
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
   const [showSearchFocus, setShowSearchFocus] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(readChatSidebarCookie);
 
   const heartbeat = useChatHeartbeat();
   const heartbeatRef = useRef(heartbeat);
@@ -64,13 +77,19 @@ export default function ChatPage() {
   }, []);
 
   const handleSearchFocused = useCallback(() => setShowSearchFocus(false), []);
-  const handleCollapseSidebar = useCallback(
-    () => setSidebarCollapsed(true),
-    [],
-  );
+  const handleToggleSidebar = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      setChatSidebarCookie(next);
+      return next;
+    });
+  }, []);
   const handleBack = useCallback(() => setShowMobileList(true), []);
   const handleToggleInfo = useCallback(() => setShowInfoPanel((p) => !p), []);
-  const handleExpandSidebar = useCallback(() => setSidebarCollapsed(false), []);
+  const handleExpandSidebar = useCallback(() => {
+    setSidebarCollapsed(false);
+    setChatSidebarCookie(false);
+  }, []);
   const handleNewDM = useCallback(() => setEmptyDMOpen(true), []);
   const handleNewChannel = useCallback(() => setEmptyGroupOpen(true), []);
   const handleSearch = useCallback(() => {
@@ -88,11 +107,10 @@ export default function ChatPage() {
       <div className="flex h-full overflow-hidden bg-background">
         <div
           className={cn(
-            "flex flex-col shrink-0 border-r border-border/40 bg-card/50 transition-all duration-300",
-            sidebarCollapsed
-              ? "w-0 overflow-hidden md:w-0"
-              : "w-full md:w-[300px] lg:w-[340px]",
-            !showMobileList && !sidebarCollapsed && "hidden md:flex",
+            "relative flex flex-col shrink-0 border-r border-border/40 bg-card/50 transition-[width] duration-300 ease-in-out overflow-visible",
+            "w-full",
+            sidebarCollapsed ? "md:w-[3.5rem]" : "md:w-[300px] lg:w-[340px]",
+            !showMobileList && "hidden md:flex",
           )}
         >
           <ChannelSidebar
@@ -101,14 +119,15 @@ export default function ChatPage() {
             currentUserId={currentUserId ?? ""}
             autoFocusSearch={showSearchFocus}
             onSearchFocused={handleSearchFocused}
-            onCollapse={handleCollapseSidebar}
+            isCollapsed={sidebarCollapsed}
+            onToggleCollapse={handleToggleSidebar}
           />
         </div>
 
         <div
           className={cn(
             "flex-1 flex flex-col min-w-0 relative",
-            showMobileList && !sidebarCollapsed && "hidden md:flex",
+            showMobileList && "hidden md:flex",
           )}
         >
           {activeChannelId && currentUserId ? (
@@ -126,9 +145,6 @@ export default function ChatPage() {
               onNewDM={handleNewDM}
               onNewChannel={handleNewChannel}
               onSearch={handleSearch}
-              onExpandSidebar={
-                sidebarCollapsed ? handleExpandSidebar : undefined
-              }
             />
           )}
         </div>
