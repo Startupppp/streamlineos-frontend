@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { BookOpen, Clock, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -178,9 +179,9 @@ export function CourseCatalog({ canManage }: Props) {
               transition={{ duration: 0.22, ease: "easeOut", delay: idx * 0.06 }}
               className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/70 transition-shadow duration-200"
             >
-              <div className={`h-36 bg-gradient-to-br ${GRADIENT_COLORS[idx % GRADIENT_COLORS.length]} flex items-center justify-center relative`}>
+              <div className={`h-36 bg-gradient-to-br ${GRADIENT_COLORS[idx % GRADIENT_COLORS.length]} flex items-center justify-center relative overflow-hidden`}>
                 {course.thumbnailUrl ? (
-                  <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
+                  <Image src={course.thumbnailUrl} alt={course.title} fill className="object-cover" />
                 ) : (
                   <BookOpen className="h-12 w-12 text-white/80" />
                 )}

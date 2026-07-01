@@ -26,9 +26,9 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter as AlertDialogFtr,
+  AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle as AlertDialogTtl,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
   Form,
@@ -69,7 +69,10 @@ const productSchema = z.object({
   description: z.string().optional(),
   sku: z.string().optional(),
   category: z.string().optional(),
-  unitPrice: z.string().min(1, "Price required"),
+  unitPrice: z
+    .string()
+    .min(1, "Price required")
+    .refine((v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0, "Price must be greater than 0"),
   currency: z.enum(["USD", "EUR", "GBP", "INR"]),
   taxRate: z.string(),
 });
@@ -148,6 +151,8 @@ export default function ProductCatalogPage() {
       setEditTarget(null);
     }
   }, []);
+
+  const handleDialogClose = useCallback(() => handleDialogOpenChange(false), [handleDialogOpenChange]);
 
   const handleDeleteRequest = useCallback((id: number) => {
     setDeleteTargetId(id);
@@ -230,13 +235,13 @@ export default function ProductCatalogPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTtl>Delete Product</AlertDialogTtl>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
             <AlertDialogDescription>
               This product will be permanently deleted and removed from all
               quotes and deals.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFtr>
+          <AlertDialogFooter>
             <AlertDialogCancel onClick={handleDeleteCancel}>
               Cancel
             </AlertDialogCancel>
@@ -246,7 +251,7 @@ export default function ProductCatalogPage() {
             >
               Delete
             </AlertDialogAction>
-          </AlertDialogFtr>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
@@ -387,7 +392,7 @@ export default function ProductCatalogPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleDialogOpenChange(false)}
+                  onClick={handleDialogClose}
                 >
                   Cancel
                 </Button>

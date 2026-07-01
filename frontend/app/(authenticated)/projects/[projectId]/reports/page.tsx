@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -73,7 +74,7 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card>
+    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold">
           <Icon className="h-4 w-4 text-muted-foreground" />
@@ -425,7 +426,7 @@ function CycleTimeSection({ projectId }: { projectId: number }) {
   return (
     <ChartCard title="Cycle Time" icon={Timer}>
       {isLoading ? (
-        <div className="h-48 animate-pulse bg-slate-50 rounded-lg" />
+        <Skeleton className="h-48 w-full rounded-xl" />
       ) : isError ? (
         <ErrorState
           compact
@@ -467,7 +468,7 @@ function LeadTimeSection({ projectId }: { projectId: number }) {
   return (
     <ChartCard title="Lead Time" icon={TrendingUp}>
       {isLoading ? (
-        <div className="h-48 animate-pulse bg-slate-50 rounded-lg" />
+        <Skeleton className="h-48 w-full rounded-xl" />
       ) : isError ? (
         <ErrorState
           compact

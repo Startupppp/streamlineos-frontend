@@ -163,7 +163,7 @@ function MilestoneCard({
   const handleDelete = useCallback(() => onDelete(milestone), [onDelete, milestone]);
 
   return (
-    <Card className={overdue ? "border-destructive/40" : ""}>
+    <Card className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm ${overdue ? "border border-destructive/40" : "border border-slate-200/80"}`}>
       <CardContent className="pt-4">
         <div className="flex items-start gap-3">
           <Diamond
@@ -244,18 +244,22 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
 
   return (
     <PageWrapper title="Milestones" subtitle="Key checkpoints and target dates for this project">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
           {achieved}/{total} achieved
         </p>
-        <Button size="sm" onClick={handleOpenCreate}>
+        <Button
+          size="sm"
+          onClick={handleOpenCreate}
+          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+        >
           <Plus className="h-4 w-4 mr-1" /> New Milestone
         </Button>
       </div>
 
       {isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />)}
+          {[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />)}
         </div>
       ) : milestones && milestones.length > 0 ? (
         <div className="space-y-3">

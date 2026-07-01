@@ -94,7 +94,7 @@ export function LeadsToolbar({
         <SelectContent>
           <SelectItem value="all" className="text-[11px]">All Sources</SelectItem>
           {LEAD_SOURCES.map(s => (
-            <SelectItem key={s} value={s} className="text-[11px]">{s.replace("_","")}</SelectItem>
+            <SelectItem key={s} value={s} className="text-[11px]">{s.replace(/_/g, " ")}</SelectItem>
           ))}
         </SelectContent>
       </Select>

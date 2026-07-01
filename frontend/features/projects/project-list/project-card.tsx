@@ -48,7 +48,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
       className="block h-full"
     >
       <div
-        className="rounded-lg border bg-card p-4 hover:shadow-md hover:border-border/80 transition-all cursor-pointer h-full min-h-[230px] flex flex-col group"
+        className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-sm p-4 shadow-sm hover:shadow-md hover:border-border/80 transition-all cursor-pointer h-full min-h-[230px] flex flex-col group"
         role="listitem"
       >
 

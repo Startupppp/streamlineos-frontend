@@ -168,6 +168,7 @@ export default function CrmTasksPage() {
   const handleEditClose = useCallback((open: boolean) => {
     if (!open) setEditTask(null);
   }, []);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const handleCreateOpen = useCallback(() => setCreateOpen(true), []);
   const handleCreateOpenChange = useCallback((open: boolean) => setCreateOpen(open), []);
 
@@ -267,7 +268,7 @@ export default function CrmTasksPage() {
         <div className="flex flex-col items-center justify-center flex-1 py-16 text-center">
           <AlertCircle className="h-12 w-12 text-muted-foreground/40 mb-3" />
           <p className="text-sm font-medium text-foreground">Failed to load tasks</p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={() => void refetch()}>
+          <Button variant="outline" size="sm" className="mt-3" onClick={handleRetry}>
             Retry
           </Button>
         </div>

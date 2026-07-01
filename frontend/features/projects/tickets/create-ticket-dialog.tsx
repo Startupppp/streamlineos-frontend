@@ -233,7 +233,7 @@ export function CreateTicketDialog({
             <Plus className="h-6 w-6" />
           </Button>
         ) : (
-          <Button>
+          <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
             <Plus className="mr-2 h-4 w-4" /> Create Ticket
           </Button>
         )}
@@ -245,13 +245,13 @@ export function CreateTicketDialog({
         <SheetHeader className="p-6 pb-4 border-b">
           <SheetTitle>New Ticket</SheetTitle>
         </SheetHeader>
-        <div className="p-6 pt-4">
+        <div className="px-6 py-4">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
               className="space-y-4"
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="type"
@@ -342,7 +342,7 @@ export function CreateTicketDialog({
                 )}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormItem>
                   <FormLabel>Assignees</FormLabel>
 
@@ -510,7 +510,7 @@ export function CreateTicketDialog({
               <Button
                 type="submit"
                 disabled={createTicketMutation.isPending || isUploading}
-                className="w-full"
+                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
               >
                 {createTicketMutation.isPending || isUploading
                   ? "Creating..."

@@ -94,7 +94,7 @@ function RuleCard({ rule, index, totalRules, onMove, onToggle, onDeleteRequest }
   const handleDeleteRequest = useCallback(() => onDeleteRequest(rule.id), [rule.id, onDeleteRequest]);
 
   return (
-    <Card className={cn("shadow-sm transition-all", !rule.isActive && "opacity-60")}>
+    <Card className={cn("bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm transition-all", !rule.isActive && "opacity-60")}>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div className="flex flex-col gap-0.5">
@@ -321,7 +321,7 @@ export default function AssignmentRulesPage() {
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
                 <Plus className="h-4 w-4 mr-2" />
                 New Rule
               </Button>
@@ -404,7 +404,7 @@ export default function AssignmentRulesPage() {
                     )} />
                   )}
 
-                  <Button type="submit" className="w-full" disabled={createRule.isPending}>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={createRule.isPending}>
                     {createRule.isPending ? "Creating..." : "Create Rule"}
                   </Button>
                 </form>

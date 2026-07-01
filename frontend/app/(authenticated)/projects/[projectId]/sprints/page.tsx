@@ -108,16 +108,16 @@ export default function SprintsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Sprints" actions={<CreateSprintDialog projectId={projectId} />}>
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="space-y-3">
             <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-40 rounded-lg" />
-            <Skeleton className="h-32 rounded-lg" />
+            <Skeleton className="h-40 rounded-2xl" />
+            <Skeleton className="h-32 rounded-2xl" />
           </div>
           <div className="space-y-3">
             <Skeleton className="h-4 w-24" />
             {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-lg" />
+              <Skeleton key={i} className="h-24 rounded-2xl" />
             ))}
           </div>
         </div>
@@ -226,8 +226,8 @@ export default function SprintsPage({ params }: PageProps) {
       )}
 
       {sprints?.length === 0 && (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
+        <Card className="border-dashed rounded-2xl">
+          <CardContent className="flex flex-col items-center justify-center min-h-[320px] py-12">
             <EmptySprintIllustration className="mb-4" />
             <h3 className="text-lg font-semibold mb-2">No sprints yet</h3>
             <p className="text-muted-foreground text-center mb-4">

@@ -528,6 +528,10 @@ export function DealsCsvImportDialog({ onSuccess }: { onSuccess?: () => void }) 
     reset();
   }, [reset]);
 
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
   const handleEditMapping = useCallback(() => setStep("mapping"), []);
 
   const stepLabel =
@@ -573,7 +577,7 @@ export function DealsCsvImportDialog({ onSuccess }: { onSuccess?: () => void }) 
         {step === "upload" && !isParsing && (
           <div className="space-y-4">
             <div
-              onDragOver={(e) => e.preventDefault()}
+              onDragOver={handleDragOver}
               onDrop={handleDrop}
               className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-blue-500/50 transition-colors"
             >

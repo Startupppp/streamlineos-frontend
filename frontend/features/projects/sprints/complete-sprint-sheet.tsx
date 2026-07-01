@@ -39,36 +39,38 @@ export function CompleteSprintSheet({
 
   return (
     <Sheet open={!!sprint} onOpenChange={handleOpenChange}>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="flex flex-col p-0 overflow-hidden">
+        <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
           <SheetTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
             Complete Sprint: {sprint?.name}
           </SheetTitle>
         </SheetHeader>
-        <div className="space-y-4">
-          {incompleteCount > 0 ? (
-            <>
-              <p className="text-sm text-muted-foreground">
-                {incompleteCount} ticket{incompleteCount > 1 ? "s are" : " is"} not done. Where should they go?
-              </p>
-              <Select value={moveToOption} onValueChange={onMoveToChange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="backlog">Move to Backlog</SelectItem>
-                  {nextPlannedSprint && (
-                    <SelectItem value="next">Move to {nextPlannedSprint.name}</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">All tickets are done! Ready to complete this sprint.</p>
-          )}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="space-y-4">
+            {incompleteCount > 0 ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {incompleteCount} ticket{incompleteCount > 1 ? "s are" : " is"} not done. Where should they go?
+                </p>
+                <Select value={moveToOption} onValueChange={onMoveToChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="backlog">Move to Backlog</SelectItem>
+                    {nextPlannedSprint && (
+                      <SelectItem value="next">Move to {nextPlannedSprint.name}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">All tickets are done! Ready to complete this sprint.</p>
+            )}
+          </div>
         </div>
-        <SheetFooter>
+        <SheetFooter className="px-6 py-3 border-t shrink-0">
           <Button variant="outline" onClick={onCancel}>Cancel</Button>
           <Button onClick={onConfirm} disabled={isUpdating}>
             {isUpdating ? "Completing..." : "Complete Sprint"}

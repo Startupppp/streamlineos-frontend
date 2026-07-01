@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useMemo, useState } from "react";
+import { BarChart3 } from "lucide-react";
 import {
   useProjectAnalytics,
   useSprints,
@@ -179,7 +180,7 @@ export default function AnalyticsPage({
   if (isLoading) {
     return (
       <PageWrapper title="Analytics">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-72 w-full" />
           ))}
@@ -210,51 +211,86 @@ export default function AnalyticsPage({
         healthBreakdown={healthBreakdown}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">State Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <StateDistributionChart data={stateData} />
+            {stateData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
+                <BarChart3 className="h-8 w-8 opacity-20" />
+                <p className="text-xs">No data yet</p>
+              </div>
+            ) : (
+              <StateDistributionChart data={stateData} />
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Priority Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
-            <PriorityBreakdownChart data={priorityData} />
+            {priorityData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
+                <BarChart3 className="h-8 w-8 opacity-20" />
+                <p className="text-xs">No data yet</p>
+              </div>
+            ) : (
+              <PriorityBreakdownChart data={priorityData} />
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Volume Over Time</CardTitle>
           </CardHeader>
           <CardContent>
-            <VolumeOverTimeChart data={volumeData} />
+            {volumeData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
+                <BarChart3 className="h-8 w-8 opacity-20" />
+                <p className="text-xs">No data yet</p>
+              </div>
+            ) : (
+              <VolumeOverTimeChart data={volumeData} />
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">
               Completion Rate by Assignee
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <AssigneeCompletionChart data={assigneeData} />
+            {assigneeData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
+                <BarChart3 className="h-8 w-8 opacity-20" />
+                <p className="text-xs">No data yet</p>
+              </div>
+            ) : (
+              <AssigneeCompletionChart data={assigneeData} />
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Cycle Velocity</CardTitle>
           </CardHeader>
           <CardContent>
-            <CycleVelocityChart data={velocityData} />
+            {velocityData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
+                <BarChart3 className="h-8 w-8 opacity-20" />
+                <p className="text-xs">No data yet</p>
+              </div>
+            ) : (
+              <CycleVelocityChart data={velocityData} />
+            )}
           </CardContent>
         </Card>
 
@@ -265,12 +301,19 @@ export default function AnalyticsPage({
           onSprintChange={setSelectedSprintId}
         />
 
-        <Card>
+        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Estimate vs Actual</CardTitle>
           </CardHeader>
           <CardContent>
-            <EstimateVsActualChart data={estimateData} />
+            {estimateData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
+                <BarChart3 className="h-8 w-8 opacity-20" />
+                <p className="text-xs">No data yet</p>
+              </div>
+            ) : (
+              <EstimateVsActualChart data={estimateData} />
+            )}
           </CardContent>
         </Card>
       </div>

@@ -221,7 +221,7 @@ export default function ScoringRulesPage() {
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
                 <Plus className="h-4 w-4 mr-2" />
                 New Rule
               </Button>
@@ -274,7 +274,7 @@ export default function ScoringRulesPage() {
                       <FormMessage />
                     </FormItem>
                   )} />
-                  <Button type="submit" className="w-full" disabled={createRule.isPending}>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={createRule.isPending}>
                     {createRule.isPending ? "Creating..." : "Create Rule"}
                   </Button>
                 </form>
@@ -290,7 +290,7 @@ export default function ScoringRulesPage() {
           animate="visible"
         >
           <motion.div variants={fadeUp}>
-            <Card className="shadow-sm">
+            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">Rules</CardTitle>
               </CardHeader>
@@ -337,7 +337,7 @@ export default function ScoringRulesPage() {
           </motion.div>
 
           <motion.div variants={fadeUp}>
-            <Card className="shadow-sm">
+            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Zap className="h-4 w-4 text-blue-600" />

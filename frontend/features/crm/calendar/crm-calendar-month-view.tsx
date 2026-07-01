@@ -1,5 +1,6 @@
 "use client"
 
+import { useCallback } from "react"
 import { motion } from "framer-motion"
 import type { CalendarListItem } from "@/hooks/api/calendar"
 
@@ -64,17 +65,24 @@ export function CrmCalendarMonthView({
     return events.filter((event) => isSameDay(new Date(event.start), day))
   }
 
-  function handleDayClick(day: Date) {
-    onDayClick(day)
-  }
+  const handleDayCellClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const dateStr = e.currentTarget.dataset.date
+      if (dateStr) onDayClick(new Date(dateStr))
+    },
+    [onDayClick],
+  )
 
-  function handleEventClick(
-    e: React.MouseEvent<HTMLButtonElement>,
-    event: CalendarListItem
-  ) {
-    e.stopPropagation()
-    onEventClick(event)
-  }
+  const handleEventButtonClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation()
+      const eventId = e.currentTarget.dataset.eventId
+      if (!eventId) return
+      const found = events.find((ev) => ev.id === eventId)
+      if (found) onEventClick(found)
+    },
+    [events, onEventClick],
+  )
 
   return (
     <motion.div
@@ -104,7 +112,8 @@ export function CrmCalendarMonthView({
           return (
             <div
               key={idx}
-              onClick={() => handleDayClick(day)}
+              data-date={day.toISOString()}
+              onClick={handleDayCellClick}
               className={[
                 "min-h-[120px] p-1.5 border-border relative cursor-pointer hover:bg-slate-50 transition-colors",
                 isCurrentMonth ? "bg-white" : "bg-muted/30 text-muted-foreground",
@@ -131,7 +140,8 @@ export function CrmCalendarMonthView({
                 return (
                   <button
                     key={event.id}
-                    onClick={(e) => handleEventClick(e, event)}
+                    data-event-id={event.id}
+                    onClick={handleEventButtonClick}
                     className={[
                       "rounded-full px-2 py-0.5 text-[11px] font-medium truncate block w-full mb-0.5 cursor-pointer text-left",
                       colors.bg,

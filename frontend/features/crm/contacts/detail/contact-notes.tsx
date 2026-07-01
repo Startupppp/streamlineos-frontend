@@ -5,9 +5,9 @@ import { Pencil, Save, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { RichNotesEditor } from "@/features/crm/shared/rich-notes-editor";
 import { useUpdateContact } from "@/hooks/api/crm";
 import { toast } from "sonner";
 
@@ -29,10 +29,7 @@ export function ContactNotes({ contactId, initialNotes }: ContactNotesProps) {
     setEditing(false);
   }, [initialNotes]);
 
-  const handleNotesChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value),
-    [],
-  );
+  const handleNotesChange = useCallback((value: string) => setNotes(value), []);
 
   const handleSave = useCallback(() => {
     updateMutation.mutate(
@@ -81,13 +78,12 @@ export function ContactNotes({ contactId, initialNotes }: ContactNotesProps) {
             </div>
           ) : (
             <div className="space-y-2">
-              <Textarea
+              <RichNotesEditor
                 value={notes}
                 onChange={handleNotesChange}
+                onSave={handleSave}
+                isSaving={updateMutation.isPending}
                 placeholder="Add internal notes about this contact..."
-                rows={5}
-                className="resize-none text-sm"
-                autoFocus
               />
               <div className="flex gap-2">
                 <Button

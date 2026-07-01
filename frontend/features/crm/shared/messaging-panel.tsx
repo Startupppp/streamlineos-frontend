@@ -21,27 +21,37 @@ export function MessagingPanel({ phone, entityType, entityId }: MessagingPanelPr
     if (!phone) return;
     const digits = phone.replace(/\D/g, "");
     window.open(`https://wa.me/${digits}`, "_blank", "noopener,noreferrer");
-    createTask.mutate({
-      title: "WhatsApp message sent",
-      type: "CUSTOM",
-      notes: `WhatsApp message sent to ${phone}`,
-      entityType,
-      entityId,
-    });
-    toast.success("WhatsApp opened and activity logged");
+    createTask.mutate(
+      {
+        title: "WhatsApp message sent",
+        type: "CUSTOM",
+        notes: `WhatsApp message sent to ${phone}`,
+        entityType,
+        entityId,
+      },
+      {
+        onSuccess: () => toast.success("WhatsApp opened and activity logged"),
+        onError: () => toast.error("Failed to log WhatsApp activity"),
+      }
+    );
   }, [phone, entityType, entityId, createTask]);
 
   const handleSms = useCallback(() => {
     if (!phone) return;
     window.location.href = `sms:${phone}`;
-    createTask.mutate({
-      title: "SMS sent",
-      type: "CUSTOM",
-      notes: `SMS sent to ${phone}`,
-      entityType,
-      entityId,
-    });
-    toast.success("SMS app opened and activity logged");
+    createTask.mutate(
+      {
+        title: "SMS sent",
+        type: "CUSTOM",
+        notes: `SMS sent to ${phone}`,
+        entityType,
+        entityId,
+      },
+      {
+        onSuccess: () => toast.success("SMS app opened and activity logged"),
+        onError: () => toast.error("Failed to log SMS activity"),
+      }
+    );
   }, [phone, entityType, entityId, createTask]);
 
   if (!phone) {

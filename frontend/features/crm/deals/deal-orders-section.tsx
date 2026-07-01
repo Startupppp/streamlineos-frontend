@@ -137,6 +137,14 @@ function OrderCard({ order, dealId, onDeleteRequest }: OrderCardProps) {
     [order.id, dealId, updateStatus],
   );
 
+  const handleStatusMenuItemClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const status = e.currentTarget.dataset.status as OrderStatus | undefined;
+      if (status) handleStatusChange(status);
+    },
+    [handleStatusChange],
+  );
+
   const handleDeleteRequest = useCallback(() => {
     onDeleteRequest(order.id);
   }, [order.id, onDeleteRequest]);
@@ -198,7 +206,8 @@ function OrderCard({ order, dealId, onDeleteRequest }: OrderCardProps) {
                     {transitions.map((s) => (
                       <DropdownMenuItem
                         key={s}
-                        onClick={() => handleStatusChange(s)}
+                        data-status={s}
+                        onClick={handleStatusMenuItemClick}
                       >
                         {s.charAt(0) + s.slice(1).toLowerCase()}
                       </DropdownMenuItem>
@@ -229,11 +238,11 @@ interface DealOrdersSectionProps {
 }
 
 export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps) {
-  const isWon = dealStage === "WON";
+  const isWon = dealStage === "WON" || dealStage === "CLOSED_WON";
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
-  const { data, isLoading } = useDealOrders(dealId);
+  const { data, isLoading, isError, refetch } = useDealOrders(dealId);
   const createOrder = useCreateOrder();
   const deleteOrder = useDeleteOrder();
 
@@ -291,6 +300,8 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
     );
   }, [deleteTargetId, dealId, deleteOrder]);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
   const handleDeleteOpenChange = useCallback(
     (open: boolean) => { if (!open) handleDeleteCancel(); },
@@ -328,6 +339,11 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
             <div className="space-y-3">
               <Skeleton className="h-16 w-full rounded-2xl" />
               <Skeleton className="h-16 w-full rounded-2xl" />
+            </div>
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
+              <p className="text-sm text-muted-foreground">Failed to load orders</p>
+              <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
             </div>
           ) : orders.length === 0 ? (
             <EmptyState

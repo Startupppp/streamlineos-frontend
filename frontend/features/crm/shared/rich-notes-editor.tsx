@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Bold, Italic, List, Eye, EyeOff, Hash } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -78,6 +78,13 @@ export function RichNotesEditor({
     }
   }
 
+  const handleTextareaChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      onChange(e.target.value);
+    },
+    [onChange]
+  );
+
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center justify-between">
@@ -130,7 +137,7 @@ export function RichNotesEditor({
         <Textarea
           ref={textareaRef}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleTextareaChange}
           placeholder={
             placeholder ??
             "Add notes... (supports **bold**, *italic*, ## headings, - lists)"

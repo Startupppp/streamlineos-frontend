@@ -89,6 +89,10 @@ export default function CrmCalendarPage() {
 
   const handleMemberFilterChange = useCallback((id: string) => setMemberFilter(id), []);
 
+  const handleConnectCalendar = useCallback(() => {
+    window.open("/settings/integrations", "_self");
+  }, []);
+
   const handleNewMeeting = useCallback(() => {
     setDefaultDate(null);
     setEditEvent(null);
@@ -173,7 +177,7 @@ export default function CrmCalendarPage() {
             <Button
               size="sm"
               className="shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm"
-              onClick={() => window.open("/settings/integrations", "_self")}
+              onClick={handleConnectCalendar}
             >
               Connect
             </Button>

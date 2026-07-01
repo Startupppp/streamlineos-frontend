@@ -115,6 +115,7 @@ function ActivitiesContent() {
 
   const logActivity = useLogCrmActivity();
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleOpenDialog = useCallback(() => setDialogOpen(true),  []);
   const handleCloseDialog = useCallback(() => setDialogOpen(false), []);
 
@@ -198,7 +199,7 @@ function ActivitiesContent() {
         {!isLoading && isError && (
           <div className="flex flex-col items-center justify-center flex-1 min-h-[400px] gap-3">
             <p className="text-sm text-muted-foreground">Failed to load activities.</p>
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            <Button variant="outline" size="sm" onClick={handleRetry}>
               Retry
             </Button>
           </div>

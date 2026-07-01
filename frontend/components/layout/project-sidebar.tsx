@@ -25,6 +25,7 @@ import {
   Activity,
   PenTool,
   Tag,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -76,6 +77,7 @@ function useSections(baseUrl: string): NavSection[] {
         { label: "Whiteboard", icon: PenTool, href: `${baseUrl}/whiteboard` },
         { label: "Budget", icon: IndianRupee, href: `${baseUrl}/budget` },
         { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
+        { label: "Webhooks", icon: Zap, href: `${baseUrl}/webhooks` },
         { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },
       ],
     },

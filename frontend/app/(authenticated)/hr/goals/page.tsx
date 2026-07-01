@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Target, Plus, ChevronRight, Calendar, TrendingUp } from "lucide-react";
+import { Target, Plus, Calendar, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -148,8 +148,6 @@ function GoalGrid({
     </div>
   );
 }
-
-const CURRENT_YEAR = new Date().getFullYear();
 
 export default function GoalsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -59,6 +59,7 @@ export function useAssignmentRules() {
 export function useCreateAssignmentRule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "assignment-rules", "create"],
     mutationFn: (input: CreateAssignmentRuleInput) =>
       apiClient.post<AssignmentRule>("/crm/assignment-rules", input),
     onSuccess: () => {
@@ -70,6 +71,7 @@ export function useCreateAssignmentRule() {
 export function useUpdateAssignmentRule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "assignment-rules", "update"],
     mutationFn: ({ id, ...data }: UpdateAssignmentRuleInput) =>
       apiClient.patch<AssignmentRule>(`/crm/assignment-rules/${id}`, data),
     onSuccess: () => {
@@ -81,6 +83,7 @@ export function useUpdateAssignmentRule() {
 export function useDeleteAssignmentRule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "assignment-rules", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/assignment-rules/${id}`),
     onSuccess: () => {
@@ -92,6 +95,7 @@ export function useDeleteAssignmentRule() {
 export function useReorderAssignmentRules() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "assignment-rules", "reorder"],
     mutationFn: (input: ReorderAssignmentRulesInput) =>
       apiClient.patch<{ success: boolean }>("/crm/assignment-rules/reorder", input),
     onSuccess: () => {
@@ -135,6 +139,7 @@ export function useEmailTemplates(params?: { limit?: number; offset?: number }) 
 export function useCreateEmailTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "email-templates", "create"],
     mutationFn: (input: CreateEmailTemplateInput) =>
       apiClient.post<EmailTemplate>("/crm/email-templates", input),
     onSuccess: () => {
@@ -146,6 +151,7 @@ export function useCreateEmailTemplate() {
 export function useUpdateEmailTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "email-templates", "update"],
     mutationFn: ({ id, ...data }: UpdateEmailTemplateInput) =>
       apiClient.patch<EmailTemplate>(`/crm/email-templates/${id}`, data),
     onSuccess: () => {
@@ -157,6 +163,7 @@ export function useUpdateEmailTemplate() {
 export function useDeleteEmailTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "email-templates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/email-templates/${id}`),
     onSuccess: () => {
@@ -201,6 +208,7 @@ export function useScoringRules() {
 export function useCreateScoringRule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "scoring-rules", "create"],
     mutationFn: (input: CreateScoringRuleInput) =>
       apiClient.post<ScoringRule>("/crm/scoring-rules", input),
     onSuccess: () => {
@@ -212,6 +220,7 @@ export function useCreateScoringRule() {
 export function useUpdateScoringRule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "scoring-rules", "update"],
     mutationFn: ({ id, ...data }: UpdateScoringRuleInput) =>
       apiClient.patch<ScoringRule>(`/crm/scoring-rules/${id}`, data),
     onSuccess: () => {
@@ -223,6 +232,7 @@ export function useUpdateScoringRule() {
 export function useDeleteScoringRule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "scoring-rules", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/scoring-rules/${id}`),
     onSuccess: () => {
@@ -302,6 +312,7 @@ export function useSlaBreachedLeads(params?: { limit?: number }) {
 export function useCreateSlaPolicy() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "sla-policies", "create"],
     mutationFn: (input: CreateSlaPolicyInput) =>
       apiClient.post<SlaPolicy>("/crm/sla/policies", input),
     onSuccess: () => {
@@ -313,6 +324,7 @@ export function useCreateSlaPolicy() {
 export function useUpdateSlaPolicy() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "sla-policies", "update"],
     mutationFn: ({ id, ...data }: UpdateSlaPolicyInput) =>
       apiClient.patch<SlaPolicy>(`/crm/sla/policies/${id}`, data),
     onSuccess: () => {
@@ -324,6 +336,7 @@ export function useUpdateSlaPolicy() {
 export function useDeleteSlaPolicy() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crm-settings", "sla-policies", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/sla/policies/${id}`),
     onSuccess: () => {

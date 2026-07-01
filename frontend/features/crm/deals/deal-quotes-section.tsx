@@ -209,7 +209,7 @@ interface DealQuotesSectionProps {
 
 export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const { data, isLoading } = useDealQuotes(dealId);
+  const { data, isLoading, isError, refetch } = useDealQuotes(dealId);
   const createQuote = useCreateQuote();
   const deleteQuote = useDeleteQuote();
 
@@ -232,6 +232,8 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
       },
     );
   }, [dealId, createQuote]);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleDeleteRequest = useCallback((id: number) => {
     setDeleteId(id);
@@ -289,6 +291,11 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
             <div className="space-y-3">
               <Skeleton className="h-14 w-full rounded-xl" />
               <Skeleton className="h-14 w-full rounded-xl" />
+            </div>
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center py-6 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/50 gap-2">
+              <p className="text-sm text-slate-500">Failed to load quotes</p>
+              <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
             </div>
           ) : quotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-6 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/50">

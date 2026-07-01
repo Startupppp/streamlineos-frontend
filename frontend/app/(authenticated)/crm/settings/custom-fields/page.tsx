@@ -125,7 +125,7 @@ function FieldRow({ field, onEdit, onDeleteRequest, onToggle }: FieldRowProps) {
 
   return (
     <motion.div variants={fadeUp}>
-      <Card className={cn("shadow-sm transition-all", !field.isActive && "opacity-60")}>
+      <Card className={cn("bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm transition-all", !field.isActive && "opacity-60")}>
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
@@ -354,6 +354,10 @@ export default function CustomFieldsPage() {
     setEditTarget(null);
   }, []);
 
+  const handleEditDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) handleEditClose();
+  }, [handleEditClose]);
+
   const handleDeleteRequest = useCallback((id: number) => {
     setDeleteTargetId(id);
   }, []);
@@ -514,7 +518,7 @@ export default function CustomFieldsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={!!editTarget} onOpenChange={(open) => { if (!open) handleEditClose(); }}>
+      <Dialog open={!!editTarget} onOpenChange={handleEditDialogOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Custom Field</DialogTitle>

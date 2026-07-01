@@ -47,20 +47,26 @@ export function CrmCalendarWeekView({
 
   const today = useMemo(() => new Date(), []);
 
-  const handleEventClick = useCallback(
-    (event: CalendarListItem) => {
-      onEventClick(event);
+  const handleEventButtonClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const eventId = e.currentTarget.dataset.eventId;
+      if (!eventId) return;
+      const found = events.find((ev) => ev.id === eventId);
+      if (found) onEventClick(found);
     },
-    [onEventClick]
+    [events, onEventClick],
   );
 
-  const handleSlotClick = useCallback(
-    (date: Date, hour: number) => {
-      const slotDate = new Date(date);
-      slotDate.setHours(hour, 0, 0, 0);
+  const handleHourSlotClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const dayStr = e.currentTarget.dataset.day;
+      const hourStr = e.currentTarget.dataset.hour;
+      if (!dayStr || !hourStr) return;
+      const slotDate = new Date(dayStr);
+      slotDate.setHours(Number(hourStr), 0, 0, 0);
       onSlotClick(slotDate);
     },
-    [onSlotClick]
+    [onSlotClick],
   );
 
   const getTimedEventsForDay = useCallback(
@@ -145,7 +151,8 @@ export function CrmCalendarWeekView({
                       {dayAllDayEvents.map((event) => (
                         <button
                           key={event.id}
-                          onClick={() => handleEventClick(event)}
+                          data-event-id={event.id}
+                          onClick={handleEventButtonClick}
                           className={[
                             "w-full text-left text-[10px] px-1.5 py-0.5 rounded truncate font-medium",
                             getCategoryColor(event.category),
@@ -173,8 +180,10 @@ export function CrmCalendarWeekView({
                   {HOURS.map((hour) => (
                     <div
                       key={hour}
+                      data-day={day.toISOString()}
+                      data-hour={String(hour)}
                       className="border-b border-border/40 h-12 cursor-pointer hover:bg-muted/30 transition-colors"
-                      onClick={() => handleSlotClick(day, hour)}
+                      onClick={handleHourSlotClick}
                     />
                   ))}
                   {dayTimedEvents.map((event) => {
@@ -183,7 +192,8 @@ export function CrmCalendarWeekView({
                     return (
                       <button
                         key={event.id}
-                        onClick={() => handleEventClick(event)}
+                        data-event-id={event.id}
+                        onClick={handleEventButtonClick}
                         className={[
                           "absolute left-0.5 right-0.5 rounded px-1 py-0.5 text-left overflow-hidden hover:opacity-90 transition-opacity",
                           getCategoryColor(event.category),

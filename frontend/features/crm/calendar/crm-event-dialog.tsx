@@ -167,6 +167,14 @@ export function CrmEventDialog({
     }
   }, [open, isEdit, existingAttendees, form]);
 
+  useEffect(() => {
+    if (!watchedEntityType) {
+      form.setValue("entityId", "");
+    }
+  }, [watchedEntityType, form]);
+
+  const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
+
   const handleToggleAttendee = useCallback(
     (id: string) => {
       const current = form.getValues("attendeeIds");
@@ -465,10 +473,7 @@ export function CrmEventDialog({
                   render={({ field }) => (
                     <Select
                       value={field.value ?? ""}
-                      onValueChange={(val) => {
-                        field.onChange(val);
-                        if (!val) form.setValue("entityId", "");
-                      }}
+                      onValueChange={field.onChange}
                     >
                       <SelectTrigger className="h-9 bg-white">
                         <SelectValue placeholder="None" />
@@ -514,7 +519,7 @@ export function CrmEventDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
             disabled={isPending}
             className="h-9"
           >

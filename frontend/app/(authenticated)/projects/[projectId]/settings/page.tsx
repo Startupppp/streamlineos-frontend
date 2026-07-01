@@ -14,6 +14,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ProjectInfoSection } from "@/features/projects/settings/project-info-section";
@@ -143,7 +144,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Settings">
-        <div className="max-w-xl mx-auto space-y-6 pb-8">
+        <div className="max-w-xl mx-auto space-y-4 pb-8">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-10 w-full" />
@@ -185,6 +186,8 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           MembersSelector={MembersSelector}
         />
 
+        <Separator />
+
         <section className="space-y-4">
           <div>
             <h3 className="text-base font-semibold">Labels</h3>
@@ -194,6 +197,8 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           </div>
           <LabelsSettings />
         </section>
+
+        <Separator />
 
         <section className="space-y-4">
           <div>
@@ -205,17 +210,22 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           <StatusesSettings projectId={projectId} />
         </section>
 
+        <Separator />
+
         <CustomFieldsSettings projectId={projectId} />
 
         {isOwner && (
-          <DangerZoneSection
-            projectName={project.name}
-            isPending={deleteMutation.isPending}
-            deleteDialogOpen={deleteDialogOpen}
-            onDeleteClick={handleDeleteClick}
-            onDeleteDialogChange={setDeleteDialogOpen}
-            onDeleteConfirm={handleDeleteConfirm}
-          />
+          <>
+            <Separator />
+            <DangerZoneSection
+              projectName={project.name}
+              isPending={deleteMutation.isPending}
+              deleteDialogOpen={deleteDialogOpen}
+              onDeleteClick={handleDeleteClick}
+              onDeleteDialogChange={setDeleteDialogOpen}
+              onDeleteConfirm={handleDeleteConfirm}
+            />
+          </>
         )}
       </div>
 

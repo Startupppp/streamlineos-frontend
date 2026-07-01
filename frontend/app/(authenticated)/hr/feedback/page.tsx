@@ -421,7 +421,7 @@ function MyReviewsTab() {
       <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
         <MessageSquare className="w-12 h-12 text-slate-300" />
         <p className="text-slate-500 font-medium">No pending reviews</p>
-        <p className="text-sm">You're all caught up!</p>
+        <p className="text-sm">You&apos;re all caught up!</p>
       </div>
     );
   }

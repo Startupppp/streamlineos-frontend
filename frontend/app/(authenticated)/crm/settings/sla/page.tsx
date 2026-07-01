@@ -207,7 +207,7 @@ export default function SlaPage() {
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
                 <Plus className="h-4 w-4 mr-2" />
                 New Policy
               </Button>
@@ -270,7 +270,7 @@ export default function SlaPage() {
                       </FormItem>
                     )} />
                   </div>
-                  <Button type="submit" className="w-full" disabled={createPolicy.isPending}>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={createPolicy.isPending}>
                     {createPolicy.isPending ? "Creating..." : "Create Policy"}
                   </Button>
                 </form>
@@ -301,7 +301,7 @@ export default function SlaPage() {
           )}
 
           <motion.div variants={fadeUp}>
-            <Card className="shadow-sm">
+            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">Policies</CardTitle>
               </CardHeader>
@@ -345,7 +345,7 @@ export default function SlaPage() {
 
           {editingId !== null && (
             <motion.div variants={fadeUp}>
-              <Card className="shadow-sm border-blue-500/30">
+              <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-violet-200/60 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-base">Edit Policy</CardTitle>
                 </CardHeader>
@@ -406,7 +406,7 @@ export default function SlaPage() {
                       </div>
                       <div className="flex justify-end gap-3">
                         <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                        <Button type="submit" disabled={updatePolicy.isPending}>
+                        <Button type="submit" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={updatePolicy.isPending}>
                           {updatePolicy.isPending ? "Saving..." : "Save Changes"}
                         </Button>
                       </div>
@@ -419,7 +419,7 @@ export default function SlaPage() {
 
           {breachedLeads && breachedLeads.length > 0 && (
             <motion.div variants={fadeUp}>
-              <Card className="shadow-sm border-red-500/20">
+              <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-red-200/60 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-red-400" />

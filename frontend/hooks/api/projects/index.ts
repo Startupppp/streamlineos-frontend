@@ -9,6 +9,7 @@ export * from "./milestones";
 export * from "./ticket-activity";
 export * from "./whiteboards";
 export * from "./releases";
+export * from "./webhooks";
 export * from "./checklists";
 export * from "./custom-fields";
 export * from "./labels";

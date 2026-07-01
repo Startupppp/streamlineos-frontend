@@ -119,6 +119,14 @@ export default function CrmReportsPage() {
     setPeriod(p);
   }, []);
 
+  const handlePeriodButtonClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const p = e.currentTarget.dataset.period as Period | undefined;
+      if (p) handlePeriodChange(p);
+    },
+    [handlePeriodChange],
+  );
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -307,6 +315,7 @@ export default function CrmReportsPage() {
           {PERIOD_OPTIONS.map((opt) => (
             <Button
               key={opt.value}
+              data-period={opt.value}
               variant={period === opt.value ? "default" : "outline"}
               size="sm"
               className={cn(
@@ -314,7 +323,7 @@ export default function CrmReportsPage() {
                 period === opt.value &&
                   "bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0 shadow-md hover:from-violet-700 hover:to-indigo-700",
               )}
-              onClick={() => handlePeriodChange(opt.value)}
+              onClick={handlePeriodButtonClick}
             >
               {opt.label}
             </Button>

@@ -5,7 +5,7 @@ import { Pencil, Save, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { RichNotesEditor } from "@/features/crm/shared/rich-notes-editor";
 import { useUpdateCrmOrganization } from "@/hooks/api/crm";
 import { toast } from "sonner";
 
@@ -43,10 +43,7 @@ export function AccountNotes({
 
   const handleStartEdit = useCallback(() => setEditing(true), []);
 
-  const handleNotesChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value),
-    [],
-  );
+  const handleNotesChange = useCallback((value: string) => setNotes(value), []);
 
   if (!editing) {
     return (
@@ -75,13 +72,12 @@ export function AccountNotes({
 
   return (
     <div className="space-y-2">
-      <Textarea
+      <RichNotesEditor
         value={notes}
         onChange={handleNotesChange}
+        onSave={handleSave}
+        isSaving={updateMutation.isPending}
         placeholder="Add internal notes about this company..."
-        rows={5}
-        className="resize-none text-sm"
-        autoFocus
       />
       <div className="flex gap-2">
         <Button

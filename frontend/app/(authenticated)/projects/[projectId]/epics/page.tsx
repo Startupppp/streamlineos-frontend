@@ -98,15 +98,15 @@ export default function EpicsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Epics">
-        <div className="space-y-8">
+        <div className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-lg" />
+              <Skeleton key={i} className="h-24 rounded-2xl" />
             ))}
           </div>
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 rounded-lg" />
+              <Skeleton key={i} className="h-32 rounded-2xl" />
             ))}
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function EpicsPage({ params }: PageProps) {
       subtitle={`${epics.length} epic${epics.length !== 1 ? "s" : ""} — ${stories.length} stories, ${tickets.filter(t => t.status === "DONE").length} completed`}
       actions={<CreateEpicDialog projectId={projectId} />}
     >
-      <div className="space-y-8" aria-live="polite" aria-atomic="true">
+      <div className="space-y-4" aria-live="polite" aria-atomic="true">
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard label="Epics" value={epics.length} icon={Layers} color="violet" index={0} />
@@ -131,8 +131,8 @@ export default function EpicsPage({ params }: PageProps) {
 
         <div className="space-y-4">
           {epics.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-12">
+            <Card className="border-dashed rounded-2xl">
+              <CardContent className="flex flex-col items-center justify-center min-h-[320px] py-12">
                 <EmptyTasksIllustration className="mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No epics yet</h3>
                 <p className="text-muted-foreground text-center mb-4">
@@ -164,7 +164,7 @@ export default function EpicsPage({ params }: PageProps) {
               <AlertCircle className="h-5 w-5 text-yellow-500" />
               Stories without Epic
             </h2>
-            <Card>
+            <Card className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-sm shadow-sm">
               <CardContent className="pt-6">
                 <div className="space-y-2">
                   {stories.filter(s => !s.epicId).map((story) => (
@@ -298,7 +298,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
   }, [newStoryTitle, handleEpicCreateStory]);
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-sm shadow-sm">
       <CardHeader
         className="cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={handleToggleExpand}
@@ -443,7 +443,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
               />
               <Button
                 size="sm"
-                className="h-8"
+                className="h-8 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
                 onClick={handleAddStory}
                 disabled={!newStoryTitle.trim()}
               >

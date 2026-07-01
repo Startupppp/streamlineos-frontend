@@ -345,7 +345,7 @@ export function LeadInfoCard({
     {
       icon: Target,
       label:"Source",
-      value: lead.source?.replace(/_/g,""),
+      value: lead.source?.replace(/_/g, " "),
     },
     { icon: User, label:"City", value: lead.city },
   ];
@@ -362,7 +362,7 @@ export function LeadInfoCard({
               key={chip.label}
               icon={chip.icon}
               label={chip.label}
-              value={chip.value as string | null | undefined}
+              value={chip.value}
               href={chip.href}
             />
           ))}

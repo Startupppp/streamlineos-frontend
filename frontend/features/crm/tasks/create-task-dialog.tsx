@@ -44,6 +44,7 @@ export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, 
 
   const isEditing = !!task;
   const isSubmitting = createTask.isPending || updateTask.isPending;
+  const hasPrefilledEntity = !!defaultEntityType && defaultEntityId != null;
 
   const defaultValues: TaskFormValues = {
     title: task?.title ?? "",
@@ -156,44 +157,51 @@ export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, 
             )}
           />
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="entityType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Related To</FormLabel>
-                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Entity type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="LEAD">Lead</SelectItem>
-                      <SelectItem value="DEAL">Deal</SelectItem>
-                      <SelectItem value="CONTACT">Contact</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {!hasPrefilledEntity && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="entityType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Related To</FormLabel>
+                      <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Entity type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="LEAD">Lead</SelectItem>
+                          <SelectItem value="DEAL">Deal</SelectItem>
+                          <SelectItem value="CONTACT">Contact</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="entityIdRaw"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Entity ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. 42" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                <FormField
+                  control={form.control}
+                  name="entityIdRaw"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Entity ID</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 42" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Leave blank to create a standalone task
+              </p>
+            </>
+          )}
 
           <FormField
             control={form.control}

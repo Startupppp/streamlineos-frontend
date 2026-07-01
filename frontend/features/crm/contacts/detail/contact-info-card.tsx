@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import Link from "next/link";
 import {
   Mail,
@@ -70,10 +69,6 @@ interface ContactInfoCardProps {
 }
 
 export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entityId }: ContactInfoCardProps) {
-  const handleEdit = useCallback(() => onEdit(), [onEdit]);
-  const handleSendEmail = useCallback(() => onSendEmail(), [onSendEmail]);
-  const handleLogCall = useCallback(() => onLogCall(), [onLogCall]);
-
   const hasLinks =
     contact.email ||
     contact.phone ||
@@ -259,7 +254,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                 variant="outline"
                 size="sm"
                 className="w-full gap-1.5 text-xs"
-                onClick={handleSendEmail}
+                onClick={onSendEmail}
               >
                 <Mail className="h-3 w-3 text-blue-500" />
                 Send Email
@@ -270,7 +265,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                 variant="outline"
                 size="sm"
                 className="w-full gap-1.5 text-xs"
-                onClick={handleLogCall}
+                onClick={onLogCall}
               >
                 <Phone className="h-3 w-3 text-violet-500" />
                 Log Call
@@ -287,7 +282,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
               variant="outline"
               size="sm"
               className="w-full gap-1.5 text-xs"
-              onClick={handleEdit}
+              onClick={onEdit}
             >
               <Pencil className="h-3 w-3" />
               Edit Contact

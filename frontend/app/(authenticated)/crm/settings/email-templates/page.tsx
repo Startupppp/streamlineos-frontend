@@ -100,7 +100,6 @@ interface TemplateData {
 
 interface TemplateCardProps {
   template: TemplateData;
-  isPreviewActive: boolean;
   onPreviewToggle: (id: number) => void;
   onEdit: (template: TemplateData) => void;
   onDeleteRequest: (id: number) => void;
@@ -112,7 +111,7 @@ function TemplateCard({ template, onPreviewToggle, onEdit, onDeleteRequest }: Te
   const handleDeleteRequest = useCallback(() => onDeleteRequest(template.id), [template.id, onDeleteRequest]);
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-all">
+    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <TooltipProvider>
@@ -304,7 +303,7 @@ export default function EmailTemplatesPage() {
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
                 <Plus className="h-4 w-4 mr-2" />
                 New Template
               </Button>
@@ -347,7 +346,7 @@ export default function EmailTemplatesPage() {
                       ))}
                     </div>
                   </div>
-                  <Button type="submit" className="w-full" disabled={createTemplate.isPending}>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={createTemplate.isPending}>
                     {createTemplate.isPending ? "Creating..." : "Create Template"}
                   </Button>
                 </form>
@@ -368,7 +367,6 @@ export default function EmailTemplatesPage() {
                 <TemplateCard
                   key={template.id}
                   template={template}
-                  isPreviewActive={previewId === template.id}
                   onPreviewToggle={handlePreviewToggle}
                   onEdit={handleStartEdit}
                   onDeleteRequest={handleDeleteRequest}
@@ -429,7 +427,7 @@ export default function EmailTemplatesPage() {
                       </div>
                       <div className="flex justify-end gap-3">
                         <Button type="button" variant="outline" onClick={handleCloseEdit}>Cancel</Button>
-                        <Button type="submit" disabled={updateTemplate.isPending}>
+                        <Button type="submit" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={updateTemplate.isPending}>
                           {updateTemplate.isPending ? "Saving..." : "Save Changes"}
                         </Button>
                       </div>

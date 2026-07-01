@@ -75,13 +75,6 @@ const STATUS_LABELS: Record<EnrollmentStatus, string> = {
   DROPPED: "Dropped",
 };
 
-const STATUS_COLORS: Record<EnrollmentStatus, string> = {
-  ENROLLED: "#6366f1",
-  IN_PROGRESS: "#f59e0b",
-  COMPLETED: "#10b981",
-  DROPPED: "#f43f5e",
-};
-
 const STATUSES: EnrollmentStatus[] = [
   "ENROLLED",
   "IN_PROGRESS",

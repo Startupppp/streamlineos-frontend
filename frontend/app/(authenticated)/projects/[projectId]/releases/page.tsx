@@ -230,7 +230,7 @@ function ReleaseCard({
   const handleDelete = useCallback(() => onDelete(release), [onDelete, release]);
 
   return (
-    <Card className="bg-white/90 backdrop-blur-sm border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200">
+    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200">
       <CardContent className="pt-4 pb-4">
         <div className="flex items-start gap-3">
           <cfg.Icon className={`h-5 w-5 mt-0.5 shrink-0 ${cfg.iconClass}`} />
@@ -305,7 +305,7 @@ export default function ReleasesPage({
   const { projectId: projectIdStr } = use(params);
   const projectId = Number(projectIdStr);
 
-  const { data: releases, isLoading, isError } = useReleases(projectId);
+  const { data: releases, isLoading, isError, refetch } = useReleases(projectId);
   const deleteRelease = useDeleteRelease(projectId);
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -358,11 +358,10 @@ export default function ReleasesPage({
           ))}
         </div>
       ) : isError ? (
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] py-16 text-center space-y-3">
-          <Tag className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-muted-foreground">Failed to load releases.</p>
-          <Button variant="outline" size="sm" onClick={handleOpenCreate}>
-            Try again
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-12">
+          <p className="text-sm text-destructive font-medium">Failed to load releases</p>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            Retry
           </Button>
         </div>
       ) : releases && releases.length > 0 ? (

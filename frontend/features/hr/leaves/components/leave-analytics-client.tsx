@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { TrendingUp, Users, Clock, ArrowRight } from "lucide-react";
-import { Card } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";

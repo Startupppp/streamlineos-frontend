@@ -48,7 +48,6 @@ interface LeadDetailHeaderProps {
 
 interface PipelineStepProps {
   status: PipelineStatus;
-  index: number;
   isActive: boolean;
   isPast: boolean;
   isLast: boolean;
@@ -83,6 +82,7 @@ function PipelineStep({
   return (
     <div className="flex items-center flex-1 min-w-0">
       <button
+        type="button"
         onClick={handleClick}
         disabled={isPending || isActive}
         className="flex flex-col items-center gap-1.5 group shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -295,7 +295,6 @@ export function LeadDetailHeader({
               <PipelineStep
                 key={status}
                 status={status}
-                index={i}
                 isActive={status === lead.status}
                 isPast={i < currentStatusIndex}
                 isLast={i === STATUS_PIPELINE.length - 1}

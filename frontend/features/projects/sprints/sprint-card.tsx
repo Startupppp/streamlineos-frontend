@@ -61,7 +61,7 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
   const handlePlan = useCallback(() => onPlan?.(sprint.id), [sprint.id, onPlan]);
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -163,7 +163,7 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
             aria-label={`Sprint progress: ${completedPoints} of ${totalPoints} points`}
             aria-valuetext={`${Math.round(progress)}% complete`}
           >
-            <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+            <div className="bg-gradient-to-r from-violet-600 to-indigo-600 h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         </div>
       </CardContent>

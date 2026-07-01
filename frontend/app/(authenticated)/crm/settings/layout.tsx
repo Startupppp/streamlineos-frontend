@@ -10,6 +10,9 @@ const TABS = [
   { label: "SLA Policies", href: "/crm/settings/sla" },
   { label: "Email Templates", href: "/crm/settings/email-templates" },
   { label: "Custom Fields", href: "/crm/settings/custom-fields" },
+  { label: "Products", href: "/crm/settings/products" },
+  { label: "Automations", href: "/crm/settings/automations" },
+  { label: "Audit Log", href: "/crm/settings/audit-log" },
 ] as const;
 
 export default function CrmSettingsLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +37,7 @@ export default function CrmSettingsLayout({ children }: { children: React.ReactN
               >
                 {tab.label}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-full" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600 rounded-full" />
                 )}
               </Link>
             );
