@@ -81,7 +81,6 @@ import {
   Smartphone,
   Plug,
   Activity,
-  Gift,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -141,6 +140,18 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: BarChart2,
         href: "/workflows/analytics",
         requiredPermission: "workflows:analytics:view",
+      },
+      {
+        label: "Variables",
+        icon: Sliders,
+        href: "/workflows/variables",
+        requiredPermission: "workflows:variables:manage",
+      },
+      {
+        label: "Secrets",
+        icon: Lock,
+        href: "/workflows/secrets",
+        requiredPermission: "workflows:secrets:manage",
       },
     ],
   },
