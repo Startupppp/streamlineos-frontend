@@ -1,5 +1,29 @@
 import type { useChatChannels } from "@/hooks/api";
 
+export interface TicketEntityRef {
+  type: "ticket";
+  id: string;
+  projectId: number;
+  ticketNumber?: number;
+  projectKey?: string;
+  title?: string;
+  status?: string;
+  priority?: string;
+}
+
+export interface CommentEntityRef {
+  type: "comment";
+  id: string;
+  ticketId: number;
+  projectId: number;
+}
+
+export type EntityRef = TicketEntityRef | CommentEntityRef;
+
+export interface MessageMetadata {
+  entities?: EntityRef[];
+}
+
 type ChannelRaw = NonNullable<
   ReturnType<typeof useChatChannels>["data"]
 >[number];
@@ -19,7 +43,7 @@ export type Message = {
   isEdited: boolean;
   isDeleted: boolean;
   messageType: "text" | "lead_submission" | "system";
-  metadata: unknown;
+  metadata: MessageMetadata | null;
   actionStatus: string | null;
   createdAt: Date | null;
   updatedAt: Date | null;

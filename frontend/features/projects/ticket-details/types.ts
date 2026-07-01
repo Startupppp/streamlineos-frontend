@@ -4,6 +4,7 @@ export interface TicketDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   projectId: number;
   statuses?: Array<{ name: string; id: number }>;
+  highlightCommentId?: number | null;
 }
 
 export interface ProjectMember {

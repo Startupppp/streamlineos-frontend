@@ -24,9 +24,7 @@ import {
   IndianRupee,
   Activity,
   PenTool,
-  Tag,
   Zap,
-  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -66,7 +64,6 @@ function useSections(baseUrl: string): NavSection[] {
         { label: "Epics", icon: Layers, href: `${baseUrl}/epics` },
         { label: "Timeline", icon: GanttChart, href: `${baseUrl}/timeline` },
         { label: "Milestones", icon: Diamond, href: `${baseUrl}/milestones` },
-        { label: "Releases", icon: Tag, href: `${baseUrl}/releases` },
       ],
     },
     {
@@ -80,7 +77,6 @@ function useSections(baseUrl: string): NavSection[] {
         { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
         { label: "Automations", icon: Zap, href: `${baseUrl}/automations` },
         { label: "Webhooks", icon: Zap, href: `${baseUrl}/webhooks` },
-        { label: "Audit Log", icon: History, href: `${baseUrl}/audit` },
         { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },
       ],
     },

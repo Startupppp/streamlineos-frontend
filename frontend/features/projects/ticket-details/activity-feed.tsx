@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Send, Loader2, MessageSquare } from "lucide-react";
+import { Send, Loader2, MessageSquare, Link } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { useAddComment } from "@/hooks/api/projects";
 import { useAddReaction, useRemoveReaction } from "@/hooks/api/projects/reactions";
@@ -21,6 +21,7 @@ interface ActivityFeedProps {
   projectId?: number;
   comments: TicketComment[];
   members?: MentionUser[];
+  highlightCommentId?: number | null;
 }
 
 function groupReactions(
@@ -36,12 +37,21 @@ function groupReactions(
   return Object.entries(groups).map(([emoji, g]) => ({ emoji, count: g.count, hasReacted: g.hasReacted }));
 }
 
-export function ActivityFeed({ ticketId, projectId = 0, comments, members = [] }: ActivityFeedProps) {
+export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], highlightCommentId }: ActivityFeedProps) {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
+  const commentRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  useEffect(() => {
+    if (!highlightCommentId) return;
+    const el = commentRefs.current.get(highlightCommentId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightCommentId]);
 
   const addComment = useAddComment({
     onSuccess: () => {
@@ -159,7 +169,13 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [] }
       {sortedTopLevel.length > 0 && (
         <div className="space-y-3">
           {sortedTopLevel.map((comment) => (
-            <div key={comment.id}>
+            <div
+              key={comment.id}
+              ref={(el) => {
+                if (el) commentRefs.current.set(comment.id, el);
+                else commentRefs.current.delete(comment.id);
+              }}
+            >
               <CommentItem
                 comment={comment}
                 currentUserId={currentUserId}
@@ -174,6 +190,8 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [] }
                 isReplyPending={addReply.isPending}
                 onReact={(emoji) => addReaction.mutate({ commentId: comment.id, emoji })}
                 onUnreact={(emoji) => removeReaction.mutate({ commentId: comment.id, emoji })}
+                isHighlighted={highlightCommentId === comment.id}
+                permalinkUrl={`/projects/${projectId}?ticket=${ticketId}&comment=${comment.id}`}
               />
               {(repliesMap[comment.id]?.length ?? 0) > 0 && (
                 <div className="ml-9 mt-2 space-y-2 border-l-2 border-slate-100 pl-3">
@@ -184,23 +202,32 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [] }
                         new Date(b.createdAt || 0).getTime()
                     )
                     .map((reply) => (
-                      <CommentItem
+                      <div
                         key={reply.id}
-                        comment={reply}
-                        currentUserId={currentUserId}
-                        members={members}
-                        isReplying={false}
-                        onReply={() => {}}
-                        onCancelReply={() => {}}
-                        replyText=""
-                        onReplyTextChange={() => {}}
-                        onReplySubmit={() => {}}
-                        onReplyKeyDown={() => {}}
-                        isReplyPending={false}
-                        onReact={(emoji) => addReaction.mutate({ commentId: reply.id, emoji })}
-                        onUnreact={(emoji) => removeReaction.mutate({ commentId: reply.id, emoji })}
-                        hideReplyButton
-                      />
+                        ref={(el) => {
+                          if (el) commentRefs.current.set(reply.id, el);
+                          else commentRefs.current.delete(reply.id);
+                        }}
+                      >
+                        <CommentItem
+                          comment={reply}
+                          currentUserId={currentUserId}
+                          members={members}
+                          isReplying={false}
+                          onReply={() => {}}
+                          onCancelReply={() => {}}
+                          replyText=""
+                          onReplyTextChange={() => {}}
+                          onReplySubmit={() => {}}
+                          onReplyKeyDown={() => {}}
+                          isReplyPending={false}
+                          onReact={(emoji) => addReaction.mutate({ commentId: reply.id, emoji })}
+                          onUnreact={(emoji) => removeReaction.mutate({ commentId: reply.id, emoji })}
+                          hideReplyButton
+                          isHighlighted={highlightCommentId === reply.id}
+                          permalinkUrl={`/projects/${projectId}?ticket=${ticketId}&comment=${reply.id}`}
+                        />
+                      </div>
                     ))}
                 </div>
               )}
@@ -233,6 +260,8 @@ interface CommentItemProps {
   onReact: (emoji: string) => void;
   onUnreact: (emoji: string) => void;
   hideReplyButton?: boolean;
+  isHighlighted?: boolean;
+  permalinkUrl?: string;
 }
 
 function CommentItem({
@@ -250,6 +279,8 @@ function CommentItem({
   onReact,
   onUnreact,
   hideReplyButton = false,
+  isHighlighted = false,
+  permalinkUrl,
 }: CommentItemProps) {
   const user = comment.user as TicketUser | undefined;
   const timeAgo = comment.createdAt
@@ -257,9 +288,24 @@ function CommentItem({
     : "";
 
   const reactionGroups = groupReactions(comment.reactions ?? [], currentUserId);
+  const [showHighlight, setShowHighlight] = useState(isHighlighted);
+
+  useEffect(() => {
+    if (!isHighlighted) return;
+    setShowHighlight(true);
+    const timer = setTimeout(() => setShowHighlight(false), 2500);
+    return () => clearTimeout(timer);
+  }, [isHighlighted]);
+
+  const handleCopyLink = useCallback(() => {
+    if (!permalinkUrl) return;
+    navigator.clipboard.writeText(window.location.origin + permalinkUrl).then(() => {
+      toast.success("Link copied");
+    });
+  }, [permalinkUrl]);
 
   return (
-    <div className="flex gap-2.5 group">
+    <div className={`flex gap-2.5 group rounded-lg transition-colors duration-500 ${showHighlight ? "bg-violet-50 ring-1 ring-violet-200 px-2 -mx-2 py-1" : ""}`}>
       <Avatar className="h-7 w-7 shrink-0 mt-0.5">
         <AvatarImage src={resolveImageUrl(user?.image)} />
         <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
@@ -290,6 +336,17 @@ function CommentItem({
               className="text-[11px] text-muted-foreground hover:text-violet-600 transition-colors opacity-0 group-hover:opacity-100"
             >
               Reply
+            </button>
+          )}
+          {permalinkUrl && (
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="text-[11px] text-muted-foreground hover:text-violet-600 transition-colors opacity-0 group-hover:opacity-100 flex items-center gap-1"
+              aria-label="Copy comment link"
+            >
+              <Link className="h-3 w-3" />
+              Copy link
             </button>
           )}
         </div>

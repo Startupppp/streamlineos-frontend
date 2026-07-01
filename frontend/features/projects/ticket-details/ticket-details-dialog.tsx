@@ -98,6 +98,7 @@ export function TicketDetailsDialog({
   onOpenChange,
   projectId,
   statuses,
+  highlightCommentId,
 }: TicketDetailsDialogProps) {
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
@@ -354,6 +355,7 @@ export function TicketDetailsDialog({
                   projectId={projectId}
                   comments={ticket.comments || []}
                   members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}
+                  highlightCommentId={highlightCommentId}
                 />
 
                 {ticketId ? (

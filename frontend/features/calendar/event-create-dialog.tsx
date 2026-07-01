@@ -25,6 +25,9 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 import { toast } from "sonner";
 import { EventFormFields } from "./event-form-fields";
 import { EventAttendeesPicker } from "./event-attendees-picker";
+import { useTicketSearch } from "@/hooks/api/projects";
+import type { TicketSearchResult } from "@/hooks/api/projects";
+import { Ticket, X, Search, Loader2 } from "lucide-react";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
 
@@ -111,6 +114,10 @@ export function EventCreateDialog({
   const [form, setForm] = useState<FormState>(() =>
     isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot),
   );
+  const [linkedTicket, setLinkedTicket] = useState<TicketSearchResult | null>(null);
+  const [existingEntityId, setExistingEntityId] = useState<string | null>(null);
+  const [ticketPickerOpen, setTicketPickerOpen] = useState(false);
+  const [ticketSearchQ, setTicketSearchQ] = useState("");
   const createEvent = useCreateCalendarEvent();
   const updateEvent = useUpdateCalendarEvent();
   const { data: members = [] } = useCalendarOrgMembers();
@@ -123,6 +130,12 @@ export function EventCreateDialog({
   useEffect(() => {
     if (open) {
       setForm(isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot));
+      setLinkedTicket(null);
+      setExistingEntityId(
+        isEdit && event?.entityType === "ticket" && event.entityId
+          ? event.entityId
+          : null,
+      );
     }
   }, [open, defaultSlot, event, isEdit]);
 
@@ -323,6 +336,7 @@ export function EventCreateDialog({
       return;
     }
 
+    const resolvedEntityId = linkedTicket ? String(linkedTicket.id) : (existingEntityId ?? undefined);
     const payload = {
       title: trimmedTitle,
       description: form.description || undefined,
@@ -333,6 +347,8 @@ export function EventCreateDialog({
       color: form.color,
       category: form.category,
       attendeeIds: form.attendeeIds,
+      entityType: resolvedEntityId ? "ticket" : undefined,
+      entityId: resolvedEntityId,
     };
 
     try {
@@ -356,79 +372,200 @@ export function EventCreateDialog({
 
   const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
 
+  const handleOpenTicketPicker = useCallback(() => {
+    setTicketPickerOpen(true);
+    setTicketSearchQ("");
+  }, []);
+
+  const handleTicketSelect = useCallback((ticket: TicketSearchResult) => {
+    setLinkedTicket(ticket);
+    setExistingEntityId(null);
+    setTicketPickerOpen(false);
+  }, []);
+
+  const handleRemoveLinkedTicket = useCallback(() => {
+    setLinkedTicket(null);
+    setExistingEntityId(null);
+  }, []);
+
+  const displayLinkedKey = linkedTicket
+    ? `${linkedTicket.projectKey}-${linkedTicket.ticketNumber}`
+    : existingEntityId
+      ? `#${existingEntityId}`
+      : null;
+
+  const displayLinkedTitle = linkedTicket?.title ?? null;
+
   return (
-    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
-      <SheetContent
-        side="right"
-        className={cn("flex flex-col p-0 w-full sm:max-w-[480px]")}
-      >
-        <SheetHeader className="px-6 border-b shrink-0">
-          <SheetTitle className="text-base font-semibold">
-            {isEdit ? "Edit Event" : "New Calendar Event"}
-          </SheetTitle>
-        </SheetHeader>
+    <>
+      <Sheet open={open} onOpenChange={handleSheetOpenChange}>
+        <SheetContent
+          side="right"
+          className={cn("flex flex-col p-0 w-full sm:max-w-[480px]")}
+        >
+          <SheetHeader className="px-6 border-b shrink-0">
+            <SheetTitle className="text-base font-semibold">
+              {isEdit ? "Edit Event" : "New Calendar Event"}
+            </SheetTitle>
+          </SheetHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="px-6 space-y-5">
-            <EventFormFields
-              title={form.title}
-              description={form.description}
-              location={form.location}
-              locationError={form.locationError}
-              allDay={form.allDay}
-              startDate={form.startDate}
-              startTime={form.startTime}
-              endDate={form.endDate}
-              endTime={form.endTime}
-              category={form.category}
-              color={form.color}
-              meetStatus={meetStatus}
-              isMeetPending={createMeet.isPending}
-              onTitleChange={handleTitleChange}
-              onDescriptionChange={handleDescriptionChange}
-              onLocationChange={handleLocationChange}
-              onAllDayChange={handleAllDayChange}
-              onStartDateChange={handleStartDateChange}
-              onStartTimeChange={handleStartTimeChange}
-              onEndDateChange={handleEndDateChange}
-              onEndTimeChange={handleEndTimeChange}
-              onCategoryChange={handleCategoryChange}
-              onColorChange={handleColorChange}
-              onGenerateMeet={handleGenerateMeet}
-            />
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="px-6 space-y-5">
+              <EventFormFields
+                title={form.title}
+                description={form.description}
+                location={form.location}
+                locationError={form.locationError}
+                allDay={form.allDay}
+                startDate={form.startDate}
+                startTime={form.startTime}
+                endDate={form.endDate}
+                endTime={form.endTime}
+                category={form.category}
+                color={form.color}
+                meetStatus={meetStatus}
+                isMeetPending={createMeet.isPending}
+                onTitleChange={handleTitleChange}
+                onDescriptionChange={handleDescriptionChange}
+                onLocationChange={handleLocationChange}
+                onAllDayChange={handleAllDayChange}
+                onStartDateChange={handleStartDateChange}
+                onStartTimeChange={handleStartTimeChange}
+                onEndDateChange={handleEndDateChange}
+                onEndTimeChange={handleEndTimeChange}
+                onCategoryChange={handleCategoryChange}
+                onColorChange={handleColorChange}
+                onGenerateMeet={handleGenerateMeet}
+              />
 
-            <EventAttendeesPicker
-              members={members}
-              selectedIds={form.attendeeIds}
-              onToggle={toggleAttendee}
-            />
+              <EventAttendeesPicker
+                members={members}
+                selectedIds={form.attendeeIds}
+                onToggle={toggleAttendee}
+              />
+
+              <div className="space-y-1.5 pb-2">
+                <p className="text-sm font-medium text-foreground">Linked work item</p>
+                {displayLinkedKey ? (
+                  <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
+                    <Ticket className="h-3.5 w-3.5 text-violet-600 shrink-0" />
+                    <span className="font-mono text-[11px] text-violet-600 shrink-0">
+                      {displayLinkedKey}
+                    </span>
+                    {displayLinkedTitle && (
+                      <span className="text-sm truncate flex-1">{displayLinkedTitle}</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleRemoveLinkedTicket}
+                      className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors shrink-0"
+                      aria-label="Remove linked ticket"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleOpenTicketPicker}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-2 w-full transition-colors hover:border-violet-400"
+                  >
+                    <Ticket className="h-3.5 w-3.5" />
+                    Link a ticket…
+                  </button>
+                )}
+              </div>
+            </div>
+          </ScrollArea>
+
+          <SheetFooter className="px-6 border-t shrink-0 flex-row gap-2 justify-end">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleClose}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSave}
+              disabled={isPending || !form.title.trim()}
+            >
+              {isPending
+                ? isEdit
+                  ? "Saving..."
+                  : "Creating..."
+                : isEdit
+                  ? "Save Changes"
+                  : "Create Event"}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={ticketPickerOpen} onOpenChange={setTicketPickerOpen}>
+        <SheetContent side="bottom" className="h-[60vh] pb-8 flex flex-col">
+          <SheetHeader className="pb-4 shrink-0">
+            <SheetTitle>Link a ticket</SheetTitle>
+          </SheetHeader>
+          <TicketPickerContent
+            q={ticketSearchQ}
+            onQChange={setTicketSearchQ}
+            onSelect={handleTicketSelect}
+          />
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+}
+
+function TicketPickerContent({
+  q,
+  onQChange,
+  onSelect,
+}: {
+  q: string;
+  onQChange: (v: string) => void;
+  onSelect: (t: TicketSearchResult) => void;
+}) {
+  const { data: tickets = [], isLoading } = useTicketSearch(q);
+  return (
+    <div className="flex flex-col gap-3 flex-1 min-h-0">
+      <div className="relative shrink-0">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <input
+          autoFocus
+          value={q}
+          onChange={(e) => onQChange(e.target.value)}
+          placeholder="Search by ticket key or title…"
+          className="w-full pl-8 pr-3 py-2 text-sm border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+        />
+      </div>
+      <div className="overflow-y-auto space-y-1 flex-1">
+        {isLoading ? (
+          <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Searching…
           </div>
-        </ScrollArea>
-
-        <SheetFooter className="px-6 border-t shrink-0 flex-row gap-2 justify-end">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={handleClose}
-            disabled={isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={handleSave}
-            disabled={isPending || !form.title.trim()}
-          >
-            {isPending
-              ? isEdit
-                ? "Saving..."
-                : "Creating..."
-              : isEdit
-                ? "Save Changes"
-                : "Create Event"}
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        ) : tickets.length === 0 && q ? (
+          <div className="py-4 text-sm text-muted-foreground">No tickets found</div>
+        ) : (
+          tickets.map((ticket) => (
+            <button
+              key={ticket.id}
+              type="button"
+              onClick={() => onSelect(ticket)}
+              className="w-full flex items-start gap-2.5 px-3 py-2 rounded-lg text-left hover:bg-muted/40 transition-colors"
+            >
+              <span className="font-mono text-[11px] text-muted-foreground shrink-0 mt-0.5">
+                {ticket.projectKey}-{ticket.ticketNumber}
+              </span>
+              <span className="text-sm flex-1 min-w-0 truncate">{ticket.title}</span>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
   );
 }

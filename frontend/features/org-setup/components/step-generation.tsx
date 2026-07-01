@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, RefreshCw } from "lucide-react";
@@ -18,13 +18,10 @@ type StepGenerationProps = {
 };
 
 export function StepGeneration({ data, onNext }: StepGenerationProps) {
-  const { update } = useSession();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const updateRef = useRef(update);
   const onNextRef = useRef(onNext);
   const dataRef = useRef(data);
-  updateRef.current = update;
   onNextRef.current = onNext;
   dataRef.current = data;
 
@@ -36,6 +33,8 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
   const hasRunRef = useRef(false);
 
   const orgMutation = useOrgSetupMutation();
+  const orgMutationRef = useRef(orgMutation);
+  orgMutationRef.current = orgMutation;
 
   function buildPayload(d: WizardData) {
     return {
@@ -49,7 +48,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
     };
   }
 
-  async function handleSuccess(orgId: string | null) {
+  async function handleSuccess(orgId: string | null, autoLoginToken: string | null) {
     if (apiDoneRef.current) return;
     apiDoneRef.current = true;
     if (intervalRef.current) {
@@ -59,14 +58,12 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
     setCompletedSteps(total);
     clearBackendTokenCache();
     document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
-    await Promise.race([
-      updateRef.current({
-        ...(orgId ? { orgId } : {}),
-        orgOnboardingCompletedAt: new Date().toISOString(),
-        isOrgOwner: true,
-      }).catch(() => null),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-    ]);
+    if (autoLoginToken) {
+      await signIn("credentials", {
+        magicToken: autoLoginToken,
+        redirect: false,
+      }).catch(() => null);
+    }
     onNextRef.current();
   }
 
@@ -94,7 +91,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
     }, 650);
   }
 
-  function runSetup() {
+  async function runSetup() {
     if (hasRunRef.current) return;
     hasRunRef.current = true;
     setCompletedSteps(0);
@@ -103,31 +100,12 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
 
     const payload = buildPayload(dataRef.current);
 
-    orgMutation.mutate(payload, {
-      onSuccess: (res) => {
-        handleSuccess(res?.orgId ?? null);
-      },
-      onError: async (err) => {
-        const msg = getErrorMessage(err).toLowerCase();
-        if (
-          msg.includes("not found") ||
-          msg.includes("organization") ||
-          msg.includes("unauthorized")
-        ) {
-          await Promise.race([
-            updateRef.current({ orgId: null }).catch(() => null),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
-          ]);
-          clearBackendTokenCache();
-          orgMutation.mutate(payload, {
-            onSuccess: (res) => { handleSuccess(res?.orgId ?? null); },
-            onError: (retryErr) => { handleError(getErrorMessage(retryErr)); },
-          });
-        } else {
-          handleError(getErrorMessage(err));
-        }
-      },
-    });
+    try {
+      const res = await orgMutationRef.current.mutateAsync(payload);
+      await handleSuccess(res?.orgId ?? null, res?.autoLoginToken ?? null);
+    } catch (err) {
+      handleError(getErrorMessage(err));
+    }
   }
 
   useEffect(() => {

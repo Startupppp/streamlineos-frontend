@@ -173,6 +173,7 @@ export interface SendMessageInput {
   content?: string;
   replyToId?: number;
   attachments?: AttachmentInput[];
+  metadata?: Record<string, unknown>;
 }
 
 export interface EditMessageInput {

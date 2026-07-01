@@ -13,7 +13,7 @@ export type OrgSetupPayload = {
   enabledModules: string[];
 };
 
-export type OrgSetupResponse = { orgId?: string };
+export type OrgSetupResponse = { orgId?: string; autoLoginToken?: string };
 
 export function useOrgSetupMutation() {
   return useMutation({

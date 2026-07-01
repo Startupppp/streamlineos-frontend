@@ -161,7 +161,7 @@ export const queryKeys = {
 
   projects: {
     all: [...base, "projects"] as const,
-    list: () => [...base, "projects", "list"] as const,
+    list: (filters?: Record<string, unknown>) => [...base, "projects", "list", filters] as const,
     detail: (id: number) => [...base, "projects", "detail", id] as const,
     sprints: (projectId?: number) => [...base, "projects", "sprints", projectId] as const,
     sprint: (id: number) => [...base, "projects", "sprints", "detail", id] as const,

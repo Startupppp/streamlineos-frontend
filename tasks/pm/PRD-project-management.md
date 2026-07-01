@@ -230,6 +230,56 @@ Calendar integration permissions:
 
 **Hard rule**: permissions are resolved in backend on every request; frontend gating is UX only.
 
+### 7.4 RBAC access invariants (fix the “created project but no access” bug)
+
+**Observed broken behavior (from current frontend wiring)**
+- Project is created via `NewProjectDialog` (`frontend/features/projects/project-list/new-project-dialog.tsx`) calling `useCreateProject()` → `POST /projects`.
+- The create payload defaults to `memberIds: []` unless the user explicitly adds members.
+- Clicking a project in the list navigates to `/projects/[projectId]`.
+- The project route is server-gated in `frontend/app/(authenticated)/projects/[projectId]/layout.tsx`:
+  - it calls `GET /projects/:projectId` via `serverApiClient`
+  - **any non-2xx** currently falls into a catch and renders `AccessDeniedView` (“You’re not invited to this project”)
+
+**Likely root cause**
+- Backend `POST /projects` is not guaranteeing that the creator becomes a project member (and/or the list endpoint can return projects the user can’t open).
+- Result: user sees the new project in `/projects` but `GET /projects/:id` returns 403 and the route shows “no access.”
+
+**Non-negotiable invariants (backend behavior)**
+- **Invariant A — creator always has access immediately**
+  - After `POST /projects` returns 201, the same actor must be able to `GET /projects/:projectId` successfully **without any client refresh**.
+- **Invariant B — creator is a member, even when `memberIds` is empty**
+  - `POST /projects` must **always** create a `project_members` row for the actor (role: “owner/admin”).
+  - If `memberIds` includes other users, create their membership rows too; **never** interpret `memberIds` as “replace members” for a new project.
+- **Invariant C — list/detail authorization must be consistent**
+  - `GET /projects` must not return projects the user cannot open unless the user is privileged (org owner / platform admin).
+  - `GET /projects/:id` and `GET /projects` must apply the **same** tenant + object-level access rules.
+- **Invariant D — transactional + idempotent create**
+  - Create project + creator membership + optional invited members must be in **one DB transaction**.
+  - Accept an `Idempotency-Key` for `POST /projects` (keyed by org + actor) to prevent duplicate projects on retries.
+- **Invariant E — stable error codes + debug details**
+  - If `GET /projects/:id` is denied, return 403 with `code: PROJECTS_FORBIDDEN_PROJECT` and `details.reason`:
+    - `reason: "NOT_A_MEMBER" | "MISSING_PERMISSION" | "MODULE_DISABLED" | "SUSPENDED" | "ORG_MISMATCH"`
+    - include `details.projectId`, `details.orgId`, `details.requiredPermission` (if applicable)
+
+**Frontend requirements (UX only; backend remains authoritative)**
+- After create success:
+  - close the sheet, show toast, **navigate to** `/projects/[projectId]` using the id returned from `POST /projects`
+  - show route-level loading skeleton while `/projects/[projectId]` server layout fetches the project
+- If `/projects/[projectId]` returns 403/404:
+  - render an explicit “Access denied” vs “Not found” message based on stable error code (not generic catch-all)
+  - include a secondary hint: “If you just created this project, it may take a moment to provision access. Retry once.” (but do not hide real denials)
+
+### 7.5 Audit log requirements for authorization failures (mandatory)
+
+Audit logs must cover **denied access** as first-class security events (not only successful mutations).
+- Emit `project.access_denied` when a user receives 403 for `GET /projects/:projectId` or any project-scoped route.
+  - **fields**: `actorUserId`, `orgId`, `projectId`, `requiredPermission?`, `reason`, `requestId`, `path`, `method`
+  - **privacy**: do not leak project name/metadata to the actor in the response if they lack access; audit log is internal only
+- Emit `ticket.access_denied` and `comment.access_denied` similarly for ticket/comment endpoints.
+- Any RBAC change that affects access (role grants, member add/remove) must emit:
+  - `project.member_added|project.member_removed|project.member_role_updated`
+  - and must bump permission/version caches per RBAC engine rules (backend `AccessService.bumpPermissionsVersion` when applicable).
+
 ---
 
 ## 8) Data model (backend; tenant-scoped)
@@ -611,6 +661,261 @@ Two entry points:
 
 ---
 
+## 14A) Click-by-click interaction specs (must-have flows)
+
+> These flows are intentionally **over-specified** so implementation can be done without ambiguity. Each flow includes: entry points, click-by-click steps, redirects/URLs, UI states, permissions/denials, edge cases, and where the behavior lives (frontend vs backend).
+
+### 14A.1 `/projects` — Edit / archive / delete project inline (must-have)
+
+**Entry points**
+- `/projects` grid cards (`frontend/features/projects/project-list/project-card.tsx`)
+- `/projects` list rows (`frontend/features/projects/project-list/project-list-row.tsx`)
+
+**Click-by-click**
+- User hovers a card/row → sees an overflow “…” button (kebab).
+- User clicks “…” → a dropdown opens with:
+  - **Edit project**
+  - **Archive project** / **Restore project** (label depends on current status)
+  - **Delete project…** (destructive; gated)
+- User clicks **Edit project**
+  - A right-side Sheet opens (small form → Dialog; multi-section form → Sheet; this is a Sheet because it mirrors project settings + member selection).
+  - Fields: name, description, status (ACTIVE/COMPLETED/ARCHIVED), optional members selector.
+  - User clicks **Save**
+    - button becomes disabled and shows “Saving…”
+    - mutation runs
+    - on success: sheet closes, toast “Project updated”, list item updates in-place without a full route reload
+    - on failure: keep sheet open, show toast with stable error code mapping, preserve input
+- User clicks **Archive project**
+  - Confirm dialog appears (“Archive project?”) with copy “You can restore later.”
+  - Confirm runs `PATCH /projects/:id` (status=ARCHIVED) or archive endpoint (§9.2 decision).
+  - On success: toast, list item badge updates to ARCHIVED; item remains visible if filter allows.
+- User clicks **Delete project…**
+  - Confirm dialog appears with “Type project key to confirm” (optional but recommended).
+  - Confirm runs `DELETE /projects/:id`.
+  - On success: toast, item is removed from list; if the user is currently on `/projects` (they are), no redirect needed.
+
+**Redirect behavior**
+- No redirect for edit/archive/delete (stay on `/projects`).
+- If user clicks the card/row itself (not the overflow menu), navigate to `/projects/[projectId]`.
+
+**States**
+- Loading: use existing skeleton layout on initial page load.
+- Mutation pending:
+  - disable only the acted-upon row/card controls (avoid freezing whole page)
+  - show spinner in the menu item or in the dialog confirm CTA
+- Error:
+  - show toast; do not silently swallow
+  - if 403, hide the action on next render (refresh access state per §18.2)
+
+**Permissions / denial UX**
+- **Backend** enforces:
+  - edit/archive: `projects:projects:update`
+  - delete: `projects:projects:delete` (or backward-compatible alias for existing `projects:delete` until migration finishes)
+- **Frontend**:
+  - hide menu items if `useCan(...)` denies
+  - if the user clicks via stale UI (permission changed mid-session), backend 403 must show toast and then UI should refresh access state and remove the action.
+
+**Edge cases**
+- Deleting a project that still has open tickets may be blocked:
+  - backend returns `PROJECTS_PROJECT_DELETE_BLOCKED` (409)
+  - UI shows a dialog explaining the constraint + CTA to open `/projects/[projectId]/settings` or an admin-only cleanup flow
+
+**Where the behavior lives**
+- **Frontend UI**: `project-card.tsx`, `project-list-row.tsx`, new “edit project” sheet under `frontend/features/projects/project-list/`
+- **Frontend data**: `useUpdateProject`, `useDeleteProject` in `frontend/hooks/api/projects/projects.ts`
+- **Backend**: `PATCH /projects/:id`, `DELETE /projects/:id` (RBAC + tenant + object checks; audit events)
+
+### 14A.2 `/chat` — Ticket tagging from chat input (must-have)
+
+**Entry points**
+- Message composer in `frontend/features/chat/message-input.tsx`
+
+**Click-by-click**
+- User types `#` in the message textarea.
+  - A “Tickets” picker popover opens (same placement behavior as the existing @mentions popover).
+  - Picker shows a search input (optional) and results list.
+- User types additional characters (e.g. `#PROJ-12`, `#123`, `#login bug`)
+  - The picker debounces network calls (300ms) and updates results.
+- User navigates results with arrow keys and presses Enter OR clicks a result.
+  - The UI inserts a **ticket token** into the textarea at the caret:
+    - displayed string uses stable identity `${project.key}-${ticket.ticketNumber}`
+  - The send payload must also include structured metadata:
+    - `metadata.entities += { type:"ticket", id:String(ticketId), projectId }`
+- User presses Backspace directly after a token
+  - the whole token is removed as one unit (no partial token corruption)
+- User sends the message
+  - optimistic message render is shown immediately
+  - on success: message is persisted with metadata
+  - on failure: optimistic message is rolled back (existing `useSendMessage` behavior)
+
+**Redirect behavior**
+- No redirects on send.
+- Clicking a rendered ticket pill in chat navigates to `/projects/[projectId]?ticket=[ticketId]` (see §6.2).
+
+**States**
+- Picker loading: show inline spinner + “Searching tickets…”
+- Picker empty: “No matching tickets”
+- Error: “Can’t search tickets right now” with “Retry”
+
+**Permissions / denial UX**
+- Searching and inserting:
+  - if user lacks `projects:tickets:view`, the picker must not show ticket titles; show a single disabled row “You don’t have access to tickets.”
+- Rendering:
+  - if user lacks access to the referenced ticket (403 on hydration/unfurl), render “Restricted ticket” pill and prevent navigation.
+
+**Edge cases**
+- Offline: typing `#` still opens the picker but shows “Offline” and no results; user can still send plain text.
+- Stale ticket: if ticket is deleted, pill renders “Ticket deleted” with no navigation.
+
+**Where the behavior lives**
+- **Frontend UI**: `frontend/features/chat/message-input.tsx` (new `#` trigger), `frontend/features/chat/chat-bubble.tsx` (render pill)
+- **Frontend data**: new ticket search hook under `frontend/hooks/api/projects/` calling `GET /projects/search/tickets`
+- **Backend**: `GET /projects/search/tickets` (RBAC + tenant safe; rate limited; paginated)
+
+### 14A.3 `/chat` — Change ticket status from a chat ticket pill (must-have)
+
+**Entry points**
+- Ticket pill rendered inside `frontend/features/chat/chat-bubble.tsx`
+
+**Click-by-click**
+- User clicks the status badge/dropdown on a ticket pill.
+  - Dropdown opens with the canonical statuses (`TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`) in order.
+  - Current status is selected/checked.
+- User selects a new status.
+  - UI immediately updates the pill status optimistically and shows a subtle “Saving…” indicator.
+  - Client calls `POST /chat/actions/ticket-status` with `{ channelId, projectId, ticketId, nextStatus }`.
+- Success:
+  - pill stays updated
+  - a system message appears in the channel:
+    - “Alice moved PROJ-123 from TODO → IN_PROGRESS”
+    - system message includes metadata entities so it can be clicked like a ticket mention
+- Failure:
+  - pill status reverts to previous status
+  - toast shows a stable error mapping:
+    - 403 → “You don’t have permission to update this ticket.”
+    - 409/422 → “This status change is not allowed.”
+
+**Redirect behavior**
+- None.
+
+**States**
+- Pending: disable the dropdown until request finishes; avoid double-submit.
+
+**Permissions / denial UX**
+- Backend checks **both**:
+  - chat action permission (`chat:actions:execute`)
+  - ticket update permission on the target ticket (`projects:tickets:update`) (BOLA-safe)
+- Frontend hides the control when `useCan("projects:tickets:update")` denies; but backend remains authoritative.
+
+**Where the behavior lives**
+- **Frontend UI**: `chat-bubble.tsx` (status dropdown on pill)
+- **Frontend data**: a new mutation hook under `frontend/hooks/api/chat.ts` (or a dedicated `frontend/hooks/api/chat-actions.ts`) calling `POST /chat/actions/ticket-status`
+- **Backend**: `POST /chat/actions/ticket-status` + emits audit + ticket activity + optional chat system message
+
+### 14A.4 `/projects/[projectId]` — Comment permalinks + deep-link open (must-have)
+
+**Entry points**
+- Ticket details sheet activity section: `frontend/features/projects/ticket-details/activity-feed.tsx`
+
+**Click-by-click**
+- User hovers a comment (top-level or reply).
+  - A small actions row appears (at minimum: “Copy link”).
+- User clicks **Copy link**
+  - app copies: `/projects/[projectId]?ticket=[ticketId]&comment=[commentId]`
+  - toast “Link copied”
+- Another user opens the link:
+  - `/projects/[projectId]` loads
+  - TicketDetailsDialog opens automatically (because `?ticket=` is present)
+  - The activity feed scrolls to the specific comment and highlights it for ~2s
+
+**Redirect behavior**
+- Direct navigation to the permalink URL must be supported.
+- Opening the ticket sheet must not cause a full route redirect; it is URL-param driven.
+
+**States**
+- If ticket loads but comment id is missing:
+  - show an inline “Comment not found” banner inside the sheet (ticket still usable)
+- If user lacks ticket access:
+  - show a stable forbidden UI (403 code), no comment content leakage
+
+**Permissions / denial UX**
+- Copy link is allowed for any user who can view the ticket/comment.
+- If viewer lacks access, the deep link must resolve to:
+  - either `/access-denied?...` (server-side `requirePermission`) or
+  - a safe “restricted” state inside the ticket sheet (client-side), depending on how the route is gated.
+
+**Where the behavior lives**
+- **Frontend UI**: `activity-feed.tsx` adds “Copy link” per comment; `ticket-details-dialog.tsx` handles scroll/highlight
+- **Frontend routing**: `frontend/app/(authenticated)/projects/[projectId]/page.tsx` reads `comment` param and passes it down
+- **Backend**: optional `GET /projects/:projectId/tickets/:ticketId/comments/:commentId` (for unfurl/hydration; see §9.3)
+
+### 14A.5 `/calendar` — Link / unlink a ticket to a calendar event (must-have)
+
+**Entry points**
+- Create/edit event sheet: `frontend/features/calendar/event-create-dialog.tsx`
+- Event detail sheet: `frontend/features/calendar/event-detail-sheet.tsx`
+
+**Click-by-click (link on create/edit)**
+- User opens “New Calendar Event”.
+- User finds “Linked work item” section and clicks “Link a ticket”.
+- Ticket picker opens (same search UX as chat ticket picker, shared component is recommended).
+- User selects a ticket:
+  - form shows a linked-ticket card: key, title, status
+  - event payload includes `entityType="ticket"`, `entityId=String(ticketId)`
+- User clicks “Create Event” / “Save Changes”.
+  - Pending state disables CTA and shows “Creating…” / “Saving…”
+  - Success closes sheet and refreshes calendar view
+
+**Click-by-click (unlink in detail)**
+- User opens event detail.
+- If the event is linked, a “Linked ticket” card is shown:
+  - click opens `/projects/[projectId]?ticket=[ticketId]`
+  - “Unlink” button removes the link (permission gated)
+- Unlink:
+  - confirm dialog (“Unlink ticket?”)
+  - pending disables unlink button
+  - success updates event detail view and emits audit
+
+**Permissions / denial UX**
+- Backend enforces `calendar:events:update` and ticket visibility for linking.
+- If the user can view calendar event but not the ticket:
+  - show “Restricted ticket” card without title; no navigation
+
+**Where the behavior lives**
+- **Frontend UI**: `event-create-dialog.tsx` and `event-detail-sheet.tsx`
+- **Frontend data**: `useCreateCalendarEvent` / `useUpdateCalendarEvent` hooks (extend payload to include entity fields)
+- **Backend**: calendar create/update endpoints persist `entityType/entityId`; emits audit events `calendar.event_linked_ticket|event_unlinked_ticket`
+
+### 14A.6 `/calendar` — Create a ticket from calendar (must-have)
+
+**Entry points**
+- Calendar header “Add” dropdown (in `frontend/features/calendar/calendar-view.tsx`)
+- Slot select flow (user drags/selects time range on the calendar)
+
+**Click-by-click**
+- User picks “Add ticket due date”.
+- A “Create Ticket” Sheet opens:
+  - required: project selector, title
+  - prefilled: due date/time derived from selected calendar slot (or today if header action)
+  - optional: also create a calendar event (toggle) and link it to the ticket
+- User clicks “Create ticket”
+  - pending disables CTA and shows “Creating…”
+  - on success:
+    - toast “Ticket created”
+    - if “also create event” is enabled, calendar refreshes and shows the event
+    - redirect behavior:
+      - default: open the ticket sheet directly in its project context:
+        - navigate to `/projects/[projectId]?ticket=[ticketId]`
+
+**Permissions / denial UX**
+- Requires `projects:tickets:create`.
+- If denied, show toast and keep user on calendar.
+
+**Where the behavior lives**
+- **Frontend UI**: calendar view adds entry points; reuse ticket create dialog pattern (`CreateTicketDialog`) where possible
+- **Frontend data**: `POST /projects/:projectId/tickets` mutation + optional calendar create mutation
+- **Backend**: ticket create endpoint is authoritative; emits audit + activity; optional event create persists link
+
 ## 14) Page-by-page PRD (click-by-click, states, acceptance)
 
 > For every page: implement loading/empty/error states, keyboard accessibility, and ensure main content scrolls without shell scroll.
@@ -657,7 +962,18 @@ Security (frontend posture):
   - **Delete** (only when permitted; uses existing `useDeleteProject`)
 
 **Click-by-click**
-- Click “New Project” → Sheet opens → fill fields → Create → toast → list refresh → navigate to `/projects/[projectId]`.
+- Click “New Project” → Sheet opens (`NewProjectDialog`) → fill fields → click “Create Project”.
+  - **Frontend**: calls `useCreateProject().mutateAsync(...)`.
+  - **Backend**: `POST /projects` creates the project **and** creator membership in a single transaction (§7.4).
+  - **Loading state**: CTA becomes disabled + label “Creating…”, toast shows “Creating project…”.
+  - **Success**:
+    - close sheet + reset form
+    - show toast “Project created successfully”
+    - **redirect** to `/projects/[projectId]` (id from response)
+    - **list refresh**: invalidate projects list cache so `/projects` shows the new project if the user navigates back
+  - **Error**:
+    - show toast with stable error mapping (`PROJECTS_PROJECT_KEY_CONFLICT`, `AUTH_FORBIDDEN`, etc.)
+    - keep sheet open and preserve user input
 - Hover a project card/row → show overflow menu → choose Edit → update name/description/status → Save → toast → card updates without full reload.
 - Choose Delete → confirm dialog → on success remove from list and show toast.
 
@@ -1001,6 +1317,7 @@ This section is kept short intentionally; the detailed requirements are in the p
 - “Create ticket from calendar” flow does not exist (see §13.4 + §14.27).
 - Backend does not expose an org-scoped ticket search endpoint required by chat/calendar pickers (see §9.3).
 - Permission key format is inconsistent (`projects:delete` vs 3-segment keys) (see §7.3).
+- **RBAC bug**: user can create a project but `GET /projects/:id` returns 403 (“not invited”) due to missing creator membership / inconsistent list-detail auth (see §7.4–§7.5).
 - Notifications/reminders are underspecified in legacy docs; must be event-driven + scheduled backend jobs (see §11.4).
 - Calendar feed supports `source:"task"` in types but may not actually include ticket due dates yet (see §9.6).
 - No canonical mapping exists between chat messages and work entities (metadata exists but is untyped) (see §8.3 + §13).

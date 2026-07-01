@@ -22,9 +22,10 @@ export function useProjects(
   options?: Omit<UseQueryOptions<PaginatedResponse<ProjectListItem>>, "queryKey" | "queryFn">
 ) {
   return useQuery<PaginatedResponse<ProjectListItem>>({
-    queryKey: queryKeys.projects.list(),
+    queryKey: queryKeys.projects.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedResponse<ProjectListItem>>("/projects", filters as Record<string, unknown>),
+    staleTime: 30_000,
     refetchInterval: 30_000,
     ...options,
   });
@@ -42,9 +43,9 @@ export function useProject(
   });
 }
 
-export function useCreateProject(options?: Parameters<typeof useMutation>[0]) {
+export function useCreateProject(options?: Omit<UseMutationOptions<Project, Error, CreateProjectInput>, "mutationFn">) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<Project, Error, CreateProjectInput>({
     mutationFn: (data: CreateProjectInput) => apiClient.post<Project>("/projects", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
@@ -53,12 +54,14 @@ export function useCreateProject(options?: Parameters<typeof useMutation>[0]) {
   });
 }
 
-export function useUpdateProject(options?: Parameters<typeof useMutation>[0]) {
+export function useUpdateProject(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, UpdateProjectInput>, "mutationFn">
+) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<{ success: boolean }, Error, UpdateProjectInput>({
     mutationFn: ({ projectId, ...data }: UpdateProjectInput) =>
       apiClient.patch<{ success: boolean }>(`/projects/${projectId}`, data),
-    onSuccess: (_data: unknown, variables: UpdateProjectInput) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
       });
@@ -82,6 +85,23 @@ export function useDeleteProject(
   });
 }
 
+export function useArchiveProject(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { projectId: number; restore?: boolean }>, "mutationFn">
+) {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { projectId: number; restore?: boolean }>({
+    mutationFn: ({ projectId, restore }) =>
+      apiClient.patch<{ success: boolean }>(`/projects/${projectId}`, {
+        status: restore ? "ACTIVE" : "ARCHIVED",
+      }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(variables.projectId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
+    ...options,
+  });
+}
+
 export function useProjectMembers(
   projectId: number,
   options?: Omit<UseQueryOptions<ProjectMember[]>, "queryKey" | "queryFn" | "enabled">
@@ -94,9 +114,9 @@ export function useProjectMembers(
   });
 }
 
-export function useAddProjectMember(options?: Parameters<typeof useMutation>[0]) {
+export function useAddProjectMember(options?: Omit<UseMutationOptions<Project, Error, CreateProjectInput>, "mutationFn">) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<Project, Error, CreateProjectInput>({
     mutationFn: ({ projectId, ...data }: AddProjectMemberInput) =>
       apiClient.post<ProjectMember>(`/projects/${projectId}/members`, data),
     onSuccess: (_data: unknown, variables: AddProjectMemberInput) => {
@@ -108,9 +128,9 @@ export function useAddProjectMember(options?: Parameters<typeof useMutation>[0])
   });
 }
 
-export function useRemoveProjectMember(options?: Parameters<typeof useMutation>[0]) {
+export function useRemoveProjectMember(options?: Omit<UseMutationOptions<Project, Error, CreateProjectInput>, "mutationFn">) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<Project, Error, CreateProjectInput>({
     mutationFn: ({ projectId, userId }: { projectId: number; userId: string }) =>
       apiClient.delete<{ success: boolean }>(`/projects/${projectId}/members`, {
         data: { userId },

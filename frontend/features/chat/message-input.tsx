@@ -25,6 +25,8 @@ import {
   getInitials,
 } from "./chat-helpers";
 import type { Message } from "./chat-types";
+import type { TicketSearchResult } from "@/hooks/api/projects";
+import { TicketMentionPicker } from "./ticket-mention-picker";
 import { EmojiGrid } from "./emoji-grid";
 type PendingAttachment = {
   fileName: string;
@@ -142,6 +144,11 @@ interface MessageInputProps {
   filteredMentions: OrgUser[];
   insertMention: (name: string) => void;
 
+  showTicketPicker: boolean;
+  ticketQuery: string;
+  ticketSelectedIndex: number;
+  onTicketSelect: (ticket: TicketSearchResult) => void;
+
   typingText: string | null;
 
   sendMessage: { isPending: boolean };
@@ -173,6 +180,10 @@ export function MessageInput({
   mentionIndex,
   filteredMentions,
   insertMention,
+  showTicketPicker,
+  ticketQuery,
+  ticketSelectedIndex,
+  onTicketSelect,
   typingText,
   sendMessage,
   onSend,
@@ -297,6 +308,15 @@ export function MessageInput({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {showTicketPicker && (
+            <TicketMentionPicker
+              query={ticketQuery}
+              onSelect={onTicketSelect}
+              selectedIndex={ticketSelectedIndex}
+              className="left-3 sm:left-6"
+            />
+          )}
 
           <AnimatePresence>
             {showEmojiPicker && (

@@ -2,11 +2,18 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { ArrowDown, Bookmark, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, Link, MessageSquare, Pencil, Reply, Smile, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowDown, Bookmark, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, Link, Loader2, MessageSquare, Pencil, Reply, Smile, Ticket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   getInitials,
   formatMessageTime,
@@ -17,8 +24,124 @@ import {
   isImageMime,
   resolveFileUrl,
 } from "./chat-helpers";
-import type { Message } from "./chat-types";
+import type { Message, TicketEntityRef, MessageMetadata } from "./chat-types";
+import { useCan } from "@/hooks/api/access";
+import { apiClient } from "@/lib/api-client";
 import { LinkPreviewCard } from "./link-preview-card";
+
+const TICKET_STATUS_DISPLAY: Record<string, string> = {
+  TODO: "Todo",
+  IN_PROGRESS: "In Progress",
+  IN_REVIEW: "In Review",
+  DONE: "Done",
+};
+const TICKET_STATUS_COLORS: Record<string, string> = {
+  TODO: "bg-slate-100 text-slate-700",
+  IN_PROGRESS: "bg-blue-100 text-blue-700",
+  IN_REVIEW: "bg-amber-100 text-amber-700",
+  DONE: "bg-green-100 text-green-700",
+};
+
+function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId: number }) {
+  const router = useRouter();
+  const [currentStatus, setCurrentStatus] = useState(entity.status ?? "TODO");
+  const [isChangingStatus, setIsChangingStatus] = useState(false);
+  const canUpdate = useCan("projects:tickets:update");
+
+  const ticketKey = entity.projectKey && entity.ticketNumber
+    ? `${entity.projectKey}-${entity.ticketNumber}`
+    : `Ticket #${entity.id}`;
+
+  const handlePillClick = useCallback(() => {
+    router.push(`/projects/${entity.projectId}?ticket=${entity.id}`);
+  }, [router, entity.projectId, entity.id]);
+
+  const handleStatusChange = useCallback(
+    async (nextStatus: string) => {
+      const prev = currentStatus;
+      setCurrentStatus(nextStatus);
+      setIsChangingStatus(true);
+      try {
+        await apiClient.post("/chat/actions/ticket-status", {
+          channelId,
+          projectId: entity.projectId,
+          ticketId: Number(entity.id),
+          nextStatus,
+        });
+      } catch {
+        setCurrentStatus(prev);
+        toast.error("Failed to update ticket status");
+      } finally {
+        setIsChangingStatus(false);
+      }
+    },
+    [currentStatus, channelId, entity],
+  );
+
+  return (
+    <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/80 px-2.5 py-1.5 shadow-sm hover:shadow-md transition-all my-1">
+      <button
+        type="button"
+        onClick={handlePillClick}
+        className="flex items-center gap-1.5 font-mono text-[12px] text-violet-600 hover:text-violet-700 font-semibold"
+        aria-label={`Open ticket ${ticketKey}`}
+      >
+        <Ticket className="h-3.5 w-3.5" />
+        {ticketKey}
+      </button>
+      {entity.title && (
+        <button
+          type="button"
+          onClick={handlePillClick}
+          className="text-[12px] text-foreground hover:underline truncate max-w-[200px]"
+        >
+          {entity.title}
+        </button>
+      )}
+      {canUpdate ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              disabled={isChangingStatus}
+              className={cn(
+                "inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity",
+                TICKET_STATUS_COLORS[currentStatus] ?? "bg-muted text-muted-foreground",
+              )}
+              aria-label="Change ticket status"
+            >
+              {isChangingStatus ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                TICKET_STATUS_DISPLAY[currentStatus] ?? currentStatus
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36">
+            {(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map((s) => (
+              <DropdownMenuItem
+                key={s}
+                onClick={() => handleStatusChange(s)}
+                className={cn(s === currentStatus && "font-semibold")}
+              >
+                {TICKET_STATUS_DISPLAY[s]}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <span
+          className={cn(
+            "inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium",
+            TICKET_STATUS_COLORS[currentStatus] ?? "bg-muted text-muted-foreground",
+          )}
+        >
+          {TICKET_STATUS_DISPLAY[currentStatus] ?? currentStatus}
+        </span>
+      )}
+    </div>
+  );
+}
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
@@ -248,6 +371,21 @@ export function ChatBubble({
             {message.content && /https?:\/\//.test(message.content) && (
               <LinkPreviewCard content={message.content} isOwn={isOwn} />
             )}
+
+            {(() => {
+              const meta = message.metadata as MessageMetadata | null;
+              const ticketEntities = (meta?.entities ?? []).filter(
+                (e): e is TicketEntityRef => e.type === "ticket",
+              );
+              if (ticketEntities.length === 0) return null;
+              return (
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {ticketEntities.map((entity) => (
+                    <TicketPill key={entity.id} entity={entity} channelId={message.channelId} />
+                  ))}
+                </div>
+              );
+            })()}
 
             {message.attachments.length > 0 && (
               <div className="mt-1.5 space-y-1.5">

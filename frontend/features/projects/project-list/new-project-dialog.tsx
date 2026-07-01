@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -56,6 +57,7 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
   const [memberSearch, setMemberSearch] = useState("");
+  const router = useRouter();
   const { data: employeesData } = useHrEmployees();
   const createProjectMutation = useCreateProject();
   const employees = Array.isArray(employeesData)
@@ -83,18 +85,17 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
       ...values,
       name: values.name.replace(/^\w/, (c) => c.toUpperCase()),
     };
-    toast.promise(
-      createProjectMutation.mutateAsync(capitalizedValues),
-      {
-        loading: "Creating project...",
-        success: () => {
-          setOpen(false);
-          form.reset();
-          return "Project created successfully";
-        },
-        error: "Failed to create project",
-      }
-    );
+    createProjectMutation.mutate(capitalizedValues, {
+      onSuccess: (project) => {
+        setOpen(false);
+        form.reset();
+        toast.success("Project created successfully");
+        router.push(`/projects/${project.id}`);
+      },
+      onError: () => {
+        toast.error("Failed to create project");
+      },
+    });
   }
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const name = e.target.value;

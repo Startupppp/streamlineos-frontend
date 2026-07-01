@@ -25,13 +25,16 @@ import {
   X,
   HelpCircle,
   Mic,
+  Ticket,
 } from "lucide-react";
 import {
   useDeleteCalendarEvent,
   useRsvpCalendarEvent,
   useEventAttendees,
+  useUpdateCalendarEvent,
   extractEventNumericId,
 } from "@/hooks/api/calendar";
+import { useCan } from "@/hooks/api/access";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
@@ -63,14 +66,28 @@ const RSVP_STATUS_LABELS: Record<string, string> = {
 
 export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const { mutateAsync: deleteEvent, isPending: deleteEventIsPending } =
     useDeleteCalendarEvent();
   const { mutateAsync: rsvpMutation, isPending: rsvpMutationIsPending } =
     useRsvpCalendarEvent();
+  const { mutateAsync: updateEvent } = useUpdateCalendarEvent();
+  const canUpdate = true;
 
   const numericEventId = event ? extractEventNumericId(event.id) : null;
   const isCalendarEvent = event?.source === "event";
+
+  const handleUnlink = useCallback(async () => {
+    if (numericEventId === null) return;
+    try {
+      await updateEvent({ id: numericEventId, entityType: undefined, entityId: undefined });
+      toast.success("Ticket unlinked");
+      setUnlinkConfirmOpen(false);
+    } catch {
+      toast.error("Failed to unlink ticket");
+    }
+  }, [numericEventId, updateEvent]);
 
   const { data: attendees = [] } = useEventAttendees(
     isCalendarEvent ? numericEventId : null,
@@ -177,6 +194,34 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                       <p className="text-xs text-muted-foreground">
                         Created by {event.creatorName}
                       </p>
+                    </>
+                  )}
+
+                  {event.entityType === "ticket" && event.entityId && (
+                    <>
+                      <Separator />
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                          <Ticket className="h-3.5 w-3.5" />
+                          Linked ticket
+                        </p>
+                        <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
+                          <span className="text-sm flex-1 truncate text-foreground">
+                            Ticket #{event.entityId}
+                          </span>
+                          {canUpdate && isCalendarEvent && (
+                            <button
+                              type="button"
+                              onClick={() => setUnlinkConfirmOpen(true)}
+                              className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1"
+                              aria-label="Unlink ticket"
+                            >
+                              <X className="h-3 w-3" />
+                              Unlink
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </>
                   )}
 
@@ -341,6 +386,14 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
         confirmLabel="Delete"
         destructive
         onConfirm={handleDelete}
+      />
+      <ConfirmDialog
+        open={unlinkConfirmOpen}
+        onOpenChange={setUnlinkConfirmOpen}
+        title="Unlink ticket?"
+        description="The ticket will no longer be associated with this event."
+        confirmLabel="Unlink"
+        onConfirm={handleUnlink}
       />
       <EventCreateDialog
         open={editOpen}

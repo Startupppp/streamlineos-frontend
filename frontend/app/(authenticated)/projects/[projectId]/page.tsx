@@ -40,6 +40,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const [hideCompleted, setHideCompleted] = useState(true);
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
+  const commentParam = searchParams.get("comment");
+  const highlightCommentId = commentParam ? parseInt(commentParam) : null;
 
   const q = searchParams.get("q") ?? "";
   const filterStatus = searchParams.get("status") ?? "";
@@ -302,6 +304,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
         onOpenChange={handleTicketClose}
         projectId={projectId}
         statuses={statuses?.map((s) => ({ id: s.id, name: s.name }))}
+        highlightCommentId={highlightCommentId}
       />
     </PageWrapper>
   );

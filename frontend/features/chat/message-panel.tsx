@@ -50,7 +50,8 @@ import { useHuddleRealtime } from "./huddle-realtime";
 import { HuddlePanel } from "./huddle-panel";
 import { VideoMeetingPanel } from "./video-meeting-panel";
 import { getInitials, getDateLabel } from "./chat-helpers";
-import type { Message } from "./chat-types";
+import type { Message, TicketEntityRef } from "./chat-types";
+import type { TicketSearchResult } from "@/hooks/api/projects";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
 import { ThreadPanel } from "./thread-panel";
@@ -183,6 +184,11 @@ export function MessagePanel({
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionIndex, setMentionIndex] = useState(0);
 
+  const [showTicketPicker, setShowTicketPicker] = useState(false);
+  const [ticketQuery, setTicketQuery] = useState("");
+  const [ticketSelectedIndex, setTicketSelectedIndex] = useState(0);
+  const pendingEntitiesRef = useRef<TicketEntityRef[]>([]);
+
   const mentionCandidates = useMemo(() => {
     if (!orgUsers) return [];
     if (channel?.type === "DIRECT") {
@@ -301,6 +307,9 @@ export function MessagePanel({
     setPendingAttachments([]);
     setShowEmojiPicker(false);
     setShowMentions(false);
+    setShowTicketPicker(false);
+    setTicketQuery("");
+    pendingEntitiesRef.current = [];
     setThreadMessageId(null);
     setShowFilesPanel(false);
     inputRef.current?.focus();
@@ -487,15 +496,55 @@ export function MessagePanel({
     [messageInput],
   );
 
+  const insertTicket = useCallback(
+    (ticket: TicketSearchResult) => {
+      const el = inputRef.current;
+      if (!el) return;
+      const token = `${ticket.projectKey}-${ticket.ticketNumber}`;
+      const text = messageInput;
+      const cursorPos = el.selectionStart ?? text.length;
+      const beforeCursor = text.slice(0, cursorPos);
+      const hashIdx = beforeCursor.lastIndexOf("#");
+      if (hashIdx === -1) return;
+      const newValue = text.slice(0, hashIdx) + token + " " + text.slice(cursorPos);
+      setMessageInput(newValue);
+      setShowTicketPicker(false);
+      setTicketQuery("");
+      setTicketSelectedIndex(0);
+      pendingEntitiesRef.current = [
+        ...pendingEntitiesRef.current,
+        {
+          type: "ticket" as const,
+          id: String(ticket.id),
+          projectId: ticket.projectId,
+          ticketNumber: ticket.ticketNumber,
+          projectKey: ticket.projectKey,
+          title: ticket.title,
+          status: ticket.status,
+          priority: ticket.priority,
+        },
+      ];
+      setTimeout(() => {
+        el.focus();
+        const pos = hashIdx + token.length + 1;
+        el.setSelectionRange(pos, pos);
+      }, 0);
+    },
+    [messageInput],
+  );
+
   const handleSend = useCallback(async () => {
     const content = messageInput.trim();
     if (!content && pendingAttachments.length === 0) return;
     const replyId = replyTo?.id;
     const attachments = [...pendingAttachments];
+    const entities = [...pendingEntitiesRef.current];
+    const metadata = entities.length > 0 ? { entities } : undefined;
     setMessageInput("");
     localStorage.removeItem(`chat:draft:${channelId}`);
     setReplyTo(null);
     setPendingAttachments([]);
+    pendingEntitiesRef.current = [];
     if (!isOnline) {
       messageQueue.current.push({
         content: content || "",
@@ -511,6 +560,7 @@ export function MessagePanel({
         content: content || undefined,
         replyToId: replyId,
         attachments: attachments.length > 0 ? attachments : undefined,
+        metadata,
       });
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (error) {
@@ -596,6 +646,22 @@ export function MessagePanel({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (showTicketPicker) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setTicketSelectedIndex((prev) => Math.min(prev + 1, 9));
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setTicketSelectedIndex((prev) => Math.max(prev - 1, 0));
+          return;
+        }
+        if (e.key === "Escape") {
+          setShowTicketPicker(false);
+          return;
+        }
+      }
       if (showMentions && filteredMentions.length > 0) {
         if (e.key === "ArrowDown") {
           e.preventDefault();
@@ -625,7 +691,7 @@ export function MessagePanel({
         handleSend();
       }
     },
-    [handleSend, showMentions, filteredMentions, mentionIndex, insertMention],
+    [handleSend, showMentions, filteredMentions, mentionIndex, insertMention, showTicketPicker],
   );
 
   const handleInputChange = useCallback(
@@ -641,14 +707,25 @@ export function MessagePanel({
       }
       const cursorPos = el.selectionStart ?? value.length;
       const textBefore = value.slice(0, cursorPos);
-      const atMatch = textBefore.match(/@(\w*)$/);
-      if (atMatch) {
-        setShowMentions(true);
-        setMentionQuery(atMatch[1]);
-        setMentionIndex(0);
-      } else {
+      const hashMatch = textBefore.match(/#([^\s]*)$/);
+      if (hashMatch) {
+        setShowTicketPicker(true);
+        setTicketQuery(hashMatch[1]);
+        setTicketSelectedIndex(0);
         setShowMentions(false);
         setMentionQuery("");
+      } else {
+        setShowTicketPicker(false);
+        setTicketQuery("");
+        const atMatch = textBefore.match(/@(\w*)$/);
+        if (atMatch) {
+          setShowMentions(true);
+          setMentionQuery(atMatch[1]);
+          setMentionIndex(0);
+        } else {
+          setShowMentions(false);
+          setMentionQuery("");
+        }
       }
     },
     [publishTyping],
@@ -983,6 +1060,10 @@ export function MessagePanel({
           setMentionIndex={setMentionIndex}
           filteredMentions={filteredMentions}
           insertMention={insertMention}
+          showTicketPicker={showTicketPicker}
+          ticketQuery={ticketQuery}
+          ticketSelectedIndex={ticketSelectedIndex}
+          onTicketSelect={insertTicket}
           typingText={typingText}
           sendMessage={sendMessage}
           onSend={handleSend}
