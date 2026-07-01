@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,6 +15,8 @@ import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { signIn } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
+import { getPasswordStrength } from "@/lib/password-utils";
+import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
 
 export const dynamic = "force-dynamic";
 
@@ -49,12 +51,35 @@ function deriveCompanyName(email: string): string {
 }
 
 const hasGoogleProvider = !!process.env.NEXT_PUBLIC_GOOGLE_ENABLED;
+const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  const startCooldown = useCallback(() => {
+    setCooldown(RESEND_COOLDOWN_SECONDS);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
 
   const googleSignUpMutation = useMutation({
     mutationFn: async () => {
@@ -74,6 +99,12 @@ export default function SignupPage() {
     },
   });
 
+  const password = form.watch("password");
+  const passwordStrength = useMemo(
+    () => (password ? getPasswordStrength(password) : null),
+    [password],
+  );
+
   const handleSubmit = useCallback(async (data: FormValues) => {
     setIsSubmitting(true);
     try {
@@ -86,28 +117,30 @@ export default function SignupPage() {
         plan: "STARTER",
       });
       setRegisteredEmail(data.email);
+      startCooldown();
       toast.success("Account created! Check your email to verify.");
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
-  }, []);
+  }, [startCooldown]);
 
   const handleResendVerification = useCallback(async () => {
-    if (!registeredEmail) return;
+    if (!registeredEmail || cooldown > 0) return;
     setIsResending(true);
     try {
       await apiClient.post("/auth/resend-verification", {
         email: registeredEmail,
       });
       toast.success("Verification email resent.");
+      startCooldown();
     } catch {
       toast.error("Failed to resend. Please try again.");
     } finally {
       setIsResending(false);
     }
-  }, [registeredEmail]);
+  }, [registeredEmail, cooldown, startCooldown]);
 
   const handleTogglePassword = useCallback(() => {
     setShowPassword((v) => !v);
@@ -130,14 +163,21 @@ export default function SignupPage() {
         <div className="mt-6 space-y-3">
           <Button
             onClick={handleResendVerification}
-            disabled={isResending}
+            disabled={isResending || cooldown > 0}
             variant="outline"
             className="w-full h-9 text-sm"
+            aria-label={
+              cooldown > 0
+                ? `Resend available in ${cooldown} seconds`
+                : "Resend verification email"
+            }
           >
             {isResending && (
               <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
             )}
-            Resend verification email
+            {cooldown > 0
+              ? `Resend available in ${cooldown}s`
+              : "Resend verification email"}
           </Button>
           <p className="text-sm text-muted-foreground">
             Already verified?{" "}
@@ -273,13 +313,16 @@ export default function SignupPage() {
                 )}
               </button>
             </div>
-            {form.formState.errors.password ? (
-              <p className="text-[12px] text-destructive">
-                {form.formState.errors.password.message}
-              </p>
+            {passwordStrength ? (
+              <PasswordStrengthIndicator strength={passwordStrength} />
             ) : (
               <p className="text-[11px] text-muted-foreground/60">
                 12+ chars · upper · lower · number · symbol
+              </p>
+            )}
+            {form.formState.errors.password && (
+              <p className="text-[12px] text-destructive">
+                {form.formState.errors.password.message}
               </p>
             )}
           </div>
