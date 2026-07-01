@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { LeadsStatsBar } from "@/features/crm/leads/leads-stats-bar";
 import { LeadsToolbar } from "@/features/crm/leads/leads-toolbar";
 import { LeadsKanban } from "@/features/crm/leads/leads-kanban";
+import { LeadsFunnelView } from "@/features/crm/leads/leads-funnel-view";
 import { LeadDetailSheet } from "@/features/crm/leads/lead-detail-sheet";
 import { CreateLeadSheet } from "@/features/crm/leads/create-lead-sheet";
 import {
@@ -116,7 +117,7 @@ export default function LeadsPipelinePage() {
   );
 
   const handleViewChange = useCallback(
-    (v: "table" | "kanban") => {
+    (v: "table" | "kanban" | "funnel") => {
       setView(v);
     },
     [setView],
@@ -462,6 +463,12 @@ export default function LeadsPipelinePage() {
               onOpenLead={setSelectedLeadId}
               onMoveStatus={handleMoveStatus}
             />
+          </div>
+        )}
+
+        {view === "funnel" && (
+          <div className="flex-1 min-h-0 mt-2 overflow-auto">
+            <LeadsFunnelView board={filteredBoard} />
           </div>
         )}
 

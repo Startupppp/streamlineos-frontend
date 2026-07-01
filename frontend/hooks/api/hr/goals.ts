@@ -1,0 +1,73 @@
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+
+export interface HrGoal {
+  id: number;
+  title: string;
+  description?: string;
+  type: string;
+  status: string;
+  progress: number;
+  startDate: string;
+  endDate: string;
+  userId: string;
+  orgId: string;
+  parentGoalId?: number;
+  targetValue?: string;
+  currentValue?: string;
+  unit?: string;
+  createdAt: string;
+}
+
+export interface HrKeyResult {
+  id: number;
+  title: string;
+  progress: number;
+  targetValue?: string;
+  currentValue?: string;
+  unit?: string;
+}
+
+export function useHrGoals(params?: { userId?: string }) {
+  return useQuery({
+    queryKey: queryKeys.hr.goals(params?.userId),
+    queryFn: () =>
+      apiClient.get<HrGoal[]>(
+        "/hr/performance/goals",
+        params as Record<string, unknown> | undefined,
+      ),
+    staleTime: 60_000,
+  });
+}
+
+export function useHrKeyResults(goalId: number) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.goals(), "keyResults", goalId],
+    queryFn: () =>
+      apiClient.get<HrKeyResult[]>(
+        `/hr/performance/key-results?goalId=${goalId}`,
+      ),
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateHrGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "goals", "create"],
+    mutationFn: (data: {
+      title: string;
+      description?: string;
+      type?: string;
+      startDate: string;
+      endDate: string;
+      userId: string;
+      targetValue?: string;
+      unit?: string;
+    }) => apiClient.post<HrGoal>("/hr/performance/goals", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.goals() }),
+  });
+}

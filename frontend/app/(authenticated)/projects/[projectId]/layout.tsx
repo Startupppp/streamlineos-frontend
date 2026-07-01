@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { ProjectSidebar } from "@/components/layout/project-sidebar";
 import { serverApiClient } from "@/lib/api/server-client";
 import type { ProjectWithDetails } from "@/types/projects";
-import { AccessDeniedView } from "./access-denied-view";
+import { AccessDeniedView } from "@/features/projects/project-detail/access-denied-view";
 
 export default async function ProjectLayout({
   children,

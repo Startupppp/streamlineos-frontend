@@ -1,3 +1,5 @@
+export type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED";
+
 export interface Quote {
   id: number;
   orgId: string;
@@ -6,7 +8,7 @@ export interface Quote {
   quoteNumber: string;
   subject: string;
   description: string | null;
-  status: "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED";
+  status: QuoteStatus;
   currency: string;
   totalAmount: string;
   taxAmount: string;

@@ -11,8 +11,8 @@ import {
   useHrEmployees,
 } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
-import { CreateExpenseDialog } from "./create-expense-dialog";
-import { ImportExpenseSheet } from "./import-expense-sheet";
+import { CreateExpenseDialog } from "@/features/hr/expenses/components/create-expense-dialog";
+import { ImportExpenseSheet } from "@/features/hr/expenses/components/import-expense-sheet";
 import ExpensesLoading from "./loading";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
 import {
@@ -39,7 +39,7 @@ import {
   AdminExpenseList,
   MemberExpenseList,
 } from "@/features/hr/expenses/expense-list";
-import type { ExpenseToEdit } from "./create-expense-dialog";
+import type { ExpenseToEdit } from "@/features/hr/expenses/components/create-expense-dialog";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import { useCan } from "@/hooks/api/access";
 

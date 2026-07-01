@@ -11,3 +11,5 @@ export * from "./whiteboards";
 export * from "./releases";
 export * from "./checklists";
 export * from "./custom-fields";
+export * from "./labels";
+export * from "./custom-states";

@@ -4,9 +4,9 @@ import { use, useState, useCallback } from "react";
 import {
   useSprints, useProject, useUpdateSprint, useUpdateTicket,
 } from "@/hooks/api/projects";
-import { CreateSprintDialog } from "@/components/projects/create-sprint-dialog";
-import { BurndownChart } from "@/components/projects/burndown-chart";
-import { VelocityChart } from "@/components/projects/velocity-chart";
+import { CreateSprintDialog } from "@/features/projects/sprints/create-sprint-dialog";
+import { BurndownChart } from "@/features/projects/sprints/burndown-chart";
+import { VelocityChart } from "@/features/projects/sprints/velocity-chart";
 import { Card, CardContent } from "@/components/ui/card";
 import { Play, Calendar, CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";

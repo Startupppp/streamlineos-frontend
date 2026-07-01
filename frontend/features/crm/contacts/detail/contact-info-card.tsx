@@ -85,6 +85,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
     contact.createdAt;
 
   return (
+    <>
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -296,6 +297,6 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
       </Card>
     </motion.div>
     <AiAssistantPanel entityType="contact" entityId={contact.id} entityName={contact.name} />
-  </>
+    </>
   );
 }

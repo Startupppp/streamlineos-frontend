@@ -98,6 +98,24 @@ export function useCriticalPath(projectId: number) {
   });
 }
 
+export function useCycleTimeReport(projectId: number) {
+  return useQuery<Array<{ week: string; avgDays: number; count: number }>>({
+    queryKey: queryKeys.projectReports.cycleTime(projectId),
+    queryFn: () => apiClient.get(`/projects/${projectId}/reports/cycle-time`),
+    enabled: !!projectId,
+    staleTime: 60_000,
+  });
+}
+
+export function useLeadTimeReport(projectId: number) {
+  return useQuery<Array<{ week: string; avgDays: number; p50Days: number; p90Days: number; count: number }>>({
+    queryKey: queryKeys.projectReports.leadTime(projectId),
+    queryFn: () => apiClient.get(`/projects/${projectId}/reports/lead-time`),
+    enabled: !!projectId,
+    staleTime: 60_000,
+  });
+}
+
 export function useCaptureSnapshot(projectId: number) {
   const qc = useQueryClient();
   return useMutation({

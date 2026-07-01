@@ -30,13 +30,15 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Gauge, TrendingUp, Layers, Camera, Route, ChevronRight, AlertTriangle } from "lucide-react";
+import { Gauge, TrendingUp, Layers, Camera, Route, ChevronRight, AlertTriangle, Timer } from "lucide-react";
 import {
   useVelocityReport,
   useBurnupReport,
   useCfdReport,
   useCaptureSnapshot,
   useCriticalPath,
+  useCycleTimeReport,
+  useLeadTimeReport,
 } from "@/hooks/api/projects/reports";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -415,6 +417,91 @@ function CriticalPathSection({ projectId }: { projectId: number }) {
   );
 }
 
+function CycleTimeSection({ projectId }: { projectId: number }) {
+  const { data = [], isLoading, isError, refetch } = useCycleTimeReport(projectId);
+
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
+  return (
+    <ChartCard title="Cycle Time" icon={Timer}>
+      {isLoading ? (
+        <div className="h-48 animate-pulse bg-slate-50 rounded-lg" />
+      ) : isError ? (
+        <ErrorState
+          compact
+          onRetry={handleRetry}
+          description="Could not load cycle time."
+        />
+      ) : data.length === 0 ? (
+        <EmptyState
+          illustration={<EmptySearchIllustration />}
+          title="No data yet"
+          description="Complete some tickets to see cycle time."
+          compact
+        />
+      ) : (
+        <div className="h-52 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="week" tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(w: string) => w.slice(5)} />
+              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} unit=" d" />
+              <Tooltip
+                contentStyle={TOOLTIP_STYLE}
+                formatter={(v: number) => [`${v} days`, "Avg Cycle Time"]}
+              />
+              <Bar dataKey="avgDays" fill="#6366f1" radius={[4, 4, 0, 0]} name="Avg Days" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </ChartCard>
+  );
+}
+
+function LeadTimeSection({ projectId }: { projectId: number }) {
+  const { data = [], isLoading, isError, refetch } = useLeadTimeReport(projectId);
+
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
+  return (
+    <ChartCard title="Lead Time" icon={TrendingUp}>
+      {isLoading ? (
+        <div className="h-48 animate-pulse bg-slate-50 rounded-lg" />
+      ) : isError ? (
+        <ErrorState
+          compact
+          onRetry={handleRetry}
+          description="Could not load lead time."
+        />
+      ) : data.length === 0 ? (
+        <EmptyState
+          illustration={<EmptySearchIllustration />}
+          title="No data yet"
+          description="Complete some tickets to see lead time."
+          compact
+        />
+      ) : (
+        <div className="h-52 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="week" tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(w: string) => w.slice(5)} />
+              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} unit=" d" />
+              <Tooltip
+                contentStyle={TOOLTIP_STYLE}
+                formatter={(v: number) => [`${v} days`]}
+              />
+              <Area dataKey="p90Days" fill="#c7d2fe" stroke="#818cf8" strokeWidth={1.5} name="P90" />
+              <Area dataKey="p50Days" fill="#a5b4fc" stroke="#6366f1" strokeWidth={2} name="P50 (Median)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </ChartCard>
+  );
+}
+
 export default function ProjectReportsPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: projectIdStr } = use(params);
   const projectId = Number(projectIdStr);
@@ -427,6 +514,10 @@ export default function ProjectReportsPage({ params }: { params: Promise<{ proje
           <BurnupSection projectId={projectId} />
         </div>
         <CfdSection projectId={projectId} />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <CycleTimeSection projectId={projectId} />
+          <LeadTimeSection projectId={projectId} />
+        </div>
         <CriticalPathSection projectId={projectId} />
       </div>
     </PageWrapper>

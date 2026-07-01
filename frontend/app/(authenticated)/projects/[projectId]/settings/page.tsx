@@ -23,6 +23,8 @@ import {
   DangerZoneSection,
 } from "@/features/projects/settings/project-members-section";
 import { CustomFieldsSettings } from "@/features/projects/settings/custom-fields-settings";
+import { LabelsSettings } from "@/features/projects/settings/labels-settings";
+import { StatusesSettings } from "@/features/projects/settings/statuses-settings";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -182,6 +184,26 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           onSubmit={handleSubmit}
           MembersSelector={MembersSelector}
         />
+
+        <section className="space-y-4">
+          <div>
+            <h3 className="text-base font-semibold">Labels</h3>
+            <p className="text-sm text-muted-foreground">
+              Manage labels for organizing tickets across this organization.
+            </p>
+          </div>
+          <LabelsSettings />
+        </section>
+
+        <section className="space-y-4">
+          <div>
+            <h3 className="text-base font-semibold">Workflow Statuses</h3>
+            <p className="text-sm text-muted-foreground">
+              Define custom workflow statuses for this project.
+            </p>
+          </div>
+          <StatusesSettings projectId={projectId} />
+        </section>
 
         <CustomFieldsSettings projectId={projectId} />
 

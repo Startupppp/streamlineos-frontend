@@ -5,11 +5,11 @@ import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useProject } from "@/hooks/api";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
-import { TicketFilterBar } from "@/components/projects/shared/ticket-filter-bar";
-import { TicketTypeIcon } from "@/components/projects/shared/ticket-type-icon";
-import { PriorityBadge } from "@/components/projects/shared/priority-badge";
-import { StatusBadge } from "@/components/projects/shared/status-badge";
-import { TicketDetailsDialog } from "@/components/projects/ticket-details/ticket-details-dialog";
+import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
+import { TicketTypeIcon } from "@/features/projects/shared/ticket-type-icon";
+import { PriorityBadge } from "@/features/projects/shared/priority-badge";
+import { StatusBadge } from "@/features/projects/shared/status-badge";
+import { TicketDetailsDialog } from "@/features/projects/ticket-details/ticket-details-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

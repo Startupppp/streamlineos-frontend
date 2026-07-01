@@ -41,6 +41,8 @@ const CRM_FIELDS: { value: string; label: string }[] = [
 ];
 
 interface CsvFieldMapperProps {
+  fields?: { value: string; label: string }[];
+  requiredFieldLabel?: string;
   fileName: string;
   rawHeaders: string[];
   rawRows: string[][];
@@ -56,10 +58,11 @@ interface FieldMappingRowProps {
   index: number;
   previewVal: string | undefined;
   currentMapping: string;
+  fields: { value: string; label: string }[];
   onMappingChange: (index: number, value: string) => void;
 }
 
-function FieldMappingRow({ header, index, previewVal, currentMapping, onMappingChange }: FieldMappingRowProps) {
+function FieldMappingRow({ header, index, previewVal, currentMapping, fields, onMappingChange }: FieldMappingRowProps) {
   const handleValueChange = useCallback((v: string) => onMappingChange(index, v), [index, onMappingChange]);
   return (
     <TableRow>
@@ -80,7 +83,7 @@ function FieldMappingRow({ header, index, previewVal, currentMapping, onMappingC
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {CRM_FIELDS.map((f) => (
+            {fields.map((f) => (
               <SelectItem key={f.value} value={f.value} className="text-xs">
                 {f.label}
               </SelectItem>
@@ -93,6 +96,8 @@ function FieldMappingRow({ header, index, previewVal, currentMapping, onMappingC
 }
 
 export function CsvFieldMapper({
+  fields,
+  requiredFieldLabel = "Name",
   fileName,
   rawHeaders,
   rawRows,
@@ -102,6 +107,7 @@ export function CsvFieldMapper({
   onConfirm,
   onBack,
 }: CsvFieldMapperProps) {
+  const resolvedFields = fields ?? CRM_FIELDS;
   const handleSelectChange = useCallback((index: number, value: string) => {
     onMappingChange({ ...fieldMappings, [index]: value });
   }, [fieldMappings, onMappingChange]);
@@ -142,6 +148,7 @@ export function CsvFieldMapper({
                 index={i}
                 previewVal={rawRows[0]?.[i]}
                 currentMapping={fieldMappings[i] ?? "_skip"}
+                fields={resolvedFields}
                 onMappingChange={handleSelectChange}
               />
             ))}
@@ -153,7 +160,7 @@ export function CsvFieldMapper({
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
           <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
           <p className="text-xs text-amber-700 dark:text-amber-400">
-            Map at least one column to <strong>Name</strong> to continue.
+            Map at least one column to <strong>{requiredFieldLabel}</strong> to continue.
           </p>
         </div>
       )}

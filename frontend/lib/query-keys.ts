@@ -100,6 +100,12 @@ export const queryKeys = {
     jobRecruiters: (jobId: number) => [...base, "hr", "jobRecruiters", jobId] as const,
     recruiterActivity: (params?: Record<string, unknown>) => [...base, "hr", "recruiterActivity", params] as const,
     scheduledReports: () => [...base, "hr", "scheduledReports"] as const,
+    kpis: (params?: Record<string, unknown>) => [...base, "hr", "kpis", params] as const,
+    competencyFrameworks: () => [...base, "hr", "competencyFrameworks"] as const,
+    feedbackCycles: () => [...base, "hr", "feedbackCycles"] as const,
+    feedbackCycle: (id: number) => [...base, "hr", "feedbackCycle", id] as const,
+    myPendingReviews: () => [...base, "hr", "myPendingReviews"] as const,
+    feedbackResults: (subjectId: string) => [...base, "hr", "feedbackResults", subjectId] as const,
   },
 
   leads: {
@@ -414,6 +420,8 @@ export const queryKeys = {
     burnup: (projectId: number, sprintId?: number) => [...base, "projectReports", "burnup", projectId, sprintId] as const,
     cfd: (projectId: number, params?: Record<string, unknown>) => [...base, "projectReports", "cfd", projectId, params] as const,
     criticalPath: (projectId: number) => [...base, "projectReports", "criticalPath", projectId] as const,
+    cycleTime: (projectId: number) => [...base, "projectReports", "cycleTime", projectId] as const,
+    leadTime: (projectId: number) => [...base, "projectReports", "leadTime", projectId] as const,
   },
 
   whiteboards: {

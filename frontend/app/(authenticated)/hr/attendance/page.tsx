@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { AttendanceContent } from "./attendance-content";
+import { AttendanceContent } from "@/features/hr/attendance/components/attendance-content";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 

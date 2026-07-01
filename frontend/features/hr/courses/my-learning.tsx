@@ -1,0 +1,111 @@
+"use client";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { BookOpen, CheckCircle2, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMyEnrollments } from "@/hooks/api/hr/courses";
+import type { CourseEnrollment } from "@/hooks/api/hr/courses";
+
+const STATUS_CONFIG: Record<CourseEnrollment["status"], { label: string; className: string }> = {
+  ENROLLED: { label: "Enrolled", className: "bg-blue-50 text-blue-700 border-blue-200" },
+  IN_PROGRESS: { label: "In Progress", className: "bg-violet-50 text-violet-700 border-violet-200" },
+  COMPLETED: { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  DROPPED: { label: "Dropped", className: "bg-slate-100 text-slate-600 border-slate-200" },
+};
+
+function EnrollmentSkeleton() {
+  return (
+    <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-5 w-20 rounded-full" />
+      </div>
+      <Skeleton className="h-2 w-full rounded-full" />
+      <Skeleton className="h-3 w-24" />
+    </div>
+  );
+}
+
+export function MyLearning() {
+  const { data: enrollments = [], isLoading } = useMyEnrollments();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <EnrollmentSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  if (enrollments.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center h-64 text-center">
+        <div className="p-4 rounded-2xl bg-slate-100 mb-4">
+          <BookOpen className="h-10 w-10 text-slate-400" />
+        </div>
+        <p className="text-sm font-medium text-foreground">No courses yet</p>
+        <p className="text-xs text-muted-foreground mt-1">Enroll in a course from the catalog to get started</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <AnimatePresence>
+        {enrollments.map((enrollment, idx) => {
+          const config = STATUS_CONFIG[enrollment.status];
+          const progress = parseFloat(enrollment.progressPct);
+
+          return (
+            <motion.div
+              key={enrollment.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22, ease: "easeOut", delay: idx * 0.06 }}
+              className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-4 space-y-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="p-2 rounded-lg bg-violet-50 shrink-0">
+                    {enrollment.status === "COMPLETED" ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    ) : (
+                      <BookOpen className="h-4 w-4 text-violet-600" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      Course #{enrollment.courseId}
+                    </p>
+                    {enrollment.completedAt && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <Clock className="h-3 w-3" />
+                        Completed {new Date(enrollment.completedAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Badge className={`text-[10px] px-2 py-0.5 shrink-0 border ${config.className}`}>
+                  {config.label}
+                </Badge>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground">Progress</span>
+                  <span className="text-[11px] font-medium tabular-nums">{Math.round(progress)}%</span>
+                </div>
+                <Progress value={progress} className="h-1.5" />
+              </div>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </div>
+  );
+}

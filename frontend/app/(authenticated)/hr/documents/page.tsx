@@ -30,7 +30,7 @@ import {
   useRichDocuments,
   useDeleteRichDocument,
 } from "@/hooks/api/hr";
-import { UploadDocumentDialog } from "./upload-document-dialog";
+import { UploadDocumentDialog } from "@/features/hr/documents/components/upload-document-dialog";
 import { useSession } from "next-auth/react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";

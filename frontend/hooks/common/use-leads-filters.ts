@@ -3,7 +3,7 @@
 import { useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
-export type LeadsView = "table" | "kanban";
+export type LeadsView = "table" | "kanban" | "funnel";
 
 export interface LeadsFilters {
   view: LeadsView;

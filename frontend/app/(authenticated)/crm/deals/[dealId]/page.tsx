@@ -45,6 +45,7 @@ import {
 import { DealInfoCard } from "@/features/crm/deals/detail/deal-info-card";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
 import { DealOrdersSection } from "@/features/crm/deals/deal-orders-section";
+import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 
 const STAGES = [
   { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },
@@ -459,6 +460,7 @@ export default function DealDetailPage({
             ) : (
               <DealInfoCard deal={deal} />
             )}
+            <DealOrdersSection dealId={dealId} dealStage={deal.stage} />
           </motion.div>
 
           <motion.div variants={fadeUp} className="lg:col-span-2 space-y-6">
@@ -473,6 +475,7 @@ export default function DealDetailPage({
               onAddMeeting={handleOpenMeetingDialog}
               onDeleteMeeting={handleDeleteMeeting}
             />
+            <DealQuotesSection dealId={dealId} />
           </motion.div>
         </div>
       </motion.div>

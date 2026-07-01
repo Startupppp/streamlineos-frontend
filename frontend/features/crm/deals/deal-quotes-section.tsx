@@ -1,27 +1,26 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus,
   FileText,
-  MoreHorizontal,
+  Plus,
   Trash2,
   Send,
-  CheckCircle2,
+  CheckCircle,
   XCircle,
-  Download,
+  Clock,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -34,288 +33,296 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useDealQuotes,
-  useUpdateQuote,
+  useCreateQuote,
+  useUpdateQuoteStatus,
   useDeleteQuote,
 } from "@/hooks/api/crm/quotes";
-import { toast } from "sonner";
-import type { Quote } from "@/types/crm/quotes";
+import type { Quote, QuoteStatus } from "@/types/crm/quotes";
 
-interface DealQuotesSectionProps {
-  dealId: number;
-  onCreateQuote: () => void;
-}
-
-const STATUS_BADGE_CLASSES: Record<Quote["status"], string> = {
-  DRAFT: "bg-slate-100 text-slate-700",
-  SENT: "bg-blue-100 text-blue-700",
-  ACCEPTED: "bg-emerald-100 text-emerald-700",
-  REJECTED: "bg-red-100 text-red-700",
-  EXPIRED: "bg-amber-100 text-amber-700",
+const STATUS_CONFIG: Record<
+  QuoteStatus,
+  { label: string; className: string; icon: typeof FileText }
+> = {
+  DRAFT: {
+    label: "Draft",
+    className: "bg-slate-100 text-slate-700 border-slate-200",
+    icon: FileText,
+  },
+  SENT: {
+    label: "Sent",
+    className: "bg-blue-100 text-blue-700 border-blue-200",
+    icon: Send,
+  },
+  ACCEPTED: {
+    label: "Accepted",
+    className: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    icon: CheckCircle,
+  },
+  REJECTED: {
+    label: "Rejected",
+    className: "bg-red-100 text-red-700 border-red-200",
+    icon: XCircle,
+  },
+  EXPIRED: {
+    label: "Expired",
+    className: "bg-amber-100 text-amber-700 border-amber-200",
+    icon: Clock,
+  },
 };
 
-const STATUS_LABELS: Record<Quote["status"], string> = {
-  DRAFT: "Draft",
-  SENT: "Sent",
-  ACCEPTED: "Accepted",
-  REJECTED: "Rejected",
-  EXPIRED: "Expired",
-};
-
-function formatCurrency(currency: string, amount: string): string {
-  return `${currency} ${parseFloat(amount).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+function formatAmount(amount: string, currency = "USD") {
+  const num = Number(amount);
+  if (Number.isNaN(num)) return amount;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+  }).format(num);
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
+  const config = STATUS_CONFIG[status];
+  const Icon = config.icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${config.className}`}
+    >
+      <Icon className="h-3 w-3" />
+      {config.label}
+    </span>
+  );
 }
 
-interface QuoteCardProps {
+interface QuoteRowProps {
   quote: Quote;
-  onMarkSent: (id: number) => void;
-  onMarkAccepted: (id: number) => void;
-  onMarkRejected: (id: number) => void;
-  onDownloadPdf: () => void;
+  dealId: number;
   onDeleteRequest: (id: number) => void;
 }
 
-function QuoteCard({
-  quote,
-  onMarkSent,
-  onMarkAccepted,
-  onMarkRejected,
-  onDownloadPdf,
-  onDeleteRequest,
-}: QuoteCardProps) {
-  return (
-    <Card className="rounded-xl border shadow-sm hover:shadow-md transition-all">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-1 min-w-0">
-            <p className="font-mono text-xs text-muted-foreground">
-              {quote.quoteNumber}
-            </p>
-            <p className="font-medium text-sm truncate">{quote.subject}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Valid until {formatDate(quote.validUntil)}
-            </p>
-          </div>
+function QuoteRow({ quote, dealId, onDeleteRequest }: QuoteRowProps) {
+  const updateStatus = useUpdateQuoteStatus();
 
-          <Badge
-            variant="outline"
-            className={cn("border-0", STATUS_BADGE_CLASSES[quote.status])}
-          >
-            {STATUS_LABELS[quote.status]}
-          </Badge>
-
-          <div className="text-right shrink-0">
-            <p className="font-semibold text-sm">
-              {formatCurrency(quote.currency, quote.netAmount)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {formatDate(quote.createdAt)}
-            </p>
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {quote.status === "DRAFT" && (
-                <DropdownMenuItem onClick={() => onMarkSent(quote.id)}>
-                  <Send className="h-4 w-4 mr-2" />
-                  Mark as Sent
-                </DropdownMenuItem>
-              )}
-              {quote.status === "SENT" && (
-                <>
-                  <DropdownMenuItem onClick={() => onMarkAccepted(quote.id)}>
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Mark as Accepted
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onMarkRejected(quote.id)}>
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Mark as Rejected
-                  </DropdownMenuItem>
-                </>
-              )}
-              <DropdownMenuItem onClick={onDownloadPdf}>
-                <Download className="h-4 w-4 mr-2" />
-                Download PDF
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => onDeleteRequest(quote.id)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardContent>
-    </Card>
+  const handleStatusChange = useCallback(
+    (status: QuoteStatus) => {
+      updateStatus.mutate(
+        { id: quote.id, status, dealId },
+        {
+          onSuccess: () =>
+            toast.success(`Quote marked as ${STATUS_CONFIG[status].label}`),
+          onError: () => toast.error("Failed to update quote status"),
+        },
+      );
+    },
+    [quote.id, dealId, updateStatus],
   );
-}
 
-export function DealQuotesSection({
-  dealId,
-  onCreateQuote,
-}: DealQuotesSectionProps) {
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-
-  const { data, isLoading } = useDealQuotes(dealId);
-  const updateQuote = useUpdateQuote();
-  const deleteQuote = useDeleteQuote();
-
-  const quotes: Quote[] = Array.isArray(data)
-    ? data
-    : (data as { quotes?: Quote[] })?.quotes ?? [];
+  const handleDeleteRequest = useCallback(() => {
+    onDeleteRequest(quote.id);
+  }, [quote.id, onDeleteRequest]);
 
   const handleMarkSent = useCallback(
-    (quoteId: number) => {
-      updateQuote.mutate(
-        { id: quoteId, status: "SENT" },
-        {
-          onSuccess: () => toast.success("Quote marked as sent"),
-          onError: () => toast.error("Failed to update quote"),
-        },
-      );
-    },
-    [updateQuote],
+    () => handleStatusChange("SENT"),
+    [handleStatusChange],
   );
-
   const handleMarkAccepted = useCallback(
-    (quoteId: number) => {
-      updateQuote.mutate(
-        { id: quoteId, status: "ACCEPTED" },
-        {
-          onSuccess: () => toast.success("Quote accepted"),
-          onError: () => toast.error("Failed to update quote"),
-        },
-      );
-    },
-    [updateQuote],
+    () => handleStatusChange("ACCEPTED"),
+    [handleStatusChange],
   );
-
   const handleMarkRejected = useCallback(
-    (quoteId: number) => {
-      updateQuote.mutate(
-        { id: quoteId, status: "REJECTED" },
-        {
-          onSuccess: () => toast.success("Quote marked as rejected"),
-          onError: () => toast.error("Failed to update quote"),
-        },
-      );
-    },
-    [updateQuote],
+    () => handleStatusChange("REJECTED"),
+    [handleStatusChange],
   );
-
   const handleDownloadPdf = useCallback(() => {
     toast.info("PDF generation coming soon");
   }, []);
 
-  const handleDeleteRequest = useCallback((quoteId: number) => {
-    setDeleteTargetId(quoteId);
+  return (
+    <div className="flex items-center gap-3 p-3 bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-sm">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium text-slate-800 font-mono truncate">
+            {quote.quoteNumber}
+          </span>
+          <QuoteStatusBadge status={quote.status} />
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+          {quote.subject}
+          {" · "}
+          {formatAmount(quote.totalAmount, quote.currency)}
+          {quote.validUntil && (
+            <>
+              {" · Valid until "}
+              {new Date(quote.validUntil).toLocaleDateString()}
+            </>
+          )}
+        </p>
+      </div>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs shrink-0"
+            disabled={updateStatus.isPending}
+          >
+            Actions
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={handleDownloadPdf}>
+            Download PDF
+          </DropdownMenuItem>
+          {quote.status === "DRAFT" && (
+            <DropdownMenuItem onClick={handleMarkSent}>
+              Mark as Sent
+            </DropdownMenuItem>
+          )}
+          {quote.status === "SENT" && (
+            <>
+              <DropdownMenuItem onClick={handleMarkAccepted}>
+                Mark Accepted
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleMarkRejected}>
+                Mark Rejected
+              </DropdownMenuItem>
+            </>
+          )}
+          <DropdownMenuItem
+            className="text-red-600 focus:text-red-600"
+            onClick={handleDeleteRequest}
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+interface DealQuotesSectionProps {
+  dealId: number;
+}
+
+export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const { data, isLoading } = useDealQuotes(dealId);
+  const createQuote = useCreateQuote();
+  const deleteQuote = useDeleteQuote();
+
+  const quotes = data?.quotes ?? [];
+
+  const handleCreateQuote = useCallback(() => {
+    const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
+    createQuote.mutate(
+      {
+        dealId,
+        subject: "New Quote",
+        validUntil: thirtyDaysFromNow,
+        lineItems: [{ description: "Service", quantity: 1, unitPrice: 0 }],
+      },
+      {
+        onSuccess: () => toast.success("Quote created"),
+        onError: () => toast.error("Failed to create quote"),
+      },
+    );
+  }, [dealId, createQuote]);
+
+  const handleDeleteRequest = useCallback((id: number) => {
+    setDeleteId(id);
   }, []);
 
   const handleDeleteConfirm = useCallback(() => {
-    if (deleteTargetId === null) return;
-    deleteQuote.mutate(deleteTargetId, {
-      onSuccess: () => {
-        toast.success("Quote deleted");
-        setDeleteTargetId(null);
+    if (deleteId === null) return;
+    deleteQuote.mutate(
+      { id: deleteId, dealId },
+      {
+        onSuccess: () => {
+          toast.success("Quote deleted");
+          setDeleteId(null);
+        },
+        onError: () => toast.error("Failed to delete quote"),
       },
-      onError: () => {
-        toast.error("Failed to delete quote");
-        setDeleteTargetId(null);
-      },
-    });
-  }, [deleteTargetId, deleteQuote]);
+    );
+  }, [deleteId, dealId, deleteQuote]);
 
-  const handleDeleteCancel = useCallback(() => {
-    setDeleteTargetId(null);
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteId(null);
   }, []);
 
-  const handleDeleteDialogOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) handleDeleteCancel();
-    },
-    [handleDeleteCancel],
-  );
-
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-base font-semibold">Quotes</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Proposals sent for this deal
-          </p>
-        </div>
-        <Button
-          onClick={onCreateQuote}
-          size="sm"
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          <Plus className="h-3.5 w-3.5 mr-1.5" />
-          Create Quote
-        </Button>
-      </div>
+    <>
+      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-4">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold">Quotes</h3>
+            {quotes.length > 0 && (
+              <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                {quotes.length}
+              </Badge>
+            )}
+          </div>
+          <motion.div whileTap={{ scale: 0.97 }}>
+            <Button
+              size="sm"
+              onClick={handleCreateQuote}
+              disabled={createQuote.isPending}
+              className="h-7 text-xs bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              {createQuote.isPending ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Plus className="h-3 w-3 mr-1" />
+              )}
+              New Quote
+            </Button>
+          </motion.div>
+        </CardHeader>
+        <CardContent className="px-4 pb-4">
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-14 w-full rounded-xl" />
+              <Skeleton className="h-14 w-full rounded-xl" />
+            </div>
+          ) : quotes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-6 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+              <FileText className="h-8 w-8 text-slate-300 mb-2" />
+              <p className="text-sm text-slate-500">No quotes yet</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Create a quote to send to the client
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <AnimatePresence>
+                {quotes.map((quote: Quote, idx: number) => (
+                  <motion.div
+                    key={quote.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <QuoteRow
+                      quote={quote}
+                      dealId={dealId}
+                      onDeleteRequest={handleDeleteRequest}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-xl" />
-          ))}
-        </div>
-      ) : quotes.length === 0 ? (
-        <EmptyState
-          illustration={<FileText className="h-10 w-10 text-muted-foreground" />}
-          title="No quotes yet"
-          description="Create a quote to send a formal proposal for this deal."
-          action={{ label: "Create Quote", onClick: onCreateQuote }}
-        />
-      ) : (
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="space-y-3"
-        >
-          {quotes.map((quote, i) => (
-            <motion.div key={quote.id} variants={fadeUp} custom={i}>
-              <QuoteCard
-                quote={quote}
-                onMarkSent={handleMarkSent}
-                onMarkAccepted={handleMarkAccepted}
-                onMarkRejected={handleMarkRejected}
-                onDownloadPdf={handleDownloadPdf}
-                onDeleteRequest={handleDeleteRequest}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-
-      <AlertDialog
-        open={deleteTargetId !== null}
-        onOpenChange={handleDeleteDialogOpenChange}
-      >
+      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Quote</AlertDialogTitle>
@@ -325,18 +332,16 @@ export function DealQuotesSection({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

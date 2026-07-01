@@ -29,6 +29,7 @@ import { KanbanColumn } from "@/features/crm/deals/kanban-column";
 import { WinLossDialog } from "@/features/crm/deals/win-loss-dialog";
 import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 import { useDealsExport } from "@/features/crm/deals/use-deals-export";
+import { DealsCsvImportDialog } from "@/features/crm/deals/deals-csv-import-dialog";
 
 const STAGE_ORDER = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION"] as const;
 
@@ -358,6 +359,7 @@ export default function DealsPage() {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
+            <DealsCsvImportDialog />
             <Button onClick={handleOpenCreate}>
               <Plus className="h-4 w-4 mr-2" />
               New Deal

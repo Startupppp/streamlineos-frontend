@@ -2,26 +2,28 @@
 
 import { use, useState, useMemo, useCallback } from "react";
 import { useProject } from "@/hooks/api";
-import { KanbanBoard } from "@/components/projects/kanban-board";
-import { ListView } from "@/components/projects/list-view";
-import { TableView } from "@/components/projects/table-view";
-import { CalendarView } from "@/components/projects/calendar-view";
-import { GanttView } from "@/components/projects/gantt-view";
-import { WorkloadView } from "@/components/projects/workload-view";
+import { KanbanBoard } from "@/features/projects/views/kanban-board";
+import { ListView } from "@/features/projects/views/list-view";
+import { TableView } from "@/features/projects/views/table-view";
+import { CalendarView } from "@/features/projects/views/calendar-view";
+import { GanttView } from "@/features/projects/views/gantt-view";
+import { WorkloadView } from "@/features/projects/views/workload-view";
 import {
   ViewSwitcher,
   type ViewType,
-} from "@/components/projects/view-switcher";
-import { TicketFilterBar } from "@/components/projects/shared/ticket-filter-bar";
-import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
-import { TicketDetailsDialog } from "@/components/projects/ticket-details/ticket-details-dialog";
+} from "@/features/projects/views/view-switcher";
+import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
+import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
+import { TicketDetailsDialog } from "@/features/projects/ticket-details/ticket-details-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, Download } from "lucide-react";
+import { exportToCsv } from "@/lib/export-csv";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
-import type { KanbanTicket } from "@/components/projects/shared/types";
+import type { KanbanTicket } from "@/features/projects/shared/types";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -165,6 +167,22 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
 
+  const handleExportCsv = useCallback(() => {
+    exportToCsv(
+      `${data?.key ?? "export"}-tickets.csv`,
+      filteredTickets.map((t) => ({
+        id: t.id,
+        number: `#${t.ticketNumber}`,
+        title: t.title,
+        status: t.status,
+        priority: t.priority ?? "",
+        type: t.type ?? "",
+        assignee: t.assigneeId ?? "",
+        dueDate: t.dueDate ?? "",
+      })),
+    );
+  }, [data?.key, filteredTickets]);
+
   if (isLoading) {
     return (
       <PageWrapper title="Loading..." noInternalScroll>
@@ -185,6 +203,16 @@ export default function ProjectBoardPage({ params }: PageProps) {
       filters={
         <>
           <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
+          <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleExportCsv}
+            className="h-7 text-xs gap-1.5 shrink-0"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export
+          </Button>
           <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
           <TicketFilterBar members={members} showSprintFilter={false} />
           <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />

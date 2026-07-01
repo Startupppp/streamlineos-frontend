@@ -63,6 +63,7 @@ import { useContacts, useDeleteContact } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { CreateContactDialog } from "@/features/crm/contacts/create-contact-dialog";
 import { EditContactSheet } from "@/features/crm/contacts/edit-contact-sheet";
+import { ContactsCsvImportDialog } from "@/features/crm/contacts/contacts-csv-import-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
@@ -347,6 +348,7 @@ export default function ContactsPage() {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
+            <ContactsCsvImportDialog onSuccess={handleRetry} />
             <Button onClick={handleOpenCreate}>
               <Plus className="h-4 w-4 mr-2" /> New Contact
             </Button>

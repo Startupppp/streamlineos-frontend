@@ -8,8 +8,8 @@ import {
   useDeleteTicket,
   useCreateTicket,
 } from "@/hooks/api/projects";
-import { CreateEpicDialog } from "@/components/projects/create-epic-dialog";
-import { EditEpicDialog } from "@/components/projects/edit-epic-dialog";
+import { CreateEpicDialog } from "@/features/projects/epics/create-epic-dialog";
+import { EditEpicDialog } from "@/features/projects/epics/edit-epic-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";

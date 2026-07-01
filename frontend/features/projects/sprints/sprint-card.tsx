@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { EditSprintDialog } from "@/components/projects/edit-sprint-dialog";
+import { EditSprintDialog } from "@/features/projects/sprints/edit-sprint-dialog";
 
 export interface SprintData {
   id: number;

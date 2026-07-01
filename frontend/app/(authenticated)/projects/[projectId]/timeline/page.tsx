@@ -2,7 +2,7 @@
 
 import { use, useMemo, useCallback } from "react";
 import { useProject } from "@/hooks/api";
-import { GanttView } from "@/components/projects/gantt-view";
+import { GanttView } from "@/features/projects/views/gantt-view";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { notFound } from "next/navigation";
