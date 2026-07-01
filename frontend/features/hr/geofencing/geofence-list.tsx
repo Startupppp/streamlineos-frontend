@@ -1,0 +1,93 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { MapPin, Edit2, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/api-client";
+import { useGeofences, useDeleteGeofence } from "@/hooks/api/hr/geofencing";
+
+interface Props {
+  canManage: boolean;
+}
+
+export function GeofenceList({ canManage }: Props) {
+  const { data: fences, isLoading } = useGeofences();
+  const deleteFence = useDeleteGeofence();
+
+  function handleDelete(id: number) {
+    deleteFence.mutate(id, {
+      onSuccess: () => toast.success("Geofence removed"),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-36 rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!fences?.length) {
+    return (
+      <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
+        <MapPin className="h-10 w-10 text-muted-foreground/40" />
+        <p className="text-sm font-medium text-muted-foreground">No geofences configured</p>
+        <p className="text-xs text-muted-foreground/70">Add your office locations to enable attendance boundary validation</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {fences.map((fence, idx) => (
+        <motion.div
+          key={fence.id}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: "easeOut", delay: idx * 0.05 }}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-4 flex flex-col gap-3"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{fence.name}</p>
+              <Badge variant="secondary" className="text-[11px] mt-1">{fence.radiusMeters}m radius</Badge>
+            </div>
+            {canManage && (
+              <div className="flex items-center gap-1 shrink-0">
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <Edit2 className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  onClick={() => handleDelete(fence.id)}
+                  disabled={deleteFence.isPending}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between">
+              <span>Latitude</span>
+              <span className="font-mono font-medium text-foreground">{fence.lat}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Longitude</span>
+              <span className="font-mono font-medium text-foreground">{fence.lng}</span>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}

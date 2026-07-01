@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { type EditForm } from "./lead-types";
 import { useState } from "react";
 import { CustomFieldsSection } from "@/features/crm/shared/custom-fields-section";
+import { MessagingPanel } from "@/features/crm/shared/messaging-panel";
 import { toast } from "sonner";
 
 interface LeadInfoCardProps {
@@ -54,6 +55,7 @@ interface LeadInfoCardProps {
     tags?: string[] | null;
     customFields?: Record<string, unknown>;
   };
+  entityId: number;
   isEditing: boolean;
   editForm: UseFormReturn<EditForm>;
   isUpdatePending: boolean;
@@ -143,6 +145,7 @@ function CopyChip({
 
 export function LeadInfoCard({
   lead,
+  entityId,
   isEditing,
   editForm,
   isUpdatePending,
@@ -364,6 +367,19 @@ export function LeadInfoCard({
             />
           ))}
         </div>
+
+        {(lead.phone ?? lead.whatsappNumber) && (
+          <div className="pt-1">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium mb-2">
+              Quick Actions
+            </p>
+            <MessagingPanel
+              phone={lead.phone ?? lead.whatsappNumber}
+              entityType="LEAD"
+              entityId={entityId}
+            />
+          </div>
+        )}
 
         {(lead.potentialValue || lead.investmentInterest) && (
           <div

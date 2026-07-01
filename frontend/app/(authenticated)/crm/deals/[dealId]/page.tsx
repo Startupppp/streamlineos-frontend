@@ -44,6 +44,7 @@ import {
 } from "@/features/crm/deals/detail/deal-dialogs";
 import { DealInfoCard } from "@/features/crm/deals/detail/deal-info-card";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
+import { DealOrdersSection } from "@/features/crm/deals/deal-orders-section";
 
 const STAGES = [
   { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },

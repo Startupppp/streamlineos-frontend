@@ -692,6 +692,22 @@ export const NAV_GROUPS: NavGroup[] = [
             icon: Sliders,
             href: "/crm/settings/custom-fields",
           },
+          {
+            label: "Automations",
+            icon: Zap,
+            href: "/crm/settings/automations",
+          },
+          {
+            label: "Product Catalog",
+            icon: Package,
+            href: "/crm/settings/products",
+            requiredPermission: "settings:manage",
+          },
+          {
+            label: "Audit Log",
+            icon: History,
+            href: "/crm/settings/audit-log",
+          },
         ],
       },
     ],

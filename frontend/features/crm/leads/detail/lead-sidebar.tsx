@@ -4,6 +4,7 @@ import { CalendarDays } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { LeadActivityTimeline } from "./lead-activity-timeline";
+import { AiAssistantPanel } from "@/features/crm/shared/ai-assistant-panel";
 
 interface TimelineItem {
   id: number | string;
@@ -14,6 +15,8 @@ interface TimelineItem {
 
 interface LeadSidebarProps {
   lead: {
+    id: number;
+    name?: string | null;
     assignedTo?: {
       name?: string | null;
       email?: string | null;

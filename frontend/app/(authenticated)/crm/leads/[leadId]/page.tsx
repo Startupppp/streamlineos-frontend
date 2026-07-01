@@ -281,6 +281,7 @@ export default function LeadDetailPage({
           <div className="lg:col-span-3 space-y-4">
             <LeadInfoCard
               lead={lead}
+              entityId={leadId}
               isEditing={isEditing}
               editForm={editForm}
               isUpdatePending={updateLeadMutation.isPending}

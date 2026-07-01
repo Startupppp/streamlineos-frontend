@@ -9,3 +9,5 @@ export * from "./activities";
 export * from "./crm-activities";
 export * from "./analytics";
 export * from "./nps";
+export * from "./products";
+export * from "./quotes";

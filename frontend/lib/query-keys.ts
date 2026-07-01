@@ -667,4 +667,18 @@ export const queryKeys = {
     orgAuditLog: (params?: Record<string, unknown>) => [...base, "users", "orgAuditLog", params] as const,
   },
 
+
+  crmProducts: {
+    all: [...base, "crmProducts"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "crmProducts", "list", params] as const,
+    detail: (id: number) => [...base, "crmProducts", "detail", id] as const,
+  },
+
+  crmQuotes: {
+    all: [...base, "crmQuotes"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "crmQuotes", "list", params] as const,
+    byDeal: (dealId: number) => [...base, "crmQuotes", "byDeal", dealId] as const,
+    detail: (id: number) => [...base, "crmQuotes", "detail", id] as const,
+  },
+
 } as const;

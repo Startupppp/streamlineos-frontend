@@ -61,6 +61,7 @@ export interface CreateQuoteInput {
     quantity: number;
     unitPrice: number;
     taxRate?: number;
+    discount?: number;
   }>;
 }
 

@@ -14,6 +14,7 @@ import {
   Briefcase,
   Pencil,
 } from "lucide-react";
+import { MessagingPanel } from "@/features/crm/shared/messaging-panel";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { Contact } from "@/types/crm";
+import { AiAssistantPanel } from "@/features/crm/shared/ai-assistant-panel";
 
 const SOURCE_LABELS: Record<string, string> = {
   website: "Website",
@@ -62,10 +64,15 @@ function InfoRow({ icon: Icon, label, value, className }: InfoRowProps) {
 interface ContactInfoCardProps {
   contact: Contact;
   onEdit: () => void;
+  onSendEmail: () => void;
+  onLogCall: () => void;
+  entityId: number;
 }
 
-export function ContactInfoCard({ contact, onEdit }: ContactInfoCardProps) {
+export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entityId }: ContactInfoCardProps) {
   const handleEdit = useCallback(() => onEdit(), [onEdit]);
+  const handleSendEmail = useCallback(() => onSendEmail(), [onSendEmail]);
+  const handleLogCall = useCallback(() => onLogCall(), [onLogCall]);
 
   const hasLinks =
     contact.email ||
@@ -244,18 +251,51 @@ export function ContactInfoCard({ contact, onEdit }: ContactInfoCardProps) {
           )}
         </CardContent>
 
-        <div className="px-5 pb-4">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full gap-1.5 text-xs"
-            onClick={handleEdit}
-          >
-            <Pencil className="h-3 w-3" />
-            Edit Contact
-          </Button>
+        <div className="px-5 pb-5 space-y-2">
+          <div className="flex gap-2">
+            <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-1.5 text-xs"
+                onClick={handleSendEmail}
+              >
+                <Mail className="h-3 w-3 text-blue-500" />
+                Send Email
+              </Button>
+            </motion.div>
+            <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-1.5 text-xs"
+                onClick={handleLogCall}
+              >
+                <Phone className="h-3 w-3 text-violet-500" />
+                Log Call
+              </Button>
+            </motion.div>
+          </div>
+          <MessagingPanel
+            phone={contact.phone}
+            entityType="CONTACT"
+            entityId={entityId}
+          />
+          <motion.div whileTap={{ scale: 0.97 }}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-1.5 text-xs"
+              onClick={handleEdit}
+            >
+              <Pencil className="h-3 w-3" />
+              Edit Contact
+            </Button>
+          </motion.div>
         </div>
       </Card>
     </motion.div>
+    <AiAssistantPanel entityType="contact" entityId={contact.id} entityName={contact.name} />
+  </>
   );
 }

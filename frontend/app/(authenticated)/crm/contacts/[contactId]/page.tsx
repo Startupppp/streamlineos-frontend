@@ -13,6 +13,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useContactDetail, useDeleteContact } from "@/hooks/api/crm";
 import { EditContactSheet } from "@/features/crm/contacts/edit-contact-sheet";
+import { EmailComposeDialog } from "@/features/crm/shared/email-compose-dialog";
+import { CallLogDialog } from "@/features/crm/shared/call-log-dialog";
 import { ContactInfoCard } from "@/features/crm/contacts/detail/contact-info-card";
 import { ContactStatsBar } from "@/features/crm/contacts/detail/contact-stats-bar";
 import { ContactTimeline } from "@/features/crm/contacts/detail/contact-timeline";
@@ -56,6 +58,8 @@ export default function ContactDetailPage({
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [logActivityOpen, setLogActivityOpen] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [callOpen, setCallOpen] = useState(false);
 
   const { data: contact, isLoading } = useContactDetail(id);
   const deleteMutation = useDeleteContact();
@@ -66,6 +70,8 @@ export default function ContactDetailPage({
   const handleDeleteOpenChange = useCallback((open: boolean) => setDeleteOpen(open), []);
   const handleOpenLogActivity = useCallback(() => setLogActivityOpen(true), []);
   const handleLogActivityOpenChange = useCallback((open: boolean) => setLogActivityOpen(open), []);
+  const handleSendEmail = useCallback(() => setEmailOpen(true), []);
+  const handleLogCall = useCallback(() => setCallOpen(true), []);
 
   const handleConfirmDelete = useCallback(() => {
     deleteMutation.mutate(id, {
@@ -147,7 +153,13 @@ export default function ContactDetailPage({
           >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="space-y-4">
-                <ContactInfoCard contact={contact} onEdit={handleOpenEdit} />
+                <ContactInfoCard
+                  contact={contact}
+                  onEdit={handleOpenEdit}
+                  onSendEmail={handleSendEmail}
+                  onLogCall={handleLogCall}
+                  entityId={id}
+                />
                 <ContactStatsBar contactId={id} openDealsCount={openDealsCount} />
               </div>
 
@@ -170,6 +182,21 @@ export default function ContactDetailPage({
           onOpenChange={handleEditOpenChange}
         />
       )}
+
+      <EmailComposeDialog
+        open={emailOpen}
+        onOpenChange={setEmailOpen}
+        toEmail={contact?.email}
+        entityType="CONTACT"
+        entityId={id}
+      />
+
+      <CallLogDialog
+        open={callOpen}
+        onOpenChange={setCallOpen}
+        entityType="CONTACT"
+        entityId={id}
+      />
 
       <CreateTaskDialog
         open={logActivityOpen}
