@@ -78,28 +78,22 @@ export function RichNotesEditor({
     }
   }
 
-  const TOOLBAR_BUTTONS = [
-    { icon: Bold, handler: handleBold, title: "Bold (Ctrl+B)" },
-    { icon: Italic, handler: handleItalic, title: "Italic" },
-    { icon: Hash, handler: handleHeading, title: "Heading" },
-    { icon: List, handler: handleList, title: "List" },
-  ] as const;
-
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-0.5">
-          {TOOLBAR_BUTTONS.map(({ icon: Icon, handler, title }) => (
-            <button
-              key={title}
-              type="button"
-              title={title}
-              onClick={handler}
-              className="p-1 h-7 w-7 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            >
-              <Icon className="h-3.5 w-3.5" />
-            </button>
-          ))}
+          <button type="button" title="Bold" onClick={handleBold} className="p-1 h-7 w-7 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+            <Bold className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" title="Italic" onClick={handleItalic} className="p-1 h-7 w-7 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+            <Italic className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" title="Heading" onClick={handleHeading} className="p-1 h-7 w-7 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+            <Hash className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" title="List" onClick={handleList} className="p-1 h-7 w-7 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+            <List className="h-3.5 w-3.5" />
+          </button>
         </div>
         <div className="flex items-center gap-2">
           {isSaving && (
