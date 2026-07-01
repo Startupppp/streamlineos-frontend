@@ -1,0 +1,15 @@
+---
+description: StreamlineOS non-negotiable engineering rules (summary)
+alwaysApply: true
+---
+
+# StreamlineOS — Non‑negotiables (Summary)
+
+- **Inspect before change**: never assume files/symbols/routes/APIs exist; confirm in repo first.
+- **Page-by-page workflow**: only modify user-named pages. Do **AUDIT → PLAN → wait for confirmation → implement**.
+- **Frontend ↔ backend boundary**: backend owns business logic + DB schema; frontend is UI + TanStack Query hooks only. Frontend `app/api/**` is **auth-bridge only**.
+- **AuthZ is backend-enforced**: middleware/client checks are UX only; re-assert tenant + object access on every backend read/write.
+- **Strict TypeScript**: no `any`, no casting hacks, no `@ts-ignore`/`@ts-expect-error`, avoid non-null assertions.
+- **No comments / no dead code**: remove stray comments, console logs, unused imports/components/hooks/files.
+- **Quality gates**: do not claim done unless **build + lint + typecheck** pass; then update `PAGES.md`.
+

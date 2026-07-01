@@ -1,0 +1,15 @@
+---
+description: Auth/invitations/onboarding implementation constraints and contracts
+globs: frontend/app/**/(auth)/**/*.tsx,frontend/app/post-signin/page.tsx,frontend/lib/auth.ts,frontend/middleware.ts,frontend/hooks/common/auth-hooks.ts
+alwaysApply: false
+---
+
+# Auth + Onboarding Rules
+
+- **Single password policy** everywhere (signup/reset/setup/invite): min 12, max 128, uppercase+lowercase+number+symbol. Backend is source of truth.
+- **No brittle error parsing**: do not branch on error strings (e.g. `ACCOUNT_LOCKED:`). Use structured error `code` + optional `details`.
+- **Anti-enumeration**: signup + forgot-password must not reveal whether an email exists.
+- **Token safety**: verify-email/reset/setup/invite/magic-link tokens must be random, hashed at rest, TTL’d, and single-use where applicable.
+- **Landing router**: successful sign-in routes to `/post-signin` unless a safe relative callbackUrl is present; middleware gates `/org-setup` + `/onboarding` correctly.
+- **Backend owns business logic**: frontend calls backend via `apiClient` + TanStack Query; no frontend business route handlers.
+

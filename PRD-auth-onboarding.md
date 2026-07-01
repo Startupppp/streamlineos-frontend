@@ -1,3 +1,1151 @@
+# StreamlineOS PRD (v3 · Clean · Implementation-Grade)
+## Authentication · Invitations · Onboarding → Correct Landing (Owner/Member/Platform)
+
+**Owner (PM)**: StreamlineOS Platform  
+**Owner (Eng)**: Identity / Platform  
+**Status**: Implementation-ready  
+**Last updated**: 2026-07-01  
+**Scope**: Frontend `frontend/` + Backend `streamlineos-api` (NestJS)
+
+---
+
+## 0) Canonical implementation prompt (paste into Claude Code)
+
+> Implement StreamlineOS Authentication, Invitations, and Onboarding end-to-end. Treat `CLAUDE.md` as constitution. Follow the strict workflow: for any page touched: AUDIT → PLAN → wait for confirmation → implement → run build+lint+typecheck → update `PAGES.md`. Backend owns all business logic + DB schema + migrations; frontend is UI + TanStack Query hooks only; frontend `app/api/**` is auth-bridge only. Strict TypeScript, no `any`, no `@ts-ignore`, no casting hacks, no non-null assertion abuse, no anonymous event handlers, no code comments; remove dead code.  
+>
+> UI/UX: `/signin` and `/signup` are the design reference for spacing density, card layout, hover/active/focus states and contrast. Fix inconsistent spacing (especially double-padding in Sheets), hover colors, icon hover states.  
+>
+> Functional goal: Make signup→verify→auto-login→org-setup→invite and invite→accept→auto-login→onboarding→dashboard flows correct and resilient. Standardize password policy and token flows. Replace brittle error string parsing with stable error codes. Make verification/reset/invitation/magic-link emails reliable via a queue with retries + DLQ + alerts. Add backend e2e coverage for all critical auth flows (success + failure + edge cases).  
+>
+> Deliverables: (1) backend endpoints + Zod/DTO validation + rate limits + audit events + queue-backed email, (2) frontend pages + hooks wired through existing `apiClient`, (3) middleware routing correctness, (4) build/lint/types green, (5) tests green, (6) `PAGES.md` updated for touched pages.
+
+---
+
+## 1) Product intent (why this exists)
+
+Auth is the “front door” of StreamlineOS. It must feel polished, be tenant-safe, and never strand users in broken loops. This PRD rebuilds auth/onboarding as a **single coherent identity system** supporting:
+- SMB self-serve signup,
+- invitation-based org membership,
+- secure password and token flows,
+- correct role-based landing,
+- onboarding gates,
+- future enterprise requirements (SSO/SCIM ready, not shipped here).
+
+---
+
+## 2) What must be true after shipping (outcomes)
+
+### 2.1 User outcomes
+- A new customer can go from signup to dashboard in **< 3 minutes**.
+- An invited user can accept invite and reach dashboard in **< 2 minutes**.
+- Password reset never fails silently and never allows token replay.
+- Users are never shown modules they don’t have (module gating) and never see onboarding flows they shouldn’t.
+
+### 2.2 Engineering outcomes
+- One password policy, one error model, one token model.
+- No duplicated endpoints or “same flow in 2 places”.
+- DB queries are indexed, bounded, and tenant-scoped.
+- Emails are sent via queue with retries and observability.
+- Critical flows have backend e2e tests.
+
+---
+
+## 3) Non-goals (explicitly excluded)
+
+- Shipping SAML/OIDC enterprise SSO now (design for it only)
+- Shipping SCIM provisioning now (design for it only)
+- Shipping WebAuthn/passkeys now
+- Rewriting the entire product UI (auth/onboarding pages only; wider UI work is a separate, page-by-page program)
+
+---
+
+## 4) Reference constraints from `CLAUDE.md` (must be followed)
+
+- **Backend owns business logic + schema**; frontend is UI + hooks only.
+- **AuthZ must be enforced in backend** for every read/write (middleware is bypassable).
+- **Strict TS**; no `any`, no `@ts-ignore`, no casting hacks.
+- **No comments in code**; delete dead code.
+- **Work page-by-page and audit-first**.
+- **UI tokens** come from landing + `/signin` + `/signup` (no invented colors/spacing).
+
+---
+
+## 5) Glossary
+
+- **Org**: Organization (tenant/workspace). Always tenant-scoped.
+- **Member**: User membership in an org, with role and permissions.
+- **Platform owner**: Global super-admin (`/owner` landing).
+- **Org owner**: Tenant owner; must complete org setup.
+- **Onboarding**:
+  - Org onboarding: org owner setup (`orgOnboardingCompletedAt`)
+  - User onboarding: member onboarding (`userOnboardingCompletedAt`)
+- **Auto-login token**: short-lived, single-use token that allows NextAuth credential sign-in without password.
+
+---
+
+## 6) Personas (who uses this)
+
+- **Org Owner (SMB buyer)**: signs up, verifies email, completes org setup, invites team.
+- **Invited Member (new)**: accepts invite, sets password, completes onboarding.
+- **Invited Member (existing)**: signs in, accepts invite to join another org.
+- **Platform Owner**: lands on `/owner`, never sees member onboarding.
+- **Future Enterprise IT Admin**: requires SSO + SCIM later; we keep the model compatible.
+
+---
+
+## 7) UI/UX standards (must be consistent)
+
+### 7.1 Canonical reference
+Use `/signin` and `/signup` as the canonical reference for:
+- card density and spacing,
+- hover/active/focus contrast,
+- icon hover behavior,
+- inline validation styles and error text sizing.
+
+### 7.2 Interaction rules
+- No dialogs for primary auth flows.
+- MFA is an **inline step** in the sign-in screen (not a modal).
+- Success/failure states are rendered inline inside the same card layout.
+- Buttons must have consistent hover/active states and focus-visible rings.
+
+### 7.3 Sheet/Dialog rules (auth-adjacent screens)
+- Small forms → Dialog, large/multi-section → Sheet.
+- Avoid double-padding in Sheets (sheet padding + inner card padding).
+
+---
+
+## 8) Route map & landing rules (frontend)
+
+### 8.1 Auth routes (public)
+- `/signup`
+- `/verify-email`
+- `/signin`
+- `/forgot-password`
+- `/reset-password`
+- `/setup-password`
+- `/invitation/[token]`
+- `/magic-link` (optional UI surface)
+
+### 8.2 Authenticated routes (protected)
+- `/post-signin` (server router)
+- `/org-setup` (org owner only until complete)
+- `/onboarding` (member onboarding)
+- `/dashboard`
+- `/owner`
+
+### 8.3 Landing decision (canonical)
+After any successful sign-in, the app must route:
+1) to `/post-signin` (server decides platform owner vs others),
+2) middleware then gates:
+   - force-change password → `/reset-password`
+   - org owner incomplete → `/org-setup`
+   - member incomplete → `/onboarding`
+   - otherwise → `/dashboard`
+
+### 8.4 Redirect safety
+Callback URLs are accepted only if:
+- start with `/`
+- not `//`
+- do not contain `\\`
+
+---
+
+## 9) Canonical policies (stop inconsistencies)
+
+### 9.1 Password policy (single policy everywhere)
+Applies to: signup, reset-password, setup-password, invitation set-password, force-change-password.
+
+- **length**: 12–128
+- **complexity**: uppercase + lowercase + number + symbol
+- Backend is source of truth; frontend mirrors.
+
+### 9.2 Error model (stable codes)
+Frontend must branch by error `code`, never by message strings.
+
+Backend must return for errors:
+- HTTP status (4xx/5xx)
+- JSON: `{ code: string; message: string; details?: unknown }`
+
+### 9.3 Token model (all token flows)
+All tokens must be:
+- random (≥128-bit entropy),
+- stored hashed at rest,
+- TTL’d,
+- single-use where applicable,
+- rate-limited on verification endpoints,
+- audited on both success and failure.
+
+---
+
+## 10) End-to-end UX flows (source of truth)
+
+### 10.1 Signup → verify → auto-login → org-setup
+1) User opens `/signup`
+2) `POST /auth/register`
+3) User clicks verification email → `/verify-email?token=...&email=...`
+4) `POST /auth/verify-email` → returns `autoLoginToken`
+5) Frontend signs in via NextAuth credentials with `{ magicToken: autoLoginToken }`
+6) Redirect to `/org-setup`
+
+### 10.2 Invite (new user) → accept → auto-login → onboarding → dashboard
+1) User opens `/invitation/<token>`
+2) `GET /organization/invitations/validate?token=...`
+3) User sets name + password; `POST /organization/invitations/accept`
+4) Backend returns `autoLoginToken`
+5) Frontend signs in with `{ magicToken: autoLoginToken }`
+6) Middleware routes to `/onboarding` (if required), else `/dashboard`
+
+### 10.3 Invite (existing user) → sign in → accept → dashboard
+1) User opens invite URL
+2) If not signed in: redirect to `/signin?callbackUrl=/invitation/<token>`
+3) Accept invite (no password)
+4) Land in `/dashboard` (or onboarding if required by policy)
+
+### 10.4 Forgot password → reset
+1) `/forgot-password` → `POST /auth/forgot-password` (anti-enumeration)
+2) Email link → `/reset-password?token=...`
+3) `POST /auth/reset-password` with `{ token, newPassword }`
+4) Redirect `/signin`
+
+### 10.5 Forced change password
+1) Backend sets `forceChangePassword=true` on session enrichment
+2) Middleware routes user to `/reset-password` (no token)
+3) `POST /auth/force-change-password` (authed)
+4) Session updated; route to `/dashboard`
+
+---
+
+## 11) Frontend PRD — page-by-page requirements
+
+> Each page must have: **loading**, **error**, and **success** state; must match `/signin` density; must be accessible.
+
+### 11.1 `/signup`
+- **Form fields**: email, password, accept terms.
+- **Validation**: inline, per-field; mirrors backend password policy.
+- **Anti-enumeration UX**: always show “Check your email” style success.
+- **Resend verification**: cooldown 60s, button disables with aria label.
+- **OAuth**: Google/Microsoft buttons shown only if enabled by env.
+
+Edge cases:
+- offline
+- backend unreachable (503)
+- rate limited
+
+Acceptance criteria:
+- does not leak “account exists”
+- consistent spacing + hover
+
+### 11.2 `/verify-email`
+- **Auto-verify on load** (token from query).
+- States:
+  - verifying
+  - verified + auto-sign-in
+  - failed (expired/invalid/used) + resend link (if email present)
+- Never exposes raw stack/error details.
+
+### 11.3 `/signin`
+- **Credentials sign-in** with remember flag (preference only).
+- **MFA inline step** on `AUTH_MFA_REQUIRED`.
+- **Lockout UI** uses `details.retryAfterSeconds`.
+- **Email not verified** → show resend CTA.
+- **Magic link**: request sign-in link (secondary).
+
+### 11.4 `/forgot-password`
+- Always show generic “If an account exists…” success.
+- Resend cooldown.
+
+### 11.5 `/reset-password`
+- Mode A: token reset (`?token=` present)
+- Mode B: forced change (no token, requires session)
+- Uses canonical password policy.
+
+### 11.6 `/setup-password`
+- Validates setup token and shows email/name.
+- Sets password via canonical endpoint `{ token, newPassword }`.
+- Forces sign-out on success (clears backend token cache + NextAuth).
+
+### 11.7 `/invitation/[token]`
+- Validates token and shows org + invited email + role.
+- Branch:
+  - existing user: “Sign in & join” / “Accept & join”
+  - new user: set name + password + accept
+- Must never create duplicate accounts.
+
+### 11.8 `/post-signin`
+- Server component router only:
+  - platform owner → `/owner`
+  - else → `/dashboard`
+
+### 11.9 `/org-setup`
+- Owner-only, required until complete.
+- Must end by setting `orgOnboardingCompletedAt`.
+
+### 11.10 `/onboarding`
+- Member-only, required until complete.
+- Must end by setting `userOnboardingCompletedAt`.
+
+---
+
+## 12) Backend PRD — endpoint contracts (with examples)
+
+### 12.1 Standard error response
+All non-2xx responses return:
+
+```json
+{ "code": "AUTH_INVALID_CREDENTIALS", "message": "Invalid email or password." }
+```
+
+Optional details are allowed only if safe:
+
+```json
+{ "code": "AUTH_ACCOUNT_LOCKED", "message": "Account locked. Try again later.", "details": { "retryAfterSeconds": 900 } }
+```
+
+### 12.2 Required endpoint catalog
+
+#### `POST /auth/register`
+Purpose: create user + seed org + enqueue verify email.
+
+Request:
+
+```json
+{
+  "email": "owner@acme.com",
+  "password": "StrongPassw0rd!@#",
+  "firstName": "Owner",
+  "lastName": "User",
+  "companyName": "Acme",
+  "plan": "STARTER"
+}
+```
+
+Response (anti-enumeration; same shape always):
+
+```json
+{ "success": true }
+```
+
+Headers:
+- `Idempotency-Key` required for clients that may retry.
+
+Rate limits:
+- per-IP and per-email (strict)
+
+Audit events:
+- `auth.register_requested`
+- `auth.register_created` (only when created)
+
+#### `POST /auth/resend-verification`
+Request:
+
+```json
+{ "email": "owner@acme.com" }
+```
+
+Response:
+
+```json
+{ "success": true }
+```
+
+Rate limits: strict.
+
+#### `POST /auth/verify-email`
+Request:
+
+```json
+{ "token": "..." }
+```
+
+Response:
+
+```json
+{ "autoLoginToken": "..." }
+```
+
+Errors:
+- `AUTH_TOKEN_INVALID`
+- `AUTH_TOKEN_EXPIRED`
+- `AUTH_ALREADY_VERIFIED`
+
+Audit events:
+- `auth.email_verified`
+
+#### `POST /auth/login`
+Request:
+
+```json
+{ "email": "owner@acme.com", "password": "StrongPassw0rd!@#", "totpCode": "123456" }
+```
+
+Response:
+
+```json
+{ "userId": "uuid", "orgId": "uuid-or-null", "forceChangePassword": false }
+```
+
+Errors:
+- `AUTH_INVALID_CREDENTIALS`
+- `AUTH_EMAIL_NOT_VERIFIED`
+- `AUTH_ACCOUNT_LOCKED` (details: retryAfterSeconds)
+- `AUTH_MFA_REQUIRED`
+- `AUTH_INVALID_MFA_CODE`
+- `AUTH_SUBSCRIPTION_INACTIVE`
+
+Audit events:
+- `auth.login_success`
+- `auth.login_failure`
+- `auth.account_locked`
+
+#### `POST /auth/forgot-password`
+Request:
+
+```json
+{ "email": "user@acme.com" }
+```
+
+Response (always):
+
+```json
+{ "success": true }
+```
+
+Audit events:
+- `auth.password_reset_requested`
+
+#### `POST /auth/reset-password`
+Request (canonical):
+
+```json
+{ "token": "...", "newPassword": "NewStrongPassw0rd!@#" }
+```
+
+Response:
+
+```json
+{ "success": true }
+```
+
+Errors:
+- `AUTH_TOKEN_INVALID`
+- `AUTH_TOKEN_EXPIRED`
+- `AUTH_PASSWORD_WEAK`
+
+Audit events:
+- `auth.password_reset_completed`
+
+#### `POST /auth/force-change-password` (authed)
+Request:
+
+```json
+{ "password": "NewStrongPassw0rd!@#" }
+```
+
+Response:
+
+```json
+{ "success": true }
+```
+
+#### `POST /auth/magic-link`
+Request:
+
+```json
+{ "email": "user@acme.com" }
+```
+
+Response (anti-enumeration):
+
+```json
+{ "success": true }
+```
+
+#### `POST /auth/magic-link/verify`
+Request:
+
+```json
+{ "token": "..." }
+```
+
+Response:
+
+```json
+{ "userId": "uuid", "forceChangePassword": false }
+```
+
+#### `GET /auth/session-data/:userId` (internal-secret)
+Response shape (must be stable; consumed by NextAuth):
+- orgId, isOrgOwner, isPlatformAdmin
+- permissions[], enabledModules[], plan
+- orgOnboardingCompletedAt, userOnboardingCompletedAt
+- mfaEnforced, totpEnabled
+- hasDashboardAccess, isActive
+
+#### Invitation endpoints
+`GET /organization/invitations/validate?token=...`
+
+Response:
+
+```json
+{ "email": "user@acme.com", "organizationName": "Acme", "role": "Member", "userExists": false }
+```
+
+`POST /organization/invitations/accept`
+- existing user request: `{ "token": "..." }`
+- new user request: `{ "token": "...", "firstName": "A", "lastName": "B", "password": "..." }`
+
+Response (recommended):
+
+```json
+{ "autoLoginToken": "..." }
+```
+
+Errors:
+- `INVITE_TOKEN_INVALID`
+- `INVITE_TOKEN_EXPIRED`
+- `INVITE_ALREADY_USED`
+- `INVITE_EMAIL_MISMATCH`
+
+Audit:
+- `org.invite_accepted`
+
+---
+
+## 13) Data model (backend, high-level)
+
+> Backend schema is source-of-truth. Tables listed here define the minimum needed to make flows correct and efficient.
+
+### 13.1 Tables (minimum)
+- `users`
+- `organizations`
+- `organization_memberships`
+- `invitations`
+- `email_verification_tokens`
+- `password_reset_tokens`
+- `magic_link_tokens`
+- `audit_events`
+
+### 13.2 Required columns (examples)
+- `invitations`:
+  - `org_id`, `email`, `role`, `token_hash`, `expires_at`, `accepted_at`, `accepted_by_user_id`
+  - optional: `invited_by_user_id`, `sent_at`
+- `*_tokens`:
+  - `user_id`, `token_hash`, `expires_at`, `used_at`
+
+### 13.3 Indexes
+- `organization_memberships (org_id, user_id)` unique
+- `invitations (org_id, email)` unique for active invites (partial index where accepted_at is null)
+- `*_tokens (token_hash)` unique
+- Always index `org_id` on tenant-scoped tables.
+
+---
+
+## 14) Email system (must actually work)
+
+### 14.1 Queue requirements
+- Queue all outgoing emails.
+- Retries with exponential backoff.
+- DLQ for permanent failures.
+- Alerts on failure spikes.
+
+### 14.2 Email template requirements
+Each email must include:
+- clear subject
+- CTA button
+- fallback URL text
+- “If you didn’t request this, ignore”
+
+Minimum templates:
+- Verify email
+- Password reset
+- Magic link sign-in
+- Organization invitation
+
+---
+
+## 15) Observability (trace→fatal, metrics, audit)
+
+### 15.1 Logging levels
+Backend supports `trace`, `debug`, `info`, `warn`, `error`, `fatal`.
+
+Every auth request logs:
+- requestId/correlationId
+- endpoint + action + outcome
+- orgId/userId when known
+- error code when failure
+- latency
+
+### 15.2 Metrics (minimum)
+- login success/failure
+- lockout count
+- token verify failures
+- email queue success/failure/DLQ
+- p95 latency by endpoint
+
+### 15.3 Audit events (tenant-scoped immutable)
+Must record:
+- register, verify-email, login success/failure, lockout
+- forgot-password requested, reset completed
+- invite sent/accepted/expired
+- mfa enabled/disabled
+- session revoked/sign out
+
+---
+
+## 16) Security requirements (must pass)
+
+- Anti-enumeration on register/forgot/magic-link.
+- Rate limit all credential/token endpoints.
+- Tokens hashed at rest; TTL enforced; single-use.
+- Tenant binding on invitations and token claims.
+- Middleware is UX only; backend is authoritative.
+
+---
+
+## 17) Testing requirements
+
+### 17.1 Backend e2e (required)
+- signup → verify → auto-login works
+- login: success/failure/lockout/mfa required/invalid mfa
+- forgot-password anti-enumeration
+- reset-password token single-use
+- invitation validate + accept (new + existing)
+- cross-tenant safety
+
+### 17.2 Frontend smoke (required)
+- auth pages render and show correct states
+- middleware gates: org-setup / onboarding / reset-password / mfa required
+
+---
+
+## 18) Definition of Done
+
+- All flows in §10 work for success + failure + edge cases.
+- Password policy is consistent across all pages and endpoints.
+- No brittle error string parsing remains.
+- Emails are reliable (queue + retries + DLQ + alerts).
+- UI matches `/signin` and `/signup` density and hover/contrast rules.
+- Build + lint + typecheck pass.
+- Critical backend e2e tests pass.
+
+# StreamlineOS PRD (Implementation-Grade)
+## Authentication · Invitations · Onboarding → Correct Dashboard Landing
+
+**Document owner**: Product (PM)  
+**Engineering owner**: Platform / Identity  
+**Last updated**: 2026-07-01  
+**Status**: Approved-for-implementation (v2 — rewritten for Claude-code execution)
+
+---
+
+## 0) Copy/paste implementation prompt (for Claude Code)
+
+Use this as the **single prompt** to implement this PRD end-to-end.
+
+> You are implementing StreamlineOS Auth + Onboarding. Follow `CLAUDE.md` as the constitution. Work **page-by-page**: when touching any page, do AUDIT → PLAN → wait → implement. Backend owns all business logic and DB schema; frontend is UI + TanStack Query hooks only; frontend `app/api/**` is auth-bridge only. Strict TypeScript, no `any`, no type casts, no `@ts-ignore`, no anonymous handlers, no comments, remove dead code. Do not invent design tokens: use `/signin` and `/signup` as the canonical UI density + interaction reference.  
+>
+> Goal: make auth flows correct, secure, consistent, and resilient. Replace brittle string-based error branching with typed error codes and consistent API contracts. Standardize password policy and token flows. Make emails (verify/reset/invite/magic-link) reliable with queues + retries + DLQ. Ensure middleware routing produces correct landings for platform owners, org owners, and members with onboarding gates. Implement backend e2e tests for all critical flows.  
+>
+> Deliverables: (1) backend endpoints + schema + migrations + Zod/DTO validation + rate limits + audit logs, (2) frontend pages wired to those endpoints via existing `apiClient` + hooks, (3) consistent UX states (loading/empty/error) and accessibility, (4) build/lint/typecheck green, (5) `PAGES.md` updated for touched pages.
+
+---
+
+## 1) What’s broken today (problem statement)
+
+This PRD is designed to fix the current “auth is breaking + feels buggy” reality by eliminating root causes:
+
+- **Inconsistent password rules**: different pages enforce different minimum/regex, causing silent failures and UX confusion.
+- **Brittle error handling**: frontend branches on error strings (e.g. `"ACCOUNT_LOCKED:"`) instead of stable error codes.
+- **Token and email flows**: verification/reset/invite flows are not uniformly single-use, TTL’d, and observable.
+- **Tenant + onboarding routing**: users can land on wrong pages, get loops, or be blocked inconsistently.
+- **UI inconsistency**: spacing/hover states/visual density differ across screens; Sheets often have double padding.
+
+---
+
+## 2) Goals, non-goals, and success metrics
+
+### 2.1 Goals (must ship)
+- **Correctness**: every auth/onboarding path ends in the right landing with no loops and no broken states.
+- **Security**: no tenant leaks, no token replay, no user enumeration via auth endpoints.
+- **Consistency**: one password policy + one API error model + consistent UX states.
+- **Reliability**: emails and notifications are queued, retryable, observable, and safe under partial failure.
+- **Performance**: fast TTFB on auth pages, low latency on login/session enrichment, bounded DB cost.
+- **Accessibility**: WCAG-friendly auth flows (labels, focus, keyboard, contrast).
+
+### 2.2 Non-goals (explicitly out of scope for this PRD)
+- Enterprise SSO (SAML/OIDC) **implementation** (we design for it, but do not ship it now)
+- SCIM provisioning **implementation**
+- Passkeys/WebAuthn (future)
+- Full cross-app UI redesign (this PRD only standardizes and fixes auth/onboarding pages; broader UI work is separate, page-by-page)
+
+### 2.3 Success metrics (how we know this PRD worked)
+- **Signup conversion**: % signups that reach `/org-setup` within 5 minutes.
+- **Email verification completion**: % verified within 24 hours.
+- **Invite acceptance**: % accepted within 7 days.
+- **Onboarding completion**: % members complete onboarding within 48 hours.
+- **Support tickets**: reduction in “can’t login / reset link broken / invite invalid” tickets.
+- **Reliability**: email job success rate ≥ 99.5% (with retries), DLQ < 0.1% daily.
+
+---
+
+## 3) Canonical UI/UX standards (applies to all auth/onboarding pages)
+
+**Non-negotiable UI reference**: `/signin` and `/signup` are the canonical baseline for:
+- compact card density,
+- spacing scale,
+- hover/active/focus contrast,
+- icon sizing and color transitions,
+- error message placement and typography.
+
+### 3.1 Layout rules
+- **No unnecessary clicks**: no dialogs for primary auth flows. Use a single page with inline states.
+- **Card density**: avoid “giant whitespace”; prefer compact spacing similar to `/signin`.
+- **Sheets**: avoid stacking outer padding + inner card padding (“double padding”).
+- **States**:
+  - Loading: skeletons or progress card, never a lone spinner.
+  - Error: friendly message + retry CTA.
+  - Empty: not applicable for auth, but invitation and onboarding tasks must have meaningful empty states.
+
+### 3.2 Accessibility rules
+- Every input has an explicit label (`<Label htmlFor=...>`).
+- Error messages use `role="alert"` and are associated via `aria-describedby`.
+- Buttons must be reachable and visible via keyboard focus (`focus-visible`).
+- Contrast must remain readable on hover (no same text/bg).
+
+### 3.3 SEO rules (public-facing pages)
+Auth pages are not “SEO targets” but must still:
+- have correct `<title>` and meta description,
+- not expose sensitive tokens in indexable ways (use `noindex` where appropriate),
+- avoid leaking internal errors into page HTML.
+
+---
+
+## 4) Personas and user journeys
+
+### 4.1 Personas
+- **Org Owner (SMB buyer)**: signs up, creates org, configures modules, invites team.
+- **Invited Member**: receives invite, joins org, completes onboarding, lands in dashboard.
+- **Existing User invited to new org**: already has StreamlineOS account; must join new org without creating duplicates.
+- **Platform Owner / Super Admin**: lands in `/owner`; never sees employee onboarding.
+- **Future: IT Admin (Enterprise)**: will require SSO + SCIM later; model must be compatible now.
+
+### 4.2 Money-path journeys (must be perfect)
+1) **Signup → verify → org setup → invite**
+2) **Invite (new user) → accept → auto-login → onboarding → dashboard**
+3) **Invite (existing user) → sign in → accept → dashboard**
+4) **Forgot password → reset → sign in**
+5) **Account locked → recover later**
+
+---
+
+## 5) System architecture (as it must be)
+
+### 5.1 Two-repo boundary
+- **Backend (`streamlineos-api`)** owns all business logic + DB schema + migrations + email sending.
+- **Frontend** owns UI + client state + TanStack Query hooks.
+- Frontend `app/api/**` is allowed **only** for NextAuth/auth-bridge (already true in this repo).
+
+### 5.2 Current repo reality to preserve (confirmed from codebase)
+- NextAuth configured in `frontend/lib/auth.ts` (Credentials + Google).
+- Frontend uses `frontend/lib/api-client.ts` for backend requests and caches `backendJwt`.
+- Middleware enforces coarse routing + onboarding gates (`frontend/middleware.ts`).
+- Invitation token page exists: `frontend/app/(auth)/invitation/[token]/page.tsx`.
+
+---
+
+## 6) Canonical contracts and invariants (eliminate drift)
+
+### 6.1 Password policy (single source of truth)
+**One policy for signup + reset-password + setup-password + invitation**:
+- length: **12–128**
+- must include: uppercase + lowercase + number + symbol
+
+**Backend validates always**. Frontend mirrors for instant UX but is not authoritative.
+
+### 6.2 Typed errors (no string parsing)
+All auth-related endpoints must return:
+- HTTP status
+- `code` (stable machine-readable)
+- `message` (user-safe)
+- optional `details` (safe, never secrets)
+
+**Rule**: UI branches on `code`, never on message strings.
+
+### 6.3 Token invariants
+All tokens (verification, reset, magic link, invite, setup-password) must be:
+- generated with strong randomness,
+- stored hashed at rest,
+- TTL’d,
+- single-use where appropriate,
+- audited on use (success + failure),
+- rate-limited on validation endpoints (prevents brute-force).
+
+---
+
+## 7) Page-by-page PRD (frontend)
+
+> For each page: **UI spec**, **data spec**, **states**, **edge cases**, **acceptance criteria**.
+
+### 7.1 `/(auth)/signup` — Owner signup
+
+**Primary action**: Create account + send verification email (anti-enumeration).
+
+#### UI
+- Inputs: work email, password, accept terms.
+- Secondary: “Continue with Google” (optional).
+- After submit: success card “Check your email” with resend cooldown.
+
+#### Edge cases
+- Offline browser → show “No internet” error.
+- Email already exists → show generic “Check your email” (do not reveal existence).
+- Email provider outage → still return success, but record an internal alert + retry email job.
+
+#### Acceptance criteria
+- One password policy enforced (12–128 + complexity).
+- No leak of “email already exists”.
+
+---
+
+### 7.2 `/(auth)/verify-email` — Verify + auto-login
+
+**Primary action**: verify email token and sign user in automatically.
+
+#### UI states
+- Loading: “Verifying…”
+- Success: “Verified. Signing you in…”
+- Failure: “Link expired/invalid” + resend if email param present + retry verification
+
+#### Edge cases
+- Token already used (idempotent): show success if already verified OR show “already used” with safe route to sign-in (backend decides).
+- User is disabled: show “Account deactivated” CTA to contact support.
+
+#### Acceptance criteria
+- Auto-login does not require password re-entry.
+- No sensitive error messages.
+
+---
+
+### 7.3 `/(auth)/signin` — Sign in (password/OAuth/magic link/MFA)
+
+**Primary action**: authenticate and redirect to the correct landing.
+
+#### UI
+- Email + password + remember checkbox.
+- Optional providers: Google and Microsoft toggled by env.
+- Optional magic link: request a sign-in link.
+- MFA step: inline transition (not a separate page) when `AUTH_MFA_REQUIRED`.
+
+#### Edge cases
+- Lockout: show retry time from `details.retryAfterSeconds`.
+- Email not verified: inline “Resend verification email”.
+- Subscription inactive: redirect to subscription page.
+- Backend down: show “service unavailable” + retry.
+
+#### Acceptance criteria
+- No parsing `ACCOUNT_LOCKED:` style strings.
+- On success: redirect to `/post-signin` unless safe callbackUrl exists.
+
+---
+
+### 7.4 `/(auth)/forgot-password`
+
+**Primary action**: request reset email without user enumeration.
+
+#### UI
+- Email input.
+- Success always (generic).
+- Resend cooldown.
+
+#### Acceptance criteria
+- Same response UX whether email exists or not.
+
+---
+
+### 7.5 `/(auth)/reset-password`
+
+Two modes:
+- **Token reset**: `?token=...`
+- **Forced change**: user redirected here when `forceChangePassword=true`
+
+#### UI
+- Token reset: “Reset password” + confirm password + strength indicator.
+- Forced change: “Set up your password” (same policy).
+
+#### Edge cases
+- Token invalid/expired/used → show invalid state with CTA to request new link.
+- If forced-change mode but session missing → redirect to sign-in.
+
+#### Acceptance criteria
+- Token reset invalidation is single-use.
+- Forced change cannot be bypassed.
+
+---
+
+### 7.6 `/(auth)/setup-password`
+
+**Primary action**: accept a setup token for pre-provisioned users.
+
+#### UI
+- Validate token and show email + name.
+- Set password with canonical policy.
+- On success: force sign-out + redirect to `/signin`.
+
+#### Edge cases
+- Token expired → show “Ask admin for a new link”.
+
+---
+
+### 7.7 `/(auth)/invitation/[token]`
+
+Two branches:
+- **userExists=true**: Accept & Join (requires sign-in if not already)
+- **userExists=false**: Collect name + password, then accept
+
+#### UI
+- Always show: org name, invited email, assigned role.
+
+#### Edge cases
+- Token used/expired → show friendly explanation + CTA to request a new invite.
+- Invited email mismatch → backend must reject (don’t allow token reuse for different email).
+
+#### Acceptance criteria
+- Accept returns auto-login token for new-user branch.
+- Existing-user branch cannot create duplicate accounts.
+
+---
+
+### 7.8 `/post-signin`
+
+**Primary action**: server-side router only.
+
+Rules:
+- Platform owner → `/owner`
+- Everyone else → `/dashboard`
+
+---
+
+### 7.9 `/org-setup` (owner org onboarding)
+
+**Primary action**: complete org bootstrap; set `orgOnboardingCompletedAt`.
+
+Rules:
+- Org owners cannot access other protected routes until complete.
+- Once complete, `/org-setup` redirects to `/dashboard`.
+
+---
+
+### 7.10 `/(authenticated)/onboarding` (member onboarding)
+
+**Primary action**: complete onboarding; set `userOnboardingCompletedAt`.
+
+Rules:
+- Not shown to org owners or platform admins.
+- Once complete, user is routed to `/dashboard`.
+
+---
+
+## 8) Middleware routing rules (frontend)
+
+Middleware is UX-only; backend must still authorize.
+
+### 8.1 Protected vs auth routes
+- Unauthenticated + protected route → redirect to `/signin?callbackUrl=...`
+- Authenticated + auth route → redirect to callbackUrl or `/dashboard`
+
+### 8.2 Onboarding gates
+- Authenticated + org owner + `orgOnboardingCompletedAt` missing → `/org-setup`
+- Authenticated + member + `userOnboardingCompletedAt` missing → `/onboarding`
+- Authenticated + `forceChangePassword=true` → `/reset-password` (unless already on it)
+- Authenticated + `mfaEnforced=true` and `totpEnabled=false` → `/settings?tab=security&mfa=required`
+
+Acceptance criteria:
+- No loops.
+- Safe redirects only.
+
+---
+
+## 9) Backend API PRD (NestJS)
+
+> Backend is the source of truth. Validate inputs with Zod/DTOs, and return typed error codes.
+
+### 9.1 Standard error response
+Recommended shape (works well with frontend parsing):
+
+```ts
+type ApiError = {
+  code: string;
+  message: string;
+  details?: unknown;
+};
+```
+
+HTTP errors return JSON:
+- `{ code, message, details? }` (and optionally `{ success:false, error:{...} }` if you standardize)
+
+### 9.2 Endpoints (must exist and be correct)
+
+#### `POST /auth/register`
+- **Purpose**: create owner user + seed org draft + send verification email
+- **Anti-enumeration**: always return 200/201 with generic message
+- **Idempotency**: accept `Idempotency-Key` header
+- **Rate limit**: strict
+
+Errors (internal only, but still typed):
+- `AUTH_RATE_LIMITED`
+- `AUTH_PASSWORD_WEAK`
+
+#### `POST /auth/resend-verification`
+- **Purpose**: resend verification (anti-enumeration)
+- **Rate limit**: strict per email + per IP
+
+#### `POST /auth/verify-email`
+- **Purpose**: verify email token; return single-use `autoLoginToken`
+- **Token**: single-use + TTL
+- Errors: `AUTH_TOKEN_INVALID`, `AUTH_TOKEN_EXPIRED`, `AUTH_ALREADY_VERIFIED`
+
+#### `POST /auth/login`
+- **Purpose**: credential login (password + optional TOTP)
+- **Lockout**: return `AUTH_ACCOUNT_LOCKED` with `details.retryAfterSeconds`
+- **MFA**: return `AUTH_MFA_REQUIRED` when needed
+- Errors: `AUTH_INVALID_CREDENTIALS`, `AUTH_EMAIL_NOT_VERIFIED`, `AUTH_SUBSCRIPTION_INACTIVE`
+
+#### `POST /auth/magic-link`
+- **Purpose**: send sign-in link
+- Anti-enumeration: do not reveal account existence
+- Rate limit: strict
+
+#### `POST /auth/magic-link/verify`
+- **Purpose**: verify token and return `{ userId, forceChangePassword }`
+- Errors: `AUTH_TOKEN_INVALID`, `AUTH_TOKEN_EXPIRED`
+
+#### `POST /auth/forgot-password`
+- **Purpose**: send reset email (anti-enumeration)
+
+#### `POST /auth/reset-password`
+- **Purpose**: reset using token OR setup-password using token
+- Request must be canonical: `{ token, newPassword }`
+- Errors: `AUTH_TOKEN_INVALID`, `AUTH_TOKEN_EXPIRED`, `AUTH_PASSWORD_WEAK`
+
+#### `POST /auth/force-change-password` (authed)
+- **Purpose**: authenticated password update for forced rotation
+
+#### `GET /auth/session-data/:userId` (internal only)
+- **Purpose**: enrich NextAuth session with orgId, permissions, modules, onboarding flags
+- Must be internal-secret protected and tenant-safe.
+
+#### Invitation endpoints
+- `GET /organization/invitations/validate?token=...`
+- `POST /organization/invitations/accept`
+  - New user branch returns `autoLoginToken`
+  - Existing user branch requires session or returns `autoLoginToken` if already authenticated server-side
+
+---
+
+## 10) Email + job queue PRD (required for “it works”)
+
+### 10.1 Email events (minimum)
+- Verify email
+- Password reset
+- Magic link sign-in
+- Organization invitation
+
+### 10.2 Reliability requirements
+- All sends go through a queue (Redis-backed or existing infra).
+- Retries with exponential backoff.
+- Dead-letter queue (DLQ) for repeated failures.
+- Alerting on failure rate spikes.
+
+### 10.3 Email template requirements
+- HTML + plain text variants
+- Clear CTA button + fallback raw URL
+- Security copy: “If you didn’t request this, ignore”
+
+---
+
+## 11) Observability requirements (covers trace/info/warn/error/fatal/etc)
+
+### 11.1 Logging levels (backend)
+Backend must support:
+- `trace` (very verbose, disabled in prod by default)
+- `debug`
+- `info`
+- `warn`
+- `error`
+- `fatal` (process-terminating / pager-worthy)
+
+Every auth request logs:
+- requestId/correlationId,
+- orgId (if known), userId (if known),
+- action + outcome + error code (if any),
+- latency.
+
+### 11.2 Metrics (minimum)
+- login success/failure rate
+- lockout count
+- token validation failure rate
+- email send success/failure + DLQ count
+- p95 latency per endpoint
+
+### 11.3 Audit logs (tenant-scoped immutable)
+Record:
+- register, verify_email, login_success, login_failure, account_locked
+- password_reset_requested, password_reset_completed
+- invite_sent, invite_accepted, invite_expired
+- mfa_enabled/disabled, session_revoked
+
+---
+
+## 12) Security requirements (must pass)
+
+- **No enumeration** on signup/forgot/magic link.
+- **Rate limiting** on all credential/token endpoints.
+- **Token hashing at rest**.
+- **Tenant isolation**: invitations and tokens must bind to org/email/user.
+- **Session safety**: secure cookies, proper SameSite, short-lived backend JWT (already 10m).
+- **CVE awareness**: middleware is bypassable; backend is authoritative for authZ.
+
+---
+
+## 13) Performance requirements
+
+- Login p95 (backend) < 500ms under normal load.
+- Session enrichment must be bounded (no N+1, select minimal fields).
+- Token validation endpoints must be indexed on token hash.
+
+---
+
+## 14) Testing requirements (must ship with this PRD)
+
+### Backend e2e (minimum)
+- Signup → verify email → auto-login token works
+- Login success/failure/lockout/MFA required
+- Forgot password anti-enumeration
+- Reset token single-use
+- Invite validate/accept (new + existing)
+- Cross-tenant safety checks
+
+### Frontend smoke
+- All auth pages render and handle loading/error/success
+- Middleware gating routes correctly for owner/member/platform admin
+
+---
+
+## 15) Rollout / migration plan
+
+- Introduce typed error codes while maintaining backward compatibility during rollout.
+- Standardize request payload names (e.g. `newPassword`) and update all callers.
+- Remove deprecated variants and dead code after verification.
+
+---
+
+## 16) Definition of Done (this PRD)
+
+- Auth + invitation + onboarding flows are correct across all states.
+- Emails are reliable (queued + retried + observable).
+- UI matches `/signin` + `/signup` density and interaction patterns.
+- Build + lint + types pass.
+- Tests cover critical flows.
+
 # StreamlineOS PRD — Authentication, Invitations, Onboarding → Dashboard Landing
 
 **Status**: Draft (implementation-ready)  

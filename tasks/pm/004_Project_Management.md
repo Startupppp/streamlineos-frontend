@@ -1,20 +1,12 @@
 # Projects Product Bible
-
+#
 # 004 Project Management
 
-## Features
-- Create/Edit/Archive projects
-- Templates
-- Members & Roles
-- Milestones
-- Goals
-- Statuses
-- Labels
-- Budget reference
-- Files
-- Activity timeline
-
-Lifecycle:
-Draft → Active → On Hold → Completed → Archived
-
-Audit every project change.
+> **DEPRECATED (consolidated)**: This outline has been merged into the canonical `PRD-project-management.md` to avoid drift.
+>
+> Use:
+> - `PRD-project-management.md` §1–§7 (vision, IA, RBAC/module gating)
+> - `PRD-project-management.md` §8–§12 (data model, APIs, caching, security, audit)
+> - `PRD-project-management.md` §14 (page-by-page specs)
+>
+> Last reviewed: 2026-07-01.

@@ -1,0 +1,18 @@
+---
+description: UI/UX consistency + spacing rules (Tailwind/shadcn)
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# UI/UX Consistency Rules
+
+- **Design tokens only**: do not invent colors/spacing/radius/shadows. Use repo tokens (see `/signin` + `/signup`).
+- **Density standard**: keep cards and forms compact; avoid oversized padding/margins/gaps.
+- **Sheets & dialogs**:
+  - Small forms → **Dialog**
+  - Large/multi-section forms → **Sheet**
+  - Avoid “double padding” (Sheet content + inner card padding stacking).
+- **Hover/active/focus**: ensure readable contrast (never text and background the same on hover). Icons must adapt to hover/active state.
+- **States are mandatory**: loading skeletons, full-height empty states, friendly error with retry.
+- **Accessibility**: labels, `aria-*`, keyboard nav, focus rings. No interactive elements without focus-visible styling.
+
