@@ -4,7 +4,6 @@ import { useState, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +17,6 @@ import {
   ImageIcon,
   Loader2,
   Pencil,
-  UserMinus,
   UserPlus,
   X,
 } from "lucide-react";
@@ -36,12 +34,15 @@ import {
   useMuteChannel,
   useUnmuteChannel,
   useRemoveChannelMember,
+  useActiveHuddle,
 } from "@/hooks/api";
+import type { ChannelMember } from "@/types/chat";
 import { resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 import { ChannelAvatar } from "./channel-avatar";
+import { ChannelMemberRow } from "./channel-member-row";
 
 export function ChannelInfoPanel({
   channelId,
@@ -58,6 +59,7 @@ export function ChannelInfoPanel({
 }) {
   const { data: channel } = useChatChannel(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
+  const { data: activeHuddle } = useActiveHuddle(channelId);
   const updateChannel = useUpdateChannel();
   const { data: pins } = useChatPins(channelId);
   const unpinMessage = useUnpinMessage();
@@ -72,6 +74,29 @@ export function ChannelInfoPanel({
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers],
   );
+
+  const mutedInCallUserIds = useMemo(
+    () =>
+      new Set(
+        (activeHuddle?.participants ?? [])
+          .filter((p) => !p.leftAt && p.isMuted)
+          .map((p) => p.userId),
+      ),
+    [activeHuddle],
+  );
+
+  const { onlineMembers, offlineMembers } = useMemo(() => {
+    const members = channel?.members ?? [];
+    const byName = (a: ChannelMember, b: ChannelMember) =>
+      (a.user?.name ?? "").localeCompare(b.user?.name ?? "");
+    const online = members
+      .filter((m) => onlineUserIds.has(m.user?.id ?? ""))
+      .sort(byName);
+    const offline = members
+      .filter((m) => !onlineUserIds.has(m.user?.id ?? ""))
+      .sort(byName);
+    return { onlineMembers: online, offlineMembers: offline };
+  }, [channel?.members, onlineUserIds]);
 
   const myMember = channel?.members?.find((m) => m.user?.id === currentUserId);
   const isArchivedForMe = Boolean(myMember?.archivedAt);
@@ -464,74 +489,52 @@ export function ChannelInfoPanel({
                 </button>
               )}
             </div>
-            <div className="space-y-0.5">
-              {channel?.members?.map((m) => {
-                const isOnline = onlineUserIds.has(m.user?.id ?? "");
-                const isYou = m.user?.id === currentUserId;
-                const canRemove =
-                  isMultiMemberChannel &&
-                  ((isAdmin && !isYou) || isYou);
-                const isRemoving = removingUserId === m.user?.id;
-                return (
-                  <div
-                    key={m.user?.id}
-                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted/30 transition-colors group"
-                  >
-                    <div className="relative shrink-0">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={resolveImageUrl(m.user?.image)} />
-                        <AvatarFallback className="text-[10px] font-medium">
-                          {getInitials(m.user?.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      {isOnline && (
-                        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium truncate">
-                        {m.user?.name}
-                        {isYou && (
-                          <span className="text-muted-foreground font-normal">
-                            {" "}
-                            (you)
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {m.user?.email}
-                      </p>
-                    </div>
-                    {m.role === "ADMIN" && (
-                      <Badge
-                        variant="outline"
-                        className="text-[9px] px-1.5 py-0 h-4 border-blue-500/30 text-blue-600"
-                      >
-                        Admin
-                      </Badge>
-                    )}
-                    {canRemove && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleRemoveMember(m.user?.id ?? "", m.user?.name, isYou)
-                        }
-                        disabled={isRemoving}
-                        className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                        title={isYou ? "Leave channel" : "Remove member"}
-                        aria-label={isYou ? "Leave channel" : `Remove ${m.user?.name ?? "member"}`}
-                      >
-                        {isRemoving ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <UserMinus className="h-3.5 w-3.5" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+
+            {onlineMembers.length > 0 && (
+              <div className="mb-3">
+                <p className="text-[10px] font-bold text-emerald-600/80 uppercase tracking-wider px-2 mb-1">
+                  Online — {onlineMembers.length}
+                </p>
+                <div className="space-y-0.5">
+                  {onlineMembers.map((m) => (
+                    <ChannelMemberRow
+                      key={m.user?.id}
+                      member={m}
+                      isOnline
+                      isMutedInCall={mutedInCallUserIds.has(m.user?.id ?? "")}
+                      currentUserId={currentUserId}
+                      isAdmin={isAdmin}
+                      isMultiMemberChannel={isMultiMemberChannel}
+                      isRemoving={removingUserId === m.user?.id}
+                      onRemove={handleRemoveMember}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {offlineMembers.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider px-2 mb-1">
+                  Offline — {offlineMembers.length}
+                </p>
+                <div className="space-y-0.5">
+                  {offlineMembers.map((m) => (
+                    <ChannelMemberRow
+                      key={m.user?.id}
+                      member={m}
+                      isOnline={false}
+                      isMutedInCall={mutedInCallUserIds.has(m.user?.id ?? "")}
+                      currentUserId={currentUserId}
+                      isAdmin={isAdmin}
+                      isMultiMemberChannel={isMultiMemberChannel}
+                      isRemoving={removingUserId === m.user?.id}
+                      onRemove={handleRemoveMember}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {channel?.type !== "DIRECT" &&
@@ -659,6 +662,7 @@ export function ChannelInfoPanel({
         onOpenChange={setShowAddMembers}
         channelId={channelId}
         existingMemberIds={existingMemberIds}
+        isAdmin={isAdmin}
       />
     </div>
   );
