@@ -1108,7 +1108,7 @@ export default function RoadmapPage() {
             placeholder="Search…"
             value={search}
             onChange={handleSearchChange}
-            className="h-8 text-sm sm:max-w-xs"
+            className="h-8 text-xs sm:max-w-xs"
           />
         </div>
 

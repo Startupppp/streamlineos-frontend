@@ -213,7 +213,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                             >
                               <Badge
                                 variant="outline"
-                                className="font-mono text-[10px] shrink-0 text-violet-600 border-violet-200 dark:border-violet-900 dark:text-violet-400"
+                                className="font-mono text-[10px] shrink-0 text-muted-foreground border-border"
                               >
                                 {event.linkedTicket.key}
                               </Badge>

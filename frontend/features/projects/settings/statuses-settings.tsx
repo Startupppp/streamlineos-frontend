@@ -175,7 +175,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="p-3 rounded-xl border border-violet-200 bg-violet-50/30 space-y-3"
+            className="p-3 rounded-lg border border-border bg-muted/30 space-y-3"
           >
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
@@ -226,7 +226,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
                 size="sm"
                 onClick={handleCreate}
                 disabled={!name.trim() || createState.isPending}
-                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white h-7 text-xs"
+                className="h-7 text-xs"
               >
                 {createState.isPending ? "Creating..." : "Create"}
               </Button>

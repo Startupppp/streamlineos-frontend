@@ -40,7 +40,7 @@ function getInitials(first?: string | null, last?: string | null): string {
 }
 
 function getUtilizationClass(count: number): string {
-  if (count === 0) return "bg-slate-100";
+  if (count === 0) return "bg-muted";
   if (count <= 2) return "bg-emerald-100 text-emerald-700";
   if (count <= 4) return "bg-amber-100 text-amber-700";
   return "bg-red-100 text-red-700";
@@ -49,7 +49,7 @@ function getUtilizationClass(count: number): string {
 function getTotalColor(total: number): string {
   if (total > 5) return "text-red-600";
   if (total > 3) return "text-amber-600";
-  return "text-slate-700";
+  return "text-foreground";
 }
 
 function ticketMatchesDay(ticket: KanbanTicket, day: Date): boolean {
@@ -291,7 +291,7 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
                                 <span className="text-xs text-muted-foreground font-mono w-12 shrink-0">
                                   #{ticket.ticketNumber}
                                 </span>
-                                <span className="text-xs text-slate-700 truncate flex-1">
+                                <span className="text-xs text-foreground truncate flex-1">
                                   {ticket.title}
                                 </span>
                                 {ticket.dueDate && (
@@ -316,10 +316,10 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
             )}
 
             {unassigned.length > 0 && (
-              <div className="flex items-center border-b bg-amber-50/20">
+              <div className="flex items-center border-b bg-muted/20">
                 <div className="w-48 shrink-0 px-4 py-3 flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-                    <Users className="h-3 w-3 text-slate-500" />
+                  <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <Users className="h-3 w-3 text-muted-foreground" />
                   </div>
                   <span className="text-sm text-muted-foreground">
                     Unassigned

@@ -126,7 +126,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
               userResults?.map(u => (
                 <div key={u.id} className="flex items-center gap-3 px-4 py-3">
                   <Avatar className="h-8 w-8 border border-border/30">
-                    <AvatarFallback className="text-[10px] font-bold bg-gradient-to-br from-blue-100 to-indigo-50 text-blue-700">
+                    <AvatarFallback className="text-[10px] font-bold bg-muted text-muted-foreground">
                       {u.name?.slice(0, 2).toUpperCase() ?? "U"}
                     </AvatarFallback>
                   </Avatar>

@@ -55,6 +55,8 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [editingSaveId, setEditingSaveId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [commentNotFoundDismissed, setCommentNotFoundDismissed] = useState(false);
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
@@ -117,11 +119,13 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
 
   const handleSaveEdit = useCallback(
     (commentId: number, content: string) => {
+      setEditingSaveId(commentId);
       updateComment.mutate(
         { commentId, ticketId, projectId, content },
         {
           onSuccess: () => toast.success("Comment updated"),
           onError: (err) => toast.error(getErrorMessage(err)),
+          onSettled: () => setEditingSaveId(null),
         }
       );
     },
@@ -130,11 +134,13 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
 
   const handleDeleteComment = useCallback(
     (commentId: number) => {
+      setDeletingId(commentId);
       deleteComment.mutate(
         { commentId, ticketId, projectId },
         {
           onSuccess: () => toast.success("Comment deleted"),
           onError: (err) => toast.error(getErrorMessage(err)),
+          onSettled: () => setDeletingId(null),
         }
       );
     },
@@ -186,7 +192,7 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
 
   return (
     <div className="space-y-4">
-      <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1.5">
+      <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5">
         <MessageSquare className="h-3.5 w-3.5" />
         Activity
         {comments.length > 0 && (
@@ -263,11 +269,11 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
                 canManage={canManage}
                 onSaveEdit={handleSaveEdit}
                 onDelete={handleDeleteComment}
-                isSavingEdit={updateComment.isPending}
-                isDeletingComment={deleteComment.isPending}
+                isSavingEdit={editingSaveId === comment.id}
+                isDeletingComment={deletingId === comment.id}
               />
               {(repliesMap[comment.id]?.length ?? 0) > 0 && (
-                <div className="ml-9 mt-2 space-y-2 border-l-2 border-slate-100 pl-3">
+                <div className="ml-9 mt-2 space-y-2 border-l border-border pl-3">
                   {[...repliesMap[comment.id]]
                     .sort(
                       (a, b) =>
@@ -302,8 +308,8 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
                           canManage={canManage}
                           onSaveEdit={handleSaveEdit}
                           onDelete={handleDeleteComment}
-                          isSavingEdit={updateComment.isPending}
-                          isDeletingComment={deleteComment.isPending}
+                          isSavingEdit={editingSaveId === reply.id}
+                          isDeletingComment={deletingId === reply.id}
                         />
                       </div>
                     ))}

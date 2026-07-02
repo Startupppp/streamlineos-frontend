@@ -228,7 +228,15 @@ export default function AutomationsPage({ params }: PageProps) {
   }, [appendAction]);
 
   return (
-    <PageWrapper title="Automations" subtitle="Automate repetitive actions with if-then rules">
+    <PageWrapper
+      title="Automations"
+      subtitle="Automate repetitive actions with if-then rules"
+      actions={
+        <Button size="sm" onClick={handleOpenNew}>
+          <Plus className="h-3.5 w-3.5 mr-1" />New Automation
+        </Button>
+      }
+    >
       <div className="max-w-2xl mx-auto space-y-3 pb-8">
         {isLoading ? (
           <div className="space-y-3">
@@ -288,11 +296,6 @@ export default function AutomationsPage({ params }: PageProps) {
               </motion.div>
             )}
 
-            {automations.length > 0 && (
-              <Button variant="outline" size="sm" onClick={handleOpenNew} className="gap-1.5 h-8 text-xs">
-                <Plus className="h-3.5 w-3.5" />New Automation
-              </Button>
-            )}
           </>
         )}
       </div>

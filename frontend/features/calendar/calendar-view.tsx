@@ -239,6 +239,18 @@ export function CalendarView() {
   );
 
   const eventPropGetter = useCallback((event: BigCalEvent) => {
+    if (event.resource?.source === "task") {
+      return {
+        style: {
+          backgroundColor: "transparent",
+          border: "1px solid var(--border)",
+          borderRadius: "4px",
+          color: "var(--foreground)",
+          fontSize: "11px",
+          padding: "1px 6px",
+        },
+      };
+    }
     const rsvp = event.resource?.myRsvpStatus as string | null | undefined;
     const rsvpBorderColor = rsvp ? (RSVP_BORDER_COLORS[rsvp] ?? null) : null;
     const categoryColor = event.resource?.category
@@ -484,28 +496,28 @@ export function CalendarView() {
       />
 
       <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
-        <DialogContent className="max-w-xs p-6">
+        <DialogContent className="max-w-xs p-4">
           <DialogHeader>
             <DialogTitle className="text-sm font-semibold">What would you like to create?</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Choose the type of item to add for the selected time.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-2 pt-1">
+          <div className="flex flex-col gap-1.5">
             <Button
               variant="outline"
-              className="justify-start h-9 text-sm gap-2"
+              className="justify-start h-8 text-xs gap-2"
               onClick={handleSlotChooseEvent}
             >
-              <Plus className="h-4 w-4 text-muted-foreground" />
+              <Plus className="h-3.5 w-3.5 text-muted-foreground" />
               Calendar event
             </Button>
             <Button
               variant="outline"
-              className="justify-start h-9 text-sm gap-2"
+              className="justify-start h-8 text-xs gap-2"
               onClick={handleSlotChooseTicket}
             >
-              <Ticket className="h-4 w-4 text-muted-foreground" />
+              <Ticket className="h-3.5 w-3.5 text-muted-foreground" />
               Ticket due date
             </Button>
           </div>

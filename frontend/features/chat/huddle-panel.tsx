@@ -369,7 +369,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               size="sm"
               className={cn(
                 "h-9 w-9 rounded-full p-0",
-                isDeafened && "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 hover:text-purple-500",
+                isDeafened && "bg-muted text-foreground hover:bg-muted/80",
               )}
               onClick={handleToggleDeafen}
               aria-label={isDeafened ? "Undeafen" : "Deafen"}

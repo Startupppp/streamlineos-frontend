@@ -37,11 +37,10 @@ import {
   Plus,
   Trash2,
   GripVertical,
-  FolderKanban,
   PlayCircle,
-  LayoutTemplate,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   useProjectTemplates,
   useCreateProjectTemplate,
@@ -609,25 +608,36 @@ export default function ProjectTemplatesPage() {
   return (
     <PageWrapper
       title="Project Templates"
-      subtitle="Pre-built project structures to bootstrap new projects quickly"
-    >
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <LayoutTemplate className="h-5 w-5" />
-          <span className="text-sm">
-            {templates?.length ?? 0} template
-            {templates?.length !== 1 ? "s" : ""}
-          </span>
-        </div>
-        <Button onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-1" /> New Template
+      subtitle={
+        templates
+          ? `${templates.length} template${templates.length !== 1 ? "s" : ""}`
+          : undefined
+      }
+      actions={
+        <Button size="sm" onClick={handleOpenCreate}>
+          <Plus className="h-3.5 w-3.5 mr-1" /> New Template
         </Button>
-      </div>
-
+      }
+    >
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-52 rounded-lg" />
+            <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+              <div className="flex gap-2 pt-1">
+                <Skeleton className="h-8 flex-1" />
+                <Skeleton className="h-8 w-8" />
+              </div>
+            </div>
           ))}
         </div>
       ) : templates && templates.length > 0 ? (
@@ -642,13 +652,12 @@ export default function ProjectTemplatesPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] py-16 text-center space-y-3">
-          <FolderKanban className="h-10 w-10 text-muted-foreground/50" />
-          <p className="text-muted-foreground">No templates yet.</p>
-          <Button variant="outline" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-1" /> Create your first template
-          </Button>
-        </div>
+        <EmptyState
+          title="No templates yet"
+          description="Create a reusable project structure to bootstrap new projects quickly."
+          action={{ label: "Create your first template", onClick: handleOpenCreate }}
+          className="flex-1 min-h-[40vh]"
+        />
       )}
 
       {createOpen && <CreateTemplateDialog onClose={handleCloseCreate} />}

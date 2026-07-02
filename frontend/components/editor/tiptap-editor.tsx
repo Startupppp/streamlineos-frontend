@@ -20,6 +20,25 @@ interface TiptapEditorProps {
   contentKey?: string | number;
 }
 
+function normalizeToHtml(raw: unknown): string | Record<string, unknown> | undefined {
+  if (raw == null) return undefined;
+  if (typeof raw === "object") return raw as Record<string, unknown>;
+  if (typeof raw !== "string") return undefined;
+  if (raw === "" || raw.trimStart().startsWith("<")) return raw;
+  return raw
+    .split("\n")
+    .map((line) => {
+      const escaped = line
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+      return escaped.length > 0 ? `<p>${escaped}</p>` : "<p><br></p>";
+    })
+    .join("");
+}
+
 export function TiptapEditor({
   content,
   onChange,
@@ -41,7 +60,7 @@ export function TiptapEditor({
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Underline,
     ],
-    content: content as string | Record<string, unknown> | undefined,
+    content: normalizeToHtml(content),
     editable,
     onUpdate: ({ editor: e }) => {
       if (output === "html") {
@@ -61,7 +80,7 @@ export function TiptapEditor({
     if (!editor || editor.isDestroyed || content == null) return;
     const targetKey = contentKey ?? true;
     if (lastInitKey.current !== targetKey) {
-      editor.commands.setContent(content as string | Record<string, unknown>);
+      editor.commands.setContent(normalizeToHtml(content) ?? "", { emitUpdate: false });
       lastInitKey.current = targetKey;
     }
   }, [editor, content, contentKey]);

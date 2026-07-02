@@ -47,13 +47,12 @@ export default function ResourceAllocationPage() {
       ) : isError ? (
         <ErrorState onRetry={handleRetry} />
       ) : !entries || entries.length === 0 ? (
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] text-center space-y-4">
-          <Users className="h-10 w-10 text-muted-foreground/50" />
-          <p className="text-muted-foreground">No open tickets assigned yet.</p>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/projects">View Projects</Link>
-          </Button>
-        </div>
+        <EmptyState
+          title="No assignments yet"
+          description="Assign tickets to team members to see workload distribution here."
+          action={{ label: "View Projects", href: "/projects" }}
+          className="flex-1 min-h-[40vh]"
+        />
       ) : (
         <div className="space-y-4">
           {entries.map((entry, idx) => {
@@ -80,7 +79,7 @@ export default function ResourceAllocationPage() {
                       </div>
                       <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden mb-2">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500"
+                          className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
                           style={{ width: `${utilPct}%` }}
                         />
                       </div>

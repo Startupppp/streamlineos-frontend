@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 
 interface MyTicketRowProps {
   ticket: {
@@ -56,9 +57,7 @@ const TicketRow = memo(function TicketRow({
       <TableCell className="px-3 py-1.5 font-mono text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <TicketTypeIcon type={ticket.type} />
-          {projectKey && ticket.ticketNumber != null
-            ? `${projectKey}-${ticket.ticketNumber}`
-            : `#${ticket.ticketNumber}`}
+          {formatTicketKey(projectKey, ticket.ticketNumber)}
         </span>
       </TableCell>
       <TableCell className="px-3 py-1.5 max-w-md">

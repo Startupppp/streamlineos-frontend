@@ -342,7 +342,7 @@ export default function PagesPage({
             <p className="text-sm text-muted-foreground mb-4">
               Create your first page to start documenting your project.
             </p>
-            <Button onClick={handleOpenCreatePage} className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm">
+            <Button onClick={handleOpenCreatePage}>
               <Plus className="h-4 w-4 mr-1" /> Create First Page
             </Button>
           </div>

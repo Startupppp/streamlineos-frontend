@@ -218,7 +218,7 @@ export default function ModulesPage({
     >
       <div className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="Total" value={total} icon={Package} color="violet" index={0} />
+          <StatCard label="Total" value={total} icon={Package} color="blue" index={0} />
           <StatCard label="In Progress" value={inProgress} icon={Activity} color="blue" index={1} />
           <StatCard label="Completed" value={completed} icon={CheckCircle2} color="green" index={2} />
           <StatCard label="Planned" value={planned} icon={Calendar} color="amber" index={3} />
@@ -239,7 +239,7 @@ export default function ModulesPage({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {modules.map((mod) => (
               <Link key={mod.id} href={`/projects/${projectId}/modules/${mod.id}`}>
-                <Card className="hover:border-violet-400/60 transition-colors cursor-pointer h-full bg-card border border-border rounded-lg">
+                <Card className="hover:border-primary/20 transition-colors cursor-pointer h-full bg-card border border-border rounded-lg">
                   <CardHeader className="pb-2 px-4 pt-4">
                     <div className="flex items-start justify-between gap-2">
                       <CardTitle className="text-sm font-semibold leading-tight truncate">
@@ -263,7 +263,7 @@ export default function ModulesPage({
                       </div>
                       <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-300"
+                          className="h-full rounded-full bg-blue-500 transition-all duration-300"
                           style={{ width: `${mod.progress ?? 0}%` }}
                         />
                       </div>

@@ -39,7 +39,7 @@ export default async function ProjectLayout({
         return <AccessDeniedView projectName="this project" hint={hint} />;
       }
     }
-    return <AccessDeniedView projectName="this project" />;
+    throw err;
   }
 
   if (!project) return notFound();

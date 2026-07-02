@@ -75,16 +75,21 @@ export function useCreateTicket(
   });
 }
 
+export interface UpdateTicketResponse {
+  updated: boolean;
+  updatedAt: string;
+}
+
 export function useUpdateTicket(
   projectId: number,
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, UpdateTicketInput>, "mutationFn">
+  options?: Omit<UseMutationOptions<UpdateTicketResponse, Error, UpdateTicketInput>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, UpdateTicketInput>({
+  return useMutation<UpdateTicketResponse, Error, UpdateTicketInput>({
     ...options,
     mutationKey: ["projects", "tickets", "update"],
     mutationFn: ({ ticketId, ...data }) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch<UpdateTicketResponse>(
         `/projects/${projectId}/tickets/${ticketId}`,
         data
       ),
@@ -95,14 +100,23 @@ export function useUpdateTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.tickets({ projectId }),
       });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.sprints(projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: [...queryKeys.projects.all, "burndown"],
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.dashboard.all, "myIssues"] });
+      const affectsAggregates =
+        variables.status !== undefined ||
+        variables.sprintId !== undefined ||
+        variables.priority !== undefined ||
+        variables.points !== undefined ||
+        variables.assigneeId !== undefined ||
+        variables.assigneeIds !== undefined;
+      if (affectsAggregates) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.sprints(projectId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: [...queryKeys.projects.all, "burndown"],
+        });
+        queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
+        queryClient.invalidateQueries({ queryKey: [...queryKeys.dashboard.all, "myIssues"] });
+      }
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });

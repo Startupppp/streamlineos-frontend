@@ -447,9 +447,9 @@ export function EventCreateDialog({
               <div className="space-y-1.5 pb-2">
                 <p className="text-sm font-medium text-foreground">Linked work item</p>
                 {displayLinkedKey ? (
-                  <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
-                    <Ticket className="h-3.5 w-3.5 text-violet-600 shrink-0" />
-                    <span className="font-mono text-[11px] text-violet-600 shrink-0">
+                  <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
+                    <Ticket className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="font-mono text-[11px] text-muted-foreground shrink-0">
                       {displayLinkedKey}
                     </span>
                     {displayLinkedTitle && (
@@ -468,7 +468,7 @@ export function EventCreateDialog({
                   <button
                     type="button"
                     onClick={handleOpenTicketPicker}
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-2 w-full transition-colors hover:border-violet-400"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-2 w-full transition-colors hover:border-border"
                   >
                     <Ticket className="h-3.5 w-3.5" />
                     Link a ticket…
@@ -541,7 +541,7 @@ function TicketPickerContent({
           value={q}
           onChange={(e) => onQChange(e.target.value)}
           placeholder="Search by ticket key or title…"
-          className="w-full pl-8 pr-3 py-2 text-sm border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+          className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30"
         />
       </div>
       <div className="overflow-y-auto space-y-1 flex-1">
@@ -558,12 +558,12 @@ function TicketPickerContent({
               key={ticket.id}
               type="button"
               onClick={() => onSelect(ticket)}
-              className="w-full flex items-start gap-2.5 px-3 py-2 rounded-lg text-left hover:bg-muted/40 transition-colors"
+              className="w-full flex items-center gap-2 px-3 h-8 rounded-md text-left hover:bg-accent transition-colors focus-visible:outline-none focus-visible:bg-accent"
             >
-              <span className="font-mono text-[11px] text-muted-foreground shrink-0 mt-0.5">
+              <span className="font-mono text-[11px] text-muted-foreground shrink-0 w-16 truncate">
                 {ticket.projectKey}-{ticket.ticketNumber}
               </span>
-              <span className="text-sm flex-1 min-w-0 truncate">{ticket.title}</span>
+              <span className="text-[13px] flex-1 min-w-0 truncate text-foreground">{ticket.title}</span>
             </button>
           ))
         )}

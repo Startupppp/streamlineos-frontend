@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, MessageSquare, Ticket } from "lucide-react";
@@ -12,6 +12,8 @@ import {
   ticketPermalinkQueryOptions,
 } from "@/hooks/api/projects/comment-permalink";
 import { LinkPreviewCard } from "./link-preview-card";
+import { getStatusBadgeClass } from "@/features/projects/shared/status-badge";
+import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 
 type InternalLink =
   | { kind: "comment"; projectId: number; ticketId: number; commentId: string; href: string }
@@ -44,12 +46,6 @@ function parseInternalLink(raw: string): InternalLink | null {
   return { kind: "ticket", projectId, ticketId, href: raw };
 }
 
-const TICKET_STATUS_COLORS: Record<string, string> = {
-  TODO: "bg-slate-100 text-slate-700",
-  IN_PROGRESS: "bg-blue-100 text-blue-700",
-  IN_REVIEW: "bg-amber-100 text-amber-700",
-  DONE: "bg-green-100 text-green-700",
-};
 
 function SkeletonLine({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded bg-muted/60", className)} />;
@@ -162,7 +158,7 @@ function CommentPreviewCard({
             isOwn ? "text-white/80" : "text-blue-600",
           )}
         >
-          {data.ticket.projectKey}-{data.ticket.ticketNumber}
+          {formatTicketKey(data.ticket.projectKey, data.ticket.ticketNumber)}
         </span>
         <span
           className={cn(
@@ -248,9 +244,7 @@ function TicketPreviewCard({
 
   if (!data) return null;
 
-  const ticketKey = data.projectKey
-    ? `${data.projectKey}-${data.ticketNumber}`
-    : `Ticket #${data.id}`;
+  const ticketKey = formatTicketKey(data.projectKey, data.ticketNumber);
 
   return (
     <CardShell isOwn={isOwn} onClick={handleOpen}>
@@ -278,7 +272,7 @@ function TicketPreviewCard({
           <span
             className={cn(
               "mt-1 inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium",
-              TICKET_STATUS_COLORS[data.status] ?? "bg-muted text-muted-foreground",
+              getStatusBadgeClass(data.status),
             )}
           >
             {data.status.replace(/_/g, " ")}
@@ -299,14 +293,15 @@ export function InternalLinkPreview({
   content: string;
   isOwn: boolean;
 }) {
-  const [link, setLink] = useState<InternalLink | null | undefined>(undefined);
-
-  useEffect(() => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const link = useMemo(() => {
+    if (!mounted) return null;
     const raw = extractFirstUrl(content);
-    setLink(raw ? parseInternalLink(raw) : null);
-  }, [content]);
+    return raw ? parseInternalLink(raw) : null;
+  }, [mounted, content]);
 
-  if (link === undefined) return null;
+  if (!mounted) return null;
 
   if (link) {
     if (link.kind === "comment") {

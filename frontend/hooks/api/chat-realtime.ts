@@ -6,7 +6,7 @@ import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { queryKeys } from "@/lib/query-keys";
-import type { Message, MessagesPage, TypingIndicator } from "@/types/chat";
+import type { Message, MessageMetadata, MessageType, MessagesPage, TypingIndicator } from "@/types/chat";
 import type { InfiniteData } from "@tanstack/react-query";
 
 interface AblyMessagePayload {
@@ -17,6 +17,8 @@ interface AblyMessagePayload {
   content: string | null;
   createdAt: string | null;
   replyToId: number | null;
+  messageType?: MessageType;
+  metadata?: MessageMetadata | null;
 }
 
 interface AblyTypingPayload {
@@ -35,12 +37,14 @@ function payloadToMessage(payload: AblyMessagePayload): Message {
     replyToId: payload.replyToId ?? null,
     isEdited: false,
     isDeleted: false,
-    messageType: "text",
-    metadata: null,
+    messageType: payload.messageType ?? "text",
+    metadata: payload.metadata ?? null,
     actionStatus: null,
     createdAt: payload.createdAt,
     updatedAt: payload.createdAt,
-    sender: null,
+    sender: payload.senderName
+      ? { id: payload.senderId, name: payload.senderName, image: null }
+      : null,
     attachments: [],
     replyTo: null,
   };

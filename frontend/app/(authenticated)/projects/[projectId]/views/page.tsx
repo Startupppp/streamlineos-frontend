@@ -97,7 +97,7 @@ const ViewCard = memo(function ViewCard({
       onClick={handleNavigate}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className={cn("shrink-0 h-8 w-8 rounded-md flex items-center justify-center", meta?.color ?? "text-violet-600 bg-violet-50")}>
+        <div className={cn("shrink-0 h-8 w-8 rounded-md flex items-center justify-center", meta?.color ?? "text-slate-600 bg-slate-100")}>
           {meta?.icon}
         </div>
         <div className="min-w-0">

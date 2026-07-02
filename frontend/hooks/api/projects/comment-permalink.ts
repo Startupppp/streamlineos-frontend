@@ -14,7 +14,7 @@ export interface CommentPermalinkData {
     id: string;
     ticketNumber: number;
     title: string;
-    projectKey: string;
+    projectKey: string | null;
     projectId: number;
   };
 }

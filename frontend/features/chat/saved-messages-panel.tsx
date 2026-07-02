@@ -31,7 +31,7 @@ function SavedMessageCard({
       <div className="flex items-start gap-3">
         <Avatar className="h-7 w-7 shrink-0 mt-0.5 border border-border/30">
           <AvatarImage src={resolveImageUrl(item.message.sender?.image)} />
-          <AvatarFallback className="text-[8px] font-bold bg-gradient-to-br from-blue-100 to-indigo-50 text-blue">
+          <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
             {getInitials(item.message.sender?.name)}
           </AvatarFallback>
         </Avatar>

@@ -5,6 +5,7 @@ import { Clock, Loader2, Search, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTicketSearch } from "@/hooks/api/projects";
 import type { TicketSearchResult } from "@/hooks/api/projects";
+import { getStatusDotClass } from "@/features/projects/shared/status-badge";
 
 interface TicketMentionPickerProps {
   query: string;
@@ -13,12 +14,6 @@ interface TicketMentionPickerProps {
   className?: string;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  TODO: "bg-slate-100 text-slate-700",
-  IN_PROGRESS: "bg-blue-100 text-blue-700",
-  IN_REVIEW: "bg-amber-100 text-amber-700",
-  DONE: "bg-green-100 text-green-700",
-};
 
 export function TicketMentionPicker({
   query,
@@ -27,7 +22,7 @@ export function TicketMentionPicker({
   className,
 }: TicketMentionPickerProps) {
   const isSearching = query.length > 0;
-  const { data: tickets = [], isLoading, isError } = useTicketSearch(query, { enabled: true });
+  const { data: tickets = [], isLoading, isError } = useTicketSearch(query);
 
   const handleSelect = useCallback(
     (ticket: TicketSearchResult) => {
@@ -92,24 +87,19 @@ export function TicketMentionPicker({
                 aria-selected={idx === selectedIndex}
                 onClick={() => handleSelect(ticket)}
                 className={cn(
-                  "w-full flex items-start gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors duration-100 ease-out motion-reduce:transition-none",
-                  idx === selectedIndex && "bg-violet-50",
+                  "w-full flex items-center gap-2 px-3 h-8 text-left hover:bg-accent transition-colors duration-100 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:bg-accent",
+                  idx === selectedIndex && "bg-accent",
                 )}
               >
-                <span className="font-mono text-[11px] text-muted-foreground shrink-0 mt-0.5 w-16">
+                <span className="font-mono text-[11px] text-muted-foreground shrink-0 w-16 truncate">
                   {ticket.projectKey}-{ticket.ticketNumber}
                 </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate">{ticket.title}</p>
-                  <span
-                    className={cn(
-                      "inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium mt-0.5",
-                      STATUS_COLORS[ticket.status] ?? "bg-muted text-muted-foreground",
-                    )}
-                  >
-                    {ticket.status.replace(/_/g, " ")}
-                  </span>
-                </div>
+                <span className="flex-1 min-w-0 text-[13px] truncate text-foreground">
+                  {ticket.title}
+                </span>
+                <span
+                  className={cn("h-2 w-2 rounded-full shrink-0", getStatusDotClass(ticket.status))}
+                />
               </button>
             ))}
           </div>

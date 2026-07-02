@@ -243,19 +243,19 @@ export function CreateTicketDialog({
             <Plus className="h-6 w-6" />
           </Button>
         ) : (
-          <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+          <Button>
             <Plus className="mr-2 h-4 w-4" /> Create Ticket
           </Button>
         )}
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-y-auto p-0"
+        className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-hidden p-0 flex flex-col"
       >
-        <SheetHeader className="p-6 pb-4 border-b">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle>New Ticket</SheetTitle>
         </SheetHeader>
-        <div className="px-6 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
@@ -519,17 +519,20 @@ export function CreateTicketDialog({
                 </FormControl>
               </FormItem>
 
-              <Button
-                type="submit"
-                disabled={createTicketMutation.isPending || isUploading}
-                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-              >
-                {createTicketMutation.isPending || isUploading
-                  ? "Creating..."
-                  : "Create Ticket"}
-              </Button>
             </form>
           </Form>
+        </div>
+        <div className="shrink-0 px-6 py-4 border-t">
+          <Button
+            type="button"
+            disabled={createTicketMutation.isPending || isUploading}
+            className="w-full"
+            onClick={form.handleSubmit(handleSubmit)}
+          >
+            {createTicketMutation.isPending || isUploading
+              ? "Creating..."
+              : "Create Ticket"}
+          </Button>
         </div>
       </SheetContent>
     </Sheet>

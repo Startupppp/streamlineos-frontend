@@ -144,7 +144,7 @@ export function CreateTicketFromCalendarDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="px-5 pb-0 space-y-4 pt-3">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="px-5 pb-0 space-y-3 pt-3">
             <FormField
               control={form.control}
               name="projectId"

@@ -116,6 +116,7 @@ export function TicketDetailsDialog({
   const [saving, setSaving] = useState(false);
   const [localTitle, setLocalTitle] = useState("");
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedAtRef = useRef<string | undefined>(undefined);
 
   const {
     data: ticket,
@@ -168,7 +169,8 @@ export function TicketDetailsDialog({
   }, [queryClient, projectId, ticketId]);
 
   const updateTicketMutation = useUpdateTicket(projectId, {
-    onSuccess: () => {
+    onSuccess: (data) => {
+      lastSavedAtRef.current = data.updatedAt;
       setSaving(false);
       invalidateAll();
     },
@@ -194,17 +196,19 @@ export function TicketDetailsDialog({
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
-  const expectedUpdatedAt = ticket?.updatedAt
-    ? new Date(ticket.updatedAt).toISOString()
-    : undefined;
+  useEffect(() => {
+    if (ticket?.updatedAt) {
+      lastSavedAtRef.current = new Date(ticket.updatedAt).toISOString();
+    }
+  }, [ticket?.updatedAt]);
 
   const autoSave = useCallback(
     (field: Record<string, unknown>) => {
       if (!ticketId) return;
       setSaving(true);
-      updateTicketMutation.mutate({ ticketId, expectedUpdatedAt, ...field });
+      updateTicketMutation.mutate({ ticketId, expectedUpdatedAt: lastSavedAtRef.current, ...field });
     },
-    [ticketId, updateTicketMutation, expectedUpdatedAt],
+    [ticketId, updateTicketMutation],
   );
 
   const debouncedSave = useCallback(
@@ -213,10 +217,10 @@ export function TicketDetailsDialog({
       setSaving(true);
       debounceTimerRef.current = setTimeout(() => {
         if (!ticketId) return;
-        updateTicketMutation.mutate({ ticketId, expectedUpdatedAt, ...field });
+        updateTicketMutation.mutate({ ticketId, expectedUpdatedAt: lastSavedAtRef.current, ...field });
       }, 500);
     },
-    [ticketId, updateTicketMutation, expectedUpdatedAt],
+    [ticketId, updateTicketMutation],
   );
 
   useEffect(() => {
@@ -243,9 +247,10 @@ export function TicketDetailsDialog({
 
   const handleDescriptionEditorChange = useCallback(
     (html: string) => {
+      if (html === (ticket?.description ?? "")) return;
       debouncedSave({ description: html });
     },
-    [debouncedSave],
+    [debouncedSave, ticket?.description],
   );
 
   return (
@@ -339,7 +344,7 @@ export function TicketDetailsDialog({
 
                 {ticket.attachments && ticket.attachments.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                    <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
                       Attachments
                     </h4>
                     <div className="grid grid-cols-3 gap-2">

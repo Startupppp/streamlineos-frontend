@@ -104,19 +104,19 @@ export function TicketFilterBar({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-center bg-muted/40 rounded-lg p-2">
+    <div className="flex flex-wrap gap-2 items-center">
       <div className="relative min-w-[140px] max-w-[200px] flex-1">
-        <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         <Input
           placeholder="Search..."
           value={q}
           onChange={handleSearchChange}
-          className="h-8 pl-7 text-sm"
+          className="h-8 pl-7 text-xs"
         />
       </div>
 
       <Select value={status || "ALL"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 w-auto min-w-[90px] text-sm shrink-0">
+        <SelectTrigger className="h-8 w-auto min-w-[90px] text-xs shrink-0">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -130,7 +130,7 @@ export function TicketFilterBar({
       </Select>
 
       <Select value={priority || "ALL"} onValueChange={handlePriorityChange}>
-        <SelectTrigger className="h-8 w-auto min-w-[90px] text-sm shrink-0">
+        <SelectTrigger className="h-8 w-auto min-w-[90px] text-xs shrink-0">
           <SelectValue placeholder="Priority" />
         </SelectTrigger>
         <SelectContent>
@@ -145,7 +145,7 @@ export function TicketFilterBar({
 
       {showTypeFilter && (
         <Select value={type || "ALL"} onValueChange={handleTypeChange}>
-          <SelectTrigger className="h-8 w-auto min-w-[80px] text-sm shrink-0">
+          <SelectTrigger className="h-8 w-auto min-w-[80px] text-xs shrink-0">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
@@ -161,7 +161,7 @@ export function TicketFilterBar({
 
       {showSprintFilter && sprints && sprints.length > 0 && (
         <Select value={sprintId || "ALL"} onValueChange={handleSprintChange}>
-          <SelectTrigger className="h-8 w-auto min-w-[100px] text-sm shrink-0">
+          <SelectTrigger className="h-8 w-auto min-w-[100px] text-xs shrink-0">
             <SelectValue placeholder="Sprint" />
           </SelectTrigger>
           <SelectContent>
@@ -177,7 +177,7 @@ export function TicketFilterBar({
 
       {showAssigneeFilter && members && members.length > 0 && (
         <Select value={assigneeId || "ALL"} onValueChange={handleAssigneeChange}>
-          <SelectTrigger className="h-8 w-auto min-w-[100px] text-sm shrink-0">
+          <SelectTrigger className="h-8 w-auto min-w-[100px] text-xs shrink-0">
             <SelectValue placeholder="Assignee" />
           </SelectTrigger>
           <SelectContent>

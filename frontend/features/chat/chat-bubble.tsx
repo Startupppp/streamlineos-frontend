@@ -30,18 +30,14 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/projects/comment-permalink";
 import { InternalLinkPreview } from "./internal-link-preview";
+import { getStatusBadgeClass } from "@/features/projects/shared/status-badge";
+import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 
 const TICKET_STATUS_DISPLAY: Record<string, string> = {
   TODO: "Todo",
   IN_PROGRESS: "In Progress",
   IN_REVIEW: "In Review",
   DONE: "Done",
-};
-const TICKET_STATUS_COLORS: Record<string, string> = {
-  TODO: "bg-slate-100 text-slate-700",
-  IN_PROGRESS: "bg-blue-50 text-blue-700",
-  IN_REVIEW: "bg-amber-50 text-amber-700",
-  DONE: "bg-emerald-50 text-emerald-700",
 };
 
 function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId: number }) {
@@ -134,7 +130,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
               disabled={isChangingStatus}
               className={cn(
                 "inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity duration-150 ease-out motion-reduce:transition-none",
-                TICKET_STATUS_COLORS[currentStatus] ?? "bg-muted text-muted-foreground",
+                getStatusBadgeClass(currentStatus),
               )}
               aria-label="Change ticket status"
             >
@@ -161,7 +157,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
         <span
           className={cn(
             "inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium",
-            TICKET_STATUS_COLORS[currentStatus] ?? "bg-muted text-muted-foreground",
+            getStatusBadgeClass(currentStatus),
           )}
         >
           {TICKET_STATUS_DISPLAY[currentStatus] ?? currentStatus}
@@ -179,7 +175,7 @@ function CommentPill({ entity }: { entity: CommentEntityRef }) {
 
   const href = `/projects/${entity.projectId}?ticket=${entity.ticketId}&comment=${entity.id}`;
   const label = ticket
-    ? `Comment on ${ticket.projectKey ? `${ticket.projectKey}-${ticket.ticketNumber}` : `#${entity.ticketId}`}`
+    ? `Comment on ${formatTicketKey(ticket.projectKey, ticket.ticketNumber)}`
     : "Comment";
 
   const handleClick = useCallback(() => {
@@ -360,7 +356,7 @@ export function ChatBubble({
           {showSender ? (
             <Avatar className="h-7 w-7 border border-border/30 shadow-sm">
               <AvatarImage src={resolveImageUrl(message.sender?.image)} />
-              <AvatarFallback className="text-[8px] font-bold bg-gradient-to-br from-blue-100 to-indigo-50 text-blue">
+              <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
                 {getInitials(message.sender?.name)}
               </AvatarFallback>
             </Avatar>

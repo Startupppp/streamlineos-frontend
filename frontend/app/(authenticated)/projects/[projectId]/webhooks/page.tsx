@@ -109,11 +109,11 @@ function WebhookCard({
   return (
     <motion.div
       layout
-      className="border border-slate-200/80 rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm shadow-sm"
+      className="border border-border rounded-lg overflow-hidden bg-card shadow-sm"
     >
       <div className="flex items-center gap-3 p-3.5">
-        <div className="h-8 w-8 rounded-xl bg-violet-50 flex items-center justify-center shrink-0">
-          <Zap className="h-4 w-4 text-violet-600" />
+        <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+          <Zap className="h-4 w-4 text-muted-foreground" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate text-slate-800">{webhook.url}</p>
@@ -122,7 +122,7 @@ function WebhookCard({
               <Badge
                 key={e}
                 variant="secondary"
-                className="text-[10px] py-0 px-1.5 bg-violet-50 text-violet-700 border-violet-100"
+                className="text-[10px] py-0 px-1.5 bg-slate-100 text-slate-700 border-slate-200 font-mono"
               >
                 {e}
               </Badge>
@@ -181,7 +181,7 @@ function WebhookCard({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden border-t border-slate-100"
+            className="overflow-hidden border-t border-border"
           >
             <div className="p-3.5">
               <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
@@ -189,13 +189,13 @@ function WebhookCard({
                 Recent Deliveries
               </p>
               {isLoading ? (
-                <Skeleton className="h-24 w-full rounded-xl" />
+                <Skeleton className="h-24 w-full rounded-lg" />
               ) : deliveries.length === 0 ? (
                 <p className="text-xs text-muted-foreground py-4 text-center">
                   No deliveries yet
                 </p>
               ) : (
-                <div className="rounded-xl border border-slate-100 overflow-hidden bg-slate-50/40">
+                <div className="rounded-md border border-border overflow-hidden bg-muted/20">
                   {deliveries.slice(0, 5).map((d) => (
                     <DeliveryRow key={d.id} delivery={d} />
                   ))}
@@ -259,16 +259,24 @@ export default function WebhooksPage({ params }: PageProps) {
     form.reset();
   }, [form]);
 
+  const handleShowForm = useCallback(() => setShowForm(true), []);
+
   return (
     <PageWrapper
       title="Webhooks"
       subtitle="Receive HTTP POST notifications when project events occur"
+      actions={
+        <Button size="sm" onClick={handleShowForm}>
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          Add Webhook
+        </Button>
+      }
     >
       <div className="max-w-2xl mx-auto space-y-3 pb-8">
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+              <Skeleton key={i} className="h-20 w-full rounded-lg" />
             ))}
           </div>
         ) : isError ? (
@@ -300,16 +308,16 @@ export default function WebhooksPage({ params }: PageProps) {
                 animate={{ opacity: 1 }}
                 className="flex flex-col items-center justify-center py-20 gap-3"
               >
-                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 flex items-center justify-center">
-                  <Zap className="h-7 w-7 text-violet-500" />
+                <div className="h-14 w-14 rounded-lg bg-muted border border-border flex items-center justify-center">
+                  <Zap className="h-7 w-7 text-muted-foreground" />
                 </div>
                 <p className="text-sm font-semibold text-slate-700">No webhooks configured</p>
                 <p className="text-xs text-muted-foreground text-center max-w-xs">
                   Get notified in real-time when tickets, sprints, or members change.
                 </p>
                 <Button
-                  onClick={() => setShowForm(true)}
-                  className="mt-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 gap-2"
+                  onClick={handleShowForm}
+                  className="mt-2 gap-2"
                 >
                   <Plus className="h-4 w-4" />
                   Create Webhook
@@ -321,7 +329,7 @@ export default function WebhooksPage({ params }: PageProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowForm(true)}
+                onClick={handleShowForm}
                 className="gap-1.5 h-8 text-xs"
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -337,7 +345,7 @@ export default function WebhooksPage({ params }: PageProps) {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="border border-violet-200/80 rounded-2xl bg-gradient-to-br from-violet-50/30 to-indigo-50/20 p-5 shadow-sm"
+              className="border border-border rounded-lg bg-muted/30 p-5"
             >
               <h3 className="text-sm font-semibold text-slate-800 mb-4">New Webhook</h3>
               <Form {...form}>
@@ -373,10 +381,10 @@ export default function WebhooksPage({ params }: PageProps) {
                             <label
                               key={ev.value}
                               className={cn(
-                                "flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-all duration-150 select-none",
+                                "flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-all duration-150 select-none",
                                 field.value.includes(ev.value)
-                                  ? "border-violet-300 bg-violet-50/80 text-violet-800"
-                                  : "border-slate-200 hover:border-slate-300 bg-white/60",
+                                  ? "border-primary bg-primary/5 text-foreground"
+                                  : "border-border hover:border-border/80 bg-card",
                               )}
                             >
                               <Checkbox
@@ -424,7 +432,7 @@ export default function WebhooksPage({ params }: PageProps) {
                       type="submit"
                       size="sm"
                       disabled={createWebhook.isPending}
-                      className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 h-8 text-xs gap-1.5"
+                      className="h-8 text-xs gap-1.5"
                     >
                       {createWebhook.isPending ? "Creating..." : "Create Webhook"}
                     </Button>

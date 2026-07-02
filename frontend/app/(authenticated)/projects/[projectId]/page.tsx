@@ -82,7 +82,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
     }
     if (savedView.layoutType) next.set("view", savedView.layoutType);
     router.replace(`?${next.toString()}`, { scroll: false });
-  }, [viewId, views]);
+  }, [viewId, views, searchParams]);
 
   const activeView = viewId ? views?.find((v) => v.id.toString() === viewId) : null;
 

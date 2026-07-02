@@ -161,12 +161,12 @@ export function MentionTextarea({
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors",
                   idx === selectedIdx
-                    ? "bg-violet-50 text-violet-900"
-                    : "hover:bg-slate-50",
+                    ? "bg-accent text-accent-foreground"
+                    : "hover:bg-muted/60",
                 )}
               >
                 <Avatar className="h-6 w-6 shrink-0">
-                  <AvatarFallback className="text-[10px] bg-violet-100 text-violet-700">
+                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                     {getInitials(user.name)}
                   </AvatarFallback>
                 </Avatar>

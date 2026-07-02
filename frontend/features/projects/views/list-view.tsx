@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Bug, Bookmark, Zap, CheckSquare, ChevronRight } from "lucide-react";
+import { getStatusDotClass } from "../shared/status-badge";
+import { formatTicketKey } from "../shared/format-ticket-key";
 
 interface Ticket {
   id: number;
@@ -38,12 +40,6 @@ const priorityColors: Record<string, string> = {
   LOW: "text-blue-400",
 };
 
-const statusColors: Record<string, string> = {
-  TODO: "bg-slate-400",
-  IN_PROGRESS: "bg-blue-500",
-  IN_REVIEW: "bg-amber-500",
-  DONE: "bg-green-500",
-};
 
 export function ListView({ tickets, onTicketClick, groupBy, projectKey }: ListViewProps) {
   const grouped = groupBy
@@ -75,10 +71,10 @@ export function ListView({ tickets, onTicketClick, groupBy, projectKey }: ListVi
                   onClick={handleTicketClick(ticket.id)}
                   className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/30 transition-colors text-left"
                 >
-                  <div className={cn("h-2 w-2 rounded-full flex-shrink-0", statusColors[ticket.status] ?? "bg-slate-400")} />
+                  <div className={cn("h-2 w-2 rounded-full flex-shrink-0", getStatusDotClass(ticket.status))} />
                   <TypeIcon className={cn("h-4 w-4 flex-shrink-0", ticket.type === "BUG" ? "text-red-500" : "text-muted-foreground")} />
                   <span className="text-xs text-muted-foreground font-mono flex-shrink-0">
-                    {projectKey && ticket.ticketNumber != null ? `${projectKey}-${ticket.ticketNumber}` : (ticket.sequenceId ?? `#${ticket.ticketNumber}`)}
+                    {formatTicketKey(projectKey, ticket.ticketNumber, ticket.sequenceId ?? undefined)}
                   </span>
                   <span className="text-sm text-foreground truncate flex-1">{ticket.title}</span>
                   {ticket.priority && (
