@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import type { LucideIcon } from "lucide-react";
 import {
   CheckCircle2,
@@ -18,10 +19,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useOrgSettings } from "@/hooks/api/organization";
+import {
+  useWorkspaceChecklistProgress,
+  type ChecklistItemId,
+} from "@/hooks/common/use-workspace-checklist-progress";
 import { cn } from "@/lib/utils";
 
-const DISMISSED_KEY = "ws_checklist_dismissed";
-const DONE_KEY = "ws_checklist_done";
+function dismissedKey(orgId: string): string {
+  return `ws_checklist_dismissed_${orgId}`;
+}
+
 const TOTAL = 5;
 const RING_RADIUS = 24;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -61,7 +68,7 @@ const rowVariants = {
 };
 
 interface ChecklistItem {
-  id: string;
+  id: ChecklistItemId;
   label: string;
   href: string;
   Icon: LucideIcon;
@@ -69,70 +76,46 @@ interface ChecklistItem {
 
 const CHECKLIST_ITEMS: ChecklistItem[] = [
   { id: "invite", label: "Invite your first teammate", href: "/users", Icon: Users },
-  { id: "record", label: "Create your first record", href: "/dashboard", Icon: Database },
-  { id: "email", label: "Connect your email", href: "/settings/integrations", Icon: Mail },
-  { id: "profile", label: "Complete your profile", href: "/settings/profile", Icon: UserCircle },
+  { id: "record", label: "Create your first record", href: "/crm/leads", Icon: Database },
+  { id: "email", label: "Connect your email", href: "/settings/integrations/calendar", Icon: Mail },
+  { id: "profile", label: "Complete your profile", href: "/settings", Icon: UserCircle },
   { id: "ai", label: "Try the AI Assistant", href: "/ai", Icon: Sparkles },
 ];
-
-function readStorageSet(): Set<string> {
-  try {
-    const raw = localStorage.getItem(DONE_KEY);
-    if (!raw) return new Set<string>();
-    return new Set<string>(JSON.parse(raw) as string[]);
-  } catch {
-    return new Set<string>();
-  }
-}
-
-function writeStorageSet(value: Set<string>): void {
-  try {
-    localStorage.setItem(DONE_KEY, JSON.stringify([...value]));
-  } catch {
-  }
-}
 
 interface ChecklistRowProps {
   item: ChecklistItem;
   done: boolean;
-  onToggle: (id: string) => void;
 }
 
-function ChecklistRow({ item, done, onToggle }: ChecklistRowProps) {
-  const { id, label, href, Icon } = item;
-
-  const handleToggle = useCallback(() => {
-    onToggle(id);
-  }, [id, onToggle]);
+function ChecklistRow({ item, done }: ChecklistRowProps) {
+  const { label, href, Icon } = item;
 
   return (
-    <motion.div
-      variants={rowVariants}
-      className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-muted/50 transition-colors"
-    >
-      <button
-        type="button"
-        onClick={handleToggle}
-        aria-label={done ? `Mark "${label}" as incomplete` : `Mark "${label}" as complete`}
-        aria-pressed={done}
-        className={cn(
-          "h-4 w-4 shrink-0 rounded border flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
-          done
-            ? "bg-primary border-primary text-primary-foreground"
-            : "border-border bg-background hover:border-primary",
-        )}
-      >
-        {done && <Check className="h-2.5 w-2.5" />}
-      </button>
-      <Icon className={cn("h-3.5 w-3.5 shrink-0", done ? "text-muted-foreground" : "text-foreground")} />
+    <motion.div variants={rowVariants}>
       <Link
         href={href}
-        className={cn(
-          "text-xs flex-1 truncate transition-colors hover:text-primary focus-visible:outline-none focus-visible:underline",
-          done ? "line-through text-muted-foreground" : "text-foreground",
-        )}
+        className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-muted/50 transition-colors group"
       >
-        {label}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "h-4 w-4 shrink-0 rounded border flex items-center justify-center transition-colors",
+            done
+              ? "bg-primary border-primary text-primary-foreground"
+              : "border-border bg-background group-hover:border-primary",
+          )}
+        >
+          {done && <Check className="h-2.5 w-2.5" />}
+        </span>
+        <Icon className={cn("h-3.5 w-3.5 shrink-0", done ? "text-muted-foreground" : "text-foreground")} />
+        <span
+          className={cn(
+            "text-xs flex-1 truncate transition-colors group-hover:text-primary",
+            done ? "line-through text-muted-foreground" : "text-foreground",
+          )}
+        >
+          {label}
+        </span>
       </Link>
     </motion.div>
   );
@@ -200,47 +183,57 @@ function FabProgressRing({ progressFraction }: FabProgressRingProps) {
 
 export function SuccessChecklist() {
   const { data: org } = useOrgSettings();
-  const [dismissed, setDismissed] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(DISMISSED_KEY) === "true";
-    } catch {
-      return false;
-    }
-  });
-  const [completed, setCompleted] = useState<Set<string>>(readStorageSet);
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  const { completed, doneCount, isLoading } = useWorkspaceChecklistProgress();
+  const [dismissed, setDismissed] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  const doneCount = completed.size;
+  useEffect(() => {
+    if (!orgId) return;
+    try {
+      const legacy = localStorage.getItem("ws_checklist_dismissed") === "true";
+      const scoped = localStorage.getItem(dismissedKey(orgId)) === "true";
+      if (legacy && !scoped) {
+        localStorage.setItem(dismissedKey(orgId), "true");
+        localStorage.removeItem("ws_checklist_dismissed");
+      }
+      setDismissed(legacy || scoped);
+    } catch {
+      setDismissed(false);
+    }
+  }, [orgId]);
+
   const progress = Math.round((doneCount / TOTAL) * 100);
   const progressFraction = doneCount / TOTAL;
   const allDone = doneCount >= TOTAL;
 
-  const handleDismiss = useCallback(() => {
+  useEffect(() => {
+    if (!allDone || !orgId || dismissed) return;
     try {
-      localStorage.setItem(DISMISSED_KEY, "true");
+      localStorage.setItem(dismissedKey(orgId), "true");
     } catch {
+      // ignore
     }
     setDismissed(true);
-  }, []);
+  }, [allDone, orgId, dismissed]);
 
-  const handleToggleItem = useCallback((id: string) => {
-    setCompleted((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
+  const handleDismiss = useCallback(() => {
+    if (orgId) {
+      try {
+        localStorage.setItem(dismissedKey(orgId), "true");
+      } catch {
+        // ignore
       }
-      writeStorageSet(next);
-      return next;
-    });
-  }, []);
+    }
+    setDismissed(true);
+  }, [orgId]);
 
   const handleToggleCollapse = useCallback(() => {
     setCollapsed((prev) => !prev);
   }, []);
 
-  if (!org?.onboardingCompletedAt || dismissed) return null;
+  if (!org?.onboardingCompletedAt || dismissed || isLoading || allDone) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -331,46 +324,20 @@ export function SuccessChecklist() {
               </div>
 
               <div className="px-3 pb-3 space-y-0.5">
-                <AnimatePresence mode="wait">
-                  {allDone ? (
-                    <motion.div
-                      key="all-done"
-                      initial={{ scale: 0.85, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.9, opacity: 0 }}
-                      transition={SPRING_BOUNCE}
-                      className="py-4 text-center"
-                    >
-                      <motion.div
-                        initial={{ scale: 0, rotate: -20 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ ...SPRING_BOUNCE, delay: 0.05 }}
-                      >
-                        <Sparkles className="h-8 w-8 text-primary mx-auto mb-2" />
-                      </motion.div>
-                      <p className="text-sm font-medium text-foreground">All done! 🎉</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">You&apos;re all set to go!</p>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="checklist-items"
-                      variants={listVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit={{ opacity: 0 }}
-                      className="space-y-0.5"
-                    >
-                      {CHECKLIST_ITEMS.map((item) => (
-                        <ChecklistRow
-                          key={item.id}
-                          item={item}
-                          done={completed.has(item.id)}
-                          onToggle={handleToggleItem}
-                        />
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <motion.div
+                  variants={listVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="space-y-0.5"
+                >
+                  {CHECKLIST_ITEMS.map((item) => (
+                    <ChecklistRow
+                      key={item.id}
+                      item={item}
+                      done={completed.has(item.id)}
+                    />
+                  ))}
+                </motion.div>
               </div>
             </Card>
           </motion.div>
