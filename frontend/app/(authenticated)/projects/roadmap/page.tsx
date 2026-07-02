@@ -303,8 +303,8 @@ function RoadmapItemCard({
   }
 
   return (
-    <Card>
-      <CardContent className="p-3 space-y-2">
+    <div className="bg-card border border-border rounded-lg p-2.5 shadow-sm hover:shadow-md transition-all duration-150 mb-1.5">
+      <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-medium leading-snug min-w-0">
             {item.title}
@@ -354,8 +354,8 @@ function RoadmapItemCard({
             {item.votes}
           </span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -438,18 +438,18 @@ function RoadmapTab({ search }: { search: string }) {
           className="flex-1"
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {ROADMAP_COLUMNS.map((col) => (
-            <div key={col.status} className="space-y-2">
-              <div className="flex items-center justify-between px-1">
+            <div key={col.status} className="bg-muted/30 rounded-xl p-2 min-h-[120px]">
+              <div className="flex items-center justify-between px-1 mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {col.label}
                 </span>
-                <span className="text-xs text-muted-foreground tabular-nums">
+                <span className="text-[11px] text-muted-foreground tabular-nums bg-background rounded-full px-1.5 py-0.5 border border-border/50 min-w-[20px] text-center">
                   {grouped[col.status].length}
                 </span>
               </div>
-              <div className="space-y-2">
+              <div>
                 {grouped[col.status].length === 0 ? (
                   <div className="rounded-lg border border-dashed border-border/60 py-6 text-center text-xs text-muted-foreground">
                     Empty
@@ -540,10 +540,9 @@ function FeedbackRow({
   }
 
   return (
-    <Card>
-      <CardContent className="p-3">
-        <div className="flex items-start gap-3">
-          <div className="flex flex-col items-center justify-center rounded-md border border-border/60 px-2 py-1 shrink-0">
+    <div className="bg-card border border-border rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-150">
+      <div className="flex items-start gap-3">
+        <div className="flex flex-col items-center justify-center rounded-md border border-border/60 px-2 py-1 shrink-0">
             <ArrowBigUp className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-semibold tabular-nums">
               {post.votes}

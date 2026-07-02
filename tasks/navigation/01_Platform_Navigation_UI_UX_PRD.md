@@ -1,151 +1,38 @@
-# StreamlineOS Product Bible
+# Platform Navigation — pointer doc
 
-# Platform Navigation, Sidebar & Settings
-## PRD 01 — Information Architecture, UI & UX
+This file is intentionally **not** a canonical PRD anymore.
 
-### Purpose
-Design a scalable, responsive, permission-aware navigation system for StreamlineOS.
+### Canonical PRDs (repo root)
 
-## Global Header
-- Workspace Switcher
-- Global Search
-- AI Assistant
-- Calendar
-- Chat
-- Notifications
-- Create (+)
-- User Avatar
+- [`PRD-ui-ux-system.md`](../../PRD-ui-ux-system.md) (UI system constraints; shell/scroll model; density/tokens)
+- [`PRD-auth-onboarding.md`](../../PRD-auth-onboarding.md)
+- [`PRD-project-management.md`](../../PRD-project-management.md)
+- [`PRD-inventory.md`](../../PRD-inventory.md)
+- [`PRD-hrms.md`](../../PRD-hrms.md)
+- [`PRD-crm.md`](../../PRD-crm.md)
 
-## Product Switcher
-- Home
-- CRM
-- HRMS
-- Projects
-- Inventory
-- Finance
-- Helpdesk
-- Documents
-- Analytics
-- AI
-- Administration
+### Where the navigation work is broken down (tasks)
 
-Show only products enabled by Subscription + RBAC.
+Use the docs in this folder as the **implementation breakdown** for Navigation:
 
-## Administration Sidebar
+- `tasks/navigation/02_Information_Architecture.md`
+- `tasks/navigation/03_Product_Switcher.md`
+- `tasks/navigation/04_Workspace_Switcher.md`
+- `tasks/navigation/05_Global_Header.md`
+- `tasks/navigation/06_Desktop_Sidebar.md`
+- `tasks/navigation/07_Mobile_Navigation.md`
+- `tasks/navigation/08_Tablet_Navigation.md`
+- `tasks/navigation/09_Command_Palette.md`
+- `tasks/navigation/10_Global_Search.md`
+- `tasks/navigation/11_Administration.md`
+- `tasks/navigation/12_Personal_Settings.md`
+- `tasks/navigation/13_RBAC_Navigation.md`
+- `tasks/navigation/14_Subscription_Aware_Navigation.md`
+- `tasks/navigation/15_Favorites_Recent_Breadcrumbs.md`
+- `tasks/navigation/16_Navigation_State_Management.md`
+- `tasks/navigation/17_Navigation_API_Contracts.md`
+- `tasks/navigation/18_Navigation_Frontend_Architecture.md`
+- `tasks/navigation/19_Navigation_Testing.md`
+- `tasks/navigation/20_Navigation_Claude_Code_Implementation.md`
+- `tasks/navigation/21_Navigation_Future_Roadmap.md`
 
-### Organization
-- Overview
-- Structure
-- Business Units
-- Departments
-- Teams
-- Branches
-- Locations
-- Cost Centers
-- Organization Chart
-- Branding
-
-### People
-- Users
-- Invitations
-- Suspended Users
-- Archived Users
-- Import / Export
-
-### Access Control
-- Roles
-- Permission Matrix
-- Role Assignment
-- Access Policies
-
-### Subscription
-- Current Plan
-- Usage
-- Seats
-- AI Credits
-- Billing
-- Invoices
-- Payment Methods
-
-### Platform
-- Modules
-- Custom Fields
-- Automation
-- Notification Templates
-- Integrations
-- Webhooks
-- API Keys
-- AI Configuration
-- Data Hub
-
-### Security
-- Password Policy
-- MFA Policy
-- SSO
-- SCIM
-- Domain Verification
-- Session Policy
-- IP Allow List
-- Audit Logs
-
-### Developer
-- Events
-- Webhooks
-- API Tokens
-- Logs
-- Sandbox
-
-## Personal Settings (All Users)
-Accessible from avatar only:
-- My Profile
-- My Account
-- Security
-- Password
-- MFA
-- Sessions & Devices
-- Connected Accounts
-- Notification Preferences
-- Appearance
-- Language
-- Time Zone
-- Accessibility
-- API Keys (if permitted)
-
-## Remove
-- Billing as standalone product
-- Sales as standalone product
-- Customer Success as standalone product
-- Knowledge Base as standalone product
-- Duplicate Branches page
-- Duplicate Audit pages
-- Reports inside Settings
-
-## Role Experience
-Employee: Assigned products + personal settings.
-Manager: Team + approvals.
-Department Head: Department management.
-HR: HRMS & Recruitment.
-Sales: CRM.
-Finance: Finance.
-IT: Administration & Security.
-Org Admin: Full administration.
-Super Admin: Entire platform.
-
-## Mobile
-Bottom Navigation:
-- Home
-- Search
-- Create
-- Notifications
-- Me
-
-Hamburger opens current product only.
-
-## Acceptance Criteria
-- Context-aware sidebar
-- RBAC aware
-- Subscription aware
-- Mobile responsive
-- WCAG AA
-- No duplicate navigation
-- Enterprise ready

@@ -290,8 +290,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       if (trigger === "update") {
         const userId = token.id as string | undefined;
+        console.log("[Auth] jwt update trigger, fetching fresh session for userId:", userId);
         if (userId) {
           const fresh = await fetchSessionData(userId);
+          console.log("[Auth] jwt update result:", { orgId: fresh?.orgId });
           if (fresh) {
             token.orgId = fresh.orgId;
             token.isOrgOwner = fresh.isOrgOwner;
@@ -328,8 +330,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       let role = (token.role as string | undefined) ?? "";
       let branchId = (token.branchId as number | null | undefined) ?? null;
 
+      console.log("[Auth] session callback: orgId from token:", orgId);
       if (orgId === null && token.id) {
+        console.log("[Auth] orgId is null, doing live fetchSessionData...");
         const fresh = await fetchSessionData(token.id as string);
+        console.log("[Auth] live lookup result:", { orgId: fresh?.orgId });
         if (fresh) {
           orgId = fresh.orgId;
           isOrgOwner = fresh.isOrgOwner;

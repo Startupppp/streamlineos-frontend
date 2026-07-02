@@ -102,34 +102,30 @@ export default function OrganizationOverviewPage() {
       subtitle="Manage your company hierarchy, locations, and cost centers."
     >
       <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {SECTIONS.map((section) => {
             const Icon = section.icon;
             const count = overview?.[section.key];
 
             return (
-              <Link key={section.href} href={section.href}>
-                <Card className="hover:bg-muted/40 transition-colors cursor-pointer h-full">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-primary/10 rounded-md">
-                          <Icon className="h-4 w-4 text-primary" />
-                        </div>
-                        <CardTitle className="text-sm font-semibold">{section.title}</CardTitle>
+              <Link key={section.href} href={section.href} className="block">
+                <div className="bg-muted/40 hover:bg-muted/60 rounded-lg p-3 cursor-pointer h-full transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-primary/10 rounded-md">
+                        <Icon className="h-4 w-4 text-primary" />
                       </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-semibold">{section.title}</span>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs text-muted-foreground mb-2">{section.description}</p>
-                    {isLoading ? (
-                      <Skeleton className="h-7 w-12 rounded" />
-                    ) : (
-                      <p className="text-2xl font-bold tabular-nums">{count ?? 0}</p>
-                    )}
-                  </CardContent>
-                </Card>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-1">{section.description}</p>
+                  {isLoading ? (
+                    <Skeleton className="h-6 w-10 rounded" />
+                  ) : (
+                    <p className="text-xl font-bold tabular-nums">{count ?? 0}</p>
+                  )}
+                </div>
               </Link>
             );
           })}

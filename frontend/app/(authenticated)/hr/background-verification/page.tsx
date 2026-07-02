@@ -392,10 +392,27 @@ function BGVContent() {
         title="Background Verification"
         subtitle="Initiate, track employee background checks, and view candidate compliance"
       >
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded-2xl" />
-          ))}
+        <Skeleton className="h-9 w-64 rounded-lg mb-4" />
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="bg-muted/40 border-b border-border flex gap-4 px-3 py-2.5">
+            {["Employee", "Type", "Vendor", "Reference", "Initiated", "Status", "Actions"].map((h) => (
+              <Skeleton key={h} className="h-3" style={{ width: `${h.length * 9}px` }} />
+            ))}
+          </div>
+          <div className="divide-y divide-border">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-3 py-3">
+                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-14 rounded-full" />
+                <Skeleton className="h-7 w-24 rounded-md ml-auto" />
+              </div>
+            ))}
+          </div>
         </div>
       </PageWrapper>
     );
@@ -417,20 +434,45 @@ function BGVContent() {
     );
   }
 
+  const pendingCount = items?.filter((b) => b.status === "PENDING").length ?? 0;
+  const inProgressCount = items?.filter((b) => b.status === "IN_PROGRESS").length ?? 0;
+  const passedCount = items?.filter((b) => b.status === "PASSED").length ?? 0;
+  const failedCount = items?.filter((b) => b.status === "FAILED").length ?? 0;
+
   return (
     <PageWrapper
       title="Background Verification"
       subtitle="Initiate, track employee background checks, and view candidate compliance"
       badge={`${items?.length ?? 0} checks`}
       actions={
-        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
+        <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />
           Initiate BGV
         </Button>
       }
     >
+      {items && items.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+            <ShieldCheck className="h-3 w-3" />
+            {pendingCount} Pending
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800">
+            <Clock className="h-3 w-3" />
+            {inProgressCount} In Progress
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+            <CheckCircle2 className="h-3 w-3" />
+            {passedCount} Cleared
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800">
+            <ShieldAlert className="h-3 w-3" />
+            {failedCount} Flagged
+          </span>
+        </div>
+      )}
       <Tabs defaultValue="employee-bgv">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 bg-muted/60">
           <TabsTrigger value="employee-bgv">Employee BGV</TabsTrigger>
           <TabsTrigger value="candidate-compliance">Candidate Compliance</TabsTrigger>
         </TabsList>
@@ -451,13 +493,13 @@ function BGVContent() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/40 hover:bg-muted/40">
-                        <TableHead className="font-semibold text-foreground/80 text-xs">Employee</TableHead>
-                        <TableHead className="font-semibold text-foreground/80 text-xs">Type</TableHead>
-                        <TableHead className="font-semibold text-foreground/80 text-xs">Vendor</TableHead>
-                        <TableHead className="font-semibold text-foreground/80 text-xs">Reference</TableHead>
-                        <TableHead className="font-semibold text-foreground/80 text-xs">Initiated</TableHead>
-                        <TableHead className="font-semibold text-foreground/80 text-xs">Status</TableHead>
-                        <TableHead className="font-semibold text-foreground/80 text-xs text-right">Actions</TableHead>
+                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Employee</TableHead>
+                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Type</TableHead>
+                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Vendor</TableHead>
+                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Reference</TableHead>
+                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Initiated</TableHead>
+                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Status</TableHead>
+                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

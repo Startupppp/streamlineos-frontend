@@ -31,7 +31,16 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Gauge, TrendingUp, Layers, Camera, Route, ChevronRight, AlertTriangle, Timer } from "lucide-react";
+import {
+  Gauge,
+  TrendingUp,
+  Layers,
+  Camera,
+  Route,
+  ChevronRight,
+  AlertTriangle,
+  Timer,
+} from "lucide-react";
 import {
   useVelocityReport,
   useBurnupReport,
@@ -58,7 +67,10 @@ const TOOLTIP_STYLE = {
   borderRadius: 8,
 } as const;
 
-const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 } as const;
+const AXIS_TICK = {
+  fill: "hsl(var(--muted-foreground))",
+  fontSize: 11,
+} as const;
 
 const numberFormatter = new Intl.NumberFormat("en-IN");
 
@@ -74,7 +86,7 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
+    <Card className="bg-card border border-border rounded-lg shadow-none">
       <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold">
           <Icon className="h-4 w-4 text-muted-foreground" />
@@ -82,7 +94,7 @@ function ChartCard({
         </CardTitle>
         {actions}
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className="p-4 pt-0">{children}</CardContent>
     </Card>
   );
 }
@@ -123,10 +135,27 @@ function VelocitySection({ projectId }: { projectId: number }) {
       ) : (
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-              <XAxis dataKey="name" tick={AXIS_TICK} tickLine={false} axisLine={false} />
-              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} allowDecimals={false} />
+            <BarChart
+              data={chartData}
+              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="name"
+                tick={AXIS_TICK}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                tick={AXIS_TICK}
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
+              />
               <Tooltip
                 contentStyle={TOOLTIP_STYLE}
                 formatter={(value) => numberFormatter.format(Number(value))}
@@ -147,10 +176,14 @@ function BurnupSection({ projectId }: { projectId: number }) {
   const [sprintId, setSprintId] = useState<number | undefined>(undefined);
 
   const sprints = velocity.data ?? [];
-  const activeSprintId = sprints.length > 0 ? sprints[sprints.length - 1].sprintId : undefined;
+  const activeSprintId =
+    sprints.length > 0 ? sprints[sprints.length - 1].sprintId : undefined;
   const selectedSprintId = sprintId ?? activeSprintId;
 
-  const { data, isLoading, isError, refetch } = useBurnupReport(projectId, selectedSprintId);
+  const { data, isLoading, isError, refetch } = useBurnupReport(
+    projectId,
+    selectedSprintId,
+  );
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
@@ -170,8 +203,11 @@ function BurnupSection({ projectId }: { projectId: number }) {
 
   const sprintSelect =
     sprints.length > 0 ? (
-      <Select value={selectedSprintId ? String(selectedSprintId) : undefined} onValueChange={handleSprintChange}>
-        <SelectTrigger className="h-8 w-44 text-xs">
+      <Select
+        value={selectedSprintId ? String(selectedSprintId) : undefined}
+        onValueChange={handleSprintChange}
+      >
+        <SelectTrigger className="h-8 w-44 text-sm bg-muted/40 border-border">
           <SelectValue placeholder="Select sprint" />
         </SelectTrigger>
         <SelectContent>
@@ -205,16 +241,39 @@ function BurnupSection({ projectId }: { projectId: number }) {
       ) : (
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+            <AreaChart
+              data={chartData}
+              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+            >
               <defs>
-                <linearGradient id="burnupCompleted" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="burnupCompleted"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="5%" stopColor="#10B981" stopOpacity={0.35} />
                   <stop offset="95%" stopColor="#10B981" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-              <XAxis dataKey="date" tick={AXIS_TICK} tickLine={false} axisLine={false} />
-              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} allowDecimals={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="date"
+                tick={AXIS_TICK}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                tick={AXIS_TICK}
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
+              />
               <Tooltip
                 contentStyle={TOOLTIP_STYLE}
                 formatter={(value) => numberFormatter.format(Number(value))}
@@ -256,7 +315,8 @@ function CfdSection({ projectId }: { projectId: number }) {
 
   function handleCapture() {
     capture.mutate(undefined, {
-      onSuccess: (result) => toast.success(`Snapshot captured (${result.captured} states)`),
+      onSuccess: (result) =>
+        toast.success(`Snapshot captured (${result.captured} states)`),
       onError: () => toast.error("Failed to capture snapshot"),
     });
   }
@@ -277,7 +337,7 @@ function CfdSection({ projectId }: { projectId: number }) {
   const actions = (
     <div className="flex items-center gap-2">
       <Select value={String(days)} onValueChange={handleDaysChange}>
-        <SelectTrigger className="h-8 w-28 text-xs">
+        <SelectTrigger className="h-8 w-28 text-sm bg-muted/40 border-border">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -287,7 +347,13 @@ function CfdSection({ projectId }: { projectId: number }) {
           <SelectItem value="90">90 days</SelectItem>
         </SelectContent>
       </Select>
-      <Button size="sm" variant="outline" className="h-8" onClick={handleCapture} disabled={capture.isPending}>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-8"
+        onClick={handleCapture}
+        disabled={capture.isPending}
+      >
         <Camera className="h-3.5 w-3.5 mr-1.5" />
         {capture.isPending ? "Capturing…" : "Capture today"}
       </Button>
@@ -310,16 +376,36 @@ function CfdSection({ projectId }: { projectId: number }) {
           illustration={<EmptyLeaderboardIllustration />}
           title="No flow history yet"
           description="The cumulative flow diagram accrues one data point per day. Capture today's snapshot to start building history."
-          action={{ label: capture.isPending ? "Capturing…" : "Capture today's snapshot", onClick: handleCapture }}
+          action={{
+            label: capture.isPending ? "Capturing…" : "Capture today's snapshot",
+            onClick: handleCapture,
+          }}
           compact
         />
       ) : (
-        <div className="h-80 w-full">
+        <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-              <XAxis dataKey="date" tick={AXIS_TICK} tickLine={false} axisLine={false} />
-              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} allowDecimals={false} />
+            <AreaChart
+              data={chartData}
+              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="date"
+                tick={AXIS_TICK}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                tick={AXIS_TICK}
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
+              />
               <Tooltip
                 contentStyle={TOOLTIP_STYLE}
                 formatter={(value) => numberFormatter.format(Number(value))}
@@ -374,7 +460,8 @@ function CriticalPathSection({ projectId }: { projectId: number }) {
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <span className="font-semibold text-foreground">
-              Total duration: {numberFormatter.format(data?.totalDuration ?? 0)}
+              Total duration:{" "}
+              {numberFormatter.format(data?.totalDuration ?? 0)}
             </span>
             <span className="text-muted-foreground">
               {numberFormatter.format(chain.length)}{" "}
@@ -389,8 +476,9 @@ function CriticalPathSection({ projectId }: { projectId: number }) {
             <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
-                A dependency cycle was detected. Cycle edges were ignored, so this path is approximate. Review the
-                &apos;blocks&apos; relations to remove the loop.
+                A dependency cycle was detected. Cycle edges were ignored, so
+                this path is approximate. Review the &apos;blocks&apos; relations
+                to remove the loop.
               </span>
             </div>
           ) : null}
@@ -398,7 +486,10 @@ function CriticalPathSection({ projectId }: { projectId: number }) {
             {chain.map((node, index) => (
               <li key={node.ticketId} className="flex items-center gap-2">
                 <div className="flex min-w-[8rem] flex-col rounded-lg border border-border bg-muted/30 px-3 py-2">
-                  <span className="truncate text-xs font-medium text-foreground" title={node.title}>
+                  <span
+                    className="truncate text-xs font-medium text-foreground"
+                    title={node.title}
+                  >
                     {node.title}
                   </span>
                   <span className="mt-1 text-[11px] text-muted-foreground">
@@ -419,7 +510,8 @@ function CriticalPathSection({ projectId }: { projectId: number }) {
 }
 
 function CycleTimeSection({ projectId }: { projectId: number }) {
-  const { data = [], isLoading, isError, refetch } = useCycleTimeReport(projectId);
+  const { data = [], isLoading, isError, refetch } =
+    useCycleTimeReport(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
@@ -443,15 +535,38 @@ function CycleTimeSection({ projectId }: { projectId: number }) {
       ) : (
         <div className="h-52 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="week" tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(w: string) => w.slice(5)} />
-              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} unit=" d" />
+            <BarChart
+              data={data}
+              margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#f1f5f9"
+              />
+              <XAxis
+                dataKey="week"
+                tick={AXIS_TICK}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(w: string) => w.slice(5)}
+              />
+              <YAxis
+                tick={AXIS_TICK}
+                tickLine={false}
+                axisLine={false}
+                unit=" d"
+              />
               <Tooltip
                 contentStyle={TOOLTIP_STYLE}
                 formatter={(v) => [`${v ?? 0} days`, "Avg Cycle Time"]}
               />
-              <Bar dataKey="avgDays" fill="#6366f1" radius={[4, 4, 0, 0]} name="Avg Days" />
+              <Bar
+                dataKey="avgDays"
+                fill="#6366f1"
+                radius={[4, 4, 0, 0]}
+                name="Avg Days"
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -461,7 +576,8 @@ function CycleTimeSection({ projectId }: { projectId: number }) {
 }
 
 function LeadTimeSection({ projectId }: { projectId: number }) {
-  const { data = [], isLoading, isError, refetch } = useLeadTimeReport(projectId);
+  const { data = [], isLoading, isError, refetch } =
+    useLeadTimeReport(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
@@ -485,16 +601,46 @@ function LeadTimeSection({ projectId }: { projectId: number }) {
       ) : (
         <div className="h-52 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="week" tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(w: string) => w.slice(5)} />
-              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} unit=" d" />
+            <AreaChart
+              data={data}
+              margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#f1f5f9"
+              />
+              <XAxis
+                dataKey="week"
+                tick={AXIS_TICK}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(w: string) => w.slice(5)}
+              />
+              <YAxis
+                tick={AXIS_TICK}
+                tickLine={false}
+                axisLine={false}
+                unit=" d"
+              />
               <Tooltip
                 contentStyle={TOOLTIP_STYLE}
                 formatter={(v) => [`${v ?? 0} days`]}
               />
-              <Area dataKey="p90Days" fill="#c7d2fe" stroke="#818cf8" strokeWidth={1.5} name="P90" />
-              <Area dataKey="p50Days" fill="#a5b4fc" stroke="#6366f1" strokeWidth={2} name="P50 (Median)" />
+              <Area
+                dataKey="p90Days"
+                fill="#c7d2fe"
+                stroke="#818cf8"
+                strokeWidth={1.5}
+                name="P90"
+              />
+              <Area
+                dataKey="p50Days"
+                fill="#a5b4fc"
+                stroke="#6366f1"
+                strokeWidth={2}
+                name="P50 (Median)"
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -503,19 +649,26 @@ function LeadTimeSection({ projectId }: { projectId: number }) {
   );
 }
 
-export default function ProjectReportsPage({ params }: { params: Promise<{ projectId: string }> }) {
+export default function ProjectReportsPage({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
   const { projectId: projectIdStr } = use(params);
   const projectId = Number(projectIdStr);
 
   return (
-    <PageWrapper title="Agile Reports" subtitle="Velocity, burnup, and cumulative flow for this project">
-      <div className="space-y-4">
-        <div className="grid gap-4 lg:grid-cols-2">
+    <PageWrapper
+      title="Agile Reports"
+      subtitle="Velocity, burnup, and cumulative flow for this project"
+    >
+      <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2">
           <VelocitySection projectId={projectId} />
           <BurnupSection projectId={projectId} />
         </div>
         <CfdSection projectId={projectId} />
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           <CycleTimeSection projectId={projectId} />
           <LeadTimeSection projectId={projectId} />
         </div>

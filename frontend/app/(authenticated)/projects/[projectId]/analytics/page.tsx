@@ -180,9 +180,9 @@ export default function AnalyticsPage({
   if (isLoading) {
     return (
       <PageWrapper title="Analytics">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-72 w-full" />
+            <Skeleton key={i} className="h-56 w-full" />
           ))}
         </div>
       </PageWrapper>
@@ -211,85 +211,103 @@ export default function AnalyticsPage({
         healthBreakdown={healthBreakdown}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">State Distribution</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+        <Card className="bg-card border border-border rounded-lg shadow-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">
+              State Distribution
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             {stateData.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
                 <BarChart3 className="h-8 w-8 opacity-20" />
                 <p className="text-xs">No data yet</p>
               </div>
             ) : (
-              <StateDistributionChart data={stateData} />
+              <div className="h-56">
+                <StateDistributionChart data={stateData} />
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Priority Breakdown</CardTitle>
+        <Card className="bg-card border border-border rounded-lg shadow-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">
+              Priority Breakdown
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             {priorityData.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
                 <BarChart3 className="h-8 w-8 opacity-20" />
                 <p className="text-xs">No data yet</p>
               </div>
             ) : (
-              <PriorityBreakdownChart data={priorityData} />
+              <div className="h-56">
+                <PriorityBreakdownChart data={priorityData} />
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Volume Over Time</CardTitle>
+        <Card className="bg-card border border-border rounded-lg shadow-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">
+              Volume Over Time
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             {volumeData.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
                 <BarChart3 className="h-8 w-8 opacity-20" />
                 <p className="text-xs">No data yet</p>
               </div>
             ) : (
-              <VolumeOverTimeChart data={volumeData} />
+              <div className="h-56">
+                <VolumeOverTimeChart data={volumeData} />
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">
+        <Card className="bg-card border border-border rounded-lg shadow-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">
               Completion Rate by Assignee
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             {assigneeData.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
                 <BarChart3 className="h-8 w-8 opacity-20" />
                 <p className="text-xs">No data yet</p>
               </div>
             ) : (
-              <AssigneeCompletionChart data={assigneeData} />
+              <div className="h-56">
+                <AssigneeCompletionChart data={assigneeData} />
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Cycle Velocity</CardTitle>
+        <Card className="bg-card border border-border rounded-lg shadow-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">
+              Cycle Velocity
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             {velocityData.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
                 <BarChart3 className="h-8 w-8 opacity-20" />
                 <p className="text-xs">No data yet</p>
               </div>
             ) : (
-              <CycleVelocityChart data={velocityData} />
+              <div className="h-56">
+                <CycleVelocityChart data={velocityData} />
+              </div>
             )}
           </CardContent>
         </Card>
@@ -301,18 +319,22 @@ export default function AnalyticsPage({
           onSprintChange={setSelectedSprintId}
         />
 
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Estimate vs Actual</CardTitle>
+        <Card className="bg-card border border-border rounded-lg shadow-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">
+              Estimate vs Actual
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             {estimateData.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
                 <BarChart3 className="h-8 w-8 opacity-20" />
                 <p className="text-xs">No data yet</p>
               </div>
             ) : (
-              <EstimateVsActualChart data={estimateData} />
+              <div className="h-56">
+                <EstimateVsActualChart data={estimateData} />
+              </div>
             )}
           </CardContent>
         </Card>

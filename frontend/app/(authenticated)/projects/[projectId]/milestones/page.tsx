@@ -5,6 +5,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/ui/stat-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Diamond, Trash2, Pencil, CalendarCheck2 } from "lucide-react";
+import { Plus, Diamond, Trash2, Pencil, CalendarCheck2, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import {
   useProjectMilestones,
   useCreateMilestone,
@@ -41,6 +42,7 @@ import {
   type ProjectMilestone,
 } from "@/hooks/api/projects";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { format, isPast, isToday, differenceInDays } from "date-fns";
 
 const STATUS_CONFIG = {
@@ -163,28 +165,29 @@ function MilestoneCard({
   const handleDelete = useCallback(() => onDelete(milestone), [onDelete, milestone]);
 
   return (
-    <Card className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm ${overdue ? "border border-destructive/40" : "border border-slate-200/80"}`}>
-      <CardContent className="pt-4">
+    <Card className={cn(
+      "rounded-lg",
+      overdue ? "border border-destructive/40 bg-card" : "border border-border bg-card"
+    )}>
+      <CardContent className="pt-3 pb-3 px-4">
         <div className="flex items-start gap-3">
           <Diamond
-            className={`h-5 w-5 mt-0.5 shrink-0 ${cfg.color}`}
+            className={cn("h-4 w-4 mt-0.5 shrink-0", cfg.color)}
             fill="currentColor"
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="font-medium text-sm">{milestone.name}</p>
+              <div className="min-w-0">
+                <p className="font-semibold text-sm truncate">{milestone.name}</p>
                 {milestone.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{milestone.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{milestone.description}</p>
                 )}
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Badge variant={cfg.variant} className="text-[10px]">{cfg.label}</Badge>
-              </div>
+              <Badge variant={cfg.variant} className="text-xs shrink-0">{cfg.label}</Badge>
             </div>
             <div className="flex items-center justify-between mt-2">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <CalendarCheck2 className="h-3.5 w-3.5" />
+                <CalendarCheck2 className="h-3.5 w-3.5 shrink-0" />
                 <span>{format(dateObj, "MMM d, yyyy")}</span>
                 {milestone.status === "PENDING" && (
                   <span className={overdue ? "text-destructive font-medium" : ""}>
@@ -196,7 +199,7 @@ function MilestoneCard({
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleEdit}>
                   <Pencil className="h-3 w-3" />
                 </Button>
@@ -222,12 +225,19 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
   const [editTarget, setEditTarget] = useState<ProjectMilestone | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectMilestone | null>(null);
 
-  const achieved = milestones?.filter((m) => m.status === "ACHIEVED").length ?? 0;
   const total = milestones?.length ?? 0;
+  const achieved = milestones?.filter((m) => m.status === "ACHIEVED").length ?? 0;
+  const pending = milestones?.filter((m) => m.status === "PENDING").length ?? 0;
+  const overdue = milestones?.filter((m) => {
+    const d = new Date(m.targetDate);
+    return isPast(d) && !isToday(d) && m.status === "PENDING";
+  }).length ?? 0;
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
 
   const handleEditTarget = useCallback((m: ProjectMilestone) => setEditTarget(m), []);
+  const handleCloseEdit = useCallback(() => setEditTarget(null), []);
   const handleDeleteTarget = useCallback((m: ProjectMilestone) => setDeleteTarget(m), []);
 
   const handleAlertDialogOpenChange = useCallback((open: boolean) => {
@@ -243,11 +253,10 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
   }, [deleteTarget, deleteMilestone]);
 
   return (
-    <PageWrapper title="Milestones" subtitle="Key checkpoints and target dates for this project">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">
-          {achieved}/{total} achieved
-        </p>
+    <PageWrapper
+      title="Milestones"
+      subtitle="Key checkpoints and target dates for this project"
+      actions={
         <Button
           size="sm"
           onClick={handleOpenCreate}
@@ -255,41 +264,50 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
         >
           <Plus className="h-4 w-4 mr-1" /> New Milestone
         </Button>
+      }
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard label="Total" value={total} icon={Diamond} color="violet" index={0} />
+          <StatCard label="Achieved" value={achieved} icon={CheckCircle2} color="green" index={1} />
+          <StatCard label="Pending" value={pending} icon={Clock} color="blue" index={2} />
+          <StatCard label="Overdue" value={overdue} icon={AlertCircle} color="red" index={3} />
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />)}
+          </div>
+        ) : milestones && milestones.length > 0 ? (
+          <div className="space-y-3">
+            {milestones.map((m) => (
+              <MilestoneCard
+                key={m.id}
+                milestone={m}
+                onEdit={handleEditTarget}
+                onDelete={handleDeleteTarget}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] py-16 text-center space-y-3">
+            <Diamond className="h-10 w-10 text-muted-foreground/50" />
+            <p className="text-muted-foreground">No milestones yet.</p>
+            <Button variant="outline" size="sm" onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-1" /> Add first milestone
+            </Button>
+          </div>
+        )}
       </div>
 
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />)}
-        </div>
-      ) : milestones && milestones.length > 0 ? (
-        <div className="space-y-3">
-          {milestones.map((m) => (
-            <MilestoneCard
-              key={m.id}
-              milestone={m}
-              onEdit={handleEditTarget}
-              onDelete={handleDeleteTarget}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] py-16 text-center space-y-3">
-          <Diamond className="h-10 w-10 text-muted-foreground/50" />
-          <p className="text-muted-foreground">No milestones yet.</p>
-          <Button variant="outline" size="sm" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-1" /> Add first milestone
-          </Button>
-        </div>
-      )}
-
       {createOpen && (
-        <MilestoneDialog projectId={projectId} onClose={() => setCreateOpen(false)} />
+        <MilestoneDialog projectId={projectId} onClose={handleCloseCreate} />
       )}
       {editTarget && (
         <MilestoneDialog
           projectId={projectId}
           milestone={editTarget}
-          onClose={() => setEditTarget(null)}
+          onClose={handleCloseEdit}
         />
       )}
 

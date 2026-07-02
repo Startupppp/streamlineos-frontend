@@ -3,8 +3,6 @@
 import { useCallback } from "react";
 import { format, differenceInDays } from "date-fns";
 import { Target, Play, Square, MoreHorizontal, Pencil, ArrowLeftRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -37,10 +35,19 @@ interface SprintCardProps {
   isUpdating?: boolean;
 }
 
-const STATUS_INFO: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-  ACTIVE: { label: "Active", variant: "default" },
-  PLANNED: { label: "Planned", variant: "secondary" },
-  COMPLETED: { label: "Completed", variant: "outline" },
+const STATUS_STYLES: Record<string, { label: string; className: string }> = {
+  ACTIVE: {
+    label: "Active",
+    className: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
+  },
+  PLANNED: {
+    label: "Planned",
+    className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+  },
+  COMPLETED: {
+    label: "Completed",
+    className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  },
 };
 
 export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating }: SprintCardProps) {
@@ -48,125 +55,128 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
   const totalPoints = tickets.reduce((sum, t) => sum + (t.points || 0), 0);
   const completedPoints = tickets.filter((t) => t.status === "DONE").reduce((sum, t) => sum + (t.points || 0), 0);
   const progress = totalPoints > 0 ? (completedPoints / totalPoints) * 100 : 0;
+  const doneTickets = tickets.filter((t) => t.status === "DONE").length;
 
   const endDate = new Date(sprint.endDate);
   const startDate = new Date(sprint.startDate);
   const daysRemaining = differenceInDays(endDate, new Date());
-  const totalDays = differenceInDays(endDate, startDate);
 
-  const statusInfo = STATUS_INFO[sprint.status || "PLANNED"] ?? { label: sprint.status || "PLANNED", variant: "secondary" as const };
+  const statusStyle = STATUS_STYLES[sprint.status ?? "PLANNED"] ?? STATUS_STYLES["PLANNED"];
 
   const handleStart = useCallback(() => onStart?.(sprint.id), [sprint.id, onStart]);
   const handleComplete = useCallback(() => onComplete?.(sprint.id), [sprint.id, onComplete]);
   const handlePlan = useCallback(() => onPlan?.(sprint.id), [sprint.id, onPlan]);
 
+  const daysLabel =
+    sprint.status === "COMPLETED"
+      ? "Done"
+      : daysRemaining < 0
+        ? `${Math.abs(daysRemaining)}d overdue`
+        : `${daysRemaining}d left`;
+
   return (
-    <Card className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Link href={`/projects/${projectId}?sprint=${sprint.id}`} className="hover:text-primary transition-colors">
-                {sprint.name}
-              </Link>
-              <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-            </CardTitle>
-            {sprint.goal && (
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <Target className="h-3 w-3" />
-                {sprint.goal}
-              </p>
-            )}
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Sprint actions for ${sprint.name}`}>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <EditSprintDialog
-                  sprint={sprint}
-                  projectId={projectId}
-                  trigger={
-                    <button className="flex items-center w-full px-2 py-1.5 text-sm">
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Edit Sprint
-                    </button>
-                  }
-                />
-              </DropdownMenuItem>
-              {onPlan && (
-                <DropdownMenuItem onClick={handlePlan}>
-                  <ArrowLeftRight className="h-4 w-4 mr-2" />
-                  Plan Sprint
-                </DropdownMenuItem>
-              )}
-              {sprint.status === "PLANNED" && onStart && (
-                <DropdownMenuItem onClick={handleStart} disabled={isUpdating}>
-                  <Play className="h-4 w-4 mr-2" />
-                  Start Sprint
-                </DropdownMenuItem>
-              )}
-              {sprint.status === "ACTIVE" && onComplete && (
-                <DropdownMenuItem onClick={handleComplete} disabled={isUpdating}>
-                  <Square className="h-4 w-4 mr-2" />
-                  Complete Sprint
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem asChild>
-                <Link href={`/projects/${projectId}?sprint=${sprint.id}`}>View Board</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <p className="text-muted-foreground">Start Date</p>
-            <p className="font-medium">{format(startDate, "MMM dd, yyyy")}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">End Date</p>
-            <p className="font-medium">{format(endDate, "MMM dd, yyyy")}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Duration</p>
-            <p className="font-medium">{totalDays} days</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">
-              {sprint.status === "COMPLETED" ? "Completed" : "Remaining"}
-            </p>
-            <p className={cn("font-medium", sprint.status !== "COMPLETED" && daysRemaining < 0 && "text-red-500")}>
-              {sprint.status === "COMPLETED"
-                ? "Done"
-                : daysRemaining < 0
-                  ? `${Math.abs(daysRemaining)} days overdue`
-                  : `${daysRemaining} days`}
-            </p>
-          </div>
-        </div>
-        <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span>Progress: {completedPoints} / {totalPoints} points</span>
-            <span>{tickets.filter((t) => t.status === "DONE").length} / {tickets.length} tickets</span>
-          </div>
-          <div
-            className="w-full bg-secondary rounded-full h-2"
-            role="progressbar"
-            aria-valuenow={Math.round(progress)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Sprint progress: ${completedPoints} of ${totalPoints} points`}
-            aria-valuetext={`${Math.round(progress)}% complete`}
+    <div className="bg-card border border-border rounded-lg p-4 group">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Link
+            href={`/projects/${projectId}?sprint=${sprint.id}`}
+            className="font-semibold text-sm truncate hover:text-primary transition-colors"
           >
-            <div className="bg-gradient-to-r from-violet-600 to-indigo-600 h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
-          </div>
+            {sprint.name}
+          </Link>
+          <span className={cn("text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0", statusStyle.className)}>
+            {statusStyle.label}
+          </span>
         </div>
-      </CardContent>
-    </Card>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity"
+              aria-label={`Sprint actions for ${sprint.name}`}
+            >
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <EditSprintDialog
+                sprint={sprint}
+                projectId={projectId}
+                trigger={
+                  <button className="flex items-center w-full px-2 py-1.5 text-sm">
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit Sprint
+                  </button>
+                }
+              />
+            </DropdownMenuItem>
+            {onPlan && (
+              <DropdownMenuItem onClick={handlePlan}>
+                <ArrowLeftRight className="h-4 w-4 mr-2" />
+                Plan Sprint
+              </DropdownMenuItem>
+            )}
+            {sprint.status === "PLANNED" && onStart && (
+              <DropdownMenuItem onClick={handleStart} disabled={isUpdating}>
+                <Play className="h-4 w-4 mr-2" />
+                Start Sprint
+              </DropdownMenuItem>
+            )}
+            {sprint.status === "ACTIVE" && onComplete && (
+              <DropdownMenuItem onClick={handleComplete} disabled={isUpdating}>
+                <Square className="h-4 w-4 mr-2" />
+                Complete Sprint
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem asChild>
+              <Link href={`/projects/${projectId}?sprint=${sprint.id}`}>View Board</Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {sprint.goal && (
+        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1.5">
+          <Target className="h-3 w-3 shrink-0" />
+          <span className="truncate">{sprint.goal}</span>
+        </p>
+      )}
+
+      <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
+        <span>
+          {format(startDate, "MMM d")} — {format(endDate, "MMM d, yyyy")}
+        </span>
+        <span
+          className={cn(
+            sprint.status !== "COMPLETED" && daysRemaining < 0 && "text-red-500"
+          )}
+        >
+          {daysLabel}
+        </span>
+      </div>
+
+      <div className="mt-3">
+        <div
+          className="w-full bg-secondary rounded-full h-1.5"
+          role="progressbar"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Sprint progress: ${completedPoints} of ${totalPoints} points`}
+          aria-valuetext={`${Math.round(progress)}% complete`}
+        >
+          <div
+            className="bg-gradient-to-r from-violet-600 to-indigo-600 h-1.5 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <span>{completedPoints}/{totalPoints} pts</span>
+          <span>{doneTickets}/{tickets.length} tickets</span>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -103,14 +103,16 @@ function blankForm(): AdjFormState {
   };
 }
 
+const TH = "text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2.5";
+
 function AdjustmentsTableSkeleton() {
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <TableHead key={i}>
+          <TableRow className="bg-muted/40 hover:bg-muted/40">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <TableHead key={i} className={TH}>
                 <Skeleton className="h-3 w-16" />
               </TableHead>
             ))}
@@ -118,9 +120,9 @@ function AdjustmentsTableSkeleton() {
         </TableHeader>
         <TableBody>
           {Array.from({ length: 6 }).map((_, i) => (
-            <TableRow key={i}>
-              {Array.from({ length: 6 }).map((__, j) => (
-                <TableCell key={j}>
+            <TableRow key={i} className="border-b border-border/50">
+              {Array.from({ length: 7 }).map((__, j) => (
+                <TableCell key={j} className="px-3 py-2.5">
                   <Skeleton className="h-4 w-full" />
                 </TableCell>
               ))}
@@ -316,49 +318,38 @@ export default function AdjustmentsPage() {
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="text-xs font-semibold">
-                      Reference
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Date
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Reason
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Lines
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Status
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Created By
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Notes
-                    </TableHead>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className={TH}>Reference</TableHead>
+                    <TableHead className={TH}>Date</TableHead>
+                    <TableHead className={TH}>Reason</TableHead>
+                    <TableHead className={cn(TH, "text-right")}>Lines</TableHead>
+                    <TableHead className={TH}>Status</TableHead>
+                    <TableHead className={TH}>Created By</TableHead>
+                    <TableHead className={TH}>Notes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {adjustments.map((adj) => (
-                    <TableRow key={adj.id} className="text-sm">
-                      <TableCell className="py-2.5 font-mono text-xs font-semibold">
+                    <TableRow
+                      key={adj.id}
+                      className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                    >
+                      <TableCell className="px-3 py-2.5 font-mono text-xs font-semibold">
                         {adj.referenceNumber}
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                         {format(new Date(adj.createdAt), "dd MMM yyyy")}
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs">
+                      <TableCell className="px-3 py-2.5 text-xs">
                         {REASON_LABELS[adj.reason]}
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs text-muted-foreground tabular-nums">
+                      <TableCell className="px-3 py-2.5 text-right text-xs font-medium tabular-nums">
                         {adj.lineCount}
                       </TableCell>
-                      <TableCell className="py-2.5">
+                      <TableCell className="px-3 py-2.5">
                         <Badge
                           className={cn(
-                            "text-[10px] px-1.5 py-0 h-4",
+                            "text-xs px-1.5 py-0.5 rounded-md font-medium border",
                             STATUS_COLORS[adj.status] ??
                               "bg-muted text-muted-foreground",
                           )}
@@ -366,10 +357,10 @@ export default function AdjustmentsPage() {
                           {adj.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs text-muted-foreground">
+                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">
                         {adj.createdByName ?? "—"}
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs text-muted-foreground max-w-[200px] truncate">
+                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground max-w-[200px] truncate">
                         {adj.notes ?? "—"}
                       </TableCell>
                     </TableRow>

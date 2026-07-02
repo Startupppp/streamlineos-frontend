@@ -91,7 +91,7 @@ export default function PurchaseBillsListPage() {
       title="Purchase Bills"
       subtitle="Vendor bills (AP side of accounting)."
       actions={
-        <Button asChild>
+        <Button size="sm" asChild>
           <Link href="/accounting/purchase-bills/new">
             <Plus className="size-4 mr-1" />
             New bill
@@ -99,86 +99,116 @@ export default function PurchaseBillsListPage() {
         </Button>
       }
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end mb-4">
-        <Input
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Search by bill number"
-          className="w-full sm:max-w-xs"
-        />
-        <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-full sm:max-w-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {query.isLoading && <LoadingState variant="table" rows={8} />}
-      {query.error && (
-        <ErrorState
-          title="Failed to load purchase bills"
-          description={query.error.message}
-          onRetry={handleRetry}
-        />
-      )}
-
-      {!query.isLoading && !query.error && items.length === 0 && (
-        <EmptyState
-          illustration={<EmptyExpensesIllustration />}
-          title="No purchase bills yet"
-          description="Record a vendor bill to start tracking accounts payable."
-          action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
-        />
-      )}
-
-      {items.length > 0 && (
-        <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
-          <Table className="min-w-[720px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Bill #</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Bill date</TableHead>
-                <TableHead>Due date</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((bill) => (
-                <TableRow key={bill.id}>
-                  <TableCell className="font-mono text-xs">
-                    <Link
-                      href={`/accounting/purchase-bills/${bill.id}`}
-                      className="text-foreground hover:text-blue-600 hover:underline"
-                    >
-                      {bill.billNumber}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{bill.vendorName ?? "—"}</TableCell>
-                  <TableCell>{formatDate(bill.billDate)}</TableCell>
-                  <TableCell>{formatDate(bill.dueDate)}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {Number(bill.total).toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={STATUS_VARIANT[bill.status]}>
-                      {bill.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+      <div className="space-y-4">
+        <div className="rounded-lg border border-border bg-muted/40 p-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <Input
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search by bill number"
+              className="w-full sm:max-w-xs h-8 text-sm"
+            />
+            <Select value={status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-full sm:max-w-xs h-8 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      )}
+
+        {query.isLoading && <LoadingState variant="table" rows={8} />}
+        {query.error && (
+          <ErrorState
+            title="Failed to load purchase bills"
+            description={query.error.message}
+            onRetry={handleRetry}
+          />
+        )}
+
+        {!query.isLoading && !query.error && items.length === 0 && (
+          <EmptyState
+            illustration={<EmptyExpensesIllustration />}
+            title="No purchase bills yet"
+            description="Record a vendor bill to start tracking accounts payable."
+            action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
+          />
+        )}
+
+        {items.length > 0 && (
+          <div className="rounded-lg border border-border overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table className="min-w-[620px]">
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
+                      Bill #
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
+                      Vendor
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
+                      Bill date
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
+                      Due date
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">
+                      Total
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
+                      Status
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {items.map((bill) => (
+                    <TableRow
+                      key={bill.id}
+                      className="border-b border-border/50 hover:bg-muted/30"
+                    >
+                      <TableCell className="font-mono text-xs px-3 py-2">
+                        <Link
+                          href={`/accounting/purchase-bills/${bill.id}`}
+                          className="text-foreground hover:text-violet-600 hover:underline"
+                        >
+                          {bill.billNumber}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-sm px-3 py-2">
+                        {bill.vendorName ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
+                        {formatDate(bill.billDate)}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
+                        {formatDate(bill.dueDate)}
+                      </TableCell>
+                      <TableCell className="text-sm text-right tabular-nums font-medium px-3 py-2">
+                        {Number(bill.total).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="px-3 py-2">
+                        <Badge
+                          variant={STATUS_VARIANT[bill.status]}
+                          className="text-xs px-1.5 py-0.5 rounded-md"
+                        >
+                          {bill.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
+      </div>
     </PageWrapper>
   );
 }

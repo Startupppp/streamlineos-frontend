@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition, Suspense } from "react";
+import { useState, useCallback, useTransition, Suspense, type KeyboardEvent, type ChangeEvent } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
@@ -126,8 +126,12 @@ function DetailField({ label, children }: { label: string; children: React.React
 }
 
 function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => void }) {
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (!open) onClose();
+  }, [onClose]);
+
   return (
-    <Sheet open onOpenChange={(v) => !v && onClose()}>
+    <Sheet open onOpenChange={handleOpenChange}>
       <SheetContent className="flex flex-col p-0 w-[380px] sm:max-w-[380px]">
         <SheetHeader className="px-4 py-3 border-b shrink-0">
           <SheetTitle className="flex items-center gap-2 text-sm font-semibold">
@@ -182,6 +186,51 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
   );
 }
 
+interface LogRowProps {
+  log: AuditLogRow;
+  onSelect: (log: AuditLogRow) => void;
+}
+
+function LogRow({ log, onSelect }: LogRowProps) {
+  const handleClick = useCallback(() => onSelect(log), [log, onSelect]);
+
+  return (
+    <TableRow className="cursor-pointer hover:bg-muted/40" onClick={handleClick}>
+      <TableCell className="text-[12px] text-muted-foreground font-mono whitespace-nowrap">
+        {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2 min-w-[140px]">
+          <Avatar className="h-6 w-6 shrink-0">
+            <AvatarImage src={resolveImageUrl(log.userImage)} />
+            <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
+          </Avatar>
+          <span className="text-[13px] font-medium truncate max-w-[120px]">
+            {log.userName ?? log.userEmail ?? log.userId}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell className="whitespace-nowrap">
+        <Badge variant="outline" className={`text-[11px] ${actionBadgeClass(log.action)}`}>
+          {formatActionLabel(log.action)}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-[12px] text-muted-foreground capitalize whitespace-nowrap">
+        {log.targetType ?? "—"}
+        {log.targetId && <span className="text-[11px] opacity-60"> #{log.targetId}</span>}
+      </TableCell>
+      <TableCell className="text-[12px] font-mono text-muted-foreground whitespace-nowrap">
+        {log.ipAddress ?? "—"}
+      </TableCell>
+      <TableCell>
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="View details">
+          <Info className="h-3.5 w-3.5 text-muted-foreground" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 function OrgAuditLogContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -226,7 +275,63 @@ function OrgAuditLogContent() {
   const total = data?.total ?? 0;
 
   const hasActiveFilters = actionFilter !== "all" || !!dateFrom || !!dateTo;
-  const resetFilters = useCallback(() => updateParams({ action: null, from: null, to: null, page: null }), [updateParams]);
+
+  const resetFilters = useCallback(
+    () => updateParams({ action: null, from: null, to: null, page: null }),
+    [updateParams],
+  );
+  const handleSelectLog = useCallback((log: AuditLogRow) => setSelectedLog(log), []);
+  const handleCloseLog = useCallback(() => setSelectedLog(null), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleActionChange = useCallback(
+    (v: string) => updateParams({ action: v === "all" ? null : v, page: null }),
+    [updateParams],
+  );
+  const handleFromChange = useCallback(
+    (v: string) => updateParams({ from: v || null, page: null }),
+    [updateParams],
+  );
+  const handleToChange = useCallback(
+    (v: string) => updateParams({ to: v || null, page: null }),
+    [updateParams],
+  );
+  const handleSizeChange = useCallback(
+    (v: string) => updateParams({ size: v, page: null }),
+    [updateParams],
+  );
+  const handleFirstPage = useCallback(
+    () => updateParams({ page: null }),
+    [updateParams],
+  );
+  const handlePrevPage = useCallback(
+    () => updateParams({ page: page <= 2 ? null : String(page - 1) }),
+    [updateParams, page],
+  );
+  const handleNextPage = useCallback(
+    () => updateParams({ page: String(Math.min(totalPages, page + 1)) }),
+    [updateParams, totalPages, page],
+  );
+  const handleLastPage = useCallback(
+    () => updateParams({ page: String(totalPages) }),
+    [updateParams, totalPages],
+  );
+  const handleGoToChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setGoToPage(e.target.value),
+    [],
+  );
+  const handleGoToKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        const num = parseInt(goToPage);
+        if (!isNaN(num) && num >= 1 && num <= totalPages) {
+          updateParams({ page: num === 1 ? null : String(num) });
+          setGoToPage("");
+        }
+      }
+    },
+    [goToPage, totalPages, updateParams],
+  );
 
   return (
     <PageWrapper
@@ -245,7 +350,7 @@ function OrgAuditLogContent() {
         <div className="flex flex-wrap gap-2 items-end">
           <div className="flex flex-col gap-1 min-w-[180px] flex-1">
             <p className="text-[11px] font-medium text-muted-foreground">Action Type</p>
-            <Select value={actionFilter} onValueChange={(v) => updateParams({ action: v === "all" ? null : v, page: null })}>
+            <Select value={actionFilter} onValueChange={handleActionChange}>
               <SelectTrigger className="h-8 text-sm w-full">
                 <SelectValue placeholder="All org actions" />
               </SelectTrigger>
@@ -259,11 +364,11 @@ function OrgAuditLogContent() {
           </div>
           <div className="flex flex-col gap-1 min-w-[140px] flex-1">
             <p className="text-[11px] font-medium text-muted-foreground">From</p>
-            <DatePicker value={dateFrom} onChange={(v) => updateParams({ from: v || null, page: null })} placeholder="From date" className="w-full" />
+            <DatePicker value={dateFrom} onChange={handleFromChange} placeholder="From date" className="w-full" />
           </div>
           <div className="flex flex-col gap-1 min-w-[140px] flex-1">
             <p className="text-[11px] font-medium text-muted-foreground">To</p>
-            <DatePicker value={dateTo} onChange={(v) => updateParams({ to: v || null, page: null })} placeholder="To date" className="w-full" />
+            <DatePicker value={dateTo} onChange={handleToChange} placeholder="To date" className="w-full" />
           </div>
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-sm self-end">Clear</Button>
@@ -283,7 +388,7 @@ function OrgAuditLogContent() {
             ) : isError ? (
               <div className="py-14 flex flex-col items-center gap-3 text-center">
                 <p className="text-sm text-muted-foreground">Failed to load audit events.</p>
-                <Button variant="outline" size="sm" onClick={() => { void refetch(); }}>Retry</Button>
+                <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
               </div>
             ) : logs.length === 0 ? (
               <div className="py-14 flex flex-col items-center gap-3 text-center">
@@ -317,39 +422,7 @@ function OrgAuditLogContent() {
                     <Table>
                       <TableBody>
                         {logs.map((log) => (
-                          <TableRow key={log.id} className="cursor-pointer" onClick={() => setSelectedLog(log)}>
-                            <TableCell className="text-[12px] text-muted-foreground font-mono whitespace-nowrap">
-                              {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2 min-w-[140px]">
-                                <Avatar className="h-6 w-6 shrink-0">
-                                  <AvatarImage src={resolveImageUrl(log.userImage)} />
-                                  <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
-                                </Avatar>
-                                <span className="text-[13px] font-medium truncate max-w-[120px]">
-                                  {log.userName ?? log.userEmail ?? log.userId}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="whitespace-nowrap">
-                              <Badge variant="outline" className={`text-[11px] ${actionBadgeClass(log.action)}`}>
-                                {formatActionLabel(log.action)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-[12px] text-muted-foreground capitalize whitespace-nowrap">
-                              {log.targetType ?? "—"}
-                              {log.targetId && <span className="text-[11px] opacity-60"> #{log.targetId}</span>}
-                            </TableCell>
-                            <TableCell className="text-[12px] font-mono text-muted-foreground whitespace-nowrap">
-                              {log.ipAddress ?? "—"}
-                            </TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="View details">
-                                <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
+                          <LogRow key={log.id} log={log} onSelect={handleSelectLog} />
                         ))}
                       </TableBody>
                     </Table>
@@ -363,7 +436,7 @@ function OrgAuditLogContent() {
                 <div className="p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[12px]">Rows per page</span>
-                    <Select value={String(pageSize)} onValueChange={(v) => updateParams({ size: v, page: null })}>
+                    <Select value={String(pageSize)} onValueChange={handleSizeChange}>
                       <SelectTrigger className="h-7 w-[64px] text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -379,20 +452,20 @@ function OrgAuditLogContent() {
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <Button variant="outline" size="icon" className="h-7 w-7 hidden sm:inline-flex"
-                      onClick={() => updateParams({ page: null })} disabled={page <= 1} aria-label="First page">
+                      onClick={handleFirstPage} disabled={page <= 1} aria-label="First page">
                       <ChevronsLeft className="h-3.5 w-3.5" />
                     </Button>
                     <Button variant="outline" size="icon" className="h-7 w-7"
-                      onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })} disabled={page <= 1} aria-label="Previous page">
+                      onClick={handlePrevPage} disabled={page <= 1} aria-label="Previous page">
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <span className="text-sm font-medium tabular-nums px-1">{page} / {totalPages}</span>
                     <Button variant="outline" size="icon" className="h-7 w-7"
-                      onClick={() => updateParams({ page: String(Math.min(totalPages, page + 1)) })} disabled={page >= totalPages} aria-label="Next page">
+                      onClick={handleNextPage} disabled={page >= totalPages} aria-label="Next page">
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                     <Button variant="outline" size="icon" className="h-7 w-7 hidden sm:inline-flex"
-                      onClick={() => updateParams({ page: String(totalPages) })} disabled={page >= totalPages} aria-label="Last page">
+                      onClick={handleLastPage} disabled={page >= totalPages} aria-label="Last page">
                       <ChevronsRight className="h-3.5 w-3.5" />
                     </Button>
                     <div className="hidden md:flex items-center gap-1.5 ml-1">
@@ -400,16 +473,8 @@ function OrgAuditLogContent() {
                       <Input
                         type="number" min={1} max={totalPages}
                         value={goToPage}
-                        onChange={(e) => setGoToPage(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            const num = parseInt(goToPage);
-                            if (!isNaN(num) && num >= 1 && num <= totalPages) {
-                              updateParams({ page: num === 1 ? null : String(num) });
-                              setGoToPage("");
-                            }
-                          }
-                        }}
+                        onChange={handleGoToChange}
+                        onKeyDown={handleGoToKeyDown}
                         placeholder="—"
                         className="h-7 w-14 text-xs text-center"
                         aria-label="Go to page"
@@ -423,7 +488,7 @@ function OrgAuditLogContent() {
         </Card>
       </div>
 
-      {selectedLog && <LogDetailSheet log={selectedLog} onClose={() => setSelectedLog(null)} />}
+      {selectedLog && <LogDetailSheet log={selectedLog} onClose={handleCloseLog} />}
     </PageWrapper>
   );
 }

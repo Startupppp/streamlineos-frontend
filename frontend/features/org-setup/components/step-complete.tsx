@@ -14,9 +14,15 @@ type StepCompleteProps = {
 
 export function StepComplete({ data }: StepCompleteProps) {
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       clearBackendTokenCache();
       clearAll();
+      const sessionCheck = await fetch("/api/auth/session").then(r => r.json()).catch(() => null);
+      console.log("[OrgSetup] pre-redirect session", JSON.stringify({
+        orgId: (sessionCheck as Record<string, unknown>)?.orgId,
+        isOrgOwner: (sessionCheck as Record<string, unknown> & { user?: Record<string, unknown> })?.user?.isOrgOwner,
+        orgOnboarding: (sessionCheck as Record<string, unknown>)?.orgOnboardingCompletedAt,
+      }));
       window.location.replace("/dashboard");
     }, 1500);
     return () => clearTimeout(timer);

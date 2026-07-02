@@ -4,10 +4,8 @@ import { useMemo, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -59,19 +57,17 @@ function StatCard({
   tone: string;
 }) {
   return (
-    <Card>
-      <CardContent className="p-4 flex items-center gap-3">
-        <div
-          className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${tone}`}
-        >
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground truncate">{label}</p>
-          <p className="text-lg font-semibold tabular-nums">{value}</p>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="bg-muted/40 rounded-lg p-3 flex items-center gap-3">
+      <div
+        className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${tone}`}
+      >
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground truncate">{label}</p>
+        <p className="text-base font-semibold tabular-nums">{value}</p>
+      </div>
+    </div>
   );
 }
 
@@ -81,44 +77,47 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
 
   return (
     <Link href={`/goals/${goal.id}`} className="block group">
-      <Card className="transition-colors group-hover:border-primary/40">
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <p className="font-medium text-sm leading-snug line-clamp-2">
-              {goal.title}
-            </p>
-            <Badge variant={cfg.variant} className="text-[10px] shrink-0">
-              {cfg.label}
-            </Badge>
-          </div>
+      <div className="bg-card border border-border rounded-lg p-4 space-y-3 transition-colors group-hover:border-primary/40">
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-medium text-sm leading-snug line-clamp-2">
+            {goal.title}
+          </p>
+          <Badge variant={cfg.variant} className="text-[10px] shrink-0">
+            {cfg.label}
+          </Badge>
+        </div>
 
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Progress</span>
-              <span className="tabular-nums">{goal.progress}%</span>
-            </div>
-            <Progress value={goal.progress} className="h-1.5" />
-          </div>
-
+        <div className="space-y-1">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5 min-w-0">
-              <Users className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{ownerName ?? "Unassigned"}</span>
-            </span>
-            <span className="flex items-center gap-1.5 shrink-0">
-              <ListChecks className="h-3.5 w-3.5" />
-              {goal.keyResultCount} KR{goal.keyResultCount === 1 ? "" : "s"}
-            </span>
+            <span>Progress</span>
+            <span className="tabular-nums">{goal.progress}%</span>
           </div>
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-violet-500 transition-all duration-300"
+              style={{ width: `${goal.progress}%` }}
+            />
+          </div>
+        </div>
 
-          {goal.dueDate && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <CalendarDays className="h-3.5 w-3.5" />
-              <span>Due {format(new Date(goal.dueDate), "MMM d, yyyy")}</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5 min-w-0">
+            <Users className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{ownerName ?? "Unassigned"}</span>
+          </span>
+          <span className="flex items-center gap-1.5 shrink-0">
+            <ListChecks className="h-3.5 w-3.5" />
+            {goal.keyResultCount} KR{goal.keyResultCount === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        {goal.dueDate && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CalendarDays className="h-3.5 w-3.5" />
+            <span>Due {format(new Date(goal.dueDate), "MMM d, yyyy")}</span>
+          </div>
+        )}
+      </div>
     </Link>
   );
 }
@@ -221,7 +220,7 @@ export default function GoalsPage() {
         </div>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <StatCard
           icon={Target}
           label="Total Goals"

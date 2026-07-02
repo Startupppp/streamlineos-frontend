@@ -59,8 +59,8 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
   return (
     <motion.div variants={fadeUp}>
       <Link href={`/inventory/warehouses/${warehouse.id}`} className="block group">
-        <Card className="cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/30 group-focus-visible:ring-2 group-focus-visible:ring-ring">
-          <CardContent className="p-4">
+        <Card className="cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary/30 group-focus-visible:ring-2 group-focus-visible:ring-ring">
+          <CardContent className="p-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -72,12 +72,12 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
                       {warehouse.name}
                     </span>
                     {warehouse.isDefault && (
-                      <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-50 text-blue-700 border-blue-200/70">
+                      <Badge className="text-xs px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border-blue-200/70">
                         Default
                       </Badge>
                     )}
                     {!warehouse.isActive && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0.5 rounded-md">
                         Inactive
                       </Badge>
                     )}
@@ -114,8 +114,8 @@ function WarehousesLoading() {
     <PageWrapper title="Warehouses" subtitle="Manage your storage facilities and locations">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
+          <Card key={i} className="shadow-sm">
+            <CardContent className="p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <Skeleton className="h-9 w-9 rounded-lg" />

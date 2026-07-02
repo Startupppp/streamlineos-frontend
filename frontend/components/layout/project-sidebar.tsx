@@ -33,7 +33,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface ProjectSidebarProps {
   projectId: string;
   projectName: string;
-  projectKey: string;
+  projectKey: string | undefined;
 }
 
 interface NavSection {
@@ -122,7 +122,7 @@ function DesktopSidebar({
         </Link>
         <div className={cn("flex items-center", isCollapsed ? "justify-center" : "gap-2")}>
           <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
-            {projectKey.substring(0, 2).toUpperCase()}
+            {(projectKey || "??").substring(0, 2).toUpperCase()}
           </div>
           {!isCollapsed && (
             <span className="text-sm font-semibold truncate">{projectName}</span>
@@ -231,7 +231,7 @@ function MobileProjectNav({
               </Link>
               <div className="flex items-center gap-2">
                 <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
-                  {projectKey.substring(0, 2).toUpperCase()}
+                  {(projectKey || "??").substring(0, 2).toUpperCase()}
                 </div>
                 <span className="text-sm font-semibold truncate">{projectName}</span>
               </div>

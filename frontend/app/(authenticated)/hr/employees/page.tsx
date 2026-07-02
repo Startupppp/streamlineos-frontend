@@ -168,44 +168,44 @@ export default function EmployeesPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
           <Table>
             <caption className="sr-only">Employee directory</caption>
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">
                 <TableHead
                   scope="col"
-                  className="font-semibold text-foreground/80"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
                 >
                   Employee
                 </TableHead>
                 <TableHead
                   scope="col"
-                  className="w-[110px] font-semibold text-foreground/80"
+                  className="w-[110px] text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell"
                 >
                   Employee ID
                 </TableHead>
                 <TableHead
                   scope="col"
-                  className="w-[160px] font-semibold text-foreground/80"
+                  className="w-[160px] text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell"
                 >
                   Designation
                 </TableHead>
                 <TableHead
                   scope="col"
-                  className="w-[140px] font-semibold text-foreground/80"
+                  className="w-[140px] text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell"
                 >
                   Department
                 </TableHead>
                 <TableHead
                   scope="col"
-                  className="w-[200px] font-semibold text-foreground/80"
+                  className="w-[200px] text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell"
                 >
                   Email
                 </TableHead>
                 <TableHead
                   scope="col"
-                  className="w-[90px] font-semibold text-foreground/80"
+                  className="w-[90px] text-xs font-semibold uppercase tracking-wider text-muted-foreground"
                 >
                   Status
                 </TableHead>

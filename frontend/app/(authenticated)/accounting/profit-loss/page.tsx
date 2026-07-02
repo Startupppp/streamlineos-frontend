@@ -35,53 +35,48 @@ function lastOfMonth(): string {
 
 interface ReportCardProps {
   title: string;
-  tint: "income" | "expense";
   rows: ProfitLossRow[];
   totalLabel: string;
   totalAmount: string;
 }
 
-function ReportCard({
-  title,
-  tint,
-  rows,
-  totalLabel,
-  totalAmount,
-}: ReportCardProps) {
-  const tintClass =
-    tint === "income"
-      ? "bg-emerald-50 text-emerald-800 border-emerald-200/70"
-      : "bg-rose-50 text-rose-800 border-rose-200/70";
-
+function ReportCard({ title, rows, totalLabel, totalAmount }: ReportCardProps) {
   return (
-    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-      <div className={`px-4 py-2.5 border-b ${tintClass}`}>
-        <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
-      </div>
+    <div className="bg-card border border-border rounded-lg p-4 mb-3">
+      <h3 className="text-sm font-semibold border-b border-border pb-2 mb-2">
+        {title}
+      </h3>
       {rows.length === 0 ? (
-        <div className="px-6 py-10 text-center text-sm text-muted-foreground">
+        <p className="py-6 text-center text-sm text-muted-foreground">
           No {title.toLowerCase()} accounts for this range.
-        </div>
+        </p>
       ) : (
         <div className="overflow-x-auto">
-          <Table className="min-w-[420px]">
+          <Table className="min-w-[320px]">
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[120px]">Code</TableHead>
-                <TableHead>Account</TableHead>
-                <TableHead className="w-[140px] text-right">Amount</TableHead>
+              <TableRow className="hover:bg-transparent border-0">
+                <TableHead className="text-xs font-medium text-muted-foreground px-2 py-1 w-20">
+                  Code
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground px-2 py-1">
+                  Account
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground px-2 py-1 text-right">
+                  Amount
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row) => (
-                <TableRow key={row.accountId}>
-                  <TableCell className="font-mono text-xs text-foreground">
+              {rows.map((row, idx) => (
+                <TableRow
+                  key={row.accountId}
+                  className={`border-0 ${idx % 2 === 0 ? "bg-transparent" : "bg-muted/20"}`}
+                >
+                  <TableCell className="font-mono text-xs text-muted-foreground px-2 py-1.5 w-20">
                     {row.code}
                   </TableCell>
-                  <TableCell className="text-sm text-foreground">
-                    {row.name}
-                  </TableCell>
-                  <TableCell className="text-sm text-right tabular-nums">
+                  <TableCell className="text-sm px-2 py-1.5">{row.name}</TableCell>
+                  <TableCell className="text-sm text-right tabular-nums font-medium px-2 py-1.5">
                     {row.amount}
                   </TableCell>
                 </TableRow>
@@ -89,10 +84,13 @@ function ReportCard({
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell colSpan={2} className="text-sm font-semibold">
+                <TableCell
+                  colSpan={2}
+                  className="text-sm font-semibold px-2 py-2"
+                >
                   {totalLabel}
                 </TableCell>
-                <TableCell className="text-sm text-right tabular-nums font-semibold">
+                <TableCell className="text-right tabular-nums font-bold text-base px-2 py-2">
                   {totalAmount}
                 </TableCell>
               </TableRow>
@@ -134,36 +132,38 @@ export default function ProfitLossPage() {
       subtitle="Income minus expense for the selected range."
     >
       <div className="space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="pnl-from"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
-            >
-              From
-            </label>
-            <Input
-              id="pnl-from"
-              type="date"
-              value={from}
-              onChange={handleFromChange}
-              className="w-full sm:w-[160px]"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="pnl-to"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
-            >
-              To
-            </label>
-            <Input
-              id="pnl-to"
-              type="date"
-              value={to}
-              onChange={handleToChange}
-              className="w-full sm:w-[160px]"
-            />
+        <div className="rounded-lg border border-border bg-muted/40 p-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="pnl-from"
+                className="text-[11px] font-medium text-muted-foreground leading-none"
+              >
+                From
+              </label>
+              <Input
+                id="pnl-from"
+                type="date"
+                value={from}
+                onChange={handleFromChange}
+                className="w-full sm:w-[160px] h-8 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="pnl-to"
+                className="text-[11px] font-medium text-muted-foreground leading-none"
+              >
+                To
+              </label>
+              <Input
+                id="pnl-to"
+                type="date"
+                value={to}
+                onChange={handleToChange}
+                className="w-full sm:w-[160px] h-8 text-sm"
+              />
+            </div>
           </div>
         </div>
 
@@ -186,24 +186,22 @@ export default function ProfitLossPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <ReportCard
                 title="Income"
-                tint="income"
                 rows={income}
                 totalLabel="Total Income"
                 totalAmount={pnl.totalIncome}
               />
               <ReportCard
                 title="Expense"
-                tint="expense"
                 rows={expense}
                 totalLabel="Total Expense"
                 totalAmount={pnl.totalExpense}
               />
             </div>
-            <div className="rounded-xl border border-border/60 bg-card px-5 py-4 flex items-center justify-between gap-4">
+            <div className="bg-card border border-border rounded-lg px-4 py-3 flex items-center justify-between gap-4">
               <span className="text-sm font-semibold text-foreground">
                 Net income
               </span>
-              <span className="font-mono tabular-nums text-base font-semibold text-foreground">
+              <span className="font-mono tabular-nums text-base font-bold text-foreground">
                 {pnl.netIncome}
               </span>
             </div>

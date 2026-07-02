@@ -119,10 +119,11 @@ export default function ProductsPage() {
           search={search}
           onSearchChange={handleSearchChange}
           searchPlaceholder="Search by name or SKU..."
+          className="bg-muted/40 rounded-lg px-3 py-2"
           filters={
             <div className="flex items-center gap-2 flex-wrap">
               <Select value={statusFilter} onValueChange={handleStatusChange}>
-                <SelectTrigger className="h-9 w-[130px] text-sm">
+                <SelectTrigger className="h-8 w-[130px] text-sm">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -136,7 +137,7 @@ export default function ProductsPage() {
                 value={categoryFilter}
                 onValueChange={handleCategoryChange}
               >
-                <SelectTrigger className="h-9 w-[160px] text-sm">
+                <SelectTrigger className="h-8 w-[160px] text-sm">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -180,68 +181,82 @@ export default function ProductsPage() {
           />
         ) : (
           <>
-            <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
-              <Table className="min-w-[860px]">
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table className="min-w-[640px]">
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="w-[130px]">SKU</TableHead>
-                    <TableHead className="w-[140px]">Category</TableHead>
-                    <TableHead className="w-[80px]">UOM</TableHead>
-                    <TableHead className="w-[120px] text-right">
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Name
+                    </TableHead>
+                    <TableHead className="w-[130px] px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
+                      SKU
+                    </TableHead>
+                    <TableHead className="w-[140px] px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
+                      Category
+                    </TableHead>
+                    <TableHead className="w-[80px] px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">
+                      UOM
+                    </TableHead>
+                    <TableHead className="w-[120px] px-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">
                       Cost Price
                     </TableHead>
-                    <TableHead className="w-[120px] text-right">
-                      Selling Price
+                    <TableHead className="w-[120px] px-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Price
                     </TableHead>
-                    <TableHead className="w-[100px] text-right">
+                    <TableHead className="w-[100px] px-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Stock
                     </TableHead>
-                    <TableHead className="w-[90px]">Status</TableHead>
-                    <TableHead className="w-[80px]"></TableHead>
+                    <TableHead className="w-[90px] px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Status
+                    </TableHead>
+                    <TableHead className="w-[80px]" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>
+                    <TableRow
+                      key={product.id}
+                      className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                    >
+                      <TableCell className="px-3 py-2">
                         <Link
                           href={`/inventory/products/${product.id}`}
-                          className="text-sm font-medium text-foreground hover:text-blue-600 hover:underline"
+                          className="text-sm font-medium text-foreground hover:text-violet-600 hover:underline"
                         >
                           {product.name}
                         </Link>
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
+                      <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground hidden md:table-cell">
                         {product.sku}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">
                         {product.category?.name ?? "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden lg:table-cell">
                         {product.uom?.abbreviation ?? "—"}
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+                      <TableCell className="px-3 py-2 text-right text-sm tabular-nums text-muted-foreground hidden lg:table-cell">
                         {formatPrice(product.costPrice)}
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums font-medium text-foreground">
+                      <TableCell className="px-3 py-2 text-right text-sm tabular-nums font-medium text-foreground">
                         {formatPrice(product.sellingPrice)}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="px-3 py-2 text-right">
                         <StockBadge qty={product.totalStock ?? 0} />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-3 py-2">
                         <Badge
                           variant={
                             product.status === "ACTIVE"
                               ? "default"
                               : "secondary"
                           }
+                          className="text-xs px-1.5 py-0.5 rounded-md"
                         >
                           {product.status === "ACTIVE" ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-3 py-2">
                         <Button variant="ghost" size="sm" asChild>
                           <Link href={`/inventory/products/${product.id}`}>
                             View
@@ -271,7 +286,10 @@ export default function ProductsPage() {
 function StockBadge({ qty }: { qty: number }) {
   if (qty <= 0) {
     return (
-      <Badge variant="destructive" className="tabular-nums text-xs">
+      <Badge
+        variant="destructive"
+        className="tabular-nums text-xs px-1.5 py-0.5 rounded-md"
+      >
         Out of stock
       </Badge>
     );
@@ -280,7 +298,7 @@ function StockBadge({ qty }: { qty: number }) {
     return (
       <Badge
         variant="outline"
-        className="tabular-nums text-xs border-amber-500/40 text-amber-700 bg-amber-50"
+        className="tabular-nums text-xs px-1.5 py-0.5 rounded-md border-amber-500/40 text-amber-600 bg-amber-50 dark:bg-amber-950"
       >
         {qty} low
       </Badge>
@@ -289,7 +307,7 @@ function StockBadge({ qty }: { qty: number }) {
   return (
     <Badge
       variant="outline"
-      className="tabular-nums text-xs border-emerald-500/40 text-emerald-700 bg-emerald-50"
+      className="tabular-nums text-xs px-1.5 py-0.5 rounded-md border-emerald-500/40 text-emerald-700 bg-emerald-50"
     >
       {qty}
     </Badge>

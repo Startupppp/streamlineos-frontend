@@ -114,31 +114,31 @@ export function useProjectMembers(
   });
 }
 
-export function useAddProjectMember(options?: Omit<UseMutationOptions<Project, Error, CreateProjectInput>, "mutationFn">) {
+export function useAddProjectMember(
+  options?: Omit<UseMutationOptions<ProjectMember, Error, AddProjectMemberInput>, "mutationFn">
+) {
   const queryClient = useQueryClient();
-  return useMutation<Project, Error, CreateProjectInput>({
+  return useMutation<ProjectMember, Error, AddProjectMemberInput>({
     mutationFn: ({ projectId, ...data }: AddProjectMemberInput) =>
       apiClient.post<ProjectMember>(`/projects/${projectId}/members`, data),
-    onSuccess: (_data: unknown, variables: AddProjectMemberInput) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.members(variables.projectId),
-      });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.members(variables.projectId) });
     },
     ...options,
   });
 }
 
-export function useRemoveProjectMember(options?: Omit<UseMutationOptions<Project, Error, CreateProjectInput>, "mutationFn">) {
+type RemoveMemberInput = { projectId: number; userId: string };
+
+export function useRemoveProjectMember(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, RemoveMemberInput>, "mutationFn">
+) {
   const queryClient = useQueryClient();
-  return useMutation<Project, Error, CreateProjectInput>({
-    mutationFn: ({ projectId, userId }: { projectId: number; userId: string }) =>
-      apiClient.delete<{ success: boolean }>(`/projects/${projectId}/members`, {
-        data: { userId },
-      }),
-    onSuccess: (_data: unknown, variables: { projectId: number; userId: string }) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.members(variables.projectId),
-      });
+  return useMutation<{ success: boolean }, Error, RemoveMemberInput>({
+    mutationFn: ({ projectId, userId }) =>
+      apiClient.delete<{ success: boolean }>(`/projects/${projectId}/members`, { data: { userId } }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.members(variables.projectId) });
     },
     ...options,
   });

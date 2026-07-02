@@ -60,7 +60,7 @@ export default function WinLossAnalysisPage() {
         subtitle="Deal outcome breakdown and lost reason attribution"
       >
         <div className="space-y-6">
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-28" />
             ))}
@@ -135,7 +135,7 @@ export default function WinLossAnalysisPage() {
       >
         <motion.div
           variants={fadeUp}
-          className="grid gap-4 grid-cols-2 md:grid-cols-4"
+          className="grid gap-3 grid-cols-2 md:grid-cols-4"
         >
           <StatCard
             label="Won Deals"
@@ -164,7 +164,7 @@ export default function WinLossAnalysisPage() {
         </motion.div>
 
         <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2">
-          <Card className="shadow-noir">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-blue-600" />
@@ -236,7 +236,7 @@ export default function WinLossAnalysisPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-noir">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-red-400" />

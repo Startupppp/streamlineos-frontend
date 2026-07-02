@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -12,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ListToolbar, LoadingState, ErrorState } from "@/components/shared";
+import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { useCustomersOutstanding } from "@/hooks/api/accounting";
@@ -38,8 +39,8 @@ export default function CustomerLedgersPage() {
     onlyOutstanding,
   });
 
-  function handleSearchChange(value: string): void {
-    setSearch(value);
+  function handleSearchChange(event: ChangeEvent<HTMLInputElement>): void {
+    setSearch(event.target.value);
   }
 
   function handleOnlyOutstandingToggle(
@@ -63,20 +64,23 @@ export default function CustomerLedgersPage() {
       badge={`${total}`}
     >
       <div className="space-y-4">
-        <ListToolbar
-          search={search}
-          onSearchChange={handleSearchChange}
-          searchPlaceholder="Search customers..."
-          filters={
-            <label className="flex items-center gap-2 text-sm text-foreground">
+        <div className="rounded-lg border border-border bg-muted/40 p-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search customers..."
+              className="w-full sm:max-w-xs h-8 text-sm"
+            />
+            <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer select-none">
               <Checkbox
                 checked={onlyOutstanding}
                 onCheckedChange={handleOnlyOutstandingToggle}
               />
               Only outstanding
             </label>
-          }
-        />
+          </div>
+        </div>
 
         {query.isLoading ? (
           <LoadingState variant="table" rows={8} />
@@ -99,48 +103,59 @@ export default function CustomerLedgersPage() {
             }
           />
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
-            <Table className="min-w-[640px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead className="w-[160px]">State</TableHead>
-                  <TableHead className="w-[180px]">GSTIN</TableHead>
-                  <TableHead className="w-[100px] text-right">
-                    Invoices
-                  </TableHead>
-                  <TableHead className="w-[160px] text-right">
-                    Outstanding
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((row) => (
-                  <TableRow key={row.clientId}>
-                    <TableCell>
-                      <Link
-                        href={`/accounting/customers/${row.clientId}`}
-                        className="text-sm font-medium text-foreground hover:text-blue-600 hover:underline"
-                      >
-                        {row.clientName}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {row.state ?? "—"}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {row.gstin ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {row.invoiceCount}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-medium tabular-nums">
-                      {formatCurrency(row.outstanding)}
-                    </TableCell>
+          <div className="rounded-lg border border-border overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table className="min-w-[500px]">
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
+                      Customer
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px] hidden md:table-cell">
+                      State
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[180px] hidden md:table-cell">
+                      GSTIN
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[100px] text-right">
+                      Invoices
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px] text-right">
+                      Outstanding
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {items.map((row) => (
+                    <TableRow
+                      key={row.clientId}
+                      className="border-b border-border/50 hover:bg-muted/30"
+                    >
+                      <TableCell className="px-3 py-2">
+                        <Link
+                          href={`/accounting/customers/${row.clientId}`}
+                          className="text-sm font-medium text-foreground hover:text-violet-600 hover:underline"
+                        >
+                          {row.clientName}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
+                        {row.state ?? "—"}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground px-3 py-2 hidden md:table-cell">
+                        {row.gstin ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums px-3 py-2">
+                        {row.invoiceCount}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-medium tabular-nums px-3 py-2">
+                        {formatCurrency(row.outstanding)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
       </div>

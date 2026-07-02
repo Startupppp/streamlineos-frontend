@@ -115,20 +115,20 @@ function ResultsTable({ leads }: { leads: NLSearchLead[] }) {
       <div className="min-w-[700px]">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Value</TableHead>
-              <TableHead>Source</TableHead>
-              <TableHead>City</TableHead>
+            <TableRow className="bg-muted/40">
+              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</TableHead>
+              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Company</TableHead>
+              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Priority</TableHead>
+              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Value</TableHead>
+              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Source</TableHead>
+              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">City</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {leads.map((lead) => (
-              <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50">
-                <TableCell>
+              <TableRow key={lead.id} className="border-b border-border/50 hover:bg-muted/30">
+                <TableCell className="px-3 py-2 text-sm">
                   <Link
                     href={`/crm/leads/${lead.id}`}
                     className="font-medium hover:text-primary transition-colors"
@@ -139,22 +139,22 @@ function ResultsTable({ leads }: { leads: NLSearchLead[] }) {
                     <p className="text-xs text-muted-foreground mt-0.5">{lead.email}</p>
                   )}
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">
                   {lead.company ?? "—"}
                 </TableCell>
-                <TableCell>
+                <TableCell className="px-3 py-2 text-sm">
                   <Badge
                     variant="outline"
-                    className={cn("text-xs", STATUS_STYLES[lead.status] ?? "")}
+                    className={cn("text-xs font-medium", STATUS_STYLES[lead.status] ?? "")}
                   >
                     {capitalize(lead.status)}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="px-3 py-2 text-sm">
                   {lead.priority ? (
                     <Badge
                       variant="outline"
-                      className={cn("text-xs", PRIORITY_STYLES[lead.priority] ?? "")}
+                      className={cn("text-xs font-medium", PRIORITY_STYLES[lead.priority] ?? "")}
                     >
                       {capitalize(lead.priority)}
                     </Badge>
@@ -162,13 +162,13 @@ function ResultsTable({ leads }: { leads: NLSearchLead[] }) {
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell className="font-medium tabular-nums">
+                <TableCell className="px-3 py-2 text-sm font-medium tabular-nums">
                   {formatValue(lead.value)}
                 </TableCell>
-                <TableCell className="text-muted-foreground capitalize">
+                <TableCell className="px-3 py-2 text-sm text-muted-foreground capitalize hidden md:table-cell">
                   {lead.source ? lead.source.replace(/_/g, " ") : "—"}
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">
                   {lead.city ?? "—"}
                 </TableCell>
               </TableRow>
@@ -248,8 +248,8 @@ export default function SmartLeadSearchPage() {
       }
     >
       <div className="space-y-6">
-        <div className="space-y-3">
-          <div className="flex gap-2">
+        <div className="space-y-3 rounded-lg bg-muted/40 p-3">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -258,7 +258,7 @@ export default function SmartLeadSearchPage() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder='Try: "hot leads from Mumbai with value above 5 lakhs"'
-                className="pl-9 pr-9 h-11 text-sm"
+                className="pl-9 pr-9 h-8 text-sm w-full"
                 aria-label="Natural language lead search"
               />
               {inputValue && (
@@ -275,7 +275,8 @@ export default function SmartLeadSearchPage() {
             <Button
               onClick={handleSearch}
               disabled={!inputValue.trim() || isPending}
-              className="h-11 px-5 gap-2"
+              size="sm"
+              className="gap-2 w-full sm:w-auto"
             >
               {isPending ? (
                 <span className="flex items-center gap-2">
@@ -317,7 +318,7 @@ export default function SmartLeadSearchPage() {
           <div className="flex flex-col items-center justify-center min-h-[300px] gap-4 text-center">
             <AlertTriangle className="h-10 w-10 text-destructive" />
             <p className="text-muted-foreground text-sm">Search failed. Please try again.</p>
-            <Button onClick={handleSearch}>Retry</Button>
+            <Button size="sm" variant="outline" onClick={handleSearch}>Retry</Button>
           </div>
         ) : hasResult ? (
           <div className="space-y-4">

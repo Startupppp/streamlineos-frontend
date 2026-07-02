@@ -93,6 +93,18 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
     router.push(`/projects/${project.id}`);
   }, [router, project.id]);
 
+  const handleCardKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") handleCardClick();
+    },
+    [handleCardClick],
+  );
+
+  const handleStopPropagation = useCallback(
+    (e: React.MouseEvent) => e.stopPropagation(),
+    [],
+  );
+
   const handleEditClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setEditOpen(true);
@@ -145,15 +157,15 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
         className={cn(
-          "relative overflow-hidden rounded-2xl border border-slate-200/80 border-l-[3px] bg-white/90 backdrop-blur-sm p-3 shadow-xl shadow-slate-200/60",
+          "relative overflow-hidden rounded-lg border border-slate-200/80 border-l-[3px] bg-white/90 backdrop-blur-sm p-3 shadow-sm",
           "flex h-full flex-col group cursor-pointer",
-          "transition-all duration-200 hover:scale-[1.02] hover:border-violet-500/30 hover:bg-violet-50 hover:shadow-md hover:shadow-violet-100/50 hover:ring-1 hover:ring-violet-500/20",
+          "transition-shadow duration-200 hover:border-violet-500/30 hover:shadow-md",
           statusAccent,
         )}
         role="listitem"
         onClick={handleCardClick}
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "Enter") handleCardClick(); }}
+        onKeyDown={handleCardKeyDown}
         aria-label={`${project.name} — ${displayLabel}. Press Enter to open.`}
       >
         <div
@@ -183,12 +195,12 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                     size="icon"
                     className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
                     aria-label="Project actions"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={handleStopPropagation}
                   >
                     <MoreHorizontal className="h-3.5 w-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuContent align="end" className="w-44" onClick={handleStopPropagation}>
                   {canUpdate && (
                     <DropdownMenuItem onClick={handleEditClick}>
                       <Pencil className="h-3.5 w-3.5 mr-2" />

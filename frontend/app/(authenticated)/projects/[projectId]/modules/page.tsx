@@ -6,6 +6,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import {
   Sheet,
@@ -26,12 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Calendar, User, ArrowRight } from "lucide-react";
+import { Plus, Calendar, User, ArrowRight, Package, Activity, CheckCircle2 } from "lucide-react";
 import { useForm, Controller, useController } from "react-hook-form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 const MODULE_STATUSES = ["backlog", "planned", "in-progress", "paused", "completed", "cancelled"] as const;
@@ -47,46 +49,13 @@ const createModuleSchema = z.object({
 type CreateModuleForm = z.infer<typeof createModuleSchema>;
 
 const statusColors: Record<string, string> = {
-  backlog: "bg-slate-100 text-slate-700",
-  planned: "bg-blue-100 text-blue-700",
-  "in-progress": "bg-yellow-100 text-yellow-700",
-  paused: "bg-orange-100 text-orange-700",
-  completed: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
+  backlog: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  planned: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  "in-progress": "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+  paused: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  completed: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  cancelled: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
-
-function ProgressRing({ value, size = 40 }: { value: number; size?: number }) {
-  const stroke = 4;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
-
-  return (
-    <svg width={size} height={size} className="rotate-[-90deg]">
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={stroke}
-        className="text-muted/30"
-      />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={stroke}
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        className="text-primary"
-      />
-    </svg>
-  );
-}
 
 export default function ModulesPage({
   params,
@@ -137,13 +106,25 @@ export default function ModulesPage({
     );
   };
 
+  const total = modules?.length ?? 0;
+  const inProgress = modules?.filter(m => m.status === "in-progress").length ?? 0;
+  const completed = modules?.filter(m => m.status === "completed").length ?? 0;
+  const planned = modules?.filter(m => m.status === "planned").length ?? 0;
+
   if (isLoading) {
     return (
       <PageWrapper title="Modules">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 w-full" />
-          ))}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 rounded-xl" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-36 w-full rounded-lg" />
+            ))}
+          </div>
         </div>
       </PageWrapper>
     );
@@ -164,92 +145,86 @@ export default function ModulesPage({
               <SheetTitle>Create Module</SheetTitle>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-6 py-5">
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-            >
-              <div>
-                <Label htmlFor="mod-name">Name</Label>
-                <Input id="mod-name" {...form.register("name")} />
-                {form.formState.errors.name && (
-                  <p className="text-xs text-destructive mt-1">
-                    {form.formState.errors.name.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="mod-desc">Description</Label>
-                <Textarea id="mod-desc" {...form.register("description")} />
-              </div>
-              <div>
-                <Label>Status</Label>
-                <Controller
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MODULE_STATUSES.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div>
+                  <Label htmlFor="mod-name">Name</Label>
+                  <Input id="mod-name" {...form.register("name")} />
+                  {form.formState.errors.name && (
+                    <p className="text-xs text-destructive mt-1">
+                      {form.formState.errors.name.message}
+                    </p>
                   )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="mod-start">Start Date</Label>
-                  <DatePicker id="mod-start" value={form.watch("startDate") || ""} onChange={handleSetStartDate} placeholder="Start date" />
                 </div>
                 <div>
-                  <Label htmlFor="mod-end">End Date</Label>
-                  <DatePicker id="mod-end" value={form.watch("endDate") || ""} onChange={handleSetEndDate} placeholder="End date" />
+                  <Label htmlFor="mod-desc">Description</Label>
+                  <Textarea id="mod-desc" {...form.register("description")} />
                 </div>
-              </div>
-              <div>
-                <Label>Lead</Label>
-                <Select
-                  value={leadIdField.value?.toString() ?? ""}
-                  onValueChange={handleLeadChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select lead..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {members?.map((m) => (
-                      <SelectItem
-                        key={m.userId}
-                        value={m.userId}
-                      >
-                        {m.user?.name ?? m.user?.email ?? m.userId}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                type="submit"
-                disabled={createMutation.isPending}
-                className="w-full"
-              >
-                {createMutation.isPending ? "Creating..." : "Create Module"}
-              </Button>
-            </form>
+                <div>
+                  <Label>Status</Label>
+                  <Controller
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MODULE_STATUSES.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="mod-start">Start Date</Label>
+                    <DatePicker id="mod-start" value={form.watch("startDate") || ""} onChange={handleSetStartDate} placeholder="Start date" />
+                  </div>
+                  <div>
+                    <Label htmlFor="mod-end">End Date</Label>
+                    <DatePicker id="mod-end" value={form.watch("endDate") || ""} onChange={handleSetEndDate} placeholder="End date" />
+                  </div>
+                </div>
+                <div>
+                  <Label>Lead</Label>
+                  <Select
+                    value={leadIdField.value?.toString() ?? ""}
+                    onValueChange={handleLeadChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select lead..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members?.map((m) => (
+                        <SelectItem key={m.userId} value={m.userId}>
+                          {m.user?.name ?? m.user?.email ?? m.userId}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="submit" disabled={createMutation.isPending} className="w-full">
+                  {createMutation.isPending ? "Creating..." : "Create Module"}
+                </Button>
+              </form>
             </div>
           </SheetContent>
         </Sheet>
       }
     >
-      <div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard label="Total" value={total} icon={Package} color="violet" index={0} />
+          <StatCard label="In Progress" value={inProgress} icon={Activity} color="blue" index={1} />
+          <StatCard label="Completed" value={completed} icon={CheckCircle2} color="green" index={2} />
+          <StatCard label="Planned" value={planned} icon={Calendar} color="amber" index={3} />
+        </div>
+
         {!modules?.length ? (
           <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[300px] text-center py-16">
             <EmptyTasksIllustration className="mx-auto mb-4 w-36 h-36" />
@@ -262,23 +237,20 @@ export default function ModulesPage({
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {modules.map((mod) => (
-              <Link
-                key={mod.id}
-                href={`/projects/${projectId}/modules/${mod.id}`}
-              >
-                <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base truncate">
+              <Link key={mod.id} href={`/projects/${projectId}/modules/${mod.id}`}>
+                <Card className="hover:border-violet-400/60 transition-colors cursor-pointer h-full bg-card border border-border rounded-lg">
+                  <CardHeader className="pb-2 px-4 pt-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-sm font-semibold leading-tight truncate">
                         {mod.name}
                       </CardTitle>
                       <Badge
-                        className={
-                          statusColors[mod.status ?? "backlog"] ??
-                          statusColors.backlog
-                        }
+                        className={cn(
+                          "text-xs shrink-0",
+                          statusColors[mod.status ?? "backlog"] ?? statusColors["backlog"]
+                        )}
                       >
                         {(mod.status ?? "backlog")
                           .replace(/_/g, " ")
@@ -286,33 +258,36 @@ export default function ModulesPage({
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-4">
-                      <ProgressRing value={mod.progress ?? 0} />
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <p className="text-xs text-muted-foreground">
-                          {mod.progress ?? 0}% complete
-                        </p>
-                        {(mod.startDate || mod.endDate) && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {mod.startDate
-                              ? new Date(mod.startDate).toLocaleDateString()
-                              : "TBD"}{" "}
-                            —{" "}
-                            {mod.endDate
-                              ? new Date(mod.endDate).toLocaleDateString()
-                              : "TBD"}
-                          </p>
-                        )}
-                        {mod.leadId && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-                            <User className="h-3 w-3" />
-                            Lead assigned
-                          </p>
-                        )}
+                  <CardContent className="px-4 pb-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{mod.progress ?? 0}% complete</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-violet-500 transition-all duration-300"
+                          style={{ width: `${mod.progress ?? 0}%` }}
+                        />
+                      </div>
+                      {(mod.startDate || mod.endDate) && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 pt-1">
+                          <Calendar className="h-3 w-3 shrink-0" />
+                          {mod.startDate
+                            ? new Date(mod.startDate).toLocaleDateString()
+                            : "TBD"}
+                          {" — "}
+                          {mod.endDate
+                            ? new Date(mod.endDate).toLocaleDateString()
+                            : "TBD"}
+                        </p>
+                      )}
+                      {mod.leadId && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                          <User className="h-3 w-3 shrink-0" />
+                          Lead assigned
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

@@ -104,7 +104,7 @@ function PageTreeItem({
     <div>
       <div
         className={`flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer transition-colors group ${
-          isActive ? "bg-primary/10 text-primary" : "hover:bg-muted"
+          isActive ? "bg-violet-50 text-violet-700 font-medium" : "hover:bg-muted"
         }`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={handleSelect}
@@ -170,7 +170,7 @@ const PinnedPageItem = memo(function PinnedPageItem({
       onClick={handleClick}
       className={`flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors ${
         activePage === page.id
-          ? "bg-primary/10 text-primary"
+          ? "bg-violet-50 text-violet-700 font-medium"
           : "hover:bg-muted"
       }`}
     >
@@ -288,7 +288,7 @@ export default function PagesPage({
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>
-            <Button size="sm">
+            <Button size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm">
               <Plus className="h-4 w-4 mr-1" /> New Page
             </Button>
           </SheetTrigger>
@@ -322,7 +322,7 @@ export default function PagesPage({
               <Button
                 type="submit"
                 disabled={createMutation.isPending}
-                className="w-full"
+                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm"
               >
                 {createMutation.isPending ? "Creating..." : "Create Page"}
               </Button>
@@ -342,14 +342,14 @@ export default function PagesPage({
             <p className="text-sm text-muted-foreground mb-4">
               Create your first page to start documenting your project.
             </p>
-            <Button onClick={handleOpenCreatePage}>
+            <Button onClick={handleOpenCreatePage} className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm">
               <Plus className="h-4 w-4 mr-1" /> Create First Page
             </Button>
           </div>
         </div>
       ) : (
         <div className="flex h-full overflow-hidden">
-          <div className="w-64 border-r overflow-y-auto p-3 space-y-1">
+          <div className="w-64 border-r overflow-y-auto p-3 space-y-1 bg-muted/20">
             {pinnedPages.length > 0 && (
               <div className="mb-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">
@@ -382,7 +382,7 @@ export default function PagesPage({
             {selectedPage ? (
               <div className="flex-1 flex flex-col p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
                     <span className="text-2xl">
                       {selectedPage.icon ?? "📄"}
                     </span>

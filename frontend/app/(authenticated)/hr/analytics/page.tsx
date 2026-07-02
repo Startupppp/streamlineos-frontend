@@ -7,7 +7,6 @@ import {
 } from "@/hooks/api/hr/analytics";
 import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -90,7 +89,7 @@ function DateRangeSelector({
 
   return (
     <Select value={value} onValueChange={handleChange}>
-      <SelectTrigger className="h-8 w-36 text-xs">
+      <SelectTrigger className="h-8 w-36 text-xs bg-muted/40 rounded-lg">
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -105,36 +104,34 @@ function DateRangeSelector({
 function KpiCard({ item }: { item: KpiItem }) {
   const Icon = item.icon;
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              {item.label}
-            </p>
-            <p
-              className={cn(
-                "text-3xl font-bold tabular-nums leading-none",
-                item.valueColor,
-              )}
-            >
-              {item.value}
-            </p>
-          </div>
-          <div
+    <div className="rounded-xl bg-muted/40 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            {item.label}
+          </p>
+          <p
             className={cn(
-              "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
-              item.iconBg,
+              "text-3xl font-bold tabular-nums leading-none",
+              item.valueColor,
             )}
           >
-            <Icon
-              className={cn("h-3.5 w-3.5", item.iconColor)}
-              aria-hidden="true"
-            />
-          </div>
+            {item.value}
+          </p>
         </div>
-      </CardContent>
-    </Card>
+        <div
+          className={cn(
+            "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+            item.iconBg,
+          )}
+        >
+          <Icon
+            className={cn("h-3.5 w-3.5", item.iconColor)}
+            aria-hidden="true"
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -155,15 +152,10 @@ function ExecutiveKPIs({
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card
-            key={i}
-            className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
-          >
-            <CardContent className="p-4">
-              <Skeleton className="h-3 w-20 mb-3" />
-              <Skeleton className="h-8 w-14" />
-            </CardContent>
-          </Card>
+          <div key={i} className="rounded-xl bg-muted/40 p-4">
+            <Skeleton className="h-3 w-20 mb-3" />
+            <Skeleton className="h-8 w-14" />
+          </div>
         ))}
       </div>
     );

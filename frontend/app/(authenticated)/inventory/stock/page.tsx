@@ -57,15 +57,31 @@ function StockTable({ rows }: { rows: StockLevelRow[] }) {
     <div className="rounded-lg border border-border overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50">
-            <TableHead className="text-xs font-semibold">Status</TableHead>
-            <TableHead className="text-xs font-semibold">Product</TableHead>
-            <TableHead className="text-xs font-semibold">SKU</TableHead>
-            <TableHead className="text-xs font-semibold">Warehouse / Location</TableHead>
-            <TableHead className="text-xs font-semibold text-right">On Hand</TableHead>
-            <TableHead className="text-xs font-semibold text-right">Committed</TableHead>
-            <TableHead className="text-xs font-semibold text-right">On Order</TableHead>
-            <TableHead className="text-xs font-semibold text-right">Available</TableHead>
+          <TableRow className="bg-muted/40 hover:bg-muted/40">
+            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Status
+            </TableHead>
+            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Product
+            </TableHead>
+            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
+              SKU
+            </TableHead>
+            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
+              Warehouse / Location
+            </TableHead>
+            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">
+              On Hand
+            </TableHead>
+            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right hidden md:table-cell">
+              Committed
+            </TableHead>
+            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right hidden md:table-cell">
+              On Order
+            </TableHead>
+            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">
+              Available
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -76,35 +92,36 @@ function StockTable({ rows }: { rows: StockLevelRow[] }) {
               <TableRow
                 key={row.id}
                 className={cn(
-                  "text-sm",
+                  "border-b border-border/50 transition-colors",
                   status === "critical" && "bg-red-50/40 hover:bg-red-50/60",
                   status === "low" && "bg-amber-50/40 hover:bg-amber-50/60",
+                  status === "ok" && "hover:bg-muted/30",
                 )}
               >
-                <TableCell className="py-2.5">
+                <TableCell className="px-3 py-2">
                   <StockStatusIcon status={status} />
                 </TableCell>
-                <TableCell className="py-2.5 font-medium max-w-[200px] truncate">
+                <TableCell className="px-3 py-2 font-medium max-w-[200px] truncate text-sm">
                   {row.productName}
                 </TableCell>
-                <TableCell className="py-2.5 font-mono text-xs text-muted-foreground">
+                <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground hidden md:table-cell">
                   {row.sku}
                 </TableCell>
-                <TableCell className="py-2.5 text-muted-foreground text-xs">
+                <TableCell className="px-3 py-2 text-muted-foreground text-xs hidden md:table-cell">
                   {[row.warehouseName, row.locationCode].filter(Boolean).join(" / ") || "—"}
                 </TableCell>
-                <TableCell className="py-2.5 text-right tabular-nums">
+                <TableCell className="px-3 py-2 text-right tabular-nums text-sm">
                   {row.onHand.toLocaleString()}
                 </TableCell>
-                <TableCell className="py-2.5 text-right tabular-nums text-muted-foreground">
+                <TableCell className="px-3 py-2 text-right tabular-nums text-muted-foreground text-sm hidden md:table-cell">
                   {row.committed.toLocaleString()}
                 </TableCell>
-                <TableCell className="py-2.5 text-right tabular-nums text-muted-foreground">
+                <TableCell className="px-3 py-2 text-right tabular-nums text-muted-foreground text-sm hidden md:table-cell">
                   {row.onOrder.toLocaleString()}
                 </TableCell>
                 <TableCell
                   className={cn(
-                    "py-2.5 text-right tabular-nums font-semibold",
+                    "px-3 py-2 text-right tabular-nums font-semibold text-sm",
                     status === "critical" && "text-red-600",
                     status === "low" && "text-amber-600",
                     status === "ok" && "text-emerald-600",
@@ -126,17 +143,21 @@ function StockTableSkeleton() {
     <div className="rounded-lg border border-border overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50">
+          <TableRow className="bg-muted/40 hover:bg-muted/40">
             {Array.from({ length: 8 }).map((_, i) => (
-              <TableHead key={i}><Skeleton className="h-3 w-16" /></TableHead>
+              <TableHead key={i} className="px-3">
+                <Skeleton className="h-3 w-16" />
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
           {Array.from({ length: 8 }).map((_, i) => (
-            <TableRow key={i}>
+            <TableRow key={i} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
               {Array.from({ length: 8 }).map((__, j) => (
-                <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                <TableCell key={j} className="px-3 py-2">
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
               ))}
             </TableRow>
           ))}
@@ -186,7 +207,7 @@ export default function StockLevelsPage() {
             value={warehouseId ? String(warehouseId) : "all"}
             onValueChange={handleWarehouseChange}
           >
-            <SelectTrigger className="h-8 text-xs w-44">
+            <SelectTrigger className="h-8 text-sm w-44">
               <SelectValue placeholder="All warehouses" />
             </SelectTrigger>
             <SelectContent>

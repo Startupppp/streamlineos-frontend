@@ -74,32 +74,32 @@ const TicketRow = memo(function TicketRow({
 
   return (
     <TableRow
-      className={`cursor-pointer hover:bg-muted/50 ${isSelected ? "bg-primary/5" : ""}`}
+      className={`cursor-pointer hover:bg-muted/50 h-10 border-b border-border/50 ${isSelected ? "bg-primary/5" : ""}`}
       onClick={handleRowClick}
     >
-      <TableCell onClick={handleCheckboxCellClick}>
+      <TableCell className="px-3 py-1.5" onClick={handleCheckboxCellClick}>
         <Checkbox
           checked={isSelected}
           onCheckedChange={handleCheckedChange}
           aria-label={`Select ticket ${ticket.ticketNumber}`}
         />
       </TableCell>
-      <TableCell className="font-mono text-xs text-muted-foreground">
+      <TableCell className="px-3 py-1.5 font-mono text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <TicketTypeIcon type={ticket.type} />
           #{ticket.ticketNumber}
         </span>
       </TableCell>
-      <TableCell className="max-w-md">
+      <TableCell className="px-3 py-1.5 max-w-md">
         <span className="text-sm font-medium line-clamp-1">{ticket.title}</span>
       </TableCell>
-      <TableCell>
+      <TableCell className="px-3 py-1.5">
         <StatusBadge status={ticket.status} />
       </TableCell>
-      <TableCell className="hidden sm:table-cell">
+      <TableCell className="px-3 py-1.5 hidden sm:table-cell">
         <PriorityBadge priority={ticket.priority} showLabel />
       </TableCell>
-      <TableCell className="hidden md:table-cell">
+      <TableCell className="px-3 py-1.5 hidden md:table-cell">
         {ticket.assignee ? (
           <div className="flex items-center gap-1.5">
             <Avatar className="h-6 w-6">
@@ -117,7 +117,7 @@ const TicketRow = memo(function TicketRow({
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">
+      <TableCell className="px-3 py-1.5 text-xs text-muted-foreground hidden lg:table-cell">
         {ticket.createdAt
           ? format(new Date(ticket.createdAt), "MMM d")
           : "—"}
@@ -290,7 +290,7 @@ export default function BacklogPage({ params }: PageProps) {
       filters={<TicketFilterBar members={members} showSprintFilter={false} />}
     >
       {selectedIds.size > 0 && (
-        <div className="mx-4 mb-3 flex flex-wrap items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-3 bg-background border-b border-border px-4 py-2 mb-2">
           <span className="text-sm font-medium text-primary shrink-0">{selectedIds.size} selected</span>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
             <Select onValueChange={handleBulkStatus}>
@@ -340,24 +340,25 @@ export default function BacklogPage({ params }: PageProps) {
         </div>
       )}
 
-      <div className="border border-slate-200/80 rounded-2xl mx-4 mb-4 overflow-x-auto bg-white/90 backdrop-blur-sm shadow-sm">
+      <div className="rounded-lg border border-border overflow-hidden mx-4 mb-4">
+        <div className="overflow-x-auto">
         <Table>
           <caption className="sr-only">Backlog tickets</caption>
           <TableHeader>
-            <TableRow className="text-xs">
-              <TableHead className="w-10" scope="col">
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableHead className="w-10 px-3 py-2" scope="col">
                 <Checkbox
                   checked={filteredTickets.length > 0 && selectedIds.size === filteredTickets.length}
                   onCheckedChange={toggleSelectAll}
                   aria-label="Select all tickets"
                 />
               </TableHead>
-              <TableHead className="w-[80px]" scope="col">ID</TableHead>
-              <TableHead scope="col">Title</TableHead>
-              <TableHead className="w-[120px]" scope="col">Status</TableHead>
-              <TableHead className="w-[100px] hidden sm:table-cell" scope="col">Priority</TableHead>
-              <TableHead className="w-[140px] hidden md:table-cell" scope="col">Assignee</TableHead>
-              <TableHead className="w-[110px] hidden lg:table-cell" scope="col">Created</TableHead>
+              <TableHead className="w-[80px] px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">ID</TableHead>
+              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Title</TableHead>
+              <TableHead className="w-[120px] px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Status</TableHead>
+              <TableHead className="w-[100px] hidden sm:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Priority</TableHead>
+              <TableHead className="w-[140px] hidden md:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Assignee</TableHead>
+              <TableHead className="w-[110px] hidden lg:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Created</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -383,6 +384,7 @@ export default function BacklogPage({ params }: PageProps) {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       <TicketDetailsDialog

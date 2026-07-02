@@ -1,13 +1,12 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,8 +19,9 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
-import { Plus, Mail, Trash2, Copy, Pencil, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Copy, Pencil, AlertCircle, Search } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
+import { cn } from "@/lib/utils";
 
 interface EmailTemplate {
   id: number; name: string; subject: string; body: string;
@@ -32,6 +32,15 @@ interface EmailTemplate {
 const etKeys = { all: [...queryKeys.hr.all, "email-templates"] as const, list: () => [...etKeys.all, "list"] as const };
 
 const CATEGORIES = ["Onboarding", "Offboarding", "Leave", "Performance", "General", "Recruitment"];
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Onboarding: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  Offboarding: "bg-rose-100 text-rose-700 border-rose-200",
+  Leave: "bg-blue-100 text-blue-700 border-blue-200",
+  Performance: "bg-amber-100 text-amber-700 border-amber-200",
+  General: "bg-slate-100 text-slate-600 border-slate-200",
+  Recruitment: "bg-violet-100 text-violet-700 border-violet-200",
+};
 
 interface TemplateCardProps {
   template: EmailTemplate;
@@ -44,11 +53,18 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
   const handleCopy = useCallback(() => onCopy(template), [onCopy, template]);
   const handleEdit = useCallback(() => onEdit(template), [onEdit, template]);
   const handleDelete = useCallback(() => onDelete(template.id), [onDelete, template.id]);
+
+  const categoryKey = template.category ?? "General";
+  const categoryClass = CATEGORY_COLORS[categoryKey] ?? CATEGORY_COLORS["General"];
+  const varCount = template.variables?.length ?? 0;
+
   return (
-    <Card className="hover:shadow-sm transition-shadow">
+    <Card className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
       <CardContent className="p-4 space-y-2">
-        <div className="flex items-start justify-between">
-          <Mail className="h-4 w-4 text-primary shrink-0" />
+        <div className="flex items-center justify-between">
+          <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border", categoryClass)}>
+            {categoryKey}
+          </span>
           <div className="flex gap-1">
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
               <Copy className="h-3 w-3" />
@@ -62,12 +78,18 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
           </div>
         </div>
         <div>
-          <h3 className="text-sm font-semibold leading-tight truncate" title={template.name}>{template.name}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5 truncate" title={template.subject}>Subject: {template.subject}</p>
+          <h3 className="font-semibold text-sm leading-tight truncate" title={template.name}>
+            {template.name}
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5 truncate" title={template.subject}>
+            <span className="text-muted-foreground">Sub:</span> {template.subject}
+          </p>
+          <p className="line-clamp-2 text-xs text-muted-foreground mt-1">{template.body}</p>
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-3 break-words">{template.body}</p>
-        <div className="flex gap-2">
-          {template.category && <Badge variant="outline" className="text-[10px]">{template.category}</Badge>}
+        <div>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 text-violet-700 border-violet-200">
+            {`{{${varCount}}} variables`}
+          </span>
         </div>
       </CardContent>
     </Card>
@@ -106,6 +128,21 @@ function EmailTemplatesContent() {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [category, setCategory] = useState("General");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+
+  const filteredTemplates = useMemo(() => {
+    if (!templates) return [];
+    return templates.filter((t) => {
+      const matchesSearch =
+        !searchQuery ||
+        t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.category ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = activeCategory === "All" || t.category === activeCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [templates, searchQuery, activeCategory]);
 
   const resetForm = useCallback(() => {
     setName(""); setSubject(""); setBody(""); setCategory("General"); setEditTemplate(null);
@@ -179,12 +216,16 @@ function EmailTemplatesContent() {
   const handleDeleteDialogOpenChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleDeleteTemplate = useCallback((id: number) => setDeleteId(id), []);
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), []);
+  const handleSetCategory = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    setActiveCategory(e.currentTarget.dataset.category ?? "All");
+  }, []);
 
   if (isLoading) {
     return (
       <PageWrapper title="Email Templates" subtitle="Manage HR email templates">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
         </div>
       </PageWrapper>
     );
@@ -210,7 +251,12 @@ function EmailTemplatesContent() {
       title="Email Templates"
       subtitle="Manage reusable email templates for HR communications"
       badge={`${templates?.length ?? 0} templates`}
-      actions={<Button size="sm" onClick={handleOpenSheet}><Plus className="h-3.5 w-3.5 mr-1" />New Template</Button>}
+      actions={
+        <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
+          <Plus className="h-3.5 w-3.5" />
+          New Template
+        </Button>
+      }
     >
       {!templates?.length ? (
         <EmptyState
@@ -220,16 +266,67 @@ function EmailTemplatesContent() {
           action={{ label: "Add Template", onClick: handleOpenSheet }}
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {templates.map((t: EmailTemplate) => (
-            <TemplateCard
-              key={t.id}
-              template={t}
-              onCopy={handleCopy}
-              onEdit={handleOpenEdit}
-              onDelete={handleDeleteTemplate}
-            />
-          ))}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 flex-wrap bg-muted/40 rounded-lg px-3 py-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search templates..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="pl-8 h-8 text-xs w-44"
+              />
+            </div>
+            <div className="flex items-center gap-1 flex-wrap">
+              <button
+                type="button"
+                onClick={handleSetCategory}
+                data-category="All"
+                className={cn(
+                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
+                  activeCategory === "All"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
+                )}
+              >
+                All
+              </button>
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={handleSetCategory}
+                  data-category={cat}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
+                    activeCategory === cat
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-transparent text-muted-foreground border-border hover:bg-muted",
+                  )}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredTemplates.length === 0 ? (
+              <p className="col-span-full text-center text-sm text-muted-foreground py-10">
+                No templates match your filters.
+              </p>
+            ) : (
+              filteredTemplates.map((t: EmailTemplate) => (
+                <TemplateCard
+                  key={t.id}
+                  template={t}
+                  onCopy={handleCopy}
+                  onEdit={handleOpenEdit}
+                  onDelete={handleDeleteTemplate}
+                />
+              ))
+            )}
+          </div>
         </div>
       )}
 

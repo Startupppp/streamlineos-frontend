@@ -3,23 +3,37 @@
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Briefcase, CheckCircle2, Clock, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  Briefcase,
+  CheckCircle2,
+  Clock,
+  LayoutGrid,
+  List,
+  TrendingUp,
+} from "lucide-react";
 import { format } from "date-fns";
 import { useProjects } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
-import type { ProjectListItem } from "@/types/projects";
-import type { ProjectStatusValue } from "@/types/projects";
+import type { ProjectListItem, ProjectStatusValue } from "@/types/projects";
 
 type StatusFilter = "ALL" | ProjectStatusValue;
 type SortKey = "name" | "status" | "progress";
+type ViewMode = "table" | "cards";
 
 function toDate(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
@@ -35,24 +49,9 @@ function getProjectHealth(project: ProjectListItem): "on-track" | "at-risk" | "c
 }
 
 const healthConfig = {
-  "on-track": {
-    label: "On Track",
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
-    dot: "bg-emerald-500",
-  },
-  "at-risk": {
-    label: "At Risk",
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-    dot: "bg-amber-500",
-  },
-  critical: {
-    label: "Critical",
-    color: "text-red-600",
-    bg: "bg-red-50",
-    dot: "bg-red-500",
-  },
+  "on-track": { label: "On Track", color: "text-emerald-600", bg: "bg-emerald-50", dot: "bg-emerald-500" },
+  "at-risk": { label: "At Risk", color: "text-amber-600", bg: "bg-amber-50", dot: "bg-amber-500" },
+  critical: { label: "Critical", color: "text-red-600", bg: "bg-red-50", dot: "bg-red-500" },
 } as const;
 
 const statusConfig: Record<ProjectStatusValue, { label: string; color: string }> = {
@@ -79,16 +78,12 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 function PortfolioSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-20 rounded-xl" />
         ))}
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-44 rounded-2xl" />
-        ))}
-      </div>
+      <Skeleton className="h-64 rounded-lg" />
     </div>
   );
 }
@@ -117,15 +112,62 @@ function StatCard({
   );
 }
 
+function ProjectTableRow({ project }: { project: ProjectListItem }) {
+  const health = getProjectHealth(project);
+  const hc = healthConfig[health];
+  const sc = project.status ? (statusConfig[project.status] ?? DEFAULT_STATUS_CONFIG) : DEFAULT_STATUS_CONFIG;
+  const endDate = toDate(project.endDate);
+  const managerName = project.manager
+    ? [project.manager.firstName, project.manager.lastName].filter(Boolean).join(" ") || null
+    : null;
+
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_minmax(100px,140px)_auto_auto] items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-[10px] font-bold text-slate-400 font-mono shrink-0 w-12 truncate">{project.key}</span>
+        <Link
+          href={`/projects/${project.id}`}
+          className="text-sm font-medium text-slate-900 hover:text-violet-600 truncate transition-colors"
+        >
+          {project.name}
+        </Link>
+      </div>
+      <Badge variant="outline" className={cn("text-[10px] shrink-0 border", sc.color)}>
+        {sc.label}
+      </Badge>
+      <div className={cn("flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0", hc.bg, hc.color)}>
+        <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", hc.dot)} />
+        {hc.label}
+      </div>
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500"
+            style={{ width: `${project.progress.percentage}%` }}
+          />
+        </div>
+        <span className="text-[11px] text-muted-foreground tabular-nums shrink-0 w-8 text-right">
+          {project.progress.percentage}%
+        </span>
+      </div>
+      <span className="text-[11px] text-muted-foreground shrink-0 whitespace-nowrap">
+        {endDate ? format(endDate, "MMM d, yyyy") : "—"}
+      </span>
+      <span className="text-[11px] text-muted-foreground truncate max-w-[100px]">
+        {managerName ?? "—"}
+      </span>
+    </div>
+  );
+}
+
 function ProjectHealthCard({ project }: { project: ProjectListItem }) {
   const health = getProjectHealth(project);
   const hc = healthConfig[health];
   const sc = project.status ? (statusConfig[project.status] ?? DEFAULT_STATUS_CONFIG) : DEFAULT_STATUS_CONFIG;
   const endDate = toDate(project.endDate);
-  const managerName =
-    project.manager
-      ? [project.manager.firstName, project.manager.lastName].filter(Boolean).join(" ") || null
-      : null;
+  const managerName = project.manager
+    ? [project.manager.firstName, project.manager.lastName].filter(Boolean).join(" ") || null
+    : null;
 
   return (
     <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 hover:shadow-md transition-shadow h-full">
@@ -149,9 +191,7 @@ function ProjectHealthCard({ project }: { project: ProjectListItem }) {
           {hc.label}
         </div>
         {project.progress.total > 0 && (
-          <span className="text-[11px] text-muted-foreground">
-            {project.progress.percentage}% done
-          </span>
+          <span className="text-[11px] text-muted-foreground">{project.progress.percentage}% done</span>
         )}
       </div>
 
@@ -172,9 +212,7 @@ function ProjectHealthCard({ project }: { project: ProjectListItem }) {
           </p>
         )}
         {managerName && (
-          <p className="text-[11px] text-muted-foreground truncate">
-            Manager: {managerName}
-          </p>
+          <p className="text-[11px] text-muted-foreground truncate">Manager: {managerName}</p>
         )}
       </div>
 
@@ -197,6 +235,7 @@ function ProjectHealthCard({ project }: { project: ProjectListItem }) {
 export default function PortfolioPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [sort, setSort] = useState<SortKey>("name");
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   const { data, isLoading, isError, refetch } = useProjects({ limit: 100 });
 
@@ -226,9 +265,35 @@ export default function PortfolioPage() {
   const handleStatusChange = useCallback((v: string) => setStatusFilter(v as StatusFilter), []);
   const handleSortChange = useCallback((v: string) => setSort(v as SortKey), []);
   const handleRetry = useCallback(() => refetch(), [refetch]);
+  const handleSetTableView = useCallback(() => setViewMode("table"), []);
+  const handleSetCardsView = useCallback(() => setViewMode("cards"), []);
 
   const filters = (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center bg-muted/40 rounded-lg p-0.5 border border-border">
+        <button
+          onClick={handleSetTableView}
+          className={cn(
+            "h-7 px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5",
+            viewMode === "table"
+              ? "bg-background shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <List className="h-3.5 w-3.5" /> Table
+        </button>
+        <button
+          onClick={handleSetCardsView}
+          className={cn(
+            "h-7 px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5",
+            viewMode === "cards"
+              ? "bg-background shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <LayoutGrid className="h-3.5 w-3.5" /> Cards
+        </button>
+      </div>
       <Select value={statusFilter} onValueChange={handleStatusChange}>
         <SelectTrigger className="h-8 w-32 text-xs">
           <SelectValue />
@@ -273,12 +338,8 @@ export default function PortfolioPage() {
   }
 
   return (
-    <PageWrapper
-      title="Portfolio"
-      badge={String(stats.total)}
-      filters={filters}
-    >
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+    <PageWrapper title="Portfolio" badge={String(stats.total)} filters={filters}>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <StatCard label="Total" value={stats.total} icon={Briefcase} color="text-violet-600" />
         <StatCard label="Active" value={stats.active} icon={TrendingUp} color="text-blue-600" />
         <StatCard label="Completed" value={stats.completed} icon={CheckCircle2} color="text-emerald-600" />
@@ -291,6 +352,22 @@ export default function PortfolioPage() {
           description="Create a project to see it in the portfolio view."
           action={{ label: "Go to Projects", href: "/projects" }}
         />
+      ) : viewMode === "table" ? (
+        <div className="rounded-lg border border-border overflow-hidden">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_minmax(100px,140px)_auto_auto] gap-3 px-4 py-2 bg-muted/40 border-b border-border">
+            <span className="text-xs font-semibold text-muted-foreground">Project</span>
+            <span className="text-xs font-semibold text-muted-foreground">Status</span>
+            <span className="text-xs font-semibold text-muted-foreground">Health</span>
+            <span className="text-xs font-semibold text-muted-foreground">Progress</span>
+            <span className="text-xs font-semibold text-muted-foreground">Due Date</span>
+            <span className="text-xs font-semibold text-muted-foreground">Manager</span>
+          </div>
+          <div className="divide-y divide-border/50">
+            {projects.map((project) => (
+              <ProjectTableRow key={project.id} project={project} />
+            ))}
+          </div>
+        </div>
       ) : (
         <motion.div
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"

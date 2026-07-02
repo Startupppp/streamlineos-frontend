@@ -24,7 +24,7 @@ function HrDocumentsTab() {
         Manage onboarding document configuration and review employee submissions.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <Card className="rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
           <CardContent className="p-4 flex items-start gap-3">
             <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
               <Settings className="h-3.5 w-3.5 text-violet-700 dark:text-violet-400" />
@@ -41,7 +41,7 @@ function HrDocumentsTab() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <Card className="rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
           <CardContent className="p-4 flex items-start gap-3">
             <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
               <ClipboardCheck className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />

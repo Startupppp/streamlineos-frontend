@@ -1,7 +1,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useCertifications, useCreateCertification, type Certification } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
-import { Plus, Award, Calendar, ExternalLink, AlertTriangle, CheckCircle2, XCircle, User, AlertCircle } from "lucide-react";
+import { Plus, Award, Calendar, ExternalLink, AlertTriangle, CheckCircle2, XCircle, User, AlertCircle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type CertStatus = "VALID" | "EXPIRING_SOON" | "EXPIRED";
@@ -59,6 +59,20 @@ export default function CertificationsPage() {
   const [expiryDate, setExpiryDate] = useState("");
   const [credentialId, setCredentialId] = useState("");
   const [credentialUrl, setCredentialUrl] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<CertStatus | "ALL">("ALL");
+
+  const filteredCerts = useMemo(() => {
+    if (!certs) return [];
+    return certs.filter((c) => {
+      const matchesSearch =
+        !searchQuery ||
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.issuingOrganization ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "ALL" || getCertStatus(c.expiryDate) === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [certs, searchQuery, statusFilter]);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
@@ -82,6 +96,11 @@ export default function CertificationsPage() {
   const handleExpiryDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setExpiryDate(e.target.value), []);
   const handleCredentialIdChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCredentialId(e.target.value), []);
   const handleCredentialUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCredentialUrl(e.target.value), []);
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), []);
+  const handleSetFilterAll = useCallback(() => setStatusFilter("ALL"), []);
+  const handleSetFilterValid = useCallback(() => setStatusFilter("VALID"), []);
+  const handleSetFilterExpiring = useCallback(() => setStatusFilter("EXPIRING_SOON"), []);
+  const handleSetFilterExpired = useCallback(() => setStatusFilter("EXPIRED"), []);
 
   const handleCreate = useCallback(() => {
     const trimmedName = name.trim();
@@ -148,8 +167,9 @@ export default function CertificationsPage() {
     );
   }
 
-  const expiredCount = certs?.filter((c) => getCertStatus(c.expiryDate) === "EXPIRED").length ?? 0;
+  const validCount = certs?.filter((c) => getCertStatus(c.expiryDate) === "VALID").length ?? 0;
   const expiringCount = certs?.filter((c) => getCertStatus(c.expiryDate) === "EXPIRING_SOON").length ?? 0;
+  const expiredCount = certs?.filter((c) => getCertStatus(c.expiryDate) === "EXPIRED").length ?? 0;
 
   return (
     <PageWrapper
@@ -157,29 +177,12 @@ export default function CertificationsPage() {
       subtitle="Track professional certifications and renewals"
       badge={`${certs?.length ?? 0} certifications`}
       actions={
-        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
+        <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />
           Add Certification
         </Button>
       }
     >
-      {(expiredCount > 0 || expiringCount > 0) && (
-        <div className="flex flex-wrap gap-2 mb-1">
-          {expiringCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800">
-              <AlertTriangle className="h-2.5 w-2.5" />
-              {expiringCount} expiring soon
-            </span>
-          )}
-          {expiredCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800">
-              <XCircle className="h-2.5 w-2.5" />
-              {expiredCount} expired
-            </span>
-          )}
-        </div>
-      )}
-
       {!certs?.length ? (
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <EmptyState
@@ -189,90 +192,160 @@ export default function CertificationsPage() {
           />
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {certs.map((cert: Certification) => {
-            const status = getCertStatus(cert.expiryDate);
-            const cfg = STATUS_CONFIG[status];
-            const daysLeft = cert.expiryDate
-              ? differenceInDays(new Date(cert.expiryDate), new Date())
-              : null;
-
-            return (
-              <Card
-                key={cert.id}
+        <div className="space-y-3">
+          <div className="bg-muted/40 rounded-lg px-3 py-2 flex items-center gap-2 flex-wrap">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search certifications..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="pl-8 h-8 text-xs w-48"
+              />
+            </div>
+            <div className="flex items-center gap-1 flex-wrap">
+              <button
+                type="button"
+                onClick={handleSetFilterAll}
                 className={cn(
-                  "rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4",
-                  cfg.accent,
+                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
+                  statusFilter === "ALL"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
                 )}
               >
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-                        <Award className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                All
+              </button>
+              <button
+                type="button"
+                onClick={handleSetFilterValid}
+                className={cn(
+                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
+                  statusFilter === "VALID"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
+                )}
+              >
+                Valid ({validCount})
+              </button>
+              <button
+                type="button"
+                onClick={handleSetFilterExpiring}
+                className={cn(
+                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
+                  statusFilter === "EXPIRING_SOON"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
+                )}
+              >
+                Expiring Soon ({expiringCount})
+              </button>
+              <button
+                type="button"
+                onClick={handleSetFilterExpired}
+                className={cn(
+                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
+                  statusFilter === "EXPIRED"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
+                )}
+              >
+                Expired ({expiredCount})
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredCerts.length === 0 ? (
+              <p className="col-span-full text-center text-sm text-muted-foreground py-10">
+                No certifications match your filters.
+              </p>
+            ) : (
+              filteredCerts.map((cert: Certification) => {
+                const status = getCertStatus(cert.expiryDate);
+                const cfg = STATUS_CONFIG[status];
+                const daysLeft = cert.expiryDate
+                  ? differenceInDays(new Date(cert.expiryDate), new Date())
+                  : null;
+
+                return (
+                  <Card
+                    key={cert.id}
+                    className={cn(
+                      "rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4",
+                      cfg.accent,
+                    )}
+                  >
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+                            <Award className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
+                              {cert.name}
+                            </h3>
+                            {cert.issuingOrganization && (
+                              <p className="text-[11px] text-muted-foreground truncate">{cert.issuingOrganization}</p>
+                            )}
+                          </div>
+                        </div>
+                        <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0", cfg.badge)}>
+                          {cfg.icon}
+                          {cfg.label}
+                        </span>
                       </div>
-                      <div className="min-w-0">
-                        <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
-                          {cert.name}
-                        </h3>
-                        {cert.issuingOrganization && (
-                          <p className="text-[11px] text-muted-foreground truncate">{cert.issuingOrganization}</p>
+
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                        {cert.user?.name && (
+                          <span className="flex items-center gap-1">
+                            <User className="h-2.5 w-2.5" />
+                            {cert.user.name}
+                          </span>
+                        )}
+                        {cert.issueDate && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-2.5 w-2.5" />
+                            Issued {format(new Date(cert.issueDate), "MMM yyyy")}
+                          </span>
                         )}
                       </div>
-                    </div>
-                    <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0", cfg.badge)}>
-                      {cfg.icon}
-                      {cfg.label}
-                    </span>
-                  </div>
 
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                    {cert.user?.name && (
-                      <span className="flex items-center gap-1">
-                        <User className="h-2.5 w-2.5" />
-                        {cert.user.name}
-                      </span>
-                    )}
-                    {cert.issueDate && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-2.5 w-2.5" />
-                        Issued {format(new Date(cert.issueDate), "MMM yyyy")}
-                      </span>
-                    )}
-                  </div>
+                      {cert.expiryDate && (
+                        <div className={cn(
+                          "rounded-lg px-3 py-2 text-[11px] font-medium",
+                          status === "EXPIRED"
+                            ? "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400"
+                            : status === "EXPIRING_SOON"
+                            ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+                            : "bg-muted/50 text-muted-foreground",
+                        )}>
+                          {status === "EXPIRED"
+                            ? `Expired ${format(new Date(cert.expiryDate), "MMM d, yyyy")} (${Math.abs(daysLeft ?? 0)}d ago)`
+                            : status === "EXPIRING_SOON"
+                            ? `Expires ${format(new Date(cert.expiryDate), "MMM d, yyyy")} (${daysLeft}d left)`
+                            : `Expires ${format(new Date(cert.expiryDate), "MMM yyyy")}`}
+                        </div>
+                      )}
 
-                  {cert.expiryDate && (
-                    <div className={cn(
-                      "rounded-lg px-3 py-2 text-[11px] font-medium",
-                      status === "EXPIRED"
-                        ? "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400"
-                        : status === "EXPIRING_SOON"
-                        ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
-                        : "bg-muted/50 text-muted-foreground",
-                    )}>
-                      {status === "EXPIRED"
-                        ? `Expired ${format(new Date(cert.expiryDate), "MMM d, yyyy")} (${Math.abs(daysLeft ?? 0)}d ago)`
-                        : status === "EXPIRING_SOON"
-                        ? `Expires ${format(new Date(cert.expiryDate), "MMM d, yyyy")} (${daysLeft}d left)`
-                        : `Expires ${format(new Date(cert.expiryDate), "MMM yyyy")}`}
-                    </div>
-                  )}
-
-                  {cert.credentialUrl && (
-                    <a
-                      href={cert.credentialUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      View Credential
-                    </a>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                      {cert.credentialUrl && (
+                        <a
+                          href={cert.credentialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          View Credential
+                        </a>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
 

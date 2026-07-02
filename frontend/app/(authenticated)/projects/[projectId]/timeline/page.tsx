@@ -42,9 +42,14 @@ export default function TimelinePage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Timeline">
-        <div className="p-4 space-y-4">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-[400px] w-full" />
+        <div className="px-4 pt-4 pb-4 space-y-1">
+          <Skeleton className="h-8 w-full mb-3" />
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-8 w-32 shrink-0" />
+              <Skeleton className="h-8 flex-1" />
+            </div>
+          ))}
         </div>
       </PageWrapper>
     );

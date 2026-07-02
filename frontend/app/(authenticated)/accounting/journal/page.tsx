@@ -110,7 +110,7 @@ export default function JournalListPage() {
       subtitle="Every posted journal entry."
       badge={`${total}`}
       actions={
-        <Button asChild>
+        <Button size="sm" asChild>
           <Link href="/accounting/journal/new">
             <Plus className="size-4 mr-1" />
             New entry
@@ -119,53 +119,55 @@ export default function JournalListPage() {
       }
     >
       <div className="space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="journal-from"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
-            >
-              From
-            </label>
-            <Input
-              id="journal-from"
-              type="date"
-              value={from}
-              onChange={handleFromChange}
-              className="w-full sm:w-[160px]"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="journal-to"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
-            >
-              To
-            </label>
-            <Input
-              id="journal-to"
-              type="date"
-              value={to}
-              onChange={handleToChange}
-              className="w-full sm:w-[160px]"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium text-muted-foreground leading-none">
-              Source
-            </span>
-            <Select value={sourceType} onValueChange={handleSourceTypeChange}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="All sources" />
-              </SelectTrigger>
-              <SelectContent>
-                {SOURCE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="rounded-lg border border-border bg-muted/40 p-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="journal-from"
+                className="text-[11px] font-medium text-muted-foreground leading-none"
+              >
+                From
+              </label>
+              <Input
+                id="journal-from"
+                type="date"
+                value={from}
+                onChange={handleFromChange}
+                className="w-full sm:w-[160px] h-8 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="journal-to"
+                className="text-[11px] font-medium text-muted-foreground leading-none"
+              >
+                To
+              </label>
+              <Input
+                id="journal-to"
+                type="date"
+                value={to}
+                onChange={handleToChange}
+                className="w-full sm:w-[160px] h-8 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-[11px] font-medium text-muted-foreground leading-none">
+                Source
+              </span>
+              <Select value={sourceType} onValueChange={handleSourceTypeChange}>
+                <SelectTrigger className="w-full sm:w-[180px] h-8 text-sm">
+                  <SelectValue placeholder="All sources" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SOURCE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -197,46 +199,64 @@ export default function JournalListPage() {
             </Button>
           </div>
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
-            <Table className="min-w-[720px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[160px]">Entry #</TableHead>
-                  <TableHead className="w-[140px]">Date</TableHead>
-                  <TableHead className="w-[200px]">Source</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="w-[120px]">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell className="font-mono text-xs">
-                      <Link
-                        href={`/accounting/journal/${entry.id}`}
-                        className="text-foreground hover:text-blue-600 hover:underline"
-                      >
-                        {entry.entryNumber}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground tabular-nums">
-                      {formatDate(entry.entryDate)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatSource(entry.sourceType, entry.sourceEvent)}
-                    </TableCell>
-                    <TableCell className="text-sm text-foreground">
-                      {entry.description ?? ""}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={STATUS_VARIANT[entry.status]}>
-                        {entry.status}
-                      </Badge>
-                    </TableCell>
+          <div className="rounded-lg border border-border overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table className="min-w-[580px]">
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px]">
+                      Entry #
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[140px]">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[200px] hidden md:table-cell">
+                      Source
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
+                      Description
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">
+                      Status
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {items.map((entry) => (
+                    <TableRow
+                      key={entry.id}
+                      className="border-b border-border/50 hover:bg-muted/30"
+                    >
+                      <TableCell className="font-mono text-xs px-3 py-2">
+                        <Link
+                          href={`/accounting/journal/${entry.id}`}
+                          className="text-foreground hover:text-violet-600 hover:underline"
+                        >
+                          {entry.entryNumber}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground tabular-nums px-3 py-2">
+                        {formatDate(entry.entryDate)}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
+                        {formatSource(entry.sourceType, entry.sourceEvent)}
+                      </TableCell>
+                      <TableCell className="text-sm text-foreground px-3 py-2 hidden md:table-cell">
+                        {entry.description ?? ""}
+                      </TableCell>
+                      <TableCell className="px-3 py-2">
+                        <Badge
+                          variant={STATUS_VARIANT[entry.status]}
+                          className="text-xs px-1.5 py-0.5 rounded-md"
+                        >
+                          {entry.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
       </div>

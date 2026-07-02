@@ -34,7 +34,6 @@ import {
   useUpdateCalendarEvent,
   extractEventNumericId,
 } from "@/hooks/api/calendar";
-import { useCan } from "@/hooks/api/access";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";

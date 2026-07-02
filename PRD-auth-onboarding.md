@@ -7,13 +7,18 @@
 **Last updated**: 2026-07-01  
 **Scope**: Frontend `frontend/` + Backend `streamlineos-api` (NestJS)
 
+## UI/UX source of truth
+
+- **Source of truth**: [PRD-ui-ux-system.md](./PRD-ui-ux-system.md)
+- **Canonical UI references**: `/signin` and `/signup`
+
 ---
 
 ## 0) Canonical implementation prompt (paste into Claude Code)
 
 > Implement StreamlineOS Authentication, Invitations, and Onboarding end-to-end. Treat `CLAUDE.md` as constitution. Follow the strict workflow: for any page touched: AUDIT → PLAN → wait for confirmation → implement → run build+lint+typecheck → update `PAGES.md`. Backend owns all business logic + DB schema + migrations; frontend is UI + TanStack Query hooks only; frontend `app/api/**` is auth-bridge only. Strict TypeScript, no `any`, no `@ts-ignore`, no casting hacks, no non-null assertion abuse, no anonymous event handlers, no code comments; remove dead code.  
 >
-> UI/UX: `/signin` and `/signup` are the design reference for spacing density, card layout, hover/active/focus states and contrast. Fix inconsistent spacing (especially double-padding in Sheets), hover colors, icon hover states.  
+> UI/UX: Follow [PRD-ui-ux-system.md](./PRD-ui-ux-system.md) as the UI source of truth. `/signin` and `/signup` are the canonical reference for spacing density, card layout, hover/active/focus states and contrast. Fix inconsistent spacing (especially double-padding in Sheets), hover colors, icon hover states.  
 >
 > Functional goal: Make signup→verify→auto-login→org-setup→invite and invite→accept→auto-login→onboarding→dashboard flows correct and resilient. Standardize password policy and token flows. Replace brittle error string parsing with stable error codes. Make verification/reset/invitation/magic-link emails reliable via a queue with retries + DLQ + alerts. Add backend e2e coverage for all critical auth flows (success + failure + edge cases).  
 >
@@ -96,6 +101,8 @@ Auth is the “front door” of StreamlineOS. It must feel polished, be tenant-s
 ## 7) UI/UX standards (must be consistent)
 
 ### 7.1 Canonical reference
+UI source of truth: [PRD-ui-ux-system.md](./PRD-ui-ux-system.md).
+
 Use `/signin` and `/signup` as the canonical reference for:
 - card density and spacing,
 - hover/active/focus contrast,

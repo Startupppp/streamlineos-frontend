@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Briefcase, Users, Calendar, UserCheck, ArrowRight,
-  TrendingUp, Clock, Target, ChevronRight, Video, Phone, MapPin,
-  Sparkles, Activity, BarChart3,
+  Clock, Target, ChevronRight, Video, Phone, MapPin,
+  Activity, BarChart3,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -79,10 +79,10 @@ const NAV_LINKS: { href: string; label: string; exact?: boolean }[] = [
 
 function StatCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
-      <Skeleton className="h-3 w-24" />
-      <Skeleton className="h-9 w-16" />
-      <Skeleton className="h-3 w-28" />
+    <div className="bg-muted/40 rounded-lg p-3 text-center space-y-2">
+      <Skeleton className="h-4 w-4 rounded mx-auto" />
+      <Skeleton className="h-6 w-12 mx-auto" />
+      <Skeleton className="h-3 w-20 mx-auto" />
     </div>
   );
 }
@@ -92,36 +92,23 @@ function StatCard({
   value,
   sub,
   icon: Icon,
-  accent,
-  iconBg,
-  iconColor,
-  valueColor,
   href,
 }: {
   label: string;
   value: number | string;
   sub: string;
   icon: React.ElementType;
-  accent: string;
-  iconBg: string;
-  iconColor: string;
-  valueColor: string;
   href?: string;
 }) {
   const content = (
     <div className={cn(
-      "rounded-2xl border border-border border-l-4 bg-card p-5 transition-all duration-200 hover:shadow-md",
-      accent,
-      href && "cursor-pointer hover:-translate-y-0.5"
+      "bg-muted/40 rounded-lg p-3 text-center transition-colors duration-150",
+      href && "hover:bg-muted/60 cursor-pointer"
     )}>
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
-        <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", iconBg)}>
-          <Icon className={cn("h-4 w-4", iconColor)} />
-        </div>
-      </div>
-      <p className={cn("text-3xl font-bold tabular-nums mb-1", valueColor)}>{value}</p>
-      <p className="text-[11px] text-muted-foreground">{sub}</p>
+      <Icon className="h-4 w-4 text-muted-foreground mx-auto mb-1.5" />
+      <p className="text-2xl font-bold tabular-nums text-foreground">{value}</p>
+      <p className="text-xs font-medium text-muted-foreground mt-0.5">{label}</p>
+      <p className="text-[11px] text-muted-foreground/70 mt-0.5">{sub}</p>
     </div>
   );
 
@@ -179,7 +166,7 @@ export default function RecruitmentDashboardPage() {
         </div>
       ) : (
       <>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : (
@@ -189,10 +176,6 @@ export default function RecruitmentDashboardPage() {
               value={stats?.openJobs ?? 0}
               sub={`${stats?.totalJobs ?? 0} total jobs`}
               icon={Briefcase}
-              accent="border-l-blue-500"
-              iconBg="bg-blue-50 dark:bg-blue-950/40"
-              iconColor="text-blue-600"
-              valueColor="text-blue-700 dark:text-blue-400"
               href="/hr/recruitment/jobs"
             />
             <StatCard
@@ -200,10 +183,6 @@ export default function RecruitmentDashboardPage() {
               value={stats?.totalCandidates ?? 0}
               sub={`+${stats?.newCandidates ?? 0} this week`}
               icon={Users}
-              accent="border-l-violet-500"
-              iconBg="bg-violet-50 dark:bg-violet-950/40"
-              iconColor="text-violet-600"
-              valueColor="text-violet-700 dark:text-violet-400"
               href="/hr/recruitment/candidates"
             />
             <StatCard
@@ -211,10 +190,6 @@ export default function RecruitmentDashboardPage() {
               value={stats?.upcomingInterviews ?? 0}
               sub="scheduled"
               icon={Calendar}
-              accent="border-l-amber-500"
-              iconBg="bg-amber-50 dark:bg-amber-950/40"
-              iconColor="text-amber-600"
-              valueColor="text-amber-700 dark:text-amber-400"
               href="/hr/recruitment/interviews"
             />
             <StatCard
@@ -222,10 +197,6 @@ export default function RecruitmentDashboardPage() {
               value={stats?.hiredThisMonth ?? 0}
               sub={`${stats?.avgTimeToHireDays ?? 0}d avg to hire`}
               icon={UserCheck}
-              accent="border-l-emerald-500"
-              iconBg="bg-emerald-50 dark:bg-emerald-950/40"
-              iconColor="text-emerald-600"
-              valueColor="text-emerald-700 dark:text-emerald-400"
             />
           </>
         )}
@@ -379,40 +350,12 @@ export default function RecruitmentDashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 shadow-sm p-5">
-            <div className="flex items-center gap-3 mb-1">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0">
-                <Clock className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-emerald-700 tabular-nums">{stats?.avgTimeToHireDays ?? "—"}</p>
-                <p className="text-[11px] text-emerald-600 font-medium">avg days to hire</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 text-[11px] text-emerald-600 mt-1">
-              <TrendingUp className="h-3 w-3" />
-              <span>Pipeline efficiency metric</span>
-            </div>
+          <div className="rounded-lg border border-border bg-muted/40 p-3 text-center">
+            <Clock className="h-4 w-4 text-muted-foreground mx-auto mb-1.5" />
+            <p className="text-2xl font-bold tabular-nums text-foreground">{stats?.avgTimeToHireDays ?? "—"}</p>
+            <p className="text-xs font-medium text-muted-foreground">avg days to hire</p>
           </div>
 
-          {analytics && (
-            <div className="rounded-2xl border border-border bg-card shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-semibold text-foreground">AI Insights</h3>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center py-1.5 border-b border-border/40">
-                  <span className="text-xs text-muted-foreground">Hire rate</span>
-                  <span className="text-xs font-bold text-emerald-600">{analytics.hireRate}%</span>
-                </div>
-                <div className="flex justify-between items-center py-1.5">
-                  <span className="text-xs text-muted-foreground">Pipeline size</span>
-                  <span className="text-xs font-bold text-foreground">{analytics.totalCandidates}</span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

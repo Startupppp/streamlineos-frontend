@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { Users, Network, Building2, Search, Download } from "lucide-react";
+import { Users, Network, Building2, Search, Download, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import type { OrgChartNode } from "@/types/hr";
 import { toast } from "sonner";
 

@@ -71,6 +71,18 @@ export const ProjectListRow = React.memo(function ProjectListRow({ project }: Pr
     router.push(`/projects/${project.id}`);
   }, [router, project.id]);
 
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") handleRowClick();
+    },
+    [handleRowClick],
+  );
+
+  const handleStopPropagation = useCallback(
+    (e: React.MouseEvent) => e.stopPropagation(),
+    [],
+  );
+
   const handleEditClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setEditOpen(true);
@@ -119,11 +131,11 @@ export const ProjectListRow = React.memo(function ProjectListRow({ project }: Pr
   return (
     <>
       <div
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg border bg-card hover:shadow-sm hover:bg-muted/30 transition-all group cursor-pointer"
+        className="flex items-center gap-3 px-3 py-2 rounded-lg border bg-card hover:shadow-sm hover:bg-muted/30 transition-all group cursor-pointer"
         role="listitem"
         onClick={handleRowClick}
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "Enter") handleRowClick(); }}
+        onKeyDown={handleRowKeyDown}
         aria-label={`${project.name} — ${displayLabel}. Press Enter to open.`}
       >
         <span className="text-[11px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0 w-14 text-center">
@@ -173,12 +185,12 @@ export const ProjectListRow = React.memo(function ProjectListRow({ project }: Pr
                 size="icon"
                 className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                 aria-label="Project actions"
-                onClick={(e) => e.stopPropagation()}
+                onClick={handleStopPropagation}
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuContent align="end" className="w-44" onClick={handleStopPropagation}>
               {canUpdate && (
                 <DropdownMenuItem onClick={handleEditClick}>
                   <Pencil className="h-3.5 w-3.5 mr-2" />

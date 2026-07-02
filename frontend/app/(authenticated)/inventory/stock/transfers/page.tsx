@@ -82,6 +82,8 @@ const ALL_STATUSES: TransferStatus[] = [
   "CANCELLED",
 ];
 
+const TH = "text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2.5";
+
 function isTransferStatusOrAll(val: string): val is TransferStatus | "all" {
   return val === "all" || val in STATUS_LABELS;
 }
@@ -101,9 +103,9 @@ function TransfersTableSkeleton() {
     <div className="rounded-lg border border-border overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <TableHead key={i}>
+          <TableRow className="bg-muted/40 hover:bg-muted/40">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <TableHead key={i} className={TH}>
                 <Skeleton className="h-3 w-16" />
               </TableHead>
             ))}
@@ -111,9 +113,9 @@ function TransfersTableSkeleton() {
         </TableHeader>
         <TableBody>
           {Array.from({ length: 6 }).map((_, i) => (
-            <TableRow key={i}>
-              {Array.from({ length: 7 }).map((__, j) => (
-                <TableCell key={j}>
+            <TableRow key={i} className="border-b border-border/50">
+              {Array.from({ length: 8 }).map((__, j) => (
+                <TableCell key={j} className="px-3 py-2.5">
                   <Skeleton className="h-4 w-full" />
                 </TableCell>
               ))}
@@ -336,35 +338,24 @@ export default function TransfersPage() {
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="text-xs font-semibold">
-                      Reference
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Status
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      From
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">To</TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Lines
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Created
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Completed
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Created By
-                    </TableHead>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className={TH}>Reference</TableHead>
+                    <TableHead className={TH}>Status</TableHead>
+                    <TableHead className={TH}>From</TableHead>
+                    <TableHead className={TH}>To</TableHead>
+                    <TableHead className={cn(TH, "text-right")}>Lines</TableHead>
+                    <TableHead className={TH}>Created</TableHead>
+                    <TableHead className={TH}>Completed</TableHead>
+                    <TableHead className={TH}>Created By</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transfers.map((transfer) => (
-                    <TableRow key={transfer.id} className="text-sm">
-                      <TableCell className="py-2.5">
+                    <TableRow
+                      key={transfer.id}
+                      className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                    >
+                      <TableCell className="px-3 py-2.5">
                         <Link
                           href={`/inventory/stock/transfers/${transfer.id}`}
                           className="font-mono text-xs font-semibold text-primary hover:underline"
@@ -372,10 +363,10 @@ export default function TransfersPage() {
                           {transfer.referenceNumber}
                         </Link>
                       </TableCell>
-                      <TableCell className="py-2.5">
+                      <TableCell className="px-3 py-2.5">
                         <Badge
                           className={cn(
-                            "text-[10px] px-1.5 py-0 h-4",
+                            "text-xs px-1.5 py-0.5 rounded-md font-medium border",
                             STATUS_COLORS[transfer.status] ??
                               "bg-muted text-muted-foreground",
                           )}
@@ -383,19 +374,19 @@ export default function TransfersPage() {
                           {STATUS_LABELS[transfer.status] ?? transfer.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs text-muted-foreground">
+                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">
                         {transfer.fromLocationName ?? "—"}
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs text-muted-foreground">
+                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">
                         {transfer.toLocationName ?? "—"}
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs text-muted-foreground tabular-nums">
+                      <TableCell className="px-3 py-2.5 text-right text-xs font-medium tabular-nums">
                         {transfer.lineCount}
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                         {format(new Date(transfer.createdAt), "dd MMM yyyy")}
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                         {transfer.completedAt
                           ? format(
                               new Date(transfer.completedAt),
@@ -403,7 +394,7 @@ export default function TransfersPage() {
                             )
                           : "—"}
                       </TableCell>
-                      <TableCell className="py-2.5 text-xs text-muted-foreground">
+                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">
                         {transfer.createdByName ?? "—"}
                       </TableCell>
                     </TableRow>

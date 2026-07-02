@@ -90,11 +90,13 @@ const ALL_TXN_TYPES: TransactionType[] = [
   "GRN",
 ];
 
+const TH = "text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2.5";
+
 function TxnTypeBadge({ type }: { type: TransactionType }) {
   return (
     <Badge
       className={cn(
-        "text-[10px] px-1.5 py-0 h-4 whitespace-nowrap",
+        "text-xs px-1.5 py-0.5 rounded-md font-medium border whitespace-nowrap",
         TXN_TYPE_COLORS[type] ?? "bg-muted text-muted-foreground",
       )}
     >
@@ -108,9 +110,9 @@ function MovementsTableSkeleton() {
     <div className="rounded-lg border border-border overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50">
+          <TableRow className="bg-muted/40 hover:bg-muted/40">
             {Array.from({ length: 8 }).map((_, i) => (
-              <TableHead key={i}>
+              <TableHead key={i} className={TH}>
                 <Skeleton className="h-3 w-16" />
               </TableHead>
             ))}
@@ -118,9 +120,9 @@ function MovementsTableSkeleton() {
         </TableHeader>
         <TableBody>
           {Array.from({ length: 10 }).map((_, i) => (
-            <TableRow key={i}>
+            <TableRow key={i} className="border-b border-border/50">
               {Array.from({ length: 8 }).map((__, j) => (
-                <TableCell key={j}>
+                <TableCell key={j} className="px-3 py-2.5">
                   <Skeleton className="h-4 w-full" />
                 </TableCell>
               ))}
@@ -248,31 +250,15 @@ export default function MovementsPage() {
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="text-xs font-semibold">
-                      Date
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Product
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Type
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-right">
-                      Qty Change
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-right">
-                      Before
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-right">
-                      After
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Reference
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      User
-                    </TableHead>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className={TH}>Date</TableHead>
+                    <TableHead className={TH}>Product</TableHead>
+                    <TableHead className={TH}>Type</TableHead>
+                    <TableHead className={cn(TH, "text-right")}>Qty Change</TableHead>
+                    <TableHead className={cn(TH, "text-right")}>Before</TableHead>
+                    <TableHead className={cn(TH, "text-right")}>After</TableHead>
+                    <TableHead className={TH}>Reference</TableHead>
+                    <TableHead className={TH}>User</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -282,15 +268,18 @@ export default function MovementsPage() {
                       .filter(Boolean)
                       .join(" #");
                     return (
-                      <TableRow key={txn.id} className="text-sm">
-                        <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                      <TableRow
+                        key={txn.id}
+                        className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                      >
+                        <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                           {format(
                             new Date(txn.createdAt),
                             "dd MMM yyyy, HH:mm",
                           )}
                         </TableCell>
-                        <TableCell className="py-2.5">
-                          <div className="font-medium text-foreground truncate max-w-[180px]">
+                        <TableCell className="px-3 py-2.5">
+                          <div className="font-medium text-sm text-foreground truncate max-w-[180px]">
                             {txn.productVariant?.product?.name ??
                               txn.productVariant?.name ??
                               "—"}
@@ -299,28 +288,28 @@ export default function MovementsPage() {
                             {txn.productVariant?.sku ?? "—"}
                           </div>
                         </TableCell>
-                        <TableCell className="py-2.5">
+                        <TableCell className="px-3 py-2.5">
                           <TxnTypeBadge type={txn.transactionType} />
                         </TableCell>
                         <TableCell
                           className={cn(
-                            "py-2.5 text-right tabular-nums font-semibold",
+                            "px-3 py-2.5 text-right tabular-nums font-semibold text-sm",
                             isPositive ? "text-emerald-600" : "text-red-600",
                           )}
                         >
                           {isPositive ? "+" : ""}
                           {txn.quantityChange.toLocaleString()}
                         </TableCell>
-                        <TableCell className="py-2.5 text-right tabular-nums text-muted-foreground">
+                        <TableCell className="px-3 py-2.5 text-right tabular-nums text-sm text-muted-foreground">
                           {Number(txn.quantityBefore).toLocaleString()}
                         </TableCell>
-                        <TableCell className="py-2.5 text-right tabular-nums">
+                        <TableCell className="px-3 py-2.5 text-right tabular-nums text-sm font-medium">
                           {Number(txn.quantityAfter).toLocaleString()}
                         </TableCell>
-                        <TableCell className="py-2.5 text-xs text-muted-foreground font-mono">
+                        <TableCell className="px-3 py-2.5 text-xs text-muted-foreground font-mono">
                           {ref || "—"}
                         </TableCell>
-                        <TableCell className="py-2.5 text-xs text-muted-foreground">
+                        <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">
                           {txn.creator?.name ?? "—"}
                         </TableCell>
                       </TableRow>

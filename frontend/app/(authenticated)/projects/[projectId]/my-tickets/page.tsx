@@ -48,24 +48,24 @@ const TicketRow = memo(function TicketRow({
 
   return (
     <TableRow
-      className="cursor-pointer hover:bg-muted/50"
+      className="cursor-pointer hover:bg-muted/50 h-10 border-b border-border/50"
       onClick={handleClick}
     >
-      <TableCell className="font-mono text-xs text-muted-foreground">
+      <TableCell className="px-3 py-1.5 font-mono text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <TicketTypeIcon type={ticket.type} />#{ticket.ticketNumber}
         </span>
       </TableCell>
-      <TableCell className="max-w-md">
+      <TableCell className="px-3 py-1.5 max-w-md">
         <span className="text-sm font-medium line-clamp-1">{ticket.title}</span>
       </TableCell>
-      <TableCell>
+      <TableCell className="px-3 py-1.5">
         <StatusBadge status={ticket.status} />
       </TableCell>
-      <TableCell>
+      <TableCell className="px-3 py-1.5 hidden sm:table-cell">
         <PriorityBadge priority={ticket.priority} showLabel />
       </TableCell>
-      <TableCell>
+      <TableCell className="px-3 py-1.5 hidden md:table-cell">
         {ticket.points != null && ticket.points > 0 ? (
           <Badge variant="secondary" className="text-xs">
             {ticket.points}
@@ -74,7 +74,7 @@ const TicketRow = memo(function TicketRow({
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground">
+      <TableCell className="px-3 py-1.5 text-xs text-muted-foreground hidden md:table-cell">
         {ticket.dueDate ? format(new Date(ticket.dueDate), "MMM d") : "—"}
       </TableCell>
     </TableRow>
@@ -198,7 +198,7 @@ export default function MyTicketsPage({ params }: PageProps) {
       }
     >
       {myTickets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center py-16 text-center min-h-[400px]">
           <EmptyTasksIllustration className="mb-4 h-40 w-40 opacity-95" />
           <p className="font-medium text-foreground mb-1">
             No tickets assigned to you
@@ -208,25 +208,26 @@ export default function MyTicketsPage({ params }: PageProps) {
           </p>
         </div>
       ) : (
-        <div className="border rounded-lg">
+        <div className="rounded-lg border border-border overflow-hidden mx-4 mb-4">
+          <div className="overflow-x-auto">
           <Table>
             <caption className="sr-only">My tickets</caption>
             <TableHeader>
-              <TableRow className="text-xs">
-                <TableHead className="w-[80px]" scope="col">
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="w-[80px] px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">
                   ID
                 </TableHead>
-                <TableHead scope="col">Title</TableHead>
-                <TableHead className="w-[120px]" scope="col">
+                <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Title</TableHead>
+                <TableHead className="w-[120px] px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">
                   Status
                 </TableHead>
-                <TableHead className="w-[100px]" scope="col">
+                <TableHead className="w-[100px] hidden sm:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">
                   Priority
                 </TableHead>
-                <TableHead className="w-[80px]" scope="col">
+                <TableHead className="w-[80px] hidden md:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">
                   Points
                 </TableHead>
-                <TableHead className="w-[100px]" scope="col">
+                <TableHead className="w-[100px] hidden md:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">
                   Due Date
                 </TableHead>
               </TableRow>

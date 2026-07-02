@@ -4,16 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface WhiteboardElement {
-  id: string;
-  type: "note" | "rect" | "ellipse" | "text";
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  text: string;
-  color: string;
-}
+export type ExcalidrawScene = Record<string, unknown>;
 
 export interface WhiteboardSummary {
   id: number;
@@ -27,7 +18,7 @@ interface Whiteboard {
   projectId: number;
   orgId: string;
   name: string;
-  data: WhiteboardElement[];
+  data: ExcalidrawScene;
   createdBy: string | null;
   createdAt: string | null;
   updatedAt: string | null;
@@ -36,7 +27,7 @@ interface Whiteboard {
 interface UpdateWhiteboardInput {
   id: number;
   name?: string;
-  data?: WhiteboardElement[];
+  data?: ExcalidrawScene;
 }
 
 export function useWhiteboards(projectId: number) {
@@ -53,7 +44,7 @@ export function useWhiteboard(projectId: number, whiteboardId: number | null) {
     queryKey: queryKeys.whiteboards.detail(whiteboardId ?? 0),
     queryFn: () => apiClient.get<Whiteboard>(`/projects/${projectId}/whiteboards/${whiteboardId}`),
     enabled: !!projectId && !!whiteboardId,
-    staleTime: 30_000,
+    staleTime: 60_000,
   });
 }
 

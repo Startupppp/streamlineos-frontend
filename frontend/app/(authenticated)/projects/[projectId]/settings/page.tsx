@@ -14,7 +14,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ProjectInfoSection } from "@/features/projects/settings/project-info-section";
@@ -34,10 +34,42 @@ interface PageProps {
 const formSchema = updateProjectSettingsInputSchema.omit({ projectId: true });
 type FormValues = z.infer<typeof formSchema>;
 
+type SectionId =
+  | "general"
+  | "labels"
+  | "statuses"
+  | "custom-fields"
+  | "danger";
+
+interface NavSection {
+  id: SectionId;
+  label: string;
+}
+
+const BASE_NAV: NavSection[] = [
+  { id: "general", label: "General" },
+  { id: "labels", label: "Labels" },
+  { id: "statuses", label: "Statuses" },
+  { id: "custom-fields", label: "Custom Fields" },
+];
+
+const DANGER_SECTION: NavSection = { id: "danger", label: "Danger Zone" };
+
+function isSectionId(value: string): value is SectionId {
+  return (
+    value === "general" ||
+    value === "labels" ||
+    value === "statuses" ||
+    value === "custom-fields" ||
+    value === "danger"
+  );
+}
+
 export default function ProjectSettingsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const router = useRouter();
+  const [activeSection, setActiveSection] = useState<SectionId>("general");
 
   const { data: project, isLoading } = useProject(projectId);
   const deleteMutation = useDeleteProject();
@@ -63,7 +95,6 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   });
 
   const isOwner = useCan("projects:delete");
-
   const updateMutation = useUpdateProject();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -74,6 +105,20 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   const [reassignTo, setReassignTo] = useState<string>("__unassign__");
   const reassignmentsRef = useRef<Record<string, string>>({});
   const pendingFieldChangeRef = useRef<(() => void) | null>(null);
+
+  const navSections: NavSection[] = isOwner
+    ? [...BASE_NAV, DANGER_SECTION]
+    : BASE_NAV;
+
+  const handleSectionClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const rawId = e.currentTarget.dataset.section;
+      if (rawId && isSectionId(rawId)) {
+        setActiveSection(rawId);
+      }
+    },
+    []
+  );
 
   const handleMemberRemoved = useCallback(
     (memberId: string, memberName: string, applyChange: () => void) => {
@@ -144,12 +189,17 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Settings">
-        <div className="max-w-xl mx-auto space-y-4 pb-8">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
+        <div className="flex flex-col md:flex-row gap-6 pb-8">
+          <div className="flex md:flex-col gap-1 md:w-44 shrink-0">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-24 md:w-full" />
+            ))}
+          </div>
+          <div className="flex-1 space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
         </div>
       </PageWrapper>
     );
@@ -174,59 +224,104 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   return (
     <PageWrapper title="Settings" subtitle={project.name}>
-      <div className="max-w-xl mx-auto space-y-6 pb-8">
-        <ProjectInfoSection
-          form={form}
-          isPending={updateMutation.isPending}
-          originalMemberIds={
-            project.members?.map((m: { userId: string }) => m.userId) ?? []
-          }
-          onMemberRemoved={handleMemberRemoved}
-          onSubmit={handleSubmit}
-          MembersSelector={MembersSelector}
-        />
+      <div className="flex flex-col md:flex-row gap-6 pb-8">
+        <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible md:w-44 shrink-0 pb-1 md:pb-0">
+          {navSections.map((section) => (
+            <button
+              key={section.id}
+              type="button"
+              data-section={section.id}
+              onClick={handleSectionClick}
+              className={cn(
+                "whitespace-nowrap rounded-md px-3 py-2 text-sm text-left transition-colors",
+                activeSection === section.id
+                  ? section.id === "danger"
+                    ? "bg-destructive/5 text-destructive font-medium"
+                    : "bg-violet-50 text-violet-700 font-medium dark:bg-violet-950/40 dark:text-violet-300"
+                  : section.id === "danger"
+                    ? "text-destructive/70 hover:bg-destructive/5 hover:text-destructive"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              {section.label}
+            </button>
+          ))}
+        </nav>
 
-        <Separator />
+        <div className="flex-1 min-w-0">
+          {activeSection === "general" && (
+            <div className="bg-card border border-border rounded-lg p-4">
+              <div className="pb-3 mb-3 border-b border-border">
+                <h3 className="text-sm font-semibold">General</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Project name, description, status, and members.
+                </p>
+              </div>
+              <ProjectInfoSection
+                form={form}
+                isPending={updateMutation.isPending}
+                originalMemberIds={
+                  project.members?.map((m: { userId: string }) => m.userId) ??
+                  []
+                }
+                onMemberRemoved={handleMemberRemoved}
+                onSubmit={handleSubmit}
+                MembersSelector={MembersSelector}
+              />
+            </div>
+          )}
 
-        <section className="space-y-4">
-          <div>
-            <h3 className="text-base font-semibold">Labels</h3>
-            <p className="text-sm text-muted-foreground">
-              Manage labels for organizing tickets across this organization.
-            </p>
-          </div>
-          <LabelsSettings />
-        </section>
+          {activeSection === "labels" && (
+            <div className="bg-card border border-border rounded-lg p-4">
+              <div className="pb-3 mb-3 border-b border-border">
+                <h3 className="text-sm font-semibold">Labels</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Manage labels for organizing tickets across this organization.
+                </p>
+              </div>
+              <LabelsSettings />
+            </div>
+          )}
 
-        <Separator />
+          {activeSection === "statuses" && (
+            <div className="bg-card border border-border rounded-lg p-4">
+              <div className="pb-3 mb-3 border-b border-border">
+                <h3 className="text-sm font-semibold">Workflow Statuses</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Define custom workflow statuses for this project.
+                </p>
+              </div>
+              <StatusesSettings projectId={projectId} />
+            </div>
+          )}
 
-        <section className="space-y-4">
-          <div>
-            <h3 className="text-base font-semibold">Workflow Statuses</h3>
-            <p className="text-sm text-muted-foreground">
-              Define custom workflow statuses for this project.
-            </p>
-          </div>
-          <StatusesSettings projectId={projectId} />
-        </section>
+          {activeSection === "custom-fields" && (
+            <div className="bg-card border border-border rounded-lg p-4">
+              <CustomFieldsSettings projectId={projectId} />
+            </div>
+          )}
 
-        <Separator />
-
-        <CustomFieldsSettings projectId={projectId} />
-
-        {isOwner && (
-          <>
-            <Separator />
-            <DangerZoneSection
-              projectName={project.name}
-              isPending={deleteMutation.isPending}
-              deleteDialogOpen={deleteDialogOpen}
-              onDeleteClick={handleDeleteClick}
-              onDeleteDialogChange={setDeleteDialogOpen}
-              onDeleteConfirm={handleDeleteConfirm}
-            />
-          </>
-        )}
+          {activeSection === "danger" && isOwner && (
+            <div className="bg-destructive/5 border border-destructive/30 rounded-lg p-4">
+              <div className="pb-3 mb-3 border-b border-destructive/20">
+                <h3 className="text-sm font-semibold text-destructive">
+                  Danger Zone
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Irreversible actions for this project.
+                </p>
+              </div>
+              <DangerZoneSection
+                projectName={project.name}
+                isPending={deleteMutation.isPending}
+                deleteDialogOpen={deleteDialogOpen}
+                onDeleteClick={handleDeleteClick}
+                onDeleteDialogChange={setDeleteDialogOpen}
+                onDeleteConfirm={handleDeleteConfirm}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <ReassignDialog

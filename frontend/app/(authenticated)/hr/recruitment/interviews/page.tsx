@@ -55,6 +55,13 @@ export default function InterviewsPage() {
   const [calView, setCalView] = useState<View>("month");
   const [calDate, setCalDate] = useState(new Date());
 
+  const interviewStats = useMemo(() => ({
+    total: interviews?.length ?? 0,
+    pending: interviews?.filter((i) => i.result === "PENDING").length ?? 0,
+    passed: interviews?.filter((i) => i.result === "PASSED").length ?? 0,
+    failed: interviews?.filter((i) => i.result === "FAILED").length ?? 0,
+  }), [interviews]);
+
   const calEvents = useMemo(
     () =>
       (interviews ?? []).map(
@@ -161,6 +168,25 @@ export default function InterviewsPage() {
         </div>
       }
     >
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="bg-muted/40 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold tabular-nums text-foreground">{interviewStats.total}</p>
+          <p className="text-xs font-medium text-muted-foreground mt-0.5">Total</p>
+        </div>
+        <div className="bg-muted/40 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold tabular-nums text-amber-600">{interviewStats.pending}</p>
+          <p className="text-xs font-medium text-muted-foreground mt-0.5">Scheduled</p>
+        </div>
+        <div className="bg-muted/40 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold tabular-nums text-emerald-600">{interviewStats.passed}</p>
+          <p className="text-xs font-medium text-muted-foreground mt-0.5">Passed</p>
+        </div>
+        <div className="bg-muted/40 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold tabular-nums text-rose-600">{interviewStats.failed}</p>
+          <p className="text-xs font-medium text-muted-foreground mt-0.5">Failed</p>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-1 rounded-lg border p-1">
           <button

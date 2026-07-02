@@ -20,6 +20,8 @@ import {
   CheckSquare,
   CheckCircle2,
   Clock,
+  UserCheck,
+  FileText,
 } from "lucide-react";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
@@ -61,12 +63,28 @@ const NAV_CARDS = [
     bg: "bg-amber-500/10",
   },
   {
+    title: "Clients",
+    description: "Account management",
+    href: "/crm/clients",
+    icon: UserCheck,
+    color: "text-teal-400",
+    bg: "bg-teal-500/10",
+  },
+  {
     title: "Deals",
     description: "Pipeline to close",
     href: "/crm/deals",
     icon: Briefcase,
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
+  },
+  {
+    title: "Quotes",
+    description: "Proposals & pricing",
+    href: "/crm/quotes",
+    icon: FileText,
+    color: "text-violet-400",
+    bg: "bg-violet-500/10",
   },
   {
     title: "Activities",

@@ -79,7 +79,7 @@ function DuplicateGroupCard({
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm font-medium text-muted-foreground">Group #{index + 1}</span>
 
-          <Badge variant="outline" className={cn("font-semibold text-xs", scoreColor(group.score))}>
+          <Badge variant="outline" className={cn("font-medium text-xs", scoreColor(group.score))}>
             Score: {group.score}
           </Badge>
 
@@ -105,51 +105,50 @@ function DuplicateGroupCard({
             <div className="min-w-[640px]">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</TableHead>
+                    <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email</TableHead>
+                    <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Phone</TableHead>
+                    <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Company</TableHead>
+                    <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                    <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Created</TableHead>
+                    <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">{leadA.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{leadA.email ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{leadA.phone ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{leadA.company ?? "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("text-xs", statusBadgeClass(leadA.status))}>
+                  <TableRow className="border-b border-border/50 hover:bg-muted/30">
+                    <TableCell className="px-3 py-2 text-sm font-medium">{leadA.name}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-muted-foreground">{leadA.email ?? "—"}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">{leadA.phone ?? "—"}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">{leadA.company ?? "—"}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm">
+                      <Badge variant="outline" className={cn("text-xs font-medium", statusBadgeClass(leadA.status))}>
                         {leadA.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(leadA.createdAt)}</TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">
+                    <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">{formatDate(leadA.createdAt)}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-right">
+                      <Badge variant="outline" className="text-xs font-medium bg-green-500/10 text-green-600 border-green-500/20">
                         Keep
                       </Badge>
                     </TableCell>
                   </TableRow>
 
-                  <TableRow>
-                    <TableCell className="font-medium">{leadB.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{leadB.email ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{leadB.phone ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{leadB.company ?? "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("text-xs", statusBadgeClass(leadB.status))}>
+                  <TableRow className="border-b border-border/50 hover:bg-muted/30">
+                    <TableCell className="px-3 py-2 text-sm font-medium">{leadB.name}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-muted-foreground">{leadB.email ?? "—"}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">{leadB.phone ?? "—"}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">{leadB.company ?? "—"}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm">
+                      <Badge variant="outline" className={cn("text-xs font-medium", statusBadgeClass(leadB.status))}>
                         {leadB.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(leadB.createdAt)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">{formatDate(leadB.createdAt)}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-right">
                       <Button
                         size="sm"
                         variant="destructive"
-                        className="h-7 text-xs"
                         onClick={handleMergeClick}
                       >
                         Remove Duplicate

@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,8 +37,8 @@ const STATUS_VARIANT: Record<PurchaseOrderStatus, "default" | "secondary" | "des
 
 const STATUS_CLASS: Partial<Record<PurchaseOrderStatus, string>> = {
   SENT: "bg-blue-50 text-blue-700 border-blue-200",
-  PARTIAL: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  RECEIVED: "bg-green-50 text-green-700 border-green-200",
+  PARTIAL: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950",
+  RECEIVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
 function isStatusFilter(value: string): value is StatusFilter {
@@ -55,7 +54,10 @@ function formatDate(value: string | null): string {
 function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
   const extraClass = STATUS_CLASS[status];
   return (
-    <Badge variant={STATUS_VARIANT[status]} className={extraClass}>
+    <Badge
+      variant={STATUS_VARIANT[status]}
+      className={`text-xs px-1.5 py-0.5 rounded-md${extraClass ? ` ${extraClass}` : ""}`}
+    >
       {status}
     </Badge>
   );
@@ -102,9 +104,9 @@ export default function PurchaseOrdersListPage() {
         </Button>
       }
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end mb-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center bg-muted/40 rounded-lg p-3 mb-4">
         <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-full sm:w-48">
+          <SelectTrigger className="h-8 text-sm w-full sm:w-48">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -117,7 +119,7 @@ export default function PurchaseOrdersListPage() {
         </Select>
 
         <Select value={vendorId} onValueChange={handleVendorChange}>
-          <SelectTrigger className="w-full sm:w-52">
+          <SelectTrigger className="h-8 text-sm w-full sm:w-52">
             <SelectValue placeholder="All vendors" />
           </SelectTrigger>
           <SelectContent className="max-h-72">
@@ -145,40 +147,59 @@ export default function PurchaseOrdersListPage() {
       )}
 
       {items.length > 0 && (
-        <Card className="overflow-x-auto">
-          <Table className="min-w-[760px]">
+        <div className="rounded-lg border border-border overflow-hidden">
+          <Table className="min-w-[640px]">
             <TableHeader>
-              <TableRow>
-                <TableHead>PO #</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Order date</TableHead>
-                <TableHead>Expected delivery</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[80px]"></TableHead>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  PO #
+                </TableHead>
+                <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Vendor
+                </TableHead>
+                <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
+                  Order Date
+                </TableHead>
+                <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
+                  Expected Delivery
+                </TableHead>
+                <TableHead className="px-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Total
+                </TableHead>
+                <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Status
+                </TableHead>
+                <TableHead className="w-[80px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {items.map((po) => (
-                <TableRow key={po.id}>
-                  <TableCell className="font-mono text-xs">
+                <TableRow
+                  key={po.id}
+                  className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                >
+                  <TableCell className="px-3 py-2 font-mono text-xs">
                     <Link
                       href={`/inventory/purchase-orders/${po.id}`}
-                      className="text-foreground hover:text-blue-600 hover:underline"
+                      className="text-foreground hover:text-violet-600 hover:underline"
                     >
                       {po.poNumber}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-sm">{po.vendor?.name ?? "—"}</TableCell>
-                  <TableCell className="text-sm">{formatDate(po.orderDate)}</TableCell>
-                  <TableCell className="text-sm">{formatDate(po.expectedDeliveryDate)}</TableCell>
-                  <TableCell className="text-right tabular-nums text-sm">
+                  <TableCell className="px-3 py-2 text-sm">{po.vendor?.name ?? "—"}</TableCell>
+                  <TableCell className="px-3 py-2 text-sm hidden md:table-cell">
+                    {formatDate(po.orderDate)}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-sm hidden md:table-cell">
+                    {formatDate(po.expectedDeliveryDate)}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-right tabular-nums text-sm">
                     {Number(po.total).toFixed(2)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-3 py-2">
                     <StatusBadge status={po.status} />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-3 py-2">
                     <Button variant="ghost" size="sm" asChild>
                       <Link href={`/inventory/purchase-orders/${po.id}`}>View</Link>
                     </Button>
@@ -187,7 +208,7 @@ export default function PurchaseOrdersListPage() {
               ))}
             </TableBody>
           </Table>
-        </Card>
+        </div>
       )}
     </PageWrapper>
   );

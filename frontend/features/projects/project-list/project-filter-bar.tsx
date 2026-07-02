@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, type ChangeEvent } from "react";
 import { Search, X, LayoutGrid, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,21 +32,54 @@ export function ProjectFilterBar({
   viewMode,
   onViewModeChange,
 }: ProjectFilterBarProps) {
-  return (
-    <div className="flex items-center gap-2 w-full flex-wrap">
+  const handleSearchInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value),
+    [onSearchChange],
+  );
 
-      <div className="relative w-full sm:w-48">
+  const handleClearSearch = useCallback(
+    () => onSearchChange(""),
+    [onSearchChange],
+  );
+
+  const handleStatusValueChange = useCallback(
+    (value: string) => {
+      if (
+        value === "ALL" ||
+        value === "ACTIVE" ||
+        value === "COMPLETED" ||
+        value === "ARCHIVED"
+      ) {
+        onStatusChange(value);
+      }
+    },
+    [onStatusChange],
+  );
+
+  const handleGridViewClick = useCallback(
+    () => onViewModeChange("grid"),
+    [onViewModeChange],
+  );
+
+  const handleListViewClick = useCallback(
+    () => onViewModeChange("list"),
+    [onViewModeChange],
+  );
+
+  return (
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+      <div className="relative w-full sm:w-64">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
-          placeholder="Search..."
+          placeholder="Search projects..."
           value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="h-8 pl-8 pr-7 text-sm"
+          onChange={handleSearchInputChange}
+          className="h-8 pl-8 pr-7 text-sm bg-muted/40 border-border"
           aria-label="Search projects"
         />
         {search && (
           <button
-            onClick={() => onSearchChange("")}
+            onClick={handleClearSearch}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             aria-label="Clear search"
           >
@@ -54,41 +88,38 @@ export function ProjectFilterBar({
         )}
       </div>
 
-      <Select
-        value={status}
-        onValueChange={(v) => onStatusChange(v as StatusFilter)}
-      >
-        <SelectTrigger className="h-8 w-[120px] text-xs">
+      <Select value={status} onValueChange={handleStatusValueChange}>
+        <SelectTrigger className="h-8 w-full sm:w-[130px] text-xs bg-muted/40 border-border">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All</SelectItem>
+          <SelectItem value="ALL">All statuses</SelectItem>
           <SelectItem value="ACTIVE">Active</SelectItem>
           <SelectItem value="COMPLETED">Completed</SelectItem>
           <SelectItem value="ARCHIVED">Archived</SelectItem>
         </SelectContent>
       </Select>
 
-      <div className="flex items-center rounded-md border bg-muted/50 p-0.5 ml-auto shrink-0">
+      <div className="flex items-center rounded-md border bg-muted/50 p-0.5 sm:ml-auto shrink-0">
         <button
-          onClick={() => onViewModeChange("grid")}
+          onClick={handleGridViewClick}
           className={cn(
             "inline-flex items-center justify-center rounded px-2 py-1 transition-all",
             viewMode === "grid"
               ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
           aria-label="Grid view"
         >
           <LayoutGrid className="h-3.5 w-3.5" />
         </button>
         <button
-          onClick={() => onViewModeChange("list")}
+          onClick={handleListViewClick}
           className={cn(
             "inline-flex items-center justify-center rounded px-2 py-1 transition-all",
             viewMode === "list"
               ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
           aria-label="List view"
         >

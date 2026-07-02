@@ -16,7 +16,7 @@ export default function CustomFieldsPage() {
       subtitle="Define custom data fields for leads, deals, and contacts"
     >
       <Tabs defaultValue="lead">
-        <TabsList className="mb-6">
+        <TabsList className="mb-4">
           <TabsTrigger value="lead">Leads</TabsTrigger>
           <TabsTrigger value="deal">Deals</TabsTrigger>
           <TabsTrigger value="contact">Contacts</TabsTrigger>

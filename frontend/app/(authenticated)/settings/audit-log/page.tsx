@@ -401,16 +401,16 @@ export default function AuditLogPage() {
               </div>
             ) : (
               <div className="flex flex-col flex-1 min-h-0">
-                <div className="min-w-[700px] border-b border-border/60 bg-card">
+                <div className="min-w-[700px] border-b border-border/60 bg-muted/40">
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[170px] bg-card">Timestamp</TableHead>
-                        <TableHead className="w-[190px] bg-card">User</TableHead>
-                        <TableHead className="bg-card">Action</TableHead>
-                        <TableHead className="w-[110px] bg-card">Entity</TableHead>
-                        <TableHead className="w-[110px] bg-card">IP Address</TableHead>
-                        <TableHead className="w-[50px] bg-card" />
+                        <TableHead className="w-[170px] bg-muted/40 text-xs uppercase tracking-wide">Timestamp</TableHead>
+                        <TableHead className="w-[190px] bg-muted/40 text-xs uppercase tracking-wide">User</TableHead>
+                        <TableHead className="bg-muted/40 text-xs uppercase tracking-wide">Action</TableHead>
+                        <TableHead className="w-[110px] bg-muted/40 text-xs uppercase tracking-wide">Entity</TableHead>
+                        <TableHead className="w-[110px] bg-muted/40 text-xs uppercase tracking-wide">IP Address</TableHead>
+                        <TableHead className="w-[50px] bg-muted/40" />
                       </TableRow>
                     </TableHeader>
                   </Table>

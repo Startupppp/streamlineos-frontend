@@ -7,6 +7,11 @@
 **Last updated**: 2026-07-01  
 **Scope**: Frontend `frontend/` + Backend `streamlineos-api` (NestJS; separate repo)
 
+## UI/UX source of truth
+
+- **Source of truth**: `PRD-ui-ux-system.md`
+- **Canonical UI references**: `/signin` and `/signup`
+
 ---
 
 ## 0) Canonical implementation prompt (paste into Claude Code)

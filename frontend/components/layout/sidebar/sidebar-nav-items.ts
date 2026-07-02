@@ -613,6 +613,18 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "crm:leads:view",
       },
       {
+        label: "Clients",
+        icon: UserCheck,
+        href: "/crm/clients",
+        requiredPermission: "crm:clients:read",
+      },
+      {
+        label: "Quotes",
+        icon: FileText,
+        href: "/crm/quotes",
+        requiredPermission: "crm:leads:view",
+      },
+      {
         label: "Deals",
         icon: Handshake,
         href: "/crm/deals",

@@ -497,14 +497,14 @@ export default function CandidatesPage() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 bg-muted/40 rounded-lg p-2">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Search candidates…"
             value={searchQuery}
             onChange={handleSearchChange}
-            className="pl-9 h-9"
+            className="pl-9 h-8 text-sm"
           />
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">

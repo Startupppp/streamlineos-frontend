@@ -7,10 +7,9 @@ import {
   useUpdateView,
   useDeleteView,
 } from "@/hooks/api/projects";
-
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import {
   Sheet,
@@ -23,17 +22,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Plus,
   LayoutGrid,
   List,
   Kanban,
+  Calendar,
+  GitBranch,
   Pin,
   PinOff,
   ArrowRight,
@@ -45,6 +39,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const LAYOUT_TYPES = ["board", "list", "table", "calendar", "gantt"] as const;
 
@@ -54,12 +49,12 @@ const createViewSchema = z.object({
 });
 type CreateViewForm = z.infer<typeof createViewSchema>;
 
-const layoutIcons: Record<string, React.ReactNode> = {
-  board: <Kanban className="h-4 w-4" />,
-  list: <List className="h-4 w-4" />,
-  table: <LayoutGrid className="h-4 w-4" />,
-  calendar: <LayoutGrid className="h-4 w-4" />,
-  gantt: <LayoutGrid className="h-4 w-4" />,
+const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
+  board: { icon: <Kanban className="h-4 w-4" />, label: "Board", color: "text-violet-600 bg-violet-50" },
+  list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-blue-600 bg-blue-50" },
+  table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-emerald-600 bg-emerald-50" },
+  calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-amber-600 bg-amber-50" },
+  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Gantt", color: "text-rose-600 bg-rose-50" },
 };
 
 interface ViewItem {
@@ -94,53 +89,55 @@ const ViewCard = memo(function ViewCard({
   const handleDelete = useCallback(() => onDelete(view.id), [onDelete, view.id]);
 
   const filterCount = view.filters ? Object.keys(view.filters).length : 0;
+  const meta = LAYOUT_META[view.layoutType] ?? LAYOUT_META["board"];
 
   return (
-    <Card
-      className="hover:border-primary/50 transition-colors cursor-pointer"
+    <div
+      className="bg-card border border-border rounded-lg p-2.5 shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer mb-1.5 flex items-center justify-between gap-3"
       onClick={handleNavigate}
     >
-      <CardContent className="py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="shrink-0 text-muted-foreground">
-            {layoutIcons[view.layoutType] ?? layoutIcons.board}
-          </div>
-          <div className="min-w-0">
-            <p className="font-medium truncate">{view.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {view.layoutType.charAt(0).toUpperCase() +
-                view.layoutType.slice(1)}{" "}
-              {filterCount > 0 &&
-                `with ${filterCount} filter${filterCount > 1 ? "s" : ""}`}
-            </p>
-          </div>
+      <div className="flex items-center gap-3 min-w-0">
+        <div className={cn("shrink-0 h-8 w-8 rounded-md flex items-center justify-center", meta?.color ?? "text-violet-600 bg-violet-50")}>
+          {meta?.icon}
         </div>
-        <div
-          className="flex items-center gap-1 shrink-0"
-          onClick={handleStopPropagation}
+        <div className="min-w-0">
+          <p className="font-medium text-sm truncate">{view.name}</p>
+          <p className="text-xs text-muted-foreground">
+            {meta?.label ?? view.layoutType}
+            {filterCount > 0 && ` · ${filterCount} filter${filterCount > 1 ? "s" : ""}`}
+          </p>
+        </div>
+        {isPinned && (
+          <Badge variant="secondary" className="text-[10px] shrink-0">Pinned</Badge>
+        )}
+      </div>
+      <div
+        className="flex items-center gap-1 shrink-0"
+        onClick={handleStopPropagation}
+      >
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={handleTogglePin}
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleTogglePin}
-          >
-            {isPinned ? (
-              <PinOff className="h-3.5 w-3.5" />
-            ) : (
-              <Pin className="h-3.5 w-3.5" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDelete}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-          <ArrowRight className="h-4 w-4 text-muted-foreground" />
-        </div>
-      </CardContent>
-    </Card>
+          {isPinned ? (
+            <PinOff className="h-3.5 w-3.5" />
+          ) : (
+            <Pin className="h-3.5 w-3.5" />
+          )}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+          onClick={handleDelete}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+        <ArrowRight className="h-4 w-4 text-muted-foreground ml-1" />
+      </div>
+    </div>
   );
 });
 
@@ -224,9 +221,9 @@ export default function ViewsPage({
   if (isLoading) {
     return (
       <PageWrapper title="Views">
-        <div className="space-y-3">
+        <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
+            <Skeleton key={i} className="h-14 w-full rounded-lg" />
           ))}
         </div>
       </PageWrapper>
@@ -236,25 +233,22 @@ export default function ViewsPage({
   return (
     <PageWrapper
       title="Views"
-           actions={
+      actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>
             <Button size="sm">
               <Plus className="h-4 w-4 mr-1" /> New View
             </Button>
           </SheetTrigger>
-            <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
-              <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-                <SheetTitle>Create View</SheetTitle>
-              </SheetHeader>
-              <div className="flex-1 overflow-y-auto px-6 py-5">
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+          <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>Create View</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 <div>
                   <Label htmlFor="view-name">Name</Label>
-                  <Input id="view-name" {...form.register("name")} />
+                  <Input id="view-name" className="mt-1.5" {...form.register("name")} />
                   {form.formState.errors.name && (
                     <p className="text-xs text-destructive mt-1">
                       {form.formState.errors.name.message}
@@ -267,24 +261,28 @@ export default function ViewsPage({
                     control={form.control}
                     name="layoutType"
                     render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LAYOUT_TYPES.map((l) => (
-                            <SelectItem key={l} value={l}>
-                              <span className="flex items-center gap-2">
-                                {layoutIcons[l]}
-                                {l.charAt(0).toUpperCase() + l.slice(1)}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="grid grid-cols-3 gap-2 mt-1.5">
+                        {LAYOUT_TYPES.map((l) => {
+                          const m = LAYOUT_META[l];
+                          const isSelected = field.value === l;
+                          return (
+                            <button
+                              key={l}
+                              type="button"
+                              onClick={() => field.onChange(l)}
+                              className={cn(
+                                "flex flex-col items-center gap-1.5 rounded-lg border p-3 text-xs font-medium transition-all",
+                                isSelected
+                                  ? "border-violet-500 bg-violet-50 text-violet-700"
+                                  : "border-border bg-muted/40 text-muted-foreground hover:border-violet-300 hover:bg-violet-50/50"
+                              )}
+                            >
+                              {m?.icon}
+                              {m?.label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
                   />
                 </div>
@@ -294,14 +292,14 @@ export default function ViewsPage({
                 <Button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="w-full"
+                  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
                 >
                   {createMutation.isPending ? "Creating..." : "Create View"}
                 </Button>
               </form>
-              </div>
-            </SheetContent>
-          </Sheet>
+            </div>
+          </SheetContent>
+        </Sheet>
       }
     >
       <div className="space-y-6">
@@ -320,10 +318,10 @@ export default function ViewsPage({
           <>
             {pinnedViews.length > 0 && (
               <section>
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-0.5">
                   Pinned
                 </h2>
-                <div className="space-y-2">
+                <div>
                   {pinnedViews.map((view) => (
                     <ViewCard
                       key={view.id}
@@ -341,11 +339,11 @@ export default function ViewsPage({
             {unpinnedViews.length > 0 && (
               <section>
                 {pinnedViews.length > 0 && (
-                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-0.5">
                     All Views
                   </h2>
                 )}
-                <div className="space-y-2">
+                <div>
                   {unpinnedViews.map((view) => (
                     <ViewCard
                       key={view.id}

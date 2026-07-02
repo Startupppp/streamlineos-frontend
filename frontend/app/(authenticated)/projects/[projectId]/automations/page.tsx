@@ -70,12 +70,20 @@ interface AutomationCardProps {
 }
 
 function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCardProps) {
+  const handleSwitchChange = useCallback(
+    (v: boolean) => onToggle(automation.id, v),
+    [automation.id, onToggle],
+  );
+  const handleEdit = useCallback(() => onEdit(automation), [automation, onEdit]);
+
   return (
     <motion.div layout className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm p-4">
       <div className="flex items-start gap-3">
-        <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center shrink-0",
+        <div className={cn("relative h-9 w-9 rounded-xl flex items-center justify-center shrink-0",
           automation.isActive ? "bg-violet-50 border border-violet-100" : "bg-slate-100 border border-slate-200")}>
           <Zap className={cn("h-4 w-4", automation.isActive ? "text-violet-600" : "text-slate-400")} />
+          <span className={cn("absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white",
+            automation.isActive ? "bg-emerald-500" : "bg-slate-300")} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -99,10 +107,10 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
         <div className="flex items-center gap-2 shrink-0">
           <Switch
             checked={automation.isActive}
-            onCheckedChange={(v) => onToggle(automation.id, v)}
+            onCheckedChange={handleSwitchChange}
             aria-label={automation.isActive ? "Deactivate" : "Activate"}
           />
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(automation)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit}>
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
           <AlertDialog>
@@ -232,6 +240,19 @@ export default function AutomationsPage({ params }: PageProps) {
           </div>
         ) : (
           <>
+            {automations.length > 0 && (
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-muted/40 rounded-xl p-3 text-center">
+                  <p className="text-lg font-bold text-emerald-600">{automations.filter(a => a.isActive).length}</p>
+                  <p className="text-xs text-muted-foreground">Active</p>
+                </div>
+                <div className="bg-muted/40 rounded-xl p-3 text-center">
+                  <p className="text-lg font-bold text-slate-500">{automations.filter(a => !a.isActive).length}</p>
+                  <p className="text-xs text-muted-foreground">Inactive</p>
+                </div>
+              </div>
+            )}
+
             <AnimatePresence initial={false}>
               {automations.map((auto, idx) => (
                 <motion.div
