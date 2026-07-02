@@ -11,10 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, Loader2, Search } from "lucide-react";
+import { Check, Copy, Loader2, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useChatOrgUsers, useAddChannelMember } from "@/hooks/api";
+import {
+  useChatOrgUsers,
+  useAddChannelMember,
+  useChannelInviteLink,
+  useRegenerateInviteLink,
+} from "@/hooks/api";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 
@@ -23,6 +28,7 @@ interface AddChannelMembersDialogProps {
   onOpenChange: (open: boolean) => void;
   channelId: number;
   existingMemberIds: Set<string>;
+  isAdmin?: boolean;
 }
 
 export function AddChannelMembersDialog({
@@ -30,11 +36,41 @@ export function AddChannelMembersDialog({
   onOpenChange,
   channelId,
   existingMemberIds,
+  isAdmin = false,
 }: AddChannelMembersDialogProps) {
   const { data: orgUsers } = useChatOrgUsers(open);
   const addMember = useAddChannelMember();
+  const { data: inviteLink, isLoading: isInviteLinkLoading } = useChannelInviteLink(
+    channelId,
+    open && isAdmin,
+  );
+  const regenerateInviteLink = useRegenerateInviteLink();
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const inviteUrl = useMemo(() => {
+    if (!inviteLink?.token || typeof window === "undefined") return null;
+    return `${window.location.origin}/chat/invite/${inviteLink.token}`;
+  }, [inviteLink?.token]);
+
+  const handleCopyLink = useCallback(async () => {
+    if (!inviteUrl) return;
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      toast.success("Invite link copied");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [inviteUrl]);
+
+  const handleRegenerateLink = useCallback(async () => {
+    try {
+      await regenerateInviteLink.mutateAsync(channelId);
+      toast.success("Generated a new invite link");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [regenerateInviteLink, channelId]);
 
   const availableUsers = useMemo(() => {
     if (!orgUsers) return [];
@@ -154,6 +190,60 @@ export function AddChannelMembersDialog({
             )}
           </div>
         </ScrollArea>
+
+        {isAdmin && (
+          <div className="px-4 py-3 border-t border-border/30">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">
+              Invite link
+            </p>
+            {isInviteLinkLoading ? (
+              <div className="h-9 flex items-center px-3 text-[12px] text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
+                Loading link...
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Input
+                  readOnly
+                  value={inviteUrl ?? ""}
+                  className="h-9 text-[12px] bg-muted/30 border-border/30 flex-1 truncate"
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={handleCopyLink}
+                  disabled={!inviteUrl}
+                  title="Copy link"
+                  aria-label="Copy invite link"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={handleRegenerateLink}
+                  disabled={regenerateInviteLink.isPending}
+                  title="Generate new link"
+                  aria-label="Generate new invite link"
+                >
+                  {regenerateInviteLink.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              </div>
+            )}
+            <p className="text-[10px] text-muted-foreground/70 mt-1.5">
+              Anyone signed in to your org with this link can join this channel.
+            </p>
+          </div>
+        )}
 
         <div className="px-4 py-3 border-t border-border/30 flex gap-2">
           <Button
