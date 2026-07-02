@@ -69,6 +69,8 @@ export function MessagePanel({
   showInfoPanel,
   sidebarCollapsed,
   onExpandSidebar,
+  autoStartCall,
+  onAutoStartHandled,
 }: {
   channelId: number;
   currentUserId: string;
@@ -77,6 +79,8 @@ export function MessagePanel({
   showInfoPanel: boolean;
   sidebarCollapsed?: boolean;
   onExpandSidebar?: () => void;
+  autoStartCall?: "huddle" | "video" | null;
+  onAutoStartHandled?: () => void;
 }) {
   const queryClient = useQueryClient();
   const { data: channel } = useChatChannel(channelId);
@@ -142,6 +146,27 @@ export function MessagePanel({
 
   const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
   const [showMeeting, setShowMeeting] = useState(false);
+  const autoStartHandledRef = useRef(false);
+
+  useEffect(() => {
+    if (!autoStartCall) {
+      autoStartHandledRef.current = false;
+      return;
+    }
+    if (autoStartHandledRef.current) return;
+    autoStartHandledRef.current = true;
+
+    if (autoStartCall === "video") {
+      if (!activeHuddle) startVideoMeeting.mutate(channelId);
+      setShowMeeting(true);
+    } else if (activeHuddle) {
+      joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
+    } else {
+      startHuddle.mutate(channelId);
+    }
+
+    onAutoStartHandled?.();
+  }, [autoStartCall, channelId, activeHuddle, startHuddle, startVideoMeeting, joinHuddle, onAutoStartHandled]);
   const [showSavedPanel, setShowSavedPanel] = useState(false);
   const [showFilesPanel, setShowFilesPanel] = useState(false);
   const [forwardMessage, setForwardMessage] = useState<{
