@@ -260,7 +260,6 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
         <Button
           size="sm"
           onClick={handleOpenCreate}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
         >
           <Plus className="h-4 w-4 mr-1" /> New Milestone
         </Button>
@@ -268,7 +267,7 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
     >
       <div className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3">
-          <StatCard label="Total" value={total} icon={Diamond} color="violet" index={0} />
+          <StatCard label="Total" value={total} icon={Diamond} tone="default" index={0} />
           <StatCard label="Achieved" value={achieved} icon={CheckCircle2} color="green" index={1} />
           <StatCard label="Pending" value={pending} icon={Clock} color="blue" index={2} />
           <StatCard label="Overdue" value={overdue} icon={AlertCircle} color="red" index={3} />

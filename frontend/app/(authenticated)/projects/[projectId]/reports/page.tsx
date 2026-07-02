@@ -518,7 +518,7 @@ function CycleTimeSection({ projectId }: { projectId: number }) {
   return (
     <ChartCard title="Cycle Time" icon={Timer}>
       {isLoading ? (
-        <Skeleton className="h-48 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-lg" />
       ) : isError ? (
         <ErrorState
           compact
@@ -563,7 +563,7 @@ function CycleTimeSection({ projectId }: { projectId: number }) {
               />
               <Bar
                 dataKey="avgDays"
-                fill="#6366f1"
+                fill="#1d4ed8"
                 radius={[4, 4, 0, 0]}
                 name="Avg Days"
               />
@@ -584,7 +584,7 @@ function LeadTimeSection({ projectId }: { projectId: number }) {
   return (
     <ChartCard title="Lead Time" icon={TrendingUp}>
       {isLoading ? (
-        <Skeleton className="h-48 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-lg" />
       ) : isError ? (
         <ErrorState
           compact
@@ -629,15 +629,15 @@ function LeadTimeSection({ projectId }: { projectId: number }) {
               />
               <Area
                 dataKey="p90Days"
-                fill="#c7d2fe"
-                stroke="#818cf8"
+                fill="#93c5fd"
+                stroke="#60a5fa"
                 strokeWidth={1.5}
                 name="P90"
               />
               <Area
                 dataKey="p50Days"
-                fill="#a5b4fc"
-                stroke="#6366f1"
+                fill="#60a5fa"
+                stroke="#1d4ed8"
                 strokeWidth={2}
                 name="P50 (Median)"
               />

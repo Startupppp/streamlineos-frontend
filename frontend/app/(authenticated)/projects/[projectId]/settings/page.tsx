@@ -237,7 +237,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                 activeSection === section.id
                   ? section.id === "danger"
                     ? "bg-destructive/5 text-destructive font-medium"
-                    : "bg-violet-50 text-violet-700 font-medium dark:bg-violet-950/40 dark:text-violet-300"
+                    : "bg-muted text-foreground font-medium"
                   : section.id === "danger"
                     ? "text-destructive/70 hover:bg-destructive/5 hover:text-destructive"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"

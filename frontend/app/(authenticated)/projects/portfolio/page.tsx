@@ -127,7 +127,7 @@ function ProjectTableRow({ project }: { project: ProjectListItem }) {
         <span className="text-[10px] font-bold text-slate-400 font-mono shrink-0 w-12 truncate">{project.key}</span>
         <Link
           href={`/projects/${project.id}`}
-          className="text-sm font-medium text-slate-900 hover:text-violet-600 truncate transition-colors"
+          className="text-sm font-medium text-foreground hover:text-blue-600 truncate transition-colors"
         >
           {project.name}
         </Link>
@@ -140,9 +140,9 @@ function ProjectTableRow({ project }: { project: ProjectListItem }) {
         {hc.label}
       </div>
       <div className="flex items-center gap-2 min-w-0">
-        <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500"
+            className="h-full bg-primary rounded-full transition-[width] duration-500 ease-out"
             style={{ width: `${project.progress.percentage}%` }}
           />
         </div>
@@ -196,9 +196,9 @@ function ProjectHealthCard({ project }: { project: ProjectListItem }) {
       </div>
 
       {project.progress.total > 0 && (
-        <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500"
+            className="h-full bg-primary rounded-full transition-[width] duration-500 ease-out"
             style={{ width: `${project.progress.percentage}%` }}
           />
         </div>
@@ -221,7 +221,7 @@ function ProjectHealthCard({ project }: { project: ProjectListItem }) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs text-violet-600 hover:text-violet-700 hover:bg-violet-50 -ml-1"
+            className="h-7 text-xs text-muted-foreground hover:text-foreground -ml-1"
           >
             View Project
             <ArrowRight className="h-3 w-3 ml-1" />
@@ -340,7 +340,7 @@ export default function PortfolioPage() {
   return (
     <PageWrapper title="Portfolio" badge={String(stats.total)} filters={filters}>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <StatCard label="Total" value={stats.total} icon={Briefcase} color="text-violet-600" />
+        <StatCard label="Total" value={stats.total} icon={Briefcase} color="text-slate-600" />
         <StatCard label="Active" value={stats.active} icon={TrendingUp} color="text-blue-600" />
         <StatCard label="Completed" value={stats.completed} icon={CheckCircle2} color="text-emerald-600" />
         <StatCard label="Archived" value={stats.archived} icon={Clock} color="text-slate-500" />

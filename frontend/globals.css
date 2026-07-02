@@ -159,7 +159,7 @@
   --popover-foreground: #f1f4fb;
   --muted: #161e36;
   --muted-foreground: #94a0c0;
-  --border: rgba(148, 178, 245, 0.12);     /* subtle but visible against card */
+  --border: rgba(148, 178, 245, 0.22);     /* visible against dark surfaces */
   --input: rgba(148, 178, 245, 0.14);
   --ring: #60a5fa;
 

@@ -50,7 +50,7 @@ const createViewSchema = z.object({
 type CreateViewForm = z.infer<typeof createViewSchema>;
 
 const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
-  board: { icon: <Kanban className="h-4 w-4" />, label: "Board", color: "text-violet-600 bg-violet-50" },
+  board: { icon: <Kanban className="h-4 w-4" />, label: "Board", color: "text-slate-600 bg-slate-100" },
   list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-blue-600 bg-blue-50" },
   table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-emerald-600 bg-emerald-50" },
   calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-amber-600 bg-amber-50" },
@@ -108,7 +108,7 @@ const ViewCard = memo(function ViewCard({
           </p>
         </div>
         {isPinned && (
-          <Badge variant="secondary" className="text-[10px] shrink-0">Pinned</Badge>
+          <Badge variant="outline" className="text-[10px] shrink-0 bg-amber-50 text-amber-700 border-amber-200">Pinned</Badge>
         )}
       </div>
       <div
@@ -273,8 +273,8 @@ export default function ViewsPage({
                               className={cn(
                                 "flex flex-col items-center gap-1.5 rounded-lg border p-3 text-xs font-medium transition-all",
                                 isSelected
-                                  ? "border-violet-500 bg-violet-50 text-violet-700"
-                                  : "border-border bg-muted/40 text-muted-foreground hover:border-violet-300 hover:bg-violet-50/50"
+                                  ? "border-primary bg-primary/5 text-foreground"
+                                  : "border-border bg-muted/40 text-muted-foreground hover:border-border hover:bg-muted"
                               )}
                             >
                               {m?.icon}
@@ -292,7 +292,7 @@ export default function ViewsPage({
                 <Button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
+                  className="w-full"
                 >
                   {createMutation.isPending ? "Creating..." : "Create View"}
                 </Button>

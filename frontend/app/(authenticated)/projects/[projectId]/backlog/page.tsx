@@ -76,17 +76,17 @@ const TicketRow = memo(function TicketRow({
 
   return (
     <TableRow
-      className={`cursor-pointer hover:bg-muted/50 h-10 border-b border-border/50 ${isSelected ? "bg-primary/5" : ""}`}
+      className={`cursor-pointer hover:bg-muted/50 h-8 border-b border-border/50 ${isSelected ? "bg-primary/5" : ""}`}
       onClick={handleRowClick}
     >
-      <TableCell className="px-3 py-1.5" onClick={handleCheckboxCellClick}>
+      <TableCell className="px-2 py-1" onClick={handleCheckboxCellClick}>
         <Checkbox
           checked={isSelected}
           onCheckedChange={handleCheckedChange}
           aria-label={`Select ticket ${ticket.ticketNumber}`}
         />
       </TableCell>
-      <TableCell className="px-3 py-1.5 font-mono text-xs text-muted-foreground">
+      <TableCell className="px-2 py-1 font-mono text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <TicketTypeIcon type={ticket.type} />
           {projectKey && ticket.ticketNumber != null

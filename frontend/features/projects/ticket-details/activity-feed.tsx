@@ -439,8 +439,8 @@ function CommentItem({
   }, [onDelete, comment.id]);
 
   return (
-    <div className={`flex gap-2.5 group rounded-lg transition-colors duration-500 ${showHighlight ? "bg-violet-50 ring-1 ring-violet-200 px-2 -mx-2 py-1" : ""}`}>
-      <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+    <div className={`flex gap-2.5 group rounded-lg transition-colors duration-500 ${showHighlight ? "bg-blue-50/40 ring-1 ring-blue-200 px-2 -mx-2 py-1" : ""}`}>
+      <Avatar className="h-6 w-6 shrink-0 mt-0.5">
         <AvatarImage src={resolveImageUrl(user?.image)} />
         <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
           {user?.firstName?.[0]}
@@ -449,10 +449,10 @@ function CommentItem({
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium">
+          <span className="text-xs font-semibold">
             {user?.firstName} {user?.lastName}
           </span>
-          <span className="text-[10px] text-muted-foreground">{timeAgo}</span>
+          <span className="text-[11px] text-muted-foreground">{timeAgo}</span>
           {isEdited && (
             <span className="text-[10px] text-muted-foreground/60 italic">(edited)</span>
           )}
@@ -494,7 +494,7 @@ function CommentItem({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
+          <p className="text-[13px] text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
             {formatMentionText(comment.content)}
           </p>
         )}
@@ -510,7 +510,7 @@ function CommentItem({
               <button
                 type="button"
                 onClick={onReply}
-                className="text-[11px] text-muted-foreground hover:text-violet-600 transition-colors opacity-0 group-hover:opacity-100"
+                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               >
                 Reply
               </button>
@@ -519,7 +519,7 @@ function CommentItem({
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="text-[11px] text-muted-foreground hover:text-violet-600 transition-colors opacity-0 group-hover:opacity-100 flex items-center gap-1"
+                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
                 aria-label="Copy comment link"
               >
                 <Link className="h-3 w-3" />
@@ -530,7 +530,7 @@ function CommentItem({
               <button
                 type="button"
                 onClick={handleStartEdit}
-                className="text-[11px] text-muted-foreground hover:text-violet-600 transition-colors opacity-0 group-hover:opacity-100 flex items-center gap-1"
+                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
                 aria-label="Edit comment"
               >
                 <Pencil className="h-3 w-3" />

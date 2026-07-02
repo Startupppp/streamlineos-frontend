@@ -397,7 +397,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
               {totalItems > 0 && (
                 <>
                   <div className="bg-green-500 h-full transition-all" style={{ width: `${(completedItems / totalItems) * 100}%` }} />
-                  <div className="bg-violet-500 h-full transition-all" style={{ width: `${(inProgressItems / totalItems) * 100}%` }} />
+                  <div className="bg-blue-500 h-full transition-all" style={{ width: `${(inProgressItems / totalItems) * 100}%` }} />
                   <div className="bg-muted-foreground/20 h-full transition-all" style={{ width: `${(todoItems / totalItems) * 100}%` }} />
                 </>
               )}
@@ -405,7 +405,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
             {totalItems > 0 && (
               <div className="flex gap-3 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full" /> Done ({completedItems})</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 bg-violet-500 rounded-full" /> In Progress ({inProgressItems})</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 bg-blue-500 rounded-full" /> In Progress ({inProgressItems})</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 bg-muted-foreground/30 rounded-full" /> To Do ({todoItems})</span>
               </div>
             )}
@@ -459,7 +459,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
                 />
                 <Button
                   size="sm"
-                  className="h-8 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                  className="h-8"
                   onClick={handleAddStory}
                   disabled={!newStoryTitle.trim()}
                 >

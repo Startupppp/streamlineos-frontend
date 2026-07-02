@@ -79,16 +79,16 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
   return (
     <motion.div layout className="rounded-lg border border-border bg-card hover:shadow-md transition-shadow p-4">
       <div className="flex items-start gap-3">
-        <div className={cn("relative h-9 w-9 rounded-xl flex items-center justify-center shrink-0",
-          automation.isActive ? "bg-violet-50 border border-violet-100" : "bg-slate-100 border border-slate-200")}>
-          <Zap className={cn("h-4 w-4", automation.isActive ? "text-violet-600" : "text-slate-400")} />
+        <div className={cn("relative h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
+          automation.isActive ? "bg-blue-50 border border-blue-100" : "bg-muted border border-border")}>
+          <Zap className={cn("h-4 w-4", automation.isActive ? "text-blue-600" : "text-muted-foreground")} />
           <span className={cn("absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white",
             automation.isActive ? "bg-emerald-500" : "bg-slate-300")} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-slate-800 truncate">{automation.name}</p>
-            <Badge variant="secondary" className="text-[10px] bg-violet-50 text-violet-700 border-violet-100 shrink-0">
+            <Badge variant="secondary" className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 shrink-0">
               {getTriggerLabel(automation.triggerEvent)}
             </Badge>
           </div>
@@ -232,7 +232,7 @@ export default function AutomationsPage({ params }: PageProps) {
       <div className="max-w-2xl mx-auto space-y-3 pb-8">
         {isLoading ? (
           <div className="space-y-3">
-            {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}
+            {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-lg" />)}
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -275,14 +275,14 @@ export default function AutomationsPage({ params }: PageProps) {
 
             {automations.length === 0 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20 gap-3">
-                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 flex items-center justify-center">
-                  <Zap className="h-7 w-7 text-violet-500" />
+                <div className="h-14 w-14 rounded-lg bg-muted border border-border flex items-center justify-center">
+                  <Zap className="h-7 w-7 text-muted-foreground" />
                 </div>
                 <p className="text-sm font-semibold text-slate-700">No automations yet</p>
                 <p className="text-xs text-muted-foreground text-center max-w-xs">
                   Automate repetitive work — assign tickets, change statuses, and more with if-then rules.
                 </p>
-                <Button onClick={handleOpenNew} className="mt-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 gap-2">
+                <Button onClick={handleOpenNew} className="mt-2 gap-2">
                   <Plus className="h-4 w-4" />Create Automation
                 </Button>
               </motion.div>
@@ -336,7 +336,7 @@ export default function AutomationsPage({ params }: PageProps) {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-slate-700">Conditions (optional)</label>
-                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1 text-violet-600 hover:text-violet-700" onClick={handleAppendCondition}>
+                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendCondition}>
                       <Plus className="h-3 w-3" />Add Condition
                     </Button>
                   </div>
@@ -378,7 +378,7 @@ export default function AutomationsPage({ params }: PageProps) {
                     <label className="text-xs font-medium text-slate-700">
                       Actions <span className="text-red-500">*</span>
                     </label>
-                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1 text-violet-600 hover:text-violet-700" onClick={handleAppendAction}>
+                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendAction}>
                       <Plus className="h-3 w-3" />Add Action
                     </Button>
                   </div>
@@ -416,7 +416,7 @@ export default function AutomationsPage({ params }: PageProps) {
               form="automation-form"
               type="submit"
               disabled={createAutomation.isPending || updateAutomation.isPending}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 h-8 text-xs flex-1"
+              className="h-8 text-xs flex-1"
             >
               {(createAutomation.isPending || updateAutomation.isPending)
                 ? "Saving..."

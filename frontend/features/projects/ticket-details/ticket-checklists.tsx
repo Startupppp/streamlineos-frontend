@@ -328,7 +328,7 @@ function ChecklistSection({
                 onChange={(e) => setNewItemText(e.target.value)}
                 onKeyDown={handleItemKeyDown}
                 placeholder="Add item..."
-                className="flex-1 text-sm bg-transparent border-b border-violet-300 outline-none py-0.5 placeholder:text-slate-400"
+                className="flex-1 text-sm bg-transparent border-b border-input outline-none py-0.5 placeholder:text-muted-foreground"
                 autoFocus
                 onBlur={handleItemBlur}
               />
@@ -336,7 +336,7 @@ function ChecklistSection({
                 type="button"
                 onClick={handleAddItem}
                 disabled={!newItemText.trim()}
-                className="text-xs text-violet-600 hover:text-violet-700 font-medium disabled:opacity-40"
+                className="text-xs text-primary hover:text-primary/80 font-medium disabled:opacity-40"
               >
                 Add
               </button>
@@ -345,7 +345,7 @@ function ChecklistSection({
             <button
               type="button"
               onClick={() => setAddingItem(true)}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-violet-600 transition-colors py-1 mt-1"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-1 mt-1"
             >
               <Plus className="h-3 w-3" />
               Add item
@@ -403,7 +403,7 @@ export function TicketChecklists({ projectId, ticketId }: TicketChecklistsProps)
         type="button"
         onClick={handleAddChecklist}
         disabled={createChecklist.isPending}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-violet-600 transition-colors"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <Plus className="h-4 w-4" />
         Add checklist

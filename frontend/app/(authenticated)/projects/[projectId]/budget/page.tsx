@@ -76,7 +76,6 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
             />
             <Button
               size="sm"
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm"
               onClick={handleSaveBudget}
               disabled={updateBudget.isPending}
             >
@@ -131,11 +130,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
             </div>
             <Progress
               value={Math.min(budget?.utilizationPct ?? 0, 100)}
-              className={
-                overBudget
-                  ? "h-2 [&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-orange-500"
-                  : "h-2 [&>div]:bg-gradient-to-r [&>div]:from-violet-500 [&>div]:to-indigo-500"
-              }
+              className={overBudget ? "h-2 [&>div]:bg-red-500" : "h-2 [&>div]:bg-blue-500"}
             />
           </CardContent>
         </Card>

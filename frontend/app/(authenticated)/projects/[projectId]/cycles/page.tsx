@@ -172,7 +172,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                     <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="font-semibold text-sm truncate">{cycle.name}</span>
-                        <Badge className="shrink-0 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">
+                        <Badge className="shrink-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                           Active
                         </Badge>
                       </div>
@@ -196,7 +196,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                           aria-label={`Cycle progress: ${cycle.progress}%`}
                         >
                           <div
-                            className="bg-gradient-to-r from-violet-600 to-indigo-600 h-1.5 rounded-full transition-all duration-300"
+                            className="bg-emerald-500 h-1.5 rounded-full transition-all duration-300"
                             style={{ width: `${cycle.progress}%` }}
                           />
                         </div>

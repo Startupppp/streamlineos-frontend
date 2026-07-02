@@ -104,7 +104,7 @@ function PageTreeItem({
     <div>
       <div
         className={`flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer transition-colors group ${
-          isActive ? "bg-violet-50 text-violet-700 font-medium" : "hover:bg-muted"
+          isActive ? "bg-muted text-foreground font-medium" : "hover:bg-muted"
         }`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={handleSelect}
@@ -170,7 +170,7 @@ const PinnedPageItem = memo(function PinnedPageItem({
       onClick={handleClick}
       className={`flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors ${
         activePage === page.id
-          ? "bg-violet-50 text-violet-700 font-medium"
+          ? "bg-muted text-foreground font-medium"
           : "hover:bg-muted"
       }`}
     >
@@ -288,7 +288,7 @@ export default function PagesPage({
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>
-            <Button size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm">
+            <Button size="sm">
               <Plus className="h-4 w-4 mr-1" /> New Page
             </Button>
           </SheetTrigger>
@@ -322,7 +322,7 @@ export default function PagesPage({
               <Button
                 type="submit"
                 disabled={createMutation.isPending}
-                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm"
+                className="w-full"
               >
                 {createMutation.isPending ? "Creating..." : "Create Page"}
               </Button>

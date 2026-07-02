@@ -1,15 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
 import { useResourceAllocation } from "@/hooks/api/projects";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const PROJECT_COLORS = [
   "bg-blue-500",

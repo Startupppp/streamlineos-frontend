@@ -39,9 +39,9 @@ const TICKET_STATUS_DISPLAY: Record<string, string> = {
 };
 const TICKET_STATUS_COLORS: Record<string, string> = {
   TODO: "bg-slate-100 text-slate-700",
-  IN_PROGRESS: "bg-blue-100 text-blue-700",
-  IN_REVIEW: "bg-amber-100 text-amber-700",
-  DONE: "bg-green-100 text-green-700",
+  IN_PROGRESS: "bg-blue-50 text-blue-700",
+  IN_REVIEW: "bg-amber-50 text-amber-700",
+  DONE: "bg-emerald-50 text-emerald-700",
 };
 
 function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId: number }) {
@@ -92,14 +92,14 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
 
   if (!hasFullInfo) {
     return (
-      <div className="inline-flex items-center rounded-lg border border-border bg-background/80 px-2.5 py-1.5 shadow-sm hover:shadow-md transition-all duration-150 ease-out motion-reduce:transition-none my-1">
+      <div className="inline-flex items-center rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 hover:border-border/80 transition-all duration-150 ease-out motion-reduce:transition-none my-1">
         <button
           type="button"
           onClick={handlePillClick}
-          className="flex items-center gap-1.5 font-mono text-[12px] text-violet-600 hover:text-violet-700 font-semibold"
+          className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground hover:text-foreground"
           aria-label={`Open ${ticketKey}`}
         >
-          <Ticket className="h-3.5 w-3.5" />
+          <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/60" />
           {ticketKey}
         </button>
       </div>
@@ -107,21 +107,21 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
   }
 
   return (
-    <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/80 px-2.5 py-1.5 shadow-sm hover:shadow-md transition-all duration-150 ease-out motion-reduce:transition-none my-1">
+    <div className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 hover:border-border/80 transition-all duration-150 ease-out motion-reduce:transition-none my-1">
       <button
         type="button"
         onClick={handlePillClick}
-        className="flex items-center gap-1.5 font-mono text-[12px] text-violet-600 hover:text-violet-700 font-semibold"
+        className="flex items-center gap-1 font-mono text-[11px] text-muted-foreground hover:text-foreground shrink-0"
         aria-label={`Open ticket ${ticketKey}`}
       >
-        <Ticket className="h-3.5 w-3.5" />
+        <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/60" />
         {ticketKey}
       </button>
       {entity.title && (
         <button
           type="button"
           onClick={handlePillClick}
-          className="text-[12px] text-foreground hover:underline truncate max-w-[200px]"
+          className="text-[12px] text-foreground/80 hover:underline truncate max-w-[160px]"
         >
           {entity.title}
         </button>
