@@ -572,6 +572,102 @@ The canonical dense table pattern (as established by CRM quotes and HR pages):
 - **Table height:** `h-[calc(100dvh-Xrem)]` where X accounts for header + filter bar + pagination. Minimum height: `min-h-[320px]`.
 - **Offset calculation guide:** `16rem` for pages with standard header + filter bar.
 
+### DataTable component
+
+The canonical generic data table lives at `components/ui/data-table.tsx`. Use it for all new list/admin tables. Never hand-roll a raw shadcn `<Table>` for page-level data display.
+
+**Engine:** `@tanstack/react-table` v8 (already installed). The component accepts a `DataTableColumn<T>[]` prop that maps internally to TanStack `ColumnDef<T>` — consumers never import TanStack types directly.
+
+**Component API:**
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `data` | `T[]` | ✓ | Row data (pre-filtered by the page) |
+| `columns` | `DataTableColumn<T>[]` | ✓ | Column definitions |
+| `getRowKey` | `(row: T) => string \| number` | ✓ | Unique key per row |
+| `isLoading` | `boolean` | — | Shows skeleton rows (5 rows, matching column count) |
+| `emptyState` | `ReactNode` | — | Rendered inside a colspan cell when `data` is empty |
+| `search` | `{ value, onChange, placeholder? }` | — | Renders a search input in an internal toolbar strip |
+| `toolbar` | `ReactNode` | — | Rendered beside the search input (e.g. archive toggle) |
+| `pagination` | `{ pageSize? }` or `{ mode: "server"; page; pageSize; total; onPageChange }` | — | Client-side slicing or server-controlled |
+| `selection` | `{ selected: Set<string\|number>; onChange }` | — | Adds a checkbox column; syncs with TanStack selection |
+| `footer` | `ReactNode` | — | Optional summary row above the pagination bar |
+| `onRowClick` | `(row: T) => void` | — | Makes rows clickable |
+| `rowClassName` | `(row: T) => string` | — | Additional classes per row (e.g. `opacity-60` for archived) |
+| `minWidth` | `string` | — | Minimum width of the inner scroll container (e.g. `"580px"`) |
+| `className` | `string` | — | Classes on the outer container |
+
+**Column definition:**
+
+```tsx
+interface DataTableColumn<T> {
+  key: string;
+  header: string;
+  cell: (row: T) => ReactNode;
+  sortable?: boolean;
+  sortValue?: (row: T) => string | number;
+  className?: string;
+  headerClassName?: string;
+}
+```
+
+**Usage example (org hierarchy page pattern):**
+
+```tsx
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import type { OrgBranch } from "@/types/org-hierarchy";
+
+const columns: DataTableColumn<OrgBranch>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (b) => <span className="font-medium">{b.name}</span>,
+    sortable: true,
+    sortValue: (b) => b.name,
+  },
+  {
+    key: "code",
+    header: "Code",
+    cell: (b) => <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{b.code}</code>,
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (b) => <StatusBadge status={b.status} />,
+  },
+  {
+    key: "actions",
+    header: "",
+    headerClassName: "w-28",
+    cell: (b) => <BranchActions branch={b} />,
+  },
+];
+
+<DataTable
+  data={filtered}
+  columns={columns}
+  getRowKey={(b) => b.id}
+  isLoading={isLoading}
+  emptyState={<EmptyState ... />}
+  search={{ value: search, onChange: setSearch, placeholder: "Search branches…" }}
+  toolbar={<ArchiveToggle ... />}
+  rowClassName={(b) => cn(b.status === "ARCHIVED" && "opacity-60")}
+  minWidth="580px"
+/>
+```
+
+**Migrated tables (as of 2026-07):** `/billing/invoices`, `/organization/branches`, `/organization/departments`, `/organization/teams`, `/organization/locations`, `/organization/business-units`, `/organization/cost-centers`
+
+**Next migration candidates (hand-rolled tables that should migrate):**
+- `/billing/recurring` — recurring subscriptions list
+- `/billing/coupons` — coupon codes table
+- `/billing/addons` — add-ons table
+- `/billing/seats` — seat allocation table
+- `/inventory/products` (already uses `DataTablePagination` separately — migrate to DataTable)
+- `/crm/**` — all CRM list pages (leads, contacts, deals, quotes)
+- `/hr/**` — HR list pages (employees, payroll, leave, attendance) if hand-rolled
+- `/organization/audit` — audit log table
+
 ### Sheets vs Dialogs
 
 | Use case | Component | Max width |

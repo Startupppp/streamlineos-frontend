@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { UsersRound, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
+import { UsersRound, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgTeams,
@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Sheet,
   SheetContent,
@@ -45,14 +45,6 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgTeam } from "@/types/org-hierarchy";
 
@@ -314,7 +306,7 @@ export default function OrgTeamsPage() {
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
-  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleSearchChange = useCallback((v: string) => setSearch(v), []);
 
   function makeRestoreHandler(team: OrgTeam) { return () => handleRestore(team); }
   function makeArchiveHandler(team: OrgTeam) { return () => handleArchive(team); }
@@ -322,6 +314,121 @@ export default function OrgTeamsPage() {
   function makeSetDeletingHandler(team: OrgTeam) { return () => setDeleting(team); }
   function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
   function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
+
+  const columns: DataTableColumn<OrgTeam>[] = [
+    {
+      key: "name",
+      header: "Name",
+      cell: (t) => <span className="font-medium">{t.name}</span>,
+      sortable: true,
+      sortValue: (t) => t.name,
+    },
+    {
+      key: "code",
+      header: "Code",
+      cell: (t) => (
+        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{t.code}</code>
+      ),
+    },
+    {
+      key: "department",
+      header: "Department",
+      cell: (t) => (
+        <span className="text-muted-foreground">
+          {t.departmentId ? (deptMap[t.departmentId] ?? "—") : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "capacity",
+      header: "Capacity",
+      cell: (t) => (
+        <span className="text-muted-foreground tabular-nums">
+          {t.capacity ?? "—"}
+        </span>
+      ),
+      className: "tabular-nums",
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (t) => (
+        <Badge
+          variant={t.status === "ACTIVE" ? "outline" : "secondary"}
+          className={cn(
+            "h-4 px-1.5 py-0 text-[9px]",
+            t.status === "ACTIVE"
+              ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
+              : t.status === "ARCHIVED"
+                ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                : "",
+          )}
+        >
+          {t.status}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-28",
+      cell: (t) => (
+        <div className="flex items-center gap-1">
+          {t.status === "ARCHIVED" ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={makeRestoreHandler(t)} title="Restore">
+                <RotateCcw className="h-4 w-4 text-blue-600" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(t)} title="Delete permanently">
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(t)} title="Edit">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(t)} title="Archive">
+                <Archive className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const emptyState = search ? (
+    <EmptyState
+      illustration={<UsersRound className="h-8 w-8 text-muted-foreground/40" />}
+      title={`No teams matching "${search}"`}
+      description="Try a different search term."
+      compact
+      className="min-h-[200px]"
+    />
+  ) : showArchived ? (
+    <EmptyState
+      illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+      title="No archived teams"
+      compact
+      className="min-h-[200px]"
+    />
+  ) : (
+    <EmptyState
+      illustration={<UsersRound className="h-8 w-8 text-muted-foreground/40" />}
+      title="No teams yet"
+      description="Create your first team to get started."
+      action={{ label: "Add Team", onClick: handleOpenCreate }}
+      className="min-h-[40vh]"
+    />
+  );
+
+  const archiveToolbar = archived.length > 0 ? (
+    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
+      <Archive className="h-4 w-4 mr-1.5" />
+      {showArchived ? "Show Active" : `Archived (${archived.length})`}
+    </Button>
+  ) : undefined;
 
   return (
     <PageWrapper
@@ -333,125 +440,18 @@ export default function OrgTeamsPage() {
           Add Team
         </Button>
       }
-      filters={
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search teams…"
-              value={search}
-              onChange={handleSearchChange}
-              className="pl-8 h-8 text-xs max-w-[240px]"
-            />
-          </div>
-          {archived.length > 0 && (
-            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
-              <Archive className="h-4 w-4 mr-1.5" />
-              {showArchived ? "Show Active" : `Archived (${archived.length})`}
-            </Button>
-          )}
-        </div>
-      }
     >
-      {isLoading ? (
-        <SkeletonTable rows={5} columns={6} />
-      ) : filtered.length === 0 ? (
-        search ? (
-          <EmptyState
-            illustration={<UsersRound className="h-8 w-8 text-muted-foreground/40" />}
-            title={`No teams matching "${search}"`}
-            description="Try a different search term."
-            compact
-            className="min-h-[200px]"
-          />
-        ) : showArchived ? (
-          <EmptyState
-            illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
-            title="No archived teams"
-            compact
-            className="min-h-[200px]"
-          />
-        ) : (
-          <EmptyState
-            illustration={<UsersRound className="h-8 w-8 text-muted-foreground/40" />}
-            title="No teams yet"
-            description="Create your first team to get started."
-            action={{ label: "Add Team", onClick: handleOpenCreate }}
-            className="min-h-[40vh]"
-          />
-        )
-      ) : (
-        <div className="overflow-x-auto">
-          <div className="min-w-[620px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Code</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Department</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Capacity</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
-                  <TableHead className="w-28 px-2 py-1.5" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((t) => (
-                  <TableRow key={t.id} className={cn("h-8", t.status === "ARCHIVED" && "opacity-60")}>
-                    <TableCell className="font-medium px-2 py-1 text-[11px]">{t.name}</TableCell>
-                    <TableCell className="px-2 py-1">
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{t.code}</code>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground px-2 py-1 text-[11px]">
-                      {t.departmentId ? (deptMap[t.departmentId] ?? "—") : "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground px-2 py-1 text-[11px] tabular-nums">
-                      {t.capacity ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-2 py-1">
-                      <Badge
-                        variant={t.status === "ACTIVE" ? "outline" : "secondary"}
-                        className={cn(
-                          "h-4 px-1.5 py-0 text-[9px]",
-                          t.status === "ACTIVE"
-                            ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
-                            : t.status === "ARCHIVED"
-                              ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
-                              : ""
-                        )}
-                      >
-                        {t.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-2 py-1">
-                      <div className="flex items-center gap-1">
-                        {t.status === "ARCHIVED" ? (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(t)} title="Restore">
-                              <RotateCcw className="h-4 w-4 text-blue-600" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(t)} title="Delete permanently">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(t)} title="Edit">
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={makeArchiveHandler(t)} title="Archive">
-                              <Archive className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      )}
+      <DataTable
+        data={filtered}
+        columns={columns}
+        getRowKey={(t) => t.id}
+        isLoading={isLoading}
+        emptyState={emptyState}
+        search={{ value: search, onChange: handleSearchChange, placeholder: "Search teams…" }}
+        toolbar={archiveToolbar}
+        rowClassName={(t) => cn(t.status === "ARCHIVED" && "opacity-60")}
+        minWidth="620px"
+      />
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">

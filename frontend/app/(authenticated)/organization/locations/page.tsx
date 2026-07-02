@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { MapPin, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
+import { MapPin, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgLocations,
@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Sheet,
   SheetContent,
@@ -43,14 +43,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
 
 const LOCATION_TYPE_ENUM = ["OFFICE", "WAREHOUSE", "STORE", "FACTORY", "REMOTE"] as const;
@@ -248,7 +240,7 @@ export default function OrgLocationsPage() {
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
-  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleSearchChange = useCallback((v: string) => setSearch(v), []);
 
   function makeRestoreHandler(loc: OrgLocation) { return () => handleRestore(loc); }
   function makeArchiveHandler(loc: OrgLocation) { return () => handleArchive(loc); }
@@ -256,6 +248,110 @@ export default function OrgLocationsPage() {
   function makeSetDeletingHandler(loc: OrgLocation) { return () => setDeleting(loc); }
   function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
   function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
+
+  const columns: DataTableColumn<OrgLocation>[] = [
+    {
+      key: "name",
+      header: "Name",
+      cell: (l) => <span className="font-medium">{l.name}</span>,
+      sortable: true,
+      sortValue: (l) => l.name,
+    },
+    {
+      key: "type",
+      header: "Type",
+      cell: (l) => <TypeBadge type={l.type} />,
+    },
+    {
+      key: "address",
+      header: "Address",
+      cell: (l) => (
+        <span className="text-muted-foreground max-w-[250px] truncate block">
+          {l.address ?? "—"}
+        </span>
+      ),
+      className: "max-w-[250px]",
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (l) => (
+        <Badge
+          variant={l.status === "ACTIVE" ? "outline" : "secondary"}
+          className={cn(
+            "h-4 px-1.5 py-0 text-[9px]",
+            l.status === "ACTIVE"
+              ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
+              : l.status === "ARCHIVED"
+                ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                : "",
+          )}
+        >
+          {l.status}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-28",
+      cell: (l) => (
+        <div className="flex items-center gap-1">
+          {l.status === "ARCHIVED" ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore">
+                <RotateCcw className="h-4 w-4 text-blue-600" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(l)} title="Delete permanently">
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(l)} title="Archive">
+                <Archive className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const emptyState = search ? (
+    <EmptyState
+      illustration={<MapPin className="h-8 w-8 text-muted-foreground/40" />}
+      title={`No locations matching "${search}"`}
+      description="Try a different search term."
+      compact
+      className="min-h-[200px]"
+    />
+  ) : showArchived ? (
+    <EmptyState
+      illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+      title="No archived locations"
+      compact
+      className="min-h-[200px]"
+    />
+  ) : (
+    <EmptyState
+      illustration={<MapPin className="h-8 w-8 text-muted-foreground/40" />}
+      title="No locations yet"
+      description="Create your first location to get started."
+      action={{ label: "Add Location", onClick: handleOpenCreate }}
+      className="min-h-[40vh]"
+    />
+  );
+
+  const archiveToolbar = archived.length > 0 ? (
+    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
+      <Archive className="h-4 w-4 mr-1.5" />
+      {showArchived ? "Show Active" : `Archived (${archived.length})`}
+    </Button>
+  ) : undefined;
 
   return (
     <PageWrapper
@@ -267,121 +363,18 @@ export default function OrgLocationsPage() {
           Add Location
         </Button>
       }
-      filters={
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search locations…"
-              value={search}
-              onChange={handleSearchChange}
-              className="pl-8 h-8 text-xs max-w-[240px]"
-            />
-          </div>
-          {archived.length > 0 && (
-            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
-              <Archive className="h-4 w-4 mr-1.5" />
-              {showArchived ? "Show Active" : `Archived (${archived.length})`}
-            </Button>
-          )}
-        </div>
-      }
     >
-      {isLoading ? (
-        <SkeletonTable rows={5} columns={5} />
-      ) : filtered.length === 0 ? (
-        search ? (
-          <EmptyState
-            illustration={<MapPin className="h-8 w-8 text-muted-foreground/40" />}
-            title={`No locations matching "${search}"`}
-            description="Try a different search term."
-            compact
-            className="min-h-[200px]"
-          />
-        ) : showArchived ? (
-          <EmptyState
-            illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
-            title="No archived locations"
-            compact
-            className="min-h-[200px]"
-          />
-        ) : (
-          <EmptyState
-            illustration={<MapPin className="h-8 w-8 text-muted-foreground/40" />}
-            title="No locations yet"
-            description="Create your first location to get started."
-            action={{ label: "Add Location", onClick: handleOpenCreate }}
-            className="min-h-[40vh]"
-          />
-        )
-      ) : (
-        <div className="overflow-x-auto">
-          <div className="min-w-[620px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Type</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Address</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
-                  <TableHead className="w-28 px-2 py-1.5" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((l) => (
-                  <TableRow key={l.id} className={cn("h-8", l.status === "ARCHIVED" && "opacity-60")}>
-                    <TableCell className="font-medium px-2 py-1 text-[11px]">{l.name}</TableCell>
-                    <TableCell className="px-2 py-1">
-                      <TypeBadge type={l.type} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground px-2 py-1 text-[11px] max-w-[250px] truncate">
-                      {l.address ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-2 py-1">
-                      <Badge
-                        variant={l.status === "ACTIVE" ? "outline" : "secondary"}
-                        className={cn(
-                          "h-4 px-1.5 py-0 text-[9px]",
-                          l.status === "ACTIVE"
-                            ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
-                            : l.status === "ARCHIVED"
-                              ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
-                              : ""
-                        )}
-                      >
-                        {l.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-2 py-1">
-                      <div className="flex items-center gap-1">
-                        {l.status === "ARCHIVED" ? (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore">
-                              <RotateCcw className="h-4 w-4 text-blue-600" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(l)} title="Delete permanently">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit">
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={makeArchiveHandler(l)} title="Archive">
-                              <Archive className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      )}
+      <DataTable
+        data={filtered}
+        columns={columns}
+        getRowKey={(l) => l.id}
+        isLoading={isLoading}
+        emptyState={emptyState}
+        search={{ value: search, onChange: handleSearchChange, placeholder: "Search locations…" }}
+        toolbar={archiveToolbar}
+        rowClassName={(l) => cn(l.status === "ARCHIVED" && "opacity-60")}
+        minWidth="620px"
+      />
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">

@@ -402,43 +402,15 @@ export default function CouponsPage() {
           <StatCardGrid cols={4}>
             <StatCard label="Total Coupons" value={totalCoupons} icon={Tag} tone="default" />
             <StatCard label="Active" value={activeCoupons} icon={CheckCircle2} tone="emerald" />
-            <StatCard label="Total Redemptions" value={totalRedemptions} icon={TrendingUp} tone="blue" />
+            <StatCard
+              label="Total Redemptions"
+              value={totalRedemptions}
+              icon={TrendingUp}
+              tone="blue"
+              hint={totalCoupons > 0 ? `avg ${(totalRedemptions / totalCoupons).toFixed(1)}/coupon` : undefined}
+            />
             <StatCard label="Expiring in 7 days" value={comingDue} icon={Clock} tone="amber" />
           </StatCardGrid>
-
-          {!isLoading && !isError && coupons.length > 0 && (
-            <div className="rounded-lg border border-border bg-card p-4">
-              <p className="text-sm font-semibold mb-3">Redemption Analytics</p>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Total Redemptions
-                  </p>
-                  <p className="text-xl font-bold tabular-nums">
-                    {totalRedemptions}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Active Coupons
-                  </p>
-                  <p className="text-xl font-bold tabular-nums">
-                    {activeCoupons}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Avg Redemptions/Coupon
-                  </p>
-                  <p className="text-xl font-bold tabular-nums">
-                    {totalCoupons > 0
-                      ? (totalRedemptions / totalCoupons).toFixed(1)
-                      : "0.0"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
           {isLoading ? (
             <TableSkeleton />

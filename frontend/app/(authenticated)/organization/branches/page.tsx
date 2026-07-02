@@ -372,7 +372,7 @@ export default function OrgBranchesPage() {
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
-  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleSearchChange = useCallback((v: string) => setSearch(v), []);
 
   function makeRestoreHandler(branch: OrgBranch) { return () => handleRestore(branch); }
   function makeArchiveHandler(branch: OrgBranch) { return () => handleArchive(branch); }
@@ -380,6 +380,111 @@ export default function OrgBranchesPage() {
   function makeSetDeletingHandler(branch: OrgBranch) { return () => setDeleting(branch); }
   function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
   function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
+
+  const emptyState = search ? (
+    <EmptyState
+      illustration={<GitBranch className="h-8 w-8 text-muted-foreground/40" />}
+      title={`No branches matching "${search}"`}
+      description="Try a different search term."
+      compact
+      className="min-h-[200px]"
+    />
+  ) : showArchived ? (
+    <EmptyState
+      illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+      title="No archived branches"
+      compact
+      className="min-h-[200px]"
+    />
+  ) : (
+    <EmptyState
+      illustration={<GitBranch className="h-8 w-8 text-muted-foreground/40" />}
+      title="No branches yet"
+      description="Create your first branch to get started."
+      action={{ label: "Add Branch", onClick: handleOpenCreate }}
+      className="min-h-[40vh]"
+    />
+  );
+
+  const archiveToolbar = archived.length > 0 ? (
+    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
+      <Archive className="h-4 w-4 mr-1.5" />
+      {showArchived ? "Show Active" : `Archived (${archived.length})`}
+    </Button>
+  ) : undefined;
+
+  const columns: DataTableColumn<OrgBranch>[] = [
+    {
+      key: "name",
+      header: "Name",
+      cell: (b) => <span className="font-medium">{b.name}</span>,
+      sortable: true,
+      sortValue: (b) => b.name,
+    },
+    {
+      key: "code",
+      header: "Code",
+      cell: (b) => (
+        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{b.code}</code>
+      ),
+    },
+    {
+      key: "location",
+      header: "Location",
+      cell: (b) => (
+        <span className="text-muted-foreground">
+          {[b.city, b.state, b.country].filter(Boolean).join(", ") || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (b) => (
+        <Badge
+          variant={b.status === "ACTIVE" ? "outline" : "secondary"}
+          className={cn(
+            "h-4 px-1.5 py-0 text-[9px]",
+            b.status === "ACTIVE"
+              ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
+              : b.status === "ARCHIVED"
+                ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                : "",
+          )}
+        >
+          {b.status}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-28",
+      cell: (b) => (
+        <div className="flex items-center gap-1">
+          {b.status === "ARCHIVED" ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={makeRestoreHandler(b)} title="Restore">
+                <RotateCcw className="h-4 w-4 text-blue-600" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(b)} title="Delete permanently">
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(b)} title="Edit">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(b)} title="Archive">
+                <Archive className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <PageWrapper
@@ -391,121 +496,18 @@ export default function OrgBranchesPage() {
           Add Branch
         </Button>
       }
-      filters={
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search branches…"
-              value={search}
-              onChange={handleSearchChange}
-              className="pl-8 h-8 text-xs max-w-[240px]"
-            />
-          </div>
-          {archived.length > 0 && (
-            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
-              <Archive className="h-4 w-4 mr-1.5" />
-              {showArchived ? "Show Active" : `Archived (${archived.length})`}
-            </Button>
-          )}
-        </div>
-      }
     >
-      {isLoading ? (
-        <SkeletonTable rows={5} columns={5} />
-      ) : filtered.length === 0 ? (
-        search ? (
-          <EmptyState
-            illustration={<GitBranch className="h-8 w-8 text-muted-foreground/40" />}
-            title={`No branches matching "${search}"`}
-            description="Try a different search term."
-            compact
-            className="min-h-[200px]"
-          />
-        ) : showArchived ? (
-          <EmptyState
-            illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
-            title="No archived branches"
-            compact
-            className="min-h-[200px]"
-          />
-        ) : (
-          <EmptyState
-            illustration={<GitBranch className="h-8 w-8 text-muted-foreground/40" />}
-            title="No branches yet"
-            description="Create your first branch to get started."
-            action={{ label: "Add Branch", onClick: handleOpenCreate }}
-            className="min-h-[40vh]"
-          />
-        )
-      ) : (
-        <div className="overflow-x-auto">
-          <div className="min-w-[580px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Code</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Location</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
-                  <TableHead className="w-28 px-2 py-1.5" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((b) => (
-                  <TableRow key={b.id} className={cn("h-8", b.status === "ARCHIVED" && "opacity-60")}>
-                    <TableCell className="font-medium px-2 py-1 text-[11px]">{b.name}</TableCell>
-                    <TableCell className="px-2 py-1">
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{b.code}</code>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground px-2 py-1 text-[11px]">
-                      {[b.city, b.state, b.country].filter(Boolean).join(", ") || "—"}
-                    </TableCell>
-                    <TableCell className="px-2 py-1">
-                      <Badge
-                        variant={b.status === "ACTIVE" ? "outline" : "secondary"}
-                        className={cn(
-                          "h-4 px-1.5 py-0 text-[9px]",
-                          b.status === "ACTIVE"
-                            ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
-                            : b.status === "ARCHIVED"
-                              ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
-                              : ""
-                        )}
-                      >
-                        {b.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-2 py-1">
-                      <div className="flex items-center gap-1">
-                        {b.status === "ARCHIVED" ? (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(b)} title="Restore">
-                              <RotateCcw className="h-4 w-4 text-blue-600" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(b)} title="Delete permanently">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(b)} title="Edit">
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={makeArchiveHandler(b)} title="Archive">
-                              <Archive className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      )}
+      <DataTable
+        data={filtered}
+        columns={columns}
+        getRowKey={(b) => b.id}
+        isLoading={isLoading}
+        emptyState={emptyState}
+        search={{ value: search, onChange: handleSearchChange, placeholder: "Search branches…" }}
+        toolbar={archiveToolbar}
+        rowClassName={(b) => cn(b.status === "ARCHIVED" && "opacity-60")}
+        minWidth="580px"
+      />
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
