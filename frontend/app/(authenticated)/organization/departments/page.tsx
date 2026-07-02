@@ -54,6 +54,8 @@ import {
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgDepartment } from "@/types/org-hierarchy";
 
+const NO_BRANCH = "none";
+
 const formSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   code: z
@@ -123,17 +125,21 @@ function DeptForm({
           <FormField
             control={form.control}
             name="branchId"
-            render={({ field }) => (
+            render={({ field }) => {
+              function handleBranchChange(value: string) {
+                field.onChange(value === NO_BRANCH ? "" : value);
+              }
+              return (
               <FormItem>
                 <FormLabel>Branch</FormLabel>
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <Select value={field.value ? field.value : NO_BRANCH} onValueChange={handleBranchChange}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value={NO_BRANCH}>None</SelectItem>
                     {branches.map((b) => (
                       <SelectItem key={b.id} value={b.id}>
                         {b.name}
@@ -143,7 +149,8 @@ function DeptForm({
                 </Select>
                 <FormMessage />
               </FormItem>
-            )}
+              );
+            }}
           />
         </div>
         <FormField

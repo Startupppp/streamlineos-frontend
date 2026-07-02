@@ -17,6 +17,10 @@ import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
 import { Building2, GitBranch, Network, Pencil, Check, X } from "lucide-react";
 
+const NO_BRANCH = "none";
+const NO_DEPARTMENT = "none";
+const NO_MANAGER = "none";
+
 interface UserMembershipSectionProps {
   userId: string;
 }
@@ -84,6 +88,16 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
   const departments = departmentsData?.data ?? [];
   const managerOptions = membersData?.data ?? [];
 
+  function handleBranchChange(v: string) {
+    setDraft((p) => ({ ...p, branchId: v === NO_BRANCH ? "" : v }));
+  }
+  function handleDepartmentChange(v: string) {
+    setDraft((p) => ({ ...p, departmentId: v === NO_DEPARTMENT ? "" : v }));
+  }
+  function handleManagerChange(v: string) {
+    setDraft((p) => ({ ...p, managerUserId: v === NO_MANAGER ? "" : v }));
+  }
+
   const rows: MembershipRow[] = [
     {
       label: "Branch",
@@ -114,12 +128,12 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs">
             <GitBranch className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <Select value={draft.branchId} onValueChange={(v) => setDraft((p) => ({ ...p, branchId: v }))}>
+            <Select value={draft.branchId || NO_BRANCH} onValueChange={handleBranchChange}>
               <SelectTrigger className="h-7 text-xs flex-1">
                 <SelectValue placeholder="Select branch" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value={NO_BRANCH}>None</SelectItem>
                 {branches.map((b) => (
                   <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
                 ))}
@@ -128,12 +142,12 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           </div>
           <div className="flex items-center gap-2 text-xs">
             <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <Select value={draft.departmentId} onValueChange={(v) => setDraft((p) => ({ ...p, departmentId: v }))}>
+            <Select value={draft.departmentId || NO_DEPARTMENT} onValueChange={handleDepartmentChange}>
               <SelectTrigger className="h-7 text-xs flex-1">
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value={NO_DEPARTMENT}>None</SelectItem>
                 {departments.map((d) => (
                   <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                 ))}
@@ -142,12 +156,12 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           </div>
           <div className="flex items-center gap-2 text-xs">
             <Network className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <Select value={draft.managerUserId} onValueChange={(v) => setDraft((p) => ({ ...p, managerUserId: v }))}>
+            <Select value={draft.managerUserId || NO_MANAGER} onValueChange={handleManagerChange}>
               <SelectTrigger className="h-7 text-xs flex-1">
                 <SelectValue placeholder="Select manager" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value={NO_MANAGER}>None</SelectItem>
                 {managerOptions.filter((m) => m.userId !== userId).map((m) => (
                   <SelectItem key={m.userId} value={m.userId}>{m.name ?? m.email}</SelectItem>
                 ))}

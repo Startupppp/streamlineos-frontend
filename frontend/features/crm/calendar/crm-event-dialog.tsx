@@ -41,6 +41,8 @@ import {
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { EventAttendeesPicker } from "@/features/calendar/event-attendees-picker";
 
+const NO_ENTITY_TYPE = "none";
+
 const eventSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters").max(100, "Title too long"),
   description: z.string().max(2000, "Description too long").optional(),
@@ -474,22 +476,27 @@ export function CrmEventDialog({
                 <Controller
                   control={form.control}
                   name="entityType"
-                  render={({ field }) => (
+                  render={({ field }) => {
+                    function handleEntityTypeChange(value: string) {
+                      field.onChange(value === NO_ENTITY_TYPE ? "" : value);
+                    }
+                    return (
                     <Select
-                      value={field.value ?? ""}
-                      onValueChange={field.onChange}
+                      value={field.value ? field.value : NO_ENTITY_TYPE}
+                      onValueChange={handleEntityTypeChange}
                     >
                       <SelectTrigger className="h-9 bg-white">
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value={NO_ENTITY_TYPE}>None</SelectItem>
                         <SelectItem value="LEAD">Lead</SelectItem>
                         <SelectItem value="DEAL">Deal</SelectItem>
                         <SelectItem value="CONTACT">Contact</SelectItem>
                       </SelectContent>
                     </Select>
-                  )}
+                    );
+                  }}
                 />
               </div>
 

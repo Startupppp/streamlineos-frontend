@@ -52,6 +52,8 @@ import {
 } from "@/features/notifications/notification-types";
 import type { NotificationTemplate, NotificationChannel } from "@/types/notifications";
 
+const NO_CATEGORY = "none";
+
 const CHANNELS: Array<{ value: NotificationChannel; label: string }> = [
   { value: "IN_APP", label: "In-App" },
   { value: "EMAIL", label: "Email" },
@@ -194,15 +196,19 @@ function TemplateSheet({
               <FormField
                 control={form.control}
                 name="category"
-                render={({ field }) => (
+                render={({ field }) => {
+                  function handleCategoryChange(value: string) {
+                    field.onChange(value === NO_CATEGORY ? undefined : value);
+                  }
+                  return (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || undefined)}>
+                    <Select value={field.value ? field.value : NO_CATEGORY} onValueChange={handleCategoryChange}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value={NO_CATEGORY}>None</SelectItem>
                         {NOTIFICATION_CATEGORIES.map((cat) => (
                           <SelectItem key={cat} value={cat}>{NOTIFICATION_CATEGORY_CONFIG[cat].label}</SelectItem>
                         ))}
@@ -210,7 +216,8 @@ function TemplateSheet({
                     </Select>
                     <FormMessage />
                   </FormItem>
-                )}
+                  );
+                }}
               />
             </div>
             <FormField

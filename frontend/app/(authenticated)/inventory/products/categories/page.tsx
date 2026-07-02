@@ -57,6 +57,8 @@ import {
 } from "@/hooks/api/inventory";
 import type { InventoryCategory } from "@/types/inventory";
 
+const NO_PARENT = "none";
+
 const categorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
   description: z.string().optional(),

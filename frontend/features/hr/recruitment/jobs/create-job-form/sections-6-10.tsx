@@ -19,6 +19,8 @@ import {
   FileText, Users, Settings, Eye, Zap,
 } from "lucide-react";
 
+const NO_HIRING_FLOW = "none";
+
 function Field({ label, required, hint, error, children }: {
   label: string;
   required?: boolean;
@@ -105,13 +107,17 @@ export function Section7({ form }: SectionProps) {
           <Controller
             name="hiringFlowId"
             control={control}
-            render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+            render={({ field }) => {
+              function handleHiringFlowChange(value: string) {
+                field.onChange(value === NO_HIRING_FLOW ? "" : value);
+              }
+              return (
+              <Select value={field.value ? field.value : NO_HIRING_FLOW} onValueChange={handleHiringFlowChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a hiring flow (optional)" />
                 </SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value={NO_HIRING_FLOW}>None</SelectItem>
                   {(hiringFlows ?? []).map((f) => (
                     <SelectItem key={f.id} value={String(f.id)}>
                       {f.name}{f.isDefault ? " (Default)" : ""}
@@ -119,7 +125,8 @@ export function Section7({ form }: SectionProps) {
                   ))}
                 </SelectContent>
               </Select>
-            )}
+              );
+            }}
           />
         </Field>
 

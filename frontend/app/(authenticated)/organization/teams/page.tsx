@@ -54,6 +54,8 @@ import {
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgTeam } from "@/types/org-hierarchy";
 
+const NO_DEPARTMENT = "none";
+
 const formSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   code: z
@@ -138,27 +140,35 @@ function TeamForm({
         <FormField
           control={form.control}
           name="departmentId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Department</FormLabel>
-              <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="None" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="">None</SelectItem>
-                  {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            function handleDepartmentChange(value: string) {
+              field.onChange(value === NO_DEPARTMENT ? "" : value);
+            }
+            return (
+              <FormItem>
+                <FormLabel>Department</FormLabel>
+                <Select
+                  value={field.value ? field.value : NO_DEPARTMENT}
+                  onValueChange={handleDepartmentChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="None" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value={NO_DEPARTMENT}>None</SelectItem>
+                    {departments.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
         <FormField
           control={form.control}

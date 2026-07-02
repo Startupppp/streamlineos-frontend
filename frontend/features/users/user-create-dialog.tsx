@@ -34,6 +34,9 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
+const NO_DEPARTMENT = "none";
+const NO_BRANCH = "none";
+
 const ROLES = ["MEMBER", "MANAGER", "HR", "FINANCE", "ENGINEERING", "ADMIN"] as const;
 
 const createUserSchema = z.object({
@@ -238,12 +241,16 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
                   <FormField
                     control={form.control}
                     name="departmentId"
-                    render={({ field }) => (
+                    render={({ field }) => {
+                      function handleDepartmentChange(v: string) {
+                        field.onChange(v === NO_DEPARTMENT ? undefined : v);
+                      }
+                      return (
                       <FormItem>
                         <FormLabel>Department</FormLabel>
                         <Select
-                          value={field.value ?? ""}
-                          onValueChange={(v) => field.onChange(v || undefined)}
+                          value={field.value ? field.value : NO_DEPARTMENT}
+                          onValueChange={handleDepartmentChange}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -251,7 +258,7 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value={NO_DEPARTMENT}>None</SelectItem>
                             {departments.map((d) => (
                               <SelectItem key={d.id} value={String(d.id)}>
                                 {d.name}
@@ -261,18 +268,23 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
                         </Select>
                         <FormMessage />
                       </FormItem>
-                    )}
+                      );
+                    }}
                   />
 
                   <FormField
                     control={form.control}
                     name="branchId"
-                    render={({ field }) => (
+                    render={({ field }) => {
+                      function handleBranchChange(v: string) {
+                        field.onChange(v === NO_BRANCH ? undefined : v);
+                      }
+                      return (
                       <FormItem>
                         <FormLabel>Branch</FormLabel>
                         <Select
-                          value={field.value ?? ""}
-                          onValueChange={(v) => field.onChange(v || undefined)}
+                          value={field.value ? field.value : NO_BRANCH}
+                          onValueChange={handleBranchChange}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -280,7 +292,7 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value={NO_BRANCH}>None</SelectItem>
                             {branches.map((b) => (
                               <SelectItem key={b.id} value={String(b.id)}>
                                 {b.name}
@@ -290,7 +302,8 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
                         </Select>
                         <FormMessage />
                       </FormItem>
-                    )}
+                      );
+                    }}
                   />
                 </div>
               </>

@@ -53,6 +53,8 @@ import {
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgBranch } from "@/types/org-hierarchy";
 
+const NO_BUSINESS_UNIT = "none";
+
 const formSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   code: z
@@ -128,17 +130,21 @@ function BranchForm({
           <FormField
             control={form.control}
             name="businessUnitId"
-            render={({ field }) => (
+            render={({ field }) => {
+              function handleBusinessUnitChange(value: string) {
+                field.onChange(value === NO_BUSINESS_UNIT ? "" : value);
+              }
+              return (
               <FormItem>
                 <FormLabel>Business Unit</FormLabel>
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <Select value={field.value ? field.value : NO_BUSINESS_UNIT} onValueChange={handleBusinessUnitChange}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value={NO_BUSINESS_UNIT}>None</SelectItem>
                     {businessUnits.map((bu) => (
                       <SelectItem key={bu.id} value={bu.id}>
                         {bu.name}
@@ -148,7 +154,8 @@ function BranchForm({
                 </Select>
                 <FormMessage />
               </FormItem>
-            )}
+              );
+            }}
           />
           <FormField
             control={form.control}

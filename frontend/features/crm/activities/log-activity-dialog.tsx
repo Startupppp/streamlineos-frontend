@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/select";
 import type { LogCrmActivityInput, CrmActivityType, CrmActivityEntityType } from "@/hooks/api/crm/crm-activities";
 
+const NO_ENTITY_TYPE = "none";
+
 const ENTITY_TYPE_VALUES = ["LEAD", "DEAL", "CONTACT", ""] as const;
 type EntityTypeFieldValue = (typeof ENTITY_TYPE_VALUES)[number];
 
@@ -149,12 +151,16 @@ export function LogActivityDialog({
             <FormField
               control={form.control}
               name="entityType"
-              render={({ field }) => (
+              render={({ field }) => {
+                function handleEntityTypeChange(value: string) {
+                  field.onChange(value === NO_ENTITY_TYPE ? "" : value);
+                }
+                return (
                 <FormItem>
                   <FormLabel>Related To</FormLabel>
                   <Select
-                    value={field.value ?? ""}
-                    onValueChange={field.onChange}
+                    value={field.value ? field.value : NO_ENTITY_TYPE}
+                    onValueChange={handleEntityTypeChange}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -162,7 +168,7 @@ export function LogActivityDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value={NO_ENTITY_TYPE}>None</SelectItem>
                       <SelectItem value="LEAD">Lead</SelectItem>
                       <SelectItem value="DEAL">Deal</SelectItem>
                       <SelectItem value="CONTACT">Contact</SelectItem>
@@ -170,7 +176,8 @@ export function LogActivityDialog({
                   </Select>
                   <FormMessage />
                 </FormItem>
-              )}
+                );
+              }}
             />
 
             <FormField
