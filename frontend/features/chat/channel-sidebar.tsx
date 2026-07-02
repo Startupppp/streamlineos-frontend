@@ -20,8 +20,10 @@ import {
   MessageSquareText,
   PanelLeftClose,
   Search,
+  Star,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { useChatChannels, useArchivedChannels, useChatOnlineUsers, useSetPresenceStatus } from "@/hooks/api";
 import { useSession } from "next-auth/react";
@@ -32,7 +34,6 @@ import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelItem } from "./channel-item";
 import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
-import { BrowseChannelsDialog } from "./browse-channels-dialog";
 import { ChatSearchDialog } from "./chat-search-dialog";
 
 interface ChannelListEntryProps {
@@ -42,6 +43,8 @@ interface ChannelListEntryProps {
   onlineUserIds: Set<string>;
   onSelectChannel: (id: number) => void;
   compact?: boolean;
+  onStartCall?: (channelId: number, type: "huddle" | "video") => void;
+  onOpenSettings?: (channelId: number) => void;
 }
 
 function ChannelListEntry({
@@ -51,6 +54,8 @@ function ChannelListEntry({
   onlineUserIds,
   onSelectChannel,
   compact = false,
+  onStartCall,
+  onOpenSettings,
 }: ChannelListEntryProps) {
   const handleClick = useCallback(() => onSelectChannel(ch.id), [ch.id, onSelectChannel]);
   return (
@@ -61,6 +66,8 @@ function ChannelListEntry({
       currentUserId={currentUserId}
       onlineUserIds={onlineUserIds}
       compact={compact}
+      onStartCall={onStartCall}
+      onOpenSettings={onOpenSettings}
     />
   );
 }
@@ -73,6 +80,8 @@ interface ChannelSidebarProps {
   onSearchFocused?: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  onStartCall?: (channelId: number, type: "huddle" | "video") => void;
+  onOpenSettings?: (channelId: number) => void;
 }
 
 export function ChannelSidebar({
@@ -83,7 +92,10 @@ export function ChannelSidebar({
   onSearchFocused,
   isCollapsed = false,
   onToggleCollapse,
+  onStartCall,
+  onOpenSettings,
 }: ChannelSidebarProps) {
+  const router = useRouter();
   const { data: rawChannels, isLoading } = useChatChannels();
   const channels = rawChannels as Channel[] | undefined;
   const { data: rawArchivedChannels, isLoading: isArchivedLoading } = useArchivedChannels();
@@ -112,11 +124,11 @@ export function ChannelSidebar({
 
   const handleToggleStatusMenu = useCallback(() => setShowStatusMenu((p) => !p), []);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
-  const [browseOpen, setBrowseOpen] = useState(false);
   const [chatSearchOpen, setChatSearchOpen] = useState(false);
   const [dmsCollapsed, setDmsCollapsed] = useState(false);
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
   const [publicCollapsed, setPublicCollapsed] = useState(false);
+  const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
@@ -124,12 +136,13 @@ export function ChannelSidebar({
   const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
   const handleTogglePublic = useCallback(() => setPublicCollapsed((p) => !p), []);
+  const handleToggleFavorites = useCallback(() => setFavoritesCollapsed((p) => !p), []);
   const handleOpenArchived = useCallback(() => setShowArchived(true), []);
   const handleCloseArchived = useCallback(() => {
     setShowArchived(false);
     setSearch("");
   }, []);
-  const handleOpenBrowse = useCallback(() => setBrowseOpen(true), []);
+  const handleOpenBrowse = useCallback(() => router.push("/chat/channels"), [router]);
   const handleOpenChatSearch = useCallback(() => setChatSearchOpen(true), []);
   const handleToggleCollapse = useCallback(() => onToggleCollapse?.(), [onToggleCollapse]);
 
@@ -178,24 +191,37 @@ export function ChannelSidebar({
     [archivedChannels],
   );
 
+  const favorites = useMemo(
+    () =>
+      filteredChannels.filter((c) =>
+        c.members?.find((m) => m.user?.id === currentUserId)?.isFavorite,
+      ),
+    [filteredChannels, currentUserId],
+  );
+
+  const favoriteIds = useMemo(() => new Set(favorites.map((c) => c.id)), [favorites]);
+
   const dms = useMemo(
-    () => filteredChannels.filter((c) => c.type === "DIRECT"),
-    [filteredChannels]
+    () => filteredChannels.filter((c) => c.type === "DIRECT" && !favoriteIds.has(c.id)),
+    [filteredChannels, favoriteIds]
   );
 
   const groups = useMemo(
-    () => filteredChannels.filter((c) => c.type === "GROUP" || c.type === "PRIVATE"),
-    [filteredChannels]
+    () =>
+      filteredChannels.filter(
+        (c) => (c.type === "GROUP" || c.type === "PRIVATE") && !favoriteIds.has(c.id),
+      ),
+    [filteredChannels, favoriteIds]
   );
 
   const publicChannels = useMemo(
-    () => filteredChannels.filter((c) => c.type === "PUBLIC"),
-    [filteredChannels]
+    () => filteredChannels.filter((c) => c.type === "PUBLIC" && !favoriteIds.has(c.id)),
+    [filteredChannels, favoriteIds]
   );
 
   const compactChannels = useMemo(
-    () => [...publicChannels, ...groups, ...dms],
-    [publicChannels, groups, dms]
+    () => [...favorites, ...publicChannels, ...groups, ...dms],
+    [favorites, publicChannels, groups, dms]
   );
 
   const showCollapseToggle = !!onToggleCollapse;
@@ -371,6 +397,8 @@ export function ChannelSidebar({
                     currentUserId={currentUserId}
                     onlineUserIds={onlineUserIds}
                     onSelectChannel={onSelectChannel}
+                    onStartCall={onStartCall}
+                    onOpenSettings={onOpenSettings}
                   />
                 ))
               ) : (
@@ -413,6 +441,31 @@ export function ChannelSidebar({
               </div>
 
               <div className={cn("py-1", isCollapsed && "md:hidden")}>
+                {favorites.length > 0 && (
+                  <ChannelSidebarSection
+                    title="Favorites"
+                    count={favorites.reduce((a, c) => a + c.unreadCount, 0)}
+                    collapsed={favoritesCollapsed}
+                    onToggle={handleToggleFavorites}
+                    icon={<Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
+                  >
+                    {favorites.map((ch) => (
+                      <ChannelListEntry
+                        key={ch.id}
+                        channel={ch}
+                        activeChannelId={activeChannelId}
+                        currentUserId={currentUserId}
+                        onlineUserIds={onlineUserIds}
+                        onSelectChannel={onSelectChannel}
+                        onStartCall={onStartCall}
+                        onOpenSettings={onOpenSettings}
+                      />
+                    ))}
+                  </ChannelSidebarSection>
+                )}
+              </div>
+
+              <div className={cn("py-1", isCollapsed && "md:hidden")}>
                 {!search && (archivedChannels?.length ?? 0) > 0 && (
                   <button
                     type="button"
@@ -446,6 +499,8 @@ export function ChannelSidebar({
                         currentUserId={currentUserId}
                         onlineUserIds={onlineUserIds}
                         onSelectChannel={onSelectChannel}
+                        onStartCall={onStartCall}
+                        onOpenSettings={onOpenSettings}
                       />
                     ))}
                   </ChannelSidebarSection>
@@ -466,6 +521,8 @@ export function ChannelSidebar({
                         currentUserId={currentUserId}
                         onlineUserIds={onlineUserIds}
                         onSelectChannel={onSelectChannel}
+                        onStartCall={onStartCall}
+                        onOpenSettings={onOpenSettings}
                       />
                     ))}
                   </ChannelSidebarSection>
@@ -486,6 +543,8 @@ export function ChannelSidebar({
                         currentUserId={currentUserId}
                         onlineUserIds={onlineUserIds}
                         onSelectChannel={onSelectChannel}
+                        onStartCall={onStartCall}
+                        onOpenSettings={onOpenSettings}
                       />
                     ))}
                   </ChannelSidebarSection>
@@ -557,11 +616,6 @@ export function ChannelSidebar({
         <ChatSearchDialog
           open={chatSearchOpen}
           onOpenChange={setChatSearchOpen}
-          onSelectChannel={onSelectChannel}
-        />
-        <BrowseChannelsDialog
-          open={browseOpen}
-          onOpenChange={setBrowseOpen}
           onSelectChannel={onSelectChannel}
         />
       </div>

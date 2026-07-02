@@ -13,6 +13,7 @@ import {
 import { formatChannelTime } from "./chat-helpers";
 import type { Channel } from "./chat-types";
 import { ChannelAvatar } from "./channel-avatar";
+import { ChannelItemMenu } from "./channel-item-menu";
 import { useMarkChannelUnread } from "@/hooks/api";
 
 export function ChannelItem({
@@ -22,6 +23,8 @@ export function ChannelItem({
   currentUserId,
   onlineUserIds,
   compact = false,
+  onStartCall,
+  onOpenSettings,
 }: {
   channel: Channel;
   isActive: boolean;
@@ -29,6 +32,8 @@ export function ChannelItem({
   currentUserId: string;
   onlineUserIds: Set<string>;
   compact?: boolean;
+  onStartCall?: (channelId: number, type: "huddle" | "video") => void;
+  onOpenSettings?: (channelId: number) => void;
 }) {
   const otherMember =
     channel.type === "DIRECT"
@@ -156,7 +161,7 @@ export function ChannelItem({
                 : "No messages yet"}
             </p>
             {hasUnread && (
-              <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-blue-500 text-white text-[10px] font-bold rounded-full px-1 shrink-0">
+              <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-blue-500 text-white text-[10px] font-bold rounded-full px-1 shrink-0 transition-opacity duration-150 group-hover/item:opacity-0">
                 {channel.unreadCount > 99 ? "99+" : channel.unreadCount}
               </span>
             )}
@@ -172,7 +177,7 @@ export function ChannelItem({
               onClick={handleMarkUnread}
               aria-label="Mark as unread"
               className={cn(
-                "absolute right-2 top-[11px] z-10",
+                "absolute right-8 top-[11px] z-10",
                 "h-6 w-6 flex items-center justify-center rounded-md",
                 "text-muted-foreground hover:text-foreground hover:bg-background/90",
                 "opacity-0 pointer-events-none group-hover/item:opacity-100 group-hover/item:pointer-events-auto",
@@ -186,6 +191,15 @@ export function ChannelItem({
             Mark as unread
           </TooltipContent>
         </Tooltip>
+      )}
+
+      {onStartCall && onOpenSettings && (
+        <ChannelItemMenu
+          channel={channel}
+          currentUserId={currentUserId}
+          onStartCall={onStartCall}
+          onOpenSettings={onOpenSettings}
+        />
       )}
     </div>
   );

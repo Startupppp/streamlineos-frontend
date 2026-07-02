@@ -9,12 +9,14 @@ export function ChannelSidebarSection({
   collapsed,
   onToggle,
   children,
+  icon,
 }: {
   title: string;
   count: number;
   collapsed: boolean;
   onToggle: () => void;
   children: React.ReactNode;
+  icon?: React.ReactNode;
 }) {
   return (
     <div className="mb-1">
@@ -27,6 +29,7 @@ export function ChannelSidebarSection({
         ) : (
           <ChevronDown className="h-3 w-3" />
         )}
+        {icon}
         <span className="flex-1 text-left">{title}</span>
         {count > 0 && (
           <span className="text-[10px] font-bold bg-blue-500 text-white rounded-full h-4 min-w-[16px] flex items-center justify-center px-1">
