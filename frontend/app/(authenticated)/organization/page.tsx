@@ -104,7 +104,7 @@ export default function OrganizationOverviewPage() {
       subtitle={
         overview
           ? `${(overview.businessUnits ?? 0) + (overview.branches ?? 0) + (overview.departments ?? 0) + (overview.teams ?? 0)} entities across your hierarchy`
-          : "Manage your company hierarchy, locations, and cost centers."
+          : "Manage your company hierarchy and cost centers."
       }
     >
       <div className="space-y-6">

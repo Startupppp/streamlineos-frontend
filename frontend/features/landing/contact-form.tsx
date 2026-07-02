@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import {
@@ -87,6 +88,10 @@ export function ContactForm() {
     setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
     setServerError(null);
   };
+
+  function handlePhoneChange(value: string) {
+    handleChange("phone", value);
+  }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -218,11 +223,10 @@ export function ContactForm() {
                 />
               </Field>
               <Field label="Phone" hint="optional" error={fieldErrors.phone}>
-                <Input
+                <PhoneInput
                   value={values.phone}
-                  onChange={(e) => handleChange("phone", e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="h-10"
+                  onChange={handlePhoneChange}
+                  defaultCountry="IN"
                 />
               </Field>
             </div>

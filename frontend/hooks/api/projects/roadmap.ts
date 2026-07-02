@@ -202,6 +202,7 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
 export function useCreateRoadmapItem() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "roadmap", "create"],
     mutationFn: (input: CreateRoadmapItemInput) =>
       apiClient.post<RoadmapItem>("/projects/roadmap", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),

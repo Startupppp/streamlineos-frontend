@@ -42,45 +42,43 @@ export default function TrialBalancePage() {
       eyebrow="Accounting · Reports"
       title="Trial Balance"
       subtitle="Ledger balances as of a chosen date."
-    >
-      <div className="space-y-4">
-        <div className="rounded-lg border border-border bg-muted/40 p-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="tb-as-of"
-                className="text-[11px] font-medium text-muted-foreground leading-none"
-              >
-                As of
-              </label>
-              <Input
-                id="tb-as-of"
-                type="date"
-                value={asOf}
-                onChange={handleAsOfChange}
-                className="w-full sm:w-[160px] h-8 text-sm"
-              />
-            </div>
-            {tb ? (
-              <div className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium text-muted-foreground leading-none">
-                  Status
-                </span>
-                {tb.balanced ? (
-                  <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-700 text-xs font-medium border border-emerald-500/20">
-                    Balanced ✓
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center px-2 py-1 rounded-md bg-destructive/10 text-destructive text-xs font-medium border border-destructive/20">
-                    Imbalanced
-                  </span>
-                )}
-              </div>
-            ) : null}
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="tb-as-of"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              As of
+            </label>
+            <Input
+              id="tb-as-of"
+              type="date"
+              value={asOf}
+              onChange={handleAsOfChange}
+              className="w-full sm:w-[160px] h-8 text-sm"
+            />
           </div>
+          {tb ? (
+            <div className="flex flex-col gap-1">
+              <span className="text-[11px] font-medium text-muted-foreground leading-none">
+                Status
+              </span>
+              {tb.balanced ? (
+                <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-700 text-xs font-medium border border-emerald-500/20">
+                  Balanced ✓
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-1 rounded-md bg-destructive/10 text-destructive text-xs font-medium border border-destructive/20">
+                  Imbalanced
+                </span>
+              )}
+            </div>
+          ) : null}
         </div>
-
-        {query.isLoading ? (
+      }
+    >
+      {query.isLoading ? (
           <LoadingState variant="table" rows={8} />
         ) : query.error ? (
           <ErrorState
@@ -152,7 +150,6 @@ export default function TrialBalancePage() {
             </div>
           </div>
         )}
-      </div>
     </PageWrapper>
   );
 }

@@ -44,16 +44,15 @@ export default function AgedReceivablesPage() {
       eyebrow="Accounting · Reports"
       title="Aged Receivables"
       subtitle="Outstanding customer balances grouped by days overdue."
-    >
-      <div className="rounded-lg border border-border bg-muted/40 p-3 mb-4">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end">
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-col gap-1">
             <label htmlFor="aged-asof" className="text-[11px] font-medium text-muted-foreground leading-none">As of</label>
             <Input id="aged-asof" type="date" value={asOf} onChange={handleAsOfChange} className="w-full sm:w-[160px] h-8 text-sm" />
           </div>
         </div>
-      </div>
-
+      }
+    >
       {query.isLoading ? (
         <LoadingState variant="table" />
       ) : query.error ? (

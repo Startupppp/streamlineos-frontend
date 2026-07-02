@@ -93,8 +93,8 @@ export function PageWrapper({
       </div>
 
       {filters && (
-        <div className="shrink-0 border-b border-border bg-card/95 backdrop-blur-sm">
-          <div className={cn("px-3 py-2", mobileFiltersClass)}>
+        <div className="shrink-0">
+          <div className={cn("px-4 sm:px-6 pb-2", mobileFiltersClass)}>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="h-8 text-xs gap-1.5">
@@ -109,13 +109,11 @@ export function PageWrapper({
               </PopoverContent>
             </Popover>
           </div>
-          <div className={cn("px-3 sm:px-4 py-2 flex-wrap items-center gap-3", desktopFiltersClass)}>
+          <div className={cn("px-4 sm:px-6 pb-2 flex-wrap items-center gap-2 sm:gap-3", desktopFiltersClass)}>
             {filters}
           </div>
         </div>
       )}
-
-      {!filters && <div className="shrink-0 mx-4 sm:mx-6 h-px bg-border" />}
 
       {noInternalScroll ? (
         <div className={cn("flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pt-3 pb-4", contentClassName)}>

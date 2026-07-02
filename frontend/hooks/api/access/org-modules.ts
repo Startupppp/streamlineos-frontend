@@ -1,16 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { useSession } from "next-auth/react";
+import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 interface OrgModule {
-  id: string;
-  orgId: string;
   moduleKey: string;
   enabled: boolean;
-  enabledAt: string;
-  enabledBy: string | null;
 }
 
 export function useOrgModules() {
@@ -23,12 +20,15 @@ export function useOrgModules() {
 
 export function useToggleOrgModule() {
   const qc = useQueryClient();
-  return useMutation<OrgModule, Error, { moduleKey: string; enabled: boolean }>({
+  const { update } = useSession();
+  return useMutation<void, Error, { moduleKey: string; enabled: boolean }>({
     mutationFn: ({ moduleKey, enabled }) =>
-      apiClient.patch<OrgModule>(`/access/org-modules/${moduleKey}`, { enabled }),
+      apiClient.patch<void>(`/access/org-modules/${moduleKey}`, { enabled }),
     onSuccess: () => {
+      clearBackendTokenCache();
       qc.invalidateQueries({ queryKey: queryKeys.access.orgModules() });
       qc.invalidateQueries({ queryKey: queryKeys.access.me() });
+      void update();
     },
   });
 }

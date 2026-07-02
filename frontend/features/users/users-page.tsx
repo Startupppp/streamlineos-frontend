@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -546,8 +547,8 @@ export function UsersPage() {
               onRetry={handleRetry}
             />
           ) : isLoading ? (
-            <div className="rounded-md border overflow-hidden">
-              <div className="overflow-x-auto">
+            <Card className="overflow-hidden">
+              <CardContent className="p-0 overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/40 h-8">
@@ -568,8 +569,8 @@ export function UsersPage() {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ) : users.length === 0 ? (
             <EmptyState
               illustration={<Users className="text-muted-foreground/40" />}
@@ -587,8 +588,8 @@ export function UsersPage() {
             />
           ) : (
             <div className="space-y-3">
-              <div className="rounded-md border overflow-hidden">
-                <div className="overflow-x-auto">
+              <Card className="overflow-hidden">
+                <CardContent className="p-0 overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/40 h-8">
@@ -731,8 +732,8 @@ export function UsersPage() {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
               {pagination && pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between text-xs text-muted-foreground">

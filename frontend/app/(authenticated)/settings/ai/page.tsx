@@ -7,15 +7,15 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   useOrgFeatureFlags,
   useUpdateFeatureFlag,
   useAiUsage,
   type OrgFeatureFlags,
 } from "@/hooks/api/ai";
-import { AlertCircle, BarChart3, Bot, BrainCircuit, TrendingUp, Zap } from "lucide-react";
+import { BarChart3, Bot, BrainCircuit, TrendingUp, Zap } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { ErrorState } from "@/components/shared/error-state";
 
 const FLAG_META: {
   key: keyof OrgFeatureFlags;
@@ -116,11 +116,12 @@ export default function AiSettingsPage() {
                 </div>
               ))
             ) : flagsError ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
-                <AlertCircle className="h-8 w-8 text-destructive/40" />
-                <p className="text-sm text-muted-foreground">Failed to load AI feature flags.</p>
-                <Button variant="outline" size="sm" onClick={handleRetryFlags}>Retry</Button>
-              </div>
+              <ErrorState
+                compact
+                title="Failed to load AI feature flags"
+                description="Something went wrong while fetching AI feature configuration."
+                onRetry={handleRetryFlags}
+              />
             ) : (
               FLAG_META.map(({ key, label, description, icon }) => (
                 <FlagRow
@@ -157,11 +158,12 @@ export default function AiSettingsPage() {
                 <StatCard label="Est. Cost" value={0} isLoading tone="emerald" />
               </StatCardGrid>
             ) : usageError ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
-                <AlertCircle className="h-8 w-8 text-destructive/40" />
-                <p className="text-sm text-muted-foreground">Failed to load usage data.</p>
-                <Button variant="outline" size="sm" onClick={handleRetryUsage}>Retry</Button>
-              </div>
+              <ErrorState
+                compact
+                title="Failed to load usage data"
+                description="Something went wrong while fetching AI usage statistics."
+                onRetry={handleRetryUsage}
+              />
             ) : (
               <div className="space-y-6">
                 <StatCardGrid cols={4}>

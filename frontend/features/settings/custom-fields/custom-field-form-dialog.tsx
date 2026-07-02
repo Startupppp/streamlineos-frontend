@@ -357,18 +357,19 @@ export function CustomFieldFormDialog({
 
         </form>
         </div>
-        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" form="custom-field-form" className="flex-1" disabled={isBusy}>
-            {isBusy ? "Saving…" : isCreate ? "Create Field" : "Save Changes"}
-          </Button>
+        <SheetFooter className="shrink-0 px-6 py-4 border-t">
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" form="custom-field-form" disabled={isBusy}>
+              {isBusy ? "Saving…" : isCreate ? "Create Field" : "Save Changes"}
+            </Button>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

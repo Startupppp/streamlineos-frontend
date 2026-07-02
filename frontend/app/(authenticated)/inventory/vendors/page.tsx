@@ -10,6 +10,7 @@ import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -182,7 +183,7 @@ function VendorFormSheet({
               <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder="+91 98765 43210" {...field} />
+                  <PhoneInput defaultCountry="IN" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

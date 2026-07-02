@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -60,6 +61,11 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
       supportPhone: org.supportPhone ?? "",
     },
   });
+
+  const supportPhone = form.watch("supportPhone");
+  const handleSupportPhoneChange = useCallback((value: string) => {
+    form.setValue("supportPhone", value, { shouldValidate: true });
+  }, [form]);
 
   const handleEdit = useCallback(() => {
     form.reset({
@@ -193,7 +199,11 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Support phone</Label>
-                <Input type="tel" {...form.register("supportPhone")} placeholder="+91 98765 43210" className="h-9" />
+                <PhoneInput
+                  value={supportPhone ?? ""}
+                  onChange={handleSupportPhoneChange}
+                  defaultCountry="IN"
+                />
               </div>
             </div>
             <div className="flex gap-2 pt-2">

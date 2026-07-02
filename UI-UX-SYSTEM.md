@@ -388,9 +388,13 @@ interface PageWrapperProps {
 
 | Breakpoint | Title size | Actions | Filters |
 |---|---|---|---|
-| Mobile (< 640px) | `text-base` semibold | Stack below title | Wrap, horizontal scroll |
-| Tablet (640–1280px) | `text-lg` semibold | Row, right-aligned | Wrap |
+| Mobile (< 640px) | `text-base` semibold | Full-width grid row — children share width equally (`grid grid-flow-col auto-cols-fr`) | Collapsed behind an outline "Filters" button (SlidersHorizontal + label, h-8) that opens a Popover with filters stacked vertically (`flex flex-col gap-2`, popover `w-72 max-w-[85vw]`) |
+| Tablet (640–1280px) | `text-lg` semibold | Row, right-aligned (`flex items-center`) | Inline flex row, wraps if needed |
 | Desktop (> 1280px) | `text-lg` semibold | Row, right-aligned | Single row, no wrap |
+
+**Subtitle:** Always clamped to one line (`line-clamp-1`). Use a live count as the subtitle on list pages for instant orientation.
+
+**`filtersCollapseBreakpoint` prop (default `"sm"`):** Pass `"md"` for wide filter bars (e.g. 3+ selects + date range) that can fit on tablet but not mobile. Shifts the collapse threshold to `md` so the popover appears on `< 768px` and the inline bar on `≥ 768px`.
 
 ### Detail page back-navigation rule
 
@@ -446,6 +450,136 @@ When "all" is selected, the query param is removed from the URL (not set to "all
 - Never reset page to 1 silently — always reset pagination when a filter changes.
 - Active filter count badge: if > 2 filters are active simultaneously, show a count badge on the
   filter bar's trigger (relevant for mobile sheet-based filters).
+
+---
+
+## Reference layout recipe (virabha)
+
+> Binding recipe extracted from the virabha admin reference. Every owned page must conform to this layout.
+> **Read-only source:** `D:\projects\virabha\frontend`
+
+### Page layout structure
+
+```tsx
+// PageWrapper props
+<PageWrapper
+  title="Page Title"
+  subtitle="Optional subtitle"
+  scrollBody={false}   // → noInternalScroll in StreamlineOS
+  className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+  actions={...}
+  filters={...}   // filters row — separate from table, no border/bg
+>
+  {/* stats row (shrink-0, mb-2) */}
+  {/* bulk action bar (conditional, shrink-0) */}
+  {/* table card (flex-1, min-h-0) */}
+</PageWrapper>
+```
+
+### Filters row — exact classes
+
+Filters live in the `PageWrapper` `filters` prop. They render **above** the table card with NO border, NO background. The PageWrapper's filter container is simply:
+
+```
+shrink-0 — no border-b, no bg-card, no backdrop-blur
+```
+
+**Full-width filter row (single flex row):**
+```
+flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3
+```
+
+**Search input block:**
+```
+relative min-w-0 flex-1 lg:max-w-md
+Search icon: absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none
+Input: h-8 w-full min-w-0 pl-8 text-xs
+```
+
+**Desktop selects block (hidden on mobile):**
+```
+hidden min-w-0 flex-[2] flex-row flex-nowrap items-center gap-2 sm:flex lg:gap-3
+Each Select trigger: h-8 min-w-0 flex-1 text-xs
+```
+
+**Mobile compact filter button:**
+```
+flex shrink-0 items-center sm:hidden
+```
+Consumer is responsible for implementing the mobile compact button inside the `filters` content; PageWrapper does NOT wrap filters in a Popover.
+
+### Table card — exact classes
+
+Always wrap the table in a Card + CardContent with zero padding:
+
+```tsx
+<Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+  <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+    <DataTable fillContainer ... />
+    {/* pagination at bottom of CardContent, border-t, shrink-0 */}
+  </CardContent>
+</Card>
+```
+
+For pages NOT using fill-height (settings, detail sub-tables):
+```tsx
+<Card className="overflow-hidden">
+  <CardContent className="p-0 overflow-x-auto">
+    <Table>...</Table>
+  </CardContent>
+</Card>
+```
+
+### Sheet anatomy — exact classes
+
+```tsx
+<Sheet open={open} onOpenChange={onOpenChange}>
+  <SheetContent className="flex w-full flex-col overflow-hidden sm:max-w-md">
+    {/* HEADER — always fixed, never scrolls */}
+    <SheetHeader className="shrink-0 border-b pb-4">
+      <SheetTitle>Title</SheetTitle>
+      <SheetDescription>Optional description</SheetDescription>
+    </SheetHeader>
+
+    {/* BODY — scrolls independently */}
+    <ScrollArea className="min-h-0 flex-1 -mx-2">
+      <div className="space-y-3 px-6 py-2">
+        {/* form fields */}
+      </div>
+    </ScrollArea>
+    {/* OR for non-form detail panes: */}
+    {/* <div className="min-h-0 flex-1 overflow-y-auto p-4"> */}
+
+    {/* FOOTER — always fixed, never scrolls */}
+    <SheetFooter className="shrink-0 gap-2 border-t">
+      {/* Two-button footer: equal widths */}
+      <div className="grid w-full grid-cols-2 gap-2">
+        <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+        <Button type="submit">Save</Button>
+      </div>
+      {/* Single-button footer: just render the button */}
+    </SheetFooter>
+  </SheetContent>
+</Sheet>
+```
+
+**Rules:**
+- `SheetContent` always gets `overflow-hidden` — content itself manages overflow
+- Header: `shrink-0 border-b pb-4` — border at bottom, compressed padding
+- Body: `min-h-0 flex-1 overflow-y-auto` — the `min-h-0` is mandatory to prevent flex overflow
+- Footer: `shrink-0 border-t` — border at top, uses SheetFooter default padding (`p-4`)
+- Two-button footers: `grid grid-cols-2 gap-2` so buttons are equal width
+
+### Header spacing
+
+| Zone | virabha class | StreamlineOS equivalent |
+|---|---|---|
+| Page outer | `px-2 py-1 sm:px-3 sm:py-1.5` (on layout `<main>`) | `px-4 sm:px-6` (on PageWrapper header + content) |
+| Header+filters block | `py-2 sm:pb-3` | `pt-4 pb-2` (header) + `pb-2` (filters) |
+| Gap between filters and table | none — just `space-y-2`/`gap-3` | none — table card immediately follows filters |
+| Actions button height | `h-8` | `h-8` |
+| Actions button text | `text-xs` | `text-xs` |
+| Actions gap | `gap-2` | `gap-2` |
 
 ---
 
@@ -518,7 +652,13 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 - `href?` — wraps the card in a `<Link>` with `hover:bg-muted/30` for navigable stat tiles.
 - `isLoading?` — shows a matching `<Skeleton>` in place of the value.
 
-**`StatCardGrid` wrapper:** `cols` = `2 | 3 | 4 | 5 | 6` (default 4). Gap is `gap-2`; responsive 2-col mobile → scales at `lg`.
+**`StatCardGrid` wrapper:** `cols` = `2 | 3 | 4 | 5 | 6` (default 4). Gap is `gap-2`; responsive 2-col mobile grid → scales at `lg`.
+
+**Responsive layout contract:**
+- **Mobile (< 640px):** Single horizontal scroll row — `flex overflow-x-auto snap-x`, each child `min-w-[150px] snap-start shrink-0`. Cards scroll horizontally; never wrap to a second row. `isLoading` skeleton cards receive the same treatment.
+- **sm+ (≥ 640px):** Reverts to a `grid` with the `cols`-controlled column count (e.g. `grid-cols-2 lg:grid-cols-4` for `cols={4}`).
+
+The negative margin (`-mx-px`) and bottom padding (`pb-1`) apply on mobile only and are reset at `sm:` to avoid layout interference.
 
 **Delta vs hint:** use `delta` for percentage changes vs. prior period; use `hint` for static context. Never show both.
 
@@ -587,8 +727,6 @@ The canonical generic data table lives at `components/ui/data-table.tsx`. Use it
 | `getRowKey` | `(row: T) => string \| number` | ✓ | Unique key per row |
 | `isLoading` | `boolean` | — | Shows skeleton rows (5 rows, matching column count) |
 | `emptyState` | `ReactNode` | — | Rendered inside a colspan cell when `data` is empty |
-| `search` | `{ value, onChange, placeholder? }` | — | Renders a search input in an internal toolbar strip |
-| `toolbar` | `ReactNode` | — | Rendered beside the search input (e.g. archive toggle) |
 | `pagination` | `{ pageSize? }` or `{ mode: "server"; page; pageSize; total; onPageChange }` | — | Client-side slicing or server-controlled |
 | `selection` | `{ selected: Set<string\|number>; onChange }` | — | Adds a checkbox column; syncs with TanStack selection |
 | `footer` | `ReactNode` | — | Optional summary row above the pagination bar |
@@ -596,6 +734,8 @@ The canonical generic data table lives at `components/ui/data-table.tsx`. Use it
 | `rowClassName` | `(row: T) => string` | — | Additional classes per row (e.g. `opacity-60` for archived) |
 | `minWidth` | `string` | — | Minimum width of the inner scroll container (e.g. `"580px"`) |
 | `className` | `string` | — | Classes on the outer container |
+
+**Layout rule:** DataTable renders ONLY the table card (header/rows/skeleton/empty) and pagination footer. It never renders search inputs or filter controls internally. All filters/search belong in the page's `PageWrapper` `filters` prop (or a standalone `flex flex-wrap items-center gap-2` row above the table card). The `search` and `toolbar` props have been removed — passing them will cause a compile error.
 
 **Column definition:**
 
@@ -649,8 +789,6 @@ const columns: DataTableColumn<OrgBranch>[] = [
   getRowKey={(b) => b.id}
   isLoading={isLoading}
   emptyState={<EmptyState ... />}
-  search={{ value: search, onChange: setSearch, placeholder: "Search branches…" }}
-  toolbar={<ArchiveToggle ... />}
   rowClassName={(b) => cn(b.status === "ARCHIVED" && "opacity-60")}
   minWidth="580px"
 />
@@ -762,6 +900,10 @@ from the palette table in §2. The size scale:
 | Table row | `h-4` | `px-1.5 py-0` | `text-[9px]` |
 | Card chip | `h-5` | `px-2 py-0.5` | `text-[10px]` |
 | Page header / filter | `h-5` | `px-2 py-0.5` | `text-xs` |
+
+### Phone Input
+
+Every phone/mobile/WhatsApp number field in the app uses `<PhoneInput>` from `@/components/ui/phone-input` (wraps `react-phone-number-input` with a searchable country-code selector); never use a bare `<Input type="tel">` for a phone field. Default `defaultCountry="IN"`. Emits an E.164 string via `onChange(value: string)`; spread `{...field}` for react-hook-form `<FormField>` render props, or use `value`/`onChange` with a named handler for uncontrolled state.
 
 ---
 
@@ -1160,3 +1302,24 @@ ui/page-wrapper.tsx` (PageWrapper contract), `components/layout/dashboard-shell.
 architecture), `app/(auth)/signin/page.tsx` (immutable reference), `app/(authenticated)/crm/
 quotes/page.tsx` (table + filter pattern reference), `components/layout/project-sidebar.tsx`
 (secondary sidebar reference).
+
+## Calculated heights rule (added 2026-07-02)
+
+Never hardcode content-area heights (`h-60`, `min-h-[260px]`, fixed skeleton block heights). Heights must be CALCULATED from available space:
+- Empty/error states fill the available content area: flex chain (`flex flex-col` on ancestors, `flex-1 min-h-0` on the state container) — or viewport-derived `min-h-[calc(100vh-<chrome>px)]` when a flex chain is impractical, where `<chrome>` = header+tabs+padding actually above it.
+- Scroll areas: `flex-1 min-h-0 overflow-y-auto`, never fixed px.
+- Skeletons size themselves from the real components they mimic (same h-8 rows, same StatCard dimensions), not invented blocks.
+
+## Overlay + data rules (added 2026-07-02, wave 2)
+
+- **Big form → Sheet, small form → Dialog.** Multi-section or >5-field forms never live in a Dialog.
+- **Sheet/Dialog anatomy:** header (`px-6 py-4 border-b shrink-0`) and footer (`px-6 py-4 border-t shrink-0`) NEVER scroll; only the body scrolls (`flex-1 min-h-0 overflow-y-auto px-6 py-5`). Container: `p-0 flex flex-col gap-0`.
+- **Sheet footer buttons share equal widths:** `grid grid-cols-2 gap-2` (or `grid-flow-col auto-cols-fr` for 3+). No hugging buttons in sheet footers.
+- **No overlapped spacing:** a container owns its padding once — children never re-add horizontal padding inside a padded parent; no `space-y-*` combined with child `mt-*`; gaps come from ONE `gap-*` on the parent.
+- **Every page must render real data:** if an API fails, FIX the API/hook (report backend contract mismatches); demo org must have seed rows for every admin page and its detail (`[id]`) pages — check detail pages too, not just lists.
+
+## Per-module identity (added 2026-07-02)
+
+One unified chrome (ink primary, neutral hovers, blue links) across ALL modules. Each module gets an ACCENT used ONLY for identity moments — activity-bar icon tint, active nav indicator, module overview hero tint, chart palette seed — never for buttons/hovers/body text:
+- CRM/Sales: blue-600 · Projects/PM: violet-600 · HR/People: emerald-600 · Inventory: amber-600 · Billing/Finance: cyan-700 · Support: rose-600 · Admin/Settings: slate-600.
+DataTable + filters layout: follow the virabha reference recipe (separate filters block above a standalone table card — see "Reference layout recipe (virabha)").

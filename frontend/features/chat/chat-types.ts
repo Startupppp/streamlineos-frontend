@@ -1,28 +1,5 @@
 import type { useChatChannels } from "@/hooks/api";
-
-export interface TicketEntityRef {
-  type: "ticket";
-  id: string;
-  projectId: number;
-  ticketNumber?: number;
-  projectKey?: string;
-  title?: string;
-  status?: string;
-  priority?: string;
-}
-
-export interface CommentEntityRef {
-  type: "comment";
-  id: string;
-  ticketId: number;
-  projectId: number;
-}
-
-export type EntityRef = TicketEntityRef | CommentEntityRef;
-
-export interface MessageMetadata {
-  entities?: EntityRef[];
-}
+export type { TicketEntityRef, CommentEntityRef, EntityRef, MessageMetadata } from "@/types/chat";
 
 type ChannelRaw = NonNullable<
   ReturnType<typeof useChatChannels>["data"]

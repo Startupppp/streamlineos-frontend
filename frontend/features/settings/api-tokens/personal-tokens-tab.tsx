@@ -111,75 +111,77 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
           </Button>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Prefix</TableHead>
-              <TableHead>Scopes</TableHead>
-              <TableHead>Expires</TableHead>
-              <TableHead>Last Used</TableHead>
-              <TableHead className="w-16" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tokens.map((t) => {
-              const expired = isExpired(t.expiresAt);
-              return (
-                <TableRow key={t.id}>
-                  <TableCell className="font-medium">{t.name}</TableCell>
-                  <TableCell>
-                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                      {t.prefix}…
-                    </code>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1 max-w-[200px]">
-                      {t.scopes.slice(0, 3).map((s) => (
-                        <Badge
-                          key={s}
-                          variant="outline"
-                          className="text-xs px-1.5 py-0"
-                        >
-                          {s}
-                        </Badge>
-                      ))}
-                      {t.scopes.length > 3 && (
-                        <Badge
-                          variant="outline"
-                          className="text-xs px-1.5 py-0"
-                        >
-                          +{t.scopes.length - 3}
-                        </Badge>
-                      )}
-                      {t.scopes.length === 0 && (
-                        <span className="text-xs text-muted-foreground">
-                          No scopes
+        <div className="rounded-md border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Prefix</TableHead>
+                <TableHead>Scopes</TableHead>
+                <TableHead>Expires</TableHead>
+                <TableHead>Last Used</TableHead>
+                <TableHead className="w-16" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tokens.map((t) => {
+                const expired = isExpired(t.expiresAt);
+                return (
+                  <TableRow key={t.id}>
+                    <TableCell className="font-medium">{t.name}</TableCell>
+                    <TableCell>
+                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                        {t.prefix}…
+                      </code>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1 max-w-[200px]">
+                        {t.scopes.slice(0, 3).map((s) => (
+                          <Badge
+                            key={s}
+                            variant="outline"
+                            className="text-xs px-1.5 py-0"
+                          >
+                            {s}
+                          </Badge>
+                        ))}
+                        {t.scopes.length > 3 && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs px-1.5 py-0"
+                          >
+                            +{t.scopes.length - 3}
+                          </Badge>
+                        )}
+                        {t.scopes.length === 0 && (
+                          <span className="text-xs text-muted-foreground">
+                            No scopes
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        {expired && (
+                          <Clock className="h-3.5 w-3.5 text-destructive" />
+                        )}
+                        <span className={expired ? "text-destructive" : ""}>
+                          {formatDate(t.expiresAt)}
                         </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      {expired && (
-                        <Clock className="h-3.5 w-3.5 text-destructive" />
-                      )}
-                      <span className={expired ? "text-destructive" : ""}>
-                        {formatDate(t.expiresAt)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(t.lastUsedAt)}
-                  </TableCell>
-                  <TableCell>
-                    <RevokeTokenButton token={t} onRevoke={setRevoking} />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(t.lastUsedAt)}
+                    </TableCell>
+                    <TableCell>
+                      <RevokeTokenButton token={t} onRevoke={setRevoking} />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       <CreateUserTokenSheet

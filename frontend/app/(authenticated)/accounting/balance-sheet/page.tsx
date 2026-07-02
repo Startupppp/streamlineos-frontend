@@ -103,10 +103,9 @@ export default function BalanceSheetPage() {
       eyebrow="Accounting · Reports"
       title="Balance Sheet"
       subtitle="Snapshot of assets, liabilities, and equity as of a chosen date."
-    >
-      <div className="rounded-lg border border-border bg-muted/40 p-3 mb-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-          <div>
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-1">
             <label
               htmlFor="balance-sheet-asof"
               className="text-[11px] font-medium text-muted-foreground leading-none"
@@ -133,8 +132,8 @@ export default function BalanceSheetPage() {
             </div>
           )}
         </div>
-      </div>
-
+      }
+    >
       {query.isLoading && <LoadingState variant="table" />}
       {query.error && (
         <ErrorState description={query.error.message} onRetry={handleRetry} />

@@ -20,6 +20,7 @@ export function useTimeEntries(
     queryKey: queryKeys.projects.timeEntries(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<TimeEntryWithUser[]>("/projects/time-entries", filters as Record<string, unknown>),
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -37,6 +38,7 @@ export function useMyTimeEntries(
         ...(filters as Record<string, unknown>),
       }),
     enabled: !!userId,
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -44,6 +46,7 @@ export function useMyTimeEntries(
 export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "time-entries", "log"],
     mutationFn: ({ projectId, ticketId, ...data }: LogTimeInput) =>
       apiClient.post<TimeEntry>(
         `/projects/${projectId}/tickets/${ticketId}/time-entries`,
@@ -64,6 +67,7 @@ export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
 export function useUpdateTimeEntry(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "time-entries", "update"],
     mutationFn: ({ entryId, ...data }: UpdateTimeEntryInput) =>
       apiClient.patch<TimeEntry>(`/projects/time-entries/${entryId}`, data),
     onSuccess: () => {
@@ -78,6 +82,7 @@ export function useUpdateTimeEntry(options?: Parameters<typeof useMutation>[0]) 
 export function useDeleteTimeEntry(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "time-entries", "delete"],
     mutationFn: ({ entryId }: { entryId: number }) =>
       apiClient.delete<{ success: boolean }>(`/projects/time-entries/${entryId}`),
     onSuccess: () => {
@@ -105,6 +110,7 @@ export function useAllTeamTimesheets(
     queryKey: [...queryKeys.projects.timeEntries(filters as Record<string, unknown>), "team"] as const,
     queryFn: () =>
       apiClient.get<TimeEntryWithUser[]>("/projects/time-entries/team", filters as Record<string, unknown>),
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -112,6 +118,7 @@ export function useAllTeamTimesheets(
 export function useApproveTimesheet(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "time-entries", "approve"],
     mutationFn: ({ timesheetId }: { timesheetId: number }) =>
       apiClient.patch<{ success: boolean }>(`/projects/time-entries/${timesheetId}/approve`, {}),
     onSuccess: () => {
@@ -124,6 +131,7 @@ export function useApproveTimesheet(options?: Parameters<typeof useMutation>[0])
 export function useRejectTimesheet(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "time-entries", "reject"],
     mutationFn: ({ timesheetId, reason }: { timesheetId: number; reason?: string }) =>
       apiClient.patch<{ success: boolean }>(`/projects/time-entries/${timesheetId}/reject`, { reason }),
     onSuccess: () => {

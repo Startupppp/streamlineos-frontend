@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Users, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
+import { Users, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgDepartments,
@@ -289,6 +289,8 @@ export default function OrgDepartmentsPage() {
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
 
+  function handleSearchInputChange(e: ChangeEvent<HTMLInputElement>) { handleSearchChange(e.target.value); }
+
   function makeRestoreHandler(dept: OrgDepartment) { return () => handleRestore(dept); }
   function makeArchiveHandler(dept: OrgDepartment) { return () => handleArchive(dept); }
   function makeSetEditingHandler(dept: OrgDepartment) { return () => setEditing(dept); }
@@ -394,22 +396,29 @@ export default function OrgDepartmentsPage() {
     />
   );
 
-  const archiveToolbar = archived.length > 0 ? (
-    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
-      <Archive className="h-4 w-4 mr-1.5" />
-      {showArchived ? "Show Active" : `Archived (${archived.length})`}
-    </Button>
-  ) : undefined;
-
   return (
     <PageWrapper
       title="Departments"
-      subtitle="Departments organized within branches across your organization."
+      subtitle="Departments organized within branches."
       actions={
         <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1.5" />
           Add Department
         </Button>
+      }
+      filters={
+        <>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <Input className="pl-8 h-8 text-xs max-w-[240px]" placeholder="Search departments…" value={search} onChange={handleSearchInputChange} />
+          </div>
+          {archived.length > 0 && (
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            </Button>
+          )}
+        </>
       }
     >
       <DataTable
@@ -418,8 +427,6 @@ export default function OrgDepartmentsPage() {
         getRowKey={(d) => d.id}
         isLoading={isLoading}
         emptyState={emptyState}
-        search={{ value: search, onChange: handleSearchChange, placeholder: "Search departments…" }}
-        toolbar={archiveToolbar}
         rowClassName={(d) => cn(d.status === "ARCHIVED" && "opacity-60")}
         minWidth="580px"
       />
@@ -432,13 +439,15 @@ export default function OrgDepartmentsPage() {
           <div className="flex-1 overflow-y-auto px-6 py-5">
             <DeptForm branches={branches} onSubmit={handleCreate} isPending={create.isPending} />
           </div>
-          <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
-            <SheetClose asChild>
-              <Button variant="outline" size="sm">Cancel</Button>
-            </SheetClose>
-            <Button size="sm" type="submit" form="dept-form" disabled={create.isPending}>
-              {create.isPending ? "Saving…" : "Save"}
-            </Button>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <SheetClose asChild>
+                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
+              </SheetClose>
+              <Button size="sm" type="submit" form="dept-form" disabled={create.isPending} className="w-full">
+                {create.isPending ? "Saving…" : "Save"}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -464,13 +473,15 @@ export default function OrgDepartmentsPage() {
               />
             )}
           </div>
-          <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
-            <SheetClose asChild>
-              <Button variant="outline" size="sm">Cancel</Button>
-            </SheetClose>
-            <Button size="sm" type="submit" form="dept-form" disabled={update.isPending}>
-              {update.isPending ? "Saving…" : "Save"}
-            </Button>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <SheetClose asChild>
+                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
+              </SheetClose>
+              <Button size="sm" type="submit" form="dept-form" disabled={update.isPending} className="w-full">
+                {update.isPending ? "Saving…" : "Save"}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>

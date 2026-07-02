@@ -15,11 +15,12 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
-  Search,
   ChevronLeft,
   ChevronRight,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -28,7 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -71,12 +71,16 @@ export interface DataTableProps<T> {
   pagination?: ClientPagination | ServerPagination;
   isLoading?: boolean;
   emptyState?: ReactNode;
-  search?: { value: string; onChange: (v: string) => void; placeholder?: string };
-  toolbar?: ReactNode;
   footer?: ReactNode;
   minWidth?: string;
   className?: string;
   rowClassName?: (row: T) => string;
+  search?: {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+  };
+  toolbar?: ReactNode;
 }
 
 function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
@@ -94,12 +98,12 @@ export function DataTable<T>({
   pagination,
   isLoading,
   emptyState,
-  search,
-  toolbar,
   footer,
   minWidth,
   className,
   rowClassName,
+  search,
+  toolbar,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [localRowSelection, setLocalRowSelection] = useState<RowSelectionState>({});
@@ -217,82 +221,75 @@ export function DataTable<T>({
   const pSize = isServerPagination ? serverPag!.pageSize : clientPageSize;
   const showPagination = pagination !== undefined && totalPages > 1;
 
+  function handleSearchInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    search?.onChange(e.target.value);
+  }
+
   return (
     <div className={cn("border border-border rounded-md flex flex-col", className)}>
       {(search !== undefined || toolbar !== undefined) && (
-        <div className="shrink-0 flex items-center gap-2 px-2 py-1.5 border-b flex-wrap">
-          {search !== undefined && (
+        <div className="shrink-0 flex items-center justify-between gap-2 border-b border-border px-2 py-1.5">
+          {search !== undefined ? (
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search.value}
-                onChange={(e) => search.onChange(e.target.value)}
+                onChange={handleSearchInputChange}
                 placeholder={search.placeholder ?? "Search…"}
-                className="pl-8 h-8 text-xs max-w-[240px]"
+                aria-label={search.placeholder ?? "Search"}
+                className="h-8 w-56 pl-7 text-xs"
               />
             </div>
+          ) : (
+            <div />
           )}
           {toolbar}
         </div>
       )}
-
       <div className="flex-1 min-h-0 overflow-auto">
-        <div
-          style={minWidth ? { minWidth } : undefined}
-          className={cn(!minWidth && "min-w-max")}
-        >
-          <Table>
-            <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-              {table.getHeaderGroups().map((hg) => (
-                <TableRow
-                  key={hg.id}
-                  className="border-b-2 border-border hover:bg-transparent"
-                >
-                  {hg.headers.map((header) => {
-                    const canSort = header.column.getCanSort();
-                    const sorted = header.column.getIsSorted();
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className={cn(
-                          "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5",
-                          header.column.columnDef.meta?.headerClassName,
-                        )}
-                        aria-sort={
-                          sorted === "asc"
-                            ? "ascending"
-                            : sorted === "desc"
-                              ? "descending"
-                              : undefined
-                        }
-                      >
-                        {header.isPlaceholder ? null : canSort ? (
-                          <button
-                            type="button"
-                            onClick={header.column.getToggleSortingHandler()}
-                            className="flex items-center gap-1 hover:text-foreground transition-colors"
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                            <SortIndicator sorted={sorted} />
-                          </button>
-                        ) : (
-                          flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )
-                        )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
+        {isLoading ? (
+          <div
+            style={minWidth ? { minWidth } : undefined}
+            className={cn(!minWidth && "min-w-max")}
+          >
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                {table.getHeaderGroups().map((hg) => (
+                  <TableRow
+                    key={hg.id}
+                    className="border-b-2 border-border hover:bg-transparent"
+                  >
+                    {hg.headers.map((header) => {
+                      const canSort = header.column.getCanSort();
+                      const sorted = header.column.getIsSorted();
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className={cn(
+                            "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5",
+                            header.column.columnDef.meta?.headerClassName,
+                          )}
+                        >
+                          {header.isPlaceholder ? null : canSort ? (
+                            <button
+                              type="button"
+                              onClick={header.column.getToggleSortingHandler()}
+                              className="flex items-center gap-1 hover:text-foreground transition-colors"
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              <SortIndicator sorted={sorted} />
+                            </button>
+                          ) : (
+                            flexRender(header.column.columnDef.header, header.getContext())
+                          )}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i} className="h-8 hover:bg-transparent">
                     {columnDefs.map((_, j) => (
                       <TableCell key={j} className="px-2 py-1">
@@ -300,19 +297,68 @@ export function DataTable<T>({
                       </TableCell>
                     ))}
                   </TableRow>
-                ))
-              ) : rows.length === 0 ? (
-                <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={colCount} className="p-0">
-                    {emptyState ?? (
-                      <div className="flex items-center justify-center min-h-[200px] text-sm text-muted-foreground">
-                        No results found.
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                rows.map((row) => (
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="p-2">
+            {emptyState ?? (
+              <div className="flex items-center justify-center min-h-[260px] text-sm text-muted-foreground rounded-lg border border-dashed border-border bg-card">
+                No results found.
+              </div>
+            )}
+          </div>
+        ) : (
+          <div
+            style={minWidth ? { minWidth } : undefined}
+            className={cn(!minWidth && "min-w-max")}
+          >
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                {table.getHeaderGroups().map((hg) => (
+                  <TableRow
+                    key={hg.id}
+                    className="border-b-2 border-border hover:bg-transparent"
+                  >
+                    {hg.headers.map((header) => {
+                      const canSort = header.column.getCanSort();
+                      const sorted = header.column.getIsSorted();
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className={cn(
+                            "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5",
+                            header.column.columnDef.meta?.headerClassName,
+                          )}
+                          aria-sort={
+                            sorted === "asc"
+                              ? "ascending"
+                              : sorted === "desc"
+                                ? "descending"
+                                : undefined
+                          }
+                        >
+                          {header.isPlaceholder ? null : canSort ? (
+                            <button
+                              type="button"
+                              onClick={header.column.getToggleSortingHandler()}
+                              className="flex items-center gap-1 hover:text-foreground transition-colors"
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              <SortIndicator sorted={sorted} />
+                            </button>
+                          ) : (
+                            flexRender(header.column.columnDef.header, header.getContext())
+                          )}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => (
                   <TableRow
                     key={row.id}
                     className={cn(
@@ -335,11 +381,11 @@ export function DataTable<T>({
                       </TableCell>
                     ))}
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
 
       {footer !== undefined && (

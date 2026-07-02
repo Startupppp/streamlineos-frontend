@@ -76,10 +76,9 @@ export default function Gstr3BPage() {
       eyebrow="Accounting · Reports"
       title="GSTR-3B"
       subtitle="Consolidated monthly GST return summary. Outward minus ITC equals tax payable."
-    >
-      <div className="rounded-lg border border-border bg-muted/40 p-3 mb-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-          <div>
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr3b-from"
               className="text-[11px] font-medium text-muted-foreground leading-none"
@@ -94,7 +93,7 @@ export default function Gstr3BPage() {
               className="w-full sm:w-[160px] h-8 text-sm"
             />
           </div>
-          <div>
+          <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr3b-to"
               className="text-[11px] font-medium text-muted-foreground leading-none"
@@ -110,8 +109,8 @@ export default function Gstr3BPage() {
             />
           </div>
         </div>
-      </div>
-
+      }
+    >
       {query.isLoading ? (
         <LoadingState variant="table" />
       ) : query.error ? (

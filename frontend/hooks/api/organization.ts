@@ -287,6 +287,23 @@ export const useRestoreOrg = () => {
   });
 };
 
+interface CreateOrganizationResult {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export const useCreateOrganization = () => {
+  const queryClient = useQueryClient();
+  return useMutation<CreateOrganizationResult, Error, { name: string; slug: string }>({
+    mutationKey: ["organization", "create"],
+    mutationFn: (data) => apiClient.post<CreateOrganizationResult>("/organization", data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organization.all });
+    },
+  });
+};
+
 export const useTransferOwnership = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, { newOwnerUserId: string }>({

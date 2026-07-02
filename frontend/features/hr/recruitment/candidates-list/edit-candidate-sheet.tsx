@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -221,7 +222,7 @@ export function EditCandidateSheet({
                         Phone
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-9" placeholder="+91..." />
+                        <PhoneInput defaultCountry="IN" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

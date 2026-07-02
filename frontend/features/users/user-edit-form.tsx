@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -164,7 +165,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
             <FormItem>
               <FormLabel>Phone</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="+1 (555) 000-0000" type="tel" />
+                <PhoneInput defaultCountry="IN" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -264,7 +265,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
               <FormItem>
                 <FormLabel className="text-xs">Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="+1 (555) 000-0000" type="tel" className="h-8 text-xs" />
+                  <PhoneInput defaultCountry="IN" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

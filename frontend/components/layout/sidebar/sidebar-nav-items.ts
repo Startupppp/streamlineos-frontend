@@ -1170,12 +1170,6 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:manage",
       },
       {
-        label: "API Keys",
-        icon: Key,
-        href: "/settings/api-tokens",
-        requiredPermission: "settings:manage",
-      },
-      {
         label: "AI Configuration",
         icon: Brain,
         href: "/settings/ai",
@@ -1331,6 +1325,27 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "administration", label: "Admin", href: "/organization", icon: Building2 },
 ];
 
+export interface ModuleAccent {
+  text: string;
+  bg: string;
+  indicator: string;
+  border: string;
+}
+
+export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
+  home:           { text: "!text-slate-600 dark:!text-slate-400",     bg: "bg-slate-100 dark:bg-slate-800/40",    indicator: "bg-slate-500 dark:bg-slate-400",    border: "border-slate-400 dark:border-slate-500"    },
+  crm:            { text: "!text-blue-600 dark:!text-blue-400",       bg: "bg-blue-50 dark:bg-blue-950/40",       indicator: "bg-blue-600 dark:bg-blue-500",       border: "border-blue-600 dark:border-blue-500"       },
+  hrms:           { text: "!text-emerald-600 dark:!text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40", indicator: "bg-emerald-600 dark:bg-emerald-500",  border: "border-emerald-600 dark:border-emerald-500"  },
+  projects:       { text: "!text-violet-600 dark:!text-violet-400",   bg: "bg-violet-50 dark:bg-violet-950/40",  indicator: "bg-violet-600 dark:bg-violet-500",   border: "border-violet-600 dark:border-violet-500"   },
+  inventory:      { text: "!text-amber-600 dark:!text-amber-400",     bg: "bg-amber-50 dark:bg-amber-950/40",    indicator: "bg-amber-600 dark:bg-amber-500",     border: "border-amber-600 dark:border-amber-500"     },
+  finance:        { text: "!text-cyan-700 dark:!text-cyan-400",       bg: "bg-cyan-50 dark:bg-cyan-950/40",      indicator: "bg-cyan-700 dark:bg-cyan-500",       border: "border-cyan-700 dark:border-cyan-500"       },
+  helpdesk:       { text: "!text-rose-600 dark:!text-rose-400",       bg: "bg-rose-50 dark:bg-rose-950/40",      indicator: "bg-rose-600 dark:bg-rose-500",       border: "border-rose-600 dark:border-rose-500"       },
+  documents:      { text: "!text-slate-600 dark:!text-slate-400",     bg: "bg-slate-100 dark:bg-slate-800/40",   indicator: "bg-slate-500 dark:bg-slate-400",    border: "border-slate-400 dark:border-slate-500"    },
+  analytics:      { text: "!text-blue-600 dark:!text-blue-400",       bg: "bg-blue-50 dark:bg-blue-950/40",      indicator: "bg-blue-600 dark:bg-blue-500",       border: "border-blue-600 dark:border-blue-500"       },
+  ai:             { text: "!text-violet-600 dark:!text-violet-400",   bg: "bg-violet-50 dark:bg-violet-950/40",  indicator: "bg-violet-600 dark:bg-violet-500",   border: "border-violet-600 dark:border-violet-500"   },
+  administration: { text: "!text-slate-600 dark:!text-slate-400",     bg: "bg-slate-100 dark:bg-slate-800/40",   indicator: "bg-slate-500 dark:bg-slate-400",    border: "border-slate-400 dark:border-slate-500"    },
+};
+
 const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   home: [],
   crm: ["CRM"],
@@ -1412,6 +1427,23 @@ export function getNavGroupsForProduct(
   const allGroups = getNavGroupsForUser(role, permissions);
   const labels = PRODUCT_NAV_GROUP_LABELS[productKey];
   return allGroups.filter((g) => labels.includes(g.label));
+}
+
+const MODULE_KEY_MAP: Partial<Record<ProductKey, string>> = {
+  crm: "CRM",
+  hrms: "HR",
+  projects: "PROJECTS",
+  inventory: "INVENTORY",
+  finance: "FINANCE",
+  helpdesk: "HELPDESK",
+};
+
+export function isModuleEnabled(key: ProductKey, enabledModules: string[]): boolean {
+  if (key === "home" || key === "administration") return true;
+  if (enabledModules.length === 0) return true;
+  const moduleName = MODULE_KEY_MAP[key];
+  if (!moduleName) return true;
+  return enabledModules.map((m) => m.toUpperCase()).includes(moduleName);
 }
 
 export function getProductFromPathname(pathname: string): ProductKey {

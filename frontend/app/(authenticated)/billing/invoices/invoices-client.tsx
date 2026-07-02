@@ -21,9 +21,10 @@ import {
   Trash2,
   IndianRupee,
   AlertCircle,
-  RefreshCw,
   XCircle,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -303,26 +304,24 @@ export function InvoicesClient() {
           isLoading={isLoading}
           emptyState={
             isError ? (
-              <div className="flex flex-col items-center justify-center text-center gap-3 min-h-[200px]">
-                <AlertCircle className="h-8 w-8 text-destructive" />
-                <p className="text-sm font-medium">Failed to load invoices</p>
-                <Button variant="outline" size="sm" onClick={handleRetryLoad}>
-                  <RefreshCw className="h-3.5 w-3.5 mr-1" /> Retry
-                </Button>
-              </div>
+              <ErrorState
+                compact
+                title="Failed to load invoices"
+                description="Something went wrong while fetching your invoices."
+                onRetry={handleRetryLoad}
+              />
             ) : (
-              <div className="flex flex-col items-center justify-center text-center min-h-[200px] gap-3">
-                <EmptyDocumentsIllustration className="mb-3 w-28 h-28" />
-                <p className="text-sm font-medium text-foreground">No invoices yet</p>
-                <p className="text-xs text-muted-foreground">Create your first invoice to get started</p>
-                <Button size="sm" onClick={handleOpenCreate}>
-                  <Plus className="h-3.5 w-3.5 mr-1" /> New Invoice
-                </Button>
-              </div>
+              <EmptyState
+                illustration={<EmptyDocumentsIllustration className="w-28 h-28" />}
+                title="No invoices yet"
+                description="Create your first invoice to get started"
+                action={{ label: "New Invoice", onClick: handleOpenCreate }}
+                compact
+              />
             )
           }
           minWidth="700px"
-          className="h-[calc(100dvh-20rem)] min-h-[320px]"
+          className="min-h-[320px]"
         />
 
         <CreateInvoiceDialog open={createOpen} onOpenChange={setCreateOpen} />

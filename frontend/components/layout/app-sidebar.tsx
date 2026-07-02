@@ -16,6 +16,8 @@ import {
   getProductFromPathname,
   flattenNavRoutes,
   PRODUCT_DEFINITIONS,
+  MODULE_ACCENTS,
+  type ModuleAccent,
 } from "./sidebar/sidebar-nav-items"
 import { SidebarSection } from "./sidebar/sidebar-section"
 import { SidebarHeader } from "./sidebar/sidebar-header"
@@ -49,6 +51,7 @@ export function AppSidebar({
 
   const pathname = usePathname()
   const activeProduct = getProductFromPathname(pathname)
+  const accent: ModuleAccent = MODULE_ACCENTS[activeProduct]
 
   const productLabel = useMemo(() => {
     if (activeProduct === "home") return "StreamlineOS"
@@ -209,6 +212,7 @@ export function AppSidebar({
                   }
                   pendingLeaves={pendingLeaves}
                   onNavigate={onNavigate}
+                  accent={accent}
                 />
               )
             })}

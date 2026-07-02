@@ -175,14 +175,14 @@ function DetailField({ label, children }: { label: string; children: React.React
 function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => void }) {
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="flex flex-col p-0 w-[380px] sm:max-w-[380px]">
-        <SheetHeader className="px-4 py-3 border-b shrink-0">
+      <SheetContent className="flex flex-col p-0 sm:max-w-[420px]">
+        <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle className="flex items-center gap-2 text-sm font-semibold">
             <Activity className="h-4 w-4 text-muted-foreground" />
             Event Details
           </SheetTitle>
         </SheetHeader>
-        <div className="flex-1 min-h-0 px-4 py-3 space-y-4 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-4">
           <DetailField label="Action">
             <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
               {log.action}

@@ -77,11 +77,13 @@ export function TemplateList({
                 {preview.subject}
               </span>
             </div>
-            <div
-              className="bg-white rounded-b-lg"
-              style={{ minHeight: "500px" }}
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(preview.html) }}
-            />
+            <div className="overflow-x-auto">
+              <div
+                className="bg-white rounded-b-lg"
+                style={{ minHeight: "500px" }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(preview.html) }}
+              />
+            </div>
           </CardContent>
         </Card>
       ) : (

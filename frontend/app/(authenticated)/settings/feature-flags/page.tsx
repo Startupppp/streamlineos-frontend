@@ -433,14 +433,16 @@ function FeatureFlagsContent() {
             </form>
           </Form>
           </div>
-          <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-            <Button type="button" variant="outline" className="flex-1" onClick={handleCloseCreate}>
-              Cancel
-            </Button>
-            <Button type="submit" form="create-flag-form" className="flex-1" disabled={createFlag.isPending}>
-              {createFlag.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-              Create Flag
-            </Button>
+          <SheetFooter className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2 w-full">
+              <Button type="button" variant="outline" onClick={handleCloseCreate}>
+                Cancel
+              </Button>
+              <Button type="submit" form="create-flag-form" disabled={createFlag.isPending}>
+                {createFlag.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                Create Flag
+              </Button>
+            </div>
           </SheetFooter>
         </SheetContent>
       </Sheet>

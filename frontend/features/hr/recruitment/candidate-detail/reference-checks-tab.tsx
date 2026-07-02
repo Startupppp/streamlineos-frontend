@@ -10,6 +10,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -114,7 +115,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
   const handleRefDesignationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRefDesignation(e.target.value), []);
   const handleRefCompanyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRefCompany(e.target.value), []);
   const handleRefEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRefEmail(e.target.value), []);
-  const handleRefPhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRefPhone(e.target.value), []);
+  const handleRefPhoneChange = useCallback((value: string) => setRefPhone(value), []);
   const handleRelationshipChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRelationship(e.target.value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
   const handleCancel = useCallback(() => setSheetOpen(false), []);
@@ -169,7 +170,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground/80">Phone</label>
-                  <Input placeholder="+91 98..." value={refPhone} onChange={handleRefPhoneChange} />
+                  <PhoneInput value={refPhone} onChange={handleRefPhoneChange} defaultCountry="IN" />
                 </div>
               </div>
               <div className="space-y-1.5">

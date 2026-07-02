@@ -1,36 +1,123 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import type { Variants } from "framer-motion"
-import { LayoutGrid } from "lucide-react"
+import { ChevronDown, Lock, Check, LayoutGrid } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSession } from "next-auth/react"
-import { PRODUCT_DEFINITIONS, getProductFromPathname, type ProductKey } from "../sidebar/sidebar-nav-items"
+import {
+  PRODUCT_DEFINITIONS,
+  getProductFromPathname,
+  isModuleEnabled,
+  MODULE_ACCENTS,
+  type ProductKey,
+} from "../sidebar/sidebar-nav-items"
 import { cn } from "@/lib/utils"
-import { staggerContainer } from "@/lib/motion-variants"
 
 const ICON_STROKE = 1.75
 
-const popoverPanelVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.22, ease: "easeOut" },
-  },
+const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
+  home: "Overview & activity",
+  crm: "Leads, deals & contacts",
+  hrms: "People & payroll",
+  projects: "Tasks & timesheets",
+  inventory: "Stock & orders",
+  finance: "Accounts & books",
+  helpdesk: "Tickets & support",
+  documents: "Knowledge base",
+  analytics: "Reports & insights",
+  ai: "AI assistance",
+  administration: "Settings & access",
 }
 
-const productItemVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.9, y: 8 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: { duration: 0.22, ease: "easeOut" },
-  },
+interface ProductTileProps {
+  productKey: ProductKey
+  label: string
+  href: string
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
+  isActive: boolean
+  isEnabled: boolean
+  onClose: () => void
+}
+
+function ProductTile({
+  productKey,
+  label,
+  href,
+  icon: Icon,
+  isActive,
+  isEnabled,
+  onClose,
+}: ProductTileProps) {
+  const accent = MODULE_ACCENTS[productKey]
+  const description = PRODUCT_DESCRIPTIONS[productKey]
+
+  const card = (
+    <div
+      className={cn(
+        "relative flex items-center gap-2.5 rounded-lg p-2.5 w-full transition-colors duration-150",
+        !isEnabled && "opacity-50 cursor-default",
+        isActive
+          ? cn("bg-accent border-[1.5px]", accent.border)
+          : isEnabled
+            ? "border border-transparent hover:bg-muted/80"
+            : "border border-transparent",
+      )}
+    >
+      <span
+        className={cn(
+          "h-8 w-8 rounded-md flex items-center justify-center shrink-0",
+          accent.bg,
+          accent.text,
+        )}
+      >
+        <Icon className="h-[15px] w-[15px]" strokeWidth={ICON_STROKE} />
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-medium text-foreground leading-tight truncate">{label}</p>
+        <p className="text-[11px] text-muted-foreground line-clamp-1">{description}</p>
+      </div>
+      {isActive && (
+        <Check className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      )}
+      {!isEnabled && (
+        <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 h-4 px-1 rounded bg-muted border border-border">
+          <Lock className="h-2.5 w-2.5 text-muted-foreground" />
+          <span className="text-[9px] font-medium text-muted-foreground">Locked</span>
+        </span>
+      )}
+    </div>
+  )
+
+  if (!isEnabled) {
+    return (
+      <Tooltip delayDuration={200}>
+        <TooltipTrigger asChild>
+          <Link
+            href="/settings/modules"
+            onClick={onClose}
+            className="flex"
+            aria-label={`${label} — not enabled`}
+          >
+            {card}
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="text-xs">
+          Not enabled — go to Modules
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return (
+    <Link href={href} onClick={onClose} className="flex" aria-label={label}>
+      {card}
+    </Link>
+  )
 }
 
 interface ProductSwitcherMenuProps {
@@ -41,130 +128,98 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const { data: session } = useSession()
+  const shouldReduceMotion = useReducedMotion()
+
   const activeProduct = getProductFromPathname(pathname)
   const enabledModules = session?.enabledModules ?? []
 
-  const isProductEnabled = useCallback(
-    (key: ProductKey) => {
-      if (key === "home" || key === "administration") return true
-      if (enabledModules.length === 0) return true
-      return enabledModules.includes(key)
-    },
-    [enabledModules],
-  )
-
   const handleClose = useCallback(() => setOpen(false), [])
-
-  const visibleProducts = useMemo(
-    () => PRODUCT_DEFINITIONS.filter((product) => isProductEnabled(product.key)),
-    [isProductEnabled],
-  )
 
   const activeDefinition = PRODUCT_DEFINITIONS.find((p) => p.key === activeProduct)
   const ActiveIcon = activeDefinition?.icon
+  const activeAccent = MODULE_ACCENTS[activeProduct]
+
+  const panelVariants: Variants = shouldReduceMotion
+    ? {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { duration: 0.12 } },
+      }
+    : {
+        hidden: { opacity: 0, scale: 0.97, y: -4 },
+        visible: {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          transition: { duration: 0.18, ease: "easeOut" },
+        },
+      }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
+          aria-label="Switch product"
           className={cn(
             "flex items-center rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
             mobile
               ? "h-11 w-11 justify-center gap-0 shrink-0"
               : "gap-1.5 h-8 px-2",
           )}
-          aria-label="Switch product"
         >
           {mobile ? (
             <LayoutGrid className="h-5 w-5 shrink-0" strokeWidth={ICON_STROKE} />
           ) : (
             <>
-              {ActiveIcon ? (
-                <ActiveIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={ICON_STROKE} />
-              ) : null}
-              <span className="hidden lg:inline text-xs truncate max-w-[5rem]">
+              {ActiveIcon && (
+                <span
+                  className={cn(
+                    "h-5 w-5 rounded-md flex items-center justify-center shrink-0",
+                    activeAccent.bg,
+                    activeAccent.text,
+                  )}
+                >
+                  <ActiveIcon className="h-3 w-3" strokeWidth={ICON_STROKE} />
+                </span>
+              )}
+              <span className="hidden lg:inline text-xs font-medium truncate max-w-[5rem]">
                 {activeDefinition?.label}
               </span>
-              <LayoutGrid className="h-3 w-3 shrink-0 text-muted-foreground" strokeWidth={ICON_STROKE} />
+              <ChevronDown
+                className="h-3 w-3 shrink-0 text-muted-foreground"
+                strokeWidth={ICON_STROKE}
+              />
             </>
           )}
         </button>
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-64 p-2.5 data-[state=open]:animate-none data-[state=closed]:animate-none"
+        className="w-80 max-w-[95vw] p-2 data-[state=open]:animate-none data-[state=closed]:animate-none"
         sideOffset={8}
       >
-        <motion.div
-          variants={popoverPanelVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.p
-            className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1"
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-          >
+        <motion.div variants={panelVariants} initial="hidden" animate="visible">
+          <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1">
             Products
-          </motion.p>
-          <motion.div
-            className="grid grid-cols-3 gap-1"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            {visibleProducts.map((product) => {
-              const Icon = product.icon
-              const isActive = activeProduct === product.key
+          </p>
+          <div className="grid grid-cols-2 gap-1">
+            {PRODUCT_DEFINITIONS.map((product) => {
+              const enabled = isModuleEnabled(product.key, enabledModules)
+              const isActive = activeProduct === product.key && enabled
               return (
-                <motion.div
+                <ProductTile
                   key={product.key}
-                  variants={productItemVariants}
-                  whileHover={isActive ? undefined : { scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  animate={
-                    isActive
-                      ? {
-                          scale: 1,
-                          boxShadow:
-                            "0 0 0 1px rgba(59, 130, 246, 0.3), 0 4px 12px rgba(59, 130, 246, 0.12)",
-                        }
-                      : { scale: 1, boxShadow: "0 0 0 0px transparent" }
-                  }
-                  transition={
-                    isActive
-                      ? { type: "spring", stiffness: 380, damping: 28 }
-                      : { duration: 0.15, ease: "easeOut" }
-                  }
-                >
-                  <Link
-                    href={product.href}
-                    onClick={handleClose}
-                    className={cn(
-                      "flex flex-col items-center gap-1 p-2 rounded-lg text-center transition-all duration-150",
-                      isActive
-                        ? "border border-blue-500/40 bg-blue-50 ring-1 ring-blue-500/20"
-                        : "text-muted-foreground hover:bg-muted/80 hover:scale-[1.02]",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
-                        isActive
-                          ? "bg-blue-100 text-blue-600"
-                          : "bg-muted/50 text-muted-foreground",
-                      )}
-                    >
-                      <Icon className="h-[18px] w-[18px]" strokeWidth={ICON_STROKE} />
-                    </span>
-                    <span className="text-[11px] font-medium leading-tight">{product.label}</span>
-                  </Link>
-                </motion.div>
+                  productKey={product.key}
+                  label={product.label}
+                  href={product.href}
+                  icon={product.icon}
+                  isActive={isActive}
+                  isEnabled={enabled}
+                  onClose={handleClose}
+                />
               )
             })}
-          </motion.div>
+          </div>
         </motion.div>
       </PopoverContent>
     </Popover>

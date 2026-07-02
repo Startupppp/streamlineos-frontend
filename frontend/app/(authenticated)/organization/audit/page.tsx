@@ -133,13 +133,13 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
   return (
     <Sheet open onOpenChange={handleOpenChange}>
       <SheetContent className="flex flex-col p-0 w-full sm:max-w-lg">
-        <SheetHeader className="px-4 py-3 border-b shrink-0">
+        <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle className="flex items-center gap-2 text-sm font-semibold">
             <Activity className="h-4 w-4 text-muted-foreground" />
             Event Details
           </SheetTitle>
         </SheetHeader>
-        <div className="flex-1 min-h-0 px-4 py-3 space-y-4 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-4">
           <DetailField label="Action">
             <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
               {log.action}
@@ -181,7 +181,7 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
             </DetailField>
           )}
         </div>
-        <div className="shrink-0 px-4 py-3 border-t flex items-center justify-end">
+        <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end">
           <SheetClose asChild>
             <Button variant="outline" size="sm">Close</Button>
           </SheetClose>
@@ -357,7 +357,7 @@ function OrgAuditLogContent() {
   return (
     <PageWrapper
       title="Organization Audit Log"
-      subtitle="Track changes to your organization structure, settings, and membership."
+      subtitle="Track changes to organization settings and membership."
       noInternalScroll
       actions={
         <div className="flex items-center gap-2">
@@ -401,19 +401,19 @@ function OrgAuditLogContent() {
         <Card className="flex-1 min-h-0 overflow-hidden">
           <CardContent className="p-0 flex flex-col h-full min-h-0">
             {isLoading ? (
-              <div className="p-4 space-y-2">
-                {Array.from({ length: pageSize }).map((_, i) => (
-                  <Skeleton key={i} className="h-11 w-full" />
+              <div className="p-3 space-y-1">
+                {Array.from({ length: Math.min(pageSize, 15) }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-full rounded" />
                 ))}
               </div>
             ) : isError ? (
-              <div className="py-14 flex flex-col items-center gap-3 text-center">
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
                 <p className="text-sm text-muted-foreground">Failed to load audit events.</p>
                 <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
               </div>
             ) : filteredLogs.length === 0 ? (
-              <div className="py-14 flex flex-col items-center gap-3 text-center">
-                <EmptyDocumentsIllustration className="h-40 w-40 opacity-95" />
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
+                <EmptyDocumentsIllustration className="h-24 w-24 opacity-90" />
                 <div className="space-y-1 text-muted-foreground">
                   <p className="text-sm font-medium text-foreground">No audit events found</p>
                   {search && logs.length > 0

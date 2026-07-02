@@ -7,6 +7,7 @@ import { Search, Mail, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -206,7 +207,8 @@ export function UserInvitationsPanel() {
         </>}
       >
         {isLoading ? (
-          <div className="border border-border rounded-md overflow-hidden">
+          <Card className="overflow-hidden">
+            <CardContent className="p-0 overflow-x-auto">
             <div className="min-w-max">
               <table className="w-full caption-bottom text-[11px]">
                 <thead className="bg-muted/80">
@@ -232,7 +234,8 @@ export function UserInvitationsPanel() {
                 </tbody>
               </table>
             </div>
-          </div>
+            </CardContent>
+          </Card>
         ) : isError ? (
           <ErrorState
             title="Failed to load invitations"
@@ -241,7 +244,7 @@ export function UserInvitationsPanel() {
             className="flex-1 min-h-[40vh]"
           />
         ) : (
-          <div className="border border-border rounded-md flex flex-col">
+          <Card className="overflow-hidden">
             <div className="flex-1 min-h-0 overflow-auto">
               <div className="min-w-max">
                 <table className="w-full caption-bottom text-[11px]">
@@ -303,7 +306,7 @@ export function UserInvitationsPanel() {
                 </div>
               </div>
             )}
-          </div>
+          </Card>
         )}
       </PageWrapper>
 

@@ -64,6 +64,7 @@ export function useProjectMilestones(projectId: number) {
 export function useCreateMilestone(projectId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "milestones", "create"],
     mutationFn: (input: CreateMilestoneInput) =>
       apiClient.post<ProjectMilestone>(`/projects/${projectId}/milestones`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
@@ -73,6 +74,7 @@ export function useCreateMilestone(projectId: number) {
 export function useUpdateMilestone(projectId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "milestones", "update"],
     mutationFn: ({ id, ...input }: UpdateMilestoneInput & { id: number }) =>
       apiClient.patch<ProjectMilestone>(`/projects/${projectId}/milestones/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
@@ -82,6 +84,7 @@ export function useUpdateMilestone(projectId: number) {
 export function useDeleteMilestone(projectId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "milestones", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/projects/${projectId}/milestones/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
@@ -101,6 +104,7 @@ export function useProjectBudget(projectId: number) {
 export function useUpdateProjectBudget(projectId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "budget", "update"],
     mutationFn: (budget: number) =>
       apiClient.patch<{ id: number; budget: string }>(`/projects/${projectId}/budget`, { budget }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.budget(projectId) }),

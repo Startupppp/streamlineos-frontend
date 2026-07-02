@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, Info, Users, UserCheck, UserMinus, TrendingUp } from "lucide-react";
+import { Info, Users, UserCheck, UserMinus, TrendingUp } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { useSeatInfo, useSubscription } from "@/hooks/api/subscription";
 import type { StatTone } from "@/components/ui/stat-card";
@@ -75,25 +76,6 @@ function SeatsPageSkeleton() {
   );
 }
 
-function SeatsErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-10 text-center">
-      <AlertCircle className="h-8 w-8 text-destructive" />
-      <div>
-        <p className="font-medium text-foreground">
-          Failed to load seat information
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          There was a problem fetching your seat data.
-        </p>
-      </div>
-      <Button variant="outline" size="sm" onClick={onRetry}>
-        Retry
-      </Button>
-    </div>
-  );
-}
-
 export default function SeatsPage() {
   const {
     data: seatInfo,
@@ -123,7 +105,12 @@ export default function SeatsPage() {
         title="Seats & Licenses"
         subtitle="Manage seat allocation and team capacity"
       >
-        <SeatsErrorState onRetry={refetchSeats} />
+        <ErrorState
+          title="Failed to load seat information"
+          description="There was a problem fetching your seat data."
+          onRetry={refetchSeats}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

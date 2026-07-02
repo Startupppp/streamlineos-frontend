@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -126,6 +127,10 @@ function VendorSheet({ initial, onClose }: VendorSheetProps) {
     onClose,
   ]);
 
+  const handleContactPhoneChange = useCallback((value: string) => {
+    setContactPhone(value);
+  }, []);
+
   const isPending = create.isPending || update.isPending;
 
   return (
@@ -175,10 +180,10 @@ function VendorSheet({ initial, onClose }: VendorSheetProps) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Phone</Label>
-              <Input
+              <PhoneInput
                 value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                placeholder="+1 555 0100"
+                onChange={handleContactPhoneChange}
+                defaultCountry="IN"
               />
             </div>
             <div className="space-y-1.5">

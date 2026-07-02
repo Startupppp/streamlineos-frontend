@@ -27,7 +27,7 @@ export function ErrorState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-destructive/30 bg-destructive/5",
+        "flex flex-col items-center justify-center text-center rounded-lg border border-dashed border-destructive/30 bg-destructive/5",
         compact ? "py-8 px-4" : "py-14 px-6",
         className
       )}
@@ -35,7 +35,7 @@ export function ErrorState({
     >
       <div
         className={cn(
-          "rounded-xl bg-destructive/10 flex items-center justify-center mb-4",
+          "rounded-lg bg-destructive/10 flex items-center justify-center mb-4",
           compact ? "h-10 w-10" : "h-12 w-12"
         )}
       >

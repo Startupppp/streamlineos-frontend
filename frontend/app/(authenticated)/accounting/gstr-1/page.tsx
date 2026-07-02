@@ -218,44 +218,42 @@ export default function Gstr1Page() {
       eyebrow="Accounting · Reports"
       title="GSTR-1 Summary"
       subtitle="Outward supplies for the selected period."
-    >
-      <div className="space-y-4">
-        <div className="rounded-lg border border-border bg-muted/40 p-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="gstr1-from"
-                className="text-[11px] font-medium text-muted-foreground leading-none"
-              >
-                From
-              </label>
-              <Input
-                id="gstr1-from"
-                type="date"
-                value={from}
-                onChange={handleFromChange}
-                className="w-full sm:w-[160px] h-8 text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="gstr1-to"
-                className="text-[11px] font-medium text-muted-foreground leading-none"
-              >
-                To
-              </label>
-              <Input
-                id="gstr1-to"
-                type="date"
-                value={to}
-                onChange={handleToChange}
-                className="w-full sm:w-[160px] h-8 text-sm"
-              />
-            </div>
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="gstr1-from"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              From
+            </label>
+            <Input
+              id="gstr1-from"
+              type="date"
+              value={from}
+              onChange={handleFromChange}
+              className="w-full sm:w-[160px] h-8 text-sm"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="gstr1-to"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              To
+            </label>
+            <Input
+              id="gstr1-to"
+              type="date"
+              value={to}
+              onChange={handleToChange}
+              className="w-full sm:w-[160px] h-8 text-sm"
+            />
           </div>
         </div>
-
-        {query.isLoading ? (
+      }
+    >
+      {query.isLoading ? (
           <LoadingState variant="table" rows={8} />
         ) : query.error ? (
           <ErrorState
@@ -305,7 +303,6 @@ export default function Gstr1Page() {
             />
           </div>
         )}
-      </div>
     </PageWrapper>
   );
 }

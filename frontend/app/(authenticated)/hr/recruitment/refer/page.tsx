@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -50,9 +51,16 @@ export default function ReferPage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     reset,
     formState: { errors },
   } = useForm<ReferFormValues>({ resolver: zodResolver(referSchema) });
+
+  const phoneValue = watch("phone") ?? "";
+
+  function handlePhoneChange(value: string) {
+    setValue("phone", value, { shouldValidate: true });
+  }
 
   function handleJobPostingChange(v: string) {
     setValue("jobPostingId", v === "none" ? undefined : v);
@@ -108,8 +116,8 @@ export default function ReferPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="phone">Phone (optional)</Label>
-                <Input id="phone" {...register("phone")} placeholder="+91 98765 43210" />
+                <Label>Phone (optional)</Label>
+                <PhoneInput value={phoneValue} onChange={handlePhoneChange} defaultCountry="IN" />
               </div>
 
               <div className="space-y-1.5">

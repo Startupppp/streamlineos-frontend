@@ -82,67 +82,21 @@ export default function AiCreditsPage() {
     <PageWrapper title="AI Credits" subtitle="Manage your AI usage credits">
       <div className="space-y-4">
         {isError ? (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-10 text-center">
-            <p className="text-sm font-medium text-foreground">Failed to load AI credits</p>
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
-              Retry
-            </Button>
-          </div>
+          <ErrorState title="Failed to load AI credits" description="Something went wrong fetching your credit balance." onRetry={handleRefresh} className="flex-1 min-h-[40vh]" />
         ) : (
           <>
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="rounded-lg border border-border bg-card p-4 space-y-2"
-              >
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-8 w-16" />
-              </div>
-            ))}
-          </div>
+          <StatCardGrid cols={3}>
+            <StatCard isLoading label="Balance" icon={Zap} tone="violet" value="" />
+            <StatCard isLoading label="Total Granted" icon={TrendingUp} tone="emerald" value="" />
+            <StatCard isLoading label="Total Used" icon={TrendingDown} tone="amber" value="" />
+          </StatCardGrid>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div className="rounded-lg border border-border bg-card px-4 py-3">
-              <p className="text-xs text-muted-foreground mb-1">
-                Current Balance
-              </p>
-              <p className="text-2xl font-bold tabular-nums">
-                {wallet?.balance.toLocaleString() ?? 0}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">credits</p>
-              {wallet && wallet.lifetimeGranted > 0 && (
-                <div className="mt-2">
-                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-violet-500 transition-all"
-                      style={{ width: `${Math.min(100, Math.round((wallet.lifetimeConsumed / wallet.lifetimeGranted) * 100))}%` }}
-                    />
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
-                    {Math.round((wallet.lifetimeConsumed / wallet.lifetimeGranted) * 100)}% used
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="rounded-lg border border-border bg-card px-4 py-3">
-              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" /> Total Granted
-              </p>
-              <p className="text-xl font-semibold tabular-nums">
-                {wallet?.lifetimeGranted.toLocaleString() ?? 0}
-              </p>
-            </div>
-            <div className="rounded-lg border border-border bg-card px-4 py-3">
-              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                <TrendingDown className="h-3 w-3" /> Total Used
-              </p>
-              <p className="text-xl font-semibold tabular-nums">
-                {wallet?.lifetimeConsumed.toLocaleString() ?? 0}
-              </p>
-            </div>
-          </div>
+          <StatCardGrid cols={3}>
+            <StatCard label="Balance" value={wallet?.balance ?? 0} icon={Zap} tone="violet" hint="credits" />
+            <StatCard label="Total Granted" value={wallet?.lifetimeGranted ?? 0} icon={TrendingUp} tone="emerald" />
+            <StatCard label="Total Used" value={wallet?.lifetimeConsumed ?? 0} icon={TrendingDown} tone="amber" />
+          </StatCardGrid>
         )}
 
         <div className="rounded-lg border border-border bg-card p-4">

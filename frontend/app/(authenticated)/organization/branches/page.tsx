@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { GitBranch, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
+import { GitBranch, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgBranches,
@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgBranch } from "@/types/org-hierarchy";
 
@@ -209,7 +210,7 @@ function BranchForm({
               <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder="+91 00000 00000" {...field} />
+                  <PhoneInput {...field} defaultCountry="IN" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -374,6 +375,8 @@ export default function OrgBranchesPage() {
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
 
+  function handleSearchInputChange(e: ChangeEvent<HTMLInputElement>) { handleSearchChange(e.target.value); }
+
   function makeRestoreHandler(branch: OrgBranch) { return () => handleRestore(branch); }
   function makeArchiveHandler(branch: OrgBranch) { return () => handleArchive(branch); }
   function makeSetEditingHandler(branch: OrgBranch) { return () => setEditing(branch); }
@@ -405,13 +408,6 @@ export default function OrgBranchesPage() {
       className="min-h-[40vh]"
     />
   );
-
-  const archiveToolbar = archived.length > 0 ? (
-    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
-      <Archive className="h-4 w-4 mr-1.5" />
-      {showArchived ? "Show Active" : `Archived (${archived.length})`}
-    </Button>
-  ) : undefined;
 
   const columns: DataTableColumn<OrgBranch>[] = [
     {
@@ -489,12 +485,26 @@ export default function OrgBranchesPage() {
   return (
     <PageWrapper
       title="Branches"
-      subtitle="Physical or regional office branches within your organization."
+      subtitle="Branches within your organization."
       actions={
         <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1.5" />
           Add Branch
         </Button>
+      }
+      filters={
+        <>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <Input className="pl-8 h-8 text-xs max-w-[240px]" placeholder="Search branches…" value={search} onChange={handleSearchInputChange} />
+          </div>
+          {archived.length > 0 && (
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            </Button>
+          )}
+        </>
       }
     >
       <DataTable
@@ -503,8 +513,6 @@ export default function OrgBranchesPage() {
         getRowKey={(b) => b.id}
         isLoading={isLoading}
         emptyState={emptyState}
-        search={{ value: search, onChange: handleSearchChange, placeholder: "Search branches…" }}
-        toolbar={archiveToolbar}
         rowClassName={(b) => cn(b.status === "ARCHIVED" && "opacity-60")}
         minWidth="580px"
       />
@@ -517,13 +525,15 @@ export default function OrgBranchesPage() {
           <div className="flex-1 overflow-y-auto px-6 py-5">
             <BranchForm businessUnits={businessUnits} onSubmit={handleCreate} isPending={create.isPending} />
           </div>
-          <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
-            <SheetClose asChild>
-              <Button variant="outline" size="sm">Cancel</Button>
-            </SheetClose>
-            <Button size="sm" type="submit" form="branch-form" disabled={create.isPending}>
-              {create.isPending ? "Saving…" : "Save"}
-            </Button>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <SheetClose asChild>
+                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
+              </SheetClose>
+              <Button size="sm" type="submit" form="branch-form" disabled={create.isPending} className="w-full">
+                {create.isPending ? "Saving…" : "Save"}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -554,13 +564,15 @@ export default function OrgBranchesPage() {
               />
             )}
           </div>
-          <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
-            <SheetClose asChild>
-              <Button variant="outline" size="sm">Cancel</Button>
-            </SheetClose>
-            <Button size="sm" type="submit" form="branch-form" disabled={update.isPending}>
-              {update.isPending ? "Saving…" : "Save"}
-            </Button>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <SheetClose asChild>
+                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
+              </SheetClose>
+              <Button size="sm" type="submit" form="branch-form" disabled={update.isPending} className="w-full">
+                {update.isPending ? "Saving…" : "Save"}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>

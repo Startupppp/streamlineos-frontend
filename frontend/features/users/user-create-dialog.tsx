@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -230,7 +231,7 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
                     <FormItem>
                       <FormLabel>Phone</FormLabel>
                       <FormControl>
-                        <Input placeholder="+1 555 000 0000" {...field} />
+                        <PhoneInput defaultCountry="IN" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -152,50 +152,48 @@ export default function CashFlowPage() {
       eyebrow="Accounting · Reports"
       title="Cash Flow Statement"
       subtitle="Cash generated and used across operating, investing, and financing activities."
-    >
-      <div className="space-y-4">
-        <div className="rounded-lg border border-border bg-muted/40 p-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="cash-flow-from"
-                className="text-[11px] font-medium text-muted-foreground leading-none"
-              >
-                From
-              </label>
-              <Input
-                id="cash-flow-from"
-                type="date"
-                value={from}
-                onChange={handleFromChange}
-                className="w-[160px] h-8 text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="cash-flow-to"
-                className="text-[11px] font-medium text-muted-foreground leading-none"
-              >
-                To
-              </label>
-              <Input
-                id="cash-flow-to"
-                type="date"
-                value={to}
-                onChange={handleToChange}
-                className="w-[160px] h-8 text-sm"
-              />
-            </div>
-            {report && !report.reconciled && (
-              <div className="ml-auto self-end text-xs text-amber-600">
-                Section totals differ from the net change in cash — review
-                unbalanced entries.
-              </div>
-            )}
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="cash-flow-from"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              From
+            </label>
+            <Input
+              id="cash-flow-from"
+              type="date"
+              value={from}
+              onChange={handleFromChange}
+              className="w-[160px] h-8 text-sm"
+            />
           </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="cash-flow-to"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              To
+            </label>
+            <Input
+              id="cash-flow-to"
+              type="date"
+              value={to}
+              onChange={handleToChange}
+              className="w-[160px] h-8 text-sm"
+            />
+          </div>
+          {report && !report.reconciled && (
+            <div className="ml-auto self-end text-xs text-amber-600">
+              Section totals differ from the net change in cash — review
+              unbalanced entries.
+            </div>
+          )}
         </div>
-
-        {query.isLoading ? (
+      }
+    >
+      {query.isLoading ? (
           <LoadingState variant="table" rows={8} />
         ) : query.error ? (
           <ErrorState
@@ -237,7 +235,6 @@ export default function CashFlowPage() {
             </div>
           </div>
         )}
-      </div>
     </PageWrapper>
   );
 }

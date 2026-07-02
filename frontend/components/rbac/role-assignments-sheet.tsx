@@ -228,7 +228,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
 
   return (
     <>
-      <SheetHeader className="px-6 pt-5 pb-3 border-b border-border/60 shrink-0 text-left gap-1">
+      <SheetHeader className="px-6 py-4 border-b shrink-0 text-left gap-1">
         <SheetTitle className="text-base font-semibold">
           Manage members
         </SheetTitle>
@@ -485,7 +485,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
         </ScrollArea>
       )}
 
-      <SheetFooter className="px-6 py-3 border-t border-border/60 shrink-0 flex-row gap-2 sm:justify-end">
+      <SheetFooter className="px-6 py-4 border-t shrink-0">
         <Button type="button" variant="outline" onClick={onClose}>
           Done
         </Button>

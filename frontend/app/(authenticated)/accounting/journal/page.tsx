@@ -117,61 +117,54 @@ export default function JournalListPage() {
           </Link>
         </Button>
       }
-    >
-      <div className="space-y-4">
-        <div className="rounded-lg border border-border bg-muted/40 p-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="journal-from"
-                className="text-[11px] font-medium text-muted-foreground leading-none"
-              >
-                From
-              </label>
-              <Input
-                id="journal-from"
-                type="date"
-                value={from}
-                onChange={handleFromChange}
-                className="w-full sm:w-[160px] h-8 text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="journal-to"
-                className="text-[11px] font-medium text-muted-foreground leading-none"
-              >
-                To
-              </label>
-              <Input
-                id="journal-to"
-                type="date"
-                value={to}
-                onChange={handleToChange}
-                className="w-full sm:w-[160px] h-8 text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium text-muted-foreground leading-none">
-                Source
-              </span>
-              <Select value={sourceType} onValueChange={handleSourceTypeChange}>
-                <SelectTrigger className="w-full sm:w-[180px] h-8 text-sm">
-                  <SelectValue placeholder="All sources" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SOURCE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <label
+              htmlFor="journal-from"
+              className="text-xs text-muted-foreground whitespace-nowrap"
+            >
+              From
+            </label>
+            <Input
+              id="journal-from"
+              type="date"
+              value={from}
+              onChange={handleFromChange}
+              className="h-8 text-xs w-[150px]"
+            />
           </div>
+          <div className="flex items-center gap-1.5">
+            <label
+              htmlFor="journal-to"
+              className="text-xs text-muted-foreground whitespace-nowrap"
+            >
+              To
+            </label>
+            <Input
+              id="journal-to"
+              type="date"
+              value={to}
+              onChange={handleToChange}
+              className="h-8 text-xs w-[150px]"
+            />
+          </div>
+          <Select value={sourceType} onValueChange={handleSourceTypeChange}>
+            <SelectTrigger className="h-8 w-[160px] text-xs">
+              <SelectValue placeholder="All sources" />
+            </SelectTrigger>
+            <SelectContent>
+              {SOURCE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
-        {query.isLoading ? (
+      }
+    >
+      {query.isLoading ? (
           <LoadingState variant="table" rows={8} />
         ) : query.error ? (
           <ErrorState
@@ -259,7 +252,6 @@ export default function JournalListPage() {
             </div>
           </div>
         )}
-      </div>
     </PageWrapper>
   );
 }

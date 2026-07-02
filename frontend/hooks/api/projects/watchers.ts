@@ -18,6 +18,7 @@ export function useWatchers(
         `/projects/${projectId}/tickets/${ticketId}/watchers`
       ),
     enabled: !!ticketId && !!projectId,
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -25,6 +26,7 @@ export function useWatchers(
 export function useToggleWatch(projectId: number) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "watchers", "toggle"],
     mutationFn: ({
       ticketId,
       watching,
@@ -53,6 +55,7 @@ export function useToggleWatch(projectId: number) {
 export function useAddWatcher(projectId: number) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "watchers", "add"],
     mutationFn: ({
       ticketId,
       userId,

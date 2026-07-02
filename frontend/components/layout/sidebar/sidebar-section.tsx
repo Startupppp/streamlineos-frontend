@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState, startTransition } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { flattenNavRoutes, type NavGroup, type NavRoute } from "./sidebar-nav-items";
+import { flattenNavRoutes, type NavGroup, type NavRoute, type ModuleAccent } from "./sidebar-nav-items";
 
 function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
   if (routes.length !== 1) return routes;
@@ -36,6 +36,7 @@ interface SidebarSectionProps {
   onToggleGroup?: () => void;
   pendingLeaves: number;
   onNavigate?: () => void;
+  accent: ModuleAccent;
 }
 
 function routeIsActive(route: NavRoute, pathname: string): boolean {
@@ -59,6 +60,7 @@ export function SidebarSection({
   onToggleGroup,
   pendingLeaves,
   onNavigate,
+  accent,
 }: SidebarSectionProps) {
   const pathname = usePathname();
   const showItems = isCollapsed || !isGroupCollapsed;
@@ -105,6 +107,7 @@ export function SidebarSection({
                   pathname={pathname}
                   pendingLeaves={pendingLeaves}
                   onNavigate={onNavigate}
+                  accent={accent}
                 />
               ))
             : hoistSingletonParentRoutes(group.routes).map((route) => (
@@ -115,6 +118,7 @@ export function SidebarSection({
                   pathname={pathname}
                   pendingLeaves={pendingLeaves}
                   onNavigate={onNavigate}
+                  accent={accent}
                 />
               ))}
         </div>
@@ -128,6 +132,7 @@ interface ItemProps {
   pathname: string;
   pendingLeaves: number;
   onNavigate?: () => void;
+  accent: ModuleAccent;
 }
 
 function computeBadge(route: NavRoute, pendingLeaves: number) {
@@ -135,7 +140,7 @@ function computeBadge(route: NavRoute, pendingLeaves: number) {
   return 0;
 }
 
-function CollapsedItem({ route, pathname, pendingLeaves, onNavigate }: ItemProps) {
+function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: ItemProps) {
   const isActive = routeIsActive(route, pathname);
   const count = computeBadge(route, pendingLeaves);
   const hasBadge = count > 0;
@@ -149,9 +154,20 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate }: ItemProps
           aria-current={isActive ? "page" : undefined}
           className={cn("nav-item group relative justify-center w-8 h-8 mx-auto flex", isActive && "active")}
         >
-          <route.icon className={cn("nav-icon transition-colors duration-150 h-4 w-4", isActive && "text-blue-600")} />
+          {isActive && (
+            <span
+              aria-hidden
+              className={cn("absolute inset-0 rounded-[6px] pointer-events-none z-0", accent.bg)}
+            />
+          )}
+          <route.icon
+            className={cn(
+              "nav-icon transition-colors duration-150 h-4 w-4 relative z-[1]",
+              isActive && accent.text,
+            )}
+          />
           {hasBadge && (
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-1 ring-sidebar" />
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-1 ring-sidebar z-[2]" />
           )}
         </Link>
       </TooltipTrigger>
@@ -167,7 +183,7 @@ interface ExpandedItemProps extends ItemProps {
   depth: number;
 }
 
-function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate }: ExpandedItemProps) {
+function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accent }: ExpandedItemProps) {
   const isActive = routeIsActive(route, pathname);
   const hasChildren = !!route.children && route.children.length > 1;
   const singleChild = !!route.children && route.children.length === 1;
@@ -202,13 +218,13 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate }: Exp
         style={{ paddingLeft }}
       >
         {isActive && (
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full bg-blue-500" />
+          <span className={cn("absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full", accent.indicator)} />
         )}
         <route.icon
           className={cn(
             "nav-icon transition-colors duration-150 shrink-0",
             depth > 0 ? "h-3.5 w-3.5" : "h-4 w-4",
-            isActive && "text-blue-600",
+            isActive && accent.text,
           )}
         />
         <span className="flex-1 min-w-0 truncate text-[0.8125rem]">{route.label}</span>
@@ -242,6 +258,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate }: Exp
               pathname={pathname}
               pendingLeaves={pendingLeaves}
               onNavigate={onNavigate}
+              accent={accent}
             />
           ))}
         </div>

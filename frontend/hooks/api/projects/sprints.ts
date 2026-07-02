@@ -20,6 +20,7 @@ export function useSprints(
     queryFn: () =>
       apiClient.get<Sprint[]>(`/projects/${projectId}/sprints`),
     enabled: !!projectId,
+    staleTime: 60_000,
     ...options,
   });
 }
@@ -34,6 +35,7 @@ export function useSprint(
     queryFn: () =>
       apiClient.get<Sprint | null>(`/projects/${projectId}/sprints/${sprintId}`),
     enabled: !!sprintId && !!projectId,
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -41,6 +43,7 @@ export function useSprint(
 export function useCreateSprint(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "sprints", "create"],
     mutationFn: ({ projectId, ...data }: CreateSprintInput) =>
       apiClient.post<Sprint>(`/projects/${projectId}/sprints`, data),
     onSuccess: (_data: unknown, variables: CreateSprintInput) => {
@@ -58,6 +61,7 @@ export function useUpdateSprint(
 ) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "sprints", "update"],
     mutationFn: ({ sprintId, ...data }: UpdateSprintInput) =>
       apiClient.patch<{ success: boolean }>(
         `/projects/${projectId}/sprints/${sprintId}`,
@@ -78,6 +82,7 @@ export function useStartSprint(
 ) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "sprints", "start"],
     mutationFn: ({ sprintId }: { sprintId: number }) =>
       apiClient.patch<{ success: boolean }>(
         `/projects/${projectId}/sprints/${sprintId}`,
@@ -98,6 +103,7 @@ export function useCompleteSprint(
 ) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "sprints", "complete"],
     mutationFn: ({ sprintId }: { sprintId: number }) =>
       apiClient.patch<{ success: boolean }>(
         `/projects/${projectId}/sprints/${sprintId}`,
@@ -124,6 +130,7 @@ export function useSprintBurndown(
         `/projects/${projectId}/sprints/${sprintId}/burndown`
       ),
     enabled: !!sprintId && !!projectId,
+    staleTime: 30_000,
     ...options,
   });
 }

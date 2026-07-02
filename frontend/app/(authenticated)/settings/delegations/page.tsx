@@ -600,27 +600,29 @@ function GrantDelegationSheet({
           </div>
 
           </div>
-          <div className="shrink-0 px-6 py-4 border-t flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleOpenChange(false)}
-              disabled={mutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={mutation.isPending}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              {mutation.isPending && (
-                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-              )}
-              Delegate
-            </Button>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleOpenChange(false)}
+                disabled={mutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={mutation.isPending}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                {mutation.isPending && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                )}
+                Delegate
+              </Button>
+            </div>
           </div>
         </form>
       </SheetContent>

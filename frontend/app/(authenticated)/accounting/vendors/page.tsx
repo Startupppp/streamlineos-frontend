@@ -2,6 +2,7 @@
 
 import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -51,27 +52,28 @@ export default function VendorsListPage() {
       eyebrow="Accounting · Vendors"
       title="Vendor ledgers"
       subtitle="Outstanding payables by vendor."
-    >
-      <div className="space-y-4">
-        <div className="rounded-lg border border-border bg-muted/40 p-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 max-w-[240px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <Input
               value={search}
               onChange={handleSearchChange}
               placeholder="Search vendors..."
-              className="w-full sm:max-w-xs h-8 text-sm"
+              className="h-8 w-full pl-8 text-xs"
             />
-            <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer select-none">
-              <Checkbox
-                checked={onlyOutstanding}
-                onCheckedChange={handleOnlyOutstandingChange}
-              />
-              Only with outstanding balance
-            </label>
           </div>
+          <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
+            <Checkbox
+              checked={onlyOutstanding}
+              onCheckedChange={handleOnlyOutstandingChange}
+            />
+            Only with outstanding balance
+          </label>
         </div>
-
-        {query.isLoading && <LoadingState variant="table" />}
+      }
+    >
+      {query.isLoading && <LoadingState variant="table" />}
         {query.error && (
           <ErrorState
             title="Failed to load vendors"
@@ -144,7 +146,6 @@ export default function VendorsListPage() {
             </div>
           </div>
         )}
-      </div>
     </PageWrapper>
   );
 }

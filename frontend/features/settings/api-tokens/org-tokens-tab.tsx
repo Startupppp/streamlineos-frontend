@@ -109,127 +109,129 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
           </Button>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Prefix</TableHead>
-              <TableHead>Scopes</TableHead>
-              <TableHead>Expires</TableHead>
-              <TableHead>Last Used</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-28" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tokens.map((t) => {
-              const expired = isExpired(t.expiresAt);
-              return (
-                <TableRow
-                  key={t.id}
-                  className={t.isRevoked ? "opacity-60" : ""}
-                >
-                  <TableCell className="font-medium">
-                    <div className="flex flex-col">
-                      <span>{t.name}</span>
-                      {t.description && (
-                        <span className="text-xs text-muted-foreground truncate max-w-[180px]">
-                          {t.description}
+        <div className="rounded-md border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Prefix</TableHead>
+                <TableHead>Scopes</TableHead>
+                <TableHead>Expires</TableHead>
+                <TableHead>Last Used</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-28" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tokens.map((t) => {
+                const expired = isExpired(t.expiresAt);
+                return (
+                  <TableRow
+                    key={t.id}
+                    className={t.isRevoked ? "opacity-60" : ""}
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        <span>{t.name}</span>
+                        {t.description && (
+                          <span className="text-xs text-muted-foreground truncate max-w-[180px]">
+                            {t.description}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                        {t.keyPrefix}…
+                      </code>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1 max-w-[200px]">
+                        {t.scopes.slice(0, 3).map((s) => (
+                          <Badge
+                            key={s}
+                            variant="outline"
+                            className="text-xs px-1.5 py-0"
+                          >
+                            {s}
+                          </Badge>
+                        ))}
+                        {t.scopes.length > 3 && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs px-1.5 py-0"
+                          >
+                            +{t.scopes.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        {expired && (
+                          <Clock className="h-3.5 w-3.5 text-destructive" />
+                        )}
+                        <span className={expired ? "text-destructive" : ""}>
+                          {formatDate(t.expiresAt)}
                         </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                      {t.keyPrefix}…
-                    </code>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1 max-w-[200px]">
-                      {t.scopes.slice(0, 3).map((s) => (
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(t.lastUsedAt)}
+                    </TableCell>
+                    <TableCell>
+                      {t.isRevoked ? (
                         <Badge
-                          key={s}
-                          variant="outline"
-                          className="text-xs px-1.5 py-0"
+                          variant="secondary"
+                          className="text-destructive border-destructive/20 bg-destructive/10"
                         >
-                          {s}
+                          Revoked
                         </Badge>
-                      ))}
-                      {t.scopes.length > 3 && (
+                      ) : expired ? (
+                        <Badge
+                          variant="secondary"
+                          className="text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                        >
+                          Expired
+                        </Badge>
+                      ) : (
                         <Badge
                           variant="outline"
-                          className="text-xs px-1.5 py-0"
+                          className="text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
                         >
-                          +{t.scopes.length - 3}
+                          <Shield className="h-3 w-3 mr-1" />
+                          Active
                         </Badge>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      {expired && (
-                        <Clock className="h-3.5 w-3.5 text-destructive" />
-                      )}
-                      <span className={expired ? "text-destructive" : ""}>
-                        {formatDate(t.expiresAt)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(t.lastUsedAt)}
-                  </TableCell>
-                  <TableCell>
-                    {t.isRevoked ? (
-                      <Badge
-                        variant="secondary"
-                        className="text-destructive border-destructive/20 bg-destructive/10"
-                      >
-                        Revoked
-                      </Badge>
-                    ) : expired ? (
-                      <Badge
-                        variant="secondary"
-                        className="text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
-                      >
-                        Expired
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
-                      >
-                        <Shield className="h-3 w-3 mr-1" />
-                        Active
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      {!t.isRevoked && (
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {!t.isRevoked && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setRevoking(t)}
+                            title="Revoke"
+                          >
+                            <ShieldOff className="h-4 w-4 text-amber-600" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setRevoking(t)}
-                          title="Revoke"
+                          onClick={() => setDeleting(t)}
+                          title="Delete"
                         >
-                          <ShieldOff className="h-4 w-4 text-amber-600" />
+                          <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleting(t)}
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       <CreateOrgTokenSheet

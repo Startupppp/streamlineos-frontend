@@ -250,13 +250,13 @@ export default function OrgTreePage() {
             </div>
           )}
           {isError && (
-            <div className="py-12 flex flex-col items-center gap-3 text-center px-6">
+            <div className="min-h-[260px] flex flex-col items-center justify-center gap-3 text-center px-6">
               <p className="text-sm font-medium text-foreground">Failed to load organization tree</p>
               <p className="text-xs text-muted-foreground">Check your connection and try again.</p>
             </div>
           )}
           {!isLoading && !isError && filtered.length === 0 && (
-            <div className="py-12 flex flex-col items-center gap-3 text-center px-6">
+            <div className="min-h-[260px] flex flex-col items-center justify-center gap-3 text-center px-6">
               <Building2 className="h-8 w-8 text-muted-foreground/40" />
               <p className="text-sm font-medium text-foreground">
                 {search ? "No results match your search." : "No business units found"}

@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { UsersRound, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
+import { UsersRound, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgTeams,
@@ -308,6 +308,8 @@ export default function OrgTeamsPage() {
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
 
+  function handleSearchInputChange(e: ChangeEvent<HTMLInputElement>) { handleSearchChange(e.target.value); }
+
   function makeRestoreHandler(team: OrgTeam) { return () => handleRestore(team); }
   function makeArchiveHandler(team: OrgTeam) { return () => handleArchive(team); }
   function makeSetEditingHandler(team: OrgTeam) { return () => setEditing(team); }
@@ -423,22 +425,29 @@ export default function OrgTeamsPage() {
     />
   );
 
-  const archiveToolbar = archived.length > 0 ? (
-    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
-      <Archive className="h-4 w-4 mr-1.5" />
-      {showArchived ? "Show Active" : `Archived (${archived.length})`}
-    </Button>
-  ) : undefined;
-
   return (
     <PageWrapper
       title="Teams"
-      subtitle="Teams within departments across your organization."
+      subtitle="Teams within departments."
       actions={
         <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1.5" />
           Add Team
         </Button>
+      }
+      filters={
+        <>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <Input className="pl-8 h-8 text-xs max-w-[240px]" placeholder="Search teams…" value={search} onChange={handleSearchInputChange} />
+          </div>
+          {archived.length > 0 && (
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            </Button>
+          )}
+        </>
       }
     >
       <DataTable
@@ -447,8 +456,6 @@ export default function OrgTeamsPage() {
         getRowKey={(t) => t.id}
         isLoading={isLoading}
         emptyState={emptyState}
-        search={{ value: search, onChange: handleSearchChange, placeholder: "Search teams…" }}
-        toolbar={archiveToolbar}
         rowClassName={(t) => cn(t.status === "ARCHIVED" && "opacity-60")}
         minWidth="620px"
       />
@@ -461,13 +468,15 @@ export default function OrgTeamsPage() {
           <div className="flex-1 overflow-y-auto px-6 py-5">
             <TeamForm departments={departments} onSubmit={handleCreate} isPending={create.isPending} />
           </div>
-          <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
-            <SheetClose asChild>
-              <Button variant="outline" size="sm">Cancel</Button>
-            </SheetClose>
-            <Button size="sm" type="submit" form="team-form" disabled={create.isPending}>
-              {create.isPending ? "Saving…" : "Save"}
-            </Button>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <SheetClose asChild>
+                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
+              </SheetClose>
+              <Button size="sm" type="submit" form="team-form" disabled={create.isPending} className="w-full">
+                {create.isPending ? "Saving…" : "Save"}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -494,13 +503,15 @@ export default function OrgTeamsPage() {
               />
             )}
           </div>
-          <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
-            <SheetClose asChild>
-              <Button variant="outline" size="sm">Cancel</Button>
-            </SheetClose>
-            <Button size="sm" type="submit" form="team-form" disabled={update.isPending}>
-              {update.isPending ? "Saving…" : "Save"}
-            </Button>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <SheetClose asChild>
+                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
+              </SheetClose>
+              <Button size="sm" type="submit" form="team-form" disabled={update.isPending} className="w-full">
+                {update.isPending ? "Saving…" : "Save"}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>

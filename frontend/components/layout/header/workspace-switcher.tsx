@@ -1,7 +1,6 @@
 "use client"
 
-import { useCallback } from "react"
-import Link from "next/link"
+import { useCallback, useState } from "react"
 import { Check, ChevronsUpDown, Plus, Building2 } from "lucide-react"
 import { useSession } from "next-auth/react"
 import {
@@ -14,6 +13,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks"
+import { CreateWorkspaceDialog } from "@/features/workspace/create-workspace-dialog"
 
 interface WorkspaceSwitcherProps {
   variant?: "header" | "sidebar"
@@ -49,6 +49,7 @@ export function WorkspaceSwitcher({
   const { data: session } = useSession()
   const { data: organizations } = useGetOrganizations()
   const switchOrg = useSwitchOrg()
+  const [createOpen, setCreateOpen] = useState(false)
 
   const activeOrgId = session?.orgId as string | null | undefined
   const activeOrg = organizations?.find((o) => o.id === activeOrgId) ?? organizations?.[0]
@@ -100,6 +101,7 @@ export function WorkspaceSwitcher({
   )
 
   return (
+    <>
     <DropdownMenu>
       {iconOnly ? (
         <Tooltip delayDuration={0}>
@@ -137,15 +139,18 @@ export function WorkspaceSwitcher({
         {session?.user?.isOrgOwner && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/setup" className="gap-2 cursor-pointer text-muted-foreground">
-                <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-sm">Add workspace</span>
-              </Link>
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer text-muted-foreground"
+              onSelect={() => setCreateOpen(true)}
+            >
+              <Plus className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-sm">Create workspace</span>
             </DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+    <CreateWorkspaceDialog open={createOpen} onOpenChange={setCreateOpen} />
+    </>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -98,32 +98,33 @@ export default function PurchaseBillsListPage() {
           </Link>
         </Button>
       }
-    >
-      <div className="space-y-4">
-        <div className="rounded-lg border border-border bg-muted/40 p-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 max-w-[240px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <Input
               value={search}
               onChange={handleSearchChange}
               placeholder="Search by bill number"
-              className="w-full sm:max-w-xs h-8 text-sm"
+              className="h-8 w-full pl-8 text-xs"
             />
-            <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-full sm:max-w-xs h-8 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
+          <Select value={status} onValueChange={handleStatusChange}>
+            <SelectTrigger className="h-8 w-[160px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
-        {query.isLoading && <LoadingState variant="table" rows={8} />}
+      }
+    >
+      {query.isLoading && <LoadingState variant="table" rows={8} />}
         {query.error && (
           <ErrorState
             title="Failed to load purchase bills"
@@ -208,7 +209,6 @@ export default function PurchaseBillsListPage() {
             </div>
           </div>
         )}
-      </div>
     </PageWrapper>
   );
 }

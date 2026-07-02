@@ -66,7 +66,7 @@ export function EmptyState({
         "flex flex-col items-center justify-center text-center",
         compact
           ? "py-4 px-2"
-          : "py-14 px-6 rounded-xl border border-dashed border-border/60 bg-muted/20",
+          : "py-12 px-6 rounded-lg border border-dashed border-border bg-card",
         className
       )}
     >

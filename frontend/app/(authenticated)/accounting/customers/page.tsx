@@ -2,6 +2,7 @@
 
 import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -62,27 +63,28 @@ export default function CustomerLedgersPage() {
       title="Customer ledgers"
       subtitle="Outstanding receivables by customer."
       badge={`${total}`}
-    >
-      <div className="space-y-4">
-        <div className="rounded-lg border border-border bg-muted/40 p-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 max-w-[240px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <Input
               value={search}
               onChange={handleSearchChange}
               placeholder="Search customers..."
-              className="w-full sm:max-w-xs h-8 text-sm"
+              className="h-8 w-full pl-8 text-xs"
             />
-            <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer select-none">
-              <Checkbox
-                checked={onlyOutstanding}
-                onCheckedChange={handleOnlyOutstandingToggle}
-              />
-              Only outstanding
-            </label>
           </div>
+          <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
+            <Checkbox
+              checked={onlyOutstanding}
+              onCheckedChange={handleOnlyOutstandingToggle}
+            />
+            Only outstanding
+          </label>
         </div>
-
-        {query.isLoading ? (
+      }
+    >
+      {query.isLoading ? (
           <LoadingState variant="table" rows={8} />
         ) : query.error ? (
           <ErrorState
@@ -158,7 +160,6 @@ export default function CustomerLedgersPage() {
             </div>
           </div>
         )}
-      </div>
     </PageWrapper>
   );
 }

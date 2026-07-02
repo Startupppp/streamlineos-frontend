@@ -5,6 +5,7 @@ import { ClipboardList, ShieldCheck, ShieldX, UserCheck, UserX } from "lucide-re
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { ErrorState } from "@/components/shared/error-state";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

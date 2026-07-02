@@ -262,7 +262,7 @@ export default function WebhooksPage() {
               </div>
               <div className="space-y-2">
                 <Label>Events to send</Label>
-                <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 gap-2">
                   {AVAILABLE_EVENTS.map(ev => (
                     <EventCheckboxItem
                       key={ev.id}
@@ -275,15 +275,16 @@ export default function WebhooksPage() {
               </div>
             </div>
           </div>
-          <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-            <Button variant="outline" className="flex-1" onClick={handleSheetClose}>Cancel</Button>
-            <Button
-              className="flex-1"
-              onClick={handleCreate}
-              disabled={createWebhook.isPending || !url.trim()}
-            >
-              {createWebhook.isPending ? "Creating..." : "Create Webhook"}
-            </Button>
+          <SheetFooter className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2 w-full">
+              <Button variant="outline" onClick={handleSheetClose}>Cancel</Button>
+              <Button
+                onClick={handleCreate}
+                disabled={createWebhook.isPending || !url.trim()}
+              >
+                {createWebhook.isPending ? "Creating..." : "Create Webhook"}
+              </Button>
+            </div>
           </SheetFooter>
         </SheetContent>
       </Sheet>

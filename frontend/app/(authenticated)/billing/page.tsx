@@ -12,9 +12,9 @@ import {
   Clock,
   ChevronRight,
   Plus,
-  RefreshCw,
   CreditCard,
 } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -171,13 +171,12 @@ export default function BillingPage() {
         )}
 
         {statsError ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 flex flex-col items-center gap-3 text-center">
-            <AlertCircle className="h-8 w-8 text-destructive" />
-            <p className="text-sm font-medium">Failed to load billing stats</p>
-            <Button variant="outline" size="sm" onClick={handleRetryStats}>
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Retry
-            </Button>
-          </div>
+          <ErrorState
+            compact
+            title="Failed to load billing stats"
+            description="Could not load billing statistics."
+            onRetry={handleRetryStats}
+          />
         ) : (
           <>
             <StatCardGrid cols={4}>

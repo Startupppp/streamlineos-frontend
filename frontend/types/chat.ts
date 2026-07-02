@@ -1,4 +1,27 @@
 
+export interface TicketEntityRef {
+  type: "ticket";
+  id: string;
+  projectId: number;
+  ticketNumber?: number;
+  projectKey?: string;
+  title?: string;
+  status?: string;
+  priority?: string;
+}
+
+export interface CommentEntityRef {
+  type: "comment";
+  id: string;
+  ticketId: number;
+  projectId: number;
+}
+
+export type EntityRef = TicketEntityRef | CommentEntityRef;
+
+export interface MessageMetadata {
+  entities?: EntityRef[];
+}
 
 export type ChannelType = "DIRECT" | "GROUP" | "PUBLIC" | "PRIVATE";
 
@@ -89,7 +112,7 @@ export interface Message {
   isEdited: boolean;
   isDeleted: boolean;
   messageType: MessageType;
-  metadata: unknown;
+  metadata: MessageMetadata | null;
   actionStatus: string | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
@@ -173,7 +196,7 @@ export interface SendMessageInput {
   content?: string;
   replyToId?: number;
   attachments?: AttachmentInput[];
-  metadata?: Record<string, unknown>;
+  metadata?: MessageMetadata;
 }
 
 export interface EditMessageInput {

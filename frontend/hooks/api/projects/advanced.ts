@@ -33,6 +33,7 @@ export function useEpics(
     queryKey: queryKeys.projects.epics(projectId),
     queryFn: () => apiClient.get<Epic[]>(`/projects/${projectId}/epics`),
     enabled: !!projectId,
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -49,6 +50,7 @@ type CreateEpicInput = {
 export function useCreateEpic(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "epics", "create"],
     mutationFn: (variables: CreateEpicInput) => {
       const { projectId, ...data } = variables;
       return apiClient.post<Epic>(`/projects/${projectId}/epics`, data);
@@ -68,6 +70,7 @@ export function useUpdateEpic(
 ) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "epics", "update"],
     mutationFn: ({ ticketId, ...data }: UpdateTicketInput) =>
       apiClient.patch<{ success: boolean }>(
         `/projects/${projectId}/tickets/${ticketId}`,
@@ -90,6 +93,7 @@ export function useCycles(
     queryKey: queryKeys.projects.cycles(projectId),
     queryFn: () => apiClient.get<Cycle[]>(`/projects/${projectId}/cycles`),
     enabled: !!projectId,
+    staleTime: 60_000,
     ...options,
   });
 }
@@ -97,6 +101,7 @@ export function useCycles(
 export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "cycles", "create"],
     mutationFn: ({ projectId, ...data }: CreateCycleInput) =>
       apiClient.post<Cycle>(`/projects/${projectId}/cycles`, data),
     onSuccess: (_data: unknown, variables: CreateCycleInput) => {
@@ -111,6 +116,7 @@ export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
 export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "cycles", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateCycleInput & { projectId: number }) =>
       apiClient.patch<Cycle>(`/projects/${projectId}/cycles/${id}`, data),
     onSuccess: (_data: unknown, variables: UpdateCycleInput & { projectId: number }) => {
@@ -133,6 +139,7 @@ export function useModules(
     queryKey: queryKeys.projects.modules(projectId),
     queryFn: () => apiClient.get<Module[]>(`/projects/${projectId}/modules`),
     enabled: !!projectId,
+    staleTime: 60_000,
     ...options,
   });
 }
@@ -140,6 +147,7 @@ export function useModules(
 export function useCreateModule(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "modules", "create"],
     mutationFn: ({ projectId, ...data }: CreateModuleInput) =>
       apiClient.post<Module>(`/projects/${projectId}/modules`, data),
     onSuccess: (_data: unknown, variables: CreateModuleInput) => {
@@ -154,6 +162,7 @@ export function useCreateModule(options?: Parameters<typeof useMutation>[0]) {
 export function useUpdateModule(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "modules", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateModuleInput & { projectId: number }) =>
       apiClient.patch<Module>(`/projects/${projectId}/modules/${id}`, data),
     onSuccess: (_data: unknown, variables: UpdateModuleInput & { projectId: number }) => {
@@ -176,6 +185,7 @@ export function usePages(
     queryKey: queryKeys.projects.pages(projectId),
     queryFn: () => apiClient.get<ProjectPage[]>(`/projects/${projectId}/pages`),
     enabled: !!projectId,
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -183,6 +193,7 @@ export function usePages(
 export function useCreatePage(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "pages", "create"],
     mutationFn: ({ projectId, ...data }: CreatePageInput) =>
       apiClient.post<ProjectPage>(`/projects/${projectId}/pages`, data),
     onSuccess: (_data: unknown, variables: CreatePageInput) => {
@@ -197,6 +208,7 @@ export function useCreatePage(options?: Parameters<typeof useMutation>[0]) {
 export function useUpdatePage(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "pages", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdatePageInput & { projectId: number }) =>
       apiClient.patch<ProjectPage>(`/projects/${projectId}/pages/${id}`, data),
     onSuccess: (_data: unknown, variables: UpdatePageInput & { projectId: number }) => {
@@ -216,6 +228,7 @@ export function useViews(
     queryKey: queryKeys.projects.views(projectId),
     queryFn: () => apiClient.get<ProjectView[]>(`/projects/${projectId}/views`),
     enabled: !!projectId,
+    staleTime: 60_000,
     ...options,
   });
 }
@@ -223,6 +236,7 @@ export function useViews(
 export function useCreateView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "views", "create"],
     mutationFn: ({ projectId, ...data }: CreateViewInput) =>
       apiClient.post<ProjectView>(`/projects/${projectId}/views`, data),
     onSuccess: (_data: unknown, variables: CreateViewInput) => {
@@ -237,6 +251,7 @@ export function useCreateView(options?: Parameters<typeof useMutation>[0]) {
 export function useUpdateView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "views", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateViewInput & { projectId: number }) =>
       apiClient.patch<ProjectView>(`/projects/${projectId}/views/${id}`, data),
     onSuccess: (_data: unknown, variables: UpdateViewInput & { projectId: number }) => {
@@ -251,6 +266,7 @@ export function useUpdateView(options?: Parameters<typeof useMutation>[0]) {
 export function useDeleteView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "views", "delete"],
     mutationFn: ({ id, projectId }: { id: number; projectId: number }) =>
       apiClient.delete<{ success: boolean }>(`/projects/${projectId}/views/${id}`),
     onSuccess: (_data: unknown, variables: { id: number; projectId: number }) => {
@@ -278,6 +294,7 @@ export function useIntakeRequests(
         status ? { status } : undefined
       ),
     enabled: !!projectId,
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -285,6 +302,7 @@ export function useIntakeRequests(
 export function useCreateIntakeRequest(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "intake", "create"],
     mutationFn: ({ projectId, ...data }: CreateIntakeRequestInput) =>
       apiClient.post<IntakeRequest>(`/projects/${projectId}/intake`, data),
     onSuccess: (_data: unknown, variables: CreateIntakeRequestInput) => {
@@ -299,6 +317,7 @@ export function useCreateIntakeRequest(options?: Parameters<typeof useMutation>[
 export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "intake", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateIntakeRequestInput & { projectId: number }) =>
       apiClient.patch<{ success: boolean }>(
         `/projects/${projectId}/intake/${id}`,

@@ -39,6 +39,7 @@ export function useProject(
     queryKey: queryKeys.projects.detail(id),
     queryFn: () => apiClient.get<ProjectWithDetails | null>(`/projects/${id}`),
     enabled: !!id,
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -46,6 +47,7 @@ export function useProject(
 export function useCreateProject(options?: Omit<UseMutationOptions<Project, Error, CreateProjectInput>, "mutationFn">) {
   const queryClient = useQueryClient();
   return useMutation<Project, Error, CreateProjectInput>({
+    mutationKey: ["projects", "create"],
     mutationFn: (data: CreateProjectInput) => apiClient.post<Project>("/projects", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
@@ -59,6 +61,7 @@ export function useUpdateProject(
 ) {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, UpdateProjectInput>({
+    mutationKey: ["projects", "update"],
     mutationFn: ({ projectId, ...data }: UpdateProjectInput) =>
       apiClient.patch<{ success: boolean }>(`/projects/${projectId}`, data),
     onSuccess: (_data, variables) => {
@@ -76,6 +79,7 @@ export function useDeleteProject(
 ) {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, { projectId: number }>({
+    mutationKey: ["projects", "delete"],
     mutationFn: ({ projectId }) =>
       apiClient.delete<{ success: boolean }>(`/projects/${projectId}`),
     onSuccess: () => {
@@ -90,6 +94,7 @@ export function useArchiveProject(
 ) {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, { projectId: number; restore?: boolean }>({
+    mutationKey: ["projects", "archive"],
     mutationFn: ({ projectId, restore }) =>
       apiClient.patch<{ success: boolean }>(`/projects/${projectId}`, {
         status: restore ? "ACTIVE" : "ARCHIVED",
@@ -110,6 +115,7 @@ export function useProjectMembers(
     queryKey: queryKeys.projects.members(projectId),
     queryFn: () => apiClient.get<ProjectMember[]>(`/projects/${projectId}/members`),
     enabled: !!projectId,
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -119,6 +125,7 @@ export function useAddProjectMember(
 ) {
   const queryClient = useQueryClient();
   return useMutation<ProjectMember, Error, AddProjectMemberInput>({
+    mutationKey: ["projects", "members", "add"],
     mutationFn: ({ projectId, ...data }: AddProjectMemberInput) =>
       apiClient.post<ProjectMember>(`/projects/${projectId}/members`, data),
     onSuccess: (_data, variables) => {
@@ -135,6 +142,7 @@ export function useRemoveProjectMember(
 ) {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, RemoveMemberInput>({
+    mutationKey: ["projects", "members", "remove"],
     mutationFn: ({ projectId, userId }) =>
       apiClient.delete<{ success: boolean }>(`/projects/${projectId}/members`, { data: { userId } }),
     onSuccess: (_data, variables) => {
@@ -154,6 +162,7 @@ export function useProjectLabels(
       projectId
         ? apiClient.get<TicketLabel[]>(`/projects/${projectId}/labels`)
         : apiClient.get<TicketLabel[]>("/projects/labels"),
+    staleTime: 60_000,
     ...options,
   });
 }

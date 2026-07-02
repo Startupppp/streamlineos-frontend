@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,6 +27,10 @@ export default function ApplyPage({ params }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [trackingToken, setTrackingToken] = useState("");
+
+  const handlePhoneChange = useCallback((value: string) => {
+    setPhone(value);
+  }, []);
 
   const handleSubmit = useCallback(async () => {
     if (!name.trim()) { toast.error("Full name is required"); return; }
@@ -134,13 +139,11 @@ export default function ApplyPage({ params }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+91 9876543210"
+              <Label>Phone Number</Label>
+              <PhoneInput
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={handlePhoneChange}
+                defaultCountry="IN"
               />
             </div>
 

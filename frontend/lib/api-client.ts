@@ -236,16 +236,40 @@ function buildUrl(path: string, params?: Record<string, unknown>): string {
   return search ? `${url}?${search}` : url;
 }
 
+export class ApiError extends Error {
+  readonly code?: string;
+  readonly details?: unknown;
+
+  constructor(message: string, code?: string, details?: unknown) {
+    super(message);
+    this.name = "ApiError";
+    this.code = code;
+    this.details = details;
+  }
+}
+
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError;
+}
+
+export function getApiErrorCode(error: unknown): string | undefined {
+  return isApiError(error) ? error.code : undefined;
+}
+
 async function parseResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let message = `${res.status} ${res.statusText}`;
+    let code: string | undefined;
+    let details: unknown;
     try {
       const body = (await res.json()) as Record<string, unknown>;
       if (typeof body?.message === "string" && body.message) message = body.message;
       else if (typeof body?.error === "string" && body.error) message = body.error;
+      if (typeof body?.code === "string") code = body.code;
+      if ("details" in body) details = body.details;
     } catch {
     }
-    throw new Error(message);
+    throw new ApiError(message, code, details);
   }
   if (res.status === 204) return undefined as T;
   const body = (await res.json()) as Record<string, unknown>;
