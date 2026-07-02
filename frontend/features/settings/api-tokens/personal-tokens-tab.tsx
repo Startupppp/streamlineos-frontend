@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Key, Plus, Clock, Trash2 } from "lucide-react";
+import { Key, Plus, Clock, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 import {
   useUserApiTokens,
@@ -25,6 +25,23 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TokenCreatedDialog } from "./token-created-dialog";
 import { CreateUserTokenSheet } from "./create-user-token-sheet";
 
+function RevokeTokenButton({
+  token,
+  onRevoke,
+}: {
+  token: UserApiToken;
+  onRevoke: (token: UserApiToken) => void;
+}) {
+  function handleClick() {
+    onRevoke(token);
+  }
+  return (
+    <Button variant="ghost" size="sm" onClick={handleClick} aria-label="Revoke token">
+      <ShieldOff className="h-4 w-4 text-amber-600" />
+    </Button>
+  );
+}
+
 function formatDate(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
@@ -35,21 +52,28 @@ function isExpired(expiresAt: string | null) {
   return new Date(expiresAt) < new Date();
 }
 
-export function PersonalTokensTab() {
+type PersonalTokensTabProps = {
+  showCreate: boolean;
+  onShowCreateChange: (open: boolean) => void;
+};
+
+export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTokensTabProps) {
   const { data, isLoading } = useUserApiTokens();
   const revoke = useRevokeUserApiToken();
 
-  const [showCreate, setShowCreate] = useState(false);
   const [createdRawToken, setCreatedRawToken] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<UserApiToken | null>(null);
 
   const tokens = data ?? [];
 
-  const handleCreated = useCallback((result: CreateUserApiTokenResponse) => {
-    setShowCreate(false);
-    setCreatedRawToken(result.rawToken);
-    toast.success("Personal access token created");
-  }, []);
+  const handleCreated = useCallback(
+    (result: CreateUserApiTokenResponse) => {
+      onShowCreateChange(false);
+      setCreatedRawToken(result.rawToken);
+      toast.success("Personal access token created");
+    },
+    [onShowCreateChange],
+  );
 
   const handleRevoke = useCallback(() => {
     if (!revoking) return;
@@ -62,32 +86,26 @@ export function PersonalTokensTab() {
     });
   }, [revoking, revoke]);
 
-  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+  const handleOpenCreate = useCallback(() => onShowCreateChange(true), [onShowCreateChange]);
   const handleCloseCreated = useCallback(() => setCreatedRawToken(null), []);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Personal tokens act on your behalf. Only you can see and manage them.
-        </p>
-        <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          New Token
-        </Button>
-      </div>
+    <div className="space-y-3">
+      <p className="text-[13px] text-muted-foreground">
+        Personal tokens act on your behalf. Only you can see and manage them.
+      </p>
 
       {isLoading ? (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-md" />
+            <Skeleton key={i} className="h-8 w-full rounded-md" />
           ))}
         </div>
       ) : tokens.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-          <Key className="h-10 w-10 opacity-30" />
+        <div className="flex min-h-[calc(100vh-320px)] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card text-muted-foreground">
+          <Key className="h-8 w-8 opacity-30" />
           <p className="text-sm">No personal access tokens yet</p>
-          <Button size="sm" onClick={handleOpenCreate}>
+          <Button size="sm" variant="outline" onClick={handleOpenCreate}>
             <Plus className="h-4 w-4 mr-1.5" />
             New Token
           </Button>
@@ -155,14 +173,7 @@ export function PersonalTokensTab() {
                     {formatDate(t.lastUsedAt)}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setRevoking(t)}
-                      title="Revoke"
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <RevokeTokenButton token={t} onRevoke={setRevoking} />
                   </TableCell>
                 </TableRow>
               );
@@ -173,7 +184,7 @@ export function PersonalTokensTab() {
 
       <CreateUserTokenSheet
         open={showCreate}
-        onOpenChange={setShowCreate}
+        onOpenChange={onShowCreateChange}
         onCreated={handleCreated}
       />
       <TokenCreatedDialog

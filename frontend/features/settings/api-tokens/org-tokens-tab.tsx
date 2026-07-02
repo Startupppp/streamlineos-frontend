@@ -36,12 +36,16 @@ function isExpired(expiresAt: string | null) {
   return new Date(expiresAt) < new Date();
 }
 
-export function OrgTokensTab() {
+type OrgTokensTabProps = {
+  showCreate: boolean;
+  onShowCreateChange: (open: boolean) => void;
+};
+
+export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabProps) {
   const { data, isLoading } = useApiTokens();
   const revoke = useRevokeApiToken();
   const del = useDeleteApiToken();
 
-  const [showCreate, setShowCreate] = useState(false);
   const [createdResult, setCreatedResult] =
     useState<CreateApiTokenResponse | null>(null);
   const [revoking, setRevoking] = useState<ApiToken | null>(null);
@@ -49,10 +53,13 @@ export function OrgTokensTab() {
 
   const tokens = data?.data ?? [];
 
-  const handleCreated = useCallback((result: CreateApiTokenResponse) => {
-    setShowCreate(false);
-    setCreatedResult(result);
-  }, []);
+  const handleCreated = useCallback(
+    (result: CreateApiTokenResponse) => {
+      onShowCreateChange(false);
+      setCreatedResult(result);
+    },
+    [onShowCreateChange],
+  );
 
   const handleRevoke = useCallback(() => {
     if (!revoking) return;
@@ -76,33 +83,27 @@ export function OrgTokensTab() {
     });
   }, [deleting, del]);
 
-  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+  const handleOpenCreate = useCallback(() => onShowCreateChange(true), [onShowCreateChange]);
   const handleCloseCreated = useCallback(() => setCreatedResult(null), []);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Tokens with access to your organization&apos;s resources. Visible to
-          administrators.
-        </p>
-        <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          New Token
-        </Button>
-      </div>
+    <div className="space-y-3">
+      <p className="text-[13px] text-muted-foreground">
+        Tokens with access to your organization&apos;s resources. Visible to
+        administrators.
+      </p>
 
       {isLoading ? (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-md" />
+            <Skeleton key={i} className="h-8 w-full rounded-md" />
           ))}
         </div>
       ) : tokens.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-          <Key className="h-10 w-10 opacity-30" />
+        <div className="flex min-h-[calc(100vh-320px)] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card text-muted-foreground">
+          <Key className="h-8 w-8 opacity-30" />
           <p className="text-sm">No organization tokens yet</p>
-          <Button size="sm" onClick={handleOpenCreate}>
+          <Button size="sm" variant="outline" onClick={handleOpenCreate}>
             <Plus className="h-4 w-4 mr-1.5" />
             New Token
           </Button>
@@ -233,7 +234,7 @@ export function OrgTokensTab() {
 
       <CreateOrgTokenSheet
         open={showCreate}
-        onOpenChange={setShowCreate}
+        onOpenChange={onShowCreateChange}
         onCreated={handleCreated}
       />
       <TokenCreatedDialog

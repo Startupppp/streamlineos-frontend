@@ -64,7 +64,16 @@ const GRID_COLS: Record<number, string> = {
 
 export function StatCardGrid({ children, cols = 4, className }: StatCardGridProps) {
   return (
-    <div className={cn("grid gap-2", GRID_COLS[cols], className)}>
+    <div
+      className={cn(
+        "flex gap-2 overflow-x-auto snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-px pb-1",
+        "[&>*]:min-w-[150px] [&>*]:snap-start [&>*]:shrink-0",
+        "sm:grid sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0",
+        "sm:[&>*]:min-w-0 sm:[&>*]:shrink",
+        GRID_COLS[cols],
+        className,
+      )}
+    >
       {children}
     </div>
   );
