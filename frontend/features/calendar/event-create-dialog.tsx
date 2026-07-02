@@ -393,10 +393,10 @@ export function EventCreateDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           showCloseButton={false}
-          className="flex flex-col p-0 w-full max-w-lg rounded-xl overflow-hidden shadow-2xl border bg-card"
+          className="flex flex-col p-0 w-[calc(100%-1rem)] sm:w-full max-w-xl rounded-xl overflow-hidden shadow-2xl border bg-card max-h-[min(92dvh,48rem)]"
         >
           {/* Header controls (New Event, Sizing controls, Close controls) */}
-          <DialogHeader className="px-6 py-4 border-b flex flex-row items-center justify-between shrink-0 select-none">
+          <DialogHeader className="px-4 sm:px-6 py-4 border-b flex flex-row items-center justify-between shrink-0 select-none">
             <DialogTitle className="text-base font-semibold text-foreground">
               {isEdit ? "Edit Event" : "New Event"}
             </DialogTitle>
@@ -420,7 +420,7 @@ export function EventCreateDialog({
           </DialogHeader>
 
           <ScrollArea className="flex-1 min-h-0">
-            <div className="px-6 py-4 space-y-4">
+            <div className="px-4 sm:px-6 py-4 space-y-4">
               <EventFormFields
                 title={form.title}
                 description={form.description}
@@ -499,8 +499,8 @@ export function EventCreateDialog({
           </ScrollArea>
 
           {/* Action Footer matches Google Calendar style */}
-          <div className="px-6 py-3 border-t bg-muted/20 shrink-0 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="px-4 sm:px-6 py-3 border-t bg-muted/20 shrink-0 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 className="h-8 text-xs px-4 bg-violet-600 hover:bg-violet-700 text-white font-medium"
                 onClick={handleSave}
@@ -522,7 +522,7 @@ export function EventCreateDialog({
             </div>
             <Button
               variant="outline"
-              className="h-8 text-xs px-3 font-normal text-muted-foreground hover:text-foreground"
+              className="h-8 text-xs px-3 font-normal text-muted-foreground hover:text-foreground w-full sm:w-auto"
               onClick={handleClose}
               disabled={isPending}
             >

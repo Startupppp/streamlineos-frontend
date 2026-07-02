@@ -221,7 +221,7 @@ export function CalendarAiAssistant({ onEventCreated, isOpen, onClose }: Calenda
 
   return (
     <div
-      className={`fixed bottom-4 right-4 z-50 flex flex-col w-96 rounded-xl border border-border bg-card shadow-2xl transition-all duration-300 ${
+      className={`fixed bottom-4 right-4 left-4 sm:left-auto sm:w-96 z-50 flex flex-col rounded-xl border border-border bg-card shadow-2xl transition-all duration-300 ${
         isMinimized ? "h-12" : "h-[480px]"
       }`}
     >

@@ -20,6 +20,7 @@ interface DatePickerProps {
   toYear?: number;
   id?: string;
   disabledDays?: (date: Date) => boolean;
+  dateFormat?: string;
 }
 
 function parseDateValue(value: string | undefined): Date | undefined {
@@ -40,6 +41,7 @@ export function DatePicker({
   toYear = new Date().getFullYear() + 5,
   id,
   disabledDays,
+  dateFormat = "PPP",
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const selected = parseDateValue(value);
@@ -64,13 +66,15 @@ export function DatePicker({
           variant="outline"
           disabled={disabled}
           className={cn(
-            "w-full justify-start text-left font-normal h-9",
+            "w-full min-w-0 justify-start text-left font-normal h-9 gap-2",
             !selected && "text-muted-foreground",
             className
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {selected ? format(selected, "PPP") : placeholder}
+          <CalendarIcon className="h-4 w-4 shrink-0" />
+          <span className="truncate">
+            {selected ? format(selected, dateFormat) : placeholder}
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">

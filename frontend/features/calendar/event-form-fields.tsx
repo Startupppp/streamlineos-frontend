@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Video, Loader2, Tag, Clock, MapPin, Lock, Circle, FileText, ArrowRight } from "lucide-react";
+import { Video, Loader2, Tag, Clock, MapPin, Lock, Circle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const EVENT_COLORS: Record<string, string> = {
@@ -120,41 +120,45 @@ export function EventFormFields({
       {/* Date Time Row */}
       <div className="flex items-start gap-3">
         <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
-        <div className="flex-1 space-y-3">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex-1 min-w-0 space-y-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <DatePicker
               value={startDate}
               onChange={onStartDateChange}
               placeholder="Start date"
-              className="h-8 text-xs max-w-[120px]"
+              dateFormat="MMM d, yyyy"
+              className="h-8 text-xs"
             />
             {!allDay && (
               <Input
                 type="time"
-                className="h-8 text-xs w-[85px] px-2"
+                className="h-8 text-xs w-[7.5rem] shrink-0"
                 value={startTime}
                 onChange={onStartTimeChange}
               />
             )}
-            <ArrowRight className="h-3 w-3 text-muted-foreground" />
-            {!allDay && (
-              <Input
-                type="time"
-                className="h-8 text-xs w-[85px] px-2"
-                value={endTime}
-                onChange={onEndTimeChange}
-              />
-            )}
+          </div>
+
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <DatePicker
               value={endDate}
               onChange={onEndDateChange}
               fromDate={startDate ? new Date(startDate) : undefined}
               placeholder="End date"
-              className="h-8 text-xs max-w-[120px]"
+              dateFormat="MMM d, yyyy"
+              className="h-8 text-xs"
             />
+            {!allDay && (
+              <Input
+                type="time"
+                className="h-8 text-xs w-[7.5rem] shrink-0"
+                value={endTime}
+                onChange={onEndTimeChange}
+              />
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pt-0.5">
             <Checkbox
               id="ev-allday"
               checked={allDay}
@@ -170,14 +174,14 @@ export function EventFormFields({
       {/* Location / Video conference Row */}
       <div className="flex items-start gap-3">
         <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
-        <div className="flex-1 space-y-1.5">
-          <div className="flex gap-2">
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               id="ev-location"
               value={location}
               onChange={onLocationChange}
               placeholder="Room or Location"
-              className={cn("h-9 text-xs flex-1", locationError && "border-destructive")}
+              className={cn("h-9 text-xs flex-1 min-w-0", locationError && "border-destructive")}
             />
             {meetStatus &&
               (meetStatus.connected ? (
@@ -185,7 +189,7 @@ export function EventFormFields({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-9 shrink-0 gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs font-semibold px-2"
+                  className="h-9 shrink-0 gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs font-semibold px-2 w-full sm:w-auto justify-center"
                   disabled={isMeetPending}
                   onClick={handleGenerateMeetClick}
                 >
@@ -207,7 +211,7 @@ export function EventFormFields({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-9 gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs font-semibold px-2"
+                    className="h-9 gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs font-semibold px-2 w-full sm:w-auto justify-center"
                     disabled={!meetStatus.authUrl}
                   >
                     <Video className="h-3.5 w-3.5" />
