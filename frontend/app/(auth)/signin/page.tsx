@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
+import { parseAuthErrorCode } from "@/lib/parse-auth-error";
 
 export const dynamic = "force-dynamic";
 
@@ -90,9 +91,9 @@ export default function SignInPage() {
       const params = new URLSearchParams(window.location.search);
       const errorParam = params.get("error");
       if (!errorParam) return;
-      if (errorParam.startsWith("ACCOUNT_LOCKED:")) {
-        const secs = parseInt(errorParam.split(":")[1] ?? "0", 10);
-        setLockedSeconds(isNaN(secs) ? null : secs);
+      const parsed = parseAuthErrorCode(errorParam);
+      if (parsed.code === "AUTH_ACCOUNT_LOCKED") {
+        setLockedSeconds(parsed.retryAfterSeconds ?? null);
         return;
       }
       const oauthMessages: Record<string, string> = {
@@ -145,19 +146,17 @@ export default function SignInPage() {
         redirect: false,
       });
       if (result?.error) {
-        if (result.error.startsWith("ACCOUNT_LOCKED:")) {
-          const secs = parseInt(result.error.split(":")[1] ?? "0", 10);
-          setLockedSeconds(isNaN(secs) ? null : secs);
+        const parsed = parseAuthErrorCode(result.error);
+        if (parsed.code === "AUTH_ACCOUNT_LOCKED") {
+          setLockedSeconds(parsed.retryAfterSeconds ?? null);
           throw new Error(
-            `Account locked. Try again in ${formatLockoutTime(isNaN(secs) ? 900 : secs)}.`,
+            `Account locked. Try again in ${formatLockoutTime(parsed.retryAfterSeconds ?? 900)}.`,
           );
         }
-        if (result.error === "SUBSCRIPTION_INACTIVE")
-          throw new Error("SUBSCRIPTION_INACTIVE");
-        if (result.error === "REQUIRES_MFA") throw new Error("REQUIRES_MFA");
-        if (result.error === "INVALID_MFA_CODE")
-          throw new Error("INVALID_MFA_CODE");
-        if (result.error === "EMAIL_NOT_VERIFIED") {
+        if (parsed.code === "AUTH_SUBSCRIPTION_INACTIVE") throw new Error("AUTH_SUBSCRIPTION_INACTIVE");
+        if (parsed.code === "AUTH_MFA_REQUIRED") throw new Error("AUTH_MFA_REQUIRED");
+        if (parsed.code === "AUTH_INVALID_MFA_CODE") throw new Error("AUTH_INVALID_MFA_CODE");
+        if (parsed.code === "AUTH_EMAIL_NOT_VERIFIED") {
           setShowVerificationHint(true);
           throw new Error(
             "Please verify your email before signing in. Check your inbox or resend the verification email below.",
@@ -189,11 +188,11 @@ export default function SignInPage() {
       }
     },
     onError: (error) => {
-      if (error instanceof Error && error.message === "SUBSCRIPTION_INACTIVE") {
+      if (error instanceof Error && error.message === "AUTH_SUBSCRIPTION_INACTIVE") {
         window.location.href = "/subscription-expired";
         return;
       }
-      if (error instanceof Error && error.message === "REQUIRES_MFA") {
+      if (error instanceof Error && error.message === "AUTH_MFA_REQUIRED") {
         const vals = form.getValues();
         pendingCredentials.current = {
           email: vals.email,
@@ -222,7 +221,7 @@ export default function SignInPage() {
       }
     },
     onError: (error) => {
-      if (error instanceof Error && error.message === "INVALID_MFA_CODE") {
+      if (error instanceof Error && error.message === "AUTH_INVALID_MFA_CODE") {
         setMfaError(
           "Invalid code. Check your authenticator app and try again.",
         );
@@ -291,6 +290,27 @@ export default function SignInPage() {
     },
   });
 
+  const handleTogglePassword = useCallback(() => setShowPassword((v) => !v), []);
+  const handleShowMagicLink = useCallback(() => setShowMagicLink(true), []);
+  const handleMagicLinkEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMagicLinkEmail(e.target.value), []);
+  const handleSendMagicLink = useCallback(() => magicLinkMutation.mutate(magicLinkEmail), [magicLinkMutation, magicLinkEmail]);
+  const handleGoogleSignIn = useCallback(() => googleSignInMutation.mutate(), [googleSignInMutation]);
+  const handleMicrosoftSignIn = useCallback(() => microsoftSignInMutation.mutate(), [microsoftSignInMutation]);
+  const handleMfaCodeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+    setMfaError(null);
+  }, []);
+  const handleMfaKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && mfaCode.length === 6) mfaMutation.mutate();
+  }, [mfaCode, mfaMutation]);
+  const handleMfaSubmit = useCallback(() => mfaMutation.mutate(), [mfaMutation]);
+  const handleMfaBack = useCallback(() => {
+    setMfaRequired(false);
+    setMfaCode("");
+    setMfaError(null);
+    pendingCredentials.current = null;
+  }, []);
+
   if (mfaRequired) {
     return (
       <div className="w-full max-w-sm animate-fade-up">
@@ -320,14 +340,8 @@ export default function SignInPage() {
               placeholder="000000"
               maxLength={6}
               value={mfaCode}
-              onChange={(e) => {
-                setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6));
-                setMfaError(null);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && mfaCode.length === 6)
-                  mfaMutation.mutate();
-              }}
+              onChange={handleMfaCodeChange}
+              onKeyDown={handleMfaKeyDown}
               disabled={mfaMutation.isPending}
               className={cn(
                 "h-9 text-sm text-center tracking-[0.4em] font-mono",
@@ -347,7 +361,7 @@ export default function SignInPage() {
             type="button"
             disabled={mfaMutation.isPending || mfaCode.length !== 6}
             className="w-full h-9 text-sm font-medium gap-2"
-            onClick={() => mfaMutation.mutate()}
+            onClick={handleMfaSubmit}
           >
             {mfaMutation.isPending ? (
               <>
@@ -364,12 +378,7 @@ export default function SignInPage() {
 
           <button
             type="button"
-            onClick={() => {
-              setMfaRequired(false);
-              setMfaCode("");
-              setMfaError(null);
-              pendingCredentials.current = null;
-            }}
+            onClick={handleMfaBack}
             className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
             Back to sign in
@@ -500,7 +509,7 @@ export default function SignInPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={handleTogglePassword}
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
@@ -565,7 +574,7 @@ export default function SignInPage() {
           {!showMagicLink ? (
             <button
               type="button"
-              onClick={() => setShowMagicLink(true)}
+              onClick={handleShowMagicLink}
               className="text-[12px] text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
             >
               Email me a sign-in link instead
@@ -580,7 +589,7 @@ export default function SignInPage() {
                 type="email"
                 placeholder="you@company.com"
                 value={magicLinkEmail}
-                onChange={(e) => setMagicLinkEmail(e.target.value)}
+                onChange={handleMagicLinkEmailChange}
                 className="h-8 text-sm"
                 autoFocus
               />
@@ -589,7 +598,7 @@ export default function SignInPage() {
                 size="sm"
                 className="h-8 shrink-0"
                 disabled={!magicLinkEmail || magicLinkMutation.isPending}
-                onClick={() => magicLinkMutation.mutate(magicLinkEmail)}
+                onClick={handleSendMagicLink}
               >
                 {magicLinkMutation.isPending ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -620,7 +629,7 @@ export default function SignInPage() {
                   type="button"
                   variant="outline"
                   className="w-full h-9 text-sm font-medium gap-2"
-                  onClick={() => googleSignInMutation.mutate()}
+                  onClick={handleGoogleSignIn}
                   disabled={googleSignInMutation.isPending || isPending}
                 >
                   {googleSignInMutation.isPending ? (
@@ -657,7 +666,7 @@ export default function SignInPage() {
                   type="button"
                   variant="outline"
                   className="w-full h-9 text-sm font-medium gap-2"
-                  onClick={() => microsoftSignInMutation.mutate()}
+                  onClick={handleMicrosoftSignIn}
                   disabled={microsoftSignInMutation.isPending || isPending}
                 >
                   {microsoftSignInMutation.isPending ? (

@@ -174,12 +174,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } catch (loginErr: unknown) {
             if (loginErr instanceof AxiosError) {
               const errData = loginErr.response?.data as Record<string, unknown> | undefined;
-              const msgStr =
-                typeof errData?.message === "string" ? errData.message : "Invalid credentials";
-              if (msgStr.startsWith("ACCOUNT_LOCKED:") || msgStr === "SUBSCRIPTION_INACTIVE")
-                throw new Error(msgStr);
-              if (msgStr === "Please verify your email before signing in")
-                throw new Error("EMAIL_NOT_VERIFIED");
+              const code = typeof errData?.code === "string" ? errData.code : null;
+              const details = errData?.details as Record<string, unknown> | undefined;
+              if (code === "AUTH_ACCOUNT_LOCKED") {
+                const retryAfterSeconds = typeof details?.retryAfterSeconds === "number" ? details.retryAfterSeconds : 900;
+                throw new Error(`AUTH_ACCOUNT_LOCKED:${retryAfterSeconds}`);
+              }
+              if (code === "AUTH_SUBSCRIPTION_INACTIVE") throw new Error("AUTH_SUBSCRIPTION_INACTIVE");
+              if (code === "AUTH_EMAIL_NOT_VERIFIED") throw new Error("AUTH_EMAIL_NOT_VERIFIED");
+              if (code === "AUTH_INVALID_MFA_CODE") throw new Error("AUTH_INVALID_MFA_CODE");
             }
             return null;
           }
@@ -193,7 +196,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             requiresMfa?: boolean;
           }>(raw);
 
-          if (data.requiresMfa) throw new Error("REQUIRES_MFA");
+          if (data.requiresMfa) throw new Error("AUTH_MFA_REQUIRED");
 
           const sessionData = await fetchSessionData(data.userId);
           if (!sessionData) return null;
@@ -205,11 +208,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } catch (err) {
           if (
             err instanceof Error &&
-            (err.message.startsWith("ACCOUNT_LOCKED:") ||
-              err.message === "SUBSCRIPTION_INACTIVE" ||
-              err.message === "REQUIRES_MFA" ||
-              err.message === "INVALID_MFA_CODE" ||
-              err.message === "EMAIL_NOT_VERIFIED")
+            (err.message.startsWith("AUTH_ACCOUNT_LOCKED:") ||
+              err.message === "AUTH_SUBSCRIPTION_INACTIVE" ||
+              err.message === "AUTH_MFA_REQUIRED" ||
+              err.message === "AUTH_INVALID_MFA_CODE" ||
+              err.message === "AUTH_EMAIL_NOT_VERIFIED")
           )
             throw err;
           return null;

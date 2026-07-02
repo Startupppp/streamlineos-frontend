@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
-import { PASSWORD_REGEX, getPasswordStrength } from "@/lib/password-utils";
+import { PASSWORD_REGEX, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, getPasswordStrength } from "@/lib/password-utils";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
 import { Loader2, Eye, EyeOff, ArrowRight, Shield, Rocket, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -25,8 +25,8 @@ const setupSchema = z
   .object({
     password: z
       .string()
-      .min(8, "Password must be at least 8 characters")
-      .max(128, "Password must be at most 128 characters")
+      .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
+      .max(PASSWORD_MAX_LENGTH, `Password must be at most ${PASSWORD_MAX_LENGTH} characters`)
       .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
     confirmPassword: z.string(),
   })
@@ -59,6 +59,9 @@ function SetupPasswordContent() {
     enabled: !!token,
     retry: false,
   });
+
+  const handleTogglePassword = useCallback(() => setShowPassword((v) => !v), []);
+  const handleToggleConfirm = useCallback(() => setShowConfirm((v) => !v), []);
 
   const handleSubmit = useCallback(async (values: FormValues) => {
     setIsSubmitting(true);
@@ -146,7 +149,7 @@ function SetupPasswordContent() {
               />
               <button
                 type="button"
-                onClick={() => setShowPassword((v) => !v)}
+                onClick={handleTogglePassword}
                 tabIndex={-1}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
               >
@@ -171,7 +174,7 @@ function SetupPasswordContent() {
               />
               <button
                 type="button"
-                onClick={() => setShowConfirm((v) => !v)}
+                onClick={handleToggleConfirm}
                 tabIndex={-1}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
               >

@@ -16,14 +16,14 @@ export function useVerifyEmail() {
 export function useForgotPassword() {
   return useMutation({
     mutationFn: (variables: { email: string }) =>
-      apiClient.post<{ success: boolean }>("/auth/forgot-password", variables),
+      apiClient.post<{ message: string }>("/auth/forgot-password", variables),
   });
 }
 
 export function useResetPassword() {
   return useMutation({
     mutationFn: (variables: { token: string; password: string }) =>
-      apiClient.post<{ success: boolean }>("/auth/reset-password", {
+      apiClient.post<{ message: string }>("/auth/reset-password", {
         token: variables.token,
         newPassword: variables.password,
       }),

@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { clearBackendTokenCache } from "@/lib/api-client";
@@ -107,8 +107,6 @@ export default function OrgSetupPage() {
     }
   }, [setupOrg]);
 
-  const sessionCheckCalledRef = useRef(false);
-
   useEffect(() => {
     const savedStep = loadStep();
     if (savedStep >= TOTAL_STEPS) {
@@ -123,18 +121,11 @@ export default function OrgSetupPage() {
   }, []);
 
   useEffect(() => {
-    if (sessionCheckCalledRef.current) return;
-    sessionCheckCalledRef.current = true;
-    fetch("/api/auth/session")
-      .then(r => r.json() as Promise<{ orgOnboardingCompletedAt?: string | null } | null>)
-      .then(s => {
-        if (s?.orgOnboardingCompletedAt) {
-          clearAll();
-          window.location.replace("/dashboard");
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (session?.orgOnboardingCompletedAt) {
+      clearAll();
+      window.location.replace("/dashboard");
+    }
+  }, [session?.orgOnboardingCompletedAt]);
 
   useEffect(() => {
     if (!mounted) return;

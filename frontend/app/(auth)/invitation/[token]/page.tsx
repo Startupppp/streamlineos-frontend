@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { useAcceptInvitation } from "@/hooks/common/auth-hooks";
-import { getPasswordStrength, PASSWORD_REGEX } from "@/lib/password-utils";
+import { getPasswordStrength, PASSWORD_REGEX, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/lib/password-utils";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
 import { PasswordConfirmField } from "@/components/auth/password-confirm-field";
 import { motion } from "framer-motion";
@@ -38,7 +38,8 @@ const invitationSchema = z
     lastName: z.string().optional(),
     password: z
       .string()
-      .min(8, "Password must be at least 8 characters")
+      .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
+      .max(PASSWORD_MAX_LENGTH, `Password must be at most ${PASSWORD_MAX_LENGTH} characters`)
       .regex(
         PASSWORD_REGEX,
         "Must include uppercase, lowercase, number, and special character",
@@ -72,6 +73,10 @@ export default function InvitationPage() {
   const password = form.watch("password");
   const confirmPassword = form.watch("confirmPassword");
   const strength = useMemo(() => getPasswordStrength(password), [password]);
+
+  const handleTogglePassword = useCallback(() => setShowPassword((v) => !v), []);
+  const handleDecline = useCallback(() => router.push("/signin"), [router]);
+  const handleConfirmPasswordChange = useCallback((val: string) => form.setValue("confirmPassword", val, { shouldDirty: true }), [form]);
 
   const { data: invitation, error: invitationError } = useQuery({
     queryKey: ["invitation", token],
@@ -247,7 +252,7 @@ export default function InvitationPage() {
                   type="button"
                   variant="outline"
                   className="w-full gap-2 h-10"
-                  onClick={() => router.push("/signin")}
+                  onClick={handleDecline}
                   disabled={acceptInvitation.isPending}
                 >
                   <X className="h-4 w-4" />
@@ -407,7 +412,7 @@ export default function InvitationPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={handleTogglePassword}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
@@ -437,9 +442,7 @@ export default function InvitationPage() {
 
               <PasswordConfirmField
                 value={confirmPassword}
-                onChange={(val) =>
-                  form.setValue("confirmPassword", val, { shouldDirty: true })
-                }
+                onChange={handleConfirmPasswordChange}
                 password={password}
                 disabled={acceptInvitation.isPending}
                 showIcon
@@ -468,7 +471,7 @@ export default function InvitationPage() {
                   type="button"
                   variant="outline"
                   className="w-full gap-2 h-10"
-                  onClick={() => router.push("/signin")}
+                  onClick={handleDecline}
                   disabled={acceptInvitation.isPending}
                 >
                   <X className="h-4 w-4" />

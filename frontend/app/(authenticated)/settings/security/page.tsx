@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { PASSWORD_REGEX, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/lib/password-utils";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -24,11 +25,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const passwordRules = z
   .string()
-  .min(12, "Minimum 12 characters")
-  .regex(/[A-Z]/, "Must include an uppercase letter")
-  .regex(/[a-z]/, "Must include a lowercase letter")
-  .regex(/[0-9]/, "Must include a number")
-  .regex(/[^A-Za-z0-9]/, "Must include a special character");
+  .min(PASSWORD_MIN_LENGTH, `Minimum ${PASSWORD_MIN_LENGTH} characters`)
+  .max(PASSWORD_MAX_LENGTH, `Maximum ${PASSWORD_MAX_LENGTH} characters`)
+  .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character");
 
 const setPasswordSchema = z
   .object({
@@ -152,7 +151,7 @@ function ChangePasswordCard() {
           <CardTitle className="text-base">Change Password</CardTitle>
         </div>
         <CardDescription>
-          Choose a strong password with at least 12 characters including uppercase, lowercase,
+          Choose a strong password with at least 8 characters including uppercase, lowercase,
           number, and special character.
         </CardDescription>
       </CardHeader>

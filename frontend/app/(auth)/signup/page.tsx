@@ -15,7 +15,7 @@ import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { signIn } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
-import { getPasswordStrength } from "@/lib/password-utils";
+import { getPasswordStrength, PASSWORD_REGEX, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/lib/password-utils";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
 
 export const dynamic = "force-dynamic";
@@ -24,11 +24,9 @@ const signupSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   password: z
     .string()
-    .min(12, "Minimum 12 characters")
-    .regex(/[A-Z]/, "Must include an uppercase letter")
-    .regex(/[a-z]/, "Must include a lowercase letter")
-    .regex(/[0-9]/, "Must include a number")
-    .regex(/[^A-Za-z0-9]/, "Must include a special character"),
+    .min(PASSWORD_MIN_LENGTH, `Minimum ${PASSWORD_MIN_LENGTH} characters`)
+    .max(PASSWORD_MAX_LENGTH, `Maximum ${PASSWORD_MAX_LENGTH} characters`)
+    .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
   terms: z
     .boolean()
     .refine((v) => v === true, { message: "You must accept the terms" }),
@@ -146,6 +144,9 @@ export default function SignupPage() {
     setShowPassword((v) => !v);
   }, []);
 
+  const handleGoogleSignUp = useCallback(() => googleSignUpMutation.mutate(), [googleSignUpMutation]);
+  const handleLinkClick = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+
   if (registeredEmail) {
     return (
       <div className="w-full max-w-sm text-center animate-fade-up">
@@ -211,7 +212,7 @@ export default function SignupPage() {
               type="button"
               variant="outline"
               className="w-full h-9 text-sm font-medium gap-2"
-              onClick={() => googleSignUpMutation.mutate()}
+              onClick={handleGoogleSignUp}
               disabled={googleSignUpMutation.isPending}
             >
               {googleSignUpMutation.isPending ? (
@@ -317,7 +318,7 @@ export default function SignupPage() {
               <PasswordStrengthIndicator strength={passwordStrength} />
             ) : (
               <p className="text-[11px] text-muted-foreground/60">
-                12+ chars · upper · lower · number · symbol
+                8+ chars · upper · lower · number · symbol
               </p>
             )}
             {form.formState.errors.password && (
@@ -340,7 +341,7 @@ export default function SignupPage() {
                   href="/legal/terms"
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={handleLinkClick}
                   className="text-blue-600 hover:underline font-medium"
                 >
                   Terms of Service
@@ -350,7 +351,7 @@ export default function SignupPage() {
                   href="/legal/privacy"
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={handleLinkClick}
                   className="text-blue-600 hover:underline font-medium"
                 >
                   Privacy Policy

@@ -30,16 +30,16 @@ import {
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { PASSWORD_REGEX } from "@/lib/password-utils";
-import { cn } from "@/lib/utils";
+import { PASSWORD_REGEX, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, getPasswordStrength } from "@/lib/password-utils";
+import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const formSchema = z
   .object({
     password: z
       .string()
-      .min(8, "Password must be at least 8 characters")
-      .max(128, "Password must be at most 128 characters")
+      .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
+      .max(PASSWORD_MAX_LENGTH, `Password must be at most ${PASSWORD_MAX_LENGTH} characters`)
       .regex(
         PASSWORD_REGEX,
         "Must include uppercase, lowercase, number, and special character",
@@ -53,55 +53,6 @@ const formSchema = z
 
 type FormValues = z.infer<typeof formSchema>;
 
-function getPasswordStrength(password: string): {
-  score: number;
-  label: string;
-  color: string;
-} {
-  let score = 0;
-  if (password.length >= 8) score++;
-  if (password.length >= 12) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[a-z]/.test(password)) score++;
-  if (/\d/.test(password)) score++;
-  if (/[@$!%*?&]/.test(password)) score++;
-
-  if (score <= 2) return { score: 1, label: "Weak", color: "bg-red-500" };
-  if (score <= 4) return { score: 2, label: "Medium", color: "bg-yellow-500" };
-  if (score <= 5) return { score: 3, label: "Strong", color: "bg-green-500" };
-  return { score: 4, label: "Very Strong", color: "bg-emerald-500" };
-}
-
-function PasswordStrengthBar({ password }: { password: string }) {
-  const strength = getPasswordStrength(password);
-  return (
-    <div className="space-y-1 mt-1">
-      <div className="flex gap-1">
-        {[1, 2, 3, 4].map((level) => (
-          <div
-            key={level}
-            className={cn(
-              "h-1 flex-1 rounded-full transition-colors",
-              level <= strength.score ? strength.color : "bg-muted",
-            )}
-          />
-        ))}
-      </div>
-      <p
-        className={cn(
-          "text-[11px]",
-          strength.score <= 1
-            ? "text-red-500"
-            : strength.score <= 2
-              ? "text-yellow-500"
-              : "text-green-500",
-        )}
-      >
-        {strength.label}
-      </p>
-    </div>
-  );
-}
 
 function PasswordFields({
   control,
@@ -151,7 +102,7 @@ function PasswordFields({
                 </button>
               </div>
             </FormControl>
-            {password && <PasswordStrengthBar password={password} />}
+            {password && <PasswordStrengthIndicator strength={getPasswordStrength(password)} />}
             <FormMessage className="text-[12px]" />
           </FormItem>
         )}
@@ -306,7 +257,6 @@ function TokenResetForm({ token }: { token: string }) {
 
 function ForceChangePasswordForm() {
   const { update } = useSession();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({
@@ -322,9 +272,7 @@ function ForceChangePasswordForm() {
       });
       toast.success("Password updated successfully!");
       await update({ forceChangePassword: false });
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      router.push("/dashboard");
-      router.refresh();
+      window.location.replace("/dashboard");
     } catch {
       toast.error("An error occurred. Please try again.");
     } finally {

@@ -188,7 +188,6 @@ export default function ForgotPasswordPage() {
       </div>
 
       <div className="rounded-xl border bg-card shadow-soft p-4">
-        {/* eslint-disable-next-line react-hooks/refs */}
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-foreground">
