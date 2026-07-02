@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect, memo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
   format,
@@ -16,6 +16,8 @@ import {
   endOfWeek,
   startOfYear,
   endOfYear,
+  startOfDay,
+  endOfDay,
   isSameDay,
 } from "date-fns";
 import {
@@ -60,6 +62,7 @@ import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";
 import { CalendarAiAssistant } from "./calendar-ai-assistant";
+import { CalendarEventsPanel } from "./calendar-events-panel";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
 
 const BigCalendarWrapper = dynamic(
@@ -88,8 +91,6 @@ const RSVP_BORDER_COLORS: Record<string, string> = {
 const CATEGORY_COLORS: Record<string, string> = {
   huddle: "#f97316",
 };
-
-const VIEWS: View[] = ["month", "week", "day"];
 
 function GoogleIcon() {
   return (
@@ -322,6 +323,23 @@ export function CalendarView() {
     return format(currentDate, "eeee, MMMM d, yyyy");
   }, [currentDate, view]);
 
+  const visibleRange = useMemo(() => {
+    if (view === "month") {
+      return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
+    }
+    if (view === "week") {
+      return {
+        start: startOfWeek(currentDate, { weekStartsOn: 1 }),
+        end: endOfWeek(currentDate, { weekStartsOn: 1 }),
+      };
+    }
+    return { start: startOfDay(currentDate), end: endOfDay(currentDate) };
+  }, [currentDate, view]);
+
+  const handleSelectEventById = useCallback((eventId: string) => {
+    setSelectedEventId(eventId);
+  }, []);
+
   return (
     <div className="flex flex-col gap-3 h-full">
       {/* Redesigned calendar header bar */}
@@ -394,7 +412,12 @@ export function CalendarView() {
             ) : (
               <GoogleIcon />
             )}
-            {isSyncing ? "Syncing..." : meetStatus?.connected ? "Google Synced" : "Synchronize with Google"}
+            <span className="hidden sm:inline">
+              {isSyncing ? "Syncing..." : meetStatus?.connected ? "Google Synced" : "Synchronize with Google"}
+            </span>
+            <span className="inline sm:hidden">
+              {isSyncing ? "Sync" : meetStatus?.connected ? "Synced" : "Sync"}
+            </span>
           </Button>
 
           {/* Share dropdown */}
@@ -402,7 +425,7 @@ export function CalendarView() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 text-xs font-medium gap-1 px-3">
                 <Share2 className="h-3.5 w-3.5" />
-                Share
+                <span className="hidden md:inline">Share</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40 text-xs">
@@ -417,7 +440,7 @@ export function CalendarView() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 text-xs font-medium gap-1 px-3">
                 <Download className="h-3.5 w-3.5" />
-                Export
+                <span className="hidden md:inline">Export</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
@@ -438,7 +461,8 @@ export function CalendarView() {
           {/* Add Event button */}
           <Button size="sm" className="h-8 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white" onClick={handleOpenCreate}>
             <Plus className="h-3.5 w-3.5 mr-1" />
-            Add Event
+            <span className="hidden sm:inline">Add Event</span>
+            <span className="inline sm:hidden">Add</span>
           </Button>
 
           <div className="h-4 border-l border-border mx-1" />
@@ -446,7 +470,9 @@ export function CalendarView() {
           {/* View mode switcher */}
           <div className="flex rounded-md border overflow-hidden h-8">
             <button
+              type="button"
               onClick={() => setViewMode("calendar")}
+              aria-pressed={viewMode === "calendar"}
               className={cn(
                 "p-1.5 transition-colors",
                 viewMode === "calendar" ? "bg-muted text-foreground" : "hover:bg-muted/40 text-muted-foreground"
@@ -456,9 +482,11 @@ export function CalendarView() {
               <CalendarIcon className="h-4 w-4" />
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("list")}
+              aria-pressed={viewMode === "list"}
               className={cn(
-                "p-1.5 transition-colors",
+                "p-1.5 transition-colors border-l",
                 viewMode === "list" ? "bg-muted text-foreground" : "hover:bg-muted/40 text-muted-foreground"
               )}
               title="List View"
@@ -466,9 +494,11 @@ export function CalendarView() {
               <List className="h-4 w-4" />
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("history")}
+              aria-pressed={viewMode === "history"}
               className={cn(
-                "p-1.5 transition-colors",
+                "p-1.5 transition-colors border-l",
                 viewMode === "history" ? "bg-muted text-foreground" : "hover:bg-muted/40 text-muted-foreground"
               )}
               title="History"
@@ -485,21 +515,31 @@ export function CalendarView() {
         <div className="flex-1 min-w-0 flex flex-col">
           <div
             ref={calContainerRef}
-            className={`flex-1 min-h-0 rounded-lg border border-border bg-card calendar-container ${
-              view === "month" ? "overflow-y-scroll" : "overflow-hidden"
-            }`}
+            className={cn(
+              "flex-1 min-h-0 rounded-lg border border-border bg-card calendar-container flex flex-col",
+              viewMode === "calendar" && view === "month" ? "overflow-y-scroll" : "overflow-hidden",
+            )}
           >
-            <BigCalendarWrapper
-              events={calEvents}
-              date={currentDate}
-              view={view}
-              calHeight={calHeight}
-              onView={setView}
-              onNavigate={setCurrentDate}
-              onSelectSlot={handleSelectSlot}
-              onSelectEvent={handleSelectEvent}
-              eventPropGetter={eventPropGetter}
-            />
+            {viewMode === "calendar" ? (
+              <BigCalendarWrapper
+                events={calEvents}
+                date={currentDate}
+                view={view}
+                calHeight={calHeight}
+                onView={setView}
+                onNavigate={setCurrentDate}
+                onSelectSlot={handleSelectSlot}
+                onSelectEvent={handleSelectEvent}
+                eventPropGetter={eventPropGetter}
+              />
+            ) : (
+              <CalendarEventsPanel
+                mode={viewMode}
+                events={events}
+                range={viewMode === "list" ? visibleRange : undefined}
+                onSelectEvent={handleSelectEventById}
+              />
+            )}
           </div>
         </div>
 
