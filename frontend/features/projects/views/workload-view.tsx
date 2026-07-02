@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { format, addDays, isSameDay, parseISO } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -71,6 +71,7 @@ function isTicketOverdue(ticket: KanbanTicket): boolean {
 }
 
 export function WorkloadView({ tickets, members }: WorkloadViewProps) {
+  const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
     new Set(),
   );
@@ -110,7 +111,7 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
       label: "Total Tickets",
       value: tickets.length,
       icon: TrendingUp,
-      color: "text-violet-600",
+      color: "text-blue-600",
     },
     {
       label: "Assigned",

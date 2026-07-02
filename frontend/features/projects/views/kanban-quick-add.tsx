@@ -9,8 +9,6 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
 
-type TicketStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
-
 interface QuickAddInputProps {
   columnId: string;
   projectId: number;
@@ -41,7 +39,7 @@ export function QuickAddInput({ columnId, projectId }: QuickAddInputProps) {
       projectId,
       title: value.trim(),
       type: "TASK",
-      status: columnId as TicketStatus,
+      status: columnId,
     });
   }, [value, projectId, columnId, createTicket]);
 

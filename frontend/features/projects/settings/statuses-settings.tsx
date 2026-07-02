@@ -114,7 +114,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
     <div className="space-y-2">
       <AnimatePresence initial={false}>
         {states.map((state, idx) => {
-          const tc = TYPE_CONFIG[state.type] ?? TYPE_CONFIG.unstarted;
+          const tc = TYPE_CONFIG[state.type ?? "unstarted"];
           return (
             <motion.div
               key={state.id}
@@ -126,7 +126,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
             >
               <div
                 className="h-3 w-3 rounded-full shrink-0"
-                style={{ background: state.color }}
+                style={{ background: state.color ?? "#94a3b8" }}
               />
               <span className="flex-1 text-sm font-medium truncate">
                 {state.name}

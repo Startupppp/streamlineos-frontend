@@ -38,6 +38,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { OrgBusinessUnit } from "@/types/org-hierarchy";
+import { RequireModule } from "@/components/auth/require-module";
 
 const formSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -68,7 +69,7 @@ function BuForm({
 
   return (
     <Form {...form}>
-      <form id="bu-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+      <form id="bu-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -327,6 +328,7 @@ export default function BusinessUnitsPage() {
   );
 
   return (
+    <RequireModule module="HR">
     <PageWrapper
       title="Business Units"
       subtitle="Top-level divisions of your organization."
@@ -423,5 +425,6 @@ export default function BusinessUnitsPage() {
         destructive
       />
     </PageWrapper>
+    </RequireModule>
   );
 }

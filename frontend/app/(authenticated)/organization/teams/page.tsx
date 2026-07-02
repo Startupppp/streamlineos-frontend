@@ -47,6 +47,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgTeam } from "@/types/org-hierarchy";
+import { RequireModule } from "@/components/auth/require-module";
 
 const NO_DEPARTMENT = "none";
 
@@ -84,7 +85,7 @@ function TeamForm({
 
   return (
     <Form {...form}>
-      <form id="team-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+      <form id="team-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -426,6 +427,7 @@ export default function OrgTeamsPage() {
   );
 
   return (
+    <RequireModule module="HR">
     <PageWrapper
       title="Teams"
       subtitle="Teams within departments."
@@ -526,5 +528,6 @@ export default function OrgTeamsPage() {
         destructive
       />
     </PageWrapper>
+    </RequireModule>
   );
 }

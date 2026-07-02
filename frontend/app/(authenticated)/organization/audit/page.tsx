@@ -26,6 +26,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useAuditLogs, type AuditLogRow } from "@/hooks/api/audit-log";
+import { RequireModule } from "@/components/auth/require-module";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 
@@ -519,8 +520,10 @@ function OrgAuditLogContent() {
 
 export default function OrgAuditLogPage() {
   return (
+    <RequireModule module="HR">
     <Suspense>
       <OrgAuditLogContent />
     </Suspense>
+    </RequireModule>
   );
 }

@@ -11,18 +11,26 @@ import { useEffect, useRef } from "react";
 
 interface TiptapEditorProps {
   content?: unknown;
-  onChange?: (json: unknown) => void;
+  onChange?: (json: Record<string, unknown>) => void;
+  onChangeHtml?: (html: string) => void;
+  output?: "json" | "html";
   placeholder?: string;
   editable?: boolean;
+  minHeightClassName?: string;
+  contentKey?: string | number;
 }
 
 export function TiptapEditor({
   content,
   onChange,
+  onChangeHtml,
+  output = "json",
   placeholder = "Start writing...",
   editable = true,
+  minHeightClassName = "min-h-[300px]",
+  contentKey,
 }: TiptapEditorProps) {
-  const hasInitialized = useRef(false);
+  const lastInitKey = useRef<string | number | boolean>(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -33,24 +41,30 @@ export function TiptapEditor({
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Underline,
     ],
-    content: content as Record<string, unknown> | undefined,
+    content: content as string | Record<string, unknown> | undefined,
     editable,
-    onUpdate: ({ editor }) => {
-      onChange?.(editor.getJSON());
+    onUpdate: ({ editor: e }) => {
+      if (output === "html") {
+        onChangeHtml?.(e.isEmpty ? "" : e.getHTML());
+      } else {
+        onChange?.(e.getJSON());
+      }
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm dark:prose-invert max-w-none min-h-[300px] p-4 focus:outline-none",
+        class: `prose prose-sm dark:prose-invert max-w-none ${minHeightClassName} p-4 focus:outline-none`,
       },
     },
   });
 
   useEffect(() => {
-    if (editor && content && !hasInitialized.current) {
-      editor.commands.setContent(content as Record<string, unknown>);
-      hasInitialized.current = true;
+    if (!editor || editor.isDestroyed || content == null) return;
+    const targetKey = contentKey ?? true;
+    if (lastInitKey.current !== targetKey) {
+      editor.commands.setContent(content as string | Record<string, unknown>);
+      lastInitKey.current = targetKey;
     }
-  }, [editor, content]);
+  }, [editor, content, contentKey]);
 
   return (
     <div className="rounded-md border bg-background">

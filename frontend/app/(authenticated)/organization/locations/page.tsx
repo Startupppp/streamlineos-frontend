@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
+import { RequireModule } from "@/components/auth/require-module";
 
 const LOCATION_TYPE_ENUM = ["OFFICE", "WAREHOUSE", "STORE", "FACTORY", "REMOTE"] as const;
 
@@ -71,7 +72,7 @@ function LocationForm({
 
   return (
     <Form {...form}>
-      <form id="location-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+      <form id="location-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -349,6 +350,7 @@ export default function OrgLocationsPage() {
   );
 
   return (
+    <RequireModule module="HR">
     <PageWrapper
       title="Locations"
       subtitle="Physical work locations and offices."
@@ -445,5 +447,6 @@ export default function OrgLocationsPage() {
         destructive
       />
     </PageWrapper>
+    </RequireModule>
   );
 }

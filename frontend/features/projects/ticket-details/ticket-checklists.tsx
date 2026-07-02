@@ -98,8 +98,8 @@ function ChecklistItemRow({
         className={cn(
           "h-4 w-4 shrink-0 rounded border-2 flex items-center justify-center transition-all duration-150",
           item.isCompleted
-            ? "bg-gradient-to-r from-violet-500 to-indigo-500 border-violet-500"
-            : "border-slate-300 hover:border-violet-400",
+            ? "bg-emerald-500 border-emerald-500"
+            : "border-slate-300 hover:border-primary/40",
         )}
         aria-label={item.isCompleted ? "Mark incomplete" : "Mark complete"}
       >
@@ -130,7 +130,7 @@ function ChecklistItemRow({
           onChange={(e) => setText(e.target.value)}
           onBlur={handleTextSave}
           onKeyDown={handleKeyDown}
-          className="flex-1 text-sm bg-transparent border-b border-violet-300 outline-none py-0.5"
+          className="flex-1 text-sm bg-transparent border-b border-input outline-none py-0.5"
           autoFocus
         />
       ) : (
@@ -256,19 +256,19 @@ function ChecklistSection({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 group">
-        <CheckSquare className="h-4 w-4 text-violet-500 shrink-0" />
+        <CheckSquare className="h-4 w-4 text-muted-foreground shrink-0" />
         {editingTitle ? (
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleSave}
             onKeyDown={handleTitleKeyDown}
-            className="flex-1 text-sm font-semibold bg-transparent border-b border-violet-300 outline-none"
+            className="flex-1 text-sm font-semibold bg-transparent border-b border-input outline-none"
             autoFocus
           />
         ) : (
           <span
-            className="flex-1 text-sm font-semibold text-slate-800 cursor-pointer hover:text-violet-700"
+            className="flex-1 text-sm font-semibold text-slate-800 cursor-pointer hover:text-foreground"
             onClick={() => setEditingTitle(true)}
             onKeyDown={handleTitleSpanKeyDown}
             role="button"
@@ -293,7 +293,7 @@ function ChecklistSection({
       {total > 0 && (
         <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden ml-6">
           <motion.div
-            className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full"
+            className="h-full bg-emerald-500 rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.4, ease: "easeOut" }}

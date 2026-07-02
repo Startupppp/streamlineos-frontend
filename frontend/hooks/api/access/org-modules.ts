@@ -8,6 +8,7 @@ import { queryKeys } from "@/lib/query-keys";
 interface OrgModule {
   moduleKey: string;
   enabled: boolean;
+  core?: boolean;
 }
 
 export function useOrgModules() {

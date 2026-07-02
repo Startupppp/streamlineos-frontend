@@ -74,6 +74,7 @@ export type PermissionKey =
   | "projects:create"
   | "projects:update"
   | "projects:delete"
+  | "projects:manage"
   | "projects:tickets:view"
   | "projects:tickets:create"
   | "projects:tickets:update"

@@ -140,7 +140,7 @@ export default function EpicsPage({ params }: PageProps) {
       <div className="space-y-4" aria-live="polite" aria-atomic="true">
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="Epics" value={epics.length} icon={Layers} color="violet" index={0} />
+          <StatCard label="Epics" value={epics.length} icon={Layers} tone="default" index={0} />
           <StatCard label="Stories" value={stories.length} icon={BookOpen} color="blue" index={1} />
           <StatCard label="Tasks" value={tasks.length} icon={Wrench} color="cyan" index={2} />
           <StatCard label="Completed" value={tickets.filter(t => t.status === "DONE").length} icon={CheckCircle2} color="green" index={3} />
@@ -344,7 +344,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
               </Button>
               <div className="space-y-0.5 min-w-0">
                 <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                  <Layers className="h-4 w-4 text-violet-500 shrink-0" />
+                  <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span className="truncate">{epic.title}</span>
                 </CardTitle>
                 {epic.description && (

@@ -76,7 +76,7 @@ export const typeConfig: Record<
   TASK: { label: "Task", color: "text-blue-500" },
   BUG: { label: "Bug", color: "text-red-500" },
   STORY: { label: "Story", color: "text-green-500" },
-  EPIC: { label: "Epic", color: "text-purple-500" },
+  EPIC: { label: "Epic", color: "text-violet-600" },
   SUBTASK: { label: "Subtask", color: "text-muted-foreground" },
 };
 

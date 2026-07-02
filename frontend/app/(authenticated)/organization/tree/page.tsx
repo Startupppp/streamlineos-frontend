@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useOrgTree } from "@/hooks/api/org-hierarchy";
 import type { OrgTreeNode, OrgTreeBranch, OrgTreeDepartment, OrgTreeTeam } from "@/types/org-hierarchy";
+import { RequireModule } from "@/components/auth/require-module";
 
 type NodeType = "business_unit" | "branch" | "department" | "team";
 
@@ -210,6 +211,7 @@ export default function OrgTreePage() {
   ];
 
   return (
+    <RequireModule module="HR">
     <PageWrapper
       title="Organization Tree"
       subtitle="Full hierarchy from business units down to teams"
@@ -278,5 +280,6 @@ export default function OrgTreePage() {
         </div>
       </div>
     </PageWrapper>
+    </RequireModule>
   );
 }

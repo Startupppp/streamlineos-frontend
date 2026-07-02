@@ -76,7 +76,7 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
           {trigger}
         </span>
       ) : (
-        <Button size="sm" onClick={handleOpen} className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+        <Button size="sm" onClick={handleOpen}>
           <Plus className="h-4 w-4 mr-2" />
           Create Epic
         </Button>
@@ -100,7 +100,7 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <Layers className="h-3.5 w-3.5 text-violet-500" />
+                    <Layers className="h-3.5 w-3.5 text-muted-foreground" />
                     Epic title
                   </FormLabel>
                   <FormControl>

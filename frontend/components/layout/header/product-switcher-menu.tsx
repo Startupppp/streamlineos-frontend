@@ -80,7 +80,7 @@ function ProductTile({
         <Icon className="h-[15px] w-[15px]" strokeWidth={ICON_STROKE} />
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-medium text-foreground leading-tight truncate">{label}</p>
+        <p className="text-[13px] font-medium text-foreground leading-tight truncate" title={label}>{label}</p>
         <p className="text-[11px] text-muted-foreground line-clamp-1">{description}</p>
       </div>
       {isActive && (
@@ -97,7 +97,7 @@ function ProductTile({
         </motion.span>
       )}
       {!isEnabled && (
-        <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 h-4 px-1 rounded bg-muted border border-border">
+        <span className="shrink-0 self-start mt-0.5 inline-flex items-center gap-0.5 h-4 px-1 rounded bg-muted border border-border">
           <Lock className="h-2.5 w-2.5 text-muted-foreground" />
           <span className="text-[9px] font-medium text-muted-foreground">Locked</span>
         </span>

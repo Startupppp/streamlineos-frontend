@@ -72,15 +72,15 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const { mutateAsync: rsvpMutation, isPending: rsvpMutationIsPending } =
     useRsvpCalendarEvent();
   const { mutateAsync: updateEvent } = useUpdateCalendarEvent();
-  const canUpdate = true;
 
   const numericEventId = event ? extractEventNumericId(event.id) : null;
   const isCalendarEvent = event?.source === "event";
+  const canUpdate = isCalendarEvent;
 
   const handleUnlink = useCallback(async () => {
     if (numericEventId === null) return;
     try {
-      await updateEvent({ id: numericEventId, entityType: undefined, entityId: undefined });
+      await updateEvent({ id: numericEventId, entityType: null, entityId: null });
       toast.success("Ticket unlinked");
       setUnlinkConfirmOpen(false);
     } catch {
@@ -196,7 +196,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                     </>
                   )}
 
-                  {event.entityType === "ticket" && event.entityId && (
+                  {event.entityType === "ticket" && (
                     <>
                       <Separator />
                       <div className="space-y-1.5">
@@ -204,22 +204,59 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                           <Ticket className="h-3.5 w-3.5" />
                           Linked ticket
                         </p>
-                        <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
-                          <span className="text-sm flex-1 truncate text-foreground">
-                            Ticket #{event.entityId}
-                          </span>
-                          {canUpdate && isCalendarEvent && (
-                            <button
-                              type="button"
-                              onClick={() => setUnlinkConfirmOpen(true)}
-                              className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1"
-                              aria-label="Unlink ticket"
+                        {event.linkedTicket ? (
+                          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 group">
+                            <Link
+                              href={`/projects/${event.linkedTicket.projectId}?ticket=${event.linkedTicket.id}`}
+                              className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+                              onClick={onClose}
                             >
-                              <X className="h-3 w-3" />
-                              Unlink
-                            </button>
-                          )}
-                        </div>
+                              <Badge
+                                variant="outline"
+                                className="font-mono text-[10px] shrink-0 text-violet-600 border-violet-200 dark:border-violet-900 dark:text-violet-400"
+                              >
+                                {event.linkedTicket.key}
+                              </Badge>
+                              <span className="text-sm truncate flex-1 text-foreground">
+                                {event.linkedTicket.title}
+                              </span>
+                              <Badge
+                                variant="secondary"
+                                className="text-[10px] h-4 px-1.5 shrink-0 capitalize"
+                              >
+                                {event.linkedTicket.status.toLowerCase().replace(/_/g, " ")}
+                              </Badge>
+                            </Link>
+                            {canUpdate && (
+                              <button
+                                type="button"
+                                onClick={() => setUnlinkConfirmOpen(true)}
+                                className="text-xs text-muted-foreground hover:text-destructive transition-colors duration-150 flex items-center gap-1 shrink-0"
+                                aria-label="Unlink ticket"
+                              >
+                                <X className="h-3 w-3" />
+                                Unlink
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/20 px-3 py-2">
+                            <span className="text-xs text-muted-foreground flex-1 italic">
+                              Ticket unavailable — it may have been deleted.
+                            </span>
+                            {canUpdate && (
+                              <button
+                                type="button"
+                                onClick={() => setUnlinkConfirmOpen(true)}
+                                className="text-xs text-muted-foreground hover:text-destructive transition-colors duration-150 flex items-center gap-1 shrink-0"
+                                aria-label="Unlink ticket"
+                              >
+                                <X className="h-3 w-3" />
+                                Unlink
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </>
                   )}

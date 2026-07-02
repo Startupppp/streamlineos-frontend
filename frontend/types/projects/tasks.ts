@@ -168,6 +168,7 @@ export interface CreateTicketInput {
   originalEstimate?: number;
   parentTicketId?: number;
   status?: string;
+  dueDate?: string;
 }
 
 export interface UpdateTicketInput {

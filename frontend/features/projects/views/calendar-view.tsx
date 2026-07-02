@@ -37,7 +37,7 @@ interface CalendarViewProps {
 const statusColors: Record<string, string> = {
   TODO: "bg-slate-400",
   IN_PROGRESS: "bg-blue-500",
-  IN_REVIEW: "bg-purple-500",
+  IN_REVIEW: "bg-amber-500",
   DONE: "bg-green-500",
 };
 

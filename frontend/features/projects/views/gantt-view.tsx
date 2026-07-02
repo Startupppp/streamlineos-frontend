@@ -36,7 +36,7 @@ interface GanttViewProps {
 const statusColors: Record<string, string> = {
   TODO: "#94a3b8",
   IN_PROGRESS: "#3b82f6",
-  IN_REVIEW: "#8b5cf6",
+  IN_REVIEW: "#d97706",
   DONE: "#22c55e",
 };
 
@@ -118,7 +118,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
 
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between bg-muted/40 rounded-lg px-3 py-2 mb-4 flex-wrap gap-2">
+      <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
         <div className="flex items-center gap-1.5">
           <Select
             value={String(displayMonth)}

@@ -14,8 +14,8 @@ import { queryKeys } from "@/lib/query-keys";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import dynamic from "next/dynamic";
 import { ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -32,6 +32,16 @@ import { TicketActivityLog } from "@/features/projects/tickets/ticket-activity-l
 import { TicketChecklists } from "./ticket-checklists";
 import { TicketCustomFields } from "./ticket-custom-fields";
 import type { TicketDetailsDialogProps, ProjectMember } from "./types";
+
+const TiptapEditorDynamic = dynamic(
+  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-md border border-input bg-background animate-pulse min-h-[120px]" />
+    ),
+  },
+);
 
 interface AttachmentImageProps {
   fileUrl: string;
@@ -105,7 +115,6 @@ export function TicketDetailsDialog({
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [localTitle, setLocalTitle] = useState("");
-  const [localDescription, setLocalDescription] = useState("");
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
@@ -212,9 +221,7 @@ export function TicketDetailsDialog({
 
   useEffect(() => {
     if (ticket) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalTitle(ticket.title);
-      setLocalDescription(ticket.description || "");
     }
   }, [ticket]);
 
@@ -234,12 +241,12 @@ export function TicketDetailsDialog({
     debouncedSave({ title: e.target.value });
   };
 
-  const handleDescriptionChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ) => {
-    setLocalDescription(e.target.value);
-    debouncedSave({ description: e.target.value });
-  };
+  const handleDescriptionEditorChange = useCallback(
+    (html: string) => {
+      debouncedSave({ description: html });
+    },
+    [debouncedSave],
+  );
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -315,10 +322,12 @@ export function TicketDetailsDialog({
                   placeholder="Ticket title"
                 />
 
-                <Textarea
-                  value={localDescription}
-                  onChange={handleDescriptionChange}
-                  className="min-h-[80px] text-sm border-0 bg-muted/30 focus-visible:bg-background focus-visible:ring-1 resize-none rounded-lg"
+                <TiptapEditorDynamic
+                  content={ticket.description ?? ""}
+                  contentKey={ticketId ?? 0}
+                  onChangeHtml={handleDescriptionEditorChange}
+                  output="html"
+                  minHeightClassName="min-h-[120px]"
                   placeholder="Add a description..."
                 />
 

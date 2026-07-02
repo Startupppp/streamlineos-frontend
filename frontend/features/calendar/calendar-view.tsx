@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect, memo } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   format,
@@ -17,7 +18,7 @@ import {
   startOfYear,
   endOfYear,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Download, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -55,7 +56,15 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";
+import { CreateTicketFromCalendarDialog } from "./create-ticket-from-calendar-dialog";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const BigCalendarWrapper = dynamic(
   () =>
@@ -114,6 +123,7 @@ const ViewButton = memo(function ViewButton({
 });
 
 export function CalendarView() {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<View>("month");
 
@@ -136,6 +146,10 @@ export function CalendarView() {
   } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [isSlotChoiceOpen, setIsSlotChoiceOpen] = useState(false);
+  const [pendingSlot, setPendingSlot] = useState<{ start: Date; end: Date } | null>(null);
+  const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
+  const [createTicketSlot, setCreateTicketSlot] = useState<{ start: Date; end: Date } | null>(null);
 
   const rangeStart = useMemo(
     () => startOfMonth(subMonths(currentDate, 0)),
@@ -171,24 +185,58 @@ export function CalendarView() {
           location: e.location,
           source: e.source,
           myRsvpStatus: e.myRsvpStatus,
+          entityType: e.entityType,
+          entityId: e.entityId,
+          projectId: e.projectId,
         },
       })),
     [events],
   );
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
-    setCreateSlot({ start: slotInfo.start, end: slotInfo.end });
-    setIsCreateOpen(true);
+    setPendingSlot({ start: slotInfo.start, end: slotInfo.end });
+    setIsSlotChoiceOpen(true);
   }, []);
+
+  const handleSlotChooseEvent = useCallback(() => {
+    setIsSlotChoiceOpen(false);
+    setCreateSlot(pendingSlot);
+    setIsCreateOpen(true);
+  }, [pendingSlot]);
+
+  const handleSlotChooseTicket = useCallback(() => {
+    setIsSlotChoiceOpen(false);
+    setCreateTicketSlot(pendingSlot);
+    setIsCreateTicketOpen(true);
+  }, [pendingSlot]);
 
   const handleOpenCreate = useCallback(() => {
     setCreateSlot(null);
     setIsCreateOpen(true);
   }, []);
 
-  const handleSelectEvent = useCallback((event: BigCalEvent) => {
-    setSelectedEventId(String(event.id));
+  const handleOpenCreateTicket = useCallback(() => {
+    setCreateTicketSlot(null);
+    setIsCreateTicketOpen(true);
   }, []);
+
+  const handleSelectEvent = useCallback(
+    (event: BigCalEvent) => {
+      if (
+        event.resource?.source === "task" &&
+        event.resource.entityType === "ticket" &&
+        event.resource.projectId != null &&
+        event.resource.entityId != null
+      ) {
+        router.push(
+          `/projects/${event.resource.projectId}?ticket=${event.resource.entityId}`,
+        );
+        return;
+      }
+      setSelectedEventId(String(event.id));
+    },
+    [router],
+  );
 
   const eventPropGetter = useCallback((event: BigCalEvent) => {
     const rsvp = event.resource?.myRsvpStatus as string | null | undefined;
@@ -385,10 +433,24 @@ export function CalendarView() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" className="h-8 text-xs" onClick={handleOpenCreate}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Add Event
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="h-8 text-xs gap-1">
+                <Plus className="h-3.5 w-3.5" />
+                Add
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem className="text-xs" onClick={handleOpenCreate}>
+                <Plus className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                Add event
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-xs" onClick={handleOpenCreateTicket}>
+                <Ticket className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                Add ticket due date
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -414,6 +476,41 @@ export function CalendarView() {
         onOpenChange={setIsCreateOpen}
         defaultSlot={createSlot}
       />
+
+      <CreateTicketFromCalendarDialog
+        open={isCreateTicketOpen}
+        onClose={() => setIsCreateTicketOpen(false)}
+        defaultSlot={createTicketSlot}
+      />
+
+      <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
+        <DialogContent className="max-w-xs p-6">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">What would you like to create?</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Choose the type of item to add for the selected time.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-1">
+            <Button
+              variant="outline"
+              className="justify-start h-9 text-sm gap-2"
+              onClick={handleSlotChooseEvent}
+            >
+              <Plus className="h-4 w-4 text-muted-foreground" />
+              Calendar event
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-9 text-sm gap-2"
+              onClick={handleSlotChooseTicket}
+            >
+              <Ticket className="h-4 w-4 text-muted-foreground" />
+              Ticket due date
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
     </div>

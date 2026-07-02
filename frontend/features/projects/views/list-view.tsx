@@ -41,7 +41,7 @@ const priorityColors: Record<string, string> = {
 const statusColors: Record<string, string> = {
   TODO: "bg-slate-400",
   IN_PROGRESS: "bg-blue-500",
-  IN_REVIEW: "bg-purple-500",
+  IN_REVIEW: "bg-amber-500",
   DONE: "bg-green-500",
 };
 
@@ -66,14 +66,14 @@ export function ListView({ tickets, onTicketClick, groupBy, projectKey }: ListVi
               <Badge variant="secondary" className="text-xs">{items.length}</Badge>
             </div>
           )}
-          <div className="border rounded-lg divide-y divide-border">
+          <div className="border border-border rounded-lg divide-y divide-border">
             {items.map((ticket) => {
               const TypeIcon = typeIcons[ticket.type] ?? CheckSquare;
               return (
                 <button
                   key={ticket.id}
                   onClick={handleTicketClick(ticket.id)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/30 transition-colors text-left"
                 >
                   <div className={cn("h-2 w-2 rounded-full flex-shrink-0", statusColors[ticket.status] ?? "bg-slate-400")} />
                   <TypeIcon className={cn("h-4 w-4 flex-shrink-0", ticket.type === "BUG" ? "text-red-500" : "text-muted-foreground")} />

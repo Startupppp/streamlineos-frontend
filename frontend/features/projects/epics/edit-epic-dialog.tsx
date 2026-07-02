@@ -130,7 +130,7 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <Zap className="h-3.5 w-3.5 text-violet-500" />
+                    <Zap className="h-3.5 w-3.5 text-muted-foreground" />
                     Title
                   </FormLabel>
                   <FormControl>
