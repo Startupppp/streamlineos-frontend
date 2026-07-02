@@ -15,7 +15,7 @@ interface SalesDashboardFilters {
   repId?: number;
 }
 
-interface SalesDashboardKPIsResult {
+export interface SalesDashboardKPIsResult {
   totalRevenue: number;
   pipelineValue: number;
   closeRate: number;

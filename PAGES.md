@@ -24,28 +24,33 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/crm/leads/smart-search` — AI-powered lead search
 - [x] `/crm/leads/duplicates` — Duplicate detection + merge
 - [x] `/crm/leads/source-report` — Lead source analytics
-- [x] `/crm/deals` — Deals kanban + table, stage management, forecast
-- [x] `/crm/deals/[dealId]` — Deal detail: info + activities + meetings + sidebar stats
+- [x] `/crm/deals` — Deals kanban + table, stage management
+- [x] `/crm/deals/[dealId]` — Deal detail: info + activities + meetings + quotes + sidebar stats
+- [x] `/crm/deals/forecast` — Pipeline forecast summary + chart + close-date list
 - [x] `/crm/deals/approvals` — Deal approval workflow
 - [x] `/crm/deals/aging` — Aging deals report
 - [x] `/crm/deals/win-loss` — Win/loss analysis
-- [x] `/crm/quotes` — Quotes list with status filters
-- [x] `/crm/quotes/[quoteId]` — Quote detail with line items + totals
-- [x] `/crm/contacts` — Contacts list with search/filter
+- [x] `/crm/quotes` — Quotes list with status filters, pagination + CSV export (backend `/quotes` contract)
+- [x] `/crm/quotes/[quoteId]` — Quote detail with line items, totals, status transitions
+- [x] `/crm/contacts` — Contacts list with search/filter, table/card views, CSV import, AI enrich
+- [x] `/crm/contacts/[contactId]` — Contact detail: info + timeline + notes + related deals
 - [x] `/crm/clients` — Client accounts list with health status
-- [x] `/crm/clients/[clientId]` — Client detail: info + activities + timeline + opportunities
-- [x] `/crm/organizations` — Organizations list
-- [x] `/crm/organizations/[organizationId]` — Org detail: rollup stats + hierarchy + timeline
-- [x] `/crm/targets` — Sales targets/quotas management
-- [x] `/crm/territories` — Territory management
-- [x] `/crm/web-forms` — Web lead forms CRUD
+- [x] `/crm/clients/[clientId]` — Client detail: info + activities + timeline + opportunities + onboarding + renewals
+- [x] `/crm/companies` — Companies (CRM organizations) list with search + pagination
+- [x] `/crm/companies/[companyId]` — Company detail: rollup stats + hierarchy + timeline + related leads
+- [x] `/crm/activities` — Cross-entity activity log with filters + stats bar
+- [x] `/crm/tasks` — CRM tasks by due-date buckets with complete/delete
+- [x] `/crm/calendar` — CRM calendar (month/week) filtered to CRM entity events
 - [x] `/crm/analytics` — CRM analytics dashboard
-- [x] `/crm/reports` — CRM reports
-- [x] `/crm/csat` — Customer satisfaction scores
-- [x] `/crm/settings/assignment-rules` — Lead assignment rules
-- [x] `/crm/settings/email-templates` — CRM email templates
-- [x] `/crm/settings/scoring-rules` — Lead scoring rules
-- [x] `/crm/settings/sla` — SLA policies
+- [x] `/crm/reports` — CRM reports with Excel export
+- [x] `/crm/settings/assignment-rules` — Lead assignment rules with priority reorder
+- [x] `/crm/settings/email-templates` — CRM email templates with variables + preview
+- [x] `/crm/settings/scoring-rules` — Lead scoring rules with live preview
+- [x] `/crm/settings/sla` — SLA policies + report + breached leads
+- [x] `/crm/settings/products` — Product catalog CRUD
+- [x] `/crm/settings/custom-fields` — Custom field definitions per entity
+- [x] `/crm/settings/automations` — Automation rules CRUD + toggle + run history
+- [x] `/crm/settings/audit-log` — Audit log with filters + pagination + export
 
 ---
 

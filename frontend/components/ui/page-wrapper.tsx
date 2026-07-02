@@ -2,12 +2,16 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PageWrapperProps {
   title: string;
   subtitle?: React.ReactNode;
   eyebrow?: string;
   badge?: React.ReactNode;
+  backHref?: string;
   actions?: React.ReactNode;
   filters?: React.ReactNode;
   children: React.ReactNode;

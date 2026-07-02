@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { MapPin, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
+import { MapPin, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgLocations,
@@ -163,11 +163,21 @@ export default function OrgLocationsPage() {
   const [editing, setEditing] = useState<OrgLocation | null>(null);
   const [deleting, setDeleting] = useState<OrgLocation | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [search, setSearch] = useState("");
 
   const allLocations = locations ?? [];
   const active = allLocations.filter((l) => l.status !== "ARCHIVED");
   const archived = allLocations.filter((l) => l.status === "ARCHIVED");
   const displayed = showArchived ? archived : active;
+  const filtered = search
+    ? displayed.filter((l) => {
+        const q = search.toLowerCase();
+        return (
+          l.name.toLowerCase().includes(q) ||
+          (l.address ?? "").toLowerCase().includes(q)
+        );
+      })
+    : displayed;
 
   const handleCreate = useCallback(
     (values: FormValues) => {
@@ -241,6 +251,7 @@ export default function OrgLocationsPage() {
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
+  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
 
   function makeRestoreHandler(loc: OrgLocation) { return () => handleRestore(loc); }
   function makeArchiveHandler(loc: OrgLocation) { return () => handleArchive(loc); }
@@ -254,17 +265,28 @@ export default function OrgLocationsPage() {
       title="Locations"
       subtitle="Physical work locations and offices used by your organization."
       actions={
-        <div className="flex items-center gap-2">
+        <Button size="sm" onClick={handleOpenCreate}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          Add Location
+        </Button>
+      }
+      filters={
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search locations…"
+              value={search}
+              onChange={handleSearchChange}
+              className="pl-8 h-8 text-xs max-w-[240px]"
+            />
+          </div>
           {archived.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleToggleArchived}>
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
               <Archive className="h-4 w-4 mr-1.5" />
               {showArchived ? "Show Active" : `Archived (${archived.length})`}
             </Button>
           )}
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Location
-          </Button>
         </div>
       }
     >
@@ -274,8 +296,13 @@ export default function OrgLocationsPage() {
             <Skeleton key={i} className="h-12 w-full rounded-md" />
           ))}
         </div>
-      ) : displayed.length === 0 ? (
-        showArchived ? (
+      ) : filtered.length === 0 ? (
+        search ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <MapPin className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No locations matching &quot;{search}&quot;</p>
+          </div>
+        ) : showArchived ? (
           <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
             <Archive className="h-10 w-10 opacity-30" />
             <p className="text-sm">No archived locations</p>
@@ -302,7 +329,7 @@ export default function OrgLocationsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayed.map((l) => (
+            {filtered.map((l) => (
               <TableRow key={l.id} className={l.status === "ARCHIVED" ? "opacity-60" : ""}>
                 <TableCell className="font-medium">{l.name}</TableCell>
                 <TableCell>

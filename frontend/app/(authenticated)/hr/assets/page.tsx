@@ -50,7 +50,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
@@ -676,28 +675,21 @@ export default function HrAssetsPage() {
         </div>
       }
       filters={
-        <Tabs
+        <Select
           value={statusFilter ?? "all"}
           onValueChange={handleStatusFilterChange}
         >
-          <TabsList className="h-8">
-            <TabsTrigger value="all" className="text-xs px-3 h-7">
-              All
-            </TabsTrigger>
-            <TabsTrigger value="AVAILABLE" className="text-xs px-3 h-7">
-              Available
-            </TabsTrigger>
-            <TabsTrigger value="ASSIGNED" className="text-xs px-3 h-7">
-              Assigned
-            </TabsTrigger>
-            <TabsTrigger value="MAINTENANCE" className="text-xs px-3 h-7">
-              Maintenance
-            </TabsTrigger>
-            <TabsTrigger value="RETIRED" className="text-xs px-3 h-7">
-              Retired
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+          <SelectTrigger className="w-[160px] h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="AVAILABLE">Available</SelectItem>
+            <SelectItem value="ASSIGNED">Assigned</SelectItem>
+            <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+            <SelectItem value="RETIRED">Retired</SelectItem>
+          </SelectContent>
+        </Select>
       }
     >
       <div className="space-y-4">

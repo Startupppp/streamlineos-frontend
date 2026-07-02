@@ -140,14 +140,14 @@ export function LeadDetailSheet({
     <Sheet open={open} onOpenChange={handleSheetClose}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-0">
         {isLoading || !lead ? (
-          <div className="space-y-4 p-6">
+          <div className="space-y-4 px-6 py-5">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-32 w-full" />
           </div>
         ) : (
           <>
-            <div className="px-6 pt-6 pb-5 border-b border-border/50">
+            <div className="px-6 py-4 border-b">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <SheetHeader className="p-0">

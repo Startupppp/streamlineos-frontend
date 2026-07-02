@@ -6,7 +6,13 @@ import { Plus, Calculator } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -30,15 +36,6 @@ const TAB_VALUES: ReadonlyArray<TabValue> = [
   "INCOME",
   "EXPENSE",
 ];
-
-const TAB_LABELS: Record<TabValue, string> = {
-  ALL: "All",
-  ASSET: "Assets",
-  LIABILITY: "Liabilities",
-  EQUITY: "Equity",
-  INCOME: "Income",
-  EXPENSE: "Expense",
-};
 
 const TYPE_BADGE_CLASSES: Record<AccountType, string> = {
   ASSET: "border-blue-500/30 text-blue-700 bg-blue-500/5",
@@ -101,24 +98,30 @@ export default function ChartOfAccountsPage() {
           New account
         </Button>
       }
+      filters={
+        <div className="flex items-center gap-2">
+          <ListToolbar
+            search={search}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder="Search by code or name..."
+          />
+          <Select value={tab} onValueChange={handleTabChange}>
+            <SelectTrigger className="w-[160px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All types</SelectItem>
+              <SelectItem value="ASSET">Assets</SelectItem>
+              <SelectItem value="LIABILITY">Liabilities</SelectItem>
+              <SelectItem value="EQUITY">Equity</SelectItem>
+              <SelectItem value="INCOME">Income</SelectItem>
+              <SelectItem value="EXPENSE">Expense</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      }
     >
       <div className="space-y-4">
-        <Tabs value={tab} onValueChange={handleTabChange}>
-          <TabsList>
-            {TAB_VALUES.map((value) => (
-              <TabsTrigger key={value} value={value}>
-                {TAB_LABELS[value]}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-
-        <ListToolbar
-          search={search}
-          onSearchChange={handleSearchChange}
-          searchPlaceholder="Search by code or name..."
-        />
-
         {query.isLoading ? (
           <LoadingState variant="table" rows={8} />
         ) : query.error ? (

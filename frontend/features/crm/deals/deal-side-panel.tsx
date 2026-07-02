@@ -80,7 +80,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
         className="w-full sm:max-w-3xl p-0 flex flex-col"
       >
         {dealLoading ? (
-          <div className="p-6 space-y-3">
+          <div className="px-6 py-5 space-y-3">
             <Skeleton className="h-6 w-48" />
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-40 w-full" />

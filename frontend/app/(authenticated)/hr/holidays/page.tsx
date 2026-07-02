@@ -15,6 +15,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useCan } from "@/hooks/api/access";
 import {
   useHolidays,
@@ -193,176 +194,166 @@ export default function HolidaysPage() {
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40">
-      <div className="max-w-5xl mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Holiday Calendar</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Manage organization holidays</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleToggleView}>
-              {yearView ? (
-                <>
-                  <CalendarDays className="h-4 w-4 mr-2" />
-                  Month View
-                </>
-              ) : (
-                <>
-                  <List className="h-4 w-4 mr-2" />
-                  All Holidays
-                </>
-              )}
-            </Button>
-            {canManage && (
-              <Button
-                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                onClick={handleCreateClick}
-              >
-                <Plus className="h-4 w-4 mr-2" /> Add Holiday
-              </Button>
+    <PageWrapper
+      title="Holiday Calendar"
+      subtitle="Manage organization holidays"
+      actions={
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleToggleView}>
+            {yearView ? (
+              <>
+                <CalendarDays className="h-4 w-4 mr-2" />
+                Month View
+              </>
+            ) : (
+              <>
+                <List className="h-4 w-4 mr-2" />
+                All Holidays
+              </>
             )}
+          </Button>
+          {canManage && (
+            <Button onClick={handleCreateClick}>
+              <Plus className="h-4 w-4 mr-2" /> Add Holiday
+            </Button>
+          )}
+        </div>
+      }
+    >
+      {isLoading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-72 rounded-2xl" />
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 rounded-xl" />
+            ))}
           </div>
         </div>
-
-        {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-72 rounded-2xl" />
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-xl" />
-              ))}
-            </div>
-          </div>
-        ) : yearView ? (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="year"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.22, ease: "easeOut" }}
-              className="space-y-6"
-            >
-              {Object.keys(holidaysByMonth).length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center">
-                  <CalendarDays className="h-10 w-10 text-slate-300 mb-3" />
-                  <p className="text-slate-500 font-medium">No holidays added yet</p>
-                  {canManage && (
-                    <Button
-                      className="mt-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md"
-                      onClick={handleCreateClick}
+      ) : yearView ? (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="year"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="space-y-6"
+          >
+            {Object.keys(holidaysByMonth).length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <CalendarDays className="h-10 w-10 text-slate-300 mb-3" />
+                <p className="text-slate-500 font-medium">No holidays added yet</p>
+                {canManage && (
+                  <Button className="mt-4" onClick={handleCreateClick}>
+                    <Plus className="h-4 w-4 mr-2" /> Add Holiday
+                  </Button>
+                )}
+              </div>
+            ) : (
+              Object.entries(holidaysByMonth).map(([month, items]) => (
+                <div key={month}>
+                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{month}</h3>
+                  <div className="space-y-2">
+                    {items.map((h) => (
+                      <HolidayItem
+                        key={h.id}
+                        holiday={h}
+                        canManage={canManage}
+                        onEdit={handleEditClick}
+                        onDelete={handleDeleteClick}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </motion.div>
+        </AnimatePresence>
+      ) : (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="month"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="space-y-4"
+          >
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <h2 className="text-lg font-semibold text-slate-900">{format(viewDate, "MMMM yyyy")}</h2>
+                <Button variant="ghost" size="icon" onClick={handleNextMonth}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {WEEKDAYS.map((day) => (
+                  <div key={day} className="text-center text-xs font-medium text-slate-400 py-1">
+                    {day}
+                  </div>
+                ))}
+                {Array.from({ length: calendarDays.startPad }).map((_, i) => (
+                  <div key={`pad-${i}`} />
+                ))}
+                {calendarDays.days.map((day) => {
+                  const dayHolidays = holidays?.filter((h) => isSameDay(parseISO(h.date), day)) ?? [];
+                  const isHoliday = dayHolidays.length > 0;
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={`relative flex flex-col items-center justify-start rounded-lg p-1.5 min-h-[40px] text-sm ${
+                        isHoliday ? "bg-violet-50 border border-violet-200" : "hover:bg-slate-50"
+                      }`}
                     >
-                      <Plus className="h-4 w-4 mr-2" /> Add Holiday
+                      <span className={`font-medium ${isHoliday ? "text-violet-700" : "text-slate-700"}`}>
+                        {format(day, "d")}
+                      </span>
+                      {isHoliday && (
+                        <div className="flex gap-0.5 mt-0.5">
+                          {dayHolidays.slice(0, 2).map((_, idx) => (
+                            <span key={idx} className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                {format(viewDate, "MMMM")} Holidays
+              </h3>
+              {monthHolidays.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center bg-white/60 rounded-2xl border border-slate-200/80">
+                  <CalendarDays className="h-8 w-8 text-slate-300 mb-2" />
+                  <p className="text-slate-400 text-sm">No holidays in {format(viewDate, "MMMM")}</p>
+                  {canManage && (
+                    <Button variant="ghost" size="sm" className="mt-2" onClick={handleCreateClick}>
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add one
                     </Button>
                   )}
                 </div>
               ) : (
-                Object.entries(holidaysByMonth).map(([month, items]) => (
-                  <div key={month}>
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{month}</h3>
-                    <div className="space-y-2">
-                      {items.map((h) => (
-                        <HolidayItem
-                          key={h.id}
-                          holiday={h}
-                          canManage={canManage}
-                          onEdit={handleEditClick}
-                          onDelete={handleDeleteClick}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                monthHolidays.map((h) => (
+                  <HolidayItem
+                    key={h.id}
+                    holiday={h}
+                    canManage={canManage}
+                    onEdit={handleEditClick}
+                    onDelete={handleDeleteClick}
+                  />
                 ))
               )}
-            </motion.div>
-          </AnimatePresence>
-        ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="month"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.22, ease: "easeOut" }}
-              className="space-y-4"
-            >
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <h2 className="text-lg font-semibold text-slate-900">{format(viewDate, "MMMM yyyy")}</h2>
-                  <Button variant="ghost" size="icon" onClick={handleNextMonth}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {WEEKDAYS.map((day) => (
-                    <div key={day} className="text-center text-xs font-medium text-slate-400 py-1">
-                      {day}
-                    </div>
-                  ))}
-                  {Array.from({ length: calendarDays.startPad }).map((_, i) => (
-                    <div key={`pad-${i}`} />
-                  ))}
-                  {calendarDays.days.map((day) => {
-                    const dayHolidays = holidays?.filter((h) => isSameDay(parseISO(h.date), day)) ?? [];
-                    const isHoliday = dayHolidays.length > 0;
-                    return (
-                      <div
-                        key={day.toISOString()}
-                        className={`relative flex flex-col items-center justify-start rounded-lg p-1.5 min-h-[40px] text-sm ${
-                          isHoliday ? "bg-violet-50 border border-violet-200" : "hover:bg-slate-50"
-                        }`}
-                      >
-                        <span className={`font-medium ${isHoliday ? "text-violet-700" : "text-slate-700"}`}>
-                          {format(day, "d")}
-                        </span>
-                        {isHoliday && (
-                          <div className="flex gap-0.5 mt-0.5">
-                            {dayHolidays.slice(0, 2).map((_, idx) => (
-                              <span key={idx} className="w-1.5 h-1.5 rounded-full bg-violet-500" />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  {format(viewDate, "MMMM")} Holidays
-                </h3>
-                {monthHolidays.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center bg-white/60 rounded-2xl border border-slate-200/80">
-                    <CalendarDays className="h-8 w-8 text-slate-300 mb-2" />
-                    <p className="text-slate-400 text-sm">No holidays in {format(viewDate, "MMMM")}</p>
-                    {canManage && (
-                      <Button variant="ghost" size="sm" className="mt-2" onClick={handleCreateClick}>
-                        <Plus className="h-3.5 w-3.5 mr-1" /> Add one
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  monthHolidays.map((h) => (
-                    <HolidayItem
-                      key={h.id}
-                      holiday={h}
-                      canManage={canManage}
-                      onEdit={handleEditClick}
-                      onDelete={handleDeleteClick}
-                    />
-                  ))
-                )}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        )}
-      </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
@@ -415,11 +406,7 @@ export default function HolidaysPage() {
               />
               </div>
               <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md"
-                >
+                <Button type="submit" disabled={isPending} className="w-full">
                   {isPending ? "Saving..." : editingHoliday ? "Update Holiday" : "Add Holiday"}
                 </Button>
               </SheetFooter>
@@ -427,6 +414,6 @@ export default function HolidaysPage() {
           </Form>
         </SheetContent>
       </Sheet>
-    </div>
+    </PageWrapper>
   );
 }

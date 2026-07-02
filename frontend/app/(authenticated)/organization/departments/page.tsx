@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Users, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
+import { Users, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgDepartments,
@@ -195,6 +195,7 @@ export default function OrgDepartmentsPage() {
   const [editing, setEditing] = useState<OrgDepartment | null>(null);
   const [deleting, setDeleting] = useState<OrgDepartment | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [search, setSearch] = useState("");
 
   const branches = (branchesData?.data ?? []).map((b) => ({ id: b.id, name: b.name }));
   const branchMap = Object.fromEntries(branches.map((b) => [b.id, b.name]));
@@ -202,6 +203,15 @@ export default function OrgDepartmentsPage() {
   const active = allDepts.filter((d) => d.status !== "ARCHIVED" && !d.deletedAt);
   const archived = allDepts.filter((d) => d.status === "ARCHIVED" && !d.deletedAt);
   const displayed = showArchived ? archived : active;
+  const filtered = search
+    ? displayed.filter((d) => {
+        const q = search.toLowerCase();
+        return (
+          d.name.toLowerCase().includes(q) ||
+          d.code.toLowerCase().includes(q)
+        );
+      })
+    : displayed;
 
   const handleCreate = useCallback(
     (values: FormValues) => {
@@ -288,6 +298,7 @@ export default function OrgDepartmentsPage() {
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
+  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
 
   function makeRestoreHandler(dept: OrgDepartment) { return () => handleRestore(dept); }
   function makeArchiveHandler(dept: OrgDepartment) { return () => handleArchive(dept); }
@@ -301,17 +312,28 @@ export default function OrgDepartmentsPage() {
       title="Departments"
       subtitle="Departments organized within branches across your organization."
       actions={
-        <div className="flex items-center gap-2">
+        <Button size="sm" onClick={handleOpenCreate}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          Add Department
+        </Button>
+      }
+      filters={
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search departments…"
+              value={search}
+              onChange={handleSearchChange}
+              className="pl-8 h-8 text-xs max-w-[240px]"
+            />
+          </div>
           {archived.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleToggleArchived}>
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
               <Archive className="h-4 w-4 mr-1.5" />
               {showArchived ? "Show Active" : `Archived (${archived.length})`}
             </Button>
           )}
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Department
-          </Button>
         </div>
       }
     >
@@ -321,8 +343,13 @@ export default function OrgDepartmentsPage() {
             <Skeleton key={i} className="h-12 w-full rounded-md" />
           ))}
         </div>
-      ) : displayed.length === 0 ? (
-        showArchived ? (
+      ) : filtered.length === 0 ? (
+        search ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <Users className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No departments matching &quot;{search}&quot;</p>
+          </div>
+        ) : showArchived ? (
           <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
             <Archive className="h-10 w-10 opacity-30" />
             <p className="text-sm">No archived departments</p>
@@ -349,7 +376,7 @@ export default function OrgDepartmentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayed.map((d) => (
+            {filtered.map((d) => (
               <TableRow key={d.id} className={d.status === "ARCHIVED" ? "opacity-60" : ""}>
                 <TableCell className="font-medium">{d.name}</TableCell>
                 <TableCell>

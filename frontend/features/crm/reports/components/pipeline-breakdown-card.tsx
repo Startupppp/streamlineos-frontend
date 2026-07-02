@@ -1,0 +1,80 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { BarChart3 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { scaleIn } from "@/lib/motion-variants";
+import type { LeadStats } from "@/types/leads";
+import { PIPELINE_COLORS } from "../lib/types";
+
+interface PipelineBreakdownCardProps {
+  stats: LeadStats;
+  maxPipelineCount: number;
+}
+
+export function PipelineBreakdownCard({
+  stats,
+  maxPipelineCount,
+}: PipelineBreakdownCardProps) {
+  return (
+    <Card className="rounded-lg border border-border">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-blue-600" />
+          Pipeline Breakdown
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {Object.entries(stats.byStatus).map(([status, count]) => {
+            const pct = stats.total > 0 ? (count / stats.total) * 100 : 0;
+            const config =
+              PIPELINE_COLORS[status] ?? PIPELINE_COLORS["NEW"];
+
+            return (
+              <motion.div key={status} variants={scaleIn}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: config.color }}
+                    />
+                    <span className="text-sm font-medium capitalize">
+                      {status.toLowerCase()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold tabular-nums">
+                      {count}
+                    </span>
+                    <span className="text-xs text-muted-foreground w-12 text-right">
+                      {pct.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <div
+                  className="h-2.5 rounded-full bg-muted overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={count}
+                  aria-valuemin={0}
+                  aria-valuemax={maxPipelineCount}
+                  aria-label={`${status} pipeline count`}
+                >
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: config.color }}
+                    initial={{ width: 0 }}
+                    animate={{
+                      width: `${(count / maxPipelineCount) * 100}%`,
+                    }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

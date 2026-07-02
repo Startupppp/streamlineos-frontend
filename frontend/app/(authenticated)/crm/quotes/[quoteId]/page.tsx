@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   Send,
   CheckCircle2,
   XCircle,
@@ -14,9 +13,6 @@ import {
   Calendar,
   User,
   Building2,
-  AlertCircle,
-  SearchX,
-  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +34,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { useQuoteDetail, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
+import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { QuoteStatus, QuoteLineItem } from "@/types/crm/quotes";
 
@@ -234,7 +231,6 @@ export default function QuoteDetailPage({
 
   const quote = data ?? null;
 
-  const handleBack = useCallback(() => router.push("/crm/quotes"), [router]);
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const handleSend = useCallback(() => {
@@ -282,7 +278,7 @@ export default function QuoteDetailPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Quote" subtitle="Loading...">
+      <PageWrapper title="Quote" subtitle="Loading..." backHref="/crm/quotes">
         <div className="space-y-4">
           <div className="h-6 w-48 bg-muted rounded animate-pulse" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -302,47 +298,26 @@ export default function QuoteDetailPage({
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
-        <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center">
-          <AlertCircle className="h-7 w-7 text-red-400" />
-        </div>
-        <div>
-          <p className="font-semibold text-foreground">Failed to load quote</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            There was an error loading this quote. Please try again.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={handleRetry}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Try Again
-          </Button>
-          <Button variant="ghost" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Quotes
-          </Button>
-        </div>
-      </div>
+      <PageWrapper title="Quote" backHref="/crm/quotes">
+        <ErrorState
+          title="Failed to load quote"
+          description="There was an error loading this quote. Please try again."
+          onRetry={handleRetry}
+          className="flex-1"
+        />
+      </PageWrapper>
     );
   }
 
   if (!quote) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
-        <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
-          <SearchX className="h-7 w-7 text-slate-400" />
-        </div>
-        <div>
-          <p className="font-semibold text-foreground">Quote not found</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            This quote may have been removed or you may not have access to it.
-          </p>
-        </div>
-        <Button variant="outline" onClick={handleBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Quotes
-        </Button>
-      </div>
+      <PageWrapper title="Quote" backHref="/crm/quotes">
+        <ErrorState
+          title="Quote not found"
+          description="This quote may have been removed or you may not have access to it."
+          className="flex-1"
+        />
+      </PageWrapper>
     );
   }
 
@@ -360,6 +335,7 @@ export default function QuoteDetailPage({
     <PageWrapper
       variant="display"
       title={quote.subject}
+      backHref="/crm/quotes"
       subtitle={
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-mono text-sm text-muted-foreground">
@@ -442,10 +418,6 @@ export default function QuoteDetailPage({
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back
-          </Button>
         </div>
       }
     >

@@ -1,0 +1,259 @@
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { BarChart2, Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useKpis, useCreateKpi, useUpdateKpi, useDeleteKpi } from "@/hooks/api/hr";
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Sales: "bg-emerald-100 text-emerald-700",
+  Finance: "bg-blue-100 text-blue-700",
+  Operations: "bg-amber-100 text-amber-700",
+  HR: "bg-violet-100 text-violet-700",
+  Customer: "bg-pink-100 text-pink-700",
+};
+
+function getCategoryColor(category: string) {
+  return CATEGORY_COLORS[category] ?? "bg-slate-100 text-slate-600";
+}
+
+interface KpiFormState {
+  name: string;
+  category: string;
+  description: string;
+  unit: string;
+  target: string;
+  weight: string;
+}
+
+export function KpiLibraryTab() {
+  const { data: kpis = [], isLoading } = useKpis();
+  const createKpi = useCreateKpi();
+  const updateKpi = useUpdateKpi();
+  const deleteKpi = useDeleteKpi();
+
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [form, setForm] = useState<KpiFormState>({
+    name: "",
+    category: "",
+    description: "",
+    unit: "",
+    target: "",
+    weight: "1",
+  });
+
+  function handleFormChange(field: keyof KpiFormState, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleCreate() {
+    if (!form.name || !form.category) {
+      toast.error("Name and category are required");
+      return;
+    }
+    try {
+      await createKpi.mutateAsync({
+        name: form.name,
+        category: form.category,
+        description: form.description || undefined,
+        unit: form.unit || undefined,
+        target: form.target || undefined,
+        weight: form.weight || "1",
+      });
+      toast.success("KPI created");
+      setSheetOpen(false);
+      setForm({ name: "", category: "", description: "", unit: "", target: "", weight: "1" });
+    } catch {
+      toast.error("Failed to create KPI");
+    }
+  }
+
+  async function handleToggleActive(id: number, current: boolean) {
+    try {
+      await updateKpi.mutateAsync({ id, isActive: !current });
+      toast.success(current ? "KPI deactivated" : "KPI activated");
+    } catch {
+      toast.error("Failed to update KPI");
+    }
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm("Delete this KPI?")) return;
+    try {
+      await deleteKpi.mutateAsync(id);
+      toast.success("KPI deleted");
+    } catch {
+      toast.error("Failed to delete KPI");
+    }
+  }
+
+  const categories = ["ALL", ...Array.from(new Set(kpis.map((k) => k.category)))];
+  const filtered = kpis.filter((k) => {
+    const matchesSearch = k.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCat = categoryFilter === "ALL" || k.category === categoryFilter;
+    return matchesSearch && matchesCat;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="bg-white/90 rounded-2xl border border-slate-200/80 p-5 space-y-3 animate-pulse">
+            <div className="h-5 w-2/3 bg-slate-200 rounded" />
+            <div className="h-4 w-1/3 bg-slate-100 rounded" />
+            <div className="h-3 w-full bg-slate-100 rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <div className="flex gap-3 flex-wrap">
+          <Input
+            className="w-60"
+            placeholder="Search KPIs…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className="flex gap-1.5 flex-wrap">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150 ${
+                  categoryFilter === cat
+                    ? "bg-violet-600 text-white border-violet-600"
+                    : "border-slate-200 text-slate-600 hover:border-violet-300 hover:text-violet-600"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetTrigger asChild>
+            <motion.div whileTap={{ scale: 0.97 }}>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add KPI
+              </Button>
+            </motion.div>
+          </SheetTrigger>
+          <SheetContent className="w-[420px] p-0 flex flex-col gap-0">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>Create KPI</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+              <div className="space-y-1.5">
+                <Label>Name *</Label>
+                <Input value={form.name} onChange={(e) => handleFormChange("name", e.target.value)} placeholder="KPI name" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Category *</Label>
+                <Input value={form.category} onChange={(e) => handleFormChange("category", e.target.value)} placeholder="e.g. Sales, Finance" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Description</Label>
+                <Input value={form.description} onChange={(e) => handleFormChange("description", e.target.value)} placeholder="Optional description" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Unit</Label>
+                  <Input value={form.unit} onChange={(e) => handleFormChange("unit", e.target.value)} placeholder="e.g. %, $" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Target</Label>
+                  <Input type="number" value={form.target} onChange={(e) => handleFormChange("target", e.target.value)} placeholder="e.g. 100" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Weight</Label>
+                <Input type="number" value={form.weight} onChange={(e) => handleFormChange("weight", e.target.value)} placeholder="1" />
+              </div>
+              <motion.div whileTap={{ scale: 0.97 }}>
+                <Button
+                  className="w-full"
+                  onClick={handleCreate}
+                  disabled={createKpi.isPending}
+                >
+                  {createKpi.isPending ? "Creating…" : "Create KPI"}
+                </Button>
+              </motion.div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
+          <BarChart2 className="w-12 h-12 text-slate-300" />
+          <p className="text-slate-500 font-medium">No KPIs found</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtered.map((kpi, i) => (
+            <motion.div
+              key={kpi.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut", delay: i * 0.06 }}
+              className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5 space-y-3"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-slate-800 truncate">{kpi.name}</h3>
+                  {kpi.description && (
+                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{kpi.description}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleDelete(kpi.id)}
+                  className="ml-2 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <Badge className={`text-xs ${getCategoryColor(kpi.category)}`}>{kpi.category}</Badge>
+                <Badge className={`text-xs ${kpi.isActive ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
+                  {kpi.isActive ? "Active" : "Inactive"}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-xs text-slate-500">
+                {kpi.unit && <div><span className="font-medium text-slate-700">{kpi.unit}</span><br />Unit</div>}
+                {kpi.target && <div><span className="font-medium text-slate-700">{kpi.target}</span><br />Target</div>}
+                <div><span className="font-medium text-slate-700">{kpi.weight}</span><br />Weight</div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className={`w-full text-xs ${kpi.isActive ? "text-red-500 border-red-200 hover:bg-red-50" : "text-green-600 border-green-200 hover:bg-green-50"}`}
+                onClick={() => handleToggleActive(kpi.id, kpi.isActive)}
+              >
+                {kpi.isActive ? "Deactivate" : "Activate"}
+              </Button>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

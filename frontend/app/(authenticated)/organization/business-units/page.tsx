@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Building2, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   useBusinessUnits,
@@ -162,11 +162,21 @@ export default function BusinessUnitsPage() {
   const [editing, setEditing] = useState<OrgBusinessUnit | null>(null);
   const [deleting, setDeleting] = useState<OrgBusinessUnit | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [search, setSearch] = useState("");
 
   const allUnits = units?.data ?? [];
   const active = allUnits.filter((u) => u.status !== "ARCHIVED" && !u.deletedAt);
   const archived = allUnits.filter((u) => u.status === "ARCHIVED" && !u.deletedAt);
   const displayed = showArchived ? archived : active;
+  const filtered = search
+    ? displayed.filter((u) => {
+        const q = search.toLowerCase();
+        return (
+          u.name.toLowerCase().includes(q) ||
+          u.code.toLowerCase().includes(q)
+        );
+      })
+    : displayed;
 
   const handleCreate = useCallback(
     (values: FormValues) => {
@@ -240,6 +250,7 @@ export default function BusinessUnitsPage() {
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
+  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
 
   function makeRestoreHandler(unit: OrgBusinessUnit) { return () => handleRestore(unit); }
   function makeArchiveHandler(unit: OrgBusinessUnit) { return () => handleArchive(unit); }
@@ -253,24 +264,40 @@ export default function BusinessUnitsPage() {
       title="Business Units"
       subtitle="Top-level organizational divisions within your company."
       actions={
-        <div className="flex items-center gap-2">
+        <Button size="sm" onClick={handleOpenCreate}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          Add Business Unit
+        </Button>
+      }
+      filters={
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search business units…"
+              value={search}
+              onChange={handleSearchChange}
+              className="pl-8 h-8 text-xs max-w-[240px]"
+            />
+          </div>
           {archived.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleToggleArchived}>
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
               <Archive className="h-4 w-4 mr-1.5" />
               {showArchived ? "Show Active" : `Archived (${archived.length})`}
             </Button>
           )}
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Business Unit
-          </Button>
         </div>
       }
     >
       {isLoading ? (
         <TableSkeleton />
-      ) : displayed.length === 0 ? (
-        showArchived ? (
+      ) : filtered.length === 0 ? (
+        search ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <Building2 className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No business units matching &quot;{search}&quot;</p>
+          </div>
+        ) : showArchived ? (
           <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
             <Archive className="h-10 w-10 opacity-30" />
             <p className="text-sm">No archived business units</p>
@@ -290,7 +317,7 @@ export default function BusinessUnitsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayed.map((u) => (
+            {filtered.map((u) => (
               <TableRow key={u.id} className={u.status === "ARCHIVED" ? "opacity-60" : ""}>
                 <TableCell className="font-medium">{u.name}</TableCell>
                 <TableCell>

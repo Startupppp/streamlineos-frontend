@@ -3,13 +3,7 @@
 import { useCallback } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  House,
-  MagnifyingGlass,
-  Plus,
-  Bell,
-  UserCircle,
-} from "@phosphor-icons/react"
+import { HouseIcon, SearchIcon, PlusIcon, BellIcon, UserIcon } from "@animateicons/react/lucide"
 import { cn } from "@/lib/utils"
 import { useUnreadNotificationCount } from "@/hooks/api/notifications"
 
@@ -17,17 +11,17 @@ interface NavItem {
   key: string
   label: string
   href: string | null
-  Icon: React.ComponentType<{ className?: string; weight?: "thin" | "light" | "regular" | "bold" | "fill" | "duotone" }>
+  Icon: React.ComponentType<{ size?: number }>
   isSearch?: boolean
   isCreate?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { key: 'home', label: 'Home', href: '/dashboard', Icon: House },
-  { key: 'search', label: 'Search', href: null, Icon: MagnifyingGlass, isSearch: true },
-  { key: 'create', label: 'Create', href: null, Icon: Plus, isCreate: true },
-  { key: 'notifications', label: 'Notifications', href: '/notifications', Icon: Bell },
-  { key: 'me', label: 'Me', href: '/settings', Icon: UserCircle },
+  { key: 'home', label: 'Home', href: '/dashboard', Icon: HouseIcon },
+  { key: 'search', label: 'Search', href: null, Icon: SearchIcon, isSearch: true },
+  { key: 'create', label: 'Create', href: null, Icon: PlusIcon, isCreate: true },
+  { key: 'notifications', label: 'Notifications', href: '/notifications', Icon: BellIcon },
+  { key: 'me', label: 'Me', href: '/settings', Icon: UserIcon },
 ]
 
 export function MobileBottomNav() {
@@ -68,7 +62,7 @@ export function MobileBottomNav() {
                 className="flex flex-col items-center gap-0.5 min-w-[44px] py-1 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label={item.label}
               >
-                <item.Icon className="h-5 w-5" weight="regular" />
+                <item.Icon size={20} />
                 <span className="text-[10px] leading-none">{item.label}</span>
               </button>
             )
@@ -83,8 +77,8 @@ export function MobileBottomNav() {
                 className="flex flex-col items-center gap-0.5 min-w-[44px] py-1"
                 aria-label={item.label}
               >
-                <span className="h-9 w-9 rounded-full bg-primary flex items-center justify-center shadow-sm ring-1 ring-primary/20">
-                  <item.Icon className="h-4 w-4 text-primary-foreground" weight="bold" />
+                <span className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm ring-1 ring-primary/20">
+                  <item.Icon size={16} />
                 </span>
               </button>
             )
@@ -101,10 +95,7 @@ export function MobileBottomNav() {
               aria-current={isActive ? "page" : undefined}
             >
               <span className="relative">
-                <item.Icon
-                  className="h-5 w-5 transition-all duration-150"
-                  weight={isActive ? "fill" : "regular"}
-                />
+                <item.Icon size={20} />
                 {isNotif && unreadNotifCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-blue-500 ring-1 ring-background" />
                 )}

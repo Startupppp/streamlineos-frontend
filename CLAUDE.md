@@ -154,16 +154,17 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 
 > Current design-token values below. If §13's extracted tokens differ, the extracted tokens win — update this section as a living rule.
 
-- Every page feels like a **$10k+ SaaS product** — polished, spacious, purposeful; no default buttons or flat cards.
+- Every page feels like a **$10k+ SaaS product** — polished, dense, purposeful; no default buttons or flat cards. Canonical spec: `UI-UX-SYSTEM.md` (repo root) — read it before any UI work.
+- **Extracted-token reality (living rule, reconciled 2026-07-02):** the system is **ink-first** (Linear/Stripe style) — `--primary: #0b1220` slate-900 fills for primary CTAs, `--accent: #3b82f6` blue-500 for links/interactive states, slate-neutral chrome. The violet/indigo gradient CTA style is RETIRED; brand gradients live only on landing/marketing surfaces, never inside the authenticated shell. One primary button per view.
 - **Framer Motion** for page/step transitions (`AnimatePresence` + `motion.div`, slide+fade), list stagger, entrance.
 - Step/route transition: `initial={{opacity:0,x:24}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-24}}`, `duration:0.22, ease:"easeOut"`, in `<AnimatePresence mode="wait">`.
-- CTA/primary buttons: `bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200`.
-- Selection cards/chips: `hover:scale-[1.02] hover:shadow-md border-violet-500 bg-violet-50` on hover/selected.
-- Progress bars animate fill: `transition: width 0.4s ease`, gradient fill.
-- Micro-interactions everywhere: hover lift/scale, `whileTap={{scale:0.97}}`.
+- Selection cards/chips: subtle `hover:shadow-md` + accent border on selected — no scale transforms in dense lists.
+- Progress bars animate fill: `transition: width 0.4s ease`.
+- Micro-interactions everywhere: hover lift, `whileTap={{scale:0.97}}` on standalone CTAs only.
+- **Every authenticated page uses `PageWrapper`** (`components/ui/page-wrapper.tsx`: title, subtitle, eyebrow, badge, backHref, actions, filters). Never `min-h-screen`/page-level gradients/ad-hoc `<h1>` inside the shell.
 - **Interactive components animate open/close and press.** shadcn/Radix **Dialog** & **Sheet** animate via their `data-[state=open]`/`data-[state=closed]` hooks with `tailwindcss-animate`: Dialog fades + zooms (`fade-in-0 zoom-in-95` in / `fade-out-0 zoom-out-95` out) with an overlay fade; **Sheet** slides from its edge (`slide-in-from-right` / `slide-out-to-right`, matched to the side); dropdowns, popovers, and tooltips fade + zoom from their trigger side. **Buttons** get a hover state (color/shadow lift), `active:scale-[0.98]`, and `whileTap`. Keep it snappy (~150–250ms, `ease-out`) and consistent across the app, and **respect `prefers-reduced-motion`** (fall back to instant/opacity-only).
-- Cards: `bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60`.
-- Full-page backgrounds: `bg-gradient-to-br from-slate-50 via-white to-violet-50/40`.
+- Cards (in-shell): `bg-card border border-border rounded-xl shadow-sm` — no backdrop-blur/heavy shadows in the authenticated shell; the glassy `rounded-2xl shadow-xl` card style is for auth/landing surfaces only.
+- Full-page backgrounds: the shell owns the background (`--background` slate-50). Pages NEVER repaint it — no `min-h-screen`, no page-level gradients inside `(authenticated)`.
 - Sequential list entrance: staggered `delay: idx * 0.08`. Success states: spring bounce + confetti where appropriate.
 
 ## 15. Layout & States (every page satisfies ALL)

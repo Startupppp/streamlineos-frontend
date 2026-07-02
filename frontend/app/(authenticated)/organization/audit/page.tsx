@@ -5,7 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import {
-  Shield, ChevronLeft, ChevronRight, Activity, Info, ChevronsLeft, ChevronsRight,
+  Shield, ChevronLeft, ChevronRight, Activity, Info, ChevronsLeft, ChevronsRight, Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -238,6 +238,7 @@ function OrgAuditLogContent() {
   const [, startTransition] = useTransition();
   const [goToPage, setGoToPage] = useState("");
   const [selectedLog, setSelectedLog] = useState<AuditLogRow | null>(null);
+  const [search, setSearch] = useState("");
 
   const page = Number(searchParams.get("page")) || 1;
   const pageSizeParam = Number(searchParams.get("size"));
@@ -273,6 +274,17 @@ function OrgAuditLogContent() {
   const logs = data?.logs ?? [];
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
+
+  const filteredLogs = search
+    ? logs.filter((l) => {
+        const q = search.toLowerCase();
+        return (
+          (l.userName ?? "").toLowerCase().includes(q) ||
+          (l.userEmail ?? "").toLowerCase().includes(q) ||
+          formatActionLabel(l.action).toLowerCase().includes(q)
+        );
+      })
+    : logs;
 
   const hasActiveFilters = actionFilter !== "all" || !!dateFrom || !!dateTo;
 
@@ -316,6 +328,10 @@ function OrgAuditLogContent() {
     () => updateParams({ page: String(totalPages) }),
     [updateParams, totalPages],
   );
+  const handleSearchChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    [],
+  );
   const handleGoToChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => setGoToPage(e.target.value),
     [],
@@ -348,6 +364,15 @@ function OrgAuditLogContent() {
       }
       filters={
         <div className="flex flex-wrap gap-2 items-end">
+          <div className="relative self-end">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search actor or action…"
+              value={search}
+              onChange={handleSearchChange}
+              className="pl-8 h-8 text-xs max-w-[220px]"
+            />
+          </div>
           <div className="flex flex-col gap-1 min-w-[180px] flex-1">
             <p className="text-[11px] font-medium text-muted-foreground">Action Type</p>
             <Select value={actionFilter} onValueChange={handleActionChange}>
@@ -390,14 +415,17 @@ function OrgAuditLogContent() {
                 <p className="text-sm text-muted-foreground">Failed to load audit events.</p>
                 <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
               </div>
-            ) : logs.length === 0 ? (
+            ) : filteredLogs.length === 0 ? (
               <div className="py-14 flex flex-col items-center gap-3 text-center">
                 <EmptyDocumentsIllustration className="h-40 w-40 opacity-95" />
                 <div className="space-y-1 text-muted-foreground">
                   <p className="text-sm font-medium text-foreground">No audit events found</p>
-                  {hasActiveFilters && <p className="text-xs">Try adjusting your filters to see results.</p>}
+                  {search && logs.length > 0
+                    ? <p className="text-xs">No events on this page match &quot;{search}&quot;.</p>
+                    : hasActiveFilters && <p className="text-xs">Try adjusting your filters to see results.</p>
+                  }
                 </div>
-                {hasActiveFilters && (
+                {hasActiveFilters && !search && (
                   <Button variant="outline" size="sm" onClick={resetFilters}>Clear filters</Button>
                 )}
               </div>
@@ -421,7 +449,7 @@ function OrgAuditLogContent() {
                   <div className="min-w-[700px]">
                     <Table>
                       <TableBody>
-                        {logs.map((log) => (
+                        {filteredLogs.map((log) => (
                           <LogRow key={log.id} log={log} onSelect={handleSelectLog} />
                         ))}
                       </TableBody>

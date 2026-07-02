@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Clock, ArrowRight } from "lucide-react";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";

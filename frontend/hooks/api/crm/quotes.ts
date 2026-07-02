@@ -19,7 +19,15 @@ export interface QuoteListResponse {
 export function useQuotes(filters?: QuoteFilters) {
   return useQuery({
     queryKey: ["quotes", "list", filters] as const,
-    queryFn: () => apiClient.get<QuoteListResponse>("/quotes", filters as Record<string, unknown>),
+    queryFn: () => {
+      const params: Record<string, string | number> = {};
+      if (filters?.status !== undefined) params.status = filters.status;
+      if (filters?.dealId !== undefined) params.dealId = filters.dealId;
+      if (filters?.search !== undefined) params.search = filters.search;
+      if (filters?.page !== undefined) params.page = filters.page;
+      if (filters?.pageSize !== undefined) params.pageSize = filters.pageSize;
+      return apiClient.get<QuoteListResponse>("/quotes", params);
+    },
     staleTime: 2 * 60_000,
   });
 }

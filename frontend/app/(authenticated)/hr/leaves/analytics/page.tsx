@@ -1,7 +1,25 @@
 import { requirePermission } from "@/lib/rbac/require-permission";
 import { LeaveAnalyticsClient } from "@/features/hr/leaves/components/leave-analytics-client";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 export default async function LeaveAnalyticsPage() {
   await requirePermission("hr:leaves:view");
-  return <LeaveAnalyticsClient />;
+  return (
+    <PageWrapper
+      title="Leave Analytics"
+      subtitle="Summary from the HR Analytics module"
+      actions={
+        <Button asChild variant="outline" size="sm">
+          <Link href="/hr/analytics">
+            Full Report <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      }
+    >
+      <LeaveAnalyticsClient />
+    </PageWrapper>
+  );
 }

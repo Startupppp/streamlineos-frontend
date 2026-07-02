@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { DollarSign, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
+import { DollarSign, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgCostCenters,
@@ -141,11 +141,21 @@ export default function OrgCostCentersPage() {
   const [editing, setEditing] = useState<OrgCostCenter | null>(null);
   const [deleting, setDeleting] = useState<OrgCostCenter | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [search, setSearch] = useState("");
 
   const allCostCenters = costCenters ?? [];
   const active = allCostCenters.filter((c) => c.status !== "ARCHIVED");
   const archived = allCostCenters.filter((c) => c.status === "ARCHIVED");
   const displayed = showArchived ? archived : active;
+  const filtered = search
+    ? displayed.filter((c) => {
+        const q = search.toLowerCase();
+        return (
+          c.name.toLowerCase().includes(q) ||
+          c.code.toLowerCase().includes(q)
+        );
+      })
+    : displayed;
 
   const handleCreate = useCallback(
     (values: FormValues) => {
@@ -219,6 +229,7 @@ export default function OrgCostCentersPage() {
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
+  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
 
   function makeRestoreHandler(cc: OrgCostCenter) { return () => handleRestore(cc); }
   function makeArchiveHandler(cc: OrgCostCenter) { return () => handleArchive(cc); }
@@ -232,17 +243,28 @@ export default function OrgCostCentersPage() {
       title="Cost Centers"
       subtitle="Financial cost centers for expense tracking and reporting."
       actions={
-        <div className="flex items-center gap-2">
+        <Button size="sm" onClick={handleOpenCreate}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          Add Cost Center
+        </Button>
+      }
+      filters={
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search cost centers…"
+              value={search}
+              onChange={handleSearchChange}
+              className="pl-8 h-8 text-xs max-w-[240px]"
+            />
+          </div>
           {archived.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleToggleArchived}>
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
               <Archive className="h-4 w-4 mr-1.5" />
               {showArchived ? "Show Active" : `Archived (${archived.length})`}
             </Button>
           )}
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Cost Center
-          </Button>
         </div>
       }
     >
@@ -252,8 +274,13 @@ export default function OrgCostCentersPage() {
             <Skeleton key={i} className="h-12 w-full rounded-md" />
           ))}
         </div>
-      ) : displayed.length === 0 ? (
-        showArchived ? (
+      ) : filtered.length === 0 ? (
+        search ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <DollarSign className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No cost centers matching &quot;{search}&quot;</p>
+          </div>
+        ) : showArchived ? (
           <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
             <Archive className="h-10 w-10 opacity-30" />
             <p className="text-sm">No archived cost centers</p>
@@ -280,7 +307,7 @@ export default function OrgCostCentersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayed.map((c) => (
+            {filtered.map((c) => (
               <TableRow key={c.id} className={c.status === "ARCHIVED" ? "opacity-60" : ""}>
                 <TableCell>
                   <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{c.code}</code>

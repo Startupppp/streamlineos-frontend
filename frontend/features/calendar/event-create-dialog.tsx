@@ -505,15 +505,17 @@ export function EventCreateDialog({
       </Sheet>
 
       <Sheet open={ticketPickerOpen} onOpenChange={setTicketPickerOpen}>
-        <SheetContent side="bottom" className="h-[60vh] pb-8 flex flex-col">
-          <SheetHeader className="pb-4 shrink-0">
+        <SheetContent side="bottom" className="h-[60vh] p-0 flex flex-col">
+          <SheetHeader className="px-6 py-4 border-b shrink-0">
             <SheetTitle>Link a ticket</SheetTitle>
           </SheetHeader>
-          <TicketPickerContent
-            q={ticketSearchQ}
-            onQChange={setTicketSearchQ}
-            onSelect={handleTicketSelect}
-          />
+          <div className="flex-1 min-h-0 px-6 py-5 flex flex-col">
+            <TicketPickerContent
+              q={ticketSearchQ}
+              onQChange={setTicketSearchQ}
+              onSelect={handleTicketSelect}
+            />
+          </div>
         </SheetContent>
       </Sheet>
     </>
