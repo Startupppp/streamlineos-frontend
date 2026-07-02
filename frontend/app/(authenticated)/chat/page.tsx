@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useChatHeartbeat, useChatChannels } from "@/hooks/api";
@@ -13,6 +14,7 @@ import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import { NewDMDialog } from "@/features/chat/new-dm-dialog";
 import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
+import { ChatTopNav } from "@/features/chat/chat-top-nav";
 
 const CHAT_SIDEBAR_COOKIE = "chat-sidebar-collapsed";
 
@@ -42,9 +44,19 @@ function ChatNotifications({
 export default function ChatPage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
-  const [activeChannelId, setActiveChannelId] = useState<number | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeChannelId, setActiveChannelId] = useState<number | null>(() => {
+    const raw = searchParams.get("channel");
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  });
   const [showMobileList, setShowMobileList] = useState(true);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [pendingCallAction, setPendingCallAction] = useState<{
+    channelId: number;
+    type: "huddle" | "video";
+  } | null>(null);
   const [emptyDMOpen, setEmptyDMOpen] = useState(false);
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
   const [showSearchFocus, setShowSearchFocus] = useState(false);
@@ -75,6 +87,15 @@ export default function ChatPage() {
     setActiveChannelId(channelId);
     setShowMobileList(false);
   }, []);
+
+  const consumedChannelParamRef = useRef(false);
+  useEffect(() => {
+    if (consumedChannelParamRef.current) return;
+    if (!searchParams.get("channel")) return;
+    consumedChannelParamRef.current = true;
+    setShowMobileList(false);
+    router.replace("/chat");
+  }, [searchParams, router]);
 
   const handleSearchFocused = useCallback(() => setShowSearchFocus(false), []);
   const handleToggleSidebar = useCallback(() => {
@@ -109,13 +130,32 @@ export default function ChatPage() {
     setShowMobileList(true);
   }, []);
 
+  const handleOpenChannelSettings = useCallback((channelId: number) => {
+    setActiveChannelId(channelId);
+    setShowMobileList(false);
+    setShowInfoPanel(true);
+  }, []);
+
+  const handleStartCallFromSidebar = useCallback(
+    (channelId: number, type: "huddle" | "video") => {
+      setActiveChannelId(channelId);
+      setShowMobileList(false);
+      setPendingCallAction({ channelId, type });
+    },
+    [],
+  );
+
+  const handleAutoStartHandled = useCallback(() => setPendingCallAction(null), []);
+
   return (
     <ChatAblyProvider>
       <ChatNotifications
         activeChannelId={activeChannelId}
         currentUserId={currentUserId}
       />
-      <div className="flex h-full overflow-hidden bg-background">
+      <div className="flex flex-col h-full">
+        <ChatTopNav />
+        <div className="flex flex-1 overflow-hidden bg-background">
         <div
           className={cn(
             "relative flex flex-col shrink-0 border-r border-border/40 bg-card/50 transition-[width] duration-300 ease-in-out overflow-visible",
@@ -132,6 +172,8 @@ export default function ChatPage() {
             onSearchFocused={handleSearchFocused}
             isCollapsed={sidebarCollapsed}
             onToggleCollapse={handleToggleSidebar}
+            onStartCall={handleStartCallFromSidebar}
+            onOpenSettings={handleOpenChannelSettings}
           />
         </div>
 
@@ -150,6 +192,12 @@ export default function ChatPage() {
               showInfoPanel={showInfoPanel}
               sidebarCollapsed={sidebarCollapsed}
               onExpandSidebar={handleExpandSidebar}
+              autoStartCall={
+                pendingCallAction?.channelId === activeChannelId
+                  ? pendingCallAction.type
+                  : null
+              }
+              onAutoStartHandled={handleAutoStartHandled}
             />
           ) : (
             <EmptyChatState
@@ -192,6 +240,7 @@ export default function ChatPage() {
           onCreated={handleSelectChannel}
           hideTrigger
         />
+        </div>
       </div>
     </ChatAblyProvider>
   );
