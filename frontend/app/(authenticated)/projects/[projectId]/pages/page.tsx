@@ -202,7 +202,7 @@ export default function PagesPage({
     resolver: zodResolver(createPageSchema),
   });
 
-  const onSubmit = (data: CreatePageForm) => {
+  const onSubmit = useCallback((data: CreatePageForm) => {
     createMutation.mutate(
       { ...data, projectId },
       {
@@ -214,7 +214,7 @@ export default function PagesPage({
         onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
-  };
+  }, [createMutation, projectId, form]);
 
   const mappedPages: ProjectPage[] = useMemo(() => (pages ?? []).map((p) => ({
     id: p.id,
@@ -335,7 +335,7 @@ export default function PagesPage({
       contentClassName="p-0"
     >
       {!pages?.length ? (
-        <div className="flex items-center justify-center flex-1 min-h-[300px]">
+        <div className="flex items-center justify-center flex-1">
           <div className="text-center">
             <EmptyDocumentsIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No pages yet</h3>

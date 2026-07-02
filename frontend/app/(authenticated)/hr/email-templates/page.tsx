@@ -59,8 +59,8 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
   const varCount = template.variables?.length ?? 0;
 
   return (
-    <Card className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-      <CardContent className="p-4 space-y-2">
+    <Card className="rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+      <CardContent className="p-3 space-y-2">
         <div className="flex items-center justify-between">
           <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border", categoryClass)}>
             {categoryKey}

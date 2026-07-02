@@ -381,28 +381,28 @@ export default function ContactsPage() {
         >
           {view === "table" && (
             <motion.div variants={fadeUp}>
-              <div className="border border-border rounded-md flex flex-col h-[calc(100dvh-16rem)] min-h-[320px]">
+              <div className="rounded-lg border border-border overflow-hidden flex flex-col h-[calc(100dvh-16rem)] min-h-[320px]">
                 <div className="flex-1 min-h-0 overflow-auto">
                   <div className="min-w-max">
                     <table className="w-full caption-bottom text-[11px]">
-                      <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                      <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur-sm">
                         <TableRow className="border-b-2 border-border">
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5">
                             Name
                           </TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5">
                             Email
                           </TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5">
                             Phone
                           </TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5">
                             Company
                           </TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5">
                             Source
                           </TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5">
                             Created
                           </TableHead>
                           <TableHead className="text-[10px] w-8 px-2" />
@@ -442,7 +442,7 @@ export default function ContactsPage() {
                             >
                               <TableCell className="px-2 py-1">
                                 <div className="flex items-center gap-2">
-                                  <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[9px] font-bold text-blue-600 shrink-0">
+                                  <div className="h-8 w-8 rounded-full bg-violet-100 flex items-center justify-center text-xs font-semibold text-violet-700 shrink-0">
                                     {contact.name[0]?.toUpperCase() ?? "?"}
                                   </div>
                                   <Link
@@ -559,7 +559,7 @@ export default function ContactsPage() {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-600 shrink-0">
+                        <div className="h-8 w-8 rounded-full bg-violet-100 flex items-center justify-center text-xs font-semibold text-violet-700 shrink-0">
                           {contact.name[0]?.toUpperCase() ?? "?"}
                         </div>
                         <div className="flex-1 min-w-0">

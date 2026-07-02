@@ -55,13 +55,13 @@ function ReportCard({ title, rows, totalLabel, totalAmount }: ReportCardProps) {
           <Table className="min-w-[320px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
-                <TableHead className="text-xs font-medium text-muted-foreground px-2 py-1 w-20">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1 w-20">
                   Code
                 </TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground px-2 py-1">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1">
                   Account
                 </TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground px-2 py-1 text-right">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1 text-right">
                   Amount
                 </TableHead>
               </TableRow>
@@ -76,7 +76,7 @@ function ReportCard({ title, rows, totalLabel, totalAmount }: ReportCardProps) {
                     {row.code}
                   </TableCell>
                   <TableCell className="text-sm px-2 py-1.5">{row.name}</TableCell>
-                  <TableCell className="text-sm text-right tabular-nums font-medium px-2 py-1.5">
+                  <TableCell className="text-sm text-right tabular-nums font-medium font-mono px-2 py-1.5">
                     {row.amount}
                   </TableCell>
                 </TableRow>

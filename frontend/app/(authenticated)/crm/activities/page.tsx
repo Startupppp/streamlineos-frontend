@@ -197,7 +197,7 @@ function ActivitiesContent() {
         )}
 
         {!isLoading && isError && (
-          <div className="flex flex-col items-center justify-center flex-1 min-h-[400px] gap-3">
+          <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] gap-3">
             <p className="text-sm text-muted-foreground">Failed to load activities.</p>
             <Button variant="outline" size="sm" onClick={handleRetry}>
               Retry
@@ -210,7 +210,7 @@ function ActivitiesContent() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="flex flex-col items-center justify-center min-h-[400px] gap-4"
+            className="flex flex-col items-center justify-center flex-1 min-h-[300px] gap-4"
           >
             <div className="rounded-full bg-violet-500/10 p-4">
               <Activity className="h-8 w-8 text-violet-500" />

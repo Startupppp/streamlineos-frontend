@@ -166,7 +166,7 @@ function MilestoneCard({
 
   return (
     <Card className={cn(
-      "rounded-lg",
+      "rounded-lg hover:shadow-md transition-shadow",
       overdue ? "border border-destructive/40 bg-card" : "border border-border bg-card"
     )}>
       <CardContent className="pt-3 pb-3 px-4">
@@ -267,7 +267,7 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3">
           <StatCard label="Total" value={total} icon={Diamond} color="violet" index={0} />
           <StatCard label="Achieved" value={achieved} icon={CheckCircle2} color="green" index={1} />
           <StatCard label="Pending" value={pending} icon={Clock} color="blue" index={2} />

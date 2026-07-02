@@ -64,7 +64,7 @@ export default function AiCreditsPage() {
     <PageWrapper title="AI Credits" subtitle="Manage your AI usage credits">
       <div className="space-y-4">
         {isLoading ? (
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
@@ -76,7 +76,7 @@ export default function AiCreditsPage() {
             ))}
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div className="rounded-lg border border-border bg-card px-4 py-3">
               <p className="text-xs text-muted-foreground mb-1">
                 Current Balance
@@ -85,6 +85,19 @@ export default function AiCreditsPage() {
                 {wallet?.balance.toLocaleString() ?? 0}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">credits</p>
+              {wallet && wallet.lifetimeGranted > 0 && (
+                <div className="mt-2">
+                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-violet-500 transition-all"
+                      style={{ width: `${Math.min(100, Math.round((wallet.lifetimeConsumed / wallet.lifetimeGranted) * 100))}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
+                    {Math.round((wallet.lifetimeConsumed / wallet.lifetimeGranted) * 100)}% used
+                  </p>
+                </div>
+              )}
             </div>
             <div className="rounded-lg border border-border bg-card px-4 py-3">
               <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
@@ -190,13 +203,13 @@ export default function AiCreditsPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Feature</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Balance</TableHead>
-                    <TableHead className="text-right">Expires</TableHead>
-                    <TableHead className="text-right">Date</TableHead>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Feature</TableHead>
+                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Amount</TableHead>
+                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Balance</TableHead>
+                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Expires</TableHead>
+                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -207,7 +220,7 @@ export default function AiCreditsPage() {
                       color: "text-foreground",
                     };
                     return (
-                      <TableRow key={txn.id}>
+                      <TableRow key={txn.id} className="border-b border-border/50 hover:bg-muted/30">
                         <TableCell>
                           <Badge variant="secondary" className="text-[10px]">
                             {meta.label}
@@ -217,12 +230,12 @@ export default function AiCreditsPage() {
                           {txn.feature ?? "—"}
                         </TableCell>
                         <TableCell
-                          className={`text-right text-sm font-medium tabular-nums ${meta.color}`}
+                          className={`text-right font-mono text-sm font-medium tabular-nums ${meta.color}`}
                         >
                           {meta.sign}
                           {Math.abs(txn.amount).toLocaleString()}
                         </TableCell>
-                        <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+                        <TableCell className="text-right font-mono text-sm tabular-nums text-muted-foreground">
                           {txn.balanceAfter.toLocaleString()}
                         </TableCell>
                         <TableCell className="text-right text-xs text-muted-foreground">

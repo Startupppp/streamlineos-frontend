@@ -32,8 +32,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import type { CustomFieldType } from "@/types/projects/tasks";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -131,16 +129,11 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
     [deleteField],
   );
 
-  return (
-    <Card>
-      <CardContent className="pt-5 space-y-5">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Sliders className="h-4 w-4 text-muted-foreground" />
-          Custom Fields
-        </div>
-        <Separator />
+  const handleShowForm = useCallback(() => setShowForm(true), []);
 
-        {isLoading ? (
+  return (
+    <div className="space-y-3">
+      {isLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-9 w-full" />
             <Skeleton className="h-9 w-full" />
@@ -171,10 +164,10 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ delay: idx * 0.03 }}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white/60 hover:bg-white transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {field.name}
                     </p>
                     {field.options && field.options.length > 0 && (
@@ -311,7 +304,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowForm(true)}
+                onClick={handleShowForm}
                 className="h-7 text-xs gap-1.5"
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -320,7 +313,6 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }

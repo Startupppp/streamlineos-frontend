@@ -33,7 +33,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 const MODULE_STATUSES = ["backlog", "planned", "in-progress", "paused", "completed", "cancelled"] as const;
@@ -48,13 +47,13 @@ const createModuleSchema = z.object({
 });
 type CreateModuleForm = z.infer<typeof createModuleSchema>;
 
-const statusColors: Record<string, string> = {
-  backlog: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  planned: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  "in-progress": "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  paused: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  completed: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  cancelled: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  backlog: "secondary",
+  planned: "outline",
+  "in-progress": "default",
+  paused: "outline",
+  completed: "secondary",
+  cancelled: "destructive",
 };
 
 export default function ModulesPage({
@@ -232,7 +231,7 @@ export default function ModulesPage({
             <p className="text-sm text-muted-foreground mb-4">
               Create your first module to organize work into feature areas.
             </p>
-            <Button onClick={handleOpenCreate}>
+            <Button size="sm" onClick={handleOpenCreate}>
               <Plus className="h-4 w-4 mr-1" /> Create First Module
             </Button>
           </div>
@@ -247,10 +246,8 @@ export default function ModulesPage({
                         {mod.name}
                       </CardTitle>
                       <Badge
-                        className={cn(
-                          "text-xs shrink-0",
-                          statusColors[mod.status ?? "backlog"] ?? statusColors["backlog"]
-                        )}
+                        variant={statusVariant[mod.status ?? "backlog"] ?? "secondary"}
+                        className="shrink-0"
                       >
                         {(mod.status ?? "backlog")
                           .replace(/_/g, " ")
@@ -266,7 +263,7 @@ export default function ModulesPage({
                       </div>
                       <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-violet-500 transition-all duration-300"
+                          className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-300"
                           style={{ width: `${mod.progress ?? 0}%` }}
                         />
                       </div>

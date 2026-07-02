@@ -297,6 +297,12 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
           {activeSection === "custom-fields" && (
             <div className="bg-card border border-border rounded-lg p-4">
+              <div className="pb-3 mb-3 border-b border-border">
+                <h3 className="text-sm font-semibold">Custom Fields</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Define additional data fields for tickets in this project.
+                </p>
+              </div>
               <CustomFieldsSettings projectId={projectId} />
             </div>
           )}

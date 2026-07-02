@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -171,9 +172,9 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                     <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="font-semibold text-sm truncate">{cycle.name}</span>
-                        <span className="text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">
+                        <Badge className="shrink-0 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">
                           Active
-                        </span>
+                        </Badge>
                       </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
                         <span className="flex items-center gap-1">
@@ -187,7 +188,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                       </div>
                       <div className="mt-3">
                         <div
-                          className="w-full bg-secondary rounded-full h-1.5"
+                          className="w-full bg-muted rounded-full h-1.5"
                           role="progressbar"
                           aria-valuenow={cycle.progress}
                           aria-valuemin={0}
@@ -227,9 +228,9 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                        <Badge variant="secondary">
                           Draft
-                        </span>
+                        </Badge>
                         <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                     </div>
@@ -270,9 +271,9 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                               {cycle.completedItems}/{cycle.totalItems} items completed
                             </p>
                           </div>
-                          <span className="text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          <Badge variant="secondary" className="shrink-0">
                             Completed
-                          </span>
+                          </Badge>
                         </div>
                       </Link>
                     ))}

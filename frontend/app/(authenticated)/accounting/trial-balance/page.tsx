@@ -44,38 +44,40 @@ export default function TrialBalancePage() {
       subtitle="Ledger balances as of a chosen date."
     >
       <div className="space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="tb-as-of"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
-            >
-              As of
-            </label>
-            <Input
-              id="tb-as-of"
-              type="date"
-              value={asOf}
-              onChange={handleAsOfChange}
-              className="w-full sm:w-[160px]"
-            />
-          </div>
-          {tb ? (
+        <div className="rounded-lg border border-border bg-muted/40 p-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium text-muted-foreground leading-none">
-                Status
-              </span>
-              {tb.balanced ? (
-                <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-700 text-xs font-medium border border-emerald-500/20">
-                  Balanced ✓
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-2 py-1 rounded-md bg-destructive/10 text-destructive text-xs font-medium border border-destructive/20">
-                  Imbalanced
-                </span>
-              )}
+              <label
+                htmlFor="tb-as-of"
+                className="text-[11px] font-medium text-muted-foreground leading-none"
+              >
+                As of
+              </label>
+              <Input
+                id="tb-as-of"
+                type="date"
+                value={asOf}
+                onChange={handleAsOfChange}
+                className="w-full sm:w-[160px] h-8 text-sm"
+              />
             </div>
-          ) : null}
+            {tb ? (
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-medium text-muted-foreground leading-none">
+                  Status
+                </span>
+                {tb.balanced ? (
+                  <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-700 text-xs font-medium border border-emerald-500/20">
+                    Balanced ✓
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2 py-1 rounded-md bg-destructive/10 text-destructive text-xs font-medium border border-destructive/20">
+                    Imbalanced
+                  </span>
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {query.isLoading ? (
@@ -93,23 +95,24 @@ export default function TrialBalancePage() {
             description="Post journal entries with a date on or before the selected date to populate this report."
           />
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+          <div className="rounded-lg border border-border overflow-hidden">
+            <div className="overflow-x-auto">
             <Table className="min-w-[640px]">
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[120px]">Code</TableHead>
-                  <TableHead>Account</TableHead>
-                  <TableHead className="w-[140px]">Type</TableHead>
-                  <TableHead className="w-[140px] text-right">Debit</TableHead>
-                  <TableHead className="w-[140px] text-right">Credit</TableHead>
-                  <TableHead className="w-[140px] text-right">
+                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                  <TableHead className="w-[120px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Code</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Account</TableHead>
+                  <TableHead className="w-[140px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
+                  <TableHead className="w-[140px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Debit</TableHead>
+                  <TableHead className="w-[140px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Credit</TableHead>
+                  <TableHead className="w-[140px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
                     Balance
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.map((row) => (
-                  <TableRow key={row.accountId}>
+                  <TableRow key={row.accountId} className="border-b border-border/50 hover:bg-muted/30">
                     <TableCell className="font-mono text-xs text-foreground">
                       {row.code}
                     </TableCell>
@@ -119,13 +122,13 @@ export default function TrialBalancePage() {
                     <TableCell className="text-xs font-mono uppercase tracking-wide text-muted-foreground">
                       {row.accountType}
                     </TableCell>
-                    <TableCell className="text-sm text-right tabular-nums">
+                    <TableCell className="text-sm text-right tabular-nums font-mono">
                       {row.debit}
                     </TableCell>
-                    <TableCell className="text-sm text-right tabular-nums">
+                    <TableCell className="text-sm text-right tabular-nums font-mono">
                       {row.credit}
                     </TableCell>
-                    <TableCell className="text-sm text-right tabular-nums font-medium">
+                    <TableCell className="text-sm text-right tabular-nums font-medium font-mono">
                       {row.balance}
                     </TableCell>
                   </TableRow>
@@ -136,16 +139,17 @@ export default function TrialBalancePage() {
                   <TableCell colSpan={3} className="text-sm font-semibold">
                     Total
                   </TableCell>
-                  <TableCell className="text-sm text-right tabular-nums font-semibold">
+                  <TableCell className="text-sm text-right tabular-nums font-semibold font-mono">
                     {tb?.totalDebit ?? ""}
                   </TableCell>
-                  <TableCell className="text-sm text-right tabular-nums font-semibold">
+                  <TableCell className="text-sm text-right tabular-nums font-semibold font-mono">
                     {tb?.totalCredit ?? ""}
                   </TableCell>
                   <TableCell />
                 </TableRow>
               </TableFooter>
             </Table>
+            </div>
           </div>
         )}
       </div>

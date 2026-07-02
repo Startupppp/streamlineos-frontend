@@ -1,5 +1,6 @@
 "use client";
 
+import { type ChangeEvent } from "react";
 import { format } from "date-fns";
 import {
   Receipt,
@@ -58,6 +59,28 @@ export function AdminExpenseItem({
   const adminCatLabel =
     ADMIN_CATEGORY_LABELS[expense.category || ""] || catConfig.label;
 
+  function handleViewReceiptArea() {
+    if (expense.receiptUrl) viewFile(expense.receiptUrl);
+  }
+  function handleViewReceiptBtn() {
+    viewFile(expense.receiptUrl!);
+  }
+  function handleDownloadReceipt() {
+    downloadFile(expense.receiptUrl!, expense.receiptFileName || "receipt");
+  }
+  function handleRejectionReasonChange(e: ChangeEvent<HTMLInputElement>) {
+    onRejectionReasonChange(e.target.value);
+  }
+  function handleConfirmReject() {
+    onRejectConfirm(expense.id);
+  }
+  function handleStartReject() {
+    onRejectStart(expense.id);
+  }
+  function handleApproveExpense() {
+    onApprove(expense.id);
+  }
+
   return (
     <div
       className={cn(
@@ -75,7 +98,7 @@ export function AdminExpenseItem({
             expense.receiptUrl &&
               "cursor-pointer hover:ring-2 hover:ring-blue-500/40 transition-all duration-200",
           )}
-          onClick={() => expense.receiptUrl && viewFile(expense.receiptUrl)}
+          onClick={handleViewReceiptArea}
         >
           {expense.receiptUrl ? (
             <Image
@@ -95,7 +118,7 @@ export function AdminExpenseItem({
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={() => viewFile(expense.receiptUrl!)}
+              onClick={handleViewReceiptBtn}
               aria-label="View receipt"
             >
               <Eye className="h-3.5 w-3.5" />
@@ -104,12 +127,7 @@ export function AdminExpenseItem({
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={() =>
-                downloadFile(
-                  expense.receiptUrl!,
-                  expense.receiptFileName || "receipt",
-                )
-              }
+              onClick={handleDownloadReceipt}
               aria-label="Download receipt"
             >
               <Download className="h-3.5 w-3.5" />
@@ -204,7 +222,7 @@ export function AdminExpenseItem({
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">
           Amount
         </p>
-        <p className="text-2xl font-bold tabular-nums text-foreground">
+        <p className="text-2xl font-bold font-mono tabular-nums text-foreground">
           {formatINR(expense.amount)}
         </p>
         <p className="text-[10px] text-muted-foreground mb-3">INR</p>
@@ -214,7 +232,7 @@ export function AdminExpenseItem({
             <Input
               placeholder="Reason for rejection (required)..."
               value={rejectionReason}
-              onChange={(e) => onRejectionReasonChange(e.target.value)}
+              onChange={handleRejectionReasonChange}
               className="text-xs h-8"
             />
             <div className="flex justify-end gap-1.5">
@@ -231,7 +249,7 @@ export function AdminExpenseItem({
                 variant="destructive"
                 className="h-8 text-xs gap-1.5"
                 disabled={!rejectionReason}
-                onClick={() => onRejectConfirm(expense.id)}
+                onClick={handleConfirmReject}
               >
                 Confirm Reject
               </Button>
@@ -243,14 +261,14 @@ export function AdminExpenseItem({
               variant="outline"
               size="sm"
               className="h-8 text-xs gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
-              onClick={() => onRejectStart(expense.id)}
+              onClick={handleStartReject}
             >
               Reject
             </Button>
             <Button
               size="sm"
               className="h-8 text-xs gap-1.5"
-              onClick={() => onApprove(expense.id)}
+              onClick={handleApproveExpense}
               disabled={isPending}
             >
               Approve
@@ -292,6 +310,20 @@ export function MemberExpenseItem({
     receiptFileName: expense.receiptFileName,
   });
 
+  function handleEditExpense() {
+    onEdit(toEditPayload());
+  }
+  function handleResubmitExpense() {
+    onResubmit(expense);
+  }
+  function handleViewExpense() {
+    if (expense.receiptUrl) {
+      viewFile(expense.receiptUrl);
+    } else {
+      onEdit(toEditPayload());
+    }
+  }
+
   return (
     <TableRow className="hover:bg-muted/30 transition-colors duration-200">
       <TableCell
@@ -306,10 +338,10 @@ export function MemberExpenseItem({
         #EXP-{new Date(expense.expenseDate).getFullYear()}-
         {expense.id.toString().padStart(3, "0")}
       </TableCell>
-      <TableCell className="px-6 py-4 text-xs text-muted-foreground">
+      <TableCell className="px-6 py-4 text-xs text-muted-foreground hidden md:table-cell">
         {format(new Date(expense.expenseDate), "MMM dd, yyyy")}
       </TableCell>
-      <TableCell className="px-6 py-4">
+      <TableCell className="px-6 py-4 hidden md:table-cell">
         <span
           className={cn(
             "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
@@ -321,10 +353,10 @@ export function MemberExpenseItem({
           {catConfig.label}
         </span>
       </TableCell>
-      <TableCell className="px-6 py-4 text-xs text-foreground max-w-[200px] truncate">
+      <TableCell className="px-6 py-4 text-xs text-foreground max-w-[200px] truncate hidden md:table-cell">
         {expense.description || expense.merchant || "-"}
       </TableCell>
-      <TableCell className="px-6 py-4 text-sm font-bold tabular-nums text-foreground">
+      <TableCell className="px-6 py-4 font-mono text-sm text-right">
         {formatINR(expense.amount)}
       </TableCell>
       <TableCell className="px-6 py-4">
@@ -352,7 +384,7 @@ export function MemberExpenseItem({
             variant="outline"
             size="sm"
             className="h-7 text-xs gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950/30"
-            onClick={() => onResubmit(expense)}
+            onClick={handleResubmitExpense}
           >
             Resubmit
           </Button>
@@ -361,7 +393,7 @@ export function MemberExpenseItem({
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-blue-600 hover:text-blue-600/80 hover:bg-blue-50 dark:hover:bg-blue-950/30"
-            onClick={() => onEdit(toEditPayload())}
+            onClick={handleEditExpense}
             aria-label="Edit"
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -371,13 +403,7 @@ export function MemberExpenseItem({
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              if (expense.receiptUrl) {
-                viewFile(expense.receiptUrl);
-              } else {
-                onEdit(toEditPayload());
-              }
-            }}
+            onClick={handleViewExpense}
             aria-label="View"
           >
             <Eye className="h-3.5 w-3.5" />

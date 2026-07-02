@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Search, FileCheck, FileBadge, Shield, FileText, Building2, File } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,6 +33,29 @@ export interface DocumentFiltersProps {
   categoryTabs: string[];
 }
 
+interface CategoryFilterButtonProps {
+  category: string;
+  isSelected: boolean;
+  onCategoryChange: (value: string) => void;
+}
+
+function CategoryFilterButton({ category, isSelected, onCategoryChange }: CategoryFilterButtonProps) {
+  const handleClick = useCallback(() => onCategoryChange(category), [onCategoryChange, category]);
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-200 border",
+        isSelected
+          ? "bg-primary text-primary-foreground border-primary"
+          : "bg-transparent text-muted-foreground border-border hover:bg-muted hover:text-foreground",
+      )}
+    >
+      {category}
+    </button>
+  );
+}
+
 export function DocumentFilters({
   searchTerm,
   onSearchChange,
@@ -46,7 +70,7 @@ export function DocumentFilters({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 w-full">
+    <div className="bg-muted/40 rounded-lg px-3 py-2 flex flex-wrap items-center gap-2 w-full">
       <div className="relative">
         <Search
           className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
@@ -56,7 +80,7 @@ export function DocumentFilters({
           placeholder="Search documents..."
           value={searchTerm}
           onChange={handleSearchChange}
-          className="pl-8 h-8 text-xs w-48 border-border bg-background"
+          className="pl-8 h-8 text-xs w-48"
           aria-label="Search documents"
         />
       </div>
@@ -77,18 +101,12 @@ export function DocumentFilters({
 
       <div className="flex items-center gap-1 flex-wrap ml-1">
         {categoryTabs.map((cat) => (
-          <button
+          <CategoryFilterButton
             key={cat}
-            onClick={() => onCategoryChange(cat)}
-            className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-200 border",
-              selectedCategory === cat
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background text-muted-foreground border-border hover:bg-muted/50 hover:text-foreground",
-            )}
-          >
-            {cat}
-          </button>
+            category={cat}
+            isSelected={selectedCategory === cat}
+            onCategoryChange={onCategoryChange}
+          />
         ))}
       </div>
     </div>

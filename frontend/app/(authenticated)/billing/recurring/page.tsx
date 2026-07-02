@@ -103,6 +103,7 @@ export default function RecurringInvoicesPage() {
 
   const generateButton = (
     <Button
+      size="sm"
       onClick={handleGenerate}
       disabled={runMutation.isPending || query.isLoading}
     >
@@ -138,7 +139,7 @@ export default function RecurringInvoicesPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -185,21 +186,21 @@ export default function RecurringInvoicesPage() {
             </Card>
           </div>
 
-          <Card className="overflow-hidden">
+          <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Frequency</TableHead>
-                  <TableHead>Next date</TableHead>
-                  <TableHead>Status</TableHead>
+                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Invoice #</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Customer</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Amount</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Frequency</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Next date</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {recurring.map((invoice) => (
-                  <TableRow key={invoice.id}>
+                  <TableRow key={invoice.id} className="border-b border-border/50 hover:bg-muted/30">
                     <TableCell className="font-medium">
                       <Link
                         href={`/billing/invoices/${invoice.id}`}
@@ -209,7 +210,7 @@ export default function RecurringInvoicesPage() {
                       </Link>
                     </TableCell>
                     <TableCell>{invoice.clientName ?? "—"}</TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-right font-mono text-sm tabular-nums">
                       {formatCurrencyFull(invoice.total, invoice.currency)}
                     </TableCell>
                     <TableCell>
@@ -239,7 +240,7 @@ export default function RecurringInvoicesPage() {
                 ))}
               </TableBody>
             </Table>
-          </Card>
+          </div>
         </div>
       )}
     </PageWrapper>

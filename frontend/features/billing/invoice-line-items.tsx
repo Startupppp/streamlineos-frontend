@@ -198,24 +198,24 @@ export function InvoiceLineItems({
         </div>
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right w-20">Qty</TableHead>
-              <TableHead className="text-right w-28">Rate</TableHead>
-              <TableHead className="text-right w-28">Amount</TableHead>
+            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right w-20">Qty</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right w-28">Rate</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right w-28">Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {lineItems.map((item, i) => (
-              <TableRow key={i}>
+              <TableRow key={i} className="border-b border-border/50 hover:bg-muted/30">
                 <TableCell className="text-sm">{item.description}</TableCell>
                 <TableCell className="text-right text-sm">
                   {item.quantity}
                 </TableCell>
-                <TableCell className="text-right text-sm">
+                <TableCell className="text-right font-mono text-sm">
                   {fmt(item.rate)}
                 </TableCell>
-                <TableCell className="text-right text-sm font-medium">
+                <TableCell className="text-right font-mono text-sm font-medium">
                   {fmt(item.amount)}
                 </TableCell>
               </TableRow>

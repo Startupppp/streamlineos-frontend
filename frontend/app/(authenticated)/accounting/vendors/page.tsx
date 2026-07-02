@@ -134,7 +134,7 @@ export default function VendorsListPage() {
                       <TableCell className="text-right text-sm tabular-nums px-3 py-2">
                         {v.billCount}
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums font-medium px-3 py-2">
+                      <TableCell className="text-right font-mono text-sm tabular-nums font-medium px-3 py-2">
                         {Number(v.outstanding).toFixed(2)}
                       </TableCell>
                     </TableRow>

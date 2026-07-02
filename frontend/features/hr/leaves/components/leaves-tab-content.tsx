@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -411,22 +412,26 @@ export function LeavesTabContent({
               </div>
               Request History
             </CardTitle>
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 text-xs text-muted-foreground"
                 aria-label="Filter requests"
               >
                 <Filter className="h-3.5 w-3.5" />
                 Filter
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleExportExcel}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
+                className="h-8 gap-1.5 text-xs text-muted-foreground"
                 aria-label="Export to Excel"
               >
                 <Download className="h-3.5 w-3.5" />
                 Export
-              </button>
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -436,32 +441,36 @@ export function LeavesTabContent({
               illustration={<EmptyLeaveIllustration />}
               title="No leave requests"
               description="You haven't submitted any leave requests yet."
+              className="flex-1"
             />
           ) : (
             <ScrollArea className="w-full" type="auto">
-              <div className="min-w-[600px]">
+              <div className="min-w-[600px] rounded-lg border border-border overflow-hidden">
                 <table className="w-full">
                   <caption className="sr-only">
                     Your leave request history
                   </caption>
                   <thead className="bg-muted/40">
                     <tr>
-                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3">
                         Type
                       </th>
-                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3 hidden md:table-cell">
                         Date Requested
                       </th>
-                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3">
                         Period
                       </th>
-                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3">
+                        Days
+                      </th>
+                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3 hidden md:table-cell">
                         Priority
                       </th>
-                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3">
                         Status
                       </th>
-                      <th className="text-right text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">
+                      <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3">
                         Action
                       </th>
                     </tr>

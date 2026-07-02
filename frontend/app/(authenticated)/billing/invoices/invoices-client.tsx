@@ -156,7 +156,7 @@ export function InvoicesClient() {
 
   const filtersBar = (
     <Select value={statusFilter} onValueChange={setStatusFilter}>
-      <SelectTrigger className="w-[160px]">
+      <SelectTrigger className="w-[160px] h-8 text-sm">
         <SelectValue placeholder="Filter status" />
       </SelectTrigger>
       <SelectContent>
@@ -175,14 +175,14 @@ export function InvoicesClient() {
       title="Invoices"
       subtitle="Manage and track all invoices"
       actions={
-        <Button onClick={handleOpenCreate}>
+        <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4" /> New Invoice
         </Button>
       }
       filters={filtersBar}
     >
       <div className="space-y-4">
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
@@ -239,14 +239,14 @@ export function InvoicesClient() {
           <div className="min-w-[700px]">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-card">
-                <TableRow>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="w-10" />
+                <TableRow className="bg-muted/40 border-b border-border">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Invoice #</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Client</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Amount</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Due Date</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Created</TableHead>
+                  <TableHead className="w-10 px-3 py-2" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -360,9 +360,9 @@ function InvoiceTableRow({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">{inv.invoiceNumber}</TableCell>
+      <TableCell className="font-mono text-xs font-medium">{inv.invoiceNumber}</TableCell>
       <TableCell>{inv.client?.name ?? "—"}</TableCell>
-      <TableCell className="font-semibold">
+      <TableCell className="font-mono font-semibold text-sm">
         {formatCurrencyFull(inv.total)}
       </TableCell>
       <TableCell>

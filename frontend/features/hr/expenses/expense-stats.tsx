@@ -57,7 +57,7 @@ export function AdminExpenseStats({ stats, pendingCount }: AdminExpenseStatsProp
     (stats?.paidAmount || 0);
 
   return (
-    <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <StatItem
         label="Pending Approval"
         value={pendingCount}
@@ -104,7 +104,7 @@ interface MemberExpenseStatsProps {
 
 export function MemberExpenseStats({ stats }: MemberExpenseStatsProps) {
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
       <StatItem
         label="Total Reimbursed (YTD)"
         value={formatINRCompact((stats?.approvedAmount || 0) + (stats?.paidAmount || 0))}

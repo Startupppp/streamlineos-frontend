@@ -5,7 +5,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
@@ -62,8 +61,8 @@ export default function ResourceAllocationPage() {
           {entries.map((entry, idx) => {
             const utilPct = Math.round((entry.totalOpen / maxTickets) * 100);
             return (
-              <Card key={entry.user.id}>
-                <CardContent className="pt-4">
+              <Card key={entry.user.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="py-2 px-4">
                   <div className="flex items-start gap-4">
                     <Avatar className="h-9 w-9 shrink-0">
                       <AvatarImage src={entry.user.image ?? undefined} />
@@ -81,7 +80,12 @@ export default function ResourceAllocationPage() {
                           {entry.totalOpen} open
                         </Badge>
                       </div>
-                      <Progress value={utilPct} className="h-1.5 mb-2" />
+                      <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden mb-2">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500"
+                          style={{ width: `${utilPct}%` }}
+                        />
+                      </div>
                       <div className="flex flex-wrap gap-1.5">
                         {entry.byProject.map((p, pIdx) => (
                           <div

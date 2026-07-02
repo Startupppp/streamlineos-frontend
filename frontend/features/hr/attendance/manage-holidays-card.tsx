@@ -47,6 +47,27 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const updateMutation = useUpdateLegacyHoliday();
 
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
+  const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMessage(e.target.value), []);
+  const handleYearChange = useCallback((v: string) => setSelectedYear(Number(v)), []);
+  const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditState((prev) => prev ? { ...prev, name: e.target.value } : prev), []);
+  const handleEditDateChange = useCallback((val: string) => setEditState((prev) => prev ? { ...prev, date: val } : prev), []);
+  const handleEditMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditState((prev) => prev ? { ...prev, message: e.target.value } : prev), []);
+  const handlePendingOpenChange = useCallback((open: boolean) => { if (!open) setPendingHoliday(null); }, []);
+  const handleDeleteConfirmOpenChange = useCallback((open: boolean) => { if (!open) setDeleteConfirmId(null); }, []);
+  const makeEditStartHandler = useCallback(
+    (h: { id: number; name: string; date: string; message: string | null }) => {
+      function handleClick() { handleEditStart(h); }
+      return handleClick;
+    },
+    [handleEditStart]
+  );
+  const makeDeleteHandler = useCallback(
+    (id: number) => {
+      function handleClick() { handleDeleteRequest(id); }
+      return handleClick;
+    },
+    [handleDeleteRequest]
+  );
 
   const handleAdd = useCallback(
     (e: React.FormEvent) => {
@@ -162,7 +183,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
             </div>
             Company Holidays
           </CardTitle>
-          <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+          <Select value={String(selectedYear)} onValueChange={handleYearChange}>
             <SelectTrigger className="w-[100px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -200,7 +221,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
               id="holiday-message"
               placeholder="Optional note for notification"
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={handleMessageChange}
               className="bg-background h-8 text-sm"
             />
           </div>
@@ -230,19 +251,19 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <Input
                           value={editState.name}
-                          onChange={(e) => setEditState((prev) => prev ? { ...prev, name: e.target.value } : prev)}
+                          onChange={handleEditNameChange}
                           placeholder="Holiday name"
                           className="h-8 text-sm"
                         />
                         <DatePicker
                           value={editState.date}
-                          onChange={(val) => setEditState((prev) => prev ? { ...prev, date: val } : prev)}
+                          onChange={handleEditDateChange}
                           placeholder="Select date"
                         />
                       </div>
                       <Input
                         value={editState.message}
-                        onChange={(e) => setEditState((prev) => prev ? { ...prev, message: e.target.value } : prev)}
+                        onChange={handleEditMessageChange}
                         placeholder="Message (optional)"
                         className="h-8 text-sm"
                       />
@@ -277,7 +298,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                   ) : (
                     <>
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" aria-hidden />
+                        <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" aria-hidden />
                         <div className="min-w-0">
                           <span className="font-medium text-foreground text-sm">{h.name}</span>
                           <span className="text-muted-foreground text-xs ml-2">{h.date}</span>
@@ -289,7 +310,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-foreground duration-200"
-                          onClick={() => handleEditStart(h)}
+                          onClick={makeEditStartHandler(h)}
                           disabled={deleteMutation.isPending || updateMutation.isPending}
                           aria-label={`Edit ${h.name}`}
                         >
@@ -300,7 +321,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive duration-200"
-                          onClick={() => handleDeleteRequest(h.id)}
+                          onClick={makeDeleteHandler(h.id)}
                           disabled={deleteMutation.isPending || updateMutation.isPending}
                           aria-label={`Remove ${h.name}`}
                         >
@@ -328,7 +349,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
 
       <ConfirmDialog
         open={pendingHoliday !== null}
-        onOpenChange={(open) => { if (!open) setPendingHoliday(null); }}
+        onOpenChange={handlePendingOpenChange}
         title="Add Holiday"
         description={pendingHoliday ? `Add "${pendingHoliday.name}" on ${pendingHoliday.date} as a company holiday?` : ""}
         confirmLabel="Add"
@@ -338,7 +359,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
 
       <ConfirmDialog
         open={deleteConfirmId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}
+        onOpenChange={handleDeleteConfirmOpenChange}
         title="Remove Holiday"
         description="Are you sure you want to remove this holiday? This action cannot be undone."
         confirmLabel="Remove"

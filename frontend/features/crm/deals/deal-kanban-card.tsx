@@ -70,7 +70,7 @@ export function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKa
   }, [deal.id, onOpen, router]);
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={handleNavigate}>
+    <Card className="rounded-md shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-card border border-border" onClick={handleNavigate}>
       <CardContent className="p-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0 mr-1">

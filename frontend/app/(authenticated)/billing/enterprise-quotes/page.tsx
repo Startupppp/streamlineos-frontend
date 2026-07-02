@@ -416,10 +416,10 @@ function TableSkeleton() {
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
               {["Quote Ref", "Subject", "Status", "Seats", "Value", "Valid Until", "Deal", "Created"].map(
                 (h) => (
-                  <TableHead key={h}>{h}</TableHead>
+                  <TableHead key={h} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">{h}</TableHead>
                 ),
               )}
             </TableRow>
@@ -482,7 +482,7 @@ export default function EnterpriseQuotesPage() {
       }
       filters={
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-44 h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -522,15 +522,15 @@ export default function EnterpriseQuotesPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Quote Ref</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Seats</TableHead>
-                      <TableHead className="text-right">Value</TableHead>
-                      <TableHead>Valid Until</TableHead>
-                      <TableHead>Deal</TableHead>
-                      <TableHead>Created</TableHead>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Quote Ref</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Subject</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Seats</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Value</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Valid Until</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Deal</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Created</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -541,7 +541,7 @@ export default function EnterpriseQuotesPage() {
                         q.pricePerSeatInPaise *
                         q.contractTermMonths;
                       return (
-                        <TableRow key={q.id} className="cursor-pointer hover:bg-muted/40">
+                        <TableRow key={q.id} className="border-b border-border/50 cursor-pointer hover:bg-muted/30">
                           <TableCell>
                             <Link
                               href={`/billing/enterprise-quotes/${q.id}`}
@@ -563,7 +563,7 @@ export default function EnterpriseQuotesPage() {
                           <TableCell className="text-right text-sm tabular-nums">
                             {q.negotiatedSeats}
                           </TableCell>
-                          <TableCell className="text-right text-sm tabular-nums font-medium">
+                          <TableCell className="text-right font-mono text-sm tabular-nums font-medium">
                             {fmtInr(totalPaise)}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">

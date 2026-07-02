@@ -102,7 +102,7 @@ function SortableHead({ col, sortColumn, sortDirection, onSort }: SortableHeadPr
   return (
     <TableHead
       className={cn(
-        "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 whitespace-nowrap",
+        "text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5 whitespace-nowrap",
         col.sortable && "cursor-pointer select-none hover:text-foreground",
       )}
       onClick={handleClick}
@@ -196,10 +196,10 @@ export function DealTableView({
         <span className="text-[11px] text-muted-foreground tabular-nums">{deals.length} deals</span>
       </div>
 
-      <div className="flex-1 min-h-0 border border-border rounded-md overflow-auto">
+      <div className="flex-1 min-h-0 rounded-lg border border-border overflow-hidden overflow-auto">
         <div className="min-w-max">
           <table className="w-full caption-bottom text-[11px]">
-            <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+            <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur-sm">
               <TableRow className="hover:bg-muted/80 border-b-2 border-border">
                 {columns.map(col => (
                   <SortableHead
@@ -243,7 +243,7 @@ export function DealTableView({
                       <TableCell className="px-2 py-1">
                         <DealNameButton dealId={deal.id} name={deal.name} onNavigate={handleNavigate} />
                       </TableCell>
-                      <TableCell className="px-2 py-1 font-mono tabular-nums text-blue-600 font-medium">
+                      <TableCell className="px-2 py-1 font-mono tabular-nums text-blue-600 font-semibold">
                         {formatINR(deal.value)}
                       </TableCell>
                       <TableCell className="px-2 py-1">

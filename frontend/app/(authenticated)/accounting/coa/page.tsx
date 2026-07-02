@@ -97,7 +97,7 @@ export default function ChartOfAccountsPage() {
       badge={`${total}`}
       actions={
         <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="size-3.5 mr-1.5" />
           New account
         </Button>
       }
@@ -146,19 +146,20 @@ export default function ChartOfAccountsPage() {
             </Button>
           </div>
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+          <div className="rounded-lg border border-border overflow-hidden">
+            <div className="overflow-x-auto">
             <Table className="min-w-[560px]">
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[120px]">Code</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="w-[140px]">Type</TableHead>
-                  <TableHead className="w-[120px]">Status</TableHead>
+                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                  <TableHead className="w-[120px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Code</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Name</TableHead>
+                  <TableHead className="w-[140px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
+                  <TableHead className="w-[120px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.map((account) => (
-                  <TableRow key={account.id}>
+                  <TableRow key={account.id} className="border-b border-border/50 hover:bg-muted/30">
                     <TableCell className="font-mono text-xs">
                       {account.code}
                     </TableCell>
@@ -189,6 +190,7 @@ export default function ChartOfAccountsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </div>
         )}
       </div>

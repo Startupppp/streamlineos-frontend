@@ -121,7 +121,7 @@ export default function AffiliatePage() {
           />
         ) : (
           <>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div className="rounded-lg border border-border bg-card px-4 py-3">
                 <p className="text-xs text-muted-foreground mb-1">
                   Total Earned
@@ -193,15 +193,15 @@ export default function AffiliatePage() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead className="text-right">Date</TableHead>
+                      <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Amount</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Date</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {commissions.map((c) => (
-                        <TableRow key={c.id}>
+                        <TableRow key={c.id} className="border-b border-border/50 hover:bg-muted/30">
                           <TableCell>
                             <Badge
                               variant={
@@ -212,7 +212,7 @@ export default function AffiliatePage() {
                               {c.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right font-medium text-sm">
+                          <TableCell className="text-right font-mono font-medium text-sm">
                             {fmt(c.amountInPaise)}
                           </TableCell>
                           <TableCell className="text-right text-xs text-muted-foreground">
@@ -262,21 +262,21 @@ export default function AffiliatePage() {
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow>
-                          <TableHead>Coupon Code</TableHead>
-                          <TableHead className="text-right">Redemptions</TableHead>
-                          <TableHead className="text-right">Revenue Generated</TableHead>
+                        <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Coupon Code</TableHead>
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Redemptions</TableHead>
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Revenue Generated</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        <TableRow>
+                        <TableRow className="border-b border-border/50 hover:bg-muted/30">
                           <TableCell className="font-mono text-sm">
                             {affiliate.referralCode}
                           </TableCell>
                           <TableCell className="text-right text-sm">
                             {affiliate.signupCount}
                           </TableCell>
-                          <TableCell className="text-right text-sm">
+                          <TableCell className="text-right font-mono text-sm">
                             {fmt(affiliate.totalEarned)}
                           </TableCell>
                         </TableRow>

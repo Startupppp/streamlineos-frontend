@@ -93,10 +93,10 @@ export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectio
   const activeDays = DAYS.filter((d) => display[d.key].enabled);
 
   return (
-    <Card className="rounded-xl border shadow-sm">
+    <Card className="rounded-lg border border-border">
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Clock className="h-4 w-4 text-blue-600" />
             Business Hours
           </CardTitle>

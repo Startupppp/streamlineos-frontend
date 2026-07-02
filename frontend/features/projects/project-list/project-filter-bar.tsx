@@ -67,14 +67,14 @@ export function ProjectFilterBar({
   );
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full bg-muted/40 rounded-lg p-2">
       <div className="relative w-full sm:w-64">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
           placeholder="Search projects..."
           value={search}
           onChange={handleSearchInputChange}
-          className="h-8 pl-8 pr-7 text-sm bg-muted/40 border-border"
+          className="h-8 pl-8 pr-7 text-sm"
           aria-label="Search projects"
         />
         {search && (
@@ -89,7 +89,7 @@ export function ProjectFilterBar({
       </div>
 
       <Select value={status} onValueChange={handleStatusValueChange}>
-        <SelectTrigger className="h-8 w-full sm:w-[130px] text-xs bg-muted/40 border-border">
+        <SelectTrigger className="h-8 w-full sm:w-[130px] text-sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

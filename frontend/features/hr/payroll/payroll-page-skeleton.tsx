@@ -21,21 +21,21 @@ export function PayrollPageSkeleton() {
       <div className="shrink-0 mx-4 sm:mx-6 h-px bg-border" />
 
       <div className="px-4 sm:px-6 pt-3 pb-6 space-y-4">
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-border bg-card p-3.5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-2 flex-1 min-w-0">
                   <Skeleton className="h-2.5 w-20" />
                   <Skeleton className="h-7 w-32" />
                 </div>
-                <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
+                <Skeleton className="h-7 w-7 rounded-lg shrink-0" />
               </div>
             </div>
           ))}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
           <div className="px-4 py-3.5 border-b border-border flex items-center justify-between">
             <div className="space-y-1">
               <Skeleton className="h-4 w-40" />

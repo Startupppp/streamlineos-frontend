@@ -120,7 +120,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
       </div>
 
       {(budget?.plannedBudget ?? 0) > 0 && (
-        <Card className="mb-4 bg-card border border-border rounded-xl shadow-sm">
+        <Card className="mb-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Budget Utilization</CardTitle>
           </CardHeader>
@@ -142,7 +142,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
       )}
 
       {budget?.memberBreakdown && budget.memberBreakdown.length > 0 && (
-        <Card>
+        <Card className="rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Member Cost Breakdown</CardTitle>
           </CardHeader>
@@ -165,8 +165,8 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
                           <span className="text-muted-foreground font-mono text-xs">{m.userId.substring(0, 8)}…</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-right text-muted-foreground">{m.hours.toFixed(1)} hrs</td>
-                      <td className="px-3 py-2 text-right font-medium">{fmt(m.cost)}</td>
+                      <td className="px-3 py-2 text-right font-mono text-sm text-muted-foreground">{m.hours.toFixed(1)} hrs</td>
+                      <td className="px-3 py-2 text-right font-mono text-sm font-medium">{fmt(m.cost)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -177,7 +177,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
       )}
 
       {(budget?.memberBreakdown?.length ?? 0) === 0 && !isLoading && (
-        <div className="flex flex-col items-center justify-center py-16 gap-2">
+        <div className="flex flex-1 flex-col items-center justify-center py-16 gap-2">
           <Clock className="h-10 w-10 text-muted-foreground/40" />
           <p className="text-base font-semibold">No billable time logged</p>
           <p className="text-sm text-muted-foreground">Log billable hours to track costs against this project&apos;s budget.</p>

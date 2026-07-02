@@ -69,7 +69,7 @@ export function LeavesWfhContent() {
     return (
       <PageWrapper title="Leaves & Time Off" subtitle="Manage your leave requests, work from home, and approvals.">
         <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
           </div>
           <Skeleton className="h-64" />
@@ -106,7 +106,7 @@ export function LeavesWfhContent() {
         }
       >
         <div className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <StatCard
               label="Available Days"
               value={totalAvailable}

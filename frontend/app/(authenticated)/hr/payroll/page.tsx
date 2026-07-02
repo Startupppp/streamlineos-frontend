@@ -225,6 +225,11 @@ export default function PayrollPage() {
       (sum, p) => sum + parseFloat(p.netSalary || "0"),
       0,
     ) || 0;
+  const totalDeductions =
+    allPayrolls?.reduce(
+      (sum, p) => sum + parseFloat(p.deductions || "0"),
+      0,
+    ) || 0;
 
   if (isLoading) {
     return <PayrollPageSkeleton />;
@@ -233,7 +238,7 @@ export default function PayrollPage() {
   if (isError) {
     return (
       <PageWrapper title="Payroll Management" subtitle="Generate and manage employee payrolls">
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="flex flex-col items-center justify-center flex-1 gap-4">
           <AlertCircle className="h-10 w-10 text-destructive/60" />
           <div className="text-center">
             <p className="text-sm font-semibold text-foreground">Failed to load payroll data</p>
@@ -251,9 +256,9 @@ export default function PayrollPage() {
       subtitle="Generate and manage employee payrolls"
       actions={
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-muted/30 p-1">
+          <div className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-muted/40 p-1">
             <Select value={activeView} onValueChange={handleViewChange}>
-              <SelectTrigger className="h-7 w-[100px] border-0 bg-transparent shadow-none text-xs font-medium focus:ring-0">
+              <SelectTrigger className="h-8 w-[100px] border-0 bg-transparent shadow-none text-xs font-medium focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -263,7 +268,7 @@ export default function PayrollPage() {
             </Select>
             {activeView === "month" ? (
               <Select value={effectiveMonth} onValueChange={handleMonthChange}>
-                <SelectTrigger className="h-7 w-[150px] border-0 bg-background shadow-sm rounded-lg text-xs font-medium focus:ring-0">
+                <SelectTrigger className="h-8 w-[150px] border-0 bg-background shadow-sm rounded-lg text-xs font-medium focus:ring-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -276,7 +281,7 @@ export default function PayrollPage() {
               </Select>
             ) : (
               <Select value={effectiveYear} onValueChange={handleYearChange}>
-                <SelectTrigger className="h-7 w-[80px] border-0 bg-background shadow-sm rounded-lg text-xs font-medium focus:ring-0">
+                <SelectTrigger className="h-8 w-[80px] border-0 bg-background shadow-sm rounded-lg text-xs font-medium focus:ring-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -356,6 +361,7 @@ export default function PayrollPage() {
           totalEmployees={allPayrolls?.length || 0}
           totalGross={totalGross}
           totalNet={totalNet}
+          totalDeductions={totalDeductions}
         />
 
         {(allPayrolls?.length ?? 0) === 0 ? (

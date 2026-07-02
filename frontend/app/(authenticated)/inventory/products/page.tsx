@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Package } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -219,12 +219,17 @@ export default function ProductsPage() {
                       className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                     >
                       <TableCell className="px-3 py-2">
-                        <Link
-                          href={`/inventory/products/${product.id}`}
-                          className="text-sm font-medium text-foreground hover:text-violet-600 hover:underline"
-                        >
-                          {product.name}
-                        </Link>
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                            <Package className="h-3.5 w-3.5 text-muted-foreground/60" aria-hidden="true" />
+                          </div>
+                          <Link
+                            href={`/inventory/products/${product.id}`}
+                            className="text-sm font-medium text-foreground hover:text-violet-600 hover:underline"
+                          >
+                            {product.name}
+                          </Link>
+                        </div>
                       </TableCell>
                       <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground hidden md:table-cell">
                         {product.sku}

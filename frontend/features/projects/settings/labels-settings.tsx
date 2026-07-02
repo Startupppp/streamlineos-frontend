@@ -130,7 +130,7 @@ export function LabelsSettings() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ delay: idx * 0.03 }}
-            className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-white/60 hover:bg-white transition-colors group"
+            className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-card hover:bg-muted/40 transition-colors group"
           >
             {editingId === label.id ? (
               <>

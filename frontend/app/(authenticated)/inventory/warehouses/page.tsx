@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
+import { useState, useCallback, type ChangeEvent, type MouseEvent } from "react";
 import { motion } from "framer-motion";
-import { Plus, Warehouse, MapPin, Building2, AlertCircle } from "lucide-react";
+import { Plus, Warehouse, MapPin, Building2, AlertCircle, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useWarehouses, useCreateWarehouse } from "@/hooks/api/inventory/warehouses";
+import { useWarehouses, useCreateWarehouse, useSetDefaultWarehouse } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import Link from "next/link";
 
@@ -52,9 +52,25 @@ function blankForm(): WarehouseFormState {
 }
 
 function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
+  const setDefault = useSetDefaultWarehouse();
   const locationCount =
     warehouse._count?.locations ?? (Array.isArray(warehouse.locations) ? warehouse.locations.length : 0);
   const cityLine = [warehouse.city, warehouse.state, warehouse.country].filter(Boolean).join(", ");
+
+  const handleSetDefault = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDefault.mutate(
+        { warehouseId: warehouse.id },
+        {
+          onSuccess: () => toast.success("Default warehouse updated"),
+          onError: (err: unknown) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [setDefault, warehouse.id],
+  );
 
   return (
     <motion.div variants={fadeUp}>
@@ -72,9 +88,9 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
                       {warehouse.name}
                     </span>
                     {warehouse.isDefault && (
-                      <Badge className="text-xs px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border-blue-200/70">
+                      <span className="bg-violet-100 text-violet-700 text-xs font-medium px-2 py-0.5 rounded-full">
                         Default
-                      </Badge>
+                      </span>
                     )}
                     {!warehouse.isActive && (
                       <Badge variant="secondary" className="text-xs px-1.5 py-0.5 rounded-md">
@@ -102,6 +118,20 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
                 </p>
               </div>
             </div>
+            {!warehouse.isDefault && (
+              <div className="mt-2 pt-2 border-t border-border/50">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                  onClick={handleSetDefault}
+                  disabled={setDefault.isPending}
+                >
+                  <Star className="h-3 w-3" aria-hidden="true" />
+                  {setDefault.isPending ? "Updating…" : "Set as Default"}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </Link>
@@ -339,7 +369,7 @@ export default function WarehousesPage() {
               />
             </div>
           </div>
-          <SheetFooter>
+          <SheetFooter className="px-6 pb-6 pt-4 border-t">
             <Button
               variant="outline"
               onClick={handleCancelSheet}

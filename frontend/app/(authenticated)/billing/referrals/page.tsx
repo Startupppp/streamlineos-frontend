@@ -169,7 +169,7 @@ export default function ReferralsPage() {
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
             { label: "Total Invites Sent", value: totalInvites },
             { label: "Active Referrals", value: activeReferrals },
@@ -215,11 +215,11 @@ export default function ReferralsPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Expires</TableHead>
-                    <TableHead>Sent</TableHead>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Email</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Expires</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Sent</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -227,7 +227,7 @@ export default function ReferralsPage() {
                     const statusConfig =
                       STATUS_CONFIG[referral.status] ?? STATUS_CONFIG.PENDING;
                     return (
-                      <TableRow key={referral.id}>
+                      <TableRow key={referral.id} className="border-b border-border/50 hover:bg-muted/30">
                         <TableCell className="text-sm">
                           {referral.referredEmail}
                         </TableCell>

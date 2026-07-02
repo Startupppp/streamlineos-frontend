@@ -111,7 +111,7 @@ export function OrgConfigSection({
   onLoginBgUrlChange,
 }: OrgConfigSectionProps) {
   return (
-    <Card className="rounded-xl border shadow-sm">
+    <Card className="rounded-lg border border-border">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">

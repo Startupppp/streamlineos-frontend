@@ -156,9 +156,8 @@ export interface TransferDetail {
 }
 
 interface CreateAdjustmentInput {
-  warehouseId?: number;
-  productId: number;
-  locationId?: number;
+  productVariantId: number;
+  locationId: number;
   adjustmentType: AdjustmentType;
   quantity: number;
   reason: AdjustmentReason;
@@ -166,15 +165,13 @@ interface CreateAdjustmentInput {
 }
 
 interface CreateTransferLineInput {
-  productId: number;
+  productVariantId: number;
   quantity: number;
 }
 
 interface CreateTransferInput {
-  fromWarehouseId?: number;
-  toWarehouseId?: number;
-  fromLocationId?: number;
-  toLocationId?: number;
+  fromLocationId: number;
+  toLocationId: number;
   lines: CreateTransferLineInput[];
   notes?: string;
 }
@@ -475,12 +472,21 @@ export function useStockTransactions(filters?: StockTransactionFilters) {
   });
 }
 
-export function useTransfers() {
-  return useQuery<TransferListItem[], Error>({
-    queryKey: queryKeys.inventory.transfers(),
+export function useTransfers(filters?: { status?: TransferStatus; page?: number; limit?: number }) {
+  return useQuery<{ items: TransferListItem[]; total: number; page: number; totalPages: number }, Error>({
+    queryKey: queryKeys.inventory.transfers(filters),
     queryFn: async () => {
-      const res = await apiClient.get<RawTransferListItem[]>("/inventory/stock/transfers");
-      return res.map(toTransferListItem);
+      const res = await apiClient.get<{ items: RawTransferListItem[]; total: number; page: number; totalPages: number }>("/inventory/stock/transfers", {
+        status: filters?.status,
+        page: filters?.page,
+        limit: filters?.limit,
+      });
+      return {
+        items: res.items.map(toTransferListItem),
+        total: res.total,
+        page: res.page,
+        totalPages: res.totalPages,
+      };
     },
     staleTime: 2 * 60_000,
   });
@@ -509,7 +515,7 @@ export function useCreateAdjustment() {
         notes: data.notes,
         lines: [
           {
-            productVariantId: data.productId,
+            productVariantId: data.productVariantId,
             locationId: data.locationId,
             quantityChange: signedQuantity(data.adjustmentType, data.quantity),
             notes: data.notes,
@@ -527,10 +533,10 @@ export function useCreateTransfer() {
   return useMutation<CreatedTransfer, Error, CreateTransferInput>({
     mutationFn: (data) =>
       apiClient.post<CreatedTransfer>("/inventory/stock/transfers", {
-        fromLocationId: data.fromLocationId ?? data.fromWarehouseId,
-        toLocationId: data.toLocationId ?? data.toWarehouseId,
+        fromLocationId: data.fromLocationId,
+        toLocationId: data.toLocationId,
         notes: data.notes,
-        lines: data.lines.map((l) => ({ productVariantId: l.productId, quantity: l.quantity })),
+        lines: data.lines.map((l) => ({ productVariantId: l.productVariantId, quantity: l.quantity })),
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
@@ -548,6 +554,19 @@ export function useCompleteTransfer() {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+    },
+  });
+}
+
+export function useDispatchTransfer() {
+  const qc = useQueryClient();
+  return useMutation<void, Error, { transferId: number }>({
+    mutationKey: ["inventory", "transfer", "dispatch"],
+    mutationFn: ({ transferId }) =>
+      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/dispatch`, {}),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
     },
   });
 }

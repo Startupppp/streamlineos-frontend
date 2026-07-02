@@ -35,6 +35,8 @@ interface WarehouseOption {
 
 type StockStatus = "critical" | "low" | "ok";
 
+const STOCK_STATUS_ORDER: Record<StockStatus, number> = { critical: 0, low: 1, ok: 2 };
+
 function getStockStatus(row: StockLevelRow): StockStatus {
   const available = row.onHand - row.committed;
   if (row.reorderPoint != null && available <= row.reorderPoint) return "critical";
@@ -93,8 +95,8 @@ function StockTable({ rows }: { rows: StockLevelRow[] }) {
                 key={row.id}
                 className={cn(
                   "border-b border-border/50 transition-colors",
-                  status === "critical" && "bg-red-50/40 hover:bg-red-50/60",
-                  status === "low" && "bg-amber-50/40 hover:bg-amber-50/60",
+                  status === "critical" && "bg-red-50/50 hover:bg-red-50/70",
+                  status === "low" && "bg-amber-50/50 hover:bg-amber-50/70",
                   status === "ok" && "hover:bg-muted/30",
                 )}
               >
@@ -181,8 +183,12 @@ export default function StockLevelsPage() {
   const rawRows = useMemo<StockLevelRow[]>(() => stockData?.items ?? [], [stockData]);
 
   const rows = useMemo(() => {
-    if (!lowStockOnly) return rawRows;
-    return rawRows.filter((r) => getStockStatus(r) !== "ok");
+    const filtered = lowStockOnly
+      ? rawRows.filter((r) => getStockStatus(r) !== "ok")
+      : rawRows;
+    return [...filtered].sort(
+      (a, b) => STOCK_STATUS_ORDER[getStockStatus(a)] - STOCK_STATUS_ORDER[getStockStatus(b)],
+    );
   }, [rawRows, lowStockOnly]);
 
   const handleWarehouseChange = useCallback((val: string) => {

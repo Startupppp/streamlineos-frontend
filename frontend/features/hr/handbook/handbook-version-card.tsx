@@ -45,7 +45,7 @@ export function HandbookVersionCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4",
+        "rounded-lg border border-border bg-card shadow-sm overflow-hidden border-l-4",
         isPublished ? "border-l-emerald-500" : "border-l-amber-500"
       )}
     >

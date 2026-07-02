@@ -109,7 +109,7 @@ function ShareJobDialog({ jobId, onClose }: { jobId: number; onClose: () => void
 
 function JobCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+    <div className="rounded-lg border border-border bg-card p-3 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-2 flex-1">
           <Skeleton className="h-4 w-40" />
@@ -223,7 +223,7 @@ export default function JobPostingsPage() {
         filters={
           <div className="flex items-center gap-2">
             <Select value={statusFilter ?? "ALL"} onValueChange={(v) => setFilter("status", v)}>
-              <SelectTrigger className="w-[130px] h-8 text-xs">
+              <SelectTrigger className="w-[130px] h-8 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -233,7 +233,7 @@ export default function JobPostingsPage() {
               </SelectContent>
             </Select>
             <Select value={visibilityFilter ?? "ALL"} onValueChange={(v) => setFilter("visibility", v)}>
-              <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectTrigger className="w-[140px] h-8 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -278,10 +278,10 @@ export default function JobPostingsPage() {
               return (
                 <div
                   key={job.id}
-                  className="group relative rounded-2xl border border-border bg-card shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                  className="group relative rounded-lg border border-border bg-card overflow-hidden transition-shadow hover:shadow-md"
                 >
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <div className={cn("h-2 w-2 rounded-full shrink-0", statusStyle.dot)} />
@@ -343,7 +343,7 @@ export default function JobPostingsPage() {
                       </DropdownMenu>
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 mb-4">
+                    <div className="flex flex-wrap gap-1.5 mb-3">
                       <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full", statusStyle.badge)}>
                         {statusStyle.label}
                       </span>

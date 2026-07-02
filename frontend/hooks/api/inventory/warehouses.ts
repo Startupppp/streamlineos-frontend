@@ -121,3 +121,51 @@ export function useCreateLocation() {
     },
   });
 }
+
+export function useUpdateLocation() {
+  const qc = useQueryClient();
+  return useMutation<
+    unknown,
+    Error,
+    { warehouseId: number; locationId: number; data: { name?: string; code?: string; locationType?: string; isActive?: boolean } }
+  >({
+    mutationKey: ["inventory", "location", "update"],
+    mutationFn: ({ warehouseId, locationId, data }) =>
+      apiClient.patch(`/inventory/warehouses/${warehouseId}/locations/${locationId}`, data),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.locations(vars.warehouseId) });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
+    },
+  });
+}
+
+export function useSetDefaultWarehouse() {
+  const qc = useQueryClient();
+  return useMutation<
+    unknown,
+    Error,
+    { warehouseId: number },
+    { previous: Warehouse[] | undefined }
+  >({
+    mutationKey: ["inventory", "warehouse", "set-default"],
+    mutationFn: ({ warehouseId }) =>
+      apiClient.patch(`/inventory/warehouses/${warehouseId}`, { isDefault: true }),
+    onMutate: async ({ warehouseId }) => {
+      await qc.cancelQueries({ queryKey: queryKeys.inventory.warehouses() });
+      const previous = qc.getQueryData<Warehouse[]>(queryKeys.inventory.warehouses());
+      qc.setQueryData<Warehouse[]>(
+        queryKeys.inventory.warehouses(),
+        (old) => old?.map((wh) => ({ ...wh, isDefault: wh.id === warehouseId })) ?? [],
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(queryKeys.inventory.warehouses(), context.previous);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
+    },
+  });
+}

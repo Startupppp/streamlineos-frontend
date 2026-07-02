@@ -95,6 +95,7 @@ export default function PurchaseOrdersListPage() {
       eyebrow="Inventory"
       title="Purchase Orders"
       subtitle="Supplier orders and goods receipt tracking."
+      badge={query.data?.total != null && query.data.total > 0 ? String(query.data.total) : undefined}
       actions={
         <Button asChild size="sm">
           <Link href="/inventory/purchase-orders/new">
@@ -104,47 +105,47 @@ export default function PurchaseOrdersListPage() {
         </Button>
       }
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center bg-muted/40 rounded-lg p-3 mb-4">
-        <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 text-sm w-full sm:w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center bg-muted/40 rounded-lg p-3">
+          <Select value={status} onValueChange={handleStatusChange}>
+            <SelectTrigger className="h-8 text-sm w-full sm:w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={vendorId} onValueChange={handleVendorChange}>
-          <SelectTrigger className="h-8 text-sm w-full sm:w-52">
-            <SelectValue placeholder="All vendors" />
-          </SelectTrigger>
-          <SelectContent className="max-h-72">
-            <SelectItem value="ALL">All vendors</SelectItem>
-            {vendors.map((v) => (
-              <SelectItem key={v.id} value={String(v.id)}>
-                {v.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          <Select value={vendorId} onValueChange={handleVendorChange}>
+            <SelectTrigger className="h-8 text-sm w-full sm:w-52">
+              <SelectValue placeholder="All vendors" />
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              <SelectItem value="ALL">All vendors</SelectItem>
+              {vendors.map((v) => (
+                <SelectItem key={v.id} value={String(v.id)}>
+                  {v.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      {query.isLoading && <LoadingState variant="table" rows={8} />}
-      {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
+        {query.isLoading && <LoadingState variant="table" rows={8} />}
+        {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
 
-      {!query.isLoading && !query.error && items.length === 0 && (
-        <EmptyState
-          className="min-h-[50vh]"
-          illustration={<EmptyExpensesIllustration />}
-          title="No purchase orders"
-          description="Create a PO to start ordering from your suppliers."
-          action={{ label: "New PO", href: "/inventory/purchase-orders/new" }}
-        />
-      )}
+        {!query.isLoading && !query.error && items.length === 0 && (
+          <EmptyState
+            illustration={<EmptyExpensesIllustration />}
+            title="No purchase orders"
+            description="Create a PO to start ordering from your suppliers."
+            action={{ label: "New PO", href: "/inventory/purchase-orders/new" }}
+          />
+        )}
 
       {items.length > 0 && (
         <div className="rounded-lg border border-border overflow-hidden">
@@ -210,6 +211,7 @@ export default function PurchaseOrdersListPage() {
           </Table>
         </div>
       )}
+      </div>
     </PageWrapper>
   );
 }

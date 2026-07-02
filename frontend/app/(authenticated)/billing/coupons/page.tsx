@@ -398,7 +398,7 @@ export default function CouponsPage() {
         }
       >
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               { label: "Total Coupons", value: totalCoupons },
               { label: "Active", value: activeCoupons },
@@ -473,22 +473,22 @@ export default function CouponsPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Code</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Value</TableHead>
-                      <TableHead>Usage</TableHead>
-                      <TableHead>Plans</TableHead>
-                      <TableHead>Expires</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-10" />
+                    <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Code</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Value</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Usage</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Plans</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Expires</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
+                      <TableHead className="w-10 px-3 py-2" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {coupons.map((coupon) => {
                       const status = getCouponStatus(coupon);
                       return (
-                        <TableRow key={coupon.id}>
+                        <TableRow key={coupon.id} className="border-b border-border/50 hover:bg-muted/30">
                           <TableCell className="font-mono text-xs font-medium">
                             {coupon.code}
                           </TableCell>

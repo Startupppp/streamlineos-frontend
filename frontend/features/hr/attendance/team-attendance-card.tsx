@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useState, useCallback } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +49,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
 }) {
   const { data, isLoading } = useHrTeamAttendanceStatus();
   const [search, setSearch] = useState("");
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
 
   const filtered = (data ?? []).filter(
     (e) =>
@@ -68,7 +69,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
     <Card className="overflow-hidden border-border shadow-sm">
       <CardHeader className="pb-3 pt-5">
         <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 shrink-0">
               <Users className="h-4 w-4 text-blue-600" />
             </div>
@@ -77,31 +78,23 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
         </div>
 
         {data && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-emerald-600">
-                {counts.PRESENT ?? 0}
-              </span>{" "}
-              present
-            </span>
-            <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-amber-600">
-                {counts.ON_BREAK ?? 0}
-              </span>{" "}
-              on break
-            </span>
-            <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-blue-600">
-                {counts.CHECKED_OUT ?? 0}
-              </span>{" "}
-              checked out
-            </span>
-            <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-muted-foreground">
-                {counts.OFFLINE ?? 0}
-              </span>{" "}
-              offline
-            </span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 mt-2 rounded-xl bg-muted/30">
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="text-xl font-bold tabular-nums text-emerald-600">{counts.PRESENT ?? 0}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Present</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="text-xl font-bold tabular-nums text-amber-600">{counts.ON_BREAK ?? 0}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">On Break</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="text-xl font-bold tabular-nums text-blue-600">{counts.CHECKED_OUT ?? 0}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Checked Out</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="text-xl font-bold tabular-nums text-muted-foreground">{counts.OFFLINE ?? 0}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Offline</span>
+            </div>
           </div>
         )}
       </CardHeader>
@@ -112,7 +105,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
           <Input
             placeholder="Search employees or departments…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-8 h-8 text-sm"
           />
         </div>
@@ -124,9 +117,10 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">
-            No employees found.
-          </p>
+          <div className="flex flex-col flex-1 items-center justify-center py-8 gap-2">
+            <Users className="h-8 w-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">No employees found.</p>
+          </div>
         ) : (
           <div
             className={

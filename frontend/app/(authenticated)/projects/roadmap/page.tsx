@@ -303,7 +303,7 @@ function RoadmapItemCard({
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-2.5 shadow-sm hover:shadow-md transition-all duration-150 mb-1.5">
+    <div className="bg-card border border-border rounded-lg p-2.5 shadow-sm hover:shadow-md transition-shadow mb-1.5">
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-medium leading-snug min-w-0">
@@ -540,7 +540,7 @@ function FeedbackRow({
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-150">
+    <div className="bg-card border border-border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start gap-3">
         <div className="flex flex-col items-center justify-center rounded-md border border-border/60 px-2 py-1 shrink-0">
             <ArrowBigUp className="h-4 w-4 text-muted-foreground" />
@@ -617,8 +617,7 @@ function FeedbackRow({
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
 
@@ -1109,7 +1108,7 @@ export default function RoadmapPage() {
             placeholder="Search…"
             value={search}
             onChange={handleSearchChange}
-            className="sm:max-w-xs"
+            className="h-8 text-sm sm:max-w-xs"
           />
         </div>
 

@@ -59,7 +59,7 @@ export default function TimelinePage({ params }: PageProps) {
 
   return (
     <PageWrapper title="Timeline" subtitle={`${tickets.length} tickets`}>
-      <div className="h-full overflow-auto px-4 pb-4">
+      <div className="h-full overflow-y-auto px-4 pb-4">
         <GanttView tickets={tickets} onTicketClick={handleTicketClick} />
       </div>
     </PageWrapper>

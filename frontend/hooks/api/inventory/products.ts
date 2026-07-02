@@ -196,3 +196,51 @@ export function useCreateUom() {
     },
   });
 }
+
+export function useUpdateCategory() {
+  const qc = useQueryClient();
+  return useMutation<
+    unknown,
+    Error,
+    { categoryId: number; data: { name?: string; parentCategoryId?: number | null; description?: string | null; isActive?: boolean } }
+  >({
+    mutationKey: ["inventory", "category", "update"],
+    mutationFn: ({ categoryId, data }) =>
+      apiClient.patch(`/inventory/products/categories/${categoryId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
+    },
+  });
+}
+
+export function useUpdateUom() {
+  const qc = useQueryClient();
+  return useMutation<
+    unknown,
+    Error,
+    { uomId: number; data: { name?: string; abbreviation?: string; isActive?: boolean } }
+  >({
+    mutationKey: ["inventory", "uom", "update"],
+    mutationFn: ({ uomId, data }) =>
+      apiClient.patch(`/inventory/products/uom/${uomId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.uom() });
+    },
+  });
+}
+
+export function useUpdateProductVariant(productId: number) {
+  const qc = useQueryClient();
+  return useMutation<
+    unknown,
+    Error,
+    { variantId: number; data: { name?: string; sku?: string; barcode?: string; costPrice?: string; sellingPrice?: string; isActive?: boolean } }
+  >({
+    mutationKey: ["inventory", "product", productId, "variant", "update"],
+    mutationFn: ({ variantId, data }) =>
+      apiClient.patch(`/inventory/products/${productId}/variants/${variantId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
+    },
+  });
+}

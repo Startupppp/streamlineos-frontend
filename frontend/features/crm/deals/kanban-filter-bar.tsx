@@ -51,7 +51,7 @@ export const KanbanFilterBar = memo(function KanbanFilterBar({
   );
 
   return (
-    <div className="flex flex-wrap items-end gap-2 p-3 rounded-lg border border-border/50 bg-muted/20">
+    <div className="flex flex-wrap items-end gap-2 p-3 rounded-lg border border-border/50 bg-muted/40">
       <Filter className="h-4 w-4 text-muted-foreground mt-1 shrink-0" />
       <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">Assignee</label>

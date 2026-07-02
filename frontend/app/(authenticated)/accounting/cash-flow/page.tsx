@@ -52,7 +52,7 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, emphasis = false }: SummaryCardProps) {
   return (
-    <Card className="px-4 py-3">
+    <div className="rounded-lg border border-border bg-card px-4 py-3">
       <p className="text-[11px] font-medium text-muted-foreground leading-none">
         {label}
       </p>
@@ -65,7 +65,7 @@ function SummaryCard({ label, value, emphasis = false }: SummaryCardProps) {
       >
         {formatInr(value)}
       </p>
-    </Card>
+    </div>
   );
 }
 
@@ -75,7 +75,7 @@ interface SectionCardProps {
 
 function SectionCard({ section }: SectionCardProps) {
   return (
-    <Card className="overflow-hidden">
+    <div className="rounded-lg border border-border overflow-hidden">
       <div className="px-4 py-2.5 border-b bg-muted/40">
         <h3 className="text-sm font-semibold tracking-tight">
           {section.label}
@@ -88,16 +88,16 @@ function SectionCard({ section }: SectionCardProps) {
       ) : (
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Account</TableHead>
-              <TableHead className="w-[180px] text-right">
+            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Account</TableHead>
+              <TableHead className="w-[180px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
                 Net Cash Flow
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {section.items.map((item) => (
-              <TableRow key={item.label}>
+              <TableRow key={item.label} className="border-b border-border/50 hover:bg-muted/30">
                 <TableCell className="text-sm text-foreground">
                   {item.label}
                 </TableCell>
@@ -119,7 +119,7 @@ function SectionCard({ section }: SectionCardProps) {
           </TableFooter>
         </Table>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -155,43 +155,45 @@ export default function CashFlowPage() {
       subtitle="Cash generated and used across operating, investing, and financing activities."
     >
       <div className="space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="cash-flow-from"
-              className="text-[11px] font-medium text-slate-500 leading-none"
-            >
-              From
-            </label>
-            <Input
-              id="cash-flow-from"
-              type="date"
-              value={from}
-              onChange={handleFromChange}
-              className="w-[160px]"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="cash-flow-to"
-              className="text-[11px] font-medium text-slate-500 leading-none"
-            >
-              To
-            </label>
-            <Input
-              id="cash-flow-to"
-              type="date"
-              value={to}
-              onChange={handleToChange}
-              className="w-[160px]"
-            />
-          </div>
-          {report && !report.reconciled && (
-            <div className="ml-auto self-end text-xs text-amber-600">
-              Section totals differ from the net change in cash — review
-              unbalanced entries.
+        <div className="rounded-lg border border-border bg-muted/40 p-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="cash-flow-from"
+                className="text-[11px] font-medium text-muted-foreground leading-none"
+              >
+                From
+              </label>
+              <Input
+                id="cash-flow-from"
+                type="date"
+                value={from}
+                onChange={handleFromChange}
+                className="w-[160px] h-8 text-sm"
+              />
             </div>
-          )}
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="cash-flow-to"
+                className="text-[11px] font-medium text-muted-foreground leading-none"
+              >
+                To
+              </label>
+              <Input
+                id="cash-flow-to"
+                type="date"
+                value={to}
+                onChange={handleToChange}
+                className="w-[160px] h-8 text-sm"
+              />
+            </div>
+            {report && !report.reconciled && (
+              <div className="ml-auto self-end text-xs text-amber-600">
+                Section totals differ from the net change in cash — review
+                unbalanced entries.
+              </div>
+            )}
+          </div>
         </div>
 
         {query.isLoading ? (
@@ -210,7 +212,7 @@ export default function CashFlowPage() {
           />
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <SummaryCard label="Opening Cash" value={report.openingCash} />
               <SummaryCard label="Net Change" value={report.netChange} />
               <SummaryCard

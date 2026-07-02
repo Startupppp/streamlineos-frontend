@@ -85,6 +85,7 @@ export type UpdateProductInput = Omit<Partial<CreateProductInput>, "categoryId" 
 export interface CreateProductVariantInput {
   name: string;
   sku: string;
+  barcode?: string;
   costPrice?: number;
   sellingPrice?: number;
   attributeValues?: Record<string, string>;
@@ -246,8 +247,7 @@ export interface ReceiveGoodsLineInput {
 }
 
 export interface ReceiveGoodsInput {
-  receivedDate: string;
-  locationId?: number;
+  locationId: number;
   notes?: string;
   lines: ReceiveGoodsLineInput[];
 }

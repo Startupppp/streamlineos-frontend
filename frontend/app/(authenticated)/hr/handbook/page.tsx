@@ -381,7 +381,7 @@ function HandbookContent() {
       }
     >
       <div className="space-y-4">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="bg-muted/40 rounded-lg px-3 py-2 flex items-center gap-2 flex-wrap">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -411,7 +411,7 @@ function HandbookContent() {
         </div>
 
         {!filteredVersions.length ? (
-          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="flex-1 rounded-lg border border-border bg-card shadow-sm overflow-hidden">
             <div className="py-14 flex flex-col items-center justify-center gap-3">
               <EmptyDocumentsIllustration className="h-36 w-36 opacity-95" />
               <div className="text-center space-y-1">

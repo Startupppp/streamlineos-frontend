@@ -100,13 +100,13 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 p-4 flex items-center gap-3">
-      <div className={cn("h-9 w-9 rounded-lg bg-slate-50 flex items-center justify-center shrink-0", color)}>
+    <div className="rounded-lg border border-border bg-card p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
+      <div className={cn("h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0", color)}>
         <Icon className="h-4 w-4" />
       </div>
       <div>
-        <p className="text-xl font-bold text-slate-900">{value}</p>
-        <p className="text-[11px] text-muted-foreground">{label}</p>
+        <p className="text-xl font-bold">{value}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
       </div>
     </div>
   );
@@ -170,7 +170,7 @@ function ProjectHealthCard({ project }: { project: ProjectListItem }) {
     : null;
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 hover:shadow-md transition-shadow h-full">
+    <div className="rounded-lg border border-border bg-card p-5 flex flex-col gap-3 hover:shadow-md transition-shadow h-full">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-[11px] font-bold text-slate-400 font-mono shrink-0">{project.key}</span>
@@ -216,7 +216,7 @@ function ProjectHealthCard({ project }: { project: ProjectListItem }) {
         )}
       </div>
 
-      <div className="mt-auto pt-2 border-t border-slate-100">
+      <div className="mt-auto pt-2 border-t border-border">
         <Link href={`/projects/${project.id}`}>
           <Button
             variant="ghost"
@@ -370,7 +370,7 @@ export default function PortfolioPage() {
         </div>
       ) : (
         <motion.div
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"

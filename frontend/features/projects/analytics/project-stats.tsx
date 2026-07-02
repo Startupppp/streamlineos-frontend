@@ -65,7 +65,7 @@ export function ProjectStats({
           : "text-destructive";
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 rounded-lg border border-border bg-card shadow-none">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Project Health Score</CardTitle>
       </CardHeader>

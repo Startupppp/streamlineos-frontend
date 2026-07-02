@@ -148,7 +148,7 @@ export default function CustomerLedgersPage() {
                       <TableCell className="text-right text-sm tabular-nums px-3 py-2">
                         {row.invoiceCount}
                       </TableCell>
-                      <TableCell className="text-right text-sm font-medium tabular-nums px-3 py-2">
+                      <TableCell className="text-right font-mono text-sm font-medium tabular-nums px-3 py-2">
                         {formatCurrency(row.outstanding)}
                       </TableCell>
                     </TableRow>

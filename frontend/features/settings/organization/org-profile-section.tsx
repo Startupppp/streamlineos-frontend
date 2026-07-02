@@ -108,16 +108,16 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
 
   const renderField = (label: string, value: string | null | undefined, placeholder: string) => (
     <div className="space-y-1">
-      <Label className="text-[12px] font-medium text-slate-600">{label}</Label>
+      <Label className="text-sm font-medium text-foreground">{label}</Label>
       <p className="h-9 flex items-center text-sm px-0">{value || <span className="text-muted-foreground text-xs">{placeholder}</span>}</p>
     </div>
   );
 
   return (
-    <Card className="rounded-xl border shadow-sm">
+    <Card className="rounded-lg border border-border">
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
-          <CardTitle className="text-base">General</CardTitle>
+          <CardTitle className="text-sm font-semibold">General</CardTitle>
           <CardDescription>Legal identity, contact details, and organization code.</CardDescription>
         </div>
         {canEdit && !isEditing && (
@@ -144,25 +144,25 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
           <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Organization name *</Label>
+                <Label className="text-sm font-medium">Organization name *</Label>
                 <Input {...form.register("name")} className="h-9" />
                 {form.formState.errors.name && <p className="text-[11px] text-destructive">{form.formState.errors.name.message}</p>}
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Slug *</Label>
+                <Label className="text-sm font-medium">Slug *</Label>
                 <Input {...form.register("slug")} className="h-9" />
                 {form.formState.errors.slug && <p className="text-[11px] text-destructive">{form.formState.errors.slug.message}</p>}
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Legal name</Label>
+                <Label className="text-sm font-medium">Legal name</Label>
                 <Input {...form.register("legalName")} placeholder="Acme Inc. Pvt. Ltd." className="h-9" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Organization code</Label>
+                <Label className="text-sm font-medium">Organization code</Label>
                 <Input {...form.register("orgCode")} placeholder="ACM-001" className="h-9 font-mono" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Industry</Label>
+                <Label className="text-sm font-medium">Industry</Label>
                 <Select
                   onValueChange={(v) => form.setValue("industry", v)}
                   value={form.watch("industry") ?? ""}
@@ -174,25 +174,25 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Website</Label>
+                <Label className="text-sm font-medium">Website</Label>
                 <Input {...form.register("website")} placeholder="https://acme.com" className="h-9" />
                 {form.formState.errors.website && <p className="text-[11px] text-destructive">{form.formState.errors.website.message}</p>}
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Registration number</Label>
+                <Label className="text-sm font-medium">Registration number</Label>
                 <Input {...form.register("registrationNumber")} placeholder="CIN / Company reg. no." className="h-9" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Tax / GST number</Label>
+                <Label className="text-sm font-medium">Tax / GST number</Label>
                 <Input {...form.register("taxNumber")} placeholder="GSTIN / PAN / VAT" className="h-9 font-mono" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Support email</Label>
+                <Label className="text-sm font-medium">Support email</Label>
                 <Input type="email" {...form.register("supportEmail")} placeholder="support@acme.com" className="h-9" />
                 {form.formState.errors.supportEmail && <p className="text-[11px] text-destructive">{form.formState.errors.supportEmail.message}</p>}
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Support phone</Label>
+                <Label className="text-sm font-medium">Support phone</Label>
                 <Input type="tel" {...form.register("supportPhone")} placeholder="+91 98765 43210" className="h-9" />
               </div>
             </div>

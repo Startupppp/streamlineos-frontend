@@ -2,7 +2,6 @@
 
 import { useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -38,16 +37,16 @@ function BlockRow({ label, block }: { label: string; block: Gstr3BTaxBlock }) {
   return (
     <TableRow>
       <TableCell>{label}</TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="text-right tabular-nums font-mono">
         {fmt(block.taxableValue)}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="text-right tabular-nums font-mono">
         {fmt(block.cgst)}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="text-right tabular-nums font-mono">
         {fmt(block.sgst)}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="text-right tabular-nums font-mono">
         {fmt(block.igst)}
       </TableCell>
     </TableRow>
@@ -78,34 +77,38 @@ export default function Gstr3BPage() {
       title="GSTR-3B"
       subtitle="Consolidated monthly GST return summary. Outward minus ITC equals tax payable."
     >
-      <div className="flex flex-col sm:flex-row gap-3 mb-4 items-end">
-        <div>
-          <label
-            htmlFor="gstr3b-from"
-            className="text-sm text-muted-foreground block mb-1"
-          >
-            From
-          </label>
-          <Input
-            id="gstr3b-from"
-            type="date"
-            value={from}
-            onChange={handleFromChange}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="gstr3b-to"
-            className="text-sm text-muted-foreground block mb-1"
-          >
-            To
-          </label>
-          <Input
-            id="gstr3b-to"
-            type="date"
-            value={to}
-            onChange={handleToChange}
-          />
+      <div className="rounded-lg border border-border bg-muted/40 p-3 mb-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
+          <div>
+            <label
+              htmlFor="gstr3b-from"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              From
+            </label>
+            <Input
+              id="gstr3b-from"
+              type="date"
+              value={from}
+              onChange={handleFromChange}
+              className="w-full sm:w-[160px] h-8 text-sm"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="gstr3b-to"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              To
+            </label>
+            <Input
+              id="gstr3b-to"
+              type="date"
+              value={to}
+              onChange={handleToChange}
+              className="w-full sm:w-[160px] h-8 text-sm"
+            />
+          </div>
         </div>
       </div>
 
@@ -121,7 +124,7 @@ export default function Gstr3BPage() {
         />
       ) : (
         <div className="space-y-4">
-          <Card className="p-4 bg-muted/40">
+          <div className="rounded-lg border border-border p-4 bg-muted/40">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm tabular-nums">
               <div>
                 <div className="text-muted-foreground">Net CGST</div>
@@ -148,20 +151,20 @@ export default function Gstr3BPage() {
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
 
-          <Card className="overflow-hidden">
+          <div className="rounded-lg border border-border overflow-hidden">
             <div className="px-4 py-3 font-medium bg-emerald-50 border-b border-emerald-200/60">
               3.1 Outward supplies
             </div>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Taxable value</TableHead>
-                  <TableHead className="text-right">CGST</TableHead>
-                  <TableHead className="text-right">SGST</TableHead>
-                  <TableHead className="text-right">IGST</TableHead>
+                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Taxable value</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">CGST</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">SGST</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">IGST</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -187,20 +190,20 @@ export default function Gstr3BPage() {
               {report.invoiceCount} invoice
               {report.invoiceCount === 1 ? "" : "s"} in period
             </div>
-          </Card>
+          </div>
 
-          <Card className="overflow-hidden">
+          <div className="rounded-lg border border-border overflow-hidden">
             <div className="px-4 py-3 font-medium bg-blue-50 border-b border-blue-200/60">
               4. Input Tax Credit (ITC)
             </div>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Taxable value</TableHead>
-                  <TableHead className="text-right">CGST</TableHead>
-                  <TableHead className="text-right">SGST</TableHead>
-                  <TableHead className="text-right">IGST</TableHead>
+                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Taxable value</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">CGST</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">SGST</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">IGST</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -222,7 +225,7 @@ export default function Gstr3BPage() {
               {report.billCount} purchase bill
               {report.billCount === 1 ? "" : "s"} in period
             </div>
-          </Card>
+          </div>
         </div>
       )}
     </PageWrapper>

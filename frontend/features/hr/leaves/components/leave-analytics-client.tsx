@@ -24,15 +24,15 @@ function StatCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.08 }}
-      className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5"
+      className="bg-card rounded-2xl border border-border shadow-sm p-4"
     >
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-medium text-slate-500">{label}</p>
-        <div className="bg-violet-50 rounded-xl p-2">
-          <Icon className="h-4 w-4 text-violet-600" />
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <div className="bg-violet-100 dark:bg-violet-950/40 rounded-xl p-2">
+          <Icon className="h-4 w-4 text-violet-600 dark:text-violet-400" />
         </div>
       </div>
-      <p className="text-3xl font-bold text-slate-900">{value}</p>
+      <p className="text-3xl font-bold text-foreground">{value}</p>
     </motion.div>
   );
 }
@@ -46,12 +46,12 @@ export function LeaveAnalyticsClient() {
   const pendingLeaves = leavesByStatus.find((s) => s.status === "PENDING")?.count ?? 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40 dark:from-background dark:via-background dark:to-violet-950/10">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Leave Analytics</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Summary from the HR Analytics module</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Leave Analytics</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">Summary from the HR Analytics module</p>
           </div>
           <Button asChild variant="outline">
             <Link href="/hr/analytics">
@@ -79,14 +79,14 @@ export function LeaveAnalyticsClient() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut", delay: 0.24 }}
-            className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5"
+            className="bg-card rounded-2xl border border-border shadow-sm p-4"
           >
-            <h3 className="text-sm font-semibold text-slate-700 mb-4">Leaves by Status</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-4">Leaves by Status</h3>
             <div className="space-y-3">
               {leavesByStatus.map((item, i) => (
                 <div key={item.status} className="flex items-center gap-3">
-                  <span className="text-sm text-slate-600 w-24 shrink-0">{item.status}</span>
-                  <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <span className="text-sm text-muted-foreground w-24 shrink-0">{item.status}</span>
+                  <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${totalLeaves > 0 ? (item.count / totalLeaves) * 100 : 0}%` }}
@@ -94,7 +94,7 @@ export function LeaveAnalyticsClient() {
                       className="h-2 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
                     />
                   </div>
-                  <span className="text-sm font-semibold text-slate-900 w-8 text-right">{item.count}</span>
+                  <span className="text-sm font-semibold text-foreground w-8 text-right">{item.count}</span>
                 </div>
               ))}
             </div>
@@ -106,9 +106,9 @@ export function LeaveAnalyticsClient() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut", delay: 0.32 }}
-            className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5"
+            className="bg-card rounded-2xl border border-border shadow-sm p-4"
           >
-            <h3 className="text-sm font-semibold text-slate-700 mb-4">Leaves by Month</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-4">Leaves by Month</h3>
             <div className="flex items-end gap-2 h-32">
               {leavesByMonth.map((item: { month: string; count: number }, i: number) => {
                 const max = Math.max(...leavesByMonth.map((m: { count: number }) => m.count), 1);
@@ -120,7 +120,7 @@ export function LeaveAnalyticsClient() {
                       transition={{ duration: 0.4, ease: "easeOut", delay: i * 0.04 }}
                       className="w-full bg-gradient-to-t from-violet-600 to-indigo-400 rounded-t-md min-h-[4px]"
                     />
-                    <span className="text-xs text-slate-400 truncate w-full text-center">
+                    <span className="text-xs text-muted-foreground truncate w-full text-center">
                       {item.month?.slice(0, 3)}
                     </span>
                   </div>
@@ -134,9 +134,9 @@ export function LeaveAnalyticsClient() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: "easeOut", delay: 0.4 }}
-          className="rounded-2xl border border-violet-200 bg-violet-50/60 p-4 flex items-center justify-between"
+          className="rounded-2xl border border-violet-200 dark:border-violet-800/40 bg-violet-50/60 dark:bg-violet-950/20 p-4 flex items-center justify-between"
         >
-          <p className="text-sm text-violet-700">
+          <p className="text-sm text-violet-700 dark:text-violet-300">
             Leave analytics data is loaded from the HR Analytics module.
           </p>
           <Button asChild size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shrink-0 ml-4">

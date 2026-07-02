@@ -62,9 +62,9 @@ export function OrgSecuritySection({
 }: OrgSecuritySectionProps) {
   return (
     <>
-      <Card className="rounded-xl border shadow-sm">
+      <Card className="rounded-lg border border-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Shield className="h-4 w-4 text-blue-600" />
             Security Policies
           </CardTitle>
@@ -194,9 +194,9 @@ export function OrgSecuritySection({
         </CardContent>
       </Card>
 
-      <Card className="rounded-xl border shadow-sm">
+      <Card className="rounded-lg border border-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Network className="h-4 w-4 text-blue-600" />
             IP Allowlist
           </CardTitle>

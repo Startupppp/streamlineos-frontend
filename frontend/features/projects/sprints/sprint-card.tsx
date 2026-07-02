@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { format, differenceInDays } from "date-fns";
 import { Target, Play, Square, MoreHorizontal, Pencil, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -35,18 +36,25 @@ interface SprintCardProps {
   isUpdating?: boolean;
 }
 
-const STATUS_STYLES: Record<string, { label: string; className: string }> = {
+interface StatusStyle {
+  label: string;
+  variant: "default" | "secondary" | "outline";
+  className?: string;
+}
+
+const STATUS_STYLES: Record<string, StatusStyle> = {
   ACTIVE: {
     label: "Active",
+    variant: "secondary",
     className: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
   },
   PLANNED: {
     label: "Planned",
-    className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+    variant: "secondary",
   },
   COMPLETED: {
     label: "Completed",
-    className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    variant: "secondary",
   },
 };
 
@@ -84,9 +92,9 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
           >
             {sprint.name}
           </Link>
-          <span className={cn("text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0", statusStyle.className)}>
+          <Badge variant={statusStyle.variant} className={cn("shrink-0", statusStyle.className)}>
             {statusStyle.label}
-          </span>
+          </Badge>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -159,7 +167,7 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
 
       <div className="mt-3">
         <div
-          className="w-full bg-secondary rounded-full h-1.5"
+          className="w-full bg-muted rounded-full h-1.5"
           role="progressbar"
           aria-valuenow={Math.round(progress)}
           aria-valuemin={0}

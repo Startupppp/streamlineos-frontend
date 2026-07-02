@@ -122,7 +122,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-white/60 group"
+              className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-card hover:bg-muted/40 transition-colors group"
             >
               <div
                 className="h-3 w-3 rounded-full shrink-0"

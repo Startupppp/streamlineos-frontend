@@ -89,10 +89,10 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
   }, [createMutation, form]);
 
   return (
-    <Card className="rounded-xl border shadow-sm">
+    <Card className="rounded-lg border border-border">
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-blue-600" />
             Holiday Calendar
           </CardTitle>
@@ -109,12 +109,12 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
           <form onSubmit={form.handleSubmit(handleAdd)} className="border rounded-lg p-3 space-y-3 bg-muted/30">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Holiday name *</Label>
+                <Label className="text-sm font-medium">Holiday name *</Label>
                 <Input {...form.register("name")} placeholder="Republic Day" className="h-8 text-sm" />
                 {form.formState.errors.name && <p className="text-[11px] text-destructive">{form.formState.errors.name.message}</p>}
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Date *</Label>
+                <Label className="text-sm font-medium">Date *</Label>
                 <Input type="date" {...form.register("date")} className="h-8 text-sm" />
                 {form.formState.errors.date && <p className="text-[11px] text-destructive">{form.formState.errors.date.message}</p>}
               </div>

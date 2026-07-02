@@ -360,7 +360,7 @@ export default function DealsPage() {
               Export
             </Button>
             <DealsCsvImportDialog />
-            <Button onClick={handleOpenCreate}>
+            <Button onClick={handleOpenCreate} className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
               <Plus className="h-4 w-4 mr-2" />
               New Deal
             </Button>

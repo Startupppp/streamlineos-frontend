@@ -518,17 +518,17 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
             </div>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Reference</TableHead>
-                  <TableHead>Recorded by</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Date</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Method</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Reference</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Recorded by</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(invoice.payments ?? []).map((p) => (
-                  <TableRow key={p.id}>
+                  <TableRow key={p.id} className="border-b border-border/50 hover:bg-muted/30">
                     <TableCell className="text-sm">
                       {format(new Date(p.paymentDate), "dd MMM yyyy")}
                     </TableCell>
@@ -541,7 +541,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                     <TableCell className="text-sm text-muted-foreground">
                       {p.creator?.name ?? "—"}
                     </TableCell>
-                    <TableCell className="text-right text-sm font-medium text-emerald-600">
+                    <TableCell className="text-right font-mono text-sm font-medium text-emerald-600">
                       {fmt(p.amount)}
                     </TableCell>
                   </TableRow>

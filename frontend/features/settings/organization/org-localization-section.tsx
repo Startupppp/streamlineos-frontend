@@ -185,10 +185,10 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
   };
 
   return (
-    <Card className="rounded-xl border shadow-sm">
+    <Card className="rounded-lg border border-border">
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Globe className="h-4 w-4 text-blue-600" />
             Localization
           </CardTitle>
@@ -205,7 +205,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
             {(Object.entries(displayValues) as [string, string][]).map(([key, val]) => (
               <div key={key} className="space-y-0.5">
-                <p className="text-[12px] font-medium text-slate-600 capitalize">{key.replace(/([A-Z])/g, " $1")}</p>
+                <p className="text-sm font-medium text-foreground capitalize">{key.replace(/([A-Z])/g, " $1")}</p>
                 <p className="text-sm">{val}</p>
               </div>
             ))}
@@ -214,56 +214,56 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
           <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Timezone</Label>
+                <Label className="text-sm font-medium">Timezone</Label>
                 <Select onValueChange={(v) => form.setValue("timezone", v)} value={form.watch("timezone")}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>{TIMEZONES.map((tz) => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Currency</Label>
+                <Label className="text-sm font-medium">Currency</Label>
                 <Select onValueChange={(v) => form.setValue("currency", v)} value={form.watch("currency")}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>{CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Fiscal year starts</Label>
+                <Label className="text-sm font-medium">Fiscal year starts</Label>
                 <Select onValueChange={(v) => form.setValue("fiscalYearStart", parseInt(v))} value={String(form.watch("fiscalYearStart"))}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>{MONTHS.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Language</Label>
+                <Label className="text-sm font-medium">Language</Label>
                 <Select onValueChange={(v) => form.setValue("language", v)} value={form.watch("language")}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Date format</Label>
+                <Label className="text-sm font-medium">Date format</Label>
                 <Select onValueChange={(v) => form.setValue("dateFormat", v)} value={form.watch("dateFormat")}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>{DATE_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Time format</Label>
+                <Label className="text-sm font-medium">Time format</Label>
                 <Select onValueChange={(v) => form.setValue("timeFormat", v as "12h" | "24h")} value={form.watch("timeFormat")}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>{TIME_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Number format</Label>
+                <Label className="text-sm font-medium">Number format</Label>
                 <Select onValueChange={(v) => form.setValue("numberFormat", v)} value={form.watch("numberFormat")}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>{NUMBER_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Week starts on</Label>
+                <Label className="text-sm font-medium">Week starts on</Label>
                 <Select onValueChange={(v) => form.setValue("weekStartDay", v as "monday" | "sunday" | "saturday")} value={form.watch("weekStartDay")}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>{WEEK_START_DAYS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent>

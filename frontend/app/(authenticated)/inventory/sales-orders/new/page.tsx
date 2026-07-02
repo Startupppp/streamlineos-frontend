@@ -1,59 +1,49 @@
 "use client";
 
-import { useState, useMemo, type ChangeEvent } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { useWarehouses } from "@/hooks/api/inventory/warehouses";
-import { useProducts } from "@/hooks/api/inventory/products";
-import { useCreateSalesOrder } from "@/hooks/api/inventory/sales-orders";
-import { useClientAccounts } from "@/hooks/api/crm";
+import { useCreateSalesOrder, useProductVariants, useWarehouses } from "@/hooks/api/inventory";
 
-interface DraftLine {
-  key: number;
-  productId: string;
-  quantity: string;
-  unitPrice: string;
-  taxRate: string;
-  discount: string;
-}
+const lineSchema = z.object({
+  variantId: z.string().min(1, "Select a variant"),
+  quantity: z.string().min(1),
+  unitPrice: z.string().min(1),
+  taxRate: z.string(),
+});
 
-interface Warehouse {
-  id: number;
-  name: string;
-  code: string;
-}
+const schema = z.object({
+  customerId: z.string().optional(),
+  warehouseId: z.string().min(1, "Select a warehouse"),
+  orderDate: z.string().min(1, "Required"),
+  expectedShipDate: z.string().optional(),
+  currency: z.string(),
+  shippingAddress: z.string().optional(),
+  notes: z.string().optional(),
+  lines: z.array(lineSchema).min(1),
+});
 
-interface Product {
-  id: number;
-  name: string;
-  sku: string;
-  sellingPrice: string | number | null;
-}
-
-interface Customer {
-  id: number;
-  clientName: string;
-}
+type FormValues = z.infer<typeof schema>;
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function emptyLine(key: number): DraftLine {
-  return { key, productId: "", quantity: "1", unitPrice: "0", taxRate: "0", discount: "0" };
-}
-
-function num(value: string): number {
-  const n = Number(value);
+function toNum(v: string): number {
+  const n = parseFloat(v);
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
@@ -63,142 +53,92 @@ function round2(n: number): number {
 
 export default function NewSalesOrderPage() {
   const router = useRouter();
+  const variantsQuery = useProductVariants({ activeOnly: true });
   const warehousesQuery = useWarehouses();
-  const productsQuery = useProducts({ limit: 500 });
-  const clientsQuery = useClientAccounts({});
   const createMutation = useCreateSalesOrder();
 
-  const [customerId, setCustomerId] = useState<string>("");
-  const [warehouseId, setWarehouseId] = useState<string>("");
-  const [expectedShipDate, setExpectedShipDate] = useState<string>("");
-  const [currency, setCurrency] = useState<string>("INR");
-  const [shippingAddress, setShippingAddress] = useState<string>("");
-  const [notes, setNotes] = useState<string>("");
-  const [lines, setLines] = useState<DraftLine[]>([emptyLine(0)]);
-  const [nextKey, setNextKey] = useState<number>(1);
+  const variants = variantsQuery.data ?? [];
+  const warehouses = warehousesQuery.data ?? [];
 
-  const warehouses = (warehousesQuery.data ?? []) as Warehouse[];
-  const products = (productsQuery.data?.items ?? []) as Product[];
-  const customers = (clientsQuery.data?.accounts ?? []) as Customer[];
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      customerId: "",
+      warehouseId: "",
+      orderDate: todayIso(),
+      expectedShipDate: "",
+      currency: "INR",
+      shippingAddress: "",
+      notes: "",
+      lines: [{ variantId: "", quantity: "1", unitPrice: "0", taxRate: "0" }],
+    },
+  });
 
-  const computed = useMemo(() => {
-    const lineCalcs = lines.map((ln) => {
-      const qty = num(ln.quantity);
-      const price = num(ln.unitPrice);
-      const tax = num(ln.taxRate);
-      const disc = num(ln.discount);
-      const subtotal = round2(qty * price);
-      const discAmt = round2(subtotal * (disc / 100));
-      const taxAmt = round2((subtotal - discAmt) * (tax / 100));
-      return { subtotal, discAmt, taxAmt, total: round2(subtotal - discAmt + taxAmt) };
-    });
-    const subtotal = round2(lineCalcs.reduce((acc, l) => acc + l.subtotal, 0));
-    const totalDisc = round2(lineCalcs.reduce((acc, l) => acc + l.discAmt, 0));
-    const totalTax = round2(lineCalcs.reduce((acc, l) => acc + l.taxAmt, 0));
-    const total = round2(lineCalcs.reduce((acc, l) => acc + l.total, 0));
-    return { subtotal, totalDisc, totalTax, total };
-  }, [lines]);
+  const { fields, append, remove } = useFieldArray({ control, name: "lines" });
+  const watchedLines = watch("lines");
 
-  function updateLine(key: number, patch: Partial<DraftLine>): void {
-    setLines((prev) => prev.map((ln) => (ln.key === key ? { ...ln, ...patch } : ln)));
-  }
+  const lineTotals = useMemo(
+    () =>
+      watchedLines.map((ln) => {
+        const sub = round2(toNum(ln.quantity) * toNum(ln.unitPrice));
+        const taxAmt = round2(sub * (toNum(ln.taxRate) / 100));
+        return round2(sub + taxAmt);
+      }),
+    [watchedLines],
+  );
 
-  function handleLineFieldChange(key: number, field: keyof DraftLine) {
-    return (event: ChangeEvent<HTMLInputElement>) => updateLine(key, { [field]: event.target.value });
-  }
-
-  function handleProductChange(key: number, value: string): void {
-    const product = products.find((p) => String(p.id) === value);
-    const unitPrice = product?.sellingPrice ? String(product.sellingPrice) : "0";
-    updateLine(key, { productId: value, unitPrice });
-  }
+  const grandTotal = round2(lineTotals.reduce((acc, t) => acc + t, 0));
 
   function handleAddLine(): void {
-    setLines((prev) => [...prev, emptyLine(nextKey)]);
-    setNextKey((k) => k + 1);
-  }
-
-  function handleRemoveLine(key: number): void {
-    setLines((prev) => (prev.length > 1 ? prev.filter((ln) => ln.key !== key) : prev));
-  }
-
-  function handleCustomerChange(value: string): void {
-    setCustomerId(value);
-  }
-
-  function handleWarehouseChange(value: string): void {
-    setWarehouseId(value);
-  }
-
-  function handleExpectedShipDateChange(event: ChangeEvent<HTMLInputElement>): void {
-    setExpectedShipDate(event.target.value);
-  }
-
-  function handleCurrencyChange(event: ChangeEvent<HTMLInputElement>): void {
-    setCurrency(event.target.value);
-  }
-
-  function handleShippingAddressChange(event: ChangeEvent<HTMLTextAreaElement>): void {
-    setShippingAddress(event.target.value);
-  }
-
-  function handleNotesChange(event: ChangeEvent<HTMLTextAreaElement>): void {
-    setNotes(event.target.value);
+    append({ variantId: "", quantity: "1", unitPrice: "0", taxRate: "0" });
   }
 
   function handleCancel(): void {
-    router.push("/inventory/sales-orders");
+    router.back();
   }
 
-  function makeProductChangeHandler(key: number) {
-    return (value: string) => handleProductChange(key, value);
+  function handleVariantsRetry(): void {
+    void variantsQuery.refetch();
   }
 
-  function makeRemoveLineHandler(key: number) {
-    return () => handleRemoveLine(key);
+  function handleWarehousesRetry(): void {
+    void warehousesQuery.refetch();
   }
 
-  function handleWarehousesRetry() { void warehousesQuery.refetch(); }
-  function handleProductsRetry() { void productsQuery.refetch(); }
-
-  async function handleSubmit(): Promise<void> {
-    if (!warehouseId) {
-      toast.error("Select a warehouse");
-      return;
-    }
-    const validLines = lines.filter((ln) => ln.productId && num(ln.quantity) > 0);
-    if (validLines.length === 0) {
-      toast.error("At least one line item is required");
-      return;
-    }
+  async function onSubmit(values: FormValues): Promise<void> {
     try {
       const result = await createMutation.mutateAsync({
-        customerId: customerId ? Number(customerId) : undefined,
-        warehouseId: Number(warehouseId),
-        expectedShipDate: expectedShipDate || undefined,
-        currency: currency.trim() || undefined,
-        shippingAddress: shippingAddress.trim() || undefined,
-        notes: notes.trim() || undefined,
-        lines: validLines.map((ln) => ({
-          productId: Number(ln.productId),
-          quantity: num(ln.quantity),
-          unitPrice: num(ln.unitPrice),
-          taxRate: num(ln.taxRate) || undefined,
-          discount: num(ln.discount) || undefined,
+        customerId: values.customerId ? parseInt(values.customerId, 10) : undefined,
+        warehouseId: parseInt(values.warehouseId, 10),
+        orderDate: values.orderDate,
+        expectedShipDate: values.expectedShipDate || undefined,
+        currency: values.currency.trim() || undefined,
+        shippingAddress: values.shippingAddress?.trim() || undefined,
+        notes: values.notes?.trim() || undefined,
+        lines: values.lines.map((ln) => ({
+          productId: parseInt(ln.variantId, 10),
+          quantity: toNum(ln.quantity),
+          unitPrice: toNum(ln.unitPrice),
+          taxRate: toNum(ln.taxRate) || undefined,
         })),
       });
       toast.success(`Sales order ${result.soNumber} created`);
       router.push(`/inventory/sales-orders/${result.id}`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create sales order";
-      toast.error(message);
+      toast.error(error instanceof Error ? error.message : "Failed to create sales order");
     }
   }
 
-  const isLoading = warehousesQuery.isLoading || productsQuery.isLoading || clientsQuery.isLoading;
+  const isLoading = variantsQuery.isLoading || warehousesQuery.isLoading;
   if (isLoading) return <LoadingState variant="form" />;
+  if (variantsQuery.error) return <ErrorState description={variantsQuery.error.message} onRetry={handleVariantsRetry} />;
   if (warehousesQuery.error) return <ErrorState description={warehousesQuery.error.message} onRetry={handleWarehousesRetry} />;
-  if (productsQuery.error) return <ErrorState description={productsQuery.error.message} onRetry={handleProductsRetry} />;
 
   return (
     <PageWrapper
@@ -206,149 +146,153 @@ export default function NewSalesOrderPage() {
       title="New Sales Order"
       subtitle="Create a customer sales order. Confirm it to reserve stock."
     >
-      <div className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Card className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Customer</label>
-              <Select value={customerId} onValueChange={handleCustomerChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select customer (optional)" />
-                </SelectTrigger>
-                <SelectContent className="max-h-72">
-                  {customers.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.clientName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-sm text-muted-foreground mb-1 block">Customer ID (optional)</Label>
+              <Input type="number" min="1" {...register("customerId")} placeholder="Leave blank if walk-in" />
             </div>
+
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Warehouse <span className="text-destructive">*</span></label>
-              <Select value={warehouseId} onValueChange={handleWarehouseChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select warehouse" />
-                </SelectTrigger>
-                <SelectContent className="max-h-72">
-                  {warehouses.map((w) => (
-                    <SelectItem key={w.id} value={String(w.id)}>
-                      {w.name} ({w.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-sm text-muted-foreground mb-1 block">
+                Warehouse <span className="text-destructive">*</span>
+              </Label>
+              <Controller
+                control={control}
+                name="warehouseId"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select warehouse" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {warehouses.map((w) => (
+                        <SelectItem key={w.id} value={String(w.id)}>
+                          {w.name} ({w.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.warehouseId && (
+                <p className="text-xs text-destructive mt-1">{errors.warehouseId.message}</p>
+              )}
             </div>
+
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Expected Ship Date</label>
-              <Input type="date" value={expectedShipDate} onChange={handleExpectedShipDateChange} min={todayIso()} />
+              <Label className="text-sm text-muted-foreground mb-1 block">
+                Order Date <span className="text-destructive">*</span>
+              </Label>
+              <Input type="date" {...register("orderDate")} />
+              {errors.orderDate && (
+                <p className="text-xs text-destructive mt-1">{errors.orderDate.message}</p>
+              )}
             </div>
+
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Currency</label>
-              <Input value={currency} onChange={handleCurrencyChange} placeholder="INR" />
+              <Label className="text-sm text-muted-foreground mb-1 block">Expected Ship Date</Label>
+              <Input type="date" min={todayIso()} {...register("expectedShipDate")} />
+            </div>
+
+            <div>
+              <Label className="text-sm text-muted-foreground mb-1 block">Currency</Label>
+              <Input {...register("currency")} placeholder="INR" />
             </div>
           </div>
         </Card>
 
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <Table className="min-w-[760px]">
+            <Table className="min-w-[720px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product</TableHead>
+                  <TableHead>Product Variant</TableHead>
                   <TableHead className="text-right w-[90px]">Qty</TableHead>
                   <TableHead className="text-right w-[110px]">Unit Price</TableHead>
                   <TableHead className="text-right w-[90px]">Tax %</TableHead>
-                  <TableHead className="text-right w-[90px]">Disc %</TableHead>
                   <TableHead className="text-right w-[110px]">Line Total</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead className="w-[50px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lines.map((ln) => {
-                  const qty = num(ln.quantity);
-                  const price = num(ln.unitPrice);
-                  const disc = num(ln.discount);
-                  const tax = num(ln.taxRate);
-                  const sub = round2(qty * price);
-                  const discAmt = round2(sub * (disc / 100));
-                  const taxAmt = round2((sub - discAmt) * (tax / 100));
-                  const lineTotal = round2(sub - discAmt + taxAmt);
-                  return (
-                    <TableRow key={ln.key}>
-                      <TableCell>
-                        <Select value={ln.productId} onValueChange={makeProductChangeHandler(ln.key)}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select product" />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-72">
-                            {products.map((p) => (
-                              <SelectItem key={p.id} value={String(p.id)}>
-                                {p.name} ({p.sku})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          value={ln.quantity}
-                          onChange={handleLineFieldChange(ln.key, "quantity")}
-                          className="text-right tabular-nums"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={ln.unitPrice}
-                          onChange={handleLineFieldChange(ln.key, "unitPrice")}
-                          className="text-right tabular-nums"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          value={ln.taxRate}
-                          onChange={handleLineFieldChange(ln.key, "taxRate")}
-                          className="text-right tabular-nums"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          value={ln.discount}
-                          onChange={handleLineFieldChange(ln.key, "discount")}
-                          className="text-right tabular-nums"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums text-sm">
-                        {lineTotal.toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={makeRemoveLineHandler(ln.key)}
-                          disabled={lines.length <= 1}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                {fields.map((field, index) => (
+                  <TableRow key={field.id}>
+                    <TableCell>
+                      <Controller
+                        control={control}
+                        name={`lines.${index}.variantId`}
+                        render={({ field: f }) => (
+                          <Select value={f.value} onValueChange={f.onChange}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select variant" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-72">
+                              {variants.map((v) => (
+                                <SelectItem key={v.id} value={String(v.id)}>
+                                  {v.productName} – {v.name} ({v.sku})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {errors.lines?.[index]?.variantId && (
+                        <p className="text-xs text-destructive mt-1">
+                          {errors.lines[index].variantId?.message}
+                        </p>
+                      )}
+                    </TableCell>
+
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="1"
+                        step="1"
+                        {...register(`lines.${index}.quantity`)}
+                        className="text-right tabular-nums"
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        {...register(`lines.${index}.unitPrice`)}
+                        className="text-right tabular-nums"
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        {...register(`lines.${index}.taxRate`)}
+                        className="text-right tabular-nums"
+                      />
+                    </TableCell>
+
+                    <TableCell className="text-right tabular-nums text-sm">
+                      {(lineTotals[index] ?? 0).toFixed(2)}
+                    </TableCell>
+
+                    <TableCell>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => remove(index)}
+                        disabled={fields.length <= 1}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
@@ -364,30 +308,25 @@ export default function NewSalesOrderPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-3">
               <div>
-                <label className="text-sm text-muted-foreground block mb-1">Shipping Address</label>
-                <Textarea value={shippingAddress} onChange={handleShippingAddressChange} rows={2} />
+                <Label className="text-sm text-muted-foreground mb-1 block">Shipping Address</Label>
+                <Textarea {...register("shippingAddress")} rows={2} />
               </div>
               <div>
-                <label className="text-sm text-muted-foreground block mb-1">Notes</label>
-                <Textarea value={notes} onChange={handleNotesChange} rows={2} />
+                <Label className="text-sm text-muted-foreground mb-1 block">Notes</Label>
+                <Textarea {...register("notes")} rows={2} />
               </div>
             </div>
+
             <div className="space-y-1 text-sm tabular-nums">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{computed.subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Discount</span>
-                <span>−{computed.totalDisc.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tax</span>
-                <span>{computed.totalTax.toFixed(2)}</span>
-              </div>
-              <div className="border-t border-border pt-1 flex justify-between font-medium text-base">
-                <span>Total</span>
-                <span>{computed.total.toFixed(2)}</span>
+              {lineTotals.map((total, index) => (
+                <div key={fields[index]?.id ?? index} className="flex justify-between text-muted-foreground">
+                  <span>Line {index + 1}</span>
+                  <span>{total.toFixed(2)}</span>
+                </div>
+              ))}
+              <div className="border-t border-border pt-2 flex justify-between font-medium text-base">
+                <span>Grand Total</span>
+                <span>{grandTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -403,15 +342,14 @@ export default function NewSalesOrderPage() {
             Cancel
           </Button>
           <Button
-            type="button"
-            className="w-full sm:w-auto"
-            onClick={handleSubmit}
+            type="submit"
+            className="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
             disabled={createMutation.isPending}
           >
             {createMutation.isPending ? "Creating…" : "Create Sales Order"}
           </Button>
         </div>
-      </div>
+      </form>
     </PageWrapper>
   );
 }

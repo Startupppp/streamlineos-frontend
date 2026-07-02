@@ -2,9 +2,10 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpDown, AlertCircle } from "lucide-react";
+import { ArrowUpDown, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -31,36 +32,23 @@ import {
 } from "@/hooks/api/inventory/stock";
 import { cn } from "@/lib/utils";
 
-const TXN_TYPE_LABELS: Record<TransactionType, string> = {
-  PURCHASE: "Purchase",
-  SALE: "Sale",
-  ADJUSTMENT_IN: "Adjustment In",
-  ADJUSTMENT_OUT: "Adjustment Out",
-  TRANSFER_IN: "Transfer In",
-  TRANSFER_OUT: "Transfer Out",
-  RETURN_IN: "Return In",
-  RETURN_OUT: "Return Out",
-  GRN: "Goods Receipt",
-};
+const LIMIT = 25;
 
-const TXN_TYPE_COLORS: Record<TransactionType, string> = {
-  PURCHASE: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
-  SALE: "bg-red-50 text-red-700 border-red-200/70",
-  ADJUSTMENT_IN: "bg-blue-50 text-blue-700 border-blue-200/70",
-  ADJUSTMENT_OUT: "bg-orange-50 text-orange-700 border-orange-200/70",
-  TRANSFER_IN: "bg-violet-50 text-violet-700 border-violet-200/70",
-  TRANSFER_OUT: "bg-purple-50 text-purple-700 border-purple-200/70",
-  RETURN_IN: "bg-teal-50 text-teal-700 border-teal-200/70",
-  RETURN_OUT: "bg-rose-50 text-rose-700 border-rose-200/70",
-  GRN: "bg-slate-50 text-slate-600 border-slate-200/70",
+const TXN_TYPE_CONFIG: Record<TransactionType, { label: string; color: string }> = {
+  PURCHASE: { label: "Purchase", color: "text-green-700 bg-green-50" },
+  SALE: { label: "Sale", color: "text-red-700 bg-red-50" },
+  GRN: { label: "GRN", color: "text-blue-700 bg-blue-50" },
+  ADJUSTMENT_IN: { label: "Adj In", color: "text-emerald-700 bg-emerald-50" },
+  ADJUSTMENT_OUT: { label: "Adj Out", color: "text-orange-700 bg-orange-50" },
+  TRANSFER_IN: { label: "Transfer In", color: "text-violet-700 bg-violet-50" },
+  TRANSFER_OUT: { label: "Transfer Out", color: "text-purple-700 bg-purple-50" },
+  RETURN_IN: { label: "Return In", color: "text-teal-700 bg-teal-50" },
+  RETURN_OUT: { label: "Return Out", color: "text-amber-700 bg-amber-50" },
 };
 
 type DatePreset = "7d" | "30d" | "90d" | "all";
 
-function getDateRange(preset: DatePreset): {
-  fromDate?: string;
-  toDate?: string;
-} {
+function getDateRange(preset: DatePreset): { fromDate?: string; toDate?: string } {
   if (preset === "all") return {};
   const now = new Date();
   const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
@@ -75,32 +63,23 @@ function isDatePreset(val: string): val is DatePreset {
 }
 
 function isTransactionTypeOrAll(val: string): val is TransactionType | "all" {
-  return val === "all" || val in TXN_TYPE_LABELS;
+  return val === "all" || val in TXN_TYPE_CONFIG;
 }
 
-const ALL_TXN_TYPES: TransactionType[] = [
-  "PURCHASE",
-  "SALE",
-  "ADJUSTMENT_IN",
-  "ADJUSTMENT_OUT",
-  "TRANSFER_IN",
-  "TRANSFER_OUT",
-  "RETURN_IN",
-  "RETURN_OUT",
-  "GRN",
-];
+const ALL_TXN_TYPES = Object.keys(TXN_TYPE_CONFIG) as TransactionType[];
 
 const TH = "text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2.5";
 
 function TxnTypeBadge({ type }: { type: TransactionType }) {
+  const cfg = TXN_TYPE_CONFIG[type];
   return (
     <Badge
       className={cn(
-        "text-xs px-1.5 py-0.5 rounded-md font-medium border whitespace-nowrap",
-        TXN_TYPE_COLORS[type] ?? "bg-muted text-muted-foreground",
+        "text-xs px-1.5 py-0.5 rounded-md font-medium border-0 whitespace-nowrap",
+        cfg.color,
       )}
     >
-      {TXN_TYPE_LABELS[type] ?? type}
+      {cfg.label}
     </Badge>
   );
 }
@@ -136,9 +115,8 @@ function MovementsTableSkeleton() {
 
 export default function MovementsPage() {
   const [datePreset, setDatePreset] = useState<DatePreset>("30d");
-  const [txnTypeFilter, setTxnTypeFilter] = useState<TransactionType | "all">(
-    "all",
-  );
+  const [txnTypeFilter, setTxnTypeFilter] = useState<TransactionType | "all">("all");
+  const [page, setPage] = useState(1);
 
   const dateRange = useMemo(() => getDateRange(datePreset), [datePreset]);
 
@@ -146,18 +124,21 @@ export default function MovementsPage() {
     () => ({
       ...dateRange,
       ...(txnTypeFilter !== "all" ? { transactionType: txnTypeFilter } : {}),
+      page,
+      limit: LIMIT,
     }),
-    [dateRange, txnTypeFilter],
+    [dateRange, txnTypeFilter, page],
   );
 
-  const {
-    data: txnData,
-    isLoading,
-    isError,
-    refetch,
-  } = useStockTransactions(filters);
+  const { data: txnData, isLoading, isError, refetch } = useStockTransactions(filters);
 
   const transactions: StockTransaction[] = txnData?.items ?? [];
+  const total = txnData?.total ?? 0;
+  const totalPages = txnData?.totalPages ?? 1;
+  const currentPage = txnData?.page ?? page;
+
+  const rangeStart = total === 0 ? 0 : (currentPage - 1) * LIMIT + 1;
+  const rangeEnd = Math.min(currentPage * LIMIT, total);
 
   function handleRetry() {
     void refetch();
@@ -166,21 +147,36 @@ export default function MovementsPage() {
   function handleResetFilters() {
     setDatePreset("30d");
     setTxnTypeFilter("all");
+    setPage(1);
   }
 
   const handleDatePresetChange = useCallback((val: string) => {
-    if (isDatePreset(val)) setDatePreset(val);
+    if (isDatePreset(val)) {
+      setDatePreset(val);
+      setPage(1);
+    }
   }, []);
 
   const handleTypeChange = useCallback((val: string) => {
-    if (isTransactionTypeOrAll(val)) setTxnTypeFilter(val);
+    if (isTransactionTypeOrAll(val)) {
+      setTxnTypeFilter(val);
+      setPage(1);
+    }
   }, []);
+
+  function handlePrevPage() {
+    setPage((p) => Math.max(1, p - 1));
+  }
+
+  function handleNextPage() {
+    setPage((p) => Math.min(totalPages, p + 1));
+  }
 
   return (
     <PageWrapper
       title="Stock Movements"
       subtitle="Transaction ledger showing all inventory movements"
-      badge={String(transactions.length)}
+      badge={total > 0 ? String(total) : undefined}
       filters={
         <>
           <Select value={datePreset} onValueChange={handleDatePresetChange}>
@@ -202,7 +198,7 @@ export default function MovementsPage() {
               <SelectItem value="all">All types</SelectItem>
               {ALL_TXN_TYPES.map((t) => (
                 <SelectItem key={t} value={t}>
-                  {TXN_TYPE_LABELS[t]}
+                  {TXN_TYPE_CONFIG[t].label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -216,10 +212,7 @@ export default function MovementsPage() {
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
             illustration={
-              <AlertCircle
-                className="h-12 w-12 text-muted-foreground/40"
-                aria-hidden="true"
-              />
+              <AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
             }
             title="Failed to load movements"
             description="An error occurred while fetching stock transactions. Please try again."
@@ -230,12 +223,9 @@ export default function MovementsPage() {
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
             illustration={
-              <ArrowUpDown
-                className="h-12 w-12 text-muted-foreground/40"
-                aria-hidden="true"
-              />
+              <ArrowUpDown className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
             }
-            title="No transactions found"
+            title="No movements found"
             description="No stock movements match the selected filters."
             action={{ label: "Clear Filters", onClick: handleResetFilters }}
           />
@@ -245,20 +235,21 @@ export default function MovementsPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
+          className="space-y-3"
         >
           <motion.div variants={fadeUp}>
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className={TH}>Date</TableHead>
-                    <TableHead className={TH}>Product</TableHead>
                     <TableHead className={TH}>Type</TableHead>
+                    <TableHead className={TH}>Product</TableHead>
+                    <TableHead className={TH}>Location</TableHead>
                     <TableHead className={cn(TH, "text-right")}>Qty Change</TableHead>
-                    <TableHead className={cn(TH, "text-right")}>Before</TableHead>
-                    <TableHead className={cn(TH, "text-right")}>After</TableHead>
+                    <TableHead className={cn(TH, "text-right")}>Balance After</TableHead>
                     <TableHead className={TH}>Reference</TableHead>
-                    <TableHead className={TH}>User</TableHead>
+                    <TableHead className={TH}>Date</TableHead>
+                    <TableHead className={TH}>By</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -272,11 +263,8 @@ export default function MovementsPage() {
                         key={txn.id}
                         className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                       >
-                        <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
-                          {format(
-                            new Date(txn.createdAt),
-                            "dd MMM yyyy, HH:mm",
-                          )}
+                        <TableCell className="px-3 py-2.5">
+                          <TxnTypeBadge type={txn.transactionType} />
                         </TableCell>
                         <TableCell className="px-3 py-2.5">
                           <div className="font-medium text-sm text-foreground truncate max-w-[180px]">
@@ -288,8 +276,8 @@ export default function MovementsPage() {
                             {txn.productVariant?.sku ?? "—"}
                           </div>
                         </TableCell>
-                        <TableCell className="px-3 py-2.5">
-                          <TxnTypeBadge type={txn.transactionType} />
+                        <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">
+                          {txn.location?.name ?? "—"}
                         </TableCell>
                         <TableCell
                           className={cn(
@@ -300,14 +288,14 @@ export default function MovementsPage() {
                           {isPositive ? "+" : ""}
                           {txn.quantityChange.toLocaleString()}
                         </TableCell>
-                        <TableCell className="px-3 py-2.5 text-right tabular-nums text-sm text-muted-foreground">
-                          {Number(txn.quantityBefore).toLocaleString()}
-                        </TableCell>
                         <TableCell className="px-3 py-2.5 text-right tabular-nums text-sm font-medium">
                           {Number(txn.quantityAfter).toLocaleString()}
                         </TableCell>
                         <TableCell className="px-3 py-2.5 text-xs text-muted-foreground font-mono">
                           {ref || "—"}
+                        </TableCell>
+                        <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                          {format(new Date(txn.createdAt), "dd MMM yyyy, HH:mm")}
                         </TableCell>
                         <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">
                           {txn.creator?.name ?? "—"}
@@ -317,6 +305,40 @@ export default function MovementsPage() {
                   })}
                 </TableBody>
               </Table>
+            </div>
+          </motion.div>
+
+          <motion.div
+            variants={fadeUp}
+            className="flex items-center justify-between px-1"
+          >
+            <span className="text-xs text-muted-foreground">
+              Showing {rangeStart}–{rangeEnd} of {total} movements
+            </span>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={handlePrevPage}
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                Prev
+              </Button>
+              <span className="text-xs text-muted-foreground px-1">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={handleNextPage}
+                disabled={currentPage >= totalPages}
+              >
+                Next
+                <ChevronRight className="h-3.5 w-3.5 ml-1" />
+              </Button>
             </div>
           </motion.div>
         </motion.div>

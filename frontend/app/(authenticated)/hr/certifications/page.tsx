@@ -184,7 +184,7 @@ export default function CertificationsPage() {
       }
     >
       {!certs?.length ? (
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="flex-1 rounded-lg border border-border bg-card shadow-sm overflow-hidden">
           <EmptyState
             illustration={<Award className="h-8 w-8 text-muted-foreground" />}
             title="No certifications recorded"
@@ -272,11 +272,11 @@ export default function CertificationsPage() {
                   <Card
                     key={cert.id}
                     className={cn(
-                      "rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4",
+                      "rounded-lg border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4",
                       cfg.accent,
                     )}
                   >
-                    <CardContent className="p-4 space-y-3">
+                    <CardContent className="p-3 space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">

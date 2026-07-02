@@ -157,7 +157,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
         className={cn(
-          "relative overflow-hidden rounded-lg border border-slate-200/80 border-l-[3px] bg-white/90 backdrop-blur-sm p-3 shadow-sm",
+          "relative overflow-hidden rounded-2xl border border-slate-200/80 border-l-[3px] bg-white/90 backdrop-blur-sm p-3 shadow-sm",
           "flex h-full flex-col group cursor-pointer",
           "transition-shadow duration-200 hover:border-violet-500/30 hover:shadow-md",
           statusAccent,

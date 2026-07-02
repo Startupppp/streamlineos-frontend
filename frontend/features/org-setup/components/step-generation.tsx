@@ -8,9 +8,12 @@ import { Check, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { clearAll } from "@/features/org-setup/lib/draft";
 import { useOrgSetupMutation } from "@/lib/api/hooks/org";
 import type { WizardData } from "../lib/types";
 import { GENERATION_STEPS } from "../lib/constants";
+
+const SETUP_DONE_KEY = "org-setup-complete";
 
 type StepGenerationProps = {
   data: WizardData;
@@ -59,6 +62,8 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
     setCompletedSteps(total);
     clearBackendTokenCache();
     document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
+    sessionStorage.setItem(SETUP_DONE_KEY, "1");
+
     if (autoLoginToken) {
       console.log("[OrgSetup] calling signIn with autoLoginToken...");
       const signInResult = await signIn("credentials", {
@@ -67,10 +72,13 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
       }).catch((e: unknown) => { console.error("[OrgSetup] signIn threw", e); return null; });
       console.log("[OrgSetup] signIn result", signInResult);
     } else {
-      console.warn("[OrgSetup] no autoLoginToken — session will NOT be refreshed");
+      console.warn("[OrgSetup] no autoLoginToken — session will rely on live lookup");
     }
-    console.log("[OrgSetup] handleSuccess complete, calling onNext");
-    onNextRef.current();
+
+    await new Promise<void>(resolve => setTimeout(resolve, 1500));
+    clearAll();
+    console.log("[OrgSetup] navigating to dashboard");
+    window.location.replace("/dashboard");
   }
 
   function handleError(msg: string) {
@@ -79,6 +87,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
       intervalRef.current = null;
     }
     hasRunRef.current = false;
+    sessionStorage.removeItem(SETUP_DONE_KEY);
     setError(msg);
   }
 
@@ -117,6 +126,10 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
   }
 
   useEffect(() => {
+    if (sessionStorage.getItem(SETUP_DONE_KEY) === "1") {
+      window.location.replace("/dashboard");
+      return;
+    }
     runSetup();
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);

@@ -84,7 +84,7 @@ function RateRows({ place }: RateRowsProps) {
   return (
     <>
       {place.rates.map((rate: Gstr1RateBucket, index: number) => (
-        <TableRow key={`${place.placeOfSupply ?? "unk"}-${rate.gstRate}`}>
+        <TableRow key={`${place.placeOfSupply ?? "unk"}-${rate.gstRate}`} className="border-b border-border/50 hover:bg-muted/30">
           {index === 0 ? (
             <TableCell
               rowSpan={rateCount}
@@ -96,16 +96,16 @@ function RateRows({ place }: RateRowsProps) {
           <TableCell className="text-sm text-foreground font-mono">
             {formatRate(rate.gstRate)}
           </TableCell>
-          <TableCell className="text-sm text-right tabular-nums">
+          <TableCell className="text-sm text-right tabular-nums font-mono">
             {rate.taxableValue}
           </TableCell>
-          <TableCell className="text-sm text-right tabular-nums">
+          <TableCell className="text-sm text-right tabular-nums font-mono">
             {rate.cgst}
           </TableCell>
-          <TableCell className="text-sm text-right tabular-nums">
+          <TableCell className="text-sm text-right tabular-nums font-mono">
             {rate.sgst}
           </TableCell>
-          <TableCell className="text-sm text-right tabular-nums">
+          <TableCell className="text-sm text-right tabular-nums font-mono">
             {rate.igst}
           </TableCell>
           <TableCell className="text-sm text-right tabular-nums">
@@ -136,7 +136,7 @@ function SectionTable({
       : "bg-amber-500/10 text-amber-700 border-amber-500/20";
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+    <div className="rounded-lg border border-border overflow-hidden">
       <div className={`px-4 py-2.5 border-b ${tintClass}`}>
         <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
         <p className="text-xs opacity-80 mt-0.5">{description}</p>
@@ -149,14 +149,14 @@ function SectionTable({
         <div className="overflow-x-auto">
           <Table className="min-w-[760px]">
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[180px]">Place of supply</TableHead>
-                <TableHead className="w-[100px]">GST rate</TableHead>
-                <TableHead className="text-right">Taxable value</TableHead>
-                <TableHead className="text-right">CGST</TableHead>
-                <TableHead className="text-right">SGST</TableHead>
-                <TableHead className="text-right">IGST</TableHead>
-                <TableHead className="w-[90px] text-right">Invoices</TableHead>
+              <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                <TableHead className="w-[180px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Place of supply</TableHead>
+                <TableHead className="w-[100px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">GST rate</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Taxable value</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">CGST</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">SGST</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">IGST</TableHead>
+                <TableHead className="w-[90px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Invoices</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -220,36 +220,38 @@ export default function Gstr1Page() {
       subtitle="Outward supplies for the selected period."
     >
       <div className="space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="gstr1-from"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
-            >
-              From
-            </label>
-            <Input
-              id="gstr1-from"
-              type="date"
-              value={from}
-              onChange={handleFromChange}
-              className="w-full sm:w-[160px]"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="gstr1-to"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
-            >
-              To
-            </label>
-            <Input
-              id="gstr1-to"
-              type="date"
-              value={to}
-              onChange={handleToChange}
-              className="w-full sm:w-[160px]"
-            />
+        <div className="rounded-lg border border-border bg-muted/40 p-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="gstr1-from"
+                className="text-[11px] font-medium text-muted-foreground leading-none"
+              >
+                From
+              </label>
+              <Input
+                id="gstr1-from"
+                type="date"
+                value={from}
+                onChange={handleFromChange}
+                className="w-full sm:w-[160px] h-8 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="gstr1-to"
+                className="text-[11px] font-medium text-muted-foreground leading-none"
+              >
+                To
+              </label>
+              <Input
+                id="gstr1-to"
+                type="date"
+                value={to}
+                onChange={handleToChange}
+                className="w-full sm:w-[160px] h-8 text-sm"
+              />
+            </div>
           </div>
         </div>
 
@@ -269,7 +271,7 @@ export default function Gstr1Page() {
           />
         ) : (
           <div className="space-y-4">
-            <div className="rounded-xl border border-border/60 bg-card px-5 py-4">
+            <div className="rounded-lg border border-border bg-card px-4 py-3">
               <h3 className="text-sm font-semibold text-foreground mb-3">
                 Grand total
               </h3>

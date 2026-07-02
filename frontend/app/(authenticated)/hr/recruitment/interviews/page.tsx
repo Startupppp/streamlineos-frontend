@@ -170,19 +170,19 @@ export default function InterviewsPage() {
     >
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-muted/40 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold tabular-nums text-foreground">{interviewStats.total}</p>
+          <p className="text-xl font-bold tabular-nums text-foreground">{interviewStats.total}</p>
           <p className="text-xs font-medium text-muted-foreground mt-0.5">Total</p>
         </div>
         <div className="bg-muted/40 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold tabular-nums text-amber-600">{interviewStats.pending}</p>
+          <p className="text-xl font-bold tabular-nums text-amber-600">{interviewStats.pending}</p>
           <p className="text-xs font-medium text-muted-foreground mt-0.5">Scheduled</p>
         </div>
         <div className="bg-muted/40 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold tabular-nums text-emerald-600">{interviewStats.passed}</p>
+          <p className="text-xl font-bold tabular-nums text-emerald-600">{interviewStats.passed}</p>
           <p className="text-xs font-medium text-muted-foreground mt-0.5">Passed</p>
         </div>
         <div className="bg-muted/40 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold tabular-nums text-rose-600">{interviewStats.failed}</p>
+          <p className="text-xl font-bold tabular-nums text-rose-600">{interviewStats.failed}</p>
           <p className="text-xs font-medium text-muted-foreground mt-0.5">Failed</p>
         </div>
       </div>

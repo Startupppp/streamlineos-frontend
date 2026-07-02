@@ -63,7 +63,7 @@ function ExpensePagination({
 
   if (variant === "admin") {
     return (
-      <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/20">
+      <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/40">
         <span className="text-xs text-muted-foreground">
           Showing{" "}
           <strong className="font-semibold text-foreground">{startItem}</strong>{" "}
@@ -119,7 +119,7 @@ function ExpensePagination({
   }
 
   return (
-    <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/20">
+    <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/40">
       <span className="text-xs text-muted-foreground">
         Showing{" "}
         <strong className="font-semibold text-foreground">{startItem}</strong>{" "}
@@ -204,9 +204,9 @@ export function AdminExpenseList({
   onShowAll,
 }: AdminExpenseListProps) {
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-      <CardContent className="p-0">
-        <div className="flex items-center justify-between px-6 py-4 border-b bg-muted/20">
+    <Card className="rounded-lg border border-border overflow-hidden">
+      <CardContent className="p-0 flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-muted/40">
           <h3 className="text-sm font-semibold text-foreground">
             Expense Claims
           </h3>
@@ -217,7 +217,7 @@ export function AdminExpenseList({
         </div>
 
         {expenses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="flex flex-col items-center justify-center flex-1 min-h-[260px] gap-3">
             <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
               <EmptyExpensesIllustration className="h-5 w-5 opacity-60" />
             </div>
@@ -310,10 +310,10 @@ export function MemberExpenseList({
   onPageChange,
 }: MemberExpenseListProps) {
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-      <CardContent className="p-0" aria-live="polite">
+    <Card className="rounded-lg border border-border overflow-hidden">
+      <CardContent className="p-0 flex flex-col" aria-live="polite">
         {expenses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="flex flex-col items-center justify-center flex-1 min-h-[260px] gap-3">
             <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
               <EmptyExpensesIllustration className="h-5 w-5 opacity-60" />
             </div>
@@ -362,43 +362,43 @@ export function MemberExpenseList({
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableHead
                         scope="col"
-                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3"
                       >
                         Claim ID
                       </TableHead>
                       <TableHead
                         scope="col"
-                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3 hidden md:table-cell"
                       >
                         Date
                       </TableHead>
                       <TableHead
                         scope="col"
-                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3 hidden md:table-cell"
                       >
                         Category
                       </TableHead>
                       <TableHead
                         scope="col"
-                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3 hidden md:table-cell"
                       >
                         Description
                       </TableHead>
                       <TableHead
                         scope="col"
-                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3 text-right"
                       >
                         Amount
                       </TableHead>
                       <TableHead
                         scope="col"
-                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3"
                       >
                         Status
                       </TableHead>
                       <TableHead
                         scope="col"
-                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3 text-right"
+                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3 text-right"
                       >
                         Action
                       </TableHead>

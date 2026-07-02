@@ -160,9 +160,9 @@ export default function OrgSetupPage() {
   useEffect(() => {
     if (sessionCheckCalledRef.current) return;
     sessionCheckCalledRef.current = true;
-    updateRef
-      .current()
-      .then((s) => {
+    fetch("/api/auth/session")
+      .then(r => r.json() as Promise<{ orgOnboardingCompletedAt?: string | null } | null>)
+      .then(s => {
         if (s?.orgOnboardingCompletedAt) {
           clearAll();
           window.location.replace("/dashboard");

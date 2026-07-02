@@ -1,24 +1,18 @@
 "use client";
 
-import { use, useState, type ChangeEvent } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, Send, PackageCheck } from "lucide-react";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { AppSheet } from "@/components/shared/app-sheet";
-import { usePurchaseOrder, useSendPurchaseOrder, useReceiveGoods } from "@/hooks/api/inventory";
-import type { PurchaseOrder, PurchaseOrderLine, PurchaseOrderStatus, ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
+import { usePurchaseOrder, useSendPurchaseOrder } from "@/hooks/api/inventory";
+import { ReceiveGoodsSheet } from "@/features/inventory/components/receive-goods-sheet";
+import type { PurchaseOrderLine, PurchaseOrderStatus } from "@/types/inventory";
 
 interface PoDetailPageProps {
   params: Promise<{ poId: string }>;
@@ -55,194 +49,6 @@ function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
     <Badge variant={STATUS_VARIANT[status]} className={extraClass}>
       {status}
     </Badge>
-  );
-}
-
-const receiveSchema = z.object({
-  receivedDate: z.string().min(1, "Received date is required"),
-  notes: z.string(),
-});
-
-type ReceiveFormValues = z.infer<typeof receiveSchema>;
-
-interface ReceiveGoodsSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  po: PurchaseOrder;
-}
-
-interface DraftReceiveLine {
-  poLineId: number;
-  productName: string;
-  sku: string | null;
-  ordered: number;
-  alreadyReceived: number;
-  quantityReceived: string;
-}
-
-function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
-  const receiveMutation = useReceiveGoods(po.id);
-
-  const form = useForm<ReceiveFormValues>({
-    resolver: zodResolver(receiveSchema),
-    defaultValues: {
-      receivedDate: new Date().toISOString().slice(0, 10),
-      notes: "",
-    },
-  });
-
-  const [receiveLines, setReceiveLines] = useState<DraftReceiveLine[]>(() =>
-    po.lines
-      .filter((l) => Number(l.quantity) > Number(l.quantityReceived))
-      .map((l) => ({
-        poLineId: l.id,
-        productName: l.productVariant?.product?.name ?? l.productVariant?.name ?? "Product",
-        sku: l.productVariant?.sku ?? null,
-        ordered: Number(l.quantity),
-        alreadyReceived: Number(l.quantityReceived),
-        quantityReceived: String(
-          Math.max(0, Number(l.quantity) - Number(l.quantityReceived)),
-        ),
-      })),
-  );
-
-  function handleQtyChange(poLineId: number, value: string): void {
-    setReceiveLines((prev) =>
-      prev.map((l) => (l.poLineId === poLineId ? { ...l, quantityReceived: value } : l)),
-    );
-  }
-
-  function makeQtyChangeHandler(poLineId: number) {
-    return function handleQtyInput(e: ChangeEvent<HTMLInputElement>): void {
-      handleQtyChange(poLineId, e.target.value);
-    };
-  }
-
-  function handleClose(): void {
-    form.reset();
-    onOpenChange(false);
-  }
-
-  function handleOpenChange(nextOpen: boolean): void {
-    if (!nextOpen) form.reset();
-    onOpenChange(nextOpen);
-  }
-
-  async function onSubmit(values: ReceiveFormValues): Promise<void> {
-    const activeLines = receiveLines.filter((l) => Number(l.quantityReceived) > 0);
-    if (activeLines.length === 0) {
-      toast.error("Enter quantity for at least one line");
-      return;
-    }
-
-    const payload: ReceiveGoodsInput = {
-      receivedDate: values.receivedDate,
-      notes: values.notes.trim() || undefined,
-      lines: activeLines.map<ReceiveGoodsLineInput>((l) => ({
-        poLineId: l.poLineId,
-        quantityReceived: Number(l.quantityReceived),
-        qualityStatus: "ACCEPTED",
-      })),
-    };
-
-    try {
-      const grn = await receiveMutation.mutateAsync(payload);
-      toast.success(`GRN ${grn.grnNumber} recorded`);
-      handleClose();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to receive goods");
-    }
-  }
-
-  return (
-    <AppSheet
-      open={open}
-      onOpenChange={handleOpenChange}
-      title="Receive Goods"
-      description="Record quantities received for this purchase order."
-      footer={
-        <>
-          <Button variant="outline" size="sm" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            form="receive-goods-form"
-            size="sm"
-            disabled={receiveMutation.isPending}
-          >
-            {receiveMutation.isPending ? "Recording…" : "Record receipt"}
-          </Button>
-        </>
-      }
-    >
-      <Form {...form}>
-        <form id="receive-goods-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="receivedDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Received date *</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="space-y-2">
-            {receiveLines.map((line) => (
-              <div key={line.poLineId} className="rounded-md border border-border/60 p-3 space-y-1">
-                <div className="text-sm font-medium">{line.productName}</div>
-                {line.sku && (
-                  <div className="text-xs text-muted-foreground font-mono">{line.sku}</div>
-                )}
-                <div className="flex items-center gap-3 mt-2">
-                  <div className="text-xs text-muted-foreground">
-                    Ordered: {line.ordered.toFixed(2)} · Received: {line.alreadyReceived.toFixed(2)}
-                  </div>
-                  <div className="flex items-center gap-1.5 ml-auto">
-                    <label className="text-xs text-muted-foreground">Qty received</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max={line.ordered - line.alreadyReceived}
-                      step="0.0001"
-                      value={line.quantityReceived}
-                      onChange={makeQtyChangeHandler(line.poLineId)}
-                      className="w-28 text-right tabular-nums"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Notes</FormLabel>
-                <FormControl>
-                  <Textarea
-                    rows={2}
-                    placeholder="Any notes about this receipt"
-                    className="resize-none"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </form>
-      </Form>
-    </AppSheet>
   );
 }
 
@@ -366,10 +172,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
             <dt className="text-muted-foreground">Vendor</dt>
             <dd>
               {po.vendor ? (
-                <Link
-                  href={`/inventory/vendors/${po.vendor.id}`}
-                  className="hover:text-blue-600 hover:underline"
-                >
+                <Link href={`/inventory/vendors/${po.vendor.id}`} className="hover:text-blue-600 hover:underline">
                   {po.vendor.name}
                 </Link>
               ) : "—"}
@@ -450,11 +253,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
       </div>
 
       {canReceive && pendingLines.length > 0 && (
-        <ReceiveGoodsSheet
-          open={receiveSheetOpen}
-          onOpenChange={setReceiveSheetOpen}
-          po={po}
-        />
+        <ReceiveGoodsSheet open={receiveSheetOpen} onOpenChange={setReceiveSheetOpen} po={po} />
       )}
     </PageWrapper>
   );

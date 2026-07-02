@@ -281,11 +281,11 @@ export function InterviewList() {
                         aria-label="Select all interviews"
                       />
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Candidate</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Type</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Scheduled</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Duration</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Result</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Candidate</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Scheduled</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Duration</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Result</TableHead>
                     <TableHead className="w-[90px]" />
                   </TableRow>
                 </TableHeader>

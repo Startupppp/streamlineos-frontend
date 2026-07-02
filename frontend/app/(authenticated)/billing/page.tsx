@@ -120,7 +120,7 @@ export default function BillingPage() {
     >
       <div className="space-y-4">
         {sub && (
-          <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
+          <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-violet-500/20 to-indigo-500/20 border border-violet-400/40 px-4 py-3">
             <CreditCard className="h-5 w-5 text-muted-foreground shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">
@@ -181,7 +181,7 @@ export default function BillingPage() {
           </div>
         ) : (
           <>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {statsLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <div
@@ -364,12 +364,12 @@ function InvoiceTable({
     <div className="overflow-x-auto">
       <Table className="min-w-[640px]">
         <TableHeader>
-          <TableRow>
-            <TableHead>Invoice #</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Due Date</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
+          <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Invoice #</TableHead>
+            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Client</TableHead>
+            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
+            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Due Date</TableHead>
+            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Amount</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -382,7 +382,7 @@ function InvoiceTable({
               inv.dueDate &&
               isPast(new Date(inv.dueDate));
             return (
-              <TableRow key={inv.id}>
+              <TableRow key={inv.id} className="border-b border-border/50 hover:bg-muted/30">
                 <TableCell className="font-mono text-xs font-medium">
                   {inv.invoiceNumber}
                 </TableCell>
@@ -403,7 +403,7 @@ function InvoiceTable({
                     ? format(new Date(inv.dueDate), "dd MMM yyyy")
                     : "—"}
                 </TableCell>
-                <TableCell className="text-right font-medium text-sm">
+                <TableCell className="text-right font-mono font-medium text-sm px-3 py-2">
                   {fmt(inv.total)}
                 </TableCell>
                 <TableCell>

@@ -3,7 +3,6 @@
 import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -46,20 +45,12 @@ export default function AgedReceivablesPage() {
       title="Aged Receivables"
       subtitle="Outstanding customer balances grouped by days overdue."
     >
-      <div className="flex flex-col sm:flex-row gap-3 mb-4 items-end">
-        <div>
-          <label
-            htmlFor="aged-asof"
-            className="text-sm text-muted-foreground block mb-1"
-          >
-            As of
-          </label>
-          <Input
-            id="aged-asof"
-            type="date"
-            value={asOf}
-            onChange={handleAsOfChange}
-          />
+      <div className="rounded-lg border border-border bg-muted/40 p-3 mb-4">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="aged-asof" className="text-[11px] font-medium text-muted-foreground leading-none">As of</label>
+            <Input id="aged-asof" type="date" value={asOf} onChange={handleAsOfChange} className="w-full sm:w-[160px] h-8 text-sm" />
+          </div>
         </div>
       </div>
 
@@ -74,22 +65,22 @@ export default function AgedReceivablesPage() {
           description={`No customer balances are overdue as of ${asOf}.`}
         />
       ) : (
-        <Card className="overflow-hidden">
+        <div className="rounded-lg border border-border overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead className="text-right">Current</TableHead>
-                <TableHead className="text-right">1–30 days</TableHead>
-                <TableHead className="text-right">31–60 days</TableHead>
-                <TableHead className="text-right">61–90 days</TableHead>
-                <TableHead className="text-right">90+ days</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+              <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Customer</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Current</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">1–30 days</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">31–60 days</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">61–90 days</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">90+ days</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {report.rows.map((row) => (
-                <TableRow key={row.clientId}>
+                <TableRow key={row.clientId} className="border-b border-border/50 hover:bg-muted/30">
                   <TableCell>
                     <Link
                       href={`/accounting/customers/${row.clientId}`}
@@ -98,50 +89,50 @@ export default function AgedReceivablesPage() {
                       {row.clientName}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-right tabular-nums font-mono text-sm">
                     {formatAmount(row.current)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-right tabular-nums font-mono text-sm">
                     {formatAmount(row.d1_30)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-right tabular-nums font-mono text-sm">
                     {formatAmount(row.d31_60)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-right tabular-nums font-mono text-sm">
                     {formatAmount(row.d61_90)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-rose-600">
+                  <TableCell className="text-right tabular-nums text-rose-600 font-mono text-sm">
                     {formatAmount(row.d91_plus)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums font-medium">
+                  <TableCell className="text-right tabular-nums font-medium font-mono text-sm">
                     {formatAmount(row.total)}
                   </TableCell>
                 </TableRow>
               ))}
               <TableRow className="font-medium bg-muted/40">
                 <TableCell>Total</TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right tabular-nums font-mono text-sm">
                   {formatAmount(report.totals.current)}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right tabular-nums font-mono text-sm">
                   {formatAmount(report.totals.d1_30)}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right tabular-nums font-mono text-sm">
                   {formatAmount(report.totals.d31_60)}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right tabular-nums font-mono text-sm">
                   {formatAmount(report.totals.d61_90)}
                 </TableCell>
-                <TableCell className="text-right tabular-nums text-rose-600">
+                <TableCell className="text-right tabular-nums text-rose-600 font-mono text-sm">
                   {formatAmount(report.totals.d91_plus)}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right tabular-nums font-mono text-sm">
                   {formatAmount(report.totals.total)}
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
-        </Card>
+        </div>
       )}
     </PageWrapper>
   );

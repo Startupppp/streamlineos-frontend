@@ -31,16 +31,16 @@ type SectionProps = {
 
 function Section({ title, rows, total, accentClass, extraRow }: SectionProps) {
   return (
-    <Card className="overflow-hidden">
+    <div className="rounded-lg border border-border overflow-hidden">
       <div className={`px-4 py-3 font-medium border-b ${accentClass}`}>
         {title}
       </div>
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-24">Code</TableHead>
-            <TableHead>Account</TableHead>
-            <TableHead className="text-right">Balance</TableHead>
+          <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead className="w-24 text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Code</TableHead>
+            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Account</TableHead>
+            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Balance</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -55,10 +55,10 @@ function Section({ title, rows, total, accentClass, extraRow }: SectionProps) {
             </TableRow>
           ) : (
             rows.map((row) => (
-              <TableRow key={row.accountId}>
+              <TableRow key={row.accountId} className="border-b border-border/50 hover:bg-muted/30">
                 <TableCell className="font-mono">{row.code}</TableCell>
                 <TableCell>{row.name}</TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right font-mono text-sm tabular-nums">
                   {Number(row.balance).toFixed(2)}
                 </TableCell>
               </TableRow>
@@ -81,7 +81,7 @@ function Section({ title, rows, total, accentClass, extraRow }: SectionProps) {
           </TableRow>
         </TableBody>
       </Table>
-    </Card>
+    </div>
   );
 }
 
@@ -104,32 +104,35 @@ export default function BalanceSheetPage() {
       title="Balance Sheet"
       subtitle="Snapshot of assets, liabilities, and equity as of a chosen date."
     >
-      <div className="flex flex-col sm:flex-row gap-3 mb-4 items-end">
-        <div>
-          <label
-            htmlFor="balance-sheet-asof"
-            className="text-sm text-muted-foreground block mb-1"
-          >
-            As of
-          </label>
-          <Input
-            id="balance-sheet-asof"
-            type="date"
-            value={asOf}
-            onChange={handleAsOfChange}
-          />
-        </div>
-        {report && (
-          <div className="ml-auto text-sm">
-            {report.balanced ? (
-              <span className="text-emerald-600">Balanced ✓</span>
-            ) : (
-              <span className="text-rose-600">
-                Imbalanced — Assets ≠ Liabilities + Equity
-              </span>
-            )}
+      <div className="rounded-lg border border-border bg-muted/40 p-3 mb-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
+          <div>
+            <label
+              htmlFor="balance-sheet-asof"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              As of
+            </label>
+            <Input
+              id="balance-sheet-asof"
+              type="date"
+              value={asOf}
+              onChange={handleAsOfChange}
+              className="w-full sm:w-[160px] h-8 text-sm"
+            />
           </div>
-        )}
+          {report && (
+            <div className="ml-auto text-sm">
+              {report.balanced ? (
+                <span className="text-emerald-600">Balanced ✓</span>
+              ) : (
+                <span className="text-rose-600">
+                  Imbalanced — Assets ≠ Liabilities + Equity
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {query.isLoading && <LoadingState variant="table" />}

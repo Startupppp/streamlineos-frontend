@@ -26,6 +26,38 @@ import { getColorSafe, payrollStatusColors } from "@/lib/theme-constants";
 import type { PayrollWithUser } from "@/types/hr";
 import { useMemo, useState } from "react";
 
+function StatusSummary({ payrolls }: { payrolls: PayrollWithUser[] }) {
+  const counts = useMemo(() => {
+    const acc = { DRAFT: 0, APPROVED: 0, PAID: 0 };
+    for (const p of payrolls) {
+      if (p.status === "DRAFT") acc.DRAFT++;
+      else if (p.status === "APPROVED") acc.APPROVED++;
+      else if (p.status === "PAID") acc.PAID++;
+    }
+    return acc;
+  }, [payrolls]);
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {counts.DRAFT > 0 && (
+        <Badge variant="outline" className="text-[10px] font-semibold px-1.5 py-0 h-5 border-amber-300 text-amber-700 bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:bg-amber-950/30">
+          {counts.DRAFT} Draft
+        </Badge>
+      )}
+      {counts.APPROVED > 0 && (
+        <Badge variant="outline" className="text-[10px] font-semibold px-1.5 py-0 h-5 border-blue-300 text-blue-700 bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:bg-blue-950/30">
+          {counts.APPROVED} Approved
+        </Badge>
+      )}
+      {counts.PAID > 0 && (
+        <Badge variant="outline" className="text-[10px] font-semibold px-1.5 py-0 h-5 border-emerald-300 text-emerald-700 bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:bg-emerald-950/30">
+          {counts.PAID} Paid
+        </Badge>
+      )}
+    </div>
+  );
+}
+
 interface PayrollTableProps {
   payrolls: PayrollWithUser[];
   title: string;
@@ -105,7 +137,7 @@ function PayrollRow({
           {payroll.status}
         </Badge>
       </TableCell>
-      <TableCell className="whitespace-nowrap hidden lg:table-cell">
+      <TableCell className="whitespace-nowrap hidden md:table-cell">
         <p className="text-xs text-muted-foreground">
           {payroll.createdAt ? format(new Date(payroll.createdAt), "MMM d, yyyy") : "—"}
         </p>
@@ -113,7 +145,7 @@ function PayrollRow({
           <p className="text-[10px] text-muted-foreground/70">by {payroll.generatedByName}</p>
         )}
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground whitespace-nowrap hidden lg:table-cell">
+      <TableCell className="text-xs text-muted-foreground whitespace-nowrap hidden md:table-cell">
         {payroll.approvedByName ?? "—"}
       </TableCell>
       <TableCell className="text-right pr-6">
@@ -278,18 +310,21 @@ export function PayrollTable({
   }, [payrolls, groupByEmployee]);
 
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
       <CardHeader className="border-b border-border/50 px-6 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-            <CreditCard className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+              <CreditCard className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-sm font-semibold text-foreground truncate">{title}</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
+                Manage payroll status and generate payslips
+              </CardDescription>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-sm font-semibold text-foreground">{title}</CardTitle>
-            <CardDescription className="text-xs text-muted-foreground">
-              Manage payroll status and generate payslips
-            </CardDescription>
-          </div>
+          <StatusSummary payrolls={payrolls} />
         </div>
       </CardHeader>
       <CardContent aria-live="polite" className="px-0 pb-0 pt-0">
@@ -300,26 +335,26 @@ export function PayrollTable({
                 <caption className="sr-only">Payroll records</caption>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="pl-6 font-semibold text-foreground/80">
+                    <TableHead className="pl-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       {groupByEmployee ? "Month" : "Employee"}
                     </TableHead>
-                    <TableHead className="text-right font-semibold text-foreground/80">
+                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Gross Salary
                     </TableHead>
-                    <TableHead className="text-right font-semibold text-foreground/80">
+                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Deductions
                     </TableHead>
-                    <TableHead className="text-right font-semibold text-foreground/80">
+                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Net Salary
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Status</TableHead>
-                    <TableHead className="hidden lg:table-cell font-semibold text-foreground/80">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                    <TableHead className="hidden md:table-cell text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Generated
                     </TableHead>
-                    <TableHead className="hidden lg:table-cell font-semibold text-foreground/80">
+                    <TableHead className="hidden md:table-cell text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Approved By
                     </TableHead>
-                    <TableHead className="text-right pr-6 font-semibold text-foreground/80">
+                    <TableHead className="text-right pr-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -358,7 +393,7 @@ export function PayrollTable({
             </div>
           </ScrollArea>
         ) : (
-          <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="flex flex-col items-center justify-center flex-1 min-h-[200px] py-12 px-4">
             <EmptyExpensesIllustration className="mx-auto mb-4 w-32 h-32 opacity-70" />
             <p className="text-sm font-semibold text-foreground">No payroll records</p>
             <p className="text-xs text-muted-foreground mt-1">

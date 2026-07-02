@@ -43,7 +43,7 @@ export function IntakeItemCard({ item, onAccept, onDecline, onDuplicate }: Intak
   const handleDuplicate = useCallback(() => onDuplicate(item.id), [item.id, onDuplicate]);
 
   return (
-    <div className="flex overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all">
+    <div className="flex overflow-hidden rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
       <div className={cn("w-1 shrink-0", STATUS_LEFT_COLOR[item.status] ?? "bg-slate-300")} />
       <div className="flex-1 py-3 px-4 min-w-0">
         <div className="flex items-center gap-2 mb-1">

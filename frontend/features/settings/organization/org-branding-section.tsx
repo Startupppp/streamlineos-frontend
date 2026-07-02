@@ -45,7 +45,7 @@ function ColorField({
 }) {
   return (
     <div className="space-y-1">
-      <Label className="text-[12px] font-medium">{label}</Label>
+      <Label className="text-sm font-medium">{label}</Label>
       <div className="flex items-center gap-2">
         <input
           type="color"
@@ -161,10 +161,10 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
   const secondaryVal = form.watch("secondaryColor") ?? "";
 
   return (
-    <Card className="rounded-xl border shadow-sm">
+    <Card className="rounded-lg border border-border">
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Palette className="h-4 w-4 text-blue-600" />
             Branding
           </CardTitle>
@@ -180,7 +180,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
         {!isEditing ? (
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <p className="text-[12px] font-medium text-slate-600">Logo</p>
+              <p className="text-sm font-medium text-foreground">Logo</p>
               {org.logo ? (
                 <Image src={org.logo} alt="Org logo" width={200} height={40} className="h-10 w-auto rounded border object-contain" />
               ) : (
@@ -188,7 +188,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
               )}
             </div>
             <div className="space-y-2">
-              <p className="text-[12px] font-medium text-slate-600">Favicon</p>
+              <p className="text-sm font-medium text-foreground">Favicon</p>
               {org.favicon ? (
                 <Image src={org.favicon} alt="Favicon" width={32} height={32} className="h-8 w-8 rounded border object-contain" />
               ) : (
@@ -196,14 +196,14 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
               )}
             </div>
             <div className="space-y-1">
-              <p className="text-[12px] font-medium text-slate-600">Primary color</p>
+              <p className="text-sm font-medium text-foreground">Primary color</p>
               <div className="flex items-center gap-2">
                 {org.primaryColor && <div className="h-6 w-6 rounded-full border" style={{ backgroundColor: org.primaryColor }} />}
                 <p className="text-sm font-mono">{org.primaryColor || "Not set"}</p>
               </div>
             </div>
             <div className="space-y-1">
-              <p className="text-[12px] font-medium text-slate-600">Secondary color</p>
+              <p className="text-sm font-medium text-foreground">Secondary color</p>
               <div className="flex items-center gap-2">
                 {org.secondaryColor && <div className="h-6 w-6 rounded-full border" style={{ backgroundColor: org.secondaryColor }} />}
                 <p className="text-sm font-mono">{org.secondaryColor || "Not set"}</p>
@@ -214,7 +214,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
           <form onSubmit={form.handleSubmit(handleSave)} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Logo</Label>
+                <Label className="text-sm font-medium">Logo</Label>
                 <div className="flex gap-2">
                   <Input {...form.register("logo")} placeholder="https://cdn.example.com/logo.png" className="h-9 flex-1 text-sm" />
                   <Button type="button" variant="outline" size="sm" className="h-9 shrink-0 gap-1" disabled={logoUploading} onClick={() => logoInputRef.current?.click()}>
@@ -226,7 +226,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                 {form.formState.errors.logo && <p className="text-[11px] text-destructive">{form.formState.errors.logo.message}</p>}
               </div>
               <div className="space-y-1">
-                <Label className="text-[12px] font-medium">Favicon <span className="text-muted-foreground font-normal">(max 256 KB)</span></Label>
+                <Label className="text-sm font-medium">Favicon <span className="text-muted-foreground font-normal">(max 256 KB)</span></Label>
                 <div className="flex gap-2">
                   <Input {...form.register("favicon")} placeholder="https://cdn.example.com/favicon.ico" className="h-9 flex-1 text-sm" />
                   <Button type="button" variant="outline" size="sm" className="h-9 shrink-0 gap-1" disabled={faviconUploading} onClick={() => faviconInputRef.current?.click()}>
@@ -255,7 +255,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
             </div>
 
             <div className="space-y-1">
-              <Label className="text-[12px] font-medium">Login page background URL</Label>
+              <Label className="text-sm font-medium">Login page background URL</Label>
               <Input {...form.register("loginBgUrl")} placeholder="https://cdn.example.com/bg.jpg" className="h-9 text-sm" />
               {form.formState.errors.loginBgUrl && <p className="text-[11px] text-destructive">{form.formState.errors.loginBgUrl.message}</p>}
             </div>

@@ -14,8 +14,8 @@ interface AttendanceLogRowProps {
 }
 
 const statusBadgeClasses: Record<string, string> = {
-  PRESENT: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
-  ABSENT: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
+  PRESENT: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
+  ABSENT: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
   LATE: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
   HALF_DAY: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800",
   WFH: "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800",
@@ -47,13 +47,13 @@ export const AttendanceLogRow = memo(function AttendanceLogRow({ log, index }: A
       <TableCell className="font-medium text-sm px-4 py-2.5">
         {format(new Date(log.date), "EEE, MMM dd")}
       </TableCell>
-      <TableCell className="font-mono text-sm px-4 py-2.5 tabular-nums text-muted-foreground">
+      <TableCell className="hidden md:table-cell font-mono text-sm px-4 py-2.5 tabular-nums text-muted-foreground">
         {log.checkIn ? format(new Date(log.checkIn), "hh:mm a") : "--"}
       </TableCell>
-      <TableCell className="font-mono text-sm px-4 py-2.5 tabular-nums text-muted-foreground">
+      <TableCell className="hidden md:table-cell font-mono text-sm px-4 py-2.5 tabular-nums text-muted-foreground">
         {log.checkOut ? format(new Date(log.checkOut), "hh:mm a") : "--"}
       </TableCell>
-      <TableCell className="px-4 py-2.5 font-mono text-sm tabular-nums">
+      <TableCell className="hidden md:table-cell px-4 py-2.5 font-mono text-sm tabular-nums">
         {log.workHours ? formatDuration(log.workHours) : "--"}
       </TableCell>
       <TableCell className="px-4 py-2.5">

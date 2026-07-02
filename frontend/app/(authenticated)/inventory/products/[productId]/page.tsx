@@ -3,23 +3,10 @@
 import { use, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ChevronLeft, Pencil, Plus } from "lucide-react";
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Tabs,
   TabsContent,
@@ -34,43 +21,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useProduct, useStockLevels } from "@/hooks/api/inventory";
+import { ProductEditForm } from "@/features/inventory/components/product-edit-form";
 import {
-  useProduct,
-  useUpdateProduct,
-  useCategories,
-  useUom,
-  useStockLevels,
-} from "@/hooks/api/inventory";
+  AddVariantSheet,
+  EditVariantSheet,
+  type ProductVariantForSheet,
+} from "@/features/inventory/components/product-variant-sheet";
 
 interface ProductDetailPageProps {
   params: Promise<{ productId: string }>;
-}
-
-interface Category {
-  id: number;
-  name: string;
-}
-
-interface UomOption {
-  id: number;
-  name: string;
-  abbreviation: string;
 }
 
 interface ProductVariant {
   id: number;
   name: string;
   sku: string;
+  barcode?: string | null;
   costPrice?: string | number | null;
   sellingPrice?: string | number | null;
   isActive: boolean;
@@ -93,38 +62,6 @@ interface ProductDetail {
   variants?: ProductVariant[];
 }
 
-const editSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  sku: z.string().min(1, "SKU is required"),
-  description: z.string().optional(),
-  categoryId: z.string().optional(),
-  uomId: z.string().optional(),
-  costPrice: z
-    .string()
-    .optional()
-    .refine(
-      (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number"
-    ),
-  sellingPrice: z
-    .string()
-    .optional()
-    .refine(
-      (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number"
-    ),
-  reorderPoint: z
-    .string()
-    .optional()
-    .refine(
-      (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number"
-    ),
-  isActive: z.string(),
-});
-
-type EditFormValues = z.infer<typeof editSchema>;
-
 function formatPrice(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === "") return "—";
   const n = Number(value);
@@ -135,13 +72,7 @@ function formatPrice(value: string | number | null | undefined): string {
   });
 }
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: ReactNode;
-}) {
+function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
       <p className="text-[11px] font-medium text-muted-foreground leading-none">
@@ -152,273 +83,18 @@ function InfoRow({
   );
 }
 
-function EditForm({
-  product,
-  categories,
-  uomOptions,
-  productId,
-  onDone,
-}: {
-  product: ProductDetail;
-  categories: Category[];
-  uomOptions: UomOption[];
-  productId: number;
-  onDone: () => void;
-}) {
-  const updateMutation = useUpdateProduct();
-
-  const form = useForm<EditFormValues>({
-    resolver: zodResolver(editSchema),
-    defaultValues: {
-      name: product.name,
-      sku: product.sku,
-      description: product.description ?? "",
-      categoryId: product.categoryId ? String(product.categoryId) : "",
-      uomId: product.uomId ? String(product.uomId) : "",
-      costPrice: product.costPrice != null ? String(product.costPrice) : "",
-      sellingPrice:
-        product.sellingPrice != null ? String(product.sellingPrice) : "",
-      reorderPoint:
-        product.reorderPoint != null ? String(product.reorderPoint) : "",
-      isActive: (product.isActive ?? product.status === "ACTIVE") ? "true" : "false",
-    },
-  });
-
-  async function onSubmit(values: EditFormValues): Promise<void> {
-    try {
-      await updateMutation.mutateAsync({
-        productId,
-        name: values.name,
-        sku: values.sku,
-        description: values.description || undefined,
-        categoryId: values.categoryId ? Number(values.categoryId) : undefined,
-        uomId: values.uomId ? Number(values.uomId) : undefined,
-        costPrice: values.costPrice ? Number(values.costPrice) : undefined,
-        sellingPrice: values.sellingPrice
-          ? Number(values.sellingPrice)
-          : undefined,
-        reorderPoint: values.reorderPoint
-          ? Number(values.reorderPoint)
-          : undefined,
-        status: values.isActive !== "false" ? "ACTIVE" : "INACTIVE",
-      });
-      toast.success("Product updated");
-      onDone();
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to update product";
-      toast.error(message);
-    }
-  }
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="sku"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>SKU</FormLabel>
-                <FormControl>
-                  <Input className="font-mono" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="categoryId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={String(cat.id)}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="uomId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Unit of Measure</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select UOM" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {uomOptions.map((uom) => (
-                      <SelectItem key={uom.id} value={String(uom.id)}>
-                        {uom.name} ({uom.abbreviation})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="sm:col-span-2">
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea rows={3} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="costPrice"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cost Price</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    className="tabular-nums"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="sellingPrice"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Selling Price</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    className="tabular-nums"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="reorderPoint"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Reorder Point</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="1"
-                    min="0"
-                    className="tabular-nums"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="isActive"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="true">Active</SelectItem>
-                    <SelectItem value="false">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onDone}
-            disabled={updateMutation.isPending}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? "Saving…" : "Save changes"}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  );
-}
-
-export default function ProductDetailPage({
-  params,
-}: ProductDetailPageProps) {
+export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { productId: productIdStr } = use(params);
   const productId = Number.parseInt(productIdStr, 10);
 
   const [editing, setEditing] = useState<boolean>(false);
+  const [addVariantOpen, setAddVariantOpen] = useState<boolean>(false);
+  const [editingVariant, setEditingVariant] = useState<ProductVariantForSheet | null>(null);
 
   const productQuery = useProduct(productId);
-  const categoriesQuery = useCategories();
-  const uomQuery = useUom();
   const stockQuery = useStockLevels({ productId });
 
   const product = productQuery.data as ProductDetail | undefined;
-  const categories = (categoriesQuery.data ?? []) as Category[];
-  const uomOptions = (uomQuery.data ?? []) as UomOption[];
-
   const stockItems = stockQuery.data?.items ?? [];
 
   function handleEditClick(): void {
@@ -427,6 +103,18 @@ export default function ProductDetailPage({
 
   function handleEditDone(): void {
     setEditing(false);
+  }
+
+  function handleAddVariantClick(): void {
+    setAddVariantOpen(true);
+  }
+
+  function handleEditVariantClick(variant: ProductVariantForSheet): void {
+    setEditingVariant(variant);
+  }
+
+  function handleEditVariantOpenChange(next: boolean): void {
+    if (!next) setEditingVariant(null);
   }
 
   function handleRetryStock(): void {
@@ -450,6 +138,7 @@ export default function ProductDetailPage({
   }
 
   const variants = product.variants ?? [];
+  const isProductActive = product.isActive ?? product.status === "ACTIVE";
 
   return (
     <PageWrapper
@@ -486,10 +175,8 @@ export default function ProductDetailPage({
           <Card>
             <CardContent className="p-5">
               {editing ? (
-                <EditForm
+                <ProductEditForm
                   product={product}
-                  categories={categories}
-                  uomOptions={uomOptions}
                   productId={productId}
                   onDone={handleEditDone}
                 />
@@ -537,10 +224,8 @@ export default function ProductDetailPage({
                   <InfoRow
                     label="Status"
                     value={
-                      <Badge
-                        variant={(product.isActive ?? product.status === "ACTIVE") ? "default" : "secondary"}
-                      >
-                        {(product.isActive ?? product.status === "ACTIVE") ? "Active" : "Inactive"}
+                      <Badge variant={isProductActive ? "default" : "secondary"}>
+                        {isProductActive ? "Active" : "Inactive"}
                       </Badge>
                     }
                   />
@@ -566,7 +251,7 @@ export default function ProductDetailPage({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-semibold">Variants</CardTitle>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" onClick={handleAddVariantClick}>
                 <Plus className="mr-1 h-4 w-4" />
                 Add Variant
               </Button>
@@ -594,33 +279,16 @@ export default function ProductDetailPage({
                           Selling Price
                         </TableHead>
                         <TableHead className="w-[90px]">Status</TableHead>
+                        <TableHead className="w-[48px]" />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {variants.map((variant) => (
-                        <TableRow key={variant.id}>
-                          <TableCell className="text-sm font-medium text-foreground">
-                            {variant.name}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs text-muted-foreground">
-                            {variant.sku}
-                          </TableCell>
-                          <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-                            {formatPrice(variant.costPrice)}
-                          </TableCell>
-                          <TableCell className="text-right text-sm tabular-nums font-medium">
-                            {formatPrice(variant.sellingPrice)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                variant.isActive ? "default" : "secondary"
-                              }
-                            >
-                              {variant.isActive ? "Active" : "Inactive"}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
+                        <VariantRow
+                          key={variant.id}
+                          variant={variant}
+                          onEdit={handleEditVariantClick}
+                        />
                       ))}
                     </TableBody>
                   </Table>
@@ -693,6 +361,63 @@ export default function ProductDetailPage({
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AddVariantSheet
+        productId={productId}
+        open={addVariantOpen}
+        onOpenChange={setAddVariantOpen}
+      />
+      <EditVariantSheet
+        key={editingVariant?.id ?? "edit-closed"}
+        productId={productId}
+        variant={editingVariant}
+        open={editingVariant !== null}
+        onOpenChange={handleEditVariantOpenChange}
+      />
     </PageWrapper>
+  );
+}
+
+interface VariantRowProps {
+  variant: ProductVariantForSheet;
+  onEdit: (variant: ProductVariantForSheet) => void;
+}
+
+function VariantRow({ variant, onEdit }: VariantRowProps) {
+  function handleEditClick(): void {
+    onEdit(variant);
+  }
+
+  return (
+    <TableRow>
+      <TableCell className="text-sm font-medium text-foreground">
+        {variant.name}
+      </TableCell>
+      <TableCell className="font-mono text-xs text-muted-foreground">
+        {variant.sku}
+      </TableCell>
+      <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+        {formatPrice(variant.costPrice)}
+      </TableCell>
+      <TableCell className="text-right text-sm tabular-nums font-medium">
+        {formatPrice(variant.sellingPrice)}
+      </TableCell>
+      <TableCell>
+        <Badge variant={variant.isActive ? "default" : "secondary"}>
+          {variant.isActive ? "Active" : "Inactive"}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleEditClick}
+          aria-label={`Edit variant ${variant.name}`}
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
+      </TableCell>
+    </TableRow>
   );
 }

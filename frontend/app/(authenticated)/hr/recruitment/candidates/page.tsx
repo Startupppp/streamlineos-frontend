@@ -161,7 +161,7 @@ function CandidateCard({
   return (
     <div
       className={cn(
-        "relative group rounded-2xl border bg-card border-l-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
+        "relative group rounded-lg border bg-card border-l-4 transition-shadow hover:shadow-md",
         cfg.accent,
         isSelected
           ? "border-primary/30 ring-2 ring-primary/20 shadow-sm"
@@ -201,8 +201,8 @@ function CandidateCard({
         </DropdownMenu>
       </div>
 
-      <Link href={`/hr/recruitment/candidates/${candidate.id}`} className="block p-5 pr-16">
-        <div className="flex items-start gap-3 mb-3">
+      <Link href={`/hr/recruitment/candidates/${candidate.id}`} className="block p-3 pr-14">
+        <div className="flex items-start gap-3 mb-2">
           <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20">
             {getInitials(candidate.firstName, candidate.lastName)}
           </div>
@@ -219,7 +219,7 @@ function CandidateCard({
           </div>
         </div>
 
-        <div className="space-y-1.5 mb-3">
+        <div className="space-y-1.5 mb-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Mail className="h-3 w-3 shrink-0" />
             <span className="truncate">{candidate.email}</span>
@@ -266,7 +266,7 @@ function CandidateCard({
         </div>
       </Link>
 
-      <div className="px-5 pb-4 flex items-center gap-2" onClick={handleStopPropagation}>
+      <div className="px-3 pb-3 flex items-center gap-2" onClick={handleStopPropagation}>
         <AIScoreCandidateButton candidateId={candidate.id} compact />
         <Select value={candidate.status ?? "NEW"} onValueChange={handleStatusChange}>
           <SelectTrigger className="h-7 flex-1 text-xs bg-muted/40 border-border/50">
@@ -290,7 +290,7 @@ function CandidateCard({
 
 function CandidateCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-border bg-card border-l-4 border-l-muted p-5 space-y-3">
+    <div className="rounded-lg border border-border bg-card border-l-4 border-l-muted p-3 space-y-3">
       <div className="flex items-start gap-3">
         <Skeleton className="h-11 w-11 rounded-full shrink-0" />
         <div className="flex-1 space-y-2">

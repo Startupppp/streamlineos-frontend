@@ -136,7 +136,7 @@ export function AdminExpenseFilters({
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2.5">
       <div className="flex items-center gap-1.5 flex-wrap">
         {[
           { key: "ALL" as StatusFilter, label: "All Claims", count: null },
@@ -164,7 +164,7 @@ export function AdminExpenseFilters({
           onValueChange={handleUserChange}
         >
           <SelectTrigger
-            className="h-8 w-[180px] text-xs"
+            className="h-8 w-[180px] text-sm"
             aria-label="Filter by employee"
           >
             <SelectValue placeholder="All Employees" />
@@ -207,7 +207,7 @@ export function MemberExpenseFilters({
   }
 
   return (
-    <div className="flex flex-wrap gap-3 items-center justify-between">
+    <div className="flex flex-wrap gap-3 items-center justify-between rounded-lg bg-muted/40 px-3 py-2.5">
       <div
         className="flex items-center gap-0.5 bg-muted p-1 rounded-xl"
         role="tablist"
@@ -227,7 +227,7 @@ export function MemberExpenseFilters({
       <div className="flex items-center gap-2">
         <Select value={datePreset} onValueChange={handleDatePresetChange}>
           <SelectTrigger
-            className="h-8 w-[150px] text-xs gap-1.5"
+            className="h-8 w-[150px] text-sm gap-1.5"
             aria-label="Filter expenses by date range"
           >
             <Filter className="h-3 w-3 shrink-0" />

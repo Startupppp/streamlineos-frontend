@@ -126,40 +126,37 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
           </div>
         </div>
         {data?.summary && (
-          <div className="flex flex-wrap gap-4 mt-3 p-3 rounded-xl bg-muted/30">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Days
-              </span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 mt-3 rounded-xl bg-muted/30">
+            <div className="flex flex-col items-center gap-0.5">
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.totalDays}
               </span>
-            </div>
-            <div className="w-px bg-border" />
-            <div className="flex flex-col gap-0.5">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Hours
+                Days
               </span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.totalHours}h
               </span>
-            </div>
-            <div className="w-px bg-border" />
-            <div className="flex flex-col gap-0.5">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Avg/Day
+                Hours
               </span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.avgHoursPerDay}h
               </span>
-            </div>
-            <div className="w-px bg-border" />
-            <div className="flex flex-col gap-0.5">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Streak
+                Avg/Day
               </span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.longestStreak}d
+              </span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Streak
               </span>
             </div>
           </div>

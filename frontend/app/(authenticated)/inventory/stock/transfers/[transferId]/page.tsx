@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, use } from "react";
+import { use, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Package, AlertCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Package, AlertCircle, Check } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,11 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useTransfer,
   useCompleteTransfer,
+  useDispatchTransfer,
   type TransferDetail,
   type TransferStatus,
 } from "@/hooks/api/inventory/stock";
+import { ReceiveTransferSheet } from "@/features/inventory/components/receive-transfer-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +45,54 @@ const STATUS_LABELS: Record<TransferStatus, string> = {
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
 };
+
+function StatusTimeline({ status }: { status: TransferStatus }) {
+  const steps: TransferStatus[] =
+    status === "CANCELLED"
+      ? ["PENDING", "IN_TRANSIT", "CANCELLED"]
+      : ["PENDING", "IN_TRANSIT", "COMPLETED"];
+  const currentIdx = steps.indexOf(status);
+
+  return (
+    <div className="flex items-center px-2 py-3">
+      {steps.map((step, i) => {
+        const done = i < currentIdx;
+        const active = i === currentIdx;
+        const cancelled = active && step === "CANCELLED";
+        return (
+          <div key={step} className="contents">
+            {i > 0 && (
+              <div className={cn("h-px flex-1 mx-2", done ? "bg-violet-400" : "bg-border")} />
+            )}
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className={cn(
+                  "h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0",
+                  done && "bg-violet-600 border-violet-600 text-white",
+                  active && !cancelled && "border-violet-500 bg-violet-50 text-violet-700",
+                  cancelled && "border-red-400 bg-red-50 text-red-600",
+                  !done && !active && "border-border bg-background text-muted-foreground",
+                )}
+              >
+                {done ? (
+                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                ) : (
+                  <span className="text-[11px] font-semibold">{i + 1}</span>
+                )}
+              </div>
+              <span className={cn(
+                "text-[10px] font-medium",
+                done ? "text-foreground" : active && !cancelled ? "text-violet-600" : cancelled ? "text-red-600" : "text-muted-foreground",
+              )}>
+                {STATUS_LABELS[step]}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function LocationCell({
   location,
@@ -67,9 +117,7 @@ function LocationCell({
         {label}
       </p>
       {location.warehouse && (
-        <p className="text-sm font-semibold text-foreground">
-          {location.warehouse.name}
-        </p>
+        <p className="text-sm font-semibold text-foreground">{location.warehouse.name}</p>
       )}
       <p className="text-xs text-muted-foreground">
         {location.name} <span className="font-mono">({location.code})</span>
@@ -82,31 +130,21 @@ function TransferDetailSkeleton() {
   return (
     <PageWrapper title="Transfer" eyebrow="Inventory / Transfers">
       <div className="space-y-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="grid grid-cols-3 gap-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="space-y-2">
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <Skeleton className="h-4 w-20" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-4 space-y-4">
+          <div className="flex items-center gap-2">
+            {[0, 1, 2].map((i) => <Skeleton key={i} className="h-7 w-7 rounded-full" />)}
+          </div>
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-3 w-20" /><Skeleton className="h-5 w-32" /><Skeleton className="h-4 w-24" />
+              </div>
+            ))}
+          </div>
+        </CardContent></Card>
+        <Card><CardContent className="p-4 space-y-2">
+          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
+        </CardContent></Card>
       </div>
     </PageWrapper>
   );
@@ -119,14 +157,11 @@ export default function TransferDetailPage({
 }) {
   const { transferId: transferIdStr } = use(params);
   const transferId = Number(transferIdStr);
+  const [receiveOpen, setReceiveOpen] = useState(false);
 
-  const {
-    data: transferData,
-    isLoading,
-    isError,
-    refetch,
-  } = useTransfer(transferId);
+  const { data: transferData, isLoading, isError, refetch } = useTransfer(transferId);
   const completeMutation = useCompleteTransfer();
+  const dispatchMutation = useDispatchTransfer();
 
   const transfer = transferData ?? undefined;
 
@@ -134,73 +169,67 @@ export default function TransferDetailPage({
     void refetch();
   }
 
-  const handleComplete = useCallback(() => {
-    if (!transfer) return;
-    const lines = transfer.lines.map((l) => ({
-      transferLineId: l.id,
-      quantityReceived: l.quantity,
-    }));
-
-    completeMutation.mutate(
-      { transferId, lines },
+  function handleDispatch() {
+    dispatchMutation.mutate(
+      { transferId },
       {
-        onSuccess: () => toast.success("Transfer completed"),
+        onSuccess: () => toast.success("Transfer dispatched"),
         onError: (err: unknown) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [transfer, transferId, completeMutation]);
+  }
+
+  function handleOpenReceiveSheet() {
+    setReceiveOpen(true);
+  }
+
+  function handleCompleteReceive(
+    lines: { transferLineId: number; quantityReceived: number }[],
+  ) {
+    completeMutation.mutate(
+      { transferId, lines },
+      {
+        onSuccess: () => {
+          toast.success("Transfer completed");
+          setReceiveOpen(false);
+        },
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }
 
   if (isLoading) return <TransferDetailSkeleton />;
+  if (isError) return (
+    <PageWrapper title="Transfer" eyebrow="Inventory / Transfers">
+      <EmptyState
+        illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+        title="Failed to load transfer"
+        description="An error occurred while fetching this transfer. Please try again."
+        action={{ label: "Retry", onClick: handleRetry }}
+      />
+    </PageWrapper>
+  );
 
-  if (isError) {
-    return (
-      <PageWrapper title="Transfer" eyebrow="Inventory / Transfers">
-        <EmptyState
-          illustration={
-            <AlertCircle
-              className="h-12 w-12 text-muted-foreground/40"
-              aria-hidden="true"
-            />
-          }
-          title="Failed to load transfer"
-          description="An error occurred while fetching this transfer. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
-        />
-      </PageWrapper>
-    );
-  }
+  if (!transfer) return (
+    <PageWrapper title="Transfer not found" eyebrow="Inventory / Transfers">
+      <EmptyState
+        title="Transfer not found"
+        description="This transfer does not exist or you do not have access."
+        action={{ label: "Back to Transfers", href: "/inventory/stock/transfers" }}
+      />
+    </PageWrapper>
+  );
 
-  if (!transfer) {
-    return (
-      <PageWrapper title="Transfer not found" eyebrow="Inventory / Transfers">
-        <EmptyState
-          title="Transfer not found"
-          description="This transfer does not exist or you do not have access."
-          action={{
-            label: "Back to Transfers",
-            href: "/inventory/stock/transfers",
-          }}
-        />
-      </PageWrapper>
-    );
-  }
-
-  const canComplete =
-    transfer.status === "PENDING" || transfer.status === "IN_TRANSIT";
   const lines = transfer.lines ?? [];
+  const isCompleted = transfer.status === "COMPLETED";
 
   return (
     <PageWrapper
       title={transfer.referenceNumber}
       eyebrow="Inventory / Transfers"
       subtitle={
-        <Badge
-          className={cn(
-            "text-[11px] px-2 py-0.5",
-            STATUS_COLORS[transfer.status] ?? "bg-muted text-muted-foreground",
-          )}
-        >
-          {STATUS_LABELS[transfer.status] ?? transfer.status}
+        <Badge className={cn("text-[11px] px-2 py-0.5", STATUS_COLORS[transfer.status])}>
+          {STATUS_LABELS[transfer.status]}
         </Badge>
       }
       actions={
@@ -208,31 +237,37 @@ export default function TransferDetailPage({
           <Button variant="outline" size="sm" asChild>
             <Link href="/inventory/stock/transfers">
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Back
+              Back to Transfers
             </Link>
           </Button>
-          {canComplete && (
+          {transfer.status === "PENDING" && (
             <Button
               size="sm"
-              onClick={handleComplete}
-              disabled={completeMutation.isPending}
+              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+              onClick={handleDispatch}
+              disabled={dispatchMutation.isPending}
             >
-              {completeMutation.isPending ? "Completing…" : "Mark as Completed"}
+              {dispatchMutation.isPending ? "Dispatching…" : "Dispatch Transfer"}
+            </Button>
+          )}
+          {transfer.status === "IN_TRANSIT" && (
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+              onClick={handleOpenReceiveSheet}
+            >
+              Receive Transfer
             </Button>
           )}
         </div>
       }
     >
-      <motion.div
-        className="space-y-4"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
+      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
         <motion.div variants={fadeUp}>
           <Card>
             <CardContent className="p-4">
-              <div className="grid gap-6 sm:grid-cols-3">
+              <StatusTimeline status={transfer.status} />
+              <div className="mt-4 pt-4 border-t grid gap-6 sm:grid-cols-3">
                 <LocationCell location={transfer.fromLocation} label="From" />
                 <div className="flex items-center justify-center">
                   <div className="flex items-center gap-2 text-muted-foreground">
@@ -243,27 +278,20 @@ export default function TransferDetailPage({
                 </div>
                 <LocationCell location={transfer.toLocation} label="To" />
               </div>
-              <div className="mt-4 pt-4 border-t border-border/50 grid gap-4 sm:grid-cols-3 text-xs text-muted-foreground">
+              <div className="mt-4 pt-4 border-t grid gap-4 sm:grid-cols-3 text-xs text-muted-foreground">
                 <div>
                   <span className="font-medium text-foreground">Created: </span>
                   {format(new Date(transfer.createdAt), "dd MMM yyyy, HH:mm")}
                 </div>
                 {transfer.completedAt && (
                   <div>
-                    <span className="font-medium text-foreground">
-                      Completed:{" "}
-                    </span>
-                    {format(
-                      new Date(transfer.completedAt),
-                      "dd MMM yyyy, HH:mm",
-                    )}
+                    <span className="font-medium text-foreground">Completed: </span>
+                    {format(new Date(transfer.completedAt), "dd MMM yyyy, HH:mm")}
                   </div>
                 )}
                 {transfer.createdByName && (
                   <div>
-                    <span className="font-medium text-foreground">
-                      Created by:{" "}
-                    </span>
+                    <span className="font-medium text-foreground">Created by: </span>
                     {transfer.createdByName}
                   </div>
                 )}
@@ -282,10 +310,7 @@ export default function TransferDetailPage({
           <Card>
             <CardHeader className="pb-2 pt-4 px-4">
               <div className="flex items-center gap-2">
-                <Package
-                  className="h-4 w-4 text-muted-foreground"
-                  aria-hidden="true"
-                />
+                <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <span className="text-sm font-semibold">Line Items</span>
                 <span className="text-xs text-muted-foreground tabular-nums">
                   ({lines.length})
@@ -300,65 +325,51 @@ export default function TransferDetailPage({
                   description="This transfer has no product lines."
                 />
               ) : (
-                <div className="rounded-lg border border-border overflow-hidden">
+                <div className="rounded-lg border overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/50 hover:bg-muted/50">
-                        <TableHead className="text-xs font-semibold">
-                          Product
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold">
-                          SKU
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-right">
-                          Requested
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-right">
-                          Received
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-right">
-                          Variance
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold">
-                          Notes
-                        </TableHead>
+                        <TableHead className="text-xs font-semibold">Product</TableHead>
+                        <TableHead className="text-xs font-semibold">SKU</TableHead>
+                        <TableHead className="text-xs font-semibold text-right">Requested</TableHead>
+                        {isCompleted && <TableHead className="text-xs font-semibold text-right">Received</TableHead>}
+                        {isCompleted && <TableHead className="text-xs font-semibold text-right">Variance</TableHead>}
+                        <TableHead className="text-xs font-semibold">Notes</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {lines.map((line) => {
-                        const productName = line.productName;
-                        const sku = line.sku;
-                        const requested = line.quantity;
-                        const received = line.quantityReceived;
-                        const variance = received - requested;
-                        const isShort = variance < 0;
-                        const isOver = variance > 0;
+                        const variance = line.quantityReceived - line.quantity;
                         return (
                           <TableRow key={line.id} className="text-sm">
                             <TableCell className="py-2.5 font-medium max-w-[180px] truncate">
-                              {productName}
+                              {line.productName}
                             </TableCell>
                             <TableCell className="py-2.5 font-mono text-xs text-muted-foreground">
-                              {sku}
+                              {line.sku}
                             </TableCell>
                             <TableCell className="py-2.5 text-right tabular-nums">
-                              {requested.toLocaleString()}
+                              {line.quantity.toLocaleString()}
                             </TableCell>
-                            <TableCell className="py-2.5 text-right tabular-nums">
-                              {received.toLocaleString()}
-                            </TableCell>
-                            <TableCell
-                              className={cn(
-                                "py-2.5 text-right tabular-nums font-medium",
-                                isShort && "text-red-600",
-                                isOver && "text-amber-600",
-                                !isShort && !isOver && "text-muted-foreground",
-                              )}
-                            >
-                              {variance === 0
-                                ? "—"
-                                : `${isOver ? "+" : ""}${variance.toLocaleString()}`}
-                            </TableCell>
+                            {isCompleted && (
+                              <TableCell className="py-2.5 text-right tabular-nums">
+                                {line.quantityReceived.toLocaleString()}
+                              </TableCell>
+                            )}
+                            {isCompleted && (
+                              <TableCell
+                                className={cn(
+                                  "py-2.5 text-right tabular-nums font-medium",
+                                  variance < 0 && "text-red-600",
+                                  variance > 0 && "text-amber-600",
+                                  variance === 0 && "text-muted-foreground",
+                                )}
+                              >
+                                {variance === 0
+                                  ? "—"
+                                  : `${variance > 0 ? "+" : ""}${variance.toLocaleString()}`}
+                              </TableCell>
+                            )}
                             <TableCell className="py-2.5 text-xs text-muted-foreground max-w-[160px] truncate">
                               {line.notes ?? "—"}
                             </TableCell>
@@ -373,6 +384,16 @@ export default function TransferDetailPage({
           </Card>
         </motion.div>
       </motion.div>
+
+      {transfer.status === "IN_TRANSIT" && (
+        <ReceiveTransferSheet
+          open={receiveOpen}
+          onOpenChange={setReceiveOpen}
+          transfer={transfer}
+          onSubmit={handleCompleteReceive}
+          isPending={completeMutation.isPending}
+        />
+      )}
     </PageWrapper>
   );
 }

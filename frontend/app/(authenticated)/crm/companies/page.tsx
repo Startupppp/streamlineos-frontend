@@ -122,7 +122,7 @@ export default function CompaniesPage() {
             placeholder="Search companies..."
             value={search}
             onChange={handleSearchChange}
-            className="pl-9"
+            className="pl-9 h-8 text-sm"
           />
         </div>
       }
@@ -199,7 +199,7 @@ export default function CompaniesPage() {
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-3">
-                            <div className="h-10 w-10 rounded-lg bg-violet-500/10 flex items-center justify-center text-sm font-semibold text-violet-600 shrink-0">
+                            <div className="h-8 w-8 rounded-full bg-violet-100 flex items-center justify-center text-xs font-semibold text-violet-700 shrink-0">
                               {org.name[0]?.toUpperCase() ?? "?"}
                             </div>
                             <div className="min-w-0">

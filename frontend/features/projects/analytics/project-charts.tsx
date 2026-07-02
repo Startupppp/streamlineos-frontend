@@ -237,8 +237,8 @@ export function SprintBurndownChart({
     onSprintChange(Number(e.target.value));
 
   return (
-    <Card className="md:col-span-2">
-      <CardHeader>
+    <Card className="md:col-span-2 rounded-lg border border-border bg-card shadow-none">
+      <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <CardTitle className="text-base">Sprint Burndown</CardTitle>
           {sprints && sprints.length > 0 && (

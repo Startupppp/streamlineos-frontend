@@ -59,7 +59,7 @@ export function WfhTabContent() {
   return (
     <div className="space-y-4">
       <div
-        className="grid grid-cols-2 gap-3"
+        className="grid grid-cols-2 md:grid-cols-4 gap-3"
         role="list"
         aria-label="WFH statistics"
       >
@@ -94,7 +94,7 @@ export function WfhTabContent() {
               </CardTitle>
             </div>
             <Select value={wfhStatusFilter} onValueChange={setWfhStatusFilter}>
-              <SelectTrigger className="h-8 w-[130px] text-xs">
+              <SelectTrigger className="h-8 w-[130px] text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">

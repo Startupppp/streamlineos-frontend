@@ -106,7 +106,7 @@ function StatCard({
       href && "hover:bg-muted/60 cursor-pointer"
     )}>
       <Icon className="h-4 w-4 text-muted-foreground mx-auto mb-1.5" />
-      <p className="text-2xl font-bold tabular-nums text-foreground">{value}</p>
+      <p className="text-xl font-bold tabular-nums text-foreground">{value}</p>
       <p className="text-xs font-medium text-muted-foreground mt-0.5">{label}</p>
       <p className="text-[11px] text-muted-foreground/70 mt-0.5">{sub}</p>
     </div>

@@ -222,7 +222,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
       }
     >
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
           <ExternalLink className="h-4 w-4 shrink-0" />
           <span className="truncate">Public form: {formUrl}</span>
           <Button variant="ghost" size="sm" className="h-6 px-2 shrink-0" onClick={handleCopyFormUrl}>
@@ -245,7 +245,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
 
           <TabsContent value={activeTab} className="mt-4">
             {filteredItems.length === 0 ? (
-              <div className="text-center py-16">
+              <div className="flex flex-col items-center justify-center flex-1 py-12 text-center">
                 <EmptyInboxIllustration className="mx-auto mb-4 w-36 h-36" />
                 <h3 className="text-lg font-semibold mb-1">
                   {activeTab === "pending" ? "No pending items" : `No ${activeTab} items`}

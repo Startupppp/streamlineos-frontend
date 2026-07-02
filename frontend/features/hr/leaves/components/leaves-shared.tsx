@@ -209,7 +209,7 @@ export const BalanceCard = React.memo(function BalanceCard({
       className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
       role="listitem"
     >
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-center justify-between mb-3">
           <div
             className={cn(
@@ -360,7 +360,7 @@ export const StatsCard = React.memo(function StatsCard({
       className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
       role="listitem"
     >
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
@@ -492,7 +492,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
           </div>
         </div>
       </td>
-      <td className="py-3 px-3 text-xs text-muted-foreground tabular-nums">
+      <td className="py-3 px-3 text-xs text-muted-foreground tabular-nums hidden md:table-cell">
         {format(createdAt, "MMM d, yyyy")}
       </td>
       <td className="py-3 px-3 text-xs text-foreground font-medium">
@@ -501,7 +501,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
       <td className="py-3 px-3 text-xs text-center font-semibold tabular-nums text-foreground">
         {days}
       </td>
-      <td className="py-3 px-3">
+      <td className="py-3 px-3 hidden md:table-cell">
         <div className="flex items-center gap-1.5">
           <span className={cn("h-1.5 w-1.5 rounded-full", pConfig.dotColor)} />
           <span className={cn("text-[10px] font-semibold", pConfig.textColor)}>

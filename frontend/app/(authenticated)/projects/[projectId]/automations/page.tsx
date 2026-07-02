@@ -77,7 +77,7 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
   const handleEdit = useCallback(() => onEdit(automation), [automation, onEdit]);
 
   return (
-    <motion.div layout className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm p-4">
+    <motion.div layout className="rounded-lg border border-border bg-card hover:shadow-md transition-shadow p-4">
       <div className="flex items-start gap-3">
         <div className={cn("relative h-9 w-9 rounded-xl flex items-center justify-center shrink-0",
           automation.isActive ? "bg-violet-50 border border-violet-100" : "bg-slate-100 border border-slate-200")}>
@@ -217,6 +217,7 @@ export default function AutomationsPage({ params }: PageProps) {
   }, [editingAutomation, createAutomation, updateAutomation]);
 
   const handleCloseSheet = useCallback(() => setSheetOpen(false), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleAppendCondition = useCallback(() => {
     appendCondition({ field: "status", operator: "equals", value: "" });
@@ -236,7 +237,7 @@ export default function AutomationsPage({ params }: PageProps) {
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <p className="text-sm text-muted-foreground">Failed to load automations.</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+            <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
           </div>
         ) : (
           <>
@@ -340,7 +341,7 @@ export default function AutomationsPage({ params }: PageProps) {
                     </Button>
                   </div>
                   {conditionFields.map((f, idx) => (
-                    <div key={f.id} className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                    <div key={f.id} className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-muted/40">
                       <Select value={form.watch(`conditions.${idx}.field`)} onValueChange={v => form.setValue(`conditions.${idx}.field`, v)}>
                         <SelectTrigger className="h-7 text-xs flex-1"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -382,7 +383,7 @@ export default function AutomationsPage({ params }: PageProps) {
                     </Button>
                   </div>
                   {actionFields.map((f, idx) => (
-                    <div key={f.id} className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                    <div key={f.id} className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-muted/40">
                       <Select value={form.watch(`actions.${idx}.type`)} onValueChange={v => form.setValue(`actions.${idx}.type`, v as AutomationAction["type"])}>
                         <SelectTrigger className="h-7 text-xs flex-1"><SelectValue /></SelectTrigger>
                         <SelectContent>
