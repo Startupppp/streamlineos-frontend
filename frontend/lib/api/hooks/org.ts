@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 export type OrgSetupPayload = {
-  goals?: string[];
   industry: string;
   companyName?: string;
   companySize: string;
@@ -20,19 +19,6 @@ export function useOrgSetupMutation() {
     mutationKey: ["org", "setup"],
     mutationFn: (payload: OrgSetupPayload) =>
       apiClient.patch<OrgSetupResponse>("/org/setup", payload),
-    retry: false,
-  });
-}
-
-export type InvitePayload = {
-  invitees: { email: string; role: string }[];
-};
-
-export function useInvitationsMutation() {
-  return useMutation({
-    mutationKey: ["org", "invite"],
-    mutationFn: (payload: InvitePayload) =>
-      apiClient.post<void>("/org/invite", payload),
     retry: false,
   });
 }

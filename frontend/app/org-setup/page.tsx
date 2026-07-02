@@ -3,12 +3,10 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { clearBackendTokenCache } from "@/lib/api-client";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useOrgSetupMutation } from "@/lib/api/hooks/org";
-import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 import {
   TOTAL_STEPS,
   STEP_TITLES,
@@ -29,20 +27,15 @@ import { StepGoals } from "@/features/org-setup/components/step-goals";
 import { StepIndustry } from "@/features/org-setup/components/step-industry";
 import { StepCompany } from "@/features/org-setup/components/step-company";
 import { StepGeneration } from "@/features/org-setup/components/step-generation";
-import { StepInvite } from "@/features/org-setup/components/step-invite";
-import { StepComplete } from "@/features/org-setup/components/step-complete";
 
 export default function OrgSetupPage() {
-  const { data: session, update } = useSession();
-  const updateRef = useRef(update);
-  updateRef.current = update;
+  const { data: session } = useSession();
   const { mutateAsync: setupOrg } = useOrgSetupMutation();
 
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
   const [direction, setDirection] = useState(1);
-  const [showCelebration, setShowCelebration] = useState(false);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
 
   const firstName =
@@ -60,11 +53,7 @@ export default function OrgSetupPage() {
 
   const goNext = useCallback(() => {
     setDirection(1);
-    setStep((s) => {
-      const next = Math.min(s + 1, TOTAL_STEPS);
-      if (next === TOTAL_STEPS) setShowCelebration(true);
-      return next;
-    });
+    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   }, []);
 
   const goBack = useCallback(() => {
@@ -97,46 +86,22 @@ export default function OrgSetupPage() {
 
   const handleSkipToDashboard = useCallback(async () => {
     setIsSkipping(true);
-    const payload = {
-      industry: "IT Services",
-      companySize: "1-10",
-      enabledModules: ["HR", "CRM", "PROJECTS"],
-    };
     try {
-      let res: { orgId?: string } | undefined;
-      try {
-        res = await setupOrg(payload);
-      } catch (firstErr) {
-        const msg = getErrorMessage(firstErr).toLowerCase();
-        if (msg.includes("not found") || msg.includes("organization")) {
-          try { await updateRef.current({ orgId: null }); } catch {}
-          clearBackendTokenCache();
-          res = await setupOrg(payload);
-        } else {
-          throw firstErr;
-        }
-      }
-      const orgId = res?.orgId ?? null;
-      let updated = false;
-      for (let i = 0; i < 3 && !updated; i++) {
-        const s = await Promise.race([
-          updateRef.current({
-            ...(orgId ? { orgId } : {}),
-            orgOnboardingCompletedAt: new Date().toISOString(),
-            isOrgOwner: true,
-          }).catch(() => null),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
-        ]);
-        if (s?.orgOnboardingCompletedAt) updated = true;
-      }
+      const res = await setupOrg({
+        industry: "IT Services",
+        companySize: "1-10",
+        enabledModules: ["HR", "CRM", "PROJECTS"],
+      });
       clearBackendTokenCache();
-      clearAll();
-      if (updated) {
-        document.cookie = "org-setup-done=1; path=/; max-age=300; SameSite=Lax";
-        window.location.replace("/dashboard");
-      } else {
-        window.location.href = "/api/auth/signout?callbackUrl=/signin";
+      document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
+      if (res?.autoLoginToken) {
+        await signIn("credentials", {
+          magicToken: res.autoLoginToken,
+          redirect: false,
+        }).catch(() => null);
       }
+      clearAll();
+      window.location.replace("/dashboard");
     } catch {
       setIsSkipping(false);
     }
@@ -146,7 +111,7 @@ export default function OrgSetupPage() {
 
   useEffect(() => {
     const savedStep = loadStep();
-    if (savedStep >= 5) {
+    if (savedStep >= TOTAL_STEPS) {
       clearAll();
       setStep(1);
       setData({ ...DEFAULT_DATA });
@@ -176,10 +141,6 @@ export default function OrgSetupPage() {
     saveStep(step);
   }, [step, mounted]);
 
-  function handleCelebrationDone() {
-    setShowCelebration(false);
-  }
-
   if (!mounted) {
     return (
       <div className="w-full max-w-sm flex items-center justify-center py-16">
@@ -195,12 +156,6 @@ export default function OrgSetupPage() {
 
   return (
     <div className="w-full max-w-sm relative">
-      {showCelebration && (
-        <ConfettiOverlay
-          durationMs={2600}
-          onDone={handleCelebrationDone}
-        />
-      )}
       <WizardShell
         step={step}
         totalSteps={TOTAL_STEPS}
@@ -234,14 +189,7 @@ export default function OrgSetupPage() {
             onNext={goNext}
           />
         )}
-        {step === 5 && <StepGeneration data={data} onNext={goNext} />}
-        {step === 6 && (
-          <StepInvite
-            onBack={goBack}
-            onNext={goNext}
-          />
-        )}
-        {step === 7 && <StepComplete data={data} />}
+        {step === 5 && <StepGeneration data={data} />}
       </WizardShell>
     </div>
   );

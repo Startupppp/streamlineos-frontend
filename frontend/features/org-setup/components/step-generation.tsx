@@ -17,15 +17,12 @@ const SETUP_DONE_KEY = "org-setup-complete";
 
 type StepGenerationProps = {
   data: WizardData;
-  onNext: () => void;
 };
 
-export function StepGeneration({ data, onNext }: StepGenerationProps) {
+export function StepGeneration({ data }: StepGenerationProps) {
   const [completedSteps, setCompletedSteps] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const onNextRef = useRef(onNext);
   const dataRef = useRef(data);
-  onNextRef.current = onNext;
   dataRef.current = data;
 
   const total = GENERATION_STEPS.length;
@@ -41,7 +38,6 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
 
   function buildPayload(d: WizardData) {
     return {
-      goals: d.goals,
       industry: d.industry || "IT Services",
       companyName: d.companyName,
       companySize: d.teamSize || "1-10",
@@ -51,7 +47,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
     };
   }
 
-  async function handleSuccess(orgId: string | null, autoLoginToken: string | null) {
+  async function handleSuccess(autoLoginToken: string | null) {
     if (apiDoneRef.current) return;
     apiDoneRef.current = true;
     if (intervalRef.current) {
@@ -111,7 +107,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
 
     try {
       const res = await orgMutationRef.current.mutateAsync(payload);
-      await handleSuccess(res?.orgId ?? null, res?.autoLoginToken ?? null);
+      await handleSuccess(res?.autoLoginToken ?? null);
     } catch (err) {
       handleError(getErrorMessage(err));
     }
@@ -129,7 +125,7 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
   }, []);
 
   const progress = Math.round((completedSteps / total) * 100);
-  const companyName = dataRef.current.companyName?.trim();
+  const companyName = data.companyName?.trim();
 
   return (
     <div className="space-y-4">

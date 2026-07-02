@@ -1,6 +1,6 @@
 import type { WizardData } from "./types";
 
-export const TOTAL_STEPS = 7;
+export const TOTAL_STEPS = 5;
 export const DRAFT_KEY = "org-setup-draft";
 
 export const GOALS = [
@@ -75,15 +75,6 @@ export const STEP_TITLES: readonly string[] = [
   "Industry",
   "Company Profile",
   "Building Your Workspace",
-  "Invite Team",
-  "Workspace Ready",
-];
-
-export const NEXT_ACTIONS: readonly string[] = [
-  "Invite first teammate",
-  "Create first record",
-  "Complete profile",
-  "Try AI Assistant",
 ];
 
 export const DEFAULT_DATA: WizardData = {
