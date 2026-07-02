@@ -196,7 +196,7 @@ async function getBackendToken(): Promise<string | null> {
   return fetchingTokenPromise;
 }
 
-async function authedFetch(url: string, init: RequestInit, useBackend: boolean, path: string): Promise<Response> {
+export async function authedFetch(url: string, init: RequestInit, useBackend: boolean, path: string): Promise<Response> {
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
 
@@ -224,7 +224,7 @@ async function authedFetch(url: string, init: RequestInit, useBackend: boolean, 
   return res;
 }
 
-function buildUrl(path: string, params?: Record<string, unknown>): string {
+export function buildUrl(path: string, params?: Record<string, unknown>): string {
   const base = isMigrated(path) ? BACKEND_API_URL : SAME_ORIGIN;
   const url = `${base}${path}`;
   if (!params || Object.keys(params).length === 0) return url;
