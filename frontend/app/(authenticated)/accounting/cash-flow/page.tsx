@@ -228,14 +228,14 @@ export default function CashFlowPage() {
               ))}
             </div>
 
-            <Card className="px-5 py-4 flex items-center justify-between gap-4 bg-muted/40">
+            <div className="rounded-lg border border-border px-4 py-3 flex items-center justify-between gap-4 bg-muted/40">
               <span className="text-sm font-semibold text-foreground">
                 Net change in cash
               </span>
               <span className="font-mono tabular-nums text-base font-semibold text-foreground">
                 {formatInr(report.netChange)}
               </span>
-            </Card>
+            </div>
           </div>
         )}
       </div>

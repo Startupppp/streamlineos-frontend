@@ -185,25 +185,25 @@ export default function CustomerLedgerDetailPage({
             </p>
           </div>
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+          <div className="rounded-lg border border-border overflow-hidden overflow-x-auto">
             <Table className="min-w-[780px]">
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[120px]">Date</TableHead>
-                  <TableHead className="w-[150px]">Entry #</TableHead>
-                  <TableHead className="w-[80px]">Invoice</TableHead>
-                  <TableHead className="w-[200px]">Source</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="w-[120px] text-right">Debit</TableHead>
-                  <TableHead className="w-[120px] text-right">Credit</TableHead>
-                  <TableHead className="w-[140px] text-right">
+                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">Date</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[150px]">Entry #</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[80px]">Invoice</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[200px]">Source</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px] text-right">Debit</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px] text-right">Credit</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[140px] text-right">
                     Running Balance
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {lines.map((line, idx) => (
-                  <TableRow key={`${line.entryId}-${idx}`}>
+                  <TableRow key={`${line.entryId}-${idx}`} className="border-b border-border/50 hover:bg-muted/30">
                     <TableCell className="text-sm text-muted-foreground tabular-nums">
                       {formatDate(line.date)}
                     </TableCell>
@@ -224,7 +224,7 @@ export default function CustomerLedgerDetailPage({
                           {line.invoiceNumber}
                         </Link>
                       ) : (
-                        <span className="text-slate-400">—</span>
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -233,17 +233,17 @@ export default function CustomerLedgerDetailPage({
                     <TableCell className="text-sm text-foreground">
                       {line.description ?? ""}
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
+                    <TableCell className="text-right font-mono text-sm tabular-nums text-destructive">
                       {Number(line.debit) > 0
                         ? formatCurrency(line.debit)
                         : "—"}
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
+                    <TableCell className="text-right font-mono text-sm tabular-nums text-emerald-600">
                       {Number(line.credit) > 0
                         ? formatCurrency(line.credit)
                         : "—"}
                     </TableCell>
-                    <TableCell className="text-right text-sm font-medium tabular-nums">
+                    <TableCell className="text-right font-mono text-sm font-medium tabular-nums">
                       {formatCurrency(line.runningBalance)}
                     </TableCell>
                   </TableRow>
