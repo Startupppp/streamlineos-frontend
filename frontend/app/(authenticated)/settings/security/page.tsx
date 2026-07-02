@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Shield, Clock } from "lucide-react";
+import { Shield, Clock, Globe, Monitor } from "lucide-react";
 import { useOrgSettings, useUpdateOrgSecuritySettings } from "@/hooks/api/organization";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,11 +22,15 @@ export default function SecurityPage() {
 
   const [mfaEnforced, setMfaEnforced] = useState(false);
   const [expiryDays, setExpiryDays] = useState("");
+  const [allowedDomains, setAllowedDomains] = useState("");
+  const [maxSessions, setMaxSessions] = useState("");
 
   useEffect(() => {
     if (!org) return;
     setMfaEnforced(org.mfaEnforced ?? false);
     setExpiryDays(org.passwordExpiryDays != null ? String(org.passwordExpiryDays) : "");
+    setAllowedDomains(org.allowedEmailDomains?.length ? org.allowedEmailDomains.join("\n") : "");
+    setMaxSessions(org.maxConcurrentSessions != null ? String(org.maxConcurrentSessions) : "");
   }, [org]);
 
   const handleMfaChange = useCallback((checked: boolean) => {
@@ -36,9 +41,16 @@ export default function SecurityPage() {
     setExpiryDays(e.target.value);
   }, []);
 
+  const handleAllowedDomainsChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setAllowedDomains(e.target.value);
+  }, []);
+
+  const handleMaxSessionsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setMaxSessions(e.target.value);
+  }, []);
+
   const handleSave = useCallback(() => {
     let passwordExpiryDays: number | null = null;
-
     if (expiryDays.trim() !== "") {
       const parsed = parseInt(expiryDays, 10);
       if (isNaN(parsed) || parsed < 30 || parsed > 365) {
@@ -48,23 +60,40 @@ export default function SecurityPage() {
       passwordExpiryDays = parsed;
     }
 
+    let maxConcurrentSessions: number | null = null;
+    if (maxSessions.trim() !== "") {
+      const parsed = parseInt(maxSessions, 10);
+      if (isNaN(parsed) || parsed < 1 || parsed > 100) {
+        toast.error("Max concurrent sessions must be between 1 and 100");
+        return;
+      }
+      maxConcurrentSessions = parsed;
+    }
+
+    const allowedEmailDomains = allowedDomains
+      .split(/[\n,]+/)
+      .map((d) => d.trim().toLowerCase())
+      .filter(Boolean);
+
     updateSecurity.mutate(
-      { mfaEnforced, passwordExpiryDays },
+      { mfaEnforced, passwordExpiryDays, allowedEmailDomains, maxConcurrentSessions },
       {
         onSuccess: () => toast.success("Security policy saved"),
         onError: (err) => toast.error(getApiError(err)),
       },
     );
-  }, [expiryDays, mfaEnforced, updateSecurity]);
+  }, [expiryDays, mfaEnforced, allowedDomains, maxSessions, updateSecurity]);
 
   if (isLoading) {
     return (
       <PageWrapper
-        title="Password Policy"
-        subtitle="Configure organisation-level security and authentication requirements."
+        title="Security Policy"
+        subtitle="Configure authentication and access controls for your organisation."
       >
         <div className="max-w-xl space-y-4 pt-2">
           <Skeleton className="h-[120px] w-full rounded-xl" />
+          <Skeleton className="h-[120px] w-full rounded-xl" />
+          <Skeleton className="h-[140px] w-full rounded-xl" />
           <Skeleton className="h-[120px] w-full rounded-xl" />
         </div>
       </PageWrapper>
@@ -74,8 +103,8 @@ export default function SecurityPage() {
   if (isError) {
     return (
       <PageWrapper
-        title="Password Policy"
-        subtitle="Configure organisation-level security and authentication requirements."
+        title="Security Policy"
+        subtitle="Configure authentication and access controls for your organisation."
       >
         <div className="max-w-xl pt-2">
           <ErrorState
@@ -90,8 +119,8 @@ export default function SecurityPage() {
 
   return (
     <PageWrapper
-      title="Password Policy"
-      subtitle="Configure organisation-level security and authentication requirements."
+      title="Security Policy"
+      subtitle="Configure authentication and access controls for your organisation."
     >
       <div className="max-w-xl space-y-4 pt-2">
         <Card>
@@ -101,13 +130,13 @@ export default function SecurityPage() {
               <CardTitle className="text-base">Multi-Factor Authentication</CardTitle>
             </div>
             <CardDescription>
-              Require all members of this organisation to enrol in MFA before accessing the platform.
+              When enabled, all members must enrol in a TOTP authenticator app before they can sign in. Takes effect at the next sign-in.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <Label htmlFor="mfa-enforced" className="text-sm font-medium">
-                Enforce MFA for all members
+                Require MFA for all members
               </Label>
               <Switch
                 id="mfa-enforced"
@@ -125,7 +154,7 @@ export default function SecurityPage() {
               <CardTitle className="text-base">Password Expiry</CardTitle>
             </div>
             <CardDescription>
-              Force members to reset their password after a set number of days. Leave blank to disable expiry.
+              Require a password change every N days. Enforced at the next sign-in once the period has elapsed. Leave blank to never expire. Per NIST 800-63B, periodic rotation is only recommended for specific compliance requirements.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -141,7 +170,58 @@ export default function SecurityPage() {
                 className="w-36"
               />
               <Label htmlFor="expiry-days" className="text-sm text-muted-foreground">
-                days (30–365)
+                days (30–365, blank to disable)
+              </Label>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Allowed Email Domains</CardTitle>
+            </div>
+            <CardDescription>
+              When set, invitations can only be sent to email addresses in these domains. Enforced at invite time. Leave blank to allow any domain.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              id="allowed-domains"
+              placeholder={"example.com\nacme.org"}
+              value={allowedDomains}
+              onChange={handleAllowedDomainsChange}
+              className="min-h-[80px] text-sm font-mono"
+            />
+            <p className="mt-1.5 text-xs text-muted-foreground">One domain per line, or comma-separated.</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Monitor className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Max Concurrent Sessions</CardTitle>
+            </div>
+            <CardDescription>
+              Limit the number of active sessions per member. When a new sign-in exceeds the limit, the oldest sessions are revoked automatically. Leave blank for no limit.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <Input
+                id="max-sessions"
+                type="number"
+                min={1}
+                max={100}
+                placeholder="e.g. 3"
+                value={maxSessions}
+                onChange={handleMaxSessionsChange}
+                className="w-36"
+              />
+              <Label htmlFor="max-sessions" className="text-sm text-muted-foreground">
+                sessions (1–100, blank for no limit)
               </Label>
             </div>
           </CardContent>
@@ -150,11 +230,7 @@ export default function SecurityPage() {
         <Separator />
 
         <div className="flex justify-end">
-          <Button
-            onClick={handleSave}
-            disabled={updateSecurity.isPending}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-          >
+          <Button onClick={handleSave} disabled={updateSecurity.isPending}>
             {updateSecurity.isPending ? "Saving…" : "Save Policy"}
           </Button>
         </div>

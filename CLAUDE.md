@@ -182,6 +182,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 - Verify the page's feature has everything: list, create, edit, delete, filters, pagination, permissions, all states. ADD what's missing; REMOVE what's not required (including files), then fix folder placement + imports.
 - **Product-specific (HR):** onboarding/profile forms collect only what a real HR platform asks a new joiner — personal (phone, DOB, gender, home address, emergency contact), bank/payroll, ID & document uploads. Exclude recruitment-only data (years of experience, skills).
 - Employee onboarding form is **never** shown to org owners or platform/super admins — gate **server-side** and redirect (owner → setup/dashboard; platform admin → `/owner`).
+- **Module-owned surfaces (living rule, 2026-07-02):** custom fields, automations, integrations, and data-hub import/export are module-scoped features — surface them inside each module's own settings area, never as global `/settings/*` pages. Global settings keeps only org-wide concerns (security, billing, roles, modules, org profile).
 
 ---
 

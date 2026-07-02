@@ -1,169 +1,231 @@
 "use client";
 
-import { Trash2, LogOut } from "lucide-react";
+import { useState, type ChangeEvent } from "react";
+import { Trash2, LogOut, Search, Monitor } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/hr/sessions";
+import { useSessions, useRevokeSession, useRevokeAllSessions, type UserSession } from "@/hooks/api/hr/sessions";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { Input } from "@/components/ui/input";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-type Session = NonNullable<ReturnType<typeof useSessions>["data"]>[number];
-
-function SessionsSkeleton() {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-12 w-full rounded-md" />
-      ))}
-    </div>
-  );
-}
-
-function SessionRow({
-  session,
-  onRevoke,
-  isRevokePending,
-}: {
-  session: Session;
-  onRevoke: (id: string) => void;
-  isRevokePending: boolean;
-}) {
-  function handleRevoke() {
-    onRevoke(session.id);
-  }
-
-  return (
-    <TableRow>
-      <TableCell className="font-medium">
-        <div className="flex items-center gap-2">
-          <span className="truncate max-w-[200px]">
-            {session.userAgent ?? "Unknown device"}
-          </span>
-          {session.isCurrent && (
-            <Badge variant="secondary" className="shrink-0 text-xs">
-              Current
-            </Badge>
-          )}
-        </div>
-      </TableCell>
-      <TableCell className="text-muted-foreground">
-        {session.ipAddress ?? "—"}
-      </TableCell>
-      <TableCell className="text-muted-foreground">
-        {format(new Date(session.lastActive), "MMM d, yyyy HH:mm")}
-      </TableCell>
-      <TableCell className="text-muted-foreground">
-        {format(new Date(session.createdAt), "MMM d, yyyy")}
-      </TableCell>
-      <TableCell>
-        {!session.isCurrent && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRevoke}
-            disabled={isRevokePending}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
-      </TableCell>
-    </TableRow>
-  );
-}
+import { ErrorState } from "@/components/shared/error-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 export default function SessionsPage() {
   const { data: sessions, isLoading, isError, refetch } = useSessions();
   const revokeOne = useRevokeSession();
   const revokeAll = useRevokeAllSessions();
 
-  function handleRevoke(id: string) {
-    revokeOne.mutate(id, {
-      onSuccess: () => toast.success("Session revoked"),
+  const [search, setSearch] = useState("");
+  const [revoking, setRevoking] = useState<UserSession | null>(null);
+  const [confirmRevokeAll, setConfirmRevokeAll] = useState(false);
+
+  const allSessions = sessions ?? [];
+  const filtered = search
+    ? allSessions.filter((s) => {
+        const q = search.toLowerCase();
+        return (
+          (s.userAgent ?? "").toLowerCase().includes(q) ||
+          (s.ipAddress ?? "").toLowerCase().includes(q)
+        );
+      })
+    : allSessions;
+
+  function handleSearchChange(e: ChangeEvent<HTMLInputElement>) {
+    setSearch(e.target.value);
+  }
+
+  function makeRevokeHandler(session: UserSession) {
+    return () => setRevoking(session);
+  }
+
+  function handleRevokeConfirm() {
+    if (!revoking) return;
+    revokeOne.mutate(revoking.id, {
+      onSuccess: () => {
+        toast.success("Session revoked");
+        setRevoking(null);
+      },
       onError: (err) => toast.error(getApiError(err)),
     });
   }
 
-  function handleRevokeAll() {
+  function handleRevokeDialogOpenChange(open: boolean) {
+    if (!open) setRevoking(null);
+  }
+
+  function handleRevokeAllClick() {
+    setConfirmRevokeAll(true);
+  }
+
+  function handleRevokeAllConfirm() {
     revokeAll.mutate(undefined, {
-      onSuccess: () => toast.success("All other sessions revoked"),
+      onSuccess: () => {
+        toast.success("All other sessions revoked");
+        setConfirmRevokeAll(false);
+      },
       onError: (err) => toast.error(getApiError(err)),
     });
+  }
+
+  function handleRevokeAllDialogOpenChange(open: boolean) {
+    if (!open) setConfirmRevokeAll(false);
   }
 
   function handleRetry() {
     void refetch();
   }
 
+  const columns: DataTableColumn<UserSession>[] = [
+    {
+      key: "device",
+      header: "Device / Browser",
+      cell: (s) => (
+        <div className="flex items-center gap-2">
+          <span className="truncate max-w-[280px] font-medium">
+            {s.userAgent ?? "Unknown device"}
+          </span>
+          {s.isCurrent && (
+            <Badge variant="secondary" className="shrink-0 text-[10px] h-4 px-1.5">
+              Current
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "ip",
+      header: "IP Address",
+      cell: (s) => (
+        <span className="text-muted-foreground font-mono text-xs">
+          {s.ipAddress ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "lastActive",
+      header: "Last Active",
+      sortable: true,
+      sortValue: (s) => new Date(s.lastActive).getTime(),
+      cell: (s) => (
+        <span className="text-muted-foreground text-xs">
+          {format(new Date(s.lastActive), "MMM d, yyyy HH:mm")}
+        </span>
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "Signed In",
+      cell: (s) => (
+        <span className="text-muted-foreground text-xs">
+          {format(new Date(s.createdAt), "MMM d, yyyy")}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-16",
+      cell: (s) =>
+        s.isCurrent ? null : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={makeRevokeHandler(s)}
+            disabled={revokeOne.isPending}
+            title="Revoke session"
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        ),
+    },
+  ];
+
+  const emptyState = search ? (
+    <EmptyState
+      title={`No sessions matching "${search}"`}
+      description="Try a different search term."
+      compact
+      className="min-h-[200px]"
+    />
+  ) : (
+    <EmptyState
+      illustration={<Monitor className="h-8 w-8 text-muted-foreground/40" />}
+      title="No active sessions"
+      description="No other sessions are currently active."
+      className="min-h-[40vh]"
+    />
+  );
+
   return (
     <PageWrapper
       title="Active Sessions"
-      subtitle="Manage where you're signed in. Revoking a session will sign you out on that device."
+      subtitle="Manage where you're signed in. Revoking a session signs you out on that device."
       actions={
         <Button
           variant="outline"
           size="sm"
-          onClick={handleRevokeAll}
-          disabled={revokeAll.isPending}
+          onClick={handleRevokeAllClick}
+          disabled={revokeAll.isPending || allSessions.filter((s) => !s.isCurrent).length === 0}
         >
           <LogOut className="h-4 w-4 mr-1.5" />
           Revoke all other sessions
         </Button>
       }
+      filters={
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <Input
+            className="pl-8 h-8 text-xs max-w-[240px]"
+            placeholder="Search by device or IP…"
+            value={search}
+            onChange={handleSearchChange}
+          />
+        </div>
+      }
     >
-      {isLoading ? (
-        <SessionsSkeleton />
-      ) : isError ? (
+      {isError ? (
         <ErrorState
           title="Couldn't load sessions"
           description="Something went wrong while fetching your active sessions."
           onRetry={handleRetry}
-          className="flex-1"
         />
-      ) : !sessions || sessions.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center min-h-[60vh]">
-          <EmptyState
-            title="No active sessions"
-            description="No other sessions are currently active."
-          />
-        </div>
       ) : (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Device / Browser</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Last Active</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="w-24" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sessions.map((s) => (
-                <SessionRow
-                  key={s.id}
-                  session={s}
-                  onRevoke={handleRevoke}
-                  isRevokePending={revokeOne.isPending}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          data={filtered}
+          columns={columns}
+          getRowKey={(s) => s.id}
+          isLoading={isLoading}
+          emptyState={emptyState}
+          minWidth="600px"
+        />
       )}
+
+      <ConfirmDialog
+        open={!!revoking}
+        onOpenChange={handleRevokeDialogOpenChange}
+        title="Revoke Session"
+        description="This will immediately sign out that device. Any unsaved work on that device will be lost."
+        confirmLabel="Revoke"
+        onConfirm={handleRevokeConfirm}
+        isPending={revokeOne.isPending}
+        destructive
+      />
+
+      <ConfirmDialog
+        open={confirmRevokeAll}
+        onOpenChange={handleRevokeAllDialogOpenChange}
+        title="Revoke All Other Sessions"
+        description="This will sign you out on all other devices. Your current session will remain active."
+        confirmLabel="Revoke All"
+        onConfirm={handleRevokeAllConfirm}
+        isPending={revokeAll.isPending}
+        destructive
+      />
     </PageWrapper>
   );
 }

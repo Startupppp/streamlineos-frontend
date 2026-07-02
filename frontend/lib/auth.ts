@@ -192,6 +192,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const data = unwrapBackend<{
             userId: string;
             orgId: string;
+            sessionId?: string;
             forceChangePassword: boolean;
             daysUntilExpiry?: number;
             requiresMfa?: boolean;
@@ -202,10 +203,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const sessionData = await fetchSessionData(data.userId);
           if (!sessionData) return null;
 
-          return buildUserFromSessionData(data.userId, sessionData, {
-            forceChangePassword: data.forceChangePassword,
-            daysUntilExpiry: data.daysUntilExpiry,
-          });
+          return {
+            ...buildUserFromSessionData(data.userId, sessionData, {
+              forceChangePassword: data.forceChangePassword,
+              daysUntilExpiry: data.daysUntilExpiry,
+            }),
+            sessionId: data.sessionId,
+          };
         } catch (err) {
           if (
             err instanceof Error &&
@@ -287,7 +291,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.enabledModules = user.enabledModules ?? [];
         token.userOnboardingCompletedAt = user.userOnboardingCompletedAt ?? null;
         token.isPlatformAdmin = user.isPlatformAdmin ?? false;
-        token.sessionId = randomUUID();
+        token.sessionId = user.sessionId ?? randomUUID();
         if (user.daysUntilExpiry !== undefined) token.daysUntilExpiry = user.daysUntilExpiry;
         token.authProvider = account?.provider ?? "credentials";
       }

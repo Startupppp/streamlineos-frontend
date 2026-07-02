@@ -75,7 +75,6 @@ import {
   CheckSquare,
   Lock,
   Key,
-  Upload,
   Smartphone,
   Plug,
   Activity,
@@ -1071,12 +1070,6 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/users/archived",
         requiredPermission: "settings:view",
       },
-      {
-        label: "Import / Export",
-        icon: Upload,
-        href: "/users/import",
-        requiredPermission: "settings:manage",
-      },
     ],
   },
   {
@@ -1156,22 +1149,10 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:manage",
       },
       {
-        label: "Custom Fields",
-        icon: Sliders,
-        href: "/settings/custom-fields",
-        requiredPermission: "settings:manage",
-      },
-      {
         label: "Automation",
         icon: Workflow,
         href: "/settings/automations",
         requiredPermission: "settings:automations:view",
-      },
-      {
-        label: "Notification Templates",
-        icon: MailOpen,
-        href: "/settings/email-templates",
-        requiredPermission: "settings:manage",
       },
       {
         label: "Integrations",
