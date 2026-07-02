@@ -106,6 +106,7 @@ export function EmptyState({
             <ActionButton
               action={action}
               size={compact ? "sm" : "default"}
+              variant="outline"
               className={compact ? "h-7 text-xs" : undefined}
             />
           )}

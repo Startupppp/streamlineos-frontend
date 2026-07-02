@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -206,7 +206,33 @@ export function UserInvitationsPanel() {
         </>}
       >
         {isLoading ? (
-          <SkeletonTable rows={8} columns={6} />
+          <div className="border border-border rounded-md overflow-hidden">
+            <div className="min-w-max">
+              <table className="w-full caption-bottom text-[11px]">
+                <thead className="bg-muted/80">
+                  <tr className="border-b-2 border-border">
+                    {["Email", "Role", "Invited", "Expires", "Status", ""].map((col) => (
+                      <th key={col} className="px-2 py-1.5 text-left">
+                        <Skeleton className="h-3 w-12" />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i} className="h-8">
+                      <td className="px-2 py-1"><Skeleton className="h-3 w-40" /></td>
+                      <td className="px-2 py-1"><Skeleton className="h-4 w-14 rounded-full" /></td>
+                      <td className="px-2 py-1"><Skeleton className="h-3 w-20" /></td>
+                      <td className="px-2 py-1"><Skeleton className="h-3 w-20" /></td>
+                      <td className="px-2 py-1"><Skeleton className="h-4 w-16 rounded-full" /></td>
+                      <td className="px-2 py-1 w-[72px]"><Skeleton className="h-5 w-14 rounded" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : isError ? (
           <ErrorState
             title="Failed to load invitations"

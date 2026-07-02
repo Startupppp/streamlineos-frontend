@@ -212,7 +212,7 @@ export default function WebhooksPage() {
               <EmptyState
                 illustration={<EmptyDevicesIllustration />}
                 title="No webhooks configured"
-                description="Webhooks let external services receive notifications when events happen in your CRM."
+                description="Webhooks let external services receive real-time notifications when events happen in your workspace."
                 action={{ label: "Add Webhook", onClick: handleOpenCreate }}
                 className="w-full"
               />

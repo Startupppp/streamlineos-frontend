@@ -16,7 +16,6 @@ import {
   FileText,
   Send,
   Check,
-  Clock,
   Ban,
   MoreHorizontal,
   Trash2,
@@ -27,7 +26,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   Select,
   SelectContent,
@@ -266,58 +265,36 @@ export function InvoicesClient() {
       filters={filtersBar}
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
-              <IndianRupee className="h-4 w-4 text-amber-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrencyFull(stats?.totalOutstanding ?? 0)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {(stats?.issued ?? 0) + (stats?.failed ?? 0)} invoices
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Paid</CardTitle>
-              <Check className="h-4 w-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrencyFull(stats?.totalPaid ?? 0)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {stats?.paid ?? 0} invoices
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Failed</CardTitle>
-              <Clock className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-destructive">
-                {stats?.failed ?? 0}
-              </div>
-              <p className="text-xs text-muted-foreground">Need attention</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Drafts</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.draft ?? 0}</div>
-              <p className="text-xs text-muted-foreground">Ready to send</p>
-            </CardContent>
-          </Card>
-        </div>
+        <StatCardGrid cols={4}>
+          <StatCard
+            label="Outstanding"
+            value={formatCurrencyFull(stats?.totalOutstanding ?? 0)}
+            icon={IndianRupee}
+            tone="amber"
+            hint={`${(stats?.issued ?? 0) + (stats?.failed ?? 0)} invoices`}
+          />
+          <StatCard
+            label="Paid"
+            value={formatCurrencyFull(stats?.totalPaid ?? 0)}
+            icon={Check}
+            tone="emerald"
+            hint={`${stats?.paid ?? 0} invoices`}
+          />
+          <StatCard
+            label="Failed"
+            value={stats?.failed ?? 0}
+            icon={AlertCircle}
+            tone="red"
+            hint="Need attention"
+          />
+          <StatCard
+            label="Drafts"
+            value={stats?.draft ?? 0}
+            icon={FileText}
+            tone="default"
+            hint="Ready to send"
+          />
+        </StatCardGrid>
 
         <DataTable
           data={invoices}

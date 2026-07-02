@@ -6,6 +6,7 @@ import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { Shield, ChevronLeft, ChevronRight, Activity, Info, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/shared/error-state";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
@@ -402,10 +403,13 @@ export default function AuditLogPage() {
                 ))}
               </div>
             ) : isError ? (
-              <div className="py-14 flex flex-col items-center gap-3 text-center">
-                <p className="text-sm text-muted-foreground">Failed to load audit events.</p>
-                <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
-              </div>
+              <ErrorState
+                title="Failed to load audit events"
+                description="Something went wrong while fetching audit events. Please try again."
+                onRetry={handleRetry}
+                compact
+                className="m-4"
+              />
             ) : filteredLogs.length === 0 ? (
               <div className="py-14 flex flex-col items-center gap-3 text-center">
                 <EmptyDocumentsIllustration className="h-40 w-40 opacity-95" />

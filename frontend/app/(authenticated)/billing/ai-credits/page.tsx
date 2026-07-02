@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   useAiCreditsWallet,
   useConfigureAutoTopUp,

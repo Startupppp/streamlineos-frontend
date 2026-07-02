@@ -342,12 +342,12 @@ export function UsersPage() {
       <PageWrapper
         title="Users"
         eyebrow="People"
-        subtitle="Manage organization members, their access and preferences."
+        subtitle="Manage members, roles, and access."
         badge={
           pagination?.total !== undefined ? String(pagination.total) : undefined
         }
         actions={
-          <div className="flex items-center gap-2">
+          <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 text-xs">
@@ -386,7 +386,7 @@ export function UsersPage() {
               <UserPlus className="h-3.5 w-3.5 mr-1.5" />
               Invite User
             </Button>
-          </div>
+          </>
         }
         filters={
           <div className="flex flex-wrap items-center gap-2 w-full">

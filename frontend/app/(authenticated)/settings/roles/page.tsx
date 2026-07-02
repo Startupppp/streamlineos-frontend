@@ -94,19 +94,27 @@ function RolesContent() {
       noInternalScroll
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" asChild className="gap-2">
+          <Button variant="outline" size="icon" className="sm:hidden" asChild aria-label="Audit log">
+            <Link href="/settings/roles/audit">
+              <ClipboardList className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Button variant="outline" asChild className="hidden sm:inline-flex gap-2">
             <Link href="/settings/roles/audit">
               <ClipboardList className="h-4 w-4" /> Audit log
             </Link>
           </Button>
-          <Button variant="outline" onClick={handleOpenTemplate} className="gap-2">
+          <Button variant="outline" size="icon" className="sm:hidden" onClick={handleOpenTemplate} aria-label="Use template">
+            <Copy className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" onClick={handleOpenTemplate} className="hidden sm:inline-flex gap-2">
             <Copy className="h-4 w-4" /> Use template
           </Button>
           <Button
             onClick={handleOpenCreate}
             className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
           >
-            <Plus className="h-4 w-4" /> New role
+            <Plus className="h-4 w-4" /><span className="hidden sm:inline">New role</span>
           </Button>
         </div>
       }

@@ -12,13 +12,12 @@ import {
   CheckCircle2,
   XCircle,
   Lock,
-  AlertTriangle,
   ShieldOff,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { ErrorState } from "@/components/shared/error-state";
 import { useRolePermissionsMatrix } from "@/hooks/api/roles";
 import type { RolePermissionsMatrixEntry } from "@/hooks/api/roles";
 import { cn } from "@/lib/utils";
@@ -93,18 +92,12 @@ function PermissionsContent() {
         subtitle="Read-only overview of built-in permissions per system role"
         eyebrow="Settings"
       >
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
-          <AlertTriangle className="h-8 w-8 text-muted-foreground" />
-          <div>
-            <p className="text-sm font-medium">Failed to load permissions</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {matrixQuery.error.message}
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            Try again
-          </Button>
-        </div>
+        <ErrorState
+          title="Failed to load permissions"
+          description="Failed to fetch permissions. Please try again."
+          onRetry={handleRetry}
+          className="flex-1 min-h-[320px]"
+        />
       </PageWrapper>
     );
   }

@@ -119,7 +119,7 @@ export function OrgAuditLogPage() {
     <PageWrapper
       title="Audit Log"
       eyebrow="People"
-      subtitle="Organization-wide audit trail of user management actions."
+      subtitle="Audit trail of user management actions."
       badge={
         pagination?.total !== undefined ? String(pagination.total) : undefined
       }

@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useInvoiceStats, useInvoices } from "@/hooks/api/invoice";
 import { useSubscription } from "@/hooks/api/subscription";
 import type { InvoiceStatus } from "@/types/invoice";
@@ -180,48 +180,36 @@ export default function BillingPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {statsLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="rounded-lg border border-border bg-card px-4 py-4 space-y-2"
-                  >
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-7 w-28" />
-                  </div>
-                ))
-              ) : (
-                <>
-                  <StatCard
-                    label="Total Invoiced"
-                    value={fmt(
-                      stats ? stats.totalOutstanding + stats.totalPaid : 0,
-                    )}
-                    icon={FileText}
-                    color="blue"
-                  />
-                  <StatCard
-                    label="Received (Paid)"
-                    value={fmt(stats?.totalPaid ?? 0)}
-                    icon={CheckCircle2}
-                    color="green"
-                  />
-                  <StatCard
-                    label="Outstanding"
-                    value={fmt(stats?.totalOutstanding ?? 0)}
-                    icon={Clock}
-                    color="amber"
-                  />
-                  <StatCard
-                    label="Failed"
-                    value={`${stats?.failed ?? 0} invoices`}
-                    icon={AlertCircle}
-                    color="red"
-                  />
-                </>
-              )}
-            </div>
+            <StatCardGrid cols={4}>
+              <StatCard
+                label="Total Invoiced"
+                value={fmt(stats ? stats.totalOutstanding + stats.totalPaid : 0)}
+                icon={FileText}
+                tone="blue"
+                isLoading={statsLoading}
+              />
+              <StatCard
+                label="Received (Paid)"
+                value={fmt(stats?.totalPaid ?? 0)}
+                icon={CheckCircle2}
+                tone="emerald"
+                isLoading={statsLoading}
+              />
+              <StatCard
+                label="Outstanding"
+                value={fmt(stats?.totalOutstanding ?? 0)}
+                icon={Clock}
+                tone="amber"
+                isLoading={statsLoading}
+              />
+              <StatCard
+                label="Failed"
+                value={`${stats?.failed ?? 0} invoices`}
+                icon={AlertCircle}
+                tone="red"
+                isLoading={statsLoading}
+              />
+            </StatCardGrid>
 
             <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
               {statsLoading

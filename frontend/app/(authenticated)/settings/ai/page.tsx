@@ -15,6 +15,7 @@ import {
   type OrgFeatureFlags,
 } from "@/hooks/api/ai";
 import { AlertCircle, BarChart3, Bot, BrainCircuit, TrendingUp, Zap } from "lucide-react";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 
 const FLAG_META: {
   key: keyof OrgFeatureFlags;
@@ -149,10 +150,12 @@ export default function AiSettingsPage() {
           </CardHeader>
           <CardContent>
             {usageLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-32 w-full" />
-              </div>
+              <StatCardGrid cols={4}>
+                <StatCard label="Total Requests" value={0} isLoading tone="blue" />
+                <StatCard label="Total Tokens" value={0} isLoading tone="default" />
+                <StatCard label="Prompt Tokens" value={0} isLoading tone="default" />
+                <StatCard label="Est. Cost" value={0} isLoading tone="emerald" />
+              </StatCardGrid>
             ) : usageError ? (
               <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
                 <AlertCircle className="h-8 w-8 text-destructive/40" />
@@ -161,12 +164,12 @@ export default function AiSettingsPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <StatBox label="Total Requests" value={String(usage?.totals.requestCount ?? 0)} />
-                  <StatBox label="Total Tokens" value={formatTokens(usage?.totals.totalTokens ?? 0)} />
-                  <StatBox label="Prompt Tokens" value={formatTokens(usage?.totals.promptTokens ?? 0)} />
-                  <StatBox label="Est. Cost" value={formatCost(usage?.totals.estimatedCostUsd ?? "0")} />
-                </div>
+                <StatCardGrid cols={4}>
+                  <StatCard label="Total Requests" value={String(usage?.totals.requestCount ?? 0)} tone="blue" />
+                  <StatCard label="Total Tokens" value={formatTokens(usage?.totals.totalTokens ?? 0)} tone="default" />
+                  <StatCard label="Prompt Tokens" value={formatTokens(usage?.totals.promptTokens ?? 0)} tone="default" />
+                  <StatCard label="Est. Cost" value={formatCost(usage?.totals.estimatedCostUsd ?? "0")} tone="emerald" />
+                </StatCardGrid>
 
                 {(usage?.byFeature.length ?? 0) > 0 && (
                   <div>
@@ -238,15 +241,6 @@ function FlagRow({ flagKey, label, description, icon: Icon, checked, disabled, o
         </div>
       </div>
       <Switch checked={checked} onCheckedChange={handleChange} disabled={disabled} />
-    </div>
-  );
-}
-
-function StatBox({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border bg-muted/30 p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
     </div>
   );
 }

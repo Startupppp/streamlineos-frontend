@@ -258,16 +258,14 @@ function EmployeeCommandItem({ employee, onSelect }: EmployeeCommandItemProps) {
 
 function EmptySelectionState() {
   return (
-    <div className="flex flex-1 items-center justify-center min-h-[320px]">
-      <div className="text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-          <User className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <p className="text-sm font-medium text-foreground">No employee selected</p>
-        <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
-          Select an employee above to simulate and inspect their effective permissions
-        </p>
+    <div className="flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 min-h-[260px]">
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+        <User className="h-6 w-6 text-muted-foreground" />
       </div>
+      <p className="text-sm font-medium text-foreground">No employee selected</p>
+      <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
+        Select an employee above to simulate and inspect their effective permissions
+      </p>
     </div>
   );
 }

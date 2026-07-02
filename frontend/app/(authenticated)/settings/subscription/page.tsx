@@ -192,12 +192,12 @@ export default function SubscriptionPage() {
     return (
       <PageWrapper title="Subscription" subtitle="Manage your plan and billing.">
         <div className="max-w-4xl space-y-4">
-          <Skeleton className="h-16 w-full rounded-lg" />
-          <Skeleton className="h-10 w-56 rounded-lg" />
+          <Skeleton className="h-14 w-full rounded-lg" />
+          <Skeleton className="h-9 w-56 rounded-lg" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Skeleton className="h-64 rounded-lg" />
-            <Skeleton className="h-64 rounded-lg" />
-            <Skeleton className="h-64 rounded-lg" />
+            <Skeleton className="min-h-[240px] rounded-lg" />
+            <Skeleton className="min-h-[240px] rounded-lg" />
+            <Skeleton className="min-h-[240px] rounded-lg" />
           </div>
         </div>
       </PageWrapper>

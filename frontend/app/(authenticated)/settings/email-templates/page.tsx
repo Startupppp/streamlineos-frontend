@@ -49,10 +49,10 @@ export default function EmailTemplatesPage() {
         title="Email Templates"
         subtitle="Preview and test all transactional email templates used in the system"
       >
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 flex-1 min-h-0">
           <Skeleton className="h-9 w-full" />
           <Skeleton className="h-8 w-72" />
-          <Skeleton className="h-[500px] w-full" />
+          <Skeleton className="flex-1 min-h-[320px] w-full" />
         </div>
       </PageWrapper>
     );

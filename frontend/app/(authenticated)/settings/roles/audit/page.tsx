@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ClipboardList, AlertCircle, RefreshCw, ShieldCheck, ShieldX, UserCheck, UserX } from "lucide-react";
+import { ClipboardList, ShieldCheck, ShieldX, UserCheck, UserX } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { ErrorState } from "@/components/shared/error-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -78,7 +78,12 @@ function AuditContent() {
         {query.isLoading && <AuditLoadingSkeleton />}
 
         {query.isError && (
-          <AuditErrorState onRetry={handleRetry} />
+          <ErrorState
+            title="Failed to load audit log"
+            description="Something went wrong while fetching audit events"
+            onRetry={handleRetry}
+            className="flex-1 min-h-[320px]"
+          />
         )}
 
         {query.isSuccess && rbacLogs.length === 0 && (
@@ -250,27 +255,6 @@ function AuditLoadingSkeleton() {
   );
 }
 
-interface AuditErrorStateProps {
-  onRetry: () => void;
-}
-
-function AuditErrorState({ onRetry }: AuditErrorStateProps) {
-  return (
-    <div className="flex flex-1 items-center justify-center min-h-[320px]">
-      <div className="text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-          <AlertCircle className="h-6 w-6 text-destructive" />
-        </div>
-        <p className="text-sm font-medium text-foreground">Failed to load audit log</p>
-        <p className="text-xs text-muted-foreground mt-1">Something went wrong while fetching audit events</p>
-        <Button variant="outline" size="sm" onClick={onRetry} className="mt-3 gap-1.5">
-          <RefreshCw className="h-3.5 w-3.5" />
-          Retry
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 function AuditEmptyState() {
   return (

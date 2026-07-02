@@ -160,7 +160,7 @@ function EntityCard({
 
   return (
     <motion.div variants={fadeUp}>
-      <div className="h-full flex flex-col rounded-xl border border-border/70 bg-card shadow-noir p-4 gap-3">
+      <div className="h-full flex flex-col rounded-lg border border-border/70 bg-card shadow-noir p-4 gap-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <span
