@@ -43,7 +43,8 @@ async function fetchSessionData(userId: string): Promise<SessionData | null> {
     });
     clearTimeout(timeout);
     if (!res.ok) return null;
-    return res.json() as Promise<SessionData>;
+    const body = (await res.json()) as unknown;
+    return unwrapBackend<SessionData>(body);
   } catch {
     clearTimeout(timeout);
     return null;

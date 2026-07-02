@@ -72,9 +72,7 @@ function profileCompletenessScore(employee: EmployeeData): {
     { label: "Bio", filled: !!(employee as Record<string, unknown>).bio },
     {
       label: "Skills",
-      filled: Array.isArray(employee.skills)
-        ? employee.skills.length > 0
-        : !!employee.skills,
+      filled: (employee.skills ?? []).length > 0,
     },
     {
       label: "LinkedIn",
@@ -314,14 +312,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() ||
     "Employee";
 
-  const skillsList: string[] = Array.isArray(employee.skills)
-    ? (employee.skills as string[]).filter(Boolean)
-    : typeof employee.skills === "string" && employee.skills
-      ? employee.skills
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [];
+  const skillsList: string[] = (employee.skills ?? []).map((s) => s.name);
 
   const { pct: completeness, missing: missingFields } =
     profileCompletenessScore(employee);

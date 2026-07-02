@@ -25,81 +25,25 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
     <div className="space-y-5">
       <FormField
         control={form.control}
-        name="skills"
+        name="taxId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Skills (Comma Separated)</FormLabel>
+            <FormLabel>PAN Number</FormLabel>
             <FormControl>
-              <Input placeholder="React, Node.js, Leadership..." {...field} />
+              <Input
+                placeholder="ABCDE1234F"
+                maxLength={10}
+                {...field}
+                onChange={(e) => {
+                  const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+                  field.onChange(v.slice(0, 10));
+                }}
+              />
             </FormControl>
-            <FormDescription>Enter skills separated by commas.</FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
-      <div className="grid md:grid-cols-2 gap-5">
-        <FormField
-          control={form.control}
-          name="experienceYears"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Years of Experience</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.5"
-                  min="0"
-                  max="60"
-                  placeholder="e.g. 2.5"
-                  value={field.value != null ? field.value : ""}
-                  onKeyDown={(e) => {
-                    if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
-                  }}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    if (v === "") {
-                      field.onChange(undefined);
-                      return;
-                    }
-                    if (/^\d*\.?\d*$/.test(v)) {
-                      const parsed = parseFloat(v);
-                      if (!isNaN(parsed) && parsed >= 0 && parsed <= 60) {
-                        field.onChange(parsed);
-                      }
-                    }
-                  }}
-                  onBlur={field.onBlur}
-                  name={field.name}
-                  ref={field.ref}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="taxId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>PAN Number</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="ABCDE1234F"
-                  maxLength={10}
-                  {...field}
-                  onChange={(e) => {
-                    const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-                    field.onChange(v.slice(0, 10));
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
 
       <div className="pt-4 border-t border-border">
         <h3 className="text-base font-semibold mb-4">Salary Information</h3>

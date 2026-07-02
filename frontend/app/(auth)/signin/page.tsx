@@ -11,19 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import {
-  Loader2,
-  Eye,
-  EyeOff,
-  ArrowRight,
-  Lock,
-  Mail,
-  ShieldCheck,
-} from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 import { parseAuthErrorCode } from "@/lib/parse-auth-error";
+import { MfaStep, MagicLinkForm, OAuthButtons, SignInAlerts, formatLockoutTime } from "@/features/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -36,14 +29,6 @@ const signinSchema = z.object({
 type FormValues = z.infer<typeof signinSchema>;
 
 const RESEND_COOLDOWN_SECONDS = 60;
-
-function formatLockoutTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (mins > 0)
-    return `${mins} minute${mins !== 1 ? "s" : ""} and ${secs} second${secs !== 1 ? "s" : ""}`;
-  return `${secs} second${secs !== 1 ? "s" : ""}`;
-}
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -313,78 +298,15 @@ export default function SignInPage() {
 
   if (mfaRequired) {
     return (
-      <div className="w-full max-w-sm animate-fade-up">
-        <div className="mb-5 sm:mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950">
-            <ShieldCheck className="h-6 w-6 text-blue-600" />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-            Two-factor authentication
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Enter the 6-digit code from your authenticator app
-          </p>
-        </div>
-
-        <div className="rounded-xl p-4 sm:p-6 space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="totp-code" className="text-[13px] font-medium">
-              Authentication code
-            </Label>
-            <Input
-              id="totp-code"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              autoComplete="one-time-code"
-              placeholder="000000"
-              maxLength={6}
-              value={mfaCode}
-              onChange={handleMfaCodeChange}
-              onKeyDown={handleMfaKeyDown}
-              disabled={mfaMutation.isPending}
-              className={cn(
-                "h-9 text-sm text-center tracking-[0.4em] font-mono",
-                mfaError &&
-                  "border-destructive focus-visible:ring-destructive/30",
-              )}
-              autoFocus
-            />
-            {mfaError && (
-              <p role="alert" className="text-[12px] text-destructive">
-                {mfaError}
-              </p>
-            )}
-          </div>
-
-          <Button
-            type="button"
-            disabled={mfaMutation.isPending || mfaCode.length !== 6}
-            className="w-full h-9 text-sm font-medium gap-2"
-            onClick={handleMfaSubmit}
-          >
-            {mfaMutation.isPending ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Verifying…
-              </>
-            ) : (
-              <>
-                Verify and sign in
-                <ArrowRight className="h-3.5 w-3.5" />
-              </>
-            )}
-          </Button>
-
-          <button
-            type="button"
-            onClick={handleMfaBack}
-            className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Back to sign in
-          </button>
-        </div>
-      </div>
+      <MfaStep
+        code={mfaCode}
+        onCodeChange={handleMfaCodeChange}
+        onKeyDown={handleMfaKeyDown}
+        onSubmit={handleMfaSubmit}
+        onBack={handleMfaBack}
+        isPending={mfaMutation.isPending}
+        error={mfaError}
+      />
     );
   }
 
@@ -399,48 +321,13 @@ export default function SignInPage() {
         </p>
       </div>
 
-      {lockedSeconds !== null && (
-        <div className="mb-2 flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
-          <Lock className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-          <p className="text-sm text-destructive">
-            Your account has been temporarily locked due to too many failed
-            login attempts. Please try again in{" "}
-            <span className="font-semibold">
-              {formatLockoutTime(lockedSeconds)}
-            </span>
-            .
-          </p>
-        </div>
-      )}
-
-      {showVerificationHint && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-          <Mail className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-blue-800">
-              Haven&apos;t verified your email yet?
-            </p>
-            <Button
-              type="button"
-              variant="link"
-              className="h-auto p-0 text-sm text-blue-700 font-semibold"
-              onClick={handleResendVerification}
-              disabled={isResendingVerification || resendCooldown > 0}
-              aria-label={
-                resendCooldown > 0
-                  ? `Resend available in ${resendCooldown} seconds`
-                  : "Resend verification email"
-              }
-            >
-              {isResendingVerification
-                ? "Sending…"
-                : resendCooldown > 0
-                  ? `Resend available in ${resendCooldown}s`
-                  : "Resend verification email"}
-            </Button>
-          </div>
-        </div>
-      )}
+      <SignInAlerts
+        lockedSeconds={lockedSeconds}
+        showVerificationHint={showVerificationHint}
+        isResendingVerification={isResendingVerification}
+        resendCooldown={resendCooldown}
+        onResendVerification={handleResendVerification}
+      />
 
       <div className="rounded-xl p-4 space-y-3">
         <form
@@ -570,124 +457,26 @@ export default function SignInPage() {
           </Button>
         </form>
 
-        <div className="text-center">
-          {!showMagicLink ? (
-            <button
-              type="button"
-              onClick={handleShowMagicLink}
-              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
-            >
-              Email me a sign-in link instead
-            </button>
-          ) : magicLinkSent ? (
-            <p className="text-[12px] text-green-700">
-              Check your inbox — a sign-in link is on its way.
-            </p>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Input
-                type="email"
-                placeholder="you@company.com"
-                value={magicLinkEmail}
-                onChange={handleMagicLinkEmailChange}
-                className="h-8 text-sm"
-                autoFocus
-              />
-              <Button
-                type="button"
-                size="sm"
-                className="h-8 shrink-0"
-                disabled={!magicLinkEmail || magicLinkMutation.isPending}
-                onClick={handleSendMagicLink}
-              >
-                {magicLinkMutation.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  "Send"
-                )}
-              </Button>
-            </div>
-          )}
-        </div>
+        <MagicLinkForm
+          isVisible={showMagicLink}
+          isSent={magicLinkSent}
+          email={magicLinkEmail}
+          onEmailChange={handleMagicLinkEmailChange}
+          onSend={handleSendMagicLink}
+          isPending={magicLinkMutation.isPending}
+          onShow={handleShowMagicLink}
+        />
 
         {hasOAuthProviders && (
-          <>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-card px-2 text-[11px] text-muted-foreground/60">
-                  or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {hasGoogleProvider && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-9 text-sm font-medium gap-2"
-                  onClick={handleGoogleSignIn}
-                  disabled={googleSignInMutation.isPending || isPending}
-                >
-                  {googleSignInMutation.isPending ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <svg
-                      className="h-4 w-4"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        fill="#4285F4"
-                      />
-                      <path
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        fill="#34A853"
-                      />
-                      <path
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        fill="#FBBC05"
-                      />
-                      <path
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        fill="#EA4335"
-                      />
-                    </svg>
-                  )}
-                  Continue with Google
-                </Button>
-              )}
-              {hasMicrosoftProvider && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-9 text-sm font-medium gap-2"
-                  onClick={handleMicrosoftSignIn}
-                  disabled={microsoftSignInMutation.isPending || isPending}
-                >
-                  {microsoftSignInMutation.isPending ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <svg
-                      className="h-4 w-4"
-                      viewBox="0 0 21 21"
-                      aria-hidden="true"
-                    >
-                      <rect x="1" y="1" width="9" height="9" fill="#f25022" />
-                      <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
-                      <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
-                      <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
-                    </svg>
-                  )}
-                  Continue with Microsoft
-                </Button>
-              )}
-            </div>
-          </>
+          <OAuthButtons
+            hasGoogleProvider={hasGoogleProvider}
+            hasMicrosoftProvider={hasMicrosoftProvider}
+            isGooglePending={googleSignInMutation.isPending}
+            isMicrosoftPending={microsoftSignInMutation.isPending}
+            isSignInPending={isPending}
+            onGoogleSignIn={handleGoogleSignIn}
+            onMicrosoftSignIn={handleMicrosoftSignIn}
+          />
         )}
 
         <p className="text-sm text-center text-muted-foreground">

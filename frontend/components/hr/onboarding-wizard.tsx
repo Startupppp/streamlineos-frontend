@@ -33,7 +33,7 @@ const STEPS = [
 const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
   1: ["firstName", "lastName", "email", "phone", "gender", "dateOfBirth"],
   2: ["designation", "departmentId", "role", "joiningDate"],
-  3: ["skills", "experienceYears", "taxId"],
+  3: ["taxId"],
   4: [],
 };
 
@@ -81,7 +81,7 @@ export function OnboardingWizard() {
       whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",
       password: "", designation: "", departmentId: undefined,
       role: "ENGINEERING", employeeId: "", joiningDate: new Date(),
-      dateOfBirth: undefined, skills: "", experienceYears: undefined,
+      dateOfBirth: undefined,
       taxId: "", monthlySalary: undefined,
       bankDetails: { accountNumber: "", bankName: "", branch: "", ifsc: "", accountHolder: "", pfUanNumber: "" },
     } as DefaultValues<FormValues>,

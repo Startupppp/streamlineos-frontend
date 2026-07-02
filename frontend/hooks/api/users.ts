@@ -372,12 +372,12 @@ export const useCreateUser = () => {
 export const useBulkInviteUsers = () => {
   const queryClient = useQueryClient();
   return useMutation<
-    { success: boolean; invited: number; failed: string[] },
+    { results: Array<{ email: string; success: boolean; invitationId?: string; error?: string }> },
     Error,
     { emails: string[]; role: string }
   >({
     mutationFn: (data) =>
-      apiClient.post<{ success: boolean; invited: number; failed: string[] }>(
+      apiClient.post<{ results: Array<{ email: string; success: boolean; invitationId?: string; error?: string }> }>(
         "/users/bulk-invite",
         data
       ),

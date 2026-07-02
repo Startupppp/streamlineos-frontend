@@ -157,51 +157,6 @@ export function ProfessionalInfoSection({
             </FormItem>
           )}
         />
-        <FormField
-          control={control}
-          name="experienceYears"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Experience (Years)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  min={0}
-                  max={60}
-                  value={field.value ?? ""}
-                  onKeyDown={(e) => {
-                    if (["-", "+", "e", "E"].includes(e.key))
-                      e.preventDefault();
-                  }}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (!raw) {
-                      field.onChange(undefined);
-                      return;
-                    }
-                    const num = parseInt(raw, 10);
-                    if (!isNaN(num) && num >= 0) field.onChange(num);
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="skills"
-          render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Skills</FormLabel>
-              <FormControl>
-                <Input placeholder="React, TypeScript, Node.js" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </div>
     </div>
   );

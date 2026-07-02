@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import { X, Plus, Linkedin, Twitter, Github, Globe, User } from "lucide-react";
 import { useUpdateProfile } from "@/hooks/api/hr";
 import { resolveImageUrl } from "@/lib/utils";
-import type { Employee } from "@/types/hr";
 
 const schema = z
   .object({
@@ -69,8 +68,21 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
+interface EmployeeWithSkills {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  image: string | null;
+  bio: string | null;
+  linkedinUrl: string | null;
+  twitterUrl: string | null;
+  githubUrl: string | null;
+  websiteUrl: string | null;
+  skills?: { name: string; level: number }[] | null;
+}
+
 interface SelfEditProfileFormProps {
-  employee: Employee;
+  employee: EmployeeWithSkills;
   onSaved?: () => void;
 }
 
@@ -79,7 +91,8 @@ export function SelfEditProfileForm({
   onSaved,
 }: SelfEditProfileFormProps) {
   const updateProfile = useUpdateProfile();
-  const [skills, setSkills] = useState<string[]>(employee.skills ?? []);
+  const initialSkillNames = (employee.skills ?? []).map((s) => s.name);
+  const [skills, setSkills] = useState<string[]>(initialSkillNames);
   const [skillError, setSkillError] = useState<string | null>(null);
 
   const fullName =
@@ -337,7 +350,7 @@ export function SelfEditProfileForm({
         className="w-full"
         disabled={
           updateProfile.isPending ||
-          (!isDirty && skills === (employee.skills ?? []))
+          (!isDirty && skills.join(",") === initialSkillNames.join(","))
         }
       >
         {updateProfile.isPending ? "Saving…" : "Save Profile"}

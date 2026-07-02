@@ -75,21 +75,6 @@ const formSchema = z
       .or(z.literal("")),
     gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
     joiningDate: z.date().optional(),
-    experienceYears: z
-      .number()
-      .min(0, "Experience cannot be negative")
-      .max(60, "Experience cannot exceed 60 years")
-      .optional(),
-    skills: z
-      .string()
-      .max(500, "Skills must be at most 500 characters")
-      .refine((v) => {
-        if (!v?.trim()) return true;
-        return v
-          .split(",")
-          .every((s) => !s.trim() || /[a-zA-Z]/.test(s.trim()));
-      }, "Each skill must contain at least one letter")
-      .optional(),
     taxId: z
       .string()
       .regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)")
@@ -128,27 +113,6 @@ const formSchema = z
       .regex(/^[A-Za-z\s]+$/, "Account holder name must contain only letters")
       .optional()
       .or(z.literal("")),
-  })
-  .superRefine((data, ctx) => {
-    if (data.skills?.trim()) {
-      const parts = data.skills
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const seen = new Set<string>();
-      for (const part of parts) {
-        const key = part.toLowerCase();
-        if (seen.has(key)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Duplicate skill: "${part}" already exists`,
-            path: ["skills"],
-          });
-          break;
-        }
-        seen.add(key);
-      }
-    }
   });
 
 export type EmployeeFormValues = z.infer<typeof formSchema>;
@@ -164,8 +128,7 @@ export interface EmployeeData {
   phone: string | null;
   gender: "MALE" | "FEMALE" | "OTHER" | null;
   joiningDate: string | Date | null;
-  experienceYears: string | number | null;
-  skills: string[] | string | null;
+  skills?: { name: string; level: number }[] | null;
   taxId: string | null;
   monthlySalary: string | number | null;
   isActive: boolean | null;
@@ -205,12 +168,6 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       joiningDate: employee.joiningDate
         ? new Date(employee.joiningDate)
         : undefined,
-      experienceYears: employee.experienceYears
-        ? Number(employee.experienceYears)
-        : 0,
-      skills: Array.isArray(employee.skills)
-        ? employee.skills.join(", ")
-        : employee.skills || "",
       taxId: employee.taxId || "",
       monthlySalary: employee.monthlySalary
         ? Number(employee.monthlySalary)
@@ -225,21 +182,6 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
 
   const onSubmit = useCallback(
     async (values: EmployeeFormValues) => {
-      const seenSkills = new Set<string>();
-      const skillsArray = values.skills
-        ? values.skills
-            .split(",")
-            .map((s) => s.trim())
-            .filter((s) => s && /[a-zA-Z0-9]/.test(s))
-            .reduce<string[]>((acc, s) => {
-              const key = s.toLowerCase();
-              if (seenSkills.has(key)) return acc;
-              seenSkills.add(key);
-              acc.push(s.charAt(0).toUpperCase() + s.slice(1));
-              return acc;
-            }, [])
-        : [];
-
       toast.promise(
         updateProfileMutation.mutateAsync({
           userId: employee.id,
@@ -251,8 +193,6 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
           phone: values.phone,
           gender: values.gender,
           joiningDate: values.joiningDate?.toISOString().slice(0, 10),
-          experienceYears: values.experienceYears,
-          skills: skillsArray,
           taxId: values.taxId,
           monthlySalary: values.monthlySalary,
           bankDetails: values.bankAccount

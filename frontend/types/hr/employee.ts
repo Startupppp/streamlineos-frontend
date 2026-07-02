@@ -44,7 +44,6 @@ export interface Employee {
   twitterUrl: string | null;
   githubUrl: string | null;
   websiteUrl: string | null;
-  skills: string[] | null;
   phone: string | null;
 }
 
@@ -223,7 +222,6 @@ export interface UpdateProfileInput {
   skills?: string[];
   role?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
-  experienceYears?: number;
   taxId?: string;
   monthlySalary?: number;
   bankDetails?: {
@@ -356,8 +354,6 @@ export interface OnboardEmployeeInput {
   employeeId?: string;
   joiningDate?: Date | string;
   dateOfBirth?: Date | string;
-  skills?: string;
-  experienceYears?: number;
   taxId?: string;
   monthlySalary?: number;
   bankDetails?: {

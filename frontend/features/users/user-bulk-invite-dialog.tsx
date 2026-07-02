@@ -97,8 +97,10 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
       { emails, role: values.role },
       {
         onSuccess: (data) => {
-          setResult({ invited: data.invited, failed: data.failed });
-          toast.success(`${data.invited} invitation(s) sent`);
+          const invited = data.results.filter((r) => r.success).length;
+          const failed = data.results.filter((r) => !r.success).map((r) => r.email);
+          setResult({ invited, failed });
+          toast.success(`${invited} invitation(s) sent`);
         },
         onError: (error) => {
           toast.error(getApiError(error));
