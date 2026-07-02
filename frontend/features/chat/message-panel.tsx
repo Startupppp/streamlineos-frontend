@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   Bell,
   Bookmark,
-  Hash,
   Mic,
   Paperclip,
   PanelLeftOpen,
@@ -54,6 +53,8 @@ import type { Message, TicketEntityRef } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/projects";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
+import { useChatScroll } from "./use-chat-scroll";
+import { ChannelAvatar } from "./channel-avatar";
 import { ThreadPanel } from "./thread-panel";
 import { SavedMessagesPanel } from "./saved-messages-panel";
 import { SharedFilesPanel } from "./shared-files-panel";
@@ -129,8 +130,6 @@ export function MessagePanel({
     return `${names[0]} and ${names.length - 1} others are typing...`;
   }, [typingUsers]);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [messageInput, setMessageInput] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
@@ -138,7 +137,6 @@ export function MessagePanel({
   const [lastPollTime, setLastPollTime] = useState(() =>
     new Date().toISOString(),
   );
-  const [showScrollBtn, setShowScrollBtn] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -148,6 +146,8 @@ export function MessagePanel({
   const [showFilesPanel, setShowFilesPanel] = useState(false);
   const [forwardMessage, setForwardMessage] = useState<{
     content: string | null;
+    metadata?: Message["metadata"];
+    attachments?: Message["attachments"];
   } | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -295,9 +295,20 @@ export function MessagePanel({
     if (channelId > 0) markRead.mutate({ channelId });
   }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+  const {
+    scrollContainerRef,
+    messagesEndRef,
+    showScrollBtn,
+    scrollToBottom,
+    handleScroll,
+  } = useChatScroll({
+    channelId,
+    messageCount: messages.length,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   useEffect(() => {
     setLastPollTime(new Date().toISOString());
@@ -355,15 +366,6 @@ export function MessagePanel({
     showNotifications,
     showMeeting,
   ]);
-
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    setShowScrollBtn(el.scrollHeight - el.scrollTop - el.clientHeight > 100);
-  }, []);
-
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -562,7 +564,8 @@ export function MessagePanel({
         attachments: attachments.length > 0 ? attachments : undefined,
         metadata,
       });
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      markRead.mutate({ channelId });
+      scrollToBottom("smooth");
     } catch (error) {
       setMessageInput(content);
       setPendingAttachments(attachments);
@@ -575,6 +578,8 @@ export function MessagePanel({
     sendMessage,
     pendingAttachments,
     isOnline,
+    markRead,
+    scrollToBottom,
   ]);
 
   const handleEdit = useCallback(
@@ -606,21 +611,35 @@ export function MessagePanel({
   );
 
   const handleSave = useCallback(
-    (messageId: number) => {
-      saveMessage.mutate(messageId);
+    async (messageId: number) => {
+      try {
+        await saveMessage.mutateAsync(messageId);
+        toast.success("Message saved");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
     },
     [saveMessage],
   );
 
   const handleUnsaveMsg = useCallback(
-    (messageId: number) => {
-      unsaveMessage.mutate(messageId);
+    async (messageId: number) => {
+      try {
+        await unsaveMessage.mutateAsync(messageId);
+        toast.success("Message removed from saved");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
     },
     [unsaveMessage],
   );
 
   const handleForward = useCallback((msg: Message) => {
-    setForwardMessage({ content: msg.content });
+    setForwardMessage({
+      content: msg.content,
+      metadata: msg.metadata,
+      attachments: msg.attachments,
+    });
   }, []);
 
   const handleReact = useCallback(
@@ -788,8 +807,7 @@ export function MessagePanel({
     return messages.find(
       (m) =>
         m.createdAt &&
-        new Date(m.createdAt).getTime() > lastReadTime &&
-        m.senderId !== currentUserId,
+        new Date(m.createdAt).getTime() > lastReadTime,
     )?.id;
   }, [messages, channel, currentUserId]);
 
@@ -815,22 +833,20 @@ export function MessagePanel({
           </button>
 
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            {channel?.type === "DIRECT" ? (
-              <div className="relative">
-                <Avatar className="h-9 w-9 border-2 border-background shadow-sm">
-                  <AvatarFallback className="text-[10px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
-                    {getInitials(otherMember?.name)}
-                  </AvatarFallback>
-                </Avatar>
-                {isOtherOnline && (
-                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
-                )}
-              </div>
-            ) : (
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border border-blue/10">
-                <Hash className="h-4 w-4 text-blue" />
-              </div>
-            )}
+            <div className="relative shrink-0">
+              <ChannelAvatar
+                type={channel?.type}
+                name={channel?.name}
+                avatarUrl={channel?.avatarUrl}
+                otherMember={otherMember}
+                className="h-9 w-9"
+                rounded="xl"
+                iconClassName="h-4 w-4"
+              />
+              {channel?.type === "DIRECT" && isOtherOnline && (
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+              )}
+            </div>
 
             <div className="min-w-0">
               <h3 className="text-[15px] font-bold truncate leading-tight">
@@ -1029,7 +1045,7 @@ export function MessagePanel({
           onUnsaveMsg={handleUnsaveMsg}
           onForward={handleForward}
           showScrollBtn={showScrollBtn}
-          scrollToBottom={scrollToBottom}
+          scrollToBottom={() => scrollToBottom("smooth")}
           messagesEndRef={messagesEndRef}
           scrollContainerRef={scrollContainerRef}
           onScroll={handleScroll}

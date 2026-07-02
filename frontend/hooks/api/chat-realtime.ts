@@ -17,6 +17,7 @@ interface AblyMessagePayload {
   content: string | null;
   createdAt: string | null;
   replyToId: number | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 interface AblyTypingPayload {
@@ -36,7 +37,7 @@ function payloadToMessage(payload: AblyMessagePayload): Message {
     isEdited: false,
     isDeleted: false,
     messageType: "text",
-    metadata: null,
+    metadata: (payload.metadata as Message["metadata"]) ?? null,
     actionStatus: null,
     createdAt: payload.createdAt,
     updatedAt: payload.createdAt,

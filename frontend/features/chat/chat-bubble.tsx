@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowDown, Bookmark, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, Link, Loader2, MessageSquare, Pencil, Reply, Smile, Ticket, Trash2 } from "lucide-react";
+import { ArrowDown, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, Link, Loader2, MessageSquare, Pencil, Pin, Reply, Smile, Ticket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,11 +23,13 @@ import {
   getFileColor,
   isImageMime,
   resolveFileUrl,
+  getForwardedDisplay,
 } from "./chat-helpers";
 import type { Message, TicketEntityRef, MessageMetadata } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { LinkPreviewCard } from "./link-preview-card";
+import { renderFormattedContent } from "./formatted-message-content";
 
 const TICKET_STATUS_DISPLAY: Record<string, string> = {
   TODO: "Todo",
@@ -145,64 +147,6 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
-function renderFormattedContent(content: string, isOwn: boolean): React.ReactNode {
-  const lines = content.split("\n");
-  const result: React.ReactNode[] = [];
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    if (line.startsWith("```")) {
-      const codeLines: string[] = [];
-      i++;
-      while (i < lines.length && !lines[i].startsWith("```")) {
-        codeLines.push(lines[i]);
-        i++;
-      }
-      result.push(
-        <pre
-          key={i}
-          className={cn(
-            "font-mono text-[12px] rounded-lg p-2.5 mt-1.5 overflow-x-auto whitespace-pre",
-            isOwn ? "bg-black/20 text-white/90" : "bg-muted text-foreground",
-          )}
-        >
-          {codeLines.join("\n")}
-        </pre>,
-      );
-    } else {
-      const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
-      result.push(
-        <span key={i} className="block">
-          {parts.map((part, j) => {
-            if (part.startsWith("**") && part.endsWith("**")) {
-              return <strong key={j}>{part.slice(2, -2)}</strong>;
-            }
-            if (part.startsWith("*") && part.endsWith("*")) {
-              return <em key={j}>{part.slice(1, -1)}</em>;
-            }
-            if (part.startsWith("`") && part.endsWith("`")) {
-              return (
-                <code
-                  key={j}
-                  className={cn(
-                    "font-mono text-[12px] px-1.5 py-0.5 rounded",
-                    isOwn ? "bg-black/20 text-white/90" : "bg-muted",
-                  )}
-                >
-                  {part.slice(1, -1)}
-                </code>
-              );
-            }
-            return <span key={j}>{part}</span>;
-          })}
-        </span>,
-      );
-    }
-    i++;
-  }
-  return result;
-}
-
 export function ChatBubble({
   message,
   isOwn,
@@ -277,6 +221,12 @@ export function ChatBubble({
     else onPin();
   }, [isPinned, onPin, onUnpin]);
 
+  const meta = message.metadata as MessageMetadata | null;
+  const { label: forwardLabel, content: displayContent } = getForwardedDisplay(
+    message.content,
+    meta?.forwardCount,
+  );
+
   if (message.isDeleted) {
     return (
       <div className={cn("flex mb-[2px]", isOwn ? "justify-end" : "justify-start", !isOwn && "ml-9")}>
@@ -331,7 +281,11 @@ export function ChatBubble({
             <p className={cn("font-bold", isOwn ? "text-blue-600" : "text-blue")}>
               {message.replyTo.sender?.name}
             </p>
-            <p className="text-muted-foreground truncate">{message.replyTo.content}</p>
+            <p className="text-muted-foreground truncate">
+              {message.replyTo.content
+                ? renderFormattedContent(message.replyTo.content, isOwn)
+                : null}
+            </p>
           </div>
         )}
 
@@ -362,14 +316,26 @@ export function ChatBubble({
                 : "bg-card border border-border/40 text-foreground rounded-2xl rounded-bl-md"
             )}
           >
-            {message.content && (
-              <div className={cn("text-[14px] leading-[1.55] break-words", isOwn ? "text-white" : "text-foreground")}>
-                {renderFormattedContent(message.content, isOwn)}
+            {forwardLabel && (
+              <div
+                className={cn(
+                  "flex items-center gap-1 mb-1.5 text-[11px] font-medium italic",
+                  isOwn ? "text-white/85" : "text-muted-foreground",
+                )}
+              >
+                <Forward className="h-3 w-3 shrink-0" />
+                <span>{forwardLabel}</span>
               </div>
             )}
 
-            {message.content && /https?:\/\//.test(message.content) && (
-              <LinkPreviewCard content={message.content} isOwn={isOwn} />
+            {displayContent && (
+              <div className={cn("text-[14px] leading-[1.55] break-words", isOwn ? "text-white" : "text-foreground")}>
+                {renderFormattedContent(displayContent, isOwn)}
+              </div>
+            )}
+
+            {displayContent && /https?:\/\//.test(displayContent) && (
+              <LinkPreviewCard content={displayContent} isOwn={isOwn} />
             )}
 
             {(() => {
@@ -517,13 +483,23 @@ export function ChatBubble({
               <button onClick={onOpenThread} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Open thread" aria-label="Open thread">
                 <MessageSquare className="h-3.5 w-3.5" />
               </button>
+              {onSave && (
+                <button
+                  onClick={isSaved ? onUnsaveMsg : onSave}
+                  className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isSaved ? "text-amber-500" : "text-muted-foreground")}
+                  title={isSaved ? "Unsave" : "Save message"}
+                  aria-label={isSaved ? "Unsave message" : "Save message"}
+                >
+                  {isSaved ? <BookmarkCheck className="h-3.5 w-3.5 fill-amber-500" /> : <BookmarkPlus className="h-3.5 w-3.5" />}
+                </button>
+              )}
               <button
                 onClick={handlePinToggle}
                 className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isPinned ? "text-amber-500" : "text-muted-foreground")}
                 title={isPinned ? "Unpin" : "Pin"}
                 aria-label={isPinned ? "Unpin message" : "Pin message"}
               >
-                <Bookmark className={cn("h-3.5 w-3.5", isPinned && "fill-amber-500")} />
+                <Pin className={cn("h-3.5 w-3.5", isPinned && "fill-amber-500")} />
               </button>
               <button
                 onClick={handleToggleReactionPicker}
@@ -559,16 +535,6 @@ export function ChatBubble({
                   aria-label="Forward message"
                 >
                   <Forward className="h-3.5 w-3.5" />
-                </button>
-              )}
-              {onSave && (
-                <button
-                  onClick={isSaved ? onUnsaveMsg : onSave}
-                  className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isSaved ? "text-amber-500" : "text-muted-foreground")}
-                  title={isSaved ? "Unsave" : "Save message"}
-                  aria-label={isSaved ? "Unsave message" : "Save message"}
-                >
-                  {isSaved ? <BookmarkCheck className="h-3.5 w-3.5 fill-amber-500" /> : <BookmarkPlus className="h-3.5 w-3.5" />}
                 </button>
               )}
               {isOwn && (

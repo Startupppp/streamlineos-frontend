@@ -21,6 +21,7 @@ export type EntityRef = TicketEntityRef | CommentEntityRef;
 
 export interface MessageMetadata {
   entities?: EntityRef[];
+  forwardCount?: number;
 }
 
 export type ChannelType = "DIRECT" | "GROUP" | "PUBLIC" | "PRIVATE";
@@ -39,6 +40,7 @@ export interface ChannelMember {
   lastReadAt: Date | string | null;
   joinedAt: Date | string | null;
   mutedUntil: Date | string | null;
+  archivedAt?: Date | string | null;
   user: {
     id: string;
     name: string | null;

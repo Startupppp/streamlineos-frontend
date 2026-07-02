@@ -97,6 +97,17 @@ export default function ChatPage() {
     setShowSearchFocus(true);
   }, []);
   const handleCloseInfo = useCallback(() => setShowInfoPanel(false), []);
+  const handleLeftChannel = useCallback(() => {
+    setActiveChannelId(null);
+    setShowInfoPanel(false);
+    setShowMobileList(true);
+  }, []);
+
+  const handleArchived = useCallback(() => {
+    setActiveChannelId(null);
+    setShowInfoPanel(false);
+    setShowMobileList(true);
+  }, []);
 
   return (
     <ChatAblyProvider>
@@ -162,6 +173,8 @@ export default function ChatPage() {
                 channelId={activeChannelId}
                 currentUserId={currentUserId ?? ""}
                 onClose={handleCloseInfo}
+                onLeftChannel={handleLeftChannel}
+                onArchived={handleArchived}
               />
             </motion.div>
           )}

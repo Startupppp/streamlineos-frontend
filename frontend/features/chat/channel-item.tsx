@@ -1,11 +1,18 @@
 "use client";
 
 import { useCallback } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { BellOff, Hash } from "lucide-react";
-import { cn, resolveImageUrl } from "@/lib/utils";
-import { getInitials, formatChannelTime } from "./chat-helpers";
+import { CircleDot } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { formatChannelTime } from "./chat-helpers";
 import type { Channel } from "./chat-types";
+import { ChannelAvatar } from "./channel-avatar";
 import { useMarkChannelUnread } from "@/hooks/api";
 
 export function ChannelItem({
@@ -39,92 +46,109 @@ export function ChannelItem({
   const hasUnread = channel.unreadCount > 0 && !isActive;
   const markUnread = useMarkChannelUnread();
 
-  const handleMarkUnread = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    markUnread.mutate(channel.id);
-  }, [markUnread, channel.id]);
+  const handleMarkUnread = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      try {
+        await markUnread.mutateAsync(channel.id);
+        toast.success("Marked as unread");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [markUnread, channel.id],
+  );
 
   if (compact) {
     return (
       <div className="relative flex justify-center">
-        <button
-          onClick={onClick}
-          title={displayName}
-          aria-label={displayName}
-          className={cn(
-            "relative flex items-center justify-center rounded-xl p-1 transition-all duration-100",
-            isActive ? "bg-blue-500/10 shadow-sm" : "hover:bg-muted/40",
-          )}
-        >
-          {channel.type === "DIRECT" ? (
-            <Avatar className="h-8 w-8 border-2 border-background shadow-sm">
-              <AvatarImage src={resolveImageUrl(otherMember?.image)} />
-              <AvatarFallback className="text-[10px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
-                {getInitials(otherMember?.name)}
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border-2 border-background shadow-sm">
-              <Hash className="h-3.5 w-3.5 text-blue" />
-            </div>
-          )}
-          {isOnline && (
-            <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
-          )}
-          {hasUnread && (
-            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-background" />
-          )}
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={onClick}
+              aria-label={displayName}
+              className={cn(
+                "relative flex items-center justify-center rounded-xl p-1 transition-all duration-100",
+                isActive ? "bg-blue-500/10 shadow-sm" : "hover:bg-muted/40",
+              )}
+            >
+              <ChannelAvatar
+                type={channel.type}
+                name={channel.name}
+                avatarUrl={channel.avatarUrl}
+                otherMember={otherMember}
+                className="h-8 w-8"
+                iconClassName="h-3.5 w-3.5"
+              />
+              {isOnline && (
+                <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+              )}
+              {hasUnread && (
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-background" />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="text-xs">
+            {displayName}
+          </TooltipContent>
+        </Tooltip>
       </div>
     );
   }
 
+  const lastMessageTime = channel.lastMessage?.createdAt
+    ? formatChannelTime(channel.lastMessage.createdAt)
+    : null;
+
   return (
     <div className="relative group/item">
       <button
+        type="button"
         onClick={onClick}
         className={cn(
-          "w-full flex items-center gap-2.5 px-2 py-2 rounded-xl text-left transition-all duration-100 group",
-          isActive
-            ? "bg-blue-500/10 shadow-sm"
-            : "hover:bg-muted/40",
-          hasUnread && !isActive && "text-foreground"
+          "w-full flex items-center gap-2.5 px-2 py-2 rounded-xl text-left transition-colors duration-100",
+          isActive ? "bg-blue-500/10 shadow-sm" : "hover:bg-muted/40",
+          hasUnread && !isActive && "text-foreground",
         )}
       >
         <div className="relative shrink-0">
-          {channel.type === "DIRECT" ? (
-            <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-              <AvatarImage src={resolveImageUrl(otherMember?.image)} />
-              <AvatarFallback className="text-[11px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
-                {getInitials(otherMember?.name)}
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border-2 border-background shadow-sm">
-              <Hash className="h-4 w-4 text-blue" />
-            </div>
-          )}
+          <ChannelAvatar
+            type={channel.type}
+            name={channel.name}
+            avatarUrl={channel.avatarUrl}
+            otherMember={otherMember}
+            className="h-10 w-10"
+          />
           {isOnline && (
             <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-1.5">
+        <div className="flex-1 min-w-0 pr-8">
+          <div className="flex items-center justify-between gap-2">
             <p
               className={cn(
-                "text-[13px] truncate leading-tight",
-                hasUnread || isActive ? "font-bold text-foreground" : "font-medium text-muted-foreground"
+                "text-[13px] truncate leading-tight min-w-0",
+                hasUnread || isActive
+                  ? "font-bold text-foreground"
+                  : "font-medium text-muted-foreground",
               )}
             >
               {displayName}
             </p>
-            {channel.lastMessage?.createdAt && (
-              <span className="text-[11px] text-muted-foreground shrink-0">
-                {formatChannelTime(channel.lastMessage.createdAt)}
+
+            {lastMessageTime && (
+              <span
+                className={cn(
+                  "text-[11px] text-muted-foreground tabular-nums shrink-0 transition-opacity duration-150",
+                  !hasUnread && "group-hover/item:opacity-0",
+                )}
+              >
+                {lastMessageTime}
               </span>
             )}
           </div>
+
           <div className="flex items-center justify-between gap-1.5 mt-0.5">
             <p className="text-[11px] text-muted-foreground/60 truncate leading-tight">
               {channel.lastMessage?.content
@@ -139,14 +163,30 @@ export function ChannelItem({
           </div>
         </div>
       </button>
-      <button
-        onClick={handleMarkUnread}
-        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted/60 text-muted-foreground/60 hover:text-foreground z-10"
-        title="Mark as unread"
-        aria-label="Mark as unread"
-      >
-        <BellOff className="h-3 w-3" />
-      </button>
+
+      {!hasUnread && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={handleMarkUnread}
+              aria-label="Mark as unread"
+              className={cn(
+                "absolute right-2 top-[11px] z-10",
+                "h-6 w-6 flex items-center justify-center rounded-md",
+                "text-muted-foreground hover:text-foreground hover:bg-background/90",
+                "opacity-0 pointer-events-none group-hover/item:opacity-100 group-hover/item:pointer-events-auto",
+                "transition-all duration-150",
+              )}
+            >
+              <CircleDot className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs px-2 py-1">
+            Mark as unread
+          </TooltipContent>
+        </Tooltip>
+      )}
     </div>
   );
 }

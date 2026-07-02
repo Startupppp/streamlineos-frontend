@@ -11,6 +11,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  Archive,
+  ArrowLeft,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -21,7 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
-import { useChatChannels, useChatOnlineUsers, useSetPresenceStatus } from "@/hooks/api";
+import { useChatChannels, useArchivedChannels, useChatOnlineUsers, useSetPresenceStatus } from "@/hooks/api";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -84,8 +86,11 @@ export function ChannelSidebar({
 }: ChannelSidebarProps) {
   const { data: rawChannels, isLoading } = useChatChannels();
   const channels = rawChannels as Channel[] | undefined;
+  const { data: rawArchivedChannels, isLoading: isArchivedLoading } = useArchivedChannels();
+  const archivedChannels = rawArchivedChannels as Channel[] | undefined;
   const { data: onlineUsers } = useChatOnlineUsers();
   const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const [newDMOpen, setNewDMOpen] = useState(false);
   const { data: session } = useSession();
   const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -119,6 +124,11 @@ export function ChannelSidebar({
   const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
   const handleTogglePublic = useCallback(() => setPublicCollapsed((p) => !p), []);
+  const handleOpenArchived = useCallback(() => setShowArchived(true), []);
+  const handleCloseArchived = useCallback(() => {
+    setShowArchived(false);
+    setSearch("");
+  }, []);
   const handleOpenBrowse = useCallback(() => setBrowseOpen(true), []);
   const handleOpenChatSearch = useCallback(() => setChatSearchOpen(true), []);
   const handleToggleCollapse = useCallback(() => onToggleCollapse?.(), [onToggleCollapse]);
@@ -151,6 +161,22 @@ export function ChannelSidebar({
         ch.lastMessage?.content?.toLowerCase().includes(q)
     );
   }, [channels, search]);
+
+  const filteredArchivedChannels = useMemo(() => {
+    if (!archivedChannels) return [];
+    if (!search) return archivedChannels;
+    const q = search.toLowerCase();
+    return archivedChannels.filter(
+      (ch) =>
+        ch.name.toLowerCase().includes(q) ||
+        ch.lastMessage?.content?.toLowerCase().includes(q),
+    );
+  }, [archivedChannels, search]);
+
+  const archivedUnreadCount = useMemo(
+    () => (archivedChannels ?? []).reduce((sum, ch) => sum + ch.unreadCount, 0),
+    [archivedChannels],
+  );
 
   const dms = useMemo(
     () => filteredChannels.filter((c) => c.type === "DIRECT"),
@@ -270,7 +296,7 @@ export function ChannelSidebar({
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
             <Input
               ref={searchInputRef}
-              placeholder="Search conversations..."
+              placeholder={showArchived ? "Search archived chats..." : "Search conversations..."}
               value={search}
               onChange={handleSearchChange}
               className="pl-8 h-8 text-[13px] bg-muted/30 border-border/30 rounded-lg placeholder:text-muted-foreground/40"
@@ -313,7 +339,52 @@ export function ChannelSidebar({
         </div>
 
         <ScrollArea className={cn("flex-1", isCollapsed ? "md:px-1 px-2" : "px-2")}>
-          {isLoading ? (
+          {showArchived ? (
+            <div className={cn("py-1", isCollapsed && "md:hidden")}>
+              <button
+                type="button"
+                onClick={handleCloseArchived}
+                className="w-full flex items-center gap-2 px-2 py-2 mb-1 rounded-xl text-left hover:bg-muted/40 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-[13px] font-semibold text-foreground">Archived</span>
+              </button>
+
+              {isArchivedLoading ? (
+                <div className="p-3 space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-2.5 px-2 py-2">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div className="flex-1 space-y-1.5">
+                        <Skeleton className="h-3.5 w-24" />
+                        <Skeleton className="h-3 w-36" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredArchivedChannels.length > 0 ? (
+                filteredArchivedChannels.map((ch) => (
+                  <ChannelListEntry
+                    key={ch.id}
+                    channel={ch}
+                    activeChannelId={activeChannelId}
+                    currentUserId={currentUserId}
+                    onlineUserIds={onlineUserIds}
+                    onSelectChannel={onSelectChannel}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-10 px-4">
+                  <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                    <Archive className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-[13px] text-muted-foreground font-medium">
+                    {search ? "No archived chats found" : "No archived chats"}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : isLoading ? (
             <div className="p-3 space-y-2">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center gap-2.5 px-2 py-2">
@@ -342,6 +413,24 @@ export function ChannelSidebar({
               </div>
 
               <div className={cn("py-1", isCollapsed && "md:hidden")}>
+                {!search && (archivedChannels?.length ?? 0) > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleOpenArchived}
+                    className="w-full flex items-center gap-2.5 px-2 py-2.5 mb-1 rounded-xl text-left hover:bg-muted/40 transition-colors"
+                  >
+                    <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center shrink-0">
+                      <Archive className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <span className="flex-1 text-[13px] font-medium text-foreground">Archived</span>
+                    {archivedUnreadCount > 0 && (
+                      <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-blue-500 text-white text-[10px] font-bold rounded-full px-1 shrink-0">
+                        {archivedUnreadCount > 99 ? "99+" : archivedUnreadCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+
                 {publicChannels.length > 0 && (
                   <ChannelSidebarSection
                     title="Public Channels"
