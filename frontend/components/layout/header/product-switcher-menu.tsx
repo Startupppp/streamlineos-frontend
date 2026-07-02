@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion, useReducedMotion } from "framer-motion"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import type { Variants } from "framer-motion"
 import { ChevronDown, Lock, Check, LayoutGrid } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -53,11 +53,13 @@ function ProductTile({
   isEnabled,
   onClose,
 }: ProductTileProps) {
+  const shouldReduceMotion = useReducedMotion()
   const accent = MODULE_ACCENTS[productKey]
   const description = PRODUCT_DESCRIPTIONS[productKey]
 
   const card = (
-    <div
+    <motion.div
+      whileTap={shouldReduceMotion || !isEnabled ? undefined : { scale: 0.98 }}
       className={cn(
         "relative flex items-center gap-2.5 rounded-lg p-2.5 w-full transition-colors duration-150",
         !isEnabled && "opacity-50 cursor-default",
@@ -82,7 +84,17 @@ function ProductTile({
         <p className="text-[11px] text-muted-foreground line-clamp-1">{description}</p>
       </div>
       {isActive && (
-        <Check className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <motion.span
+          initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0, opacity: 0 }}
+          animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+          transition={
+            shouldReduceMotion
+              ? { duration: 0.12 }
+              : { type: "spring", stiffness: 500, damping: 25 }
+          }
+        >
+          <Check className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        </motion.span>
       )}
       {!isEnabled && (
         <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 h-4 px-1 rounded bg-muted border border-border">
@@ -90,7 +102,7 @@ function ProductTile({
           <span className="text-[9px] font-medium text-muted-foreground">Locked</span>
         </span>
       )}
-    </div>
+    </motion.div>
   )
 
   if (!isEnabled) {
@@ -143,14 +155,21 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
     ? {
         hidden: { opacity: 0 },
         visible: { opacity: 1, transition: { duration: 0.12 } },
+        exit: { opacity: 0, transition: { duration: 0.1 } },
       }
     : {
-        hidden: { opacity: 0, scale: 0.97, y: -4 },
+        hidden: { opacity: 0, scale: 0.96, y: -4 },
         visible: {
           opacity: 1,
           scale: 1,
           y: 0,
-          transition: { duration: 0.18, ease: "easeOut" },
+          transition: { duration: 0.16, ease: "easeOut" },
+        },
+        exit: {
+          opacity: 0,
+          scale: 0.98,
+          y: -2,
+          transition: { duration: 0.12, ease: "easeOut" },
         },
       }
 
@@ -186,7 +205,11 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
                 {activeDefinition?.label}
               </span>
               <ChevronDown
-                className="h-3 w-3 shrink-0 text-muted-foreground"
+                className={cn(
+                  "h-3 w-3 shrink-0 text-muted-foreground",
+                  !shouldReduceMotion && "transition-transform duration-150",
+                  !shouldReduceMotion && open && "rotate-180",
+                )}
                 strokeWidth={ICON_STROKE}
               />
             </>
@@ -194,33 +217,56 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
         </button>
       </PopoverTrigger>
       <PopoverContent
+        forceMount
         align="start"
-        className="w-80 max-w-[95vw] p-2 data-[state=open]:animate-none data-[state=closed]:animate-none"
+        className="w-80 max-w-[95vw] p-0 border-0 bg-transparent shadow-none data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=closed]:pointer-events-none"
         sideOffset={8}
       >
-        <motion.div variants={panelVariants} initial="hidden" animate="visible">
-          <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1">
-            Products
-          </p>
-          <div className="grid grid-cols-2 gap-1">
-            {PRODUCT_DEFINITIONS.map((product) => {
-              const enabled = isModuleEnabled(product.key, enabledModules)
-              const isActive = activeProduct === product.key && enabled
-              return (
-                <ProductTile
-                  key={product.key}
-                  productKey={product.key}
-                  label={product.label}
-                  href={product.href}
-                  icon={product.icon}
-                  isActive={isActive}
-                  isEnabled={enabled}
-                  onClose={handleClose}
-                />
-              )
-            })}
-          </div>
-        </motion.div>
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              key="product-switcher-panel"
+              variants={panelVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              style={{ transformOrigin: "top left" }}
+              className="w-full rounded-md border bg-popover text-popover-foreground shadow-md p-2"
+            >
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1">
+                Products
+              </p>
+              <div className="grid grid-cols-2 gap-1">
+                {PRODUCT_DEFINITIONS.map((product, index) => {
+                  const enabled = isModuleEnabled(product.key, enabledModules)
+                  const isActive = activeProduct === product.key && enabled
+                  return (
+                    <motion.div
+                      key={product.key}
+                      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
+                      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                      transition={{
+                        duration: shouldReduceMotion ? 0.12 : 0.14,
+                        ease: "easeOut",
+                        delay: shouldReduceMotion ? 0 : index * 0.02,
+                      }}
+                    >
+                      <ProductTile
+                        productKey={product.key}
+                        label={product.label}
+                        href={product.href}
+                        icon={product.icon}
+                        isActive={isActive}
+                        isEnabled={enabled}
+                        onClose={handleClose}
+                      />
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </PopoverContent>
     </Popover>
   )

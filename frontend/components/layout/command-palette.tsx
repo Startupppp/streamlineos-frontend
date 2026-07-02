@@ -88,9 +88,10 @@ export function CommandPalette() {
   const { data: session } = useSession();
   const role = session?.user?.role;
   const { permissions } = usePermissions();
+  const enabledModules = session?.enabledModules ?? [];
 
   const pages = useMemo(() => {
-    const groups = getNavGroupsForUser(role, permissions);
+    const groups = getNavGroupsForUser(role, permissions, enabledModules);
     const seen = new Set<string>();
     return groups.flatMap((group) =>
       flattenNavRoutes(group.routes)
@@ -106,7 +107,7 @@ export function CommandPalette() {
           group: group.label,
         })),
     );
-  }, [role, permissions]);
+  }, [role, permissions, enabledModules]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -193,7 +194,7 @@ export function CommandPalette() {
   );
 
   const quickNavGroups = useMemo(() => {
-    const groups = getNavGroupsForUser(role, permissions);
+    const groups = getNavGroupsForUser(role, permissions, enabledModules);
     const seen = new Set<string>();
     return groups.slice(0, 5).map((group) => ({
       label: group.label,
@@ -205,7 +206,7 @@ export function CommandPalette() {
         })
         .slice(0, 4),
     }));
-  }, [role, permissions]);
+  }, [role, permissions, enabledModules]);
 
   const hasResults = filteredPages.length > 0 || entityResults.length > 0;
   const showEmpty = !isSearching && query.length >= 2 && !hasResults;

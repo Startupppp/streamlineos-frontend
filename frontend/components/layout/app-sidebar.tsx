@@ -61,10 +61,11 @@ export function AppSidebar({
 
   const { permissions } = usePermissions()
   const isAdmin = useCan("settings:manage")
+  const enabledModules = session?.enabledModules ?? []
 
   const navGroups = useMemo(
-    () => getNavGroupsForProduct(activeProduct, effectiveRole, permissions),
-    [activeProduct, effectiveRole, permissions],
+    () => getNavGroupsForProduct(activeProduct, effectiveRole, permissions, enabledModules),
+    [activeProduct, effectiveRole, permissions, enabledModules],
   )
 
   const activeGroupLabel = useMemo(() => {

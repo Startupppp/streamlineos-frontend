@@ -89,6 +89,7 @@ export interface NavRoute {
   isProjectsList?: boolean;
   requiredPermission?: string | string[];
   children?: NavRoute[];
+  module?: ProductKey;
 }
 
 export interface NavGroup {
@@ -96,6 +97,7 @@ export interface NavGroup {
   routes: NavRoute[];
   defaultCollapsed?: boolean;
   requiredPermission?: string | string[];
+  module?: ProductKey;
 }
 
 export const NAV_GROUPS: NavGroup[] = [
@@ -155,6 +157,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "HR – People",
+    module: "hrms",
     requiredPermission: ["hr:employees:view", "hr:attendance:view", "hr:leaves:view"],
     routes: [
       {
@@ -512,6 +515,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Recruitment",
+    module: "hrms",
     requiredPermission: ["hr:employees:create"],
     routes: [
       {
@@ -562,6 +566,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "CRM",
+    module: "crm",
     requiredPermission: ["crm:leads:view", "crm:reports:view"],
     routes: [
       {
@@ -735,6 +740,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Accounting",
+    module: "finance",
     requiredPermission: ["accounting:view"],
     routes: [
       {
@@ -827,6 +833,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Inventory",
+    module: "inventory",
     requiredPermission: ["inventory:stock:view", "inventory:products:view"],
     routes: [
       {
@@ -887,6 +894,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Projects & Time",
+    module: "projects",
     requiredPermission: [
       "projects:view",
       "projects:timesheets:view",
@@ -943,6 +951,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Support",
+    module: "helpdesk",
     requiredPermission: ["projects:tickets:view", "support:kb:view"],
     routes: [
       {
@@ -981,6 +990,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Organization",
+    module: "hrms",
     requiredPermission: ["settings:manage", "settings:view"],
     routes: [
       {
@@ -1241,12 +1251,14 @@ function filterRoute(
   route: NavRoute,
   isOwner: boolean,
   granted: Set<string>,
+  enabledModules: string[],
 ): NavRoute | null {
+  if (route.module && !isModuleEnabled(route.module, enabledModules)) return null;
   if (!isOwner && !matchesPermission(route.requiredPermission, granted))
     return null;
   if (route.children && route.children.length > 0) {
     const children = route.children
-      .map((c) => filterRoute(c, isOwner, granted))
+      .map((c) => filterRoute(c, isOwner, granted, enabledModules))
       .filter((c): c is NavRoute => c !== null);
     return children.length > 0
       ? { ...route, children }
@@ -1258,22 +1270,26 @@ function filterRoute(
 export function getNavGroupsForUser(
   role: string | undefined,
   permissions: string[] | undefined,
+  enabledModules: string[] = [],
 ): NavGroup[] {
   if (!role) return [];
 
   const isOwner = role === "OWNER";
   const granted = new Set(permissions ?? []);
 
-  return NAV_GROUPS.map((group) => {
-    const visibleRoutes = group.routes
-      .map((r) => filterRoute(r, isOwner, granted))
-      .filter((r): r is NavRoute => r !== null);
-    return { ...group, routes: visibleRoutes };
-  }).filter((group) => {
-    if (group.routes.length === 0) return false;
-    if (isOwner) return true;
-    return matchesPermission(group.requiredPermission, granted);
-  });
+  return NAV_GROUPS
+    .filter((group) => !group.module || isModuleEnabled(group.module, enabledModules))
+    .map((group) => {
+      const visibleRoutes = group.routes
+        .map((r) => filterRoute(r, isOwner, granted, enabledModules))
+        .filter((r): r is NavRoute => r !== null);
+      return { ...group, routes: visibleRoutes };
+    })
+    .filter((group) => {
+      if (group.routes.length === 0) return false;
+      if (isOwner) return true;
+      return matchesPermission(group.requiredPermission, granted);
+    });
 }
 
 export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
@@ -1372,6 +1388,7 @@ export function getNavGroupsForProduct(
   productKey: ProductKey,
   role: string | undefined,
   permissions: string[] | undefined,
+  enabledModules: string[] = [],
 ): NavGroup[] {
   if (productKey === "home") {
     return [
@@ -1424,7 +1441,7 @@ export function getNavGroupsForProduct(
       },
     ];
 
-  const allGroups = getNavGroupsForUser(role, permissions);
+  const allGroups = getNavGroupsForUser(role, permissions, enabledModules);
   const labels = PRODUCT_NAV_GROUP_LABELS[productKey];
   return allGroups.filter((g) => labels.includes(g.label));
 }
