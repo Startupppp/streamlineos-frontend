@@ -201,6 +201,8 @@ export const queryKeys = {
     thread: (channelId: number, messageId: number) => [...base, "chat", "thread", channelId, messageId] as const,
     huddle: (channelId: number) => [...base, "chat", "huddle", channelId] as const,
     savedMessages: () => [...base, "chat", "savedMessages"] as const,
+    inviteLink: (channelId: number) => [...base, "chat", "inviteLink", channelId] as const,
+    orgSettings: () => [...base, "chat", "orgSettings"] as const,
   },
 
   dashboard: {

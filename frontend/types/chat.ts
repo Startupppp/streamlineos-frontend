@@ -32,6 +32,8 @@ export type MessageType = "text" | "lead_submission" | "system";
 
 export type PresenceStatus = "ONLINE" | "AWAY" | "OFFLINE";
 
+export type ChatNotificationPreference = "DEFAULT" | "ALL" | "MENTIONS" | "NOTHING";
+
 export interface ChannelMember {
   id: number;
   channelId: number;
@@ -41,6 +43,8 @@ export interface ChannelMember {
   joinedAt: Date | string | null;
   mutedUntil: Date | string | null;
   archivedAt?: Date | string | null;
+  isFavorite: boolean;
+  notificationPreference: ChatNotificationPreference;
   user: {
     id: string;
     name: string | null;
@@ -48,6 +52,13 @@ export interface ChannelMember {
     email?: string | null;
     role?: string | null;
   } | null;
+}
+
+export interface ChatOrgSettings {
+  orgId?: string;
+  defaultNotificationPreference: "ALL" | "MENTIONS" | "NOTHING";
+  maxAttachmentSizeMb: number;
+  maxHuddleParticipants: number;
 }
 
 export interface LastMessage {
