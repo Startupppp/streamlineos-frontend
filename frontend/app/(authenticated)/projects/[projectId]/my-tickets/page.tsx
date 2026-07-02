@@ -257,6 +257,7 @@ export default function MyTicketsPage({ params }: PageProps) {
             </TableBody>
           </Table>
         </div>
+        </div>
       )}
 
       <TicketDetailsDialog

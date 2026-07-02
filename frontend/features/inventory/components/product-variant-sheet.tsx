@@ -35,7 +35,7 @@ const variantSchema = z.object({
   barcode: z.string().optional(),
   costPrice: z.string().optional(),
   sellingPrice: z.string().min(1, "Selling price is required"),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 });
 
 type VariantFormValues = z.infer<typeof variantSchema>;

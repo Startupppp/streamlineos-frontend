@@ -38,86 +38,16 @@ import { CrmPipelineMini } from "@/features/crm/shared/crm-pipeline-mini";
 import { CrmRecentActivity } from "@/features/crm/shared/crm-recent-activity";
 
 const NAV_CARDS = [
-  {
-    title: "Leads",
-    description: "Pipeline tracking",
-    href: "/crm/leads",
-    icon: UserPlus,
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
-  },
-  {
-    title: "Contacts",
-    description: "People directory",
-    href: "/crm/contacts",
-    icon: Users,
-    color: "text-purple-400",
-    bg: "bg-purple-500/10",
-  },
-  {
-    title: "Companies",
-    description: "Organizations & accounts",
-    href: "/crm/companies",
-    icon: Building2,
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-  },
-  {
-    title: "Clients",
-    description: "Account management",
-    href: "/crm/clients",
-    icon: UserCheck,
-    color: "text-teal-400",
-    bg: "bg-teal-500/10",
-  },
-  {
-    title: "Deals",
-    description: "Pipeline to close",
-    href: "/crm/deals",
-    icon: Briefcase,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-  },
-  {
-    title: "Quotes",
-    description: "Proposals & pricing",
-    href: "/crm/quotes",
-    icon: FileText,
-    color: "text-violet-400",
-    bg: "bg-violet-500/10",
-  },
-  {
-    title: "Activities",
-    description: "Calls, emails & meetings",
-    href: "/crm/activities",
-    icon: Activity,
-    color: "text-cyan-400",
-    bg: "bg-cyan-500/10",
-  },
-  {
-    title: "Calendar",
-    description: "Schedule & meetings",
-    href: "/crm/calendar",
-    icon: CalendarDays,
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/10",
-  },
-  {
-    title: "Tasks",
-    description: "Follow-ups & to-dos",
-    href: "/crm/tasks",
-    icon: CheckSquare,
-    color: "text-rose-400",
-    bg: "bg-rose-500/10",
-  },
-  {
-    title: "Reports",
-    description: "Analytics & insights",
-    href: "/crm/reports",
-    icon: BarChart3,
-    color: "text-slate-400",
-    bg: "bg-slate-500/10",
-  },
+  { title: "Leads", description: "Pipeline tracking", href: "/crm/leads", icon: UserPlus },
+  { title: "Contacts", description: "People directory", href: "/crm/contacts", icon: Users },
+  { title: "Companies", description: "Organizations & accounts", href: "/crm/companies", icon: Building2 },
+  { title: "Clients", description: "Account management", href: "/crm/clients", icon: UserCheck },
+  { title: "Deals", description: "Pipeline to close", href: "/crm/deals", icon: Briefcase },
+  { title: "Quotes", description: "Proposals & pricing", href: "/crm/quotes", icon: FileText },
+  { title: "Activities", description: "Calls, emails & meetings", href: "/crm/activities", icon: Activity },
+  { title: "Calendar", description: "Schedule & meetings", href: "/crm/calendar", icon: CalendarDays },
+  { title: "Tasks", description: "Follow-ups & to-dos", href: "/crm/tasks", icon: CheckSquare },
+  { title: "Reports", description: "Analytics & insights", href: "/crm/reports", icon: BarChart3 },
 ] as const;
 
 export default function CrmHubPage() {
@@ -376,13 +306,8 @@ export default function CrmHubPage() {
             <Link key={card.href} href={card.href}>
               <Card className="shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 cursor-pointer group h-full">
                 <CardContent className="p-3 flex items-center gap-2.5">
-                  <div
-                    className={cn(
-                      "h-8 w-8 rounded-md flex items-center justify-center shrink-0",
-                      card.bg,
-                    )}
-                  >
-                    <card.icon className={cn("h-4 w-4", card.color)} />
+                  <div className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-muted">
+                    <card.icon className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-semibold flex items-center gap-1">

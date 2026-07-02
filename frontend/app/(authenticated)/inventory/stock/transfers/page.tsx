@@ -31,13 +31,13 @@ import { cn } from "@/lib/utils";
 const schema = z
   .object({
     fromWarehouseId: z.number().int().positive(),
-    fromLocationId: z.number({ required_error: "From location required" }).int().positive(),
+    fromLocationId: z.number({ error: "From location required" }).int().positive(),
     toWarehouseId: z.number().int().positive(),
-    toLocationId: z.number({ required_error: "To location required" }).int().positive(),
+    toLocationId: z.number({ error: "To location required" }).int().positive(),
     notes: z.string().max(500).optional(),
     lines: z
       .array(z.object({
-        productVariantId: z.number({ required_error: "Variant required" }).int().positive(),
+        productVariantId: z.number({ error: "Variant required" }).int().positive(),
         quantity: z.number().positive(),
       }))
       .min(1, "At least one line required"),

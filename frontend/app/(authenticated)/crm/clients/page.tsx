@@ -46,7 +46,7 @@ const STATUS_LABELS: Record<ClientAccountStatus, string> = {
 const STATUS_COLORS: Record<ClientAccountStatus, string> = {
   ACCOUNT_OPENING: "bg-blue-500/10 text-blue-600 border-0",
   QUERIES: "bg-amber-500/10 text-amber-600 border-0",
-  PLAN_SELECTED: "bg-violet-500/10 text-violet-600 border-0",
+  PLAN_SELECTED: "bg-muted text-foreground border-0",
   INVESTED: "bg-emerald-500/10 text-emerald-600 border-0",
 };
 
@@ -115,7 +115,7 @@ function ClientRow({ account }: { account: ClientAccount }) {
     >
       <td className="px-3 py-1.5">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="h-6 w-6 rounded-full bg-violet-500/10 flex items-center justify-center text-[10px] font-semibold text-violet-600 shrink-0">
+          <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
             {(account.clientName[0] ?? "?").toUpperCase()}
           </div>
           <span className="text-[11px] font-medium truncate max-w-[140px]">

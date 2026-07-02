@@ -29,7 +29,7 @@ import { useReceiveGoods, useLocations } from "@/hooks/api/inventory";
 import type { PurchaseOrder, ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
 
 const grnSchema = z.object({
-  locationId: z.number({ required_error: "Location is required" }).int().positive(),
+  locationId: z.number({ error: "Location is required" }).int().positive(),
   notes: z.string().max(500).optional(),
   lines: z
     .array(

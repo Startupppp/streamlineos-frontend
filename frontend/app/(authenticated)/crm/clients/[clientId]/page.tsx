@@ -61,7 +61,7 @@ const STATUS_LABELS: Record<ClientAccountStatus, string> = {
 const STATUS_COLORS: Record<ClientAccountStatus, string> = {
   ACCOUNT_OPENING: "bg-blue-500/10 text-blue-600 border-0",
   QUERIES: "bg-amber-500/10 text-amber-600 border-0",
-  PLAN_SELECTED: "bg-violet-500/10 text-violet-600 border-0",
+  PLAN_SELECTED: "bg-muted text-foreground border-0",
   INVESTED: "bg-emerald-500/10 text-emerald-600 border-0",
 };
 
@@ -83,7 +83,7 @@ const OPP_STAGE_LABELS: Record<ClientOpportunity["stage"], string> = {
 const OPP_STAGE_COLORS: Record<ClientOpportunity["stage"], string> = {
   identified: "bg-blue-500/10 text-blue-600 border-0",
   proposed: "bg-amber-500/10 text-amber-600 border-0",
-  negotiating: "bg-violet-500/10 text-violet-600 border-0",
+  negotiating: "bg-muted text-foreground border-0",
   won: "bg-emerald-500/10 text-emerald-600 border-0",
   lost: "bg-red-500/10 text-red-600 border-0",
 };
@@ -193,8 +193,8 @@ function TimelineTab({ clientId }: { clientId: number }) {
           key={event.id}
           className="flex items-start gap-3 py-2.5 border-b border-border/50 last:border-0"
         >
-          <div className="h-6 w-6 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0 mt-0.5">
-            <TrendingUp className="h-3 w-3 text-violet-600" />
+          <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+            <TrendingUp className="h-3 w-3 text-muted-foreground" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-medium text-foreground">{event.title}</p>
@@ -343,7 +343,7 @@ function OnboardingTab({ clientId }: { clientId: number }) {
       </div>
       <div className="h-1.5 rounded-full bg-muted overflow-hidden">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500"
+          className="h-full rounded-full bg-primary transition-all duration-500"
           style={{ width: `${percentage}%` }}
         />
       </div>

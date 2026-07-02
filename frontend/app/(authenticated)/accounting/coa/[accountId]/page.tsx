@@ -386,19 +386,19 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                   <div className="overflow-x-auto">
                     <Table className="min-w-[560px]">
                       <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[120px] pl-5">
+                        <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">
                             Entry #
                           </TableHead>
-                          <TableHead className="w-[120px]">Date</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead className="w-[100px]">Status</TableHead>
-                          <TableHead className="w-[60px] pr-5" />
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">Date</TableHead>
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[100px]">Status</TableHead>
+                          <TableHead className="w-[60px] px-3 py-2" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {journalEntries.map((entry) => (
-                          <TableRow key={entry.id}>
+                          <TableRow key={entry.id} className="border-b border-border/50 hover:bg-muted/30">
                             <TableCell className="pl-5 font-mono text-xs text-foreground">
                               {entry.entryNumber}
                             </TableCell>

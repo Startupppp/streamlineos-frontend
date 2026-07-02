@@ -2,7 +2,6 @@
 
 import { useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,

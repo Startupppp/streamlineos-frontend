@@ -54,6 +54,12 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const handleEditMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditState((prev) => prev ? { ...prev, message: e.target.value } : prev), []);
   const handlePendingOpenChange = useCallback((open: boolean) => { if (!open) setPendingHoliday(null); }, []);
   const handleDeleteConfirmOpenChange = useCallback((open: boolean) => { if (!open) setDeleteConfirmId(null); }, []);
+  const handleDeleteRequest = useCallback((holidayId: number) => {
+    setDeleteConfirmId(holidayId);
+  }, []);
+  const handleEditStart = useCallback((h: { id: number; name: string; date: string; message: string | null }) => {
+    setEditState({ id: h.id, name: h.name, date: h.date, message: h.message ?? "" });
+  }, []);
   const makeEditStartHandler = useCallback(
     (h: { id: number; name: string; date: string; message: string | null }) => {
       function handleClick() { handleEditStart(h); }
@@ -112,10 +118,6 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
     );
   }, [pendingHoliday, addMutation]);
 
-  const handleDeleteRequest = useCallback((holidayId: number) => {
-    setDeleteConfirmId(holidayId);
-  }, []);
-
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteConfirmId) return;
     deleteMutation.mutate(
@@ -132,10 +134,6 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
       }
     );
   }, [deleteConfirmId, deleteMutation]);
-
-  const handleEditStart = useCallback((h: { id: number; name: string; date: string; message: string | null }) => {
-    setEditState({ id: h.id, name: h.name, date: h.date, message: h.message ?? "" });
-  }, []);
 
   const handleEditCancel = useCallback(() => {
     setEditState(null);

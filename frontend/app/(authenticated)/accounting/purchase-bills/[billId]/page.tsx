@@ -282,18 +282,18 @@ export default function PurchaseBillDetailPage({
               </CardContent>
             </Card>
 
-            <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+            <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Description</TableHead>
-                    <TableHead>HSN/SAC</TableHead>
-                    <TableHead className="text-right">Qty</TableHead>
-                    <TableHead className="text-right">Rate</TableHead>
-                    <TableHead className="text-right">GST %</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Tax</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">HSN/SAC</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Qty</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Rate</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">GST %</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Amount</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Tax</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -308,26 +308,26 @@ export default function PurchaseBillDetailPage({
                     </TableRow>
                   ) : (
                     bill.items.map((item) => (
-                      <TableRow key={item.id}>
+                      <TableRow key={item.id} className="border-b border-border/50 hover:bg-muted/30">
                         <TableCell className="text-sm text-foreground">
                           {item.description}
                         </TableCell>
                         <TableCell className="text-sm font-mono text-muted-foreground">
                           {item.hsnSacCode ?? "—"}
                         </TableCell>
-                        <TableCell className="text-right text-sm tabular-nums">
+                        <TableCell className="text-right font-mono text-sm tabular-nums">
                           {formatNum(item.quantity)}
                         </TableCell>
-                        <TableCell className="text-right text-sm tabular-nums">
+                        <TableCell className="text-right font-mono text-sm tabular-nums">
                           {formatNum(item.rate)}
                         </TableCell>
                         <TableCell className="text-right text-sm tabular-nums">
                           {formatNum(item.gstRate)}%
                         </TableCell>
-                        <TableCell className="text-right text-sm tabular-nums">
+                        <TableCell className="text-right font-mono text-sm tabular-nums">
                           {formatNum(item.amount)}
                         </TableCell>
-                        <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+                        <TableCell className="text-right font-mono text-sm tabular-nums text-muted-foreground">
                           {formatNum(
                             (Number(item.quantity) *
                               Number(item.rate) *
@@ -335,7 +335,7 @@ export default function PurchaseBillDetailPage({
                               100,
                           )}
                         </TableCell>
-                        <TableCell className="text-right text-sm tabular-nums font-medium">
+                        <TableCell className="text-right font-mono text-sm tabular-nums font-medium">
                           {formatNum(
                             Number(item.quantity) *
                               Number(item.rate) *
@@ -409,19 +409,19 @@ export default function PurchaseBillDetailPage({
                 <h2 className="text-sm font-semibold text-foreground">
                   Payments
                 </h2>
-                <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+                <div className="rounded-lg border border-border overflow-hidden">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Method</TableHead>
-                        <TableHead>Reference</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
+                      <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Date</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Method</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Reference</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Amount</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {bill.payments.map((payment) => (
-                        <TableRow key={payment.id}>
+                        <TableRow key={payment.id} className="border-b border-border/50 hover:bg-muted/30">
                           <TableCell className="text-sm tabular-nums">
                             {formatDate(payment.paymentDate)}
                           </TableCell>
@@ -432,7 +432,7 @@ export default function PurchaseBillDetailPage({
                           <TableCell className="text-sm text-muted-foreground font-mono">
                             {payment.referenceNumber ?? "—"}
                           </TableCell>
-                          <TableCell className="text-right text-sm tabular-nums font-medium">
+                          <TableCell className="text-right font-mono text-sm tabular-nums font-medium">
                             {formatNum(payment.amount)}
                           </TableCell>
                         </TableRow>

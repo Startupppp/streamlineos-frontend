@@ -69,7 +69,7 @@ export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Data & Privacy</CardTitle>
+          <CardTitle className="text-sm font-semibold">Data & Privacy</CardTitle>
           <CardDescription>
             Manage data retention, exports, and organization deletion.
           </CardDescription>

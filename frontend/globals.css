@@ -698,6 +698,20 @@
   color: var(--foreground);
 }
 
+.calendar-container .rbc-date-cell.rbc-now a,
+.calendar-container .rbc-date-cell.rbc-now button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  outline: 2px solid #8b5cf6;
+  outline-offset: 1px;
+  color: #7c3aed;
+  font-weight: 700;
+}
+
 .calendar-container .rbc-date-cell a,
 .calendar-container .rbc-date-cell button {
   color: var(--foreground);

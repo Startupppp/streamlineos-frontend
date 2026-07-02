@@ -68,14 +68,14 @@ function Section({ title, rows, total, accentClass, extraRow }: SectionProps) {
             <TableRow>
               <TableCell className="font-mono">—</TableCell>
               <TableCell>{extraRow.label}</TableCell>
-              <TableCell className="text-right tabular-nums">
+              <TableCell className="text-right font-mono text-sm tabular-nums">
                 {Number(extraRow.value).toFixed(2)}
               </TableCell>
             </TableRow>
           )}
           <TableRow className="font-medium bg-muted/40">
             <TableCell colSpan={2}>Total {title}</TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell className="text-right font-mono text-sm tabular-nums">
               {Number(total).toFixed(2)}
             </TableCell>
           </TableRow>

@@ -261,7 +261,7 @@ export default function CrmReportsPage() {
         subtitle="Sales performance and pipeline analytics"
       >
         <div className="space-y-6">
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="p-3.5 space-y-2">
@@ -332,6 +332,7 @@ export default function CrmReportsPage() {
       }
       actions={
         <Button
+          size="sm"
           onClick={handleExport}
           className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
         >
@@ -412,7 +413,7 @@ export default function CrmReportsPage() {
               {periodLabel}
             </p>
           </div>
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
               label="Total Leads"
               value={stats?.total ?? 0}
@@ -449,7 +450,7 @@ export default function CrmReportsPage() {
 
         {stats && (
           <motion.div variants={fadeUp}>
-            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
+            <Card className="rounded-lg border border-border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-violet-600" />
@@ -518,7 +519,7 @@ export default function CrmReportsPage() {
         )}
 
         <motion.div variants={fadeUp}>
-          <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
+          <Card className="rounded-lg border border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Activity className="h-4 w-4 text-violet-600" />
@@ -595,7 +596,7 @@ export default function CrmReportsPage() {
         </motion.div>
 
         <motion.div variants={fadeUp}>
-          <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
+          <Card className="rounded-lg border border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Trophy className="h-4 w-4 text-amber-500" />
@@ -739,7 +740,7 @@ export default function CrmReportsPage() {
 
         {stats && (
           <motion.div variants={fadeUp}>
-            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
+            <Card className="rounded-lg border border-border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-blue-600" />

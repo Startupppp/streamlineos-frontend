@@ -305,6 +305,9 @@ function ScheduledReportsList() {
   function handleDeleteDialogChange(v: boolean) {
     if (!v) setDeletingId(null);
   }
+  function handleCancelDelete() {
+    setDeletingId(null);
+  }
 
   if (isLoading) return <Skeleton className="h-24 rounded-lg" />;
   if (reports.length === 0) return null;
@@ -327,7 +330,7 @@ function ScheduledReportsList() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeletingId(null)}>
+              <AlertDialogCancel onClick={handleCancelDelete}>
                 Cancel
               </AlertDialogCancel>
               <AlertDialogAction
@@ -354,7 +357,7 @@ function ResultTable({ result }: { result: GenerateReportResult }) {
         : [];
 
   return (
-    <div className="mt-4 rounded-lg border overflow-auto max-h-[50vh]">
+    <div className="mt-4 rounded-lg border border-border overflow-auto max-h-[50vh]">
       <Table>
         <TableHeader>
           <TableRow>
@@ -478,6 +481,15 @@ export default function ReportsPage() {
   function handleDateFromChange(e: React.ChangeEvent<HTMLInputElement>) {
     setDateFrom(e.target.value);
   }
+  function handleDateToChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setDateTo(e.target.value);
+  }
+  function handleOpenSchedule() {
+    setScheduleSheetOpen(true);
+  }
+  function handleCloseSchedule() {
+    setScheduleSheetOpen(false);
+  }
 
   return (
     <PageWrapper
@@ -547,7 +559,7 @@ export default function ReportsPage() {
                   <Input
                     type="date"
                     value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    onChange={handleDateToChange}
                     className="h-8 text-xs"
                   />
                 </div>
@@ -636,7 +648,7 @@ export default function ReportsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setScheduleSheetOpen(true)}
+                      onClick={handleOpenSchedule}
                     >
                       Schedule
                     </Button>
@@ -661,7 +673,7 @@ export default function ReportsPage() {
         <ScheduleReportSheet
           entity={result.entity}
           fields={result.fields}
-          onClose={() => setScheduleSheetOpen(false)}
+          onClose={handleCloseSchedule}
         />
       )}
     </PageWrapper>

@@ -38,7 +38,7 @@ export function OrgIntegrationsSection({ canEdit }: OrgIntegrationsSectionProps)
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Integrations</CardTitle>
+        <CardTitle className="text-sm font-semibold">Integrations</CardTitle>
         <CardDescription>
           Connect third-party services to streamline your organization workflows.
         </CardDescription>

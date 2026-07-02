@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Target, Plus, Calendar, TrendingUp } from "lucide-react";
@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { LoadingState } from "@/components/shared/loading-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useHrGoals, useCreateHrGoal, type HrGoal } from "@/hooks/api/hr";
 import { useUpdateGoal } from "@/hooks/api/hr";
 
@@ -71,19 +74,23 @@ function GoalCard({
   index: number;
   onEditProgress: (goal: HrGoal) => void;
 }) {
+  function handleEditProgress() {
+    onEditProgress(goal);
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.06 }}
-      className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5 flex flex-col gap-4"
+      className="bg-card rounded-lg border border-border p-5 flex flex-col gap-4"
     >
       <div className="flex items-start gap-4">
         <CircularProgress value={goal.progress} />
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-slate-800 truncate">{goal.title}</h3>
+          <h3 className="font-semibold text-foreground truncate">{goal.title}</h3>
           {goal.description && (
-            <p className="text-sm text-slate-500 mt-0.5 line-clamp-2">{goal.description}</p>
+            <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{goal.description}</p>
           )}
           <div className="flex flex-wrap gap-1.5 mt-2">
             <Badge className={`text-xs ${TYPE_COLORS[goal.type] ?? "bg-slate-100 text-slate-600"}`}>
@@ -95,16 +102,16 @@ function GoalCard({
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Calendar className="w-3.5 h-3.5" />
         <span>{new Date(goal.startDate).toLocaleDateString()} — {new Date(goal.endDate).toLocaleDateString()}</span>
       </div>
       <div className="space-y-1">
-        <div className="flex justify-between text-xs text-slate-500">
+        <div className="flex justify-between text-xs text-muted-foreground">
           <span>Progress</span>
           <span>{goal.progress}%</span>
         </div>
-        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500"
             style={{ width: `${Math.min(goal.progress, 100)}%` }}
@@ -115,7 +122,7 @@ function GoalCard({
         size="sm"
         variant="outline"
         className="w-full text-violet-600 border-violet-200 hover:bg-violet-50"
-        onClick={() => onEditProgress(goal)}
+        onClick={handleEditProgress}
       >
         <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
         Update Progress
@@ -133,10 +140,10 @@ function GoalGrid({
 }) {
   if (goals.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4 text-slate-400">
-        <Target className="w-12 h-12 text-slate-300" />
-        <p className="text-lg font-medium text-slate-500">No goals yet</p>
-        <p className="text-sm">Create your first goal to start tracking progress</p>
+      <div className="flex flex-1 flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
+        <Target className="w-10 h-10 text-muted-foreground/40" />
+        <p className="text-sm font-medium">No goals yet</p>
+        <p className="text-xs">Create your first goal to start tracking progress</p>
       </div>
     );
   }
@@ -180,6 +187,31 @@ export default function GoalsPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  function handleTitleChange(e: ChangeEvent<HTMLInputElement>) {
+    handleFormChange("title", e.target.value);
+  }
+  function handleDescriptionChange(e: ChangeEvent<HTMLInputElement>) {
+    handleFormChange("description", e.target.value);
+  }
+  function handleTypeChange(v: string) {
+    handleFormChange("type", v);
+  }
+  function handleStartDateChange(e: ChangeEvent<HTMLInputElement>) {
+    handleFormChange("startDate", e.target.value);
+  }
+  function handleEndDateChange(e: ChangeEvent<HTMLInputElement>) {
+    handleFormChange("endDate", e.target.value);
+  }
+  function handleTargetValueChange(e: ChangeEvent<HTMLInputElement>) {
+    handleFormChange("targetValue", e.target.value);
+  }
+  function handleUnitChange(e: ChangeEvent<HTMLInputElement>) {
+    handleFormChange("unit", e.target.value);
+  }
+  function handleUserIdChange(e: ChangeEvent<HTMLInputElement>) {
+    handleFormChange("userId", e.target.value);
+  }
+
   async function handleCreate() {
     if (!form.title || !form.startDate || !form.endDate) {
       toast.error("Title, start date, and end date are required");
@@ -220,64 +252,53 @@ export default function GoalsPage() {
     }
   }
 
+  function handleProgressDialogChange(open: boolean) {
+    if (!open) setProgressGoal(null);
+  }
+
+  function handleProgressRangeChange(e: ChangeEvent<HTMLInputElement>) {
+    setProgressValue(Number(e.target.value));
+  }
+
+  function handleProgressNumberChange(e: ChangeEvent<HTMLInputElement>) {
+    setProgressValue(Math.min(100, Math.max(0, Number(e.target.value))));
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40 p-6">
-        <div className="h-8 w-48 bg-slate-200 animate-pulse rounded-lg mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white/90 rounded-2xl border border-slate-200/80 p-5 space-y-4 animate-pulse">
-              <div className="flex gap-4">
-                <div className="w-16 h-16 rounded-full bg-slate-100" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-3/4 bg-slate-200 rounded" />
-                  <div className="h-3 w-full bg-slate-100 rounded" />
-                  <div className="flex gap-2">
-                    <div className="h-5 w-14 bg-slate-100 rounded-full" />
-                    <div className="h-5 w-20 bg-slate-100 rounded-full" />
-                  </div>
-                </div>
-              </div>
-              <div className="h-1.5 bg-slate-100 rounded-full" />
-            </div>
-          ))}
-        </div>
-      </div>
+      <PageWrapper title="Goals & OKRs" subtitle="Track your personal and team goals">
+        <LoadingState variant="cards" rows={6} />
+      </PageWrapper>
     );
   }
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40 flex items-center justify-center">
-        <div className="bg-white/90 rounded-2xl border border-slate-200/80 shadow-xl p-10 text-center space-y-4">
-          <Target className="w-12 h-12 text-red-300 mx-auto" />
-          <p className="text-slate-600">Failed to load goals</p>
-          <Button onClick={() => refetch()} variant="outline">Retry</Button>
-        </div>
-      </div>
+      <PageWrapper title="Goals & OKRs" subtitle="Track your personal and team goals">
+        <ErrorState
+          title="Failed to load goals"
+          description="We couldn't load your goals. Please try again."
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40 p-6 space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Goals & OKRs</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{goals.length} goals total</p>
-        </div>
+    <PageWrapper
+      title="Goals & OKRs"
+      subtitle={`${goals.length} goals total`}
+      actions={
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <motion.div whileTap={{ scale: 0.97 }}>
-              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
-                <Plus className="w-4 h-4 mr-2" />
-                New Goal
-              </Button>
-            </motion.div>
+            <Button size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+              <Plus className="w-4 h-4 mr-2" />
+              New Goal
+            </Button>
           </SheetTrigger>
           <SheetContent className="w-[420px] p-0 flex flex-col gap-0">
             <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
@@ -285,25 +306,25 @@ export default function GoalsPage() {
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               <div className="space-y-1.5">
-                <Label>Title *</Label>
+                <Label className="text-sm font-medium">Title *</Label>
                 <Input
                   value={form.title}
-                  onChange={(e) => handleFormChange("title", e.target.value)}
+                  onChange={handleTitleChange}
                   placeholder="Goal title"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Description</Label>
+                <Label className="text-sm font-medium">Description</Label>
                 <Input
                   value={form.description}
-                  onChange={(e) => handleFormChange("description", e.target.value)}
+                  onChange={handleDescriptionChange}
                   placeholder="Optional description"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Type</Label>
-                <Select value={form.type} onValueChange={(v) => handleFormChange("type", v)}>
-                  <SelectTrigger>
+                <Label className="text-sm font-medium">Type</Label>
+                <Select value={form.type} onValueChange={handleTypeChange}>
+                  <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -315,70 +336,67 @@ export default function GoalsPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Start Date *</Label>
+                  <Label className="text-sm font-medium">Start Date *</Label>
                   <Input
                     type="date"
+                    className="h-8 text-sm"
                     value={form.startDate}
-                    onChange={(e) => handleFormChange("startDate", e.target.value)}
+                    onChange={handleStartDateChange}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>End Date *</Label>
+                  <Label className="text-sm font-medium">End Date *</Label>
                   <Input
                     type="date"
+                    className="h-8 text-sm"
                     value={form.endDate}
-                    onChange={(e) => handleFormChange("endDate", e.target.value)}
+                    onChange={handleEndDateChange}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Target Value</Label>
+                  <Label className="text-sm font-medium">Target Value</Label>
                   <Input
+                    className="h-8 text-sm"
                     value={form.targetValue}
-                    onChange={(e) => handleFormChange("targetValue", e.target.value)}
+                    onChange={handleTargetValueChange}
                     placeholder="e.g. 100"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Unit</Label>
+                  <Label className="text-sm font-medium">Unit</Label>
                   <Input
+                    className="h-8 text-sm"
                     value={form.unit}
-                    onChange={(e) => handleFormChange("unit", e.target.value)}
+                    onChange={handleUnitChange}
                     placeholder="e.g. %"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label>Assignee User ID</Label>
+                <Label className="text-sm font-medium">Assignee User ID</Label>
                 <Input
+                  className="h-8 text-sm"
                   value={form.userId}
-                  onChange={(e) => handleFormChange("userId", e.target.value)}
+                  onChange={handleUserIdChange}
                   placeholder="User ID"
                 />
               </div>
-              <motion.div whileTap={{ scale: 0.97 }}>
-                <Button
-                  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md"
-                  onClick={handleCreate}
-                  disabled={createGoal.isPending}
-                >
-                  {createGoal.isPending ? "Creating…" : "Create Goal"}
-                </Button>
-              </motion.div>
+              <Button
+                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md"
+                onClick={handleCreate}
+                disabled={createGoal.isPending}
+              >
+                {createGoal.isPending ? "Creating…" : "Create Goal"}
+              </Button>
             </div>
           </SheetContent>
         </Sheet>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut", delay: 0.05 }}
-        className="flex flex-wrap gap-3 items-center"
-      >
+      }
+      filters={
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="h-8 w-44 text-sm">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -389,13 +407,13 @@ export default function GoalsPage() {
             <SelectItem value="DRAFT">Draft</SelectItem>
           </SelectContent>
         </Select>
-      </motion.div>
-
+      }
+    >
       <Tabs defaultValue="all">
-        <TabsList className="bg-white/80 border border-slate-200/80">
-          <TabsTrigger value="all">All Goals ({filtered.length})</TabsTrigger>
-          <TabsTrigger value="mine">My Goals ({myGoals.length})</TabsTrigger>
-          <TabsTrigger value="completed">Completed ({completed.length})</TabsTrigger>
+        <TabsList>
+          <TabsTrigger value="all" className="text-sm font-medium">All Goals ({filtered.length})</TabsTrigger>
+          <TabsTrigger value="mine" className="text-sm font-medium">My Goals ({myGoals.length})</TabsTrigger>
+          <TabsTrigger value="completed" className="text-sm font-medium">Completed ({completed.length})</TabsTrigger>
         </TabsList>
 
         <AnimatePresence mode="wait">
@@ -411,22 +429,22 @@ export default function GoalsPage() {
         </AnimatePresence>
       </Tabs>
 
-      <Dialog open={!!progressGoal} onOpenChange={(open) => !open && setProgressGoal(null)}>
+      <Dialog open={!!progressGoal} onOpenChange={handleProgressDialogChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Progress</DialogTitle>
           </DialogHeader>
           {progressGoal && (
             <div className="space-y-4 pt-2">
-              <p className="text-sm text-slate-600">{progressGoal.title}</p>
+              <p className="text-sm text-muted-foreground">{progressGoal.title}</p>
               <div className="space-y-2">
-                <Label>Progress: {progressValue}%</Label>
+                <Label className="text-sm font-medium">Progress: {progressValue}%</Label>
                 <input
                   type="range"
                   min={0}
                   max={100}
                   value={progressValue}
-                  onChange={(e) => setProgressValue(Number(e.target.value))}
+                  onChange={handleProgressRangeChange}
                   className="w-full accent-violet-600"
                 />
                 <Input
@@ -434,28 +452,26 @@ export default function GoalsPage() {
                   min={0}
                   max={100}
                   value={progressValue}
-                  onChange={(e) => setProgressValue(Math.min(100, Math.max(0, Number(e.target.value))))}
+                  onChange={handleProgressNumberChange}
                 />
               </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-300"
                   style={{ width: `${progressValue}%` }}
                 />
               </div>
-              <motion.div whileTap={{ scale: 0.97 }}>
-                <Button
-                  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
-                  onClick={handleSaveProgress}
-                  disabled={updateGoal.isPending}
-                >
-                  {updateGoal.isPending ? "Saving…" : "Save Progress"}
-                </Button>
-              </motion.div>
+              <Button
+                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
+                onClick={handleSaveProgress}
+                disabled={updateGoal.isPending}
+              >
+                {updateGoal.isPending ? "Saving…" : "Save Progress"}
+              </Button>
             </div>
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </PageWrapper>
   );
 }

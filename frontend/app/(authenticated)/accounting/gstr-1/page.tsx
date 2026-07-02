@@ -167,16 +167,16 @@ function SectionTable({
                 <TableCell colSpan={2} className="text-sm">
                   Section total
                 </TableCell>
-                <TableCell className="text-sm text-right tabular-nums">
+                <TableCell className="text-sm text-right tabular-nums font-mono">
                   {section.totalTaxableValue}
                 </TableCell>
-                <TableCell className="text-sm text-right tabular-nums">
+                <TableCell className="text-sm text-right tabular-nums font-mono">
                   {section.totalCgst}
                 </TableCell>
-                <TableCell className="text-sm text-right tabular-nums">
+                <TableCell className="text-sm text-right tabular-nums font-mono">
                   {section.totalSgst}
                 </TableCell>
-                <TableCell className="text-sm text-right tabular-nums">
+                <TableCell className="text-sm text-right tabular-nums font-mono">
                   {section.totalIgst}
                 </TableCell>
                 <TableCell className="text-sm text-right tabular-nums">

@@ -116,10 +116,10 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
   }, [addMutation, form]);
 
   return (
-    <Card className="rounded-xl border shadow-sm">
+    <Card className="rounded-lg border border-border">
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Globe className="h-4 w-4 text-blue-600" />
             Custom Domains
           </CardTitle>
@@ -135,7 +135,7 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
         {showAdd && (
           <form onSubmit={form.handleSubmit(handleAdd)} className="border rounded-lg p-3 space-y-2 bg-muted/30">
             <div className="space-y-1">
-              <Label className="text-[12px] font-medium">Domain *</Label>
+              <Label className="text-sm font-medium">Domain *</Label>
               <Input {...form.register("domain")} placeholder="app.yourcompany.com" className="h-8 text-sm" />
               {form.formState.errors.domain && <p className="text-[11px] text-destructive">{form.formState.errors.domain.message}</p>}
             </div>

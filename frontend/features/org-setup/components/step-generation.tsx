@@ -52,7 +52,6 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
   }
 
   async function handleSuccess(orgId: string | null, autoLoginToken: string | null) {
-    console.log("[OrgSetup] handleSuccess", { orgId, hasToken: !!autoLoginToken });
     if (apiDoneRef.current) return;
     apiDoneRef.current = true;
     if (intervalRef.current) {
@@ -65,19 +64,14 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
     sessionStorage.setItem(SETUP_DONE_KEY, "1");
 
     if (autoLoginToken) {
-      console.log("[OrgSetup] calling signIn with autoLoginToken...");
-      const signInResult = await signIn("credentials", {
+      await signIn("credentials", {
         magicToken: autoLoginToken,
         redirect: false,
-      }).catch((e: unknown) => { console.error("[OrgSetup] signIn threw", e); return null; });
-      console.log("[OrgSetup] signIn result", signInResult);
-    } else {
-      console.warn("[OrgSetup] no autoLoginToken — session will rely on live lookup");
+      }).catch(() => null);
     }
 
     await new Promise<void>(resolve => setTimeout(resolve, 1500));
     clearAll();
-    console.log("[OrgSetup] navigating to dashboard");
     window.location.replace("/dashboard");
   }
 
@@ -117,10 +111,8 @@ export function StepGeneration({ data, onNext }: StepGenerationProps) {
 
     try {
       const res = await orgMutationRef.current.mutateAsync(payload);
-      console.log("[OrgSetup] setup API response", res);
       await handleSuccess(res?.orgId ?? null, res?.autoLoginToken ?? null);
     } catch (err) {
-      console.error("[OrgSetup] setup API error", err);
       handleError(getErrorMessage(err));
     }
   }
