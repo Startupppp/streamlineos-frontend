@@ -7,8 +7,10 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import type { Variants } from "framer-motion"
 import { ChevronDown, Lock, Check, LayoutGrid } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSession } from "next-auth/react"
+import { useIsMobile } from "@/hooks/common/use-mobile"
 import {
   PRODUCT_DEFINITIONS,
   getProductFromPathname,
@@ -30,7 +32,6 @@ const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   helpdesk: "Tickets & support",
   documents: "Knowledge base",
   analytics: "Reports & insights",
-  ai: "AI assistance",
   administration: "Settings & access",
 }
 
@@ -80,7 +81,15 @@ function ProductTile({
         <Icon className="h-[15px] w-[15px]" strokeWidth={ICON_STROKE} />
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-medium text-foreground leading-tight truncate" title={label}>{label}</p>
+        <p
+          className={cn(
+            "text-[13px] font-medium text-foreground leading-tight truncate",
+            !isEnabled && "pr-12",
+          )}
+          title={label}
+        >
+          {label}
+        </p>
         <p className="text-[11px] text-muted-foreground line-clamp-1">{description}</p>
       </div>
       {isActive && (
@@ -97,7 +106,7 @@ function ProductTile({
         </motion.span>
       )}
       {!isEnabled && (
-        <span className="shrink-0 self-start mt-0.5 inline-flex items-center gap-0.5 h-4 px-1 rounded bg-muted border border-border">
+        <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 h-4 px-1 rounded bg-muted border border-border">
           <Lock className="h-2.5 w-2.5 text-muted-foreground" />
           <span className="text-[9px] font-medium text-muted-foreground">Locked</span>
         </span>
@@ -132,6 +141,51 @@ function ProductTile({
   )
 }
 
+interface ProductGridProps {
+  activeProduct: ProductKey
+  enabledModules: string[]
+  onClose: () => void
+  shouldReduceMotion: boolean | null
+}
+
+function ProductGrid({ activeProduct, enabledModules, onClose, shouldReduceMotion }: ProductGridProps) {
+  return (
+    <>
+      <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1">
+        Products
+      </p>
+      <div className="grid grid-cols-2 gap-1">
+        {PRODUCT_DEFINITIONS.map((product, index) => {
+          const enabled = isModuleEnabled(product.key, enabledModules)
+          const isActive = activeProduct === product.key && enabled
+          return (
+            <motion.div
+              key={product.key}
+              initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
+              animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              transition={{
+                duration: shouldReduceMotion ? 0.12 : 0.14,
+                ease: "easeOut",
+                delay: shouldReduceMotion ? 0 : index * 0.02,
+              }}
+            >
+              <ProductTile
+                productKey={product.key}
+                label={product.label}
+                href={product.href}
+                icon={product.icon}
+                isActive={isActive}
+                isEnabled={enabled}
+                onClose={onClose}
+              />
+            </motion.div>
+          )
+        })}
+      </div>
+    </>
+  )
+}
+
 interface ProductSwitcherMenuProps {
   mobile?: boolean
 }
@@ -141,6 +195,7 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
   const pathname = usePathname()
   const { data: session } = useSession()
   const shouldReduceMotion = useReducedMotion()
+  const isMobile = useIsMobile()
 
   const activeProduct = getProductFromPathname(pathname)
   const enabledModules = session?.enabledModules ?? []
@@ -173,53 +228,75 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
         },
       }
 
+  const triggerButton = (
+    <button
+      type="button"
+      aria-label="Switch product"
+      className={cn(
+        "flex items-center rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        mobile
+          ? "h-11 w-11 justify-center gap-0 shrink-0"
+          : "gap-1.5 h-8 px-2",
+      )}
+    >
+      {mobile ? (
+        <LayoutGrid className="h-5 w-5 shrink-0" strokeWidth={ICON_STROKE} />
+      ) : (
+        <>
+          {ActiveIcon && (
+            <span
+              className={cn(
+                "h-5 w-5 rounded-md flex items-center justify-center shrink-0",
+                activeAccent.bg,
+                activeAccent.text,
+              )}
+            >
+              <ActiveIcon className="h-3 w-3" strokeWidth={ICON_STROKE} />
+            </span>
+          )}
+          <span className="hidden lg:inline text-xs font-medium truncate max-w-[5rem]">
+            {activeDefinition?.label}
+          </span>
+          <ChevronDown
+            className={cn(
+              "h-3 w-3 shrink-0 text-muted-foreground",
+              !shouldReduceMotion && "transition-transform duration-150",
+              !shouldReduceMotion && open && "rotate-180",
+            )}
+            strokeWidth={ICON_STROKE}
+          />
+        </>
+      )}
+    </button>
+  )
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          {triggerButton}
+        </SheetTrigger>
+        <SheetContent side="bottom" className="rounded-t-xl px-4 pb-6 pt-4">
+          <ProductGrid
+            activeProduct={activeProduct}
+            enabledModules={enabledModules}
+            onClose={handleClose}
+            shouldReduceMotion={shouldReduceMotion}
+          />
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label="Switch product"
-          className={cn(
-            "flex items-center rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            mobile
-              ? "h-11 w-11 justify-center gap-0 shrink-0"
-              : "gap-1.5 h-8 px-2",
-          )}
-        >
-          {mobile ? (
-            <LayoutGrid className="h-5 w-5 shrink-0" strokeWidth={ICON_STROKE} />
-          ) : (
-            <>
-              {ActiveIcon && (
-                <span
-                  className={cn(
-                    "h-5 w-5 rounded-md flex items-center justify-center shrink-0",
-                    activeAccent.bg,
-                    activeAccent.text,
-                  )}
-                >
-                  <ActiveIcon className="h-3 w-3" strokeWidth={ICON_STROKE} />
-                </span>
-              )}
-              <span className="hidden lg:inline text-xs font-medium truncate max-w-[5rem]">
-                {activeDefinition?.label}
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-3 w-3 shrink-0 text-muted-foreground",
-                  !shouldReduceMotion && "transition-transform duration-150",
-                  !shouldReduceMotion && open && "rotate-180",
-                )}
-                strokeWidth={ICON_STROKE}
-              />
-            </>
-          )}
-        </button>
+        {triggerButton}
       </PopoverTrigger>
       <PopoverContent
         forceMount
         align="start"
-        className="w-80 max-w-[95vw] p-0 border-0 bg-transparent shadow-none data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=closed]:pointer-events-none"
+        className="w-[440px] max-w-[95vw] p-0 border-0 bg-transparent shadow-none data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=closed]:pointer-events-none"
         sideOffset={8}
       >
         <AnimatePresence>
@@ -233,37 +310,12 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
               style={{ transformOrigin: "top left" }}
               className="w-full rounded-md border bg-popover text-popover-foreground shadow-md p-2"
             >
-              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1">
-                Products
-              </p>
-              <div className="grid grid-cols-2 gap-1">
-                {PRODUCT_DEFINITIONS.map((product, index) => {
-                  const enabled = isModuleEnabled(product.key, enabledModules)
-                  const isActive = activeProduct === product.key && enabled
-                  return (
-                    <motion.div
-                      key={product.key}
-                      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
-                      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                      transition={{
-                        duration: shouldReduceMotion ? 0.12 : 0.14,
-                        ease: "easeOut",
-                        delay: shouldReduceMotion ? 0 : index * 0.02,
-                      }}
-                    >
-                      <ProductTile
-                        productKey={product.key}
-                        label={product.label}
-                        href={product.href}
-                        icon={product.icon}
-                        isActive={isActive}
-                        isEnabled={enabled}
-                        onClose={handleClose}
-                      />
-                    </motion.div>
-                  )
-                })}
-              </div>
+              <ProductGrid
+                activeProduct={activeProduct}
+                enabledModules={enabledModules}
+                onClose={handleClose}
+                shouldReduceMotion={shouldReduceMotion}
+              />
             </motion.div>
           )}
         </AnimatePresence>
