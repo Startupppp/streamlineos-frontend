@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { GitBranch, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
+import { GitBranch, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgBranches,
@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Sheet,
   SheetContent,
@@ -44,14 +44,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgBranch } from "@/types/org-hierarchy";
 

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, isAfter, addDays } from "date-fns";
-import { Plus, Copy, MoreHorizontal, RefreshCw, Tag } from "lucide-react";
+import { Plus, Copy, MoreHorizontal, RefreshCw, Tag, CheckCircle2, TrendingUp, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCan } from "@/hooks/api/access";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   useCoupons,
   useCreateCoupon,
@@ -398,22 +399,12 @@ export default function CouponsPage() {
         }
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: "Total Coupons", value: totalCoupons },
-              { label: "Active", value: activeCoupons },
-              { label: "Total Redemptions", value: totalRedemptions },
-              { label: "Expiring in 7 days", value: comingDue },
-            ].map(({ label, value }) => (
-              <div
-                key={label}
-                className="rounded-lg border border-border bg-card px-4 py-3"
-              >
-                <p className="text-xs text-muted-foreground mb-1">{label}</p>
-                <p className="text-xl font-bold tabular-nums">{value}</p>
-              </div>
-            ))}
-          </div>
+          <StatCardGrid cols={4}>
+            <StatCard label="Total Coupons" value={totalCoupons} icon={Tag} tone="default" />
+            <StatCard label="Active" value={activeCoupons} icon={CheckCircle2} tone="emerald" />
+            <StatCard label="Total Redemptions" value={totalRedemptions} icon={TrendingUp} tone="blue" />
+            <StatCard label="Expiring in 7 days" value={comingDue} icon={Clock} tone="amber" />
+          </StatCardGrid>
 
           {!isLoading && !isError && coupons.length > 0 && (
             <div className="rounded-lg border border-border bg-card p-4">

@@ -129,7 +129,7 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
                       ? {
                           scale: 1,
                           boxShadow:
-                            "0 0 0 1px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(139, 92, 246, 0.12)",
+                            "0 0 0 1px rgba(59, 130, 246, 0.3), 0 4px 12px rgba(59, 130, 246, 0.12)",
                         }
                       : { scale: 1, boxShadow: "0 0 0 0px transparent" }
                   }
@@ -145,7 +145,7 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
                     className={cn(
                       "flex flex-col items-center gap-1 p-2 rounded-lg text-center transition-all duration-150",
                       isActive
-                        ? "border border-violet-500 bg-violet-50 ring-1 ring-violet-500/30"
+                        ? "border border-blue-500/40 bg-blue-50 ring-1 ring-blue-500/20"
                         : "text-muted-foreground hover:bg-muted/80 hover:scale-[1.02]",
                     )}
                   >
@@ -153,7 +153,7 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
                       className={cn(
                         "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
                         isActive
-                          ? "bg-violet-100 text-violet-600"
+                          ? "bg-blue-100 text-blue-600"
                           : "bg-muted/50 text-muted-foreground",
                       )}
                     >

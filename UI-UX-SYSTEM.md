@@ -82,9 +82,9 @@ blue-500 for interactive states and links, and full Tailwind semantic families f
   --primary:               #0b1220;   /* slate-900 */
   --primary-foreground:    #ffffff;
 
-  /* ── Accent (links, interactive highlights, focus) ── */
-  --accent:                #3b82f6;   /* blue-500 */
-  --accent-foreground:     #ffffff;
+  /* ── Accent (neutral hover wash — shadcn dropdown/menu/command item bg-accent) ── */
+  --accent:                #f1f5f9;   /* slate-100 — subtle neutral, NOT brand blue */
+  --accent-foreground:     #0f172a;   /* slate-900 — readable on neutral wash */
   --secondary:             #f1f5f9;   /* slate-100 */
   --secondary-foreground:  #0b1220;
 
@@ -134,7 +134,7 @@ blue-500 for interactive states and links, and full Tailwind semantic families f
   --primary-foreground:    #07091a;
   --secondary:             #1a2238;
   --secondary-foreground:  #f1f4fb;
-  --accent:                #1a2238;
+  --accent:                #1a2238;   /* dark surface wash — neutral for dark-mode hover */
   --accent-foreground:     #f1f4fb;
   --destructive:           #ef4444;
   --destructive-foreground: #f1f4fb;
@@ -168,6 +168,27 @@ blue-500 for interactive states and links, and full Tailwind semantic families f
 
 **Rule:** Never use brand gradient colors (`--brand-core`, `.brand-text`, `.gradient-signature`) for
 status badges. Never repurpose status colors for brand decoration.
+
+### Accent vs Brand — critical distinction
+
+`--accent` is a **neutral hover wash** (`slate-100` light / `#1a2238` dark). shadcn/ui primitives
+(DropdownMenuItem, SelectItem, CommandItem, ComboboxItem, CalendarDay, etc.) apply `bg-accent
+text-accent-foreground` on hover and focus. Setting `--accent` to a brand blue causes saturated
+blue backgrounds on every menu hover, making text and icons illegible.
+
+- **Use `--accent` / `bg-accent`:** shadcn hover/focus states only. Never set it to a chromatic color.
+- **Use `--ring` / `ring-ring`:** focus rings on interactive elements. Currently `blue-500`.
+- **Use `--brand-core` / `blue-500` / `blue-600`:** links, active-state tints, icon highlights, info badges.
+- **Use `--primary` / `bg-primary`:** ink-black CTAs (buttons, "+" create buttons). Not brand blue.
+- **Sidebar active item:** uses `--sidebar-accent` (a 10% blue tint), separate from the global `--accent`.
+
+### Border opacity rule
+
+`--border` is `#e2e8f0` (slate-200). Use `border-border` at **full opacity** for all structural
+borders: card edges, table outer borders, sheet/dialog header and footer separators, form field
+outlines. Reduced-opacity variants (`border-border/60`, `border-border/50`) are acceptable only for
+intentional hairline dividers inside dense list rows or decorative separator lines — never on the
+outer boundary of a card, table, or panel.
 
 ---
 
@@ -462,16 +483,46 @@ Standard authenticated dashboard card:
 - `bg-card` = white in light mode. Do not use `bg-white` directly — always reference the token.
 - Hover variant for clickable cards: add `hover:shadow-medium transition-shadow cursor-pointer`.
 
-Metric / stat card:
+Metric / stat card — use `<StatCard>` from `components/ui/stat-card.tsx`. This is the ONE canonical stats component; never build bespoke number-over-label divs.
+
 ```tsx
-<div className="bg-card rounded-lg border border-border p-4 sm:p-5">
-  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-    {label}
-  </p>
-  <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
-  <p className="mt-0.5 text-xs text-muted-foreground">{subtext}</p>
-</div>
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+
+<StatCardGrid cols={4}>
+  <StatCard label="Active Users" value={42} icon={Users} tone="emerald" />
+  <StatCard label="Pending" value={7} icon={Clock} tone="amber" />
+  <StatCard label="Failed" value={2} icon={AlertCircle} tone="red" />
+  <StatCard label="Total" value={51} icon={BarChart2} tone="blue" />
+</StatCardGrid>
 ```
+
+**StatCard dimensions:** `rounded-lg border border-border bg-card px-3 py-2.5`, natural height ~56px.
+**Layout:** compact horizontal row — tinted icon square LEFT (`h-8 w-8 rounded-md`), label + value stacked RIGHT.
+**Label:** `text-[11px] font-medium text-muted-foreground` — no uppercase, no tracking.
+**Value:** `text-lg font-semibold tabular-nums leading-tight`.
+
+**`tone` prop:**
+
+| Tone | Background | Icon color | When to use |
+|---|---|---|---|
+| `default` | `bg-slate-100` | `text-slate-600` | Neutral counts, totals, no semantic signal |
+| `blue` | `bg-blue-50` | `text-blue-600` | Info, in-progress, primary metrics |
+| `emerald` | `bg-emerald-50` | `text-emerald-600` | Success, active, healthy, positive |
+| `amber` | `bg-amber-50` | `text-amber-600` | Warning, pending, moderate, caution |
+| `red` | `bg-red-50` | `text-red-600` | Error, failed, overdue, critical |
+| `violet` | `bg-violet-50` | `text-violet-600` | Privileged / RBAC contexts |
+
+**Optional props:**
+- `delta?: { value: string; direction: "up" | "down" }` — ↑/↓ trend in emerald/red below the value. Use for period-over-period changes.
+- `hint?` — 10px muted suffix text below the value (shown only when `delta` is absent). Use for static context ("of 100 seats").
+- `href?` — wraps the card in a `<Link>` with `hover:bg-muted/30` for navigable stat tiles.
+- `isLoading?` — shows a matching `<Skeleton>` in place of the value.
+
+**`StatCardGrid` wrapper:** `cols` = `2 | 3 | 4 | 5 | 6` (default 4). Gap is `gap-2`; responsive 2-col mobile → scales at `lg`.
+
+**Delta vs hint:** use `delta` for percentage changes vs. prior period; use `hint` for static context. Never show both.
+
+**Anti-pattern:** bespoke divs with `text-xl font-bold tabular-nums` over a label. Always use `<StatCard>`.
 
 ### Data tables
 

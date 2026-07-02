@@ -1,123 +1,136 @@
 "use client";
 
 import Link from "next/link";
-import { LucideIcon, TrendingDown, TrendingUp } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-export type StatColor =
-  | "blue"
-  | "cyan"
-  | "green"
-  | "red"
-  | "violet"
-  | "amber"
-  | "gold"
-  | "purple";
+export type StatTone = "default" | "blue" | "emerald" | "amber" | "red" | "violet";
 
-interface StatCardProps {
+export type StatColor = StatTone | "cyan" | "green" | "gold" | "purple";
+
+const TONE_MAP: Record<StatTone, { bg: string; text: string }> = {
+  default: { bg: "bg-slate-100",  text: "text-slate-600" },
+  blue:    { bg: "bg-blue-50",    text: "text-blue-600" },
+  emerald: { bg: "bg-emerald-50", text: "text-emerald-600" },
+  amber:   { bg: "bg-amber-50",   text: "text-amber-600" },
+  red:     { bg: "bg-red-50",     text: "text-red-600" },
+  violet:  { bg: "bg-violet-50",  text: "text-violet-600" },
+};
+
+const COLOR_TONE: Partial<Record<StatColor, StatTone>> = {
+  cyan:   "blue",
+  green:  "emerald",
+  gold:   "amber",
+  purple: "violet",
+};
+
+function resolveTone(tone?: StatTone, color?: StatColor): StatTone {
+  if (tone) return tone;
+  if (!color) return "default";
+  if (color in TONE_MAP) return color as StatTone;
+  return COLOR_TONE[color] ?? "default";
+}
+
+export interface StatCardProps {
   label: string;
   value: string | number;
-  icon: LucideIcon;
-  trend?: { value: number; isPositive: boolean; label?: string };
+  icon?: LucideIcon;
+  tone?: StatTone;
+  color?: StatColor;
+  delta?: { value: string; direction: "up" | "down" };
   hint?: string;
   href?: string;
+  isLoading?: boolean;
   className?: string;
   index?: number;
-  color?: StatColor;
-  /** @deprecated — use `hint` */
+  trend?: { value: number; isPositive: boolean; label?: string };
   subtitle?: string;
 }
 
-const COLOR_MAP: Record<StatColor, { bg: string; icon: string; bar: string }> = {
-  blue: { bg: "bg-blue-500/10", icon: "text-blue-600", bar: "bg-blue-500" },
-  cyan: { bg: "bg-cyan-500/10", icon: "text-cyan-600", bar: "bg-cyan-500" },
-  green: { bg: "bg-emerald-500/10", icon: "text-emerald-600", bar: "bg-emerald-500" },
-  red: { bg: "bg-red-500/10", icon: "text-red-600", bar: "bg-red-500" },
-  violet: { bg: "bg-violet-500/10", icon: "text-violet-600", bar: "bg-violet-500" },
-  amber: { bg: "bg-amber-500/10", icon: "text-amber-600", bar: "bg-amber-500" },
-  gold: { bg: "bg-blue-500/10", icon: "text-blue-600", bar: "bg-blue-500" },
-  purple: { bg: "bg-violet-500/10", icon: "text-violet-600", bar: "bg-violet-500" },
+export interface StatCardGridProps {
+  children: React.ReactNode;
+  cols?: 2 | 3 | 4 | 5 | 6;
+  className?: string;
+}
+
+const GRID_COLS: Record<number, string> = {
+  2: "grid-cols-2",
+  3: "grid-cols-2 sm:grid-cols-3",
+  4: "grid-cols-2 lg:grid-cols-4",
+  5: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
+  6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
 };
+
+export function StatCardGrid({ children, cols = 4, className }: StatCardGridProps) {
+  return (
+    <div className={cn("grid gap-2", GRID_COLS[cols], className)}>
+      {children}
+    </div>
+  );
+}
 
 export function StatCard({
   label,
   value,
   icon: Icon,
-  trend,
+  tone,
+  color,
+  delta,
   hint,
-  subtitle,
   href,
+  isLoading,
   className,
-  index = 0,
-  color = "blue",
+  index: _index,
+  trend,
+  subtitle,
 }: StatCardProps) {
-  const c = COLOR_MAP[color];
+  const t = TONE_MAP[resolveTone(tone, color)];
+
   const effectiveHint = hint ?? subtitle;
+
+  const effectiveDelta: { value: string; direction: "up" | "down" } | undefined =
+    delta ??
+    (trend
+      ? {
+          value: `${Math.abs(trend.value)}%${trend.label ? ` ${trend.label}` : ""}`,
+          direction: trend.isPositive ? "up" : "down",
+        }
+      : undefined);
 
   const body = (
     <div
       className={cn(
-        "relative group rounded-xl border border-border bg-card p-3.5 overflow-hidden transition-all duration-200",
-        href &&
-          "hover:border-blue-400 hover:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.18)] hover:-translate-y-0.5 cursor-pointer",
+        "flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors",
+        href && "hover:bg-muted/30 cursor-pointer",
         className,
       )}
-      style={{ animation: `fade-up 0.3s ease-out ${index * 0.07}s both` }}
     >
-      <div className={cn("absolute top-0 left-0 right-0 h-[2px]", c.bar)} />
-
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground truncate">
-            {label}
-          </p>
+      {Icon && (
+        <div className={cn("h-8 w-8 rounded-md flex items-center justify-center shrink-0", t.bg)}>
+          <Icon className={cn("h-4 w-4", t.text)} />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-medium text-muted-foreground truncate">{label}</p>
+        {isLoading ? (
+          <Skeleton className="h-5 w-14 mt-0.5" />
+        ) : (
+          <p className="text-lg font-semibold tabular-nums leading-tight text-foreground">{value}</p>
+        )}
+        {!isLoading && effectiveDelta && (
           <p
             className={cn(
-              "font-semibold text-foreground mt-1 truncate leading-none",
-              typeof value === "string" && value.length > 8 ? "text-lg" : "text-[1.375rem]",
+              "text-[10px] font-medium",
+              effectiveDelta.direction === "up" ? "text-emerald-600" : "text-red-600",
             )}
           >
-            {value}
+            {effectiveDelta.direction === "up" ? "↑" : "↓"} {effectiveDelta.value}
           </p>
-
-          {trend && (
-            <div className="flex items-center gap-1 mt-1.5">
-              {trend.isPositive ? (
-                <TrendingUp className="h-3 w-3 text-emerald-500" />
-              ) : (
-                <TrendingDown className="h-3 w-3 text-red-500" />
-              )}
-              <span
-                className={cn(
-                  "text-[11px] font-medium",
-                  trend.isPositive ? "text-emerald-600" : "text-red-600",
-                )}
-              >
-                {trend.isPositive ? "+" : "-"}
-                {Math.abs(trend.value)}%
-              </span>
-              {trend.label && (
-                <span className="text-[11px] text-muted-foreground">{trend.label}</span>
-              )}
-            </div>
-          )}
-
-          {!trend && effectiveHint && (
-            <p className="text-[11px] text-muted-foreground mt-1.5 truncate">
-              {effectiveHint}
-            </p>
-          )}
-        </div>
-
-        <div
-          className={cn(
-            "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200",
-            c.bg,
-            href && "group-hover:scale-110",
-          )}
-        >
-          <Icon className={cn("h-4 w-4", c.icon)} />
-        </div>
+        )}
+        {!isLoading && !effectiveDelta && effectiveHint && (
+          <p className="text-[10px] text-muted-foreground truncate">{effectiveHint}</p>
+        )}
       </div>
     </div>
   );

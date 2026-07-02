@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   useUsers,
   useUpdateUserStatus,
@@ -49,29 +50,29 @@ import { formatDistanceToNow } from "date-fns";
 function getInitials(name: string | null, email: string): string {
   if (name) {
     const parts = name.split(" ").filter(Boolean);
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    if (parts.length >= 2)
+      return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
+    if (parts.length === 1) return (parts[0] ?? "").slice(0, 2).toUpperCase();
   }
   return email.slice(0, 2).toUpperCase();
 }
 
 function RowSkeleton() {
   return (
-    <TableRow>
-      <TableCell className="w-10"><Skeleton className="h-4 w-4 rounded" /></TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2.5">
-          <Skeleton className="h-8 w-8 rounded-full" />
-          <div className="space-y-1">
-            <Skeleton className="h-3.5 w-28" />
-            <Skeleton className="h-3 w-36" />
-          </div>
+    <TableRow className="h-8">
+      <TableCell className="w-10 px-2 py-1">
+        <Skeleton className="h-4 w-4 rounded" />
+      </TableCell>
+      <TableCell className="px-2 py-1">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-6 rounded-full shrink-0" />
+          <Skeleton className="h-3 w-28" />
         </div>
       </TableCell>
-      <TableCell><Skeleton className="h-3.5 w-40" /></TableCell>
-      <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
-      <TableCell><Skeleton className="h-3.5 w-24" /></TableCell>
-      <TableCell><Skeleton className="h-6 w-6 rounded" /></TableCell>
+      <TableCell className="px-2 py-1"><Skeleton className="h-3 w-36" /></TableCell>
+      <TableCell className="px-2 py-1"><Skeleton className="h-4 w-14 rounded-full" /></TableCell>
+      <TableCell className="px-2 py-1"><Skeleton className="h-3 w-20" /></TableCell>
+      <TableCell className="w-8 px-2 py-1" />
     </TableRow>
   );
 }
@@ -91,7 +92,7 @@ function SuspendedActionsMenu({ user, onView }: SuspendedActionsMenuProps) {
       {
         onSuccess: () => toast.success("User activated"),
         onError: (e) => toast.error(getApiError(e)),
-      }
+      },
     );
   }
 
@@ -101,7 +102,7 @@ function SuspendedActionsMenu({ user, onView }: SuspendedActionsMenuProps) {
       {
         onSuccess: () => toast.success("User archived"),
         onError: (e) => toast.error(getApiError(e)),
-      }
+      },
     );
   }
 
@@ -165,7 +166,7 @@ export function SuspendedUsersPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const { data, isLoading } = useUsers({
+  const { data, isLoading, isError, refetch } = useUsers({
     page,
     limit: 20,
     search: debouncedSearch || undefined,
@@ -179,17 +180,29 @@ export function SuspendedUsersPage() {
   const allSelected = users.length > 0 && users.every((u) => selectedIds.has(u.id));
   const someSelected = selectedIds.size > 0;
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    [],
+  );
+
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (checked) setSelectedIds(new Set(users.map((u) => u.id)));
+      else setSelectedIds(new Set());
+    },
+    [users],
+  );
+
+  const handleSelectAllChange = useCallback(
+    (c: boolean | string) => handleSelectAll(!!c),
+    [handleSelectAll],
+  );
+
   function handleRowClick(userId: string) {
     setSelectedUserId(userId);
     setSheetOpen(true);
-  }
-
-  function handleSelectAll(checked: boolean) {
-    if (checked) {
-      setSelectedIds(new Set(users.map((u) => u.id)));
-    } else {
-      setSelectedIds(new Set());
-    }
   }
 
   const handleSelectRow = useCallback((userId: string, checked: boolean) => {
@@ -201,6 +214,8 @@ export function SuspendedUsersPage() {
     });
   }, []);
 
+  const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
   function handleBulkRestore() {
     bulkRestore(
       { userIds: Array.from(selectedIds) },
@@ -210,14 +225,24 @@ export function SuspendedUsersPage() {
           setSelectedIds(new Set());
         },
         onError: (e) => toast.error(getApiError(e)),
-      }
+      },
     );
   }
+
+  const handlePrevPage = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
+
+  const handleNextPage = useCallback(
+    () => setPage((p) => Math.min(pagination?.totalPages ?? 1, p + 1)),
+    [pagination?.totalPages],
+  );
+
+  const handleSheetChange = useCallback((v: boolean) => setSheetOpen(v), []);
 
   return (
     <>
       <PageWrapper
         title="Suspended Users"
+        eyebrow="People"
         subtitle="Users whose access has been temporarily suspended."
         badge={pagination?.total !== undefined ? String(pagination.total) : undefined}
         filters={
@@ -226,16 +251,16 @@ export function SuspendedUsersPage() {
             <Input
               placeholder="Search suspended users..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-8 h-8 text-xs"
             />
           </div>
         }
       >
         {someSelected && (
-          <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-md bg-muted/60 border text-xs">
+          <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-md bg-muted/60 border text-xs flex-wrap">
             <span className="font-medium text-muted-foreground">{selectedIds.size} selected</span>
-            <div className="flex items-center gap-1.5 ml-auto">
+            <div className="flex items-center gap-1.5 ml-auto flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
@@ -250,7 +275,7 @@ export function SuspendedUsersPage() {
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs"
-                onClick={() => setSelectedIds(new Set())}
+                onClick={handleClearSelection}
               >
                 Clear
               </Button>
@@ -258,25 +283,33 @@ export function SuspendedUsersPage() {
           </div>
         )}
 
-        {isLoading ? (
+        {isError ? (
+          <ErrorState
+            title="Failed to load suspended users"
+            description="An error occurred while loading suspended users."
+            onRetry={handleRetry}
+          />
+        ) : isLoading ? (
           <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40">
-                  <TableHead className="w-10" />
-                  <TableHead className="text-xs">User</TableHead>
-                  <TableHead className="text-xs">Email</TableHead>
-                  <TableHead className="text-xs">Role</TableHead>
-                  <TableHead className="text-xs">Suspended</TableHead>
-                  <TableHead className="text-xs w-10" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <RowSkeleton key={i} />
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 h-8">
+                    <TableHead className="w-10 px-2" />
+                    <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">User</TableHead>
+                    <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Email</TableHead>
+                    <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Role</TableHead>
+                    <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Suspended</TableHead>
+                    <TableHead className="w-8 px-2" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <RowSkeleton key={i} />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         ) : users.length === 0 ? (
           <EmptyState
@@ -291,71 +324,73 @@ export function SuspendedUsersPage() {
         ) : (
           <div className="space-y-3">
             <div className="rounded-md border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead className="w-10 pl-4">
-                      <Checkbox
-                        checked={allSelected}
-                        onCheckedChange={(c) => handleSelectAll(!!c)}
-                        aria-label="Select all"
-                      />
-                    </TableHead>
-                    <TableHead className="text-xs">User</TableHead>
-                    <TableHead className="text-xs">Email</TableHead>
-                    <TableHead className="text-xs">Role</TableHead>
-                    <TableHead className="text-xs">Suspended</TableHead>
-                    <TableHead className="text-xs w-10" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow
-                      key={user.id}
-                      className="cursor-pointer hover:bg-muted/30 transition-colors"
-                      onClick={() => handleRowClick(user.id)}
-                    >
-                      <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/40 h-8">
+                      <TableHead className="w-10 px-2 pl-4">
                         <Checkbox
-                          checked={selectedIds.has(user.id)}
-                          onCheckedChange={(c) => handleSelectRow(user.id, !!c)}
-                          aria-label={`Select ${user.name ?? user.email}`}
+                          checked={allSelected}
+                          onCheckedChange={handleSelectAllChange}
+                          aria-label="Select all"
                         />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2.5">
-                          <Avatar className="h-8 w-8 shrink-0">
-                            <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
-                            <AvatarFallback className="text-xs font-semibold">
-                              {getInitials(user.name, user.email)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="text-xs font-medium truncate">{user.name ?? "—"}</p>
-                            {user.designation && (
-                              <p className="text-[11px] text-muted-foreground truncate">{user.designation}</p>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground truncate max-w-[180px]">
-                        {user.email}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal">
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(user.updatedAt), { addSuffix: true })}
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <SuspendedActionsMenu user={user} onView={() => handleRowClick(user.id)} />
-                      </TableCell>
+                      </TableHead>
+                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">User</TableHead>
+                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Email</TableHead>
+                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Role</TableHead>
+                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Suspended</TableHead>
+                      <TableHead className="w-8 px-2" />
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow
+                        key={user.id}
+                        className="h-8 cursor-pointer hover:bg-muted/30 transition-colors"
+                        onClick={() => handleRowClick(user.id)}
+                      >
+                        <TableCell className="pl-4 px-2 py-1" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedIds.has(user.id)}
+                            onCheckedChange={(c) => handleSelectRow(user.id, !!c)}
+                            aria-label={`Select ${user.name ?? user.email}`}
+                          />
+                        </TableCell>
+                        <TableCell className="px-2 py-1">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6 shrink-0">
+                              <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
+                              <AvatarFallback className="text-[10px] font-semibold">
+                                {getInitials(user.name, user.email)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-medium truncate leading-tight">{user.name ?? "—"}</p>
+                              {user.designation && (
+                                <p className="text-[10px] text-muted-foreground truncate">{user.designation}</p>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-2 py-1 text-[11px] text-muted-foreground truncate max-w-[180px]">
+                          {user.email}
+                        </TableCell>
+                        <TableCell className="px-2 py-1">
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
+                            {user.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-2 py-1 text-[11px] text-muted-foreground tabular-nums font-mono">
+                          {formatDistanceToNow(new Date(user.updatedAt), { addSuffix: true })}
+                        </TableCell>
+                        <TableCell className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
+                          <SuspendedActionsMenu user={user} onView={() => handleRowClick(user.id)} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
 
             {pagination && pagination.totalPages > 1 && (
@@ -368,7 +403,7 @@ export function SuspendedUsersPage() {
                     variant="outline"
                     size="sm"
                     className="h-7 w-7 p-0"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    onClick={handlePrevPage}
                     disabled={page === 1}
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
@@ -378,7 +413,7 @@ export function SuspendedUsersPage() {
                     variant="outline"
                     size="sm"
                     className="h-7 w-7 p-0"
-                    onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                    onClick={handleNextPage}
                     disabled={page === pagination.totalPages}
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
@@ -390,7 +425,7 @@ export function SuspendedUsersPage() {
         )}
       </PageWrapper>
 
-      <UserDetailSheet userId={selectedUserId} open={sheetOpen} onOpenChange={setSheetOpen} />
+      <UserDetailSheet userId={selectedUserId} open={sheetOpen} onOpenChange={handleSheetChange} />
     </>
   );
 }

@@ -3,7 +3,7 @@
 Input for the Task 10 agent. Each wave agent's findings that touch the SHARED files (index.ts, test-catalog.ts, email-senders.base.ts, email.service.ts) are recorded here.
 
 ## From Task 1 (layout kit)
-- `backend/src/modules/auth/auth.ts` lines ~128/176/205 hardcode `support@streamlineos.app` — replace with `getSupportEmail()` from `../email/email.constants` (verify exact usage; these predate the overhaul).
+- RESOLVED: grep for `support@streamlineos.app` in backend/src now returns nothing — no action needed.
 
 ## From Task 3 (expense.ts + hr.ts) — subject alignment at call sites
 Templates return HTML; inbox subjects are set at sender call sites (email-senders.base.ts / email.service.ts). Align sender subject strings to:
@@ -84,6 +84,14 @@ Already handled by Task 2 itself: index.ts export removals + test-catalog entrie
 - clients-email.service.ts + lead-status.service.ts rewired to crm.ts imports; inline HTML + local escapeHtml gone.
 - index.ts still exports the 5 dead CRM fns + 4 appraisal fns (pending Task 8's deletions) → Task 10 removes; Task 10 also adds barrel exports for crm.ts's 3 new fns, recruitment.ts, interviews.ts, payroll.ts, platform.ts (+ components.ts helpers).
 - test-catalog.ts needs: entries removed for deleted CRM/appraisal templates; entries added for all new templates (crm x3, recruitment, interviews, payroll, platform, weekly recap when Task 8 adds it).
+
+## Render smoke-check spec (built)
+- `backend/src/modules/email/templates/test-catalog.spec.ts` iterates `TEMPLATE_MAP` from test-catalog.ts via Object.entries — PRESERVE the `TEMPLATE_MAP` export name and per-entry `generateHtml()` shape. Spec asserts: no throw, `<!DOCTYPE html`, `StreamlineOS`, no undefined/NaN/[object Object], no 0f2b7f/bd882c, no unreplaced `${`.
+- Currently fails to compile because index.ts still re-exports: `./appraisal` (file DELETED by Task 8) and 5 dead CRM functions. Fix = REMOVE those barrel exports (do NOT restore templates), then run `npx jest src/modules/email/templates/test-catalog.spec.ts` green.
+- Existing email.controller.e2e-spec.ts only does 401 auth checks — untouched.
+
+## Test email recipient
+- User-approved recipient for live test sends: adityachalla01@gmail.com (Task 11).
 
 ## From Task 9 (provider dedup)
 - Done, no shared-file follow-ups.

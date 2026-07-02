@@ -102,9 +102,9 @@
   --primary: #0b1220;             /* slate-900 — primary CTAs */
   --primary-foreground: #ffffff;
 
-  /* ─── Accent (interactive highlights, links) ─── */
-  --accent: #3b82f6;              /* blue-500 */
-  --accent-foreground: #ffffff;
+  /* ─── Accent (neutral hover wash — used by shadcn dropdown/menu/command item hover) ─── */
+  --accent: #f1f5f9;              /* slate-100 — subtle neutral; NOT brand blue */
+  --accent-foreground: #0f172a;   /* slate-900 — readable on neutral wash */
   --secondary: #f1f5f9;           /* slate-100 — secondary buttons */
   --secondary-foreground: #0b1220;
 
@@ -168,7 +168,7 @@
   --primary-foreground: #07091a;
   --secondary: #1a2238;
   --secondary-foreground: #f1f4fb;
-  --accent: #1a2238;
+  --accent: #1a2238;              /* dark surface wash — neutral for dark mode hover */
   --accent-foreground: #f1f4fb;
   --destructive: #ef4444;
   --destructive-foreground: #f1f4fb;

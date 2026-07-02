@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { ArchivedUsersPage } from "@/features/users/archived-users-page";
 
 export const metadata: Metadata = {
@@ -6,5 +7,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <ArchivedUsersPage />;
+  return (
+    <Suspense>
+      <ArchivedUsersPage />
+    </Suspense>
+  );
 }

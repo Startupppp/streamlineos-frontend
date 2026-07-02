@@ -2,12 +2,13 @@
 
 import {
   Building2, GitBranch, Users, UsersRound, MapPin, DollarSign,
-  ChevronRight, Plus, Network, Settings, AlertCircle, CheckCircle2,
+  Plus, Network, Settings, AlertCircle, CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
 import { useOrgHierarchyOverview } from "@/hooks/api/org-hierarchy";
 import { useOrgSettings } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -107,34 +108,20 @@ export default function OrganizationOverviewPage() {
       }
     >
       <div className="space-y-6">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {SECTIONS.map((section) => {
-            const Icon = section.icon;
-            const count = overview?.[section.key];
-
-            return (
-              <Link key={section.href} href={section.href} className="block">
-                <div className="bg-muted/40 hover:bg-muted/60 rounded-lg p-3 cursor-pointer h-full transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-primary/10 rounded-md">
-                        <Icon className="h-4 w-4 text-primary" />
-                      </div>
-                      <span className="text-sm font-semibold">{section.title}</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-1">{section.description}</p>
-                  {isLoading ? (
-                    <Skeleton className="h-6 w-10 rounded" />
-                  ) : (
-                    <p className="text-xl font-bold tabular-nums">{count ?? 0}</p>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+        <StatCardGrid cols={3}>
+          {SECTIONS.map((section) => (
+            <StatCard
+              key={section.href}
+              label={section.title}
+              value={overview?.[section.key] ?? 0}
+              icon={section.icon}
+              tone="default"
+              hint={section.description}
+              href={section.href}
+              isLoading={isLoading}
+            />
+          ))}
+        </StatCardGrid>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>

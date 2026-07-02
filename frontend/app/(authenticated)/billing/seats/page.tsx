@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { AlertCircle, Info, Users, UserCheck, UserMinus, TrendingUp } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSeatInfo, useSubscription } from "@/hooks/api/subscription";
-import type { StatColor } from "@/components/ui/stat-card";
+import type { StatTone } from "@/components/ui/stat-card";
 
 function utilizationColor(percent: number): string {
   if (percent >= 90) return "text-red-600";
@@ -22,10 +22,10 @@ function progressBarColor(percent: number): string {
   return "bg-green-500";
 }
 
-function utilizationStatColor(percent: number): StatColor {
+function utilizationStatTone(percent: number): StatTone {
   if (percent >= 90) return "red";
   if (percent >= 70) return "amber";
-  return "green";
+  return "emerald";
 }
 
 function utilizationLabel(percent: number): string {
@@ -42,17 +42,16 @@ function capitalize(str: string): string {
 function SeatsPageSkeleton() {
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="space-y-2 rounded-xl border border-border bg-card p-4"
-          >
-            <Skeleton className="h-3.5 w-20" />
-            <Skeleton className="h-7 w-12" />
-          </div>
+      <StatCardGrid cols={4}>
+        {[
+          { label: "Total Seats", icon: Users, tone: "blue" as const },
+          { label: "Used Seats", icon: UserCheck, tone: "emerald" as const },
+          { label: "Available Seats", icon: UserMinus, tone: "blue" as const },
+          { label: "Utilization", icon: TrendingUp, tone: "emerald" as const },
+        ].map(({ label, icon, tone }) => (
+          <StatCard key={label} label={label} value={0} icon={icon} tone={tone} isLoading />
         ))}
-      </div>
+      </StatCardGrid>
 
       <div className="space-y-3 rounded-lg border border-border bg-card p-5">
         <div className="flex justify-between">
@@ -142,36 +141,32 @@ export default function SeatsPage() {
       subtitle="Manage seat allocation and team capacity"
     >
       <div className="space-y-8">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatCardGrid cols={4}>
           <StatCard
             label="Total Seats"
             value={total}
             icon={Users}
-            color="blue"
-            index={0}
+            tone="blue"
           />
           <StatCard
             label="Used Seats"
             value={used}
             icon={UserCheck}
-            color="green"
-            index={1}
+            tone="emerald"
           />
           <StatCard
             label="Available Seats"
             value={available}
             icon={UserMinus}
-            color="cyan"
-            index={2}
+            tone="blue"
           />
           <StatCard
             label="Utilization"
             value={`${utilizationPercent}%`}
             icon={TrendingUp}
-            color={utilizationStatColor(utilizationPercent)}
-            index={3}
+            tone={utilizationStatTone(utilizationPercent)}
           />
-        </div>
+        </StatCardGrid>
 
         <div className="space-y-3 rounded-lg border border-border bg-card p-5">
           <div className="flex items-center justify-between">

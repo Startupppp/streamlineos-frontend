@@ -42,7 +42,7 @@ const TXN_LABELS: Record<
   EXPIRY: { label: "Expiry", sign: "-", color: "text-destructive" },
 };
 
-function BuyPackButton({ packId, onBuy }: { packId: string; onBuy: (id: string) => void }) {
+function BuyPackButton({ packId, onBuy }: { packId: number; onBuy: (id: number) => void }) {
   function handleClick() {
     onBuy(packId);
   }
@@ -69,7 +69,7 @@ export default function AiCreditsPage() {
     void refetch();
   }
 
-  function handleBuyPack(packId: string) {
+  function handleBuyPack(packId: number) {
     router.push(`/billing/checkout?pack=${packId}`);
   }
 

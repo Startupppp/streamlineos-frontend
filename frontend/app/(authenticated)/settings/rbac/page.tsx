@@ -4,39 +4,12 @@ import Link from "next/link";
 import { Shield, Users, Key, TrendingUp, ArrowRight } from "lucide-react";
 import { useRoles, useRolesAnalytics } from "@/hooks/api/roles";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: number | string | undefined;
-  icon: React.ElementType;
-}) {
-  return (
-    <Card>
-      <CardContent className="flex items-center gap-4 p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-          <Icon className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          {value === undefined ? (
-            <Skeleton className="h-7 w-16 mt-1" />
-          ) : (
-            <p className="text-2xl font-bold tabular-nums">{value}</p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function RbacOverviewPage() {
   const { data: roles, isLoading: rolesLoading } = useRoles();
@@ -50,28 +23,36 @@ export default function RbacOverviewPage() {
         eyebrow="Settings"
       >
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatCardGrid cols={4}>
             <StatCard
               label="Total Roles"
-              value={analyticsLoading ? undefined : analytics?.totalRoles}
+              value={analytics?.totalRoles ?? 0}
               icon={Shield}
+              tone="default"
+              isLoading={analyticsLoading}
             />
             <StatCard
               label="Custom Roles"
-              value={analyticsLoading ? undefined : analytics?.customRoles}
+              value={analytics?.customRoles ?? 0}
               icon={Key}
+              tone="violet"
+              isLoading={analyticsLoading}
             />
             <StatCard
               label="Users Assigned"
-              value={analyticsLoading ? undefined : analytics?.usersAssigned}
+              value={analytics?.usersAssigned ?? 0}
               icon={Users}
+              tone="emerald"
+              isLoading={analyticsLoading}
             />
             <StatCard
               label="Recent Changes"
-              value={analyticsLoading ? undefined : analytics?.recentChanges}
+              value={analytics?.recentChanges ?? 0}
               icon={TrendingUp}
+              tone="amber"
+              isLoading={analyticsLoading}
             />
-          </div>
+          </StatCardGrid>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

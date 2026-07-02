@@ -39,7 +39,7 @@ function SearchButton() {
       type="button"
       onClick={handleClick}
       aria-label="Search (⌘K)"
-      className="flex items-center gap-2 h-8 w-full max-w-xs px-3 rounded-lg bg-muted/60 border border-border/60 text-muted-foreground hover:bg-muted hover:border-border transition-colors"
+      className="flex items-center gap-2 h-8 w-full max-w-xs px-3 rounded-lg bg-muted/60 border border-border text-muted-foreground hover:bg-muted hover:border-border transition-colors"
     >
       <Search className="h-4 w-4 shrink-0" />
       <span className="flex-1 text-left text-xs">Search…</span>

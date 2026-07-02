@@ -29,14 +29,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -49,12 +41,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import type { InvoiceStatus, Invoice } from "@/types/invoice";
 import { CreateInvoiceDialog } from "@/features/billing/create-invoice-dialog";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 const STATUS_CONFIG: Record<
   InvoiceStatus,
@@ -70,6 +62,53 @@ const STATUS_CONFIG: Record<
   FAILED: { label: "Failed", variant: "destructive", icon: XCircle },
   VOIDED: { label: "Voided", variant: "outline", icon: Ban },
 };
+
+interface InvoiceActionsCellProps {
+  inv: Invoice;
+  onUpdateStatus: (id: number, status: InvoiceStatus) => void;
+  onDelete: (id: number) => void;
+}
+
+function InvoiceActionsCell({ inv, onUpdateStatus, onDelete }: InvoiceActionsCellProps) {
+  const handleMarkIssued = useCallback(() => onUpdateStatus(inv.id, "ISSUED"), [inv.id, onUpdateStatus]);
+  const handleMarkPaid = useCallback(() => onUpdateStatus(inv.id, "PAID"), [inv.id, onUpdateStatus]);
+  const handleMarkVoided = useCallback(() => onUpdateStatus(inv.id, "VOIDED"), [inv.id, onUpdateStatus]);
+  const handleDelete = useCallback(() => onDelete(inv.id), [inv.id, onDelete]);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem asChild>
+          <Link href={`/billing/invoices/${inv.id}`}>View Detail</Link>
+        </DropdownMenuItem>
+        {inv.status === "DRAFT" && (
+          <DropdownMenuItem onClick={handleMarkIssued}>
+            <Send className="h-3.5 w-3.5 mr-2" /> Mark as Issued
+          </DropdownMenuItem>
+        )}
+        {(inv.status === "ISSUED" || inv.status === "FAILED") && (
+          <DropdownMenuItem onClick={handleMarkPaid}>
+            <Check className="h-3.5 w-3.5 mr-2" /> Mark as Paid
+          </DropdownMenuItem>
+        )}
+        {inv.status !== "PAID" && inv.status !== "VOIDED" && (
+          <DropdownMenuItem onClick={handleMarkVoided} className="text-destructive">
+            <Ban className="h-3.5 w-3.5 mr-2" /> Void
+          </DropdownMenuItem>
+        )}
+        {inv.status !== "PAID" && (
+          <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+            <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export function InvoicesClient() {
   const searchParams = useSearchParams();
@@ -135,6 +174,69 @@ export function InvoicesClient() {
   const handleRetryLoad = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const columns: DataTableColumn<Invoice>[] = [
+    {
+      key: "invoiceNumber",
+      header: "Invoice #",
+      cell: (inv) => <span className="font-mono text-[11px] font-medium">{inv.invoiceNumber}</span>,
+      sortable: true,
+      sortValue: (inv) => inv.invoiceNumber,
+    },
+    {
+      key: "client",
+      header: "Client",
+      cell: (inv) => inv.client?.name ?? "—",
+    },
+    {
+      key: "total",
+      header: "Amount",
+      cell: (inv) => (
+        <span className="font-mono font-semibold tabular-nums">{formatCurrencyFull(inv.total)}</span>
+      ),
+      sortable: true,
+      sortValue: (inv) => inv.total,
+      className: "font-mono tabular-nums",
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (inv) => {
+        const config = STATUS_CONFIG[inv.status];
+        return (
+          <Badge variant={config.variant} className="gap-1 text-[9px] h-4 px-1.5 py-0">
+            <config.icon className="h-3 w-3" />
+            {config.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "dueDate",
+      header: "Due Date",
+      cell: (inv) =>
+        inv.dueDate ? format(new Date(inv.dueDate), "MMM d, yyyy") : "—",
+    },
+    {
+      key: "createdAt",
+      header: "Created",
+      cell: (inv) =>
+        inv.createdAt ? format(new Date(inv.createdAt), "MMM d") : "",
+      className: "text-muted-foreground",
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-10",
+      cell: (inv) => (
+        <InvoiceActionsCell
+          inv={inv}
+          onUpdateStatus={handleUpdateStatus}
+          onDelete={handleDeleteInvoice}
+        />
+      ),
+    },
+  ];
 
   const filtersBar = (
     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -217,193 +319,37 @@ export function InvoicesClient() {
           </Card>
         </div>
 
-        <div className="border border-border rounded-lg overflow-auto h-[calc(100dvh-20rem)] min-h-[320px]">
-          <div className="min-w-[700px]">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-card">
-                <TableRow className="bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Invoice #</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Client</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Amount</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Due Date</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Created</TableHead>
-                  <TableHead className="w-10 px-3 py-2" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  Array.from({ length: 6 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <Skeleton className="h-4 w-24" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-28" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-20" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-5 w-16 rounded-full" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-20" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-14" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-7 w-7 rounded ml-auto" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : isError ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-10">
-                      <div className="flex flex-col items-center justify-center text-center gap-3">
-                        <AlertCircle className="h-8 w-8 text-destructive" />
-                        <p className="text-sm font-medium">
-                          Failed to load invoices
-                        </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleRetryLoad}
-                        >
-                          <RefreshCw className="h-3.5 w-3.5 mr-1" /> Retry
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : invoices.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-10">
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <EmptyDocumentsIllustration className="mb-3 w-28 h-28" />
-                        <p className="text-sm font-medium text-foreground">
-                          No invoices yet
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1 mb-3">
-                          Create your first invoice to get started
-                        </p>
-                        <Button size="sm" onClick={handleOpenCreate}>
-                          <Plus className="h-3.5 w-3.5 mr-1" /> New Invoice
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  invoices.map((inv) => (
-                    <InvoiceTableRow
-                      key={inv.id}
-                      inv={inv}
-                      onUpdateStatus={handleUpdateStatus}
-                      onDelete={handleDeleteInvoice}
-                    />
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+        <DataTable
+          data={invoices}
+          columns={columns}
+          getRowKey={(inv) => inv.id}
+          isLoading={isLoading}
+          emptyState={
+            isError ? (
+              <div className="flex flex-col items-center justify-center text-center gap-3 min-h-[200px]">
+                <AlertCircle className="h-8 w-8 text-destructive" />
+                <p className="text-sm font-medium">Failed to load invoices</p>
+                <Button variant="outline" size="sm" onClick={handleRetryLoad}>
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" /> Retry
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center min-h-[200px] gap-3">
+                <EmptyDocumentsIllustration className="mb-3 w-28 h-28" />
+                <p className="text-sm font-medium text-foreground">No invoices yet</p>
+                <p className="text-xs text-muted-foreground">Create your first invoice to get started</p>
+                <Button size="sm" onClick={handleOpenCreate}>
+                  <Plus className="h-3.5 w-3.5 mr-1" /> New Invoice
+                </Button>
+              </div>
+            )
+          }
+          minWidth="700px"
+          className="h-[calc(100dvh-20rem)] min-h-[320px]"
+        />
 
         <CreateInvoiceDialog open={createOpen} onOpenChange={setCreateOpen} />
       </div>
     </PageWrapper>
-  );
-}
-
-interface InvoiceTableRowProps {
-  inv: Invoice;
-  onUpdateStatus: (id: number, status: InvoiceStatus) => void;
-  onDelete: (id: number) => void;
-}
-
-function InvoiceTableRow({
-  inv,
-  onUpdateStatus,
-  onDelete,
-}: InvoiceTableRowProps) {
-  const config = STATUS_CONFIG[inv.status];
-  const handleMarkIssued = useCallback(
-    () => onUpdateStatus(inv.id, "ISSUED"),
-    [inv.id, onUpdateStatus],
-  );
-  const handleMarkPaid = useCallback(
-    () => onUpdateStatus(inv.id, "PAID"),
-    [inv.id, onUpdateStatus],
-  );
-  const handleMarkVoided = useCallback(
-    () => onUpdateStatus(inv.id, "VOIDED"),
-    [inv.id, onUpdateStatus],
-  );
-  const handleDelete = useCallback(() => onDelete(inv.id), [inv.id, onDelete]);
-
-  return (
-    <TableRow>
-      <TableCell className="font-mono text-xs font-medium">{inv.invoiceNumber}</TableCell>
-      <TableCell>{inv.client?.name ?? "—"}</TableCell>
-      <TableCell className="font-mono font-semibold text-sm">
-        {formatCurrencyFull(inv.total)}
-      </TableCell>
-      <TableCell>
-        <Badge variant={config.variant} className="gap-1 text-xs">
-          <config.icon className="h-3 w-3" />
-          {config.label}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        {inv.dueDate ? format(new Date(inv.dueDate), "MMM d, yyyy") : "—"}
-      </TableCell>
-      <TableCell className="text-muted-foreground text-xs">
-        {inv.createdAt ? format(new Date(inv.createdAt), "MMM d") : ""}
-      </TableCell>
-      <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              aria-label="More options"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link href={`/billing/invoices/${inv.id}`}>View Detail</Link>
-            </DropdownMenuItem>
-            {inv.status === "DRAFT" && (
-              <DropdownMenuItem onClick={handleMarkIssued}>
-                <Send className="h-3.5 w-3.5 mr-2" /> Mark as Issued
-              </DropdownMenuItem>
-            )}
-            {(inv.status === "ISSUED" || inv.status === "FAILED") && (
-              <DropdownMenuItem onClick={handleMarkPaid}>
-                <Check className="h-3.5 w-3.5 mr-2" /> Mark as Paid
-              </DropdownMenuItem>
-            )}
-            {inv.status !== "PAID" && inv.status !== "VOIDED" && (
-              <DropdownMenuItem
-                onClick={handleMarkVoided}
-                className="text-destructive"
-              >
-                <Ban className="h-3.5 w-3.5 mr-2" /> Void
-              </DropdownMenuItem>
-            )}
-            {inv.status !== "PAID" && (
-              <DropdownMenuItem
-                onClick={handleDelete}
-                className="text-destructive"
-              >
-                <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TableCell>
-    </TableRow>
   );
 }
