@@ -3,12 +3,11 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { format, parseISO, addHours, differenceInMinutes } from "date-fns";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -27,7 +26,7 @@ import { EventFormFields } from "./event-form-fields";
 import { EventAttendeesPicker } from "./event-attendees-picker";
 import { useTicketSearch } from "@/hooks/api/projects";
 import type { TicketSearchResult } from "@/hooks/api/projects";
-import { Ticket, X, Search, Loader2 } from "lucide-react";
+import { Ticket, X, Search, Loader2, Maximize2, Users, Link as LinkIcon } from "lucide-react";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
 
@@ -147,13 +146,6 @@ export function EventCreateDialog({
       setForm((prev) => ({ ...prev, attendeeIds: ids }));
     }
   }, [open, isEdit, existingAttendees]);
-
-  const handleSheetOpenChange = useCallback(
-    (v: boolean) => {
-      if (!v) onOpenChange(false);
-    },
-    [onOpenChange],
-  );
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
@@ -398,19 +390,37 @@ export function EventCreateDialog({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={handleSheetOpenChange}>
-        <SheetContent
-          side="right"
-          className={cn("flex flex-col p-0 w-full sm:max-w-[480px]")}
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent
+          showCloseButton={false}
+          className="flex flex-col p-0 w-full max-w-lg rounded-xl overflow-hidden shadow-2xl border bg-card"
         >
-          <SheetHeader className="px-6 border-b shrink-0">
-            <SheetTitle className="text-base font-semibold">
-              {isEdit ? "Edit Event" : "New Calendar Event"}
-            </SheetTitle>
-          </SheetHeader>
+          {/* Header controls (New Event, Sizing controls, Close controls) */}
+          <DialogHeader className="px-6 py-4 border-b flex flex-row items-center justify-between shrink-0 select-none">
+            <DialogTitle className="text-base font-semibold text-foreground">
+              {isEdit ? "Edit Event" : "New Event"}
+            </DialogTitle>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
+                title="Expand"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
+                title="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </DialogHeader>
 
           <ScrollArea className="flex-1 min-h-0">
-            <div className="px-6 space-y-5">
+            <div className="px-6 py-4 space-y-4">
               <EventFormFields
                 title={form.title}
                 description={form.description}
@@ -438,86 +448,104 @@ export function EventCreateDialog({
                 onGenerateMeet={handleGenerateMeet}
               />
 
-              <EventAttendeesPicker
-                members={members}
-                selectedIds={form.attendeeIds}
-                onToggle={toggleAttendee}
-              />
+              {/* Attendees Picker with icon on left */}
+              <div className="flex items-start gap-3">
+                <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
+                <div className="flex-1">
+                  <EventAttendeesPicker
+                    members={members}
+                    selectedIds={form.attendeeIds}
+                    onToggle={toggleAttendee}
+                  />
+                </div>
+              </div>
 
-              <div className="space-y-1.5 pb-2">
-                <p className="text-sm font-medium text-foreground">Linked work item</p>
-                {displayLinkedKey ? (
-                  <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
-                    <Ticket className="h-3.5 w-3.5 text-violet-600 shrink-0" />
-                    <span className="font-mono text-[11px] text-violet-600 shrink-0">
-                      {displayLinkedKey}
-                    </span>
-                    {displayLinkedTitle && (
-                      <span className="text-sm truncate flex-1">{displayLinkedTitle}</span>
-                    )}
+              {/* Linked Work item with icon on left */}
+              <div className="flex items-start gap-3 pb-2">
+                <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
+                <div className="flex-1 space-y-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground">Linked work item</p>
+                  {displayLinkedKey ? (
+                    <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
+                      <Ticket className="h-3.5 w-3.5 text-violet-600 shrink-0" />
+                      <span className="font-mono text-[11px] text-violet-600 shrink-0">
+                        {displayLinkedKey}
+                      </span>
+                      {displayLinkedTitle && (
+                        <span className="text-xs truncate flex-1">{displayLinkedTitle}</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleRemoveLinkedTicket}
+                        className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors shrink-0"
+                        aria-label="Remove linked ticket"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
                     <button
                       type="button"
-                      onClick={handleRemoveLinkedTicket}
-                      className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors shrink-0"
-                      aria-label="Remove linked ticket"
+                      onClick={handleOpenTicketPicker}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-2 w-full transition-colors hover:border-violet-400"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <Ticket className="h-3.5 w-3.5" />
+                      Link a ticket…
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleOpenTicketPicker}
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-2 w-full transition-colors hover:border-violet-400"
-                  >
-                    <Ticket className="h-3.5 w-3.5" />
-                    Link a ticket…
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </ScrollArea>
 
-          <SheetFooter className="px-6 border-t shrink-0 flex-row gap-2 justify-end">
+          {/* Action Footer matches Google Calendar style */}
+          <div className="px-6 py-3 border-t bg-muted/20 shrink-0 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button
+                className="h-8 text-xs px-4 bg-violet-600 hover:bg-violet-700 text-white font-medium"
+                onClick={handleSave}
+                disabled={isPending || !form.title.trim()}
+              >
+                {isPending
+                  ? isEdit
+                    ? "Saving..."
+                    : "Creating..."
+                  : "Save"}
+              </Button>
+              <Button
+                variant="outline"
+                className="h-8 text-xs px-3 font-normal"
+                disabled={isPending}
+              >
+                More Options
+              </Button>
+            </div>
             <Button
               variant="outline"
-              className="flex-1"
+              className="h-8 text-xs px-3 font-normal text-muted-foreground hover:text-foreground"
               onClick={handleClose}
               disabled={isPending}
             >
-              Cancel
+              Discard
             </Button>
-            <Button
-              className="flex-1"
-              onClick={handleSave}
-              disabled={isPending || !form.title.trim()}
-            >
-              {isPending
-                ? isEdit
-                  ? "Saving..."
-                  : "Creating..."
-                : isEdit
-                  ? "Save Changes"
-                  : "Create Event"}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <Sheet open={ticketPickerOpen} onOpenChange={setTicketPickerOpen}>
-        <SheetContent side="bottom" className="h-[60vh] p-0 flex flex-col">
-          <SheetHeader className="px-6 py-4 border-b shrink-0">
-            <SheetTitle>Link a ticket</SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 min-h-0 px-6 py-5 flex flex-col">
+      <Dialog open={ticketPickerOpen} onOpenChange={setTicketPickerOpen}>
+        <DialogContent className="max-w-md p-0 flex flex-col h-[50vh] overflow-hidden rounded-xl">
+          <DialogHeader className="px-6 py-4 border-b shrink-0">
+            <DialogTitle className="text-base font-semibold">Link a ticket</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 px-6 py-4 flex flex-col">
             <TicketPickerContent
               q={ticketSearchQ}
               onQChange={setTicketSearchQ}
               onSelect={handleTicketSelect}
             />
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -541,17 +569,17 @@ function TicketPickerContent({
           value={q}
           onChange={(e) => onQChange(e.target.value)}
           placeholder="Search by ticket key or title…"
-          className="w-full pl-8 pr-3 py-2 text-sm border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+          className="w-full pl-8 pr-3 py-2 text-xs border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-violet-500/30"
         />
       </div>
       <div className="overflow-y-auto space-y-1 flex-1">
         {isLoading ? (
-          <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 py-4 text-xs text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Searching…
           </div>
         ) : tickets.length === 0 && q ? (
-          <div className="py-4 text-sm text-muted-foreground">No tickets found</div>
+          <div className="py-4 text-xs text-muted-foreground">No tickets found</div>
         ) : (
           tickets.map((ticket) => (
             <button
@@ -560,10 +588,10 @@ function TicketPickerContent({
               onClick={() => onSelect(ticket)}
               className="w-full flex items-start gap-2.5 px-3 py-2 rounded-lg text-left hover:bg-muted/40 transition-colors"
             >
-              <span className="font-mono text-[11px] text-muted-foreground shrink-0 mt-0.5">
+              <span className="font-mono text-[10px] text-muted-foreground shrink-0 mt-0.5">
                 {ticket.projectKey}-{ticket.ticketNumber}
               </span>
-              <span className="text-sm flex-1 min-w-0 truncate">{ticket.title}</span>
+              <span className="text-xs flex-1 min-w-0 truncate">{ticket.title}</span>
             </button>
           ))
         )}
