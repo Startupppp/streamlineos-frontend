@@ -74,7 +74,7 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
-const EMPTY: FormValues = { name: "", code: "", businessUnitId: "", managerUserId: "", city: "", state: "", country: "", address: "", phone: "", email: "" };
+const EMPTY: FormValues = { name: "", code: "", businessUnitId: NO_BUSINESS_UNIT, managerUserId: "", city: "", state: "", country: "", address: "", phone: "", email: "" };
 
 function BranchForm({
   defaultValues,
@@ -130,14 +130,10 @@ function BranchForm({
           <FormField
             control={form.control}
             name="businessUnitId"
-            render={({ field }) => {
-              function handleBusinessUnitChange(value: string) {
-                field.onChange(value === NO_BUSINESS_UNIT ? "" : value);
-              }
-              return (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Business Unit</FormLabel>
-                <Select value={field.value ? field.value : NO_BUSINESS_UNIT} onValueChange={handleBusinessUnitChange}>
+                <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="None" />
@@ -154,8 +150,7 @@ function BranchForm({
                 </Select>
                 <FormMessage />
               </FormItem>
-              );
-            }}
+            )}
           />
           <FormField
             control={form.control}
@@ -287,7 +282,7 @@ export default function OrgBranchesPage() {
         {
           name: values.name,
           code: values.code.toUpperCase(),
-          businessUnitId: values.businessUnitId || undefined,
+          businessUnitId: values.businessUnitId === NO_BUSINESS_UNIT ? undefined : values.businessUnitId,
           managerUserId: values.managerUserId || undefined,
           city: values.city || undefined,
           state: values.state || undefined,
@@ -317,7 +312,7 @@ export default function OrgBranchesPage() {
           id: editing.id,
           name: values.name,
           code: values.code.toUpperCase(),
-          businessUnitId: values.businessUnitId || undefined,
+          businessUnitId: values.businessUnitId === NO_BUSINESS_UNIT ? undefined : values.businessUnitId,
           managerUserId: values.managerUserId || undefined,
           city: values.city || undefined,
           state: values.state || undefined,
@@ -512,7 +507,7 @@ export default function OrgBranchesPage() {
                 defaultValues={{
                   name: editing.name,
                   code: editing.code,
-                  businessUnitId: editing.businessUnitId ?? "",
+                  businessUnitId: editing.businessUnitId ?? NO_BUSINESS_UNIT,
                   managerUserId: editing.managerUserId ?? "",
                   city: editing.city ?? "",
                   state: editing.state ?? "",

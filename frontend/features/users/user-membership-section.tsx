@@ -43,13 +43,13 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
     branchId: string;
     departmentId: string;
     managerUserId: string;
-  }>({ branchId: "", departmentId: "", managerUserId: "" });
+  }>({ branchId: NO_BRANCH, departmentId: NO_DEPARTMENT, managerUserId: NO_MANAGER });
 
   function handleEdit() {
     setDraft({
-      branchId: membership?.branchId ? String(membership.branchId) : "",
-      departmentId: membership?.departmentId ? String(membership.departmentId) : "",
-      managerUserId: membership?.managerUserId ?? "",
+      branchId: membership?.branchId ? String(membership.branchId) : NO_BRANCH,
+      departmentId: membership?.departmentId ? String(membership.departmentId) : NO_DEPARTMENT,
+      managerUserId: membership?.managerUserId ?? NO_MANAGER,
     });
     setIsEditing(true);
   }
@@ -59,9 +59,9 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
       {
         userId,
         data: {
-          branchId: draft.branchId ? Number(draft.branchId) : null,
-          departmentId: draft.departmentId ? Number(draft.departmentId) : null,
-          managerUserId: draft.managerUserId || null,
+          branchId: draft.branchId !== NO_BRANCH ? Number(draft.branchId) : null,
+          departmentId: draft.departmentId !== NO_DEPARTMENT ? Number(draft.departmentId) : null,
+          managerUserId: draft.managerUserId !== NO_MANAGER ? draft.managerUserId : null,
         },
       },
       {
@@ -89,13 +89,13 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
   const managerOptions = membersData?.data ?? [];
 
   function handleBranchChange(v: string) {
-    setDraft((p) => ({ ...p, branchId: v === NO_BRANCH ? "" : v }));
+    setDraft((p) => ({ ...p, branchId: v }));
   }
   function handleDepartmentChange(v: string) {
-    setDraft((p) => ({ ...p, departmentId: v === NO_DEPARTMENT ? "" : v }));
+    setDraft((p) => ({ ...p, departmentId: v }));
   }
   function handleManagerChange(v: string) {
-    setDraft((p) => ({ ...p, managerUserId: v === NO_MANAGER ? "" : v }));
+    setDraft((p) => ({ ...p, managerUserId: v }));
   }
 
   const rows: MembershipRow[] = [
@@ -128,7 +128,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs">
             <GitBranch className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <Select value={draft.branchId || NO_BRANCH} onValueChange={handleBranchChange}>
+            <Select value={draft.branchId} onValueChange={handleBranchChange}>
               <SelectTrigger className="h-7 text-xs flex-1">
                 <SelectValue placeholder="Select branch" />
               </SelectTrigger>
@@ -142,7 +142,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           </div>
           <div className="flex items-center gap-2 text-xs">
             <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <Select value={draft.departmentId || NO_DEPARTMENT} onValueChange={handleDepartmentChange}>
+            <Select value={draft.departmentId} onValueChange={handleDepartmentChange}>
               <SelectTrigger className="h-7 text-xs flex-1">
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
@@ -156,7 +156,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           </div>
           <div className="flex items-center gap-2 text-xs">
             <Network className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <Select value={draft.managerUserId || NO_MANAGER} onValueChange={handleManagerChange}>
+            <Select value={draft.managerUserId} onValueChange={handleManagerChange}>
               <SelectTrigger className="h-7 text-xs flex-1">
                 <SelectValue placeholder="Select manager" />
               </SelectTrigger>

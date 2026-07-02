@@ -54,7 +54,7 @@ const eventSchema = z.object({
   endTime: z.string().optional(),
   category: z.enum(["meeting", "call", "demo", "general", "other"]),
   color: z.enum(["blue", "green", "red", "yellow", "purple"]),
-  entityType: z.enum(["LEAD", "DEAL", "CONTACT", ""]).optional(),
+  entityType: z.enum(["LEAD", "DEAL", "CONTACT", "", "none"]).optional(),
   entityId: z.string().optional(),
   attendeeIds: z.array(z.string()),
 });
@@ -91,7 +91,7 @@ function buildDefaults(date?: Date | null): EventFormValues {
     endTime: format(end, "HH:mm"),
     category: "meeting",
     color: "blue",
-    entityType: "",
+    entityType: NO_ENTITY_TYPE,
     entityId: "",
     attendeeIds: [],
   };
@@ -111,7 +111,7 @@ function buildEditValues(event: CalendarListItem): EventFormValues {
     endTime: format(end, "HH:mm"),
     category: (event.category as EventFormValues["category"]) ?? "meeting",
     color: (event.color as EventFormValues["color"]) ?? "blue",
-    entityType: (event.entityType as EventFormValues["entityType"]) ?? "",
+    entityType: (event.entityType as EventFormValues["entityType"]) ?? NO_ENTITY_TYPE,
     entityId: event.entityId ?? "",
     attendeeIds: [],
   };
@@ -171,7 +171,7 @@ export function CrmEventDialog({
   }, [open, isEdit, existingAttendees, form]);
 
   useEffect(() => {
-    if (!watchedEntityType) {
+    if (!watchedEntityType || watchedEntityType === NO_ENTITY_TYPE) {
       form.setValue("entityId", "");
     }
   }, [watchedEntityType, form]);
@@ -232,7 +232,7 @@ export function CrmEventDialog({
       allDay: values.allDay,
       color: values.color,
       category: values.category,
-      entityType: values.entityType || undefined,
+      entityType: (values.entityType && values.entityType !== NO_ENTITY_TYPE) ? values.entityType : undefined,
       entityId: values.entityId || undefined,
       attendeeIds: values.attendeeIds,
     };
@@ -476,14 +476,10 @@ export function CrmEventDialog({
                 <Controller
                   control={form.control}
                   name="entityType"
-                  render={({ field }) => {
-                    function handleEntityTypeChange(value: string) {
-                      field.onChange(value === NO_ENTITY_TYPE ? "" : value);
-                    }
-                    return (
+                  render={({ field }) => (
                     <Select
-                      value={field.value ? field.value : NO_ENTITY_TYPE}
-                      onValueChange={handleEntityTypeChange}
+                      value={field.value}
+                      onValueChange={field.onChange}
                     >
                       <SelectTrigger className="h-9 bg-white">
                         <SelectValue placeholder="None" />
@@ -495,12 +491,11 @@ export function CrmEventDialog({
                         <SelectItem value="CONTACT">Contact</SelectItem>
                       </SelectContent>
                     </Select>
-                    );
-                  }}
+                  )}
                 />
               </div>
 
-              {watchedEntityType && (
+              {watchedEntityType && watchedEntityType !== NO_ENTITY_TYPE && (
                 <div className="space-y-1.5">
                   <Label htmlFor="entityId" className="text-xs text-slate-500">
                     Entity ID

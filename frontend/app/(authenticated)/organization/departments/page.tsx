@@ -84,7 +84,7 @@ function DeptForm({
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValues ?? { name: "", code: "", branchId: "", headUserId: "", description: "" },
+    defaultValues: defaultValues ?? { name: "", code: "", branchId: NO_BRANCH, headUserId: "", description: "" },
   });
 
   return (
@@ -125,14 +125,10 @@ function DeptForm({
           <FormField
             control={form.control}
             name="branchId"
-            render={({ field }) => {
-              function handleBranchChange(value: string) {
-                field.onChange(value === NO_BRANCH ? "" : value);
-              }
-              return (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Branch</FormLabel>
-                <Select value={field.value ? field.value : NO_BRANCH} onValueChange={handleBranchChange}>
+                <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="None" />
@@ -149,8 +145,7 @@ function DeptForm({
                 </Select>
                 <FormMessage />
               </FormItem>
-              );
-            }}
+            )}
           />
         </div>
         <FormField
@@ -214,7 +209,7 @@ export default function OrgDepartmentsPage() {
         {
           name: values.name,
           code: values.code.toUpperCase(),
-          branchId: values.branchId || undefined,
+          branchId: values.branchId === NO_BRANCH ? undefined : values.branchId,
           headUserId: values.headUserId || undefined,
           description: values.description || undefined,
         },
@@ -238,7 +233,7 @@ export default function OrgDepartmentsPage() {
           id: editing.id,
           name: values.name,
           code: values.code.toUpperCase(),
-          branchId: values.branchId || undefined,
+          branchId: values.branchId === NO_BRANCH ? undefined : values.branchId,
           headUserId: values.headUserId || undefined,
           description: values.description || undefined,
         },
@@ -428,7 +423,7 @@ export default function OrgDepartmentsPage() {
                 defaultValues={{
                   name: editing.name,
                   code: editing.code,
-                  branchId: editing.branchId ?? "",
+                  branchId: editing.branchId ?? NO_BRANCH,
                   headUserId: editing.headUserId ?? "",
                   description: editing.description ?? "",
                 }}

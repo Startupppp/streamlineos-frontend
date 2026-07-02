@@ -232,7 +232,7 @@ export default function QuoteDetailPage({
   const updateStatus = useUpdateQuoteStatus();
   const deleteQuote = useDeleteQuote();
 
-  const quote = data?.quote;
+  const quote = data ?? null;
 
   const handleBack = useCallback(() => router.push("/crm/quotes"), [router]);
   const handleRetry = useCallback(() => void refetch(), [refetch]);

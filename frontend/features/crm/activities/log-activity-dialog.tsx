@@ -24,7 +24,7 @@ import type { LogCrmActivityInput, CrmActivityType, CrmActivityEntityType } from
 
 const NO_ENTITY_TYPE = "none";
 
-const ENTITY_TYPE_VALUES = ["LEAD", "DEAL", "CONTACT", ""] as const;
+const ENTITY_TYPE_VALUES = ["LEAD", "DEAL", "CONTACT", "", "none"] as const;
 type EntityTypeFieldValue = (typeof ENTITY_TYPE_VALUES)[number];
 
 const logActivitySchema = z.object({
@@ -95,7 +95,7 @@ export function LogActivityDialog({
         type: "CALL",
         title: "",
         notes: "",
-        entityType: "",
+        entityType: NO_ENTITY_TYPE,
         entityId: "",
         dueDate: "",
       }}
@@ -151,16 +151,12 @@ export function LogActivityDialog({
             <FormField
               control={form.control}
               name="entityType"
-              render={({ field }) => {
-                function handleEntityTypeChange(value: string) {
-                  field.onChange(value === NO_ENTITY_TYPE ? "" : value);
-                }
-                return (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Related To</FormLabel>
                   <Select
-                    value={field.value ? field.value : NO_ENTITY_TYPE}
-                    onValueChange={handleEntityTypeChange}
+                    value={field.value}
+                    onValueChange={field.onChange}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -176,8 +172,7 @@ export function LogActivityDialog({
                   </Select>
                   <FormMessage />
                 </FormItem>
-                );
-              }}
+              )}
             />
 
             <FormField

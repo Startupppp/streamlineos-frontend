@@ -2,13 +2,24 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { Quote, QuoteFilters, QuoteStatus, CreateQuoteInput, UpdateQuoteInput } from "@/types/crm/quotes";
+import type {
+  Quote,
+  QuoteListItem,
+  QuoteFilters,
+  QuoteStatus,
+  CreateQuoteInput,
+  UpdateQuoteInput,
+} from "@/types/crm/quotes";
+
+export interface QuoteListResponse {
+  quotes: QuoteListItem[];
+  total: number;
+}
 
 export function useQuotes(filters?: QuoteFilters) {
   return useQuery({
     queryKey: ["quotes", "list", filters] as const,
-    queryFn: () =>
-      apiClient.get<{ quotes: Quote[]; total: number }>("/crm/quotes", filters as Record<string, unknown>),
+    queryFn: () => apiClient.get<QuoteListResponse>("/quotes", filters as Record<string, unknown>),
     staleTime: 2 * 60_000,
   });
 }
@@ -16,7 +27,7 @@ export function useQuotes(filters?: QuoteFilters) {
 export function useQuoteDetail(id: number) {
   return useQuery({
     queryKey: ["quotes", "detail", id] as const,
-    queryFn: () => apiClient.get<{ quote: Quote }>(`/crm/quotes/${id}`),
+    queryFn: () => apiClient.get<Quote>(`/quotes/${id}`),
     enabled: id > 0,
     staleTime: 2 * 60_000,
   });
@@ -25,25 +36,31 @@ export function useQuoteDetail(id: number) {
 export function useDealQuotes(dealId: number) {
   return useQuery({
     queryKey: ["quotes", "deal", dealId] as const,
-    queryFn: () =>
-      apiClient.get<{ quotes: Quote[] }>(`/crm/deals/${dealId}/quotes`),
+    queryFn: () => apiClient.get<QuoteListResponse>("/quotes", { dealId, pageSize: 100 }),
     enabled: dealId > 0,
     staleTime: 2 * 60_000,
   });
+}
+
+function invalidateQuoteCaches(
+  qc: ReturnType<typeof useQueryClient>,
+  vars: { id?: number; dealId?: number },
+) {
+  void qc.invalidateQueries({ queryKey: ["quotes", "list"] });
+  if (vars.id !== undefined) {
+    void qc.invalidateQueries({ queryKey: ["quotes", "detail", vars.id] });
+  }
+  if (vars.dealId !== undefined) {
+    void qc.invalidateQueries({ queryKey: ["quotes", "deal", vars.dealId] });
+  }
 }
 
 export function useCreateQuote() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["quotes", "create"],
-    mutationFn: (input: CreateQuoteInput) =>
-      apiClient.post<{ quote: Quote }>("/crm/quotes", input),
-    onSuccess: (_data, vars) => {
-      void qc.invalidateQueries({ queryKey: ["quotes", "list"] });
-      if (vars.dealId !== undefined) {
-        void qc.invalidateQueries({ queryKey: ["quotes", "deal", vars.dealId] });
-      }
-    },
+    mutationFn: (input: CreateQuoteInput) => apiClient.post<Quote>("/quotes", input),
+    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { dealId: vars.dealId }),
   });
 }
 
@@ -52,14 +69,8 @@ export function useUpdateQuote() {
   return useMutation({
     mutationKey: ["quotes", "update"],
     mutationFn: ({ id, dealId: _dealId, ...input }: UpdateQuoteInput & { dealId?: number }) =>
-      apiClient.patch<{ quote: Quote }>(`/crm/quotes/${id}`, input),
-    onSuccess: (_data, vars) => {
-      void qc.invalidateQueries({ queryKey: ["quotes", "list"] });
-      void qc.invalidateQueries({ queryKey: ["quotes", "detail", vars.id] });
-      if (vars.dealId !== undefined) {
-        void qc.invalidateQueries({ queryKey: ["quotes", "deal", vars.dealId] });
-      }
-    },
+      apiClient.patch<Quote>(`/quotes/${id}`, input),
+    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
 
@@ -67,15 +78,27 @@ export function useUpdateQuoteStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["quotes", "updateStatus"],
-    mutationFn: ({ id, status }: { id: number; status: QuoteStatus; dealId?: number }) =>
-      apiClient.patch<{ quote: Quote }>(`/crm/quotes/${id}/status`, { status }),
-    onSuccess: (_data, vars) => {
-      void qc.invalidateQueries({ queryKey: ["quotes", "list"] });
-      void qc.invalidateQueries({ queryKey: ["quotes", "detail", vars.id] });
-      if (vars.dealId) {
-        void qc.invalidateQueries({ queryKey: ["quotes", "deal", vars.dealId] });
-      }
-    },
+    mutationFn: ({
+      id,
+      status,
+      rejectionReason,
+    }: {
+      id: number;
+      status: QuoteStatus;
+      rejectionReason?: string;
+      dealId?: number;
+    }) => apiClient.patch<Quote>(`/quotes/${id}`, { status, rejectionReason }),
+    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+  });
+}
+
+export function useSendQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["quotes", "send"],
+    mutationFn: ({ id }: { id: number; dealId?: number }) =>
+      apiClient.post<Quote>(`/quotes/${id}/send`),
+    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
 
@@ -84,12 +107,11 @@ export function useDeleteQuote() {
   return useMutation({
     mutationKey: ["quotes", "delete"],
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
-      apiClient.delete<{ success: boolean }>(`/crm/quotes/${id}`),
-    onSuccess: (_data, vars) => {
-      void qc.invalidateQueries({ queryKey: ["quotes", "list"] });
-      if (vars.dealId) {
-        void qc.invalidateQueries({ queryKey: ["quotes", "deal", vars.dealId] });
-      }
-    },
+      apiClient.delete<{ success: boolean }>(`/quotes/${id}`),
+    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { dealId: vars.dealId }),
   });
+}
+
+export function downloadQuotesCsv(status?: QuoteStatus): Promise<Blob> {
+  return apiClient.download("/quotes/export", status ? { status } : undefined);
 }

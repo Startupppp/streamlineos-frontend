@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const NO_HIRING_FLOW = "none";
+
 export const INTERVIEW_ROUND_OPTIONS = [
   { value: "HR_ROUND", label: "HR Round" },
   { value: "TECHNICAL_ROUND", label: "Technical Round" },

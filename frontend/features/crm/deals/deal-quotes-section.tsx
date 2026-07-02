@@ -39,7 +39,7 @@ import {
   useUpdateQuoteStatus,
   useDeleteQuote,
 } from "@/hooks/api/crm/quotes";
-import type { Quote, QuoteStatus } from "@/types/crm/quotes";
+import type { QuoteListItem, QuoteStatus } from "@/types/crm/quotes";
 
 const STATUS_CONFIG: Record<
   QuoteStatus,
@@ -96,7 +96,7 @@ function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
 }
 
 interface QuoteRowProps {
-  quote: Quote;
+  quote: QuoteListItem;
   dealId: number;
   onDeleteRequest: (id: number) => void;
 }
@@ -308,7 +308,7 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
           ) : (
             <div className="space-y-2">
               <AnimatePresence>
-                {quotes.map((quote: Quote, idx: number) => (
+                {quotes.map((quote: QuoteListItem, idx: number) => (
                   <motion.div
                     key={quote.id}
                     initial={{ opacity: 0, y: 8 }}

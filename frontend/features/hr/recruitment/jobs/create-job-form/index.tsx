@@ -11,13 +11,12 @@ import { useCreateJobPosting, useUpdateJobPosting } from "@/hooks/api/hr/recruit
 import { useHrDepartments } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { FormSidebar } from "./sidebar";
-import {
-  Section1, Section2, Section3, Section4, Section5,
-} from "./sections-1-5";
-import {
-  Section6, Section7, Section8, Section9, Section10,
-} from "./sections-6-10";
-import { createJobFormSchema, SECTION_KEYS, type CreateJobFormValues } from "./schema";
+import { Section1, Section2 } from "./job-basics-sections";
+import { Section3, Section4, Section5 } from "./compensation-qualifications-sections";
+import { Section6 } from "./job-description-sections";
+import { Section7, Section8 } from "./hiring-pipeline-sections";
+import { Section9, Section10 } from "./publishing-settings-sections";
+import { createJobFormSchema, SECTION_KEYS, NO_HIRING_FLOW, type CreateJobFormValues } from "./schema";
 import { parseJobToFormValues } from "./parse-job";
 import type { JobPosting } from "@/types/hr/recruitment";
 import { cn } from "@/lib/utils";
@@ -94,6 +93,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
       referralEnabled: true,
       approvalRequired: false,
       status: "DRAFT",
+      hiringFlowId: NO_HIRING_FLOW,
       ...parsed,
     },
   });

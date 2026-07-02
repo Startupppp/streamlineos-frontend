@@ -85,7 +85,7 @@ function TeamForm({
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", code: "", departmentId: "", leadUserId: "", description: "", capacity: "", ...defaultValues },
+    defaultValues: { name: "", code: "", departmentId: NO_DEPARTMENT, leadUserId: "", description: "", capacity: "", ...defaultValues },
   });
 
   return (
@@ -140,16 +140,12 @@ function TeamForm({
         <FormField
           control={form.control}
           name="departmentId"
-          render={({ field }) => {
-            function handleDepartmentChange(value: string) {
-              field.onChange(value === NO_DEPARTMENT ? "" : value);
-            }
-            return (
+          render={({ field }) => (
               <FormItem>
                 <FormLabel>Department</FormLabel>
                 <Select
-                  value={field.value ? field.value : NO_DEPARTMENT}
-                  onValueChange={handleDepartmentChange}
+                  value={field.value}
+                  onValueChange={field.onChange}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -167,8 +163,7 @@ function TeamForm({
                 </Select>
                 <FormMessage />
               </FormItem>
-            );
-          }}
+            )}
         />
         <FormField
           control={form.control}
@@ -231,7 +226,7 @@ export default function OrgTeamsPage() {
         {
           name: values.name,
           code: values.code.toUpperCase(),
-          departmentId: values.departmentId || undefined,
+          departmentId: values.departmentId === NO_DEPARTMENT ? undefined : values.departmentId,
           leadUserId: values.leadUserId || undefined,
           description: values.description || undefined,
           capacity: values.capacity ? Number(values.capacity) : undefined,
@@ -256,7 +251,7 @@ export default function OrgTeamsPage() {
           id: editing.id,
           name: values.name,
           code: values.code.toUpperCase(),
-          departmentId: values.departmentId || undefined,
+          departmentId: values.departmentId === NO_DEPARTMENT ? undefined : values.departmentId,
           leadUserId: values.leadUserId || undefined,
           description: values.description || undefined,
           capacity: values.capacity ? Number(values.capacity) : undefined,
@@ -451,7 +446,7 @@ export default function OrgTeamsPage() {
                 defaultValues={{
                   name: editing.name,
                   code: editing.code,
-                  departmentId: editing.departmentId ?? "",
+                  departmentId: editing.departmentId ?? NO_DEPARTMENT,
                   leadUserId: editing.leadUserId ?? "",
                   description: editing.description ?? "",
                   capacity: editing.capacity != null ? String(editing.capacity) : "",

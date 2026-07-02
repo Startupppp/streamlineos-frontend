@@ -86,7 +86,7 @@ function CreateCategoryForm({
 
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
-    defaultValues: { name: "", description: "", parentId: "" },
+    defaultValues: { name: "", description: "", parentId: NO_PARENT },
   });
 
   async function onSubmit(values: CategoryFormValues): Promise<void> {
@@ -94,7 +94,7 @@ function CreateCategoryForm({
       await createMutation.mutateAsync({
         name: values.name,
         description: values.description || undefined,
-        parentCategoryId: values.parentId ? Number(values.parentId) : undefined,
+        parentCategoryId: values.parentId === NO_PARENT ? undefined : Number(values.parentId),
       });
       toast.success(`Category "${values.name}" created`);
       form.reset();
@@ -134,7 +134,7 @@ function CreateCategoryForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None (top-level)</SelectItem>
+                    <SelectItem value={NO_PARENT}>None (top-level)</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={String(cat.id)}>
                         {cat.name}
@@ -190,7 +190,7 @@ function EditCategorySheet({
     resolver: zodResolver(editCategorySchema),
     defaultValues: {
       name: category.name,
-      parentId: category.parentCategoryId != null ? String(category.parentCategoryId) : "",
+      parentId: category.parentCategoryId != null ? String(category.parentCategoryId) : NO_PARENT,
       description: category.description ?? "",
     },
   });
@@ -205,7 +205,7 @@ function EditCategorySheet({
         categoryId: category.id,
         data: {
           name: values.name,
-          parentCategoryId: values.parentId ? Number(values.parentId) : null,
+          parentCategoryId: values.parentId === NO_PARENT ? null : Number(values.parentId),
           description: values.description || null,
         },
       });
@@ -257,7 +257,7 @@ function EditCategorySheet({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None (top-level)</SelectItem>
+                      <SelectItem value={NO_PARENT}>None (top-level)</SelectItem>
                       {availableParents.map((cat) => (
                         <SelectItem key={cat.id} value={String(cat.id)}>
                           {cat.name}

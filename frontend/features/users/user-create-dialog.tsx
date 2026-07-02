@@ -72,7 +72,7 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
 
   const form = useForm<CreateUserValues>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { email: "", role: "MEMBER", sendInvite: true },
+    defaultValues: { email: "", role: "MEMBER", sendInvite: true, departmentId: NO_DEPARTMENT, branchId: NO_BRANCH },
   });
 
   const sendInvite = form.watch("sendInvite");
@@ -92,8 +92,8 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
         sendInvite: values.sendInvite,
         designation: values.designation || undefined,
         phone: values.phone || undefined,
-        departmentId: toIntOrUndefined(values.departmentId),
-        branchId: toIntOrUndefined(values.branchId),
+        departmentId: values.departmentId === NO_DEPARTMENT ? undefined : toIntOrUndefined(values.departmentId),
+        branchId: values.branchId === NO_BRANCH ? undefined : toIntOrUndefined(values.branchId),
       },
       {
         onSuccess: () => {
@@ -241,16 +241,12 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
                   <FormField
                     control={form.control}
                     name="departmentId"
-                    render={({ field }) => {
-                      function handleDepartmentChange(v: string) {
-                        field.onChange(v === NO_DEPARTMENT ? undefined : v);
-                      }
-                      return (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Department</FormLabel>
                         <Select
-                          value={field.value ? field.value : NO_DEPARTMENT}
-                          onValueChange={handleDepartmentChange}
+                          value={field.value}
+                          onValueChange={field.onChange}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -268,23 +264,18 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
                         </Select>
                         <FormMessage />
                       </FormItem>
-                      );
-                    }}
+                    )}
                   />
 
                   <FormField
                     control={form.control}
                     name="branchId"
-                    render={({ field }) => {
-                      function handleBranchChange(v: string) {
-                        field.onChange(v === NO_BRANCH ? undefined : v);
-                      }
-                      return (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Branch</FormLabel>
                         <Select
-                          value={field.value ? field.value : NO_BRANCH}
-                          onValueChange={handleBranchChange}
+                          value={field.value}
+                          onValueChange={field.onChange}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -302,8 +293,7 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
                         </Select>
                         <FormMessage />
                       </FormItem>
-                      );
-                    }}
+                    )}
                   />
                 </div>
               </>

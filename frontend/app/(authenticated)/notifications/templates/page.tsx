@@ -69,7 +69,7 @@ const templateSchema = z.object({
   templateKey: z.string().min(1).regex(/^[a-z0-9_.-]+$/, "Lowercase letters, numbers, dashes, dots only"),
   name: z.string().min(1, "Name is required"),
   channel: z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "SLACK", "TEAMS", "WEBHOOK"]),
-  category: z.enum(["SECURITY", "CRM", "HRMS", "BILLING", "AI", "PROJECTS", "WORKFLOW", "MARKETING", "SYSTEM"]).optional(),
+  category: z.enum(["SECURITY", "CRM", "HRMS", "BILLING", "AI", "PROJECTS", "WORKFLOW", "MARKETING", "SYSTEM", "none"]).optional(),
   locale: z.string().min(1),
   subject: z.string().optional(),
   body: z.string().min(1, "Body is required"),
@@ -97,7 +97,7 @@ function TemplateSheet({
       templateKey: template?.templateKey ?? "",
       name: template?.name ?? "",
       channel: (template?.channel ?? "IN_APP") as NotificationChannel,
-      category: template?.category ?? undefined,
+      category: template?.category ?? NO_CATEGORY,
       locale: template?.locale ?? "en",
       subject: template?.subject ?? "",
       body: template?.body ?? "",
@@ -109,7 +109,7 @@ function TemplateSheet({
     const variables = values.variables
       ? values.variables.split(",").map((v) => v.trim()).filter(Boolean)
       : [];
-    const payload = { ...values, variables, subject: values.subject || undefined };
+    const payload = { ...values, variables, subject: values.subject || undefined, category: values.category === NO_CATEGORY ? undefined : values.category };
 
     if (isEdit && template) {
       update.mutate(
@@ -196,14 +196,10 @@ function TemplateSheet({
               <FormField
                 control={form.control}
                 name="category"
-                render={({ field }) => {
-                  function handleCategoryChange(value: string) {
-                    field.onChange(value === NO_CATEGORY ? undefined : value);
-                  }
-                  return (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select value={field.value ? field.value : NO_CATEGORY} onValueChange={handleCategoryChange}>
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                       </FormControl>
@@ -216,8 +212,7 @@ function TemplateSheet({
                     </Select>
                     <FormMessage />
                   </FormItem>
-                  );
-                }}
+                )}
               />
             </div>
             <FormField

@@ -15,6 +15,7 @@ import {
   XCircle,
   Trash2,
   FileText,
+  Download,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -55,10 +56,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState, SkeletonTable } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useQuotes, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
+import { downloadQuotesCsv } from "@/hooks/api/crm/quotes";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { Quote, QuoteStatus } from "@/types/crm/quotes";
+import type { QuoteListItem, QuoteStatus } from "@/types/crm/quotes";
 
 const PAGE_SIZE = 20;
 
@@ -78,6 +80,10 @@ const STATUS_BADGE_CLASSES: Record<QuoteStatus, string> = {
   EXPIRED: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
+function isQuoteStatus(value: string): value is QuoteStatus {
+  return value in STATUS_LABELS;
+}
+
 function formatCurrency(amount: string, currency: string) {
   const num = parseFloat(amount);
   if (isNaN(num)) return "—";
@@ -89,7 +95,7 @@ function formatCurrency(amount: string, currency: string) {
 }
 
 interface QuoteRowActionsProps {
-  quote: Quote;
+  quote: QuoteListItem;
   onDelete: (id: number) => void;
   onStatusUpdate: (id: number, status: QuoteStatus) => void;
 }
@@ -171,6 +177,7 @@ export default function QuotesPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const updateQuoteStatus = useUpdateQuoteStatus();
   const deleteQuote = useDeleteQuote();
@@ -201,9 +208,9 @@ export default function QuotesPage() {
 
   const { data, isLoading, error, refetch } = useQuotes({
     search: apiSearch || undefined,
-    status: statusFilter !== "all" ? statusFilter : undefined,
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
+    status: isQuoteStatus(statusFilter) ? statusFilter : undefined,
+    page,
+    pageSize: PAGE_SIZE,
   });
 
   const total = data?.total ?? 0;
@@ -228,6 +235,26 @@ export default function QuotesPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleExport = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      const blob = await downloadQuotesCsv(
+        isQuoteStatus(statusFilter) ? statusFilter : undefined,
+      );
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `quotes-${new Date().toISOString().split("T")[0]}.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      toast.success("Quotes exported");
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    } finally {
+      setIsExporting(false);
+    }
+  }, [statusFilter]);
 
   const handleRequestDelete = useCallback((id: number) => {
     setDeleteId(id);
@@ -327,6 +354,16 @@ export default function QuotesPage() {
                 <SelectItem value="EXPIRED">Expired</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={handleExport}
+              disabled={isExporting || total === 0}
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              {isExporting ? "Exporting..." : "Export"}
+            </Button>
           </div>
         }
       >

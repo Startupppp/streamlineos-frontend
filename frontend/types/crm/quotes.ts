@@ -30,6 +30,28 @@ export interface Quote {
   lineItems?: QuoteLineItem[];
 }
 
+export interface QuoteListItem {
+  id: number;
+  orgId: string;
+  dealId: number | null;
+  clientId: number | null;
+  quoteNumber: string;
+  subject: string;
+  status: QuoteStatus;
+  currency: string;
+  totalAmount: string;
+  netAmount: string;
+  validUntil: string;
+  createdById: string;
+  sentAt: string | null;
+  acceptedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: { id: string; name: string | null; image: string | null } | null;
+  deal: { id: number; name: string } | null;
+  client: { id: number; clientName: string } | null;
+}
+
 export interface QuoteLineItem {
   id: number;
   quoteId: number;
@@ -42,11 +64,18 @@ export interface QuoteLineItem {
 }
 
 export interface QuoteFilters {
-  status?: string;
+  status?: QuoteStatus;
   dealId?: number;
   search?: string;
-  limit?: number;
-  offset?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface QuoteLineItemInput {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  taxRate?: number;
 }
 
 export interface CreateQuoteInput {
@@ -58,22 +87,17 @@ export interface CreateQuoteInput {
   validUntil: string;
   termsAndConditions?: string;
   notes?: string;
-  lineItems: Array<{
-    description: string;
-    quantity: number;
-    unitPrice: number;
-    taxRate?: number;
-    discount?: number;
-  }>;
+  lineItems: QuoteLineItemInput[];
 }
 
 export interface UpdateQuoteInput {
   id: number;
   subject?: string;
   description?: string;
-  status?: Quote["status"];
+  status?: QuoteStatus;
   validUntil?: string;
   termsAndConditions?: string;
   notes?: string;
   rejectionReason?: string;
+  lineItems?: QuoteLineItemInput[];
 }
