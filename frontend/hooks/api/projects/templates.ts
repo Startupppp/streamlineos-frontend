@@ -65,6 +65,7 @@ export function useProjectTemplates() {
 export function useCreateProjectTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "templates", "create"],
     mutationFn: (input: CreateProjectTemplateInput) =>
       apiClient.post<ProjectTemplate>("/projects/templates", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_KEY }),
@@ -74,6 +75,7 @@ export function useCreateProjectTemplate() {
 export function useDeleteProjectTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "templates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/projects/templates/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_KEY }),
@@ -83,6 +85,7 @@ export function useDeleteProjectTemplate() {
 export function useApplyProjectTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "templates", "apply"],
     mutationFn: ({ templateId, input }: { templateId: number; input: ApplyProjectTemplateInput }) =>
       apiClient.post<{ projectId: number; key: string; ticketsCreated: number }>(
         `/projects/templates/${templateId}/apply`,

@@ -119,6 +119,7 @@ export function useLeadTimeReport(projectId: number) {
 export function useCaptureSnapshot(projectId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "reports", "snapshot"],
     mutationFn: () =>
       apiClient.post<CaptureSnapshotResult>(`/projects/${projectId}/reports/snapshot`),
     onSuccess: () => {

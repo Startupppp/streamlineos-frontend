@@ -212,6 +212,7 @@ export function useCreateRoadmapItem() {
 export function useUpdateRoadmapItem() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "roadmap", "update"],
     mutationFn: ({ id, ...input }: UpdateRoadmapItemInput & { id: number }) =>
       apiClient.patch<RoadmapItem>(`/projects/roadmap/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
@@ -221,6 +222,7 @@ export function useUpdateRoadmapItem() {
 export function useDeleteRoadmapItem() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "roadmap", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/projects/roadmap/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
@@ -239,6 +241,7 @@ export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
 export function useCreateFeedbackPost() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "feedback", "create"],
     mutationFn: (input: CreateFeedbackPostInput) =>
       apiClient.post<FeedbackPost>("/projects/feedback", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
@@ -248,6 +251,7 @@ export function useCreateFeedbackPost() {
 export function useUpdateFeedbackPost() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "feedback", "update"],
     mutationFn: ({ id, ...input }: UpdateFeedbackPostInput & { id: number }) =>
       apiClient.patch<FeedbackPost>(`/projects/feedback/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
@@ -257,6 +261,7 @@ export function useUpdateFeedbackPost() {
 export function useDeleteFeedbackPost() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "feedback", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/projects/feedback/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
@@ -275,6 +280,7 @@ export function useChangelog(filters: ChangelogFilters = {}) {
 export function useCreateChangelogEntry() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "changelog", "create"],
     mutationFn: (input: CreateChangelogEntryInput) =>
       apiClient.post<ChangelogEntry>("/projects/changelog", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
@@ -284,6 +290,7 @@ export function useCreateChangelogEntry() {
 export function useUpdateChangelogEntry() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "changelog", "update"],
     mutationFn: ({ id, ...input }: UpdateChangelogEntryInput & { id: number }) =>
       apiClient.patch<ChangelogEntry>(`/projects/changelog/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
@@ -293,6 +300,7 @@ export function useUpdateChangelogEntry() {
 export function useDeleteChangelogEntry() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "changelog", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/projects/changelog/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
@@ -312,6 +320,7 @@ export function usePublicRoadmap(orgId: string) {
 export function usePublicVote(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "roadmap", "vote"],
     mutationFn: (input: PublicVoteInput) =>
       apiClient.post<PublicVoteResult>(`/public/roadmap/vote?org=${encodeURIComponent(orgId)}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.publicBoard(orgId) }),
@@ -321,6 +330,7 @@ export function usePublicVote(orgId: string) {
 export function useSubmitPublicFeedback(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "feedback", "submit"],
     mutationFn: (input: SubmitPublicFeedbackInput) =>
       apiClient.post<{ id: number; message: string }>(
         `/public/roadmap/feedback?org=${encodeURIComponent(orgId)}`,

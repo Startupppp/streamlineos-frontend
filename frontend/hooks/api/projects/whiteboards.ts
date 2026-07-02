@@ -51,6 +51,7 @@ export function useWhiteboard(projectId: number, whiteboardId: number | null) {
 export function useCreateWhiteboard(projectId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "whiteboards", "create"],
     mutationFn: (name: string) =>
       apiClient.post<Whiteboard>(`/projects/${projectId}/whiteboards`, { name }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.whiteboards.list(projectId) }),
@@ -60,6 +61,7 @@ export function useCreateWhiteboard(projectId: number) {
 export function useUpdateWhiteboard(projectId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "whiteboards", "update"],
     mutationFn: ({ id, ...input }: UpdateWhiteboardInput) =>
       apiClient.patch<Whiteboard>(`/projects/${projectId}/whiteboards/${id}`, input),
     onSuccess: (updated) => {
@@ -72,6 +74,7 @@ export function useUpdateWhiteboard(projectId: number) {
 export function useDeleteWhiteboard(projectId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["projects", "whiteboards", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/projects/${projectId}/whiteboards/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.whiteboards.list(projectId) }),

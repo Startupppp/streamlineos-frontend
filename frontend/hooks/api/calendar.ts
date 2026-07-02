@@ -35,6 +35,7 @@ export function useGoogleMeetStatus() {
 
 export function useCreateMeetLink() {
   return useMutation({
+    mutationKey: ["calendar", "meet", "create"],
     mutationFn: () => apiClient.post<{ meetLink: string }>("/calendar/create-meet", {}),
   });
 }
@@ -123,6 +124,7 @@ export function useCalendarEvents(start: Date, end: Date) {
 export function useCreateCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["calendar", "events", "create"],
     mutationFn: (payload: CreateCalendarEventPayload) =>
       apiClient.post<CalendarEvent>("/calendar/events", payload),
     onSuccess: () =>
@@ -133,6 +135,7 @@ export function useCreateCalendarEvent() {
 export function useUpdateCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["calendar", "events", "update"],
     mutationFn: ({ id, ...payload }: UpdateCalendarEventPayload) =>
       apiClient.put<CalendarEvent>(`/calendar/events/${id}`, payload),
     onSuccess: () =>
@@ -143,6 +146,7 @@ export function useUpdateCalendarEvent() {
 export function useDeleteCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["calendar", "events", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${id}`),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
@@ -178,6 +182,7 @@ export function useEventAttendees(eventId: number | null) {
 export function useRsvpCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["calendar", "events", "rsvp"],
     mutationFn: ({ eventId, status }: { eventId: number; status: RsvpStatus }) =>
       apiClient.post<EventAttendee>(`/calendar/events/${eventId}/rsvp`, { status }),
     onSuccess: (_data, { eventId }) => {
@@ -209,6 +214,7 @@ export function useCalendarConnections() {
 export function useDisconnectCalendar() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["calendar", "connections", "disconnect"],
     mutationFn: (connectionId: number) =>
       apiClient.delete<{ success: boolean }>(`/calendar/connections/${connectionId}`),
     onSuccess: () => {
@@ -220,6 +226,7 @@ export function useDisconnectCalendar() {
 export function useSetPrimaryCalendar() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["calendar", "connections", "set-primary"],
     mutationFn: (connectionId: number) =>
       apiClient.patch<CalendarConnection>(`/calendar/connections/${connectionId}/primary`, {}),
     onSuccess: () => {
