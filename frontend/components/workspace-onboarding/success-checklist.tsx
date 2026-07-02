@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 
 const DISMISSED_KEY = "ws_checklist_dismissed";
 const DONE_KEY = "ws_checklist_done";
-const TOTAL = 5;
+const TOTAL = 4;
 const RING_RADIUS = 24;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -72,7 +72,6 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
   { id: "record", label: "Create your first record", href: "/dashboard", Icon: Database },
   { id: "email", label: "Connect your email", href: "/settings/integrations", Icon: Mail },
   { id: "profile", label: "Complete your profile", href: "/settings/profile", Icon: UserCircle },
-  { id: "ai", label: "Try the AI Assistant", href: "/ai", Icon: Sparkles },
 ];
 
 function readStorageSet(): Set<string> {

@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import Link from "next/link"
-import { Menu, Search, Sparkles, CalendarDays, MessageSquare } from "lucide-react"
+import { Menu, Search, CalendarDays, MessageSquare } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ProductSwitcherMenu } from "./product-switcher-menu"
 import { QuickCreateButton } from "./quick-create-button"
@@ -117,10 +117,6 @@ function DesktopHeader({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
       </div>
 
       <div className="flex items-center gap-1 shrink-0">
-        <HeaderIconLink href="/ai" label="AI Assistant">
-          <Sparkles className="h-4 w-4" />
-        </HeaderIconLink>
-
         <HeaderIconLink href="/calendar" label="Calendar">
           <CalendarDays className="h-4 w-4" />
         </HeaderIconLink>

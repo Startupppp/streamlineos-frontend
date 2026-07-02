@@ -53,7 +53,6 @@ import {
   UserCog,
   SlidersHorizontal,
   UserX,
-  Sparkles,
   Brain,
   Copy,
   Search,

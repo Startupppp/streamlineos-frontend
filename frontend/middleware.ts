@@ -79,7 +79,6 @@ const PROTECTED_ROUTES = [
   "/chat",
   "/reports",
   "/notifications",
-  "/ai",
   "/calendar",
   "/knowledge-base",
 ];
@@ -143,7 +142,6 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/notifications": ["self:attendance"],
   "/ceo": ["reports:view"],
   "/reports": ["reports:view"],
-  "/ai": ["settings:manage"],
   "/blogs/admin": ["settings:manage"],
 };
 
