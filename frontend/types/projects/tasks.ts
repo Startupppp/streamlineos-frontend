@@ -186,6 +186,7 @@ export interface UpdateTicketInput {
   originalEstimate?: number | null;
   startDate?: string | null;
   dueDate?: string | null;
+  expectedUpdatedAt?: string;
 }
 
 export interface UpdateTicketStatusInput {

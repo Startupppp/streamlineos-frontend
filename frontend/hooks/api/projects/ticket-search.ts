@@ -24,7 +24,6 @@ export function useTicketSearch(
     queryKey: [...queryKeys.projects.all, "search", "tickets", q],
     queryFn: () =>
       apiClient.get<TicketSearchResult[]>("/projects/search/tickets", { q, limit: 10 }),
-    enabled: q.length > 0,
     staleTime: 30_000,
     ...options,
   });

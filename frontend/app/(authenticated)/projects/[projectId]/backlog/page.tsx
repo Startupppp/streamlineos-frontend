@@ -51,6 +51,7 @@ interface TicketRowProps {
       lastName?: string | null;
     } | null;
   };
+  projectKey?: string | null;
   isSelected: boolean;
   onSelect: (id: number) => void;
   onToggleSelect: (id: number) => void;
@@ -58,6 +59,7 @@ interface TicketRowProps {
 
 const TicketRow = memo(function TicketRow({
   ticket,
+  projectKey,
   isSelected,
   onSelect,
   onToggleSelect,
@@ -87,7 +89,9 @@ const TicketRow = memo(function TicketRow({
       <TableCell className="px-3 py-1.5 font-mono text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <TicketTypeIcon type={ticket.type} />
-          #{ticket.ticketNumber}
+          {projectKey && ticket.ticketNumber != null
+            ? `${projectKey}-${ticket.ticketNumber}`
+            : `#${ticket.ticketNumber}`}
         </span>
       </TableCell>
       <TableCell className="px-3 py-1.5 max-w-md">
@@ -376,6 +380,7 @@ export default function BacklogPage({ params }: PageProps) {
                 <TicketRow
                   key={ticket.id}
                   ticket={ticket}
+                  projectKey={data?.key}
                   isSelected={selectedIds.has(ticket.id)}
                   onSelect={handleTicketSelect}
                   onToggleSelect={toggleSelect}

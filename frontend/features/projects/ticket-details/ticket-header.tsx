@@ -16,6 +16,7 @@ import { StatusBadge } from "../shared/status-badge";
 interface TicketHeaderProps {
   ticketId: number | null;
   ticketNumber?: number | null;
+  projectKey?: string | null;
   priority: string;
   status: string;
   title: string;
@@ -28,6 +29,7 @@ interface TicketHeaderProps {
 export function TicketHeader({
   ticketId,
   ticketNumber,
+  projectKey,
   priority,
   status,
   title,
@@ -45,7 +47,7 @@ export function TicketHeader({
 
           <div className="flex items-center gap-2 min-w-0 flex-wrap">
             <Badge variant="outline" className="font-mono text-[11px] shrink-0 h-5 px-1.5">
-              #{ticketNumber ?? ticketId}
+              {projectKey && ticketNumber != null ? `${projectKey}-${ticketNumber}` : `#${ticketNumber ?? ticketId}`}
             </Badge>
             {!isLoading && (
               <>

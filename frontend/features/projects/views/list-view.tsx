@@ -21,6 +21,7 @@ interface ListViewProps {
   tickets: Ticket[];
   onTicketClick: (ticketId: number) => void;
   groupBy?: keyof Ticket;
+  projectKey?: string | null;
 }
 
 const typeIcons: Record<string, typeof CheckSquare> = {
@@ -44,7 +45,7 @@ const statusColors: Record<string, string> = {
   DONE: "bg-green-500",
 };
 
-export function ListView({ tickets, onTicketClick, groupBy }: ListViewProps) {
+export function ListView({ tickets, onTicketClick, groupBy, projectKey }: ListViewProps) {
   const grouped = groupBy
     ? tickets.reduce<Record<string, Ticket[]>>((acc, t) => {
         const key = String(t[groupBy] ?? "None");
@@ -77,7 +78,7 @@ export function ListView({ tickets, onTicketClick, groupBy }: ListViewProps) {
                   <div className={cn("h-2 w-2 rounded-full flex-shrink-0", statusColors[ticket.status] ?? "bg-slate-400")} />
                   <TypeIcon className={cn("h-4 w-4 flex-shrink-0", ticket.type === "BUG" ? "text-red-500" : "text-muted-foreground")} />
                   <span className="text-xs text-muted-foreground font-mono flex-shrink-0">
-                    {ticket.sequenceId ?? `#${ticket.ticketNumber}`}
+                    {projectKey && ticket.ticketNumber != null ? `${projectKey}-${ticket.ticketNumber}` : (ticket.sequenceId ?? `#${ticket.ticketNumber}`)}
                   </span>
                   <span className="text-sm text-foreground truncate flex-1">{ticket.title}</span>
                   {ticket.priority && (

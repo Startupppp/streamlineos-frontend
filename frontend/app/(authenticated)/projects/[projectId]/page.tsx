@@ -1,7 +1,8 @@
 "use client";
 
-import { use, useState, useMemo, useCallback } from "react";
+import { use, useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useProject } from "@/hooks/api";
+import { useViews, useCreateView } from "@/hooks/api/projects";
 import { KanbanBoard } from "@/features/projects/views/kanban-board";
 import { ListView } from "@/features/projects/views/list-view";
 import { TableView } from "@/features/projects/views/table-view";
@@ -17,11 +18,21 @@ import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-di
 import { TicketDetailsDialog } from "@/features/projects/ticket-details/ticket-details-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, Download, Bookmark, X } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import type { KanbanTicket } from "@/features/projects/shared/types";
 
@@ -38,16 +49,92 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const view = (searchParams.get("view") as ViewType) ?? "board";
   const [hideCompleted, setHideCompleted] = useState(true);
+  const [saveViewOpen, setSaveViewOpen] = useState(false);
+  const [saveViewName, setSaveViewName] = useState("");
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
   const commentParam = searchParams.get("comment");
   const highlightCommentId = commentParam ? parseInt(commentParam) : null;
+  const viewId = searchParams.get("viewId");
 
   const q = searchParams.get("q") ?? "";
   const filterStatus = searchParams.get("status") ?? "";
   const filterPriority = searchParams.get("priority") ?? "";
   const filterType = searchParams.get("type") ?? "";
   const filterAssigneeId = searchParams.get("assigneeId") ?? "";
+
+  const { data: views } = useViews(projectId);
+  const createView = useCreateView();
+  const appliedViewIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!viewId || !views) return;
+    if (appliedViewIdRef.current === viewId) return;
+    const savedView = views.find((v) => v.id.toString() === viewId);
+    if (!savedView) return;
+    appliedViewIdRef.current = viewId;
+    const next = new URLSearchParams(searchParams.toString());
+    if (savedView.filters && typeof savedView.filters === "object") {
+      for (const [k, val] of Object.entries(savedView.filters)) {
+        if (typeof val === "string" && val) next.set(k, val);
+        else next.delete(k);
+      }
+    }
+    if (savedView.layoutType) next.set("view", savedView.layoutType);
+    router.replace(`?${next.toString()}`, { scroll: false });
+  }, [viewId, views]);
+
+  const activeView = viewId ? views?.find((v) => v.id.toString() === viewId) : null;
+
+  const handleClearView = useCallback(() => {
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("viewId");
+    appliedViewIdRef.current = null;
+    router.replace(`?${next.toString()}`, { scroll: false });
+  }, [router, searchParams]);
+
+  const handleSaveView = useCallback(() => {
+    const name = saveViewName.trim();
+    if (!name) return;
+    const filters: Record<string, string> = {};
+    if (q) filters.q = q;
+    if (filterStatus) filters.status = filterStatus;
+    if (filterPriority) filters.priority = filterPriority;
+    if (filterType) filters.type = filterType;
+    if (filterAssigneeId) filters.assigneeId = filterAssigneeId;
+    createView.mutate(
+      { projectId, name, filters, layoutType: view as "board" | "list" | "table" | "calendar" | "gantt" },
+      {
+        onSuccess: (created) => {
+          toast.success("View saved");
+          setSaveViewOpen(false);
+          setSaveViewName("");
+          if (created && typeof created === "object" && "id" in created && typeof (created as Record<string, unknown>).id === "number") {
+            const next = new URLSearchParams(searchParams.toString());
+            next.set("viewId", String((created as Record<string, number>).id));
+            router.replace(`?${next.toString()}`, { scroll: false });
+          }
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      }
+    );
+  }, [saveViewName, q, filterStatus, filterPriority, filterType, filterAssigneeId, view, projectId, createView, searchParams, router]);
+
+  const handleSaveViewKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") handleSaveView();
+    },
+    [handleSaveView]
+  );
+
+  const handleOpenSaveView = useCallback(() => {
+    setSaveViewName("");
+    setSaveViewOpen(true);
+  }, []);
+
+  const handleCloseSaveView = useCallback((open: boolean) => {
+    setSaveViewOpen(open);
+  }, []);
 
   const handleViewChange = useCallback(
     (v: ViewType) => {
@@ -72,6 +159,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       if (!open) {
         const params = new URLSearchParams(searchParams.toString());
         params.delete("ticket");
+        params.delete("comment");
         router.replace(`?${params.toString()}`, { scroll: false });
       }
     },
@@ -215,6 +303,31 @@ export default function ProjectBoardPage({ params }: PageProps) {
             <Download className="h-3.5 w-3.5" />
             Export
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleOpenSaveView}
+            className="h-7 text-xs gap-1.5 shrink-0"
+          >
+            <Bookmark className="h-3.5 w-3.5" />
+            Save view
+          </Button>
+          {activeView && (
+            <Badge
+              variant="secondary"
+              className="h-6 text-xs font-normal gap-1 shrink-0 pl-2 pr-1 cursor-default"
+            >
+              View: {activeView.name}
+              <button
+                type="button"
+                onClick={handleClearView}
+                aria-label="Clear view"
+                className="ml-0.5 rounded-sm hover:bg-muted transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
           <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
           <TicketFilterBar members={members} showSprintFilter={false} />
           <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
@@ -257,6 +370,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             tickets={filteredTickets}
             onTicketClick={handleTicketSelect}
             groupBy="status"
+            projectKey={data.key}
           />
         </div>
       )}
@@ -266,6 +380,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
           <TableView
             tickets={filteredTickets}
             onTicketClick={handleTicketSelect}
+            projectKey={data.key}
           />
         </div>
       )}
@@ -306,6 +421,48 @@ export default function ProjectBoardPage({ params }: PageProps) {
         statuses={statuses?.map((s) => ({ id: s.id, name: s.name }))}
         highlightCommentId={highlightCommentId}
       />
+
+      <Dialog open={saveViewOpen} onOpenChange={handleCloseSaveView}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Save current view</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-1">
+            <div>
+              <Label htmlFor="save-view-name" className="text-sm">View name</Label>
+              <Input
+                id="save-view-name"
+                value={saveViewName}
+                onChange={(e) => setSaveViewName(e.target.value)}
+                onKeyDown={handleSaveViewKeyDown}
+                placeholder="My filtered view"
+                className="mt-1.5"
+                autoFocus
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Saves current layout ({view}) and active filters.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSaveViewOpen(false)}
+                disabled={createView.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveView}
+                disabled={!saveViewName.trim() || createView.isPending}
+              >
+                {createView.isPending ? "Saving..." : "Save view"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageWrapper>
   );
 }

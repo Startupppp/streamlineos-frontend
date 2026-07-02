@@ -7,6 +7,7 @@ export interface KanbanTicket {
   status: string;
   priority?: TicketPriority | string | null;
   ticketNumber?: number;
+  sequenceId?: string | null;
   points?: number | null;
   storyPoints?: number | null;
   assigneeId?: string | null;
@@ -14,6 +15,7 @@ export interface KanbanTicket {
   sprintId?: number | null;
   order?: number | null;
   dueDate?: string | null;
+  startDate?: string | null;
   timeSpent?: string | null;
   assignee?: {
     id: string;

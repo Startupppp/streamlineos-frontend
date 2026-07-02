@@ -25,6 +25,7 @@ interface Ticket {
 interface TableViewProps {
   tickets: Ticket[];
   onTicketClick: (ticketId: number) => void;
+  projectKey?: string | null;
 }
 
 const statusBadge: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; label: string }> = {
@@ -43,7 +44,7 @@ function isOverdue(ticket: Ticket): boolean {
   return due < today;
 }
 
-export function TableView({ tickets, onTicketClick }: TableViewProps) {
+export function TableView({ tickets, onTicketClick, projectKey }: TableViewProps) {
   function handleRowClick(e: MouseEvent<HTMLTableRowElement>) {
     const id = Number(e.currentTarget.dataset.ticketId);
     if (id) onTicketClick(id);
@@ -77,7 +78,7 @@ export function TableView({ tickets, onTicketClick }: TableViewProps) {
                   className="cursor-pointer hover:bg-muted/50"
                 >
                   <TableCell className="font-mono text-xs text-muted-foreground">
-                    {ticket.sequenceId ?? `#${ticket.ticketNumber}`}
+                    {projectKey && ticket.ticketNumber != null ? `${projectKey}-${ticket.ticketNumber}` : (ticket.sequenceId ?? `#${ticket.ticketNumber}`)}
                   </TableCell>
                   <TableCell className="font-medium text-sm">
                     <span className="block min-w-0 line-clamp-2 sm:truncate">{ticket.title}</span>

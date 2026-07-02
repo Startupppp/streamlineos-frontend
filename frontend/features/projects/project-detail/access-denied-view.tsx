@@ -43,7 +43,7 @@ function AccessDeniedIllustration({ className }: { className?: string }) {
   );
 }
 
-export function AccessDeniedView({ projectName }: { projectName: string }) {
+export function AccessDeniedView({ projectName, hint }: { projectName: string; hint?: string }) {
   return (
     <div className="flex items-center justify-center min-h-[60vh] w-full p-8">
       <div className="text-center max-w-md">
@@ -54,9 +54,13 @@ export function AccessDeniedView({ projectName }: { projectName: string }) {
         <p className="text-sm text-muted-foreground mb-1">
           <span className="font-medium text-foreground">{projectName}</span> is a private project.
         </p>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-sm text-muted-foreground mb-1">
           Ask the project manager or admin to add you as a member to get access.
         </p>
+        {hint && (
+          <p className="text-xs text-muted-foreground/70 mb-5">{hint}</p>
+        )}
+        {!hint && <div className="mb-5" />}
         <Link href="/projects">
           <Button variant="outline" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
