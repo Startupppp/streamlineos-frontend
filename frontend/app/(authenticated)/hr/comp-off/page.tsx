@@ -14,13 +14,8 @@ export default function CompOffPage() {
   const earnedDays = records?.[0] ? parseFloat(records[0].earnedDays) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40">
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Compensatory Off</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Track earned comp-off from overtime work</p>
-        </div>
-
+    <PageWrapper title="Compensatory Off" subtitle="Track earned comp-off from overtime work">
+      <div className="space-y-6">
         {isLoading ? (
           <Skeleton className="h-40 rounded-2xl" />
         ) : (
@@ -69,6 +64,6 @@ export default function CompOffPage() {
           </motion.div>
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { addMonths, format } from "date-fns";
 import {
   Package,
@@ -41,9 +42,21 @@ const TXN_LABELS: Record<
   EXPIRY: { label: "Expiry", sign: "-", color: "text-destructive" },
 };
 
+function BuyPackButton({ packId, onBuy }: { packId: string; onBuy: (id: string) => void }) {
+  function handleClick() {
+    onBuy(packId);
+  }
+  return (
+    <Button size="sm" variant="outline" onClick={handleClick}>
+      Buy
+    </Button>
+  );
+}
+
 export default function AiCreditsPage() {
-  const { data, isLoading, refetch } = useAiCreditsWallet();
+  const { data, isLoading, isError, refetch } = useAiCreditsWallet();
   const configureTopUp = useConfigureAutoTopUp();
+  const router = useRouter();
   const [localAutoTopUp, setLocalAutoTopUp] = useState<boolean | null>(null);
   const autoTopUp = localAutoTopUp ?? (data?.wallet.autoTopUpEnabled ?? false);
 
@@ -56,6 +69,10 @@ export default function AiCreditsPage() {
     void refetch();
   }
 
+  function handleBuyPack(packId: string) {
+    router.push(`/billing/checkout?pack=${packId}`);
+  }
+
   const wallet = data?.wallet;
   const packs = data?.packs ?? [];
   const txns = data?.recentTransactions ?? [];
@@ -63,6 +80,15 @@ export default function AiCreditsPage() {
   return (
     <PageWrapper title="AI Credits" subtitle="Manage your AI usage credits">
       <div className="space-y-4">
+        {isError ? (
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-10 text-center">
+            <p className="text-sm font-medium text-foreground">Failed to load AI credits</p>
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <>
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -174,9 +200,7 @@ export default function AiCreditsPage() {
                     <span className="text-sm font-medium">
                       ₹{(pack.priceInPaise / 100).toLocaleString("en-IN")}
                     </span>
-                    <Button size="sm" variant="outline">
-                      Buy
-                    </Button>
+                    <BuyPackButton packId={pack.id} onBuy={handleBuyPack} />
                   </div>
                 </div>
               ))}
@@ -257,6 +281,8 @@ export default function AiCreditsPage() {
             </div>
           )}
         </div>
+          </>
+        )}
       </div>
     </PageWrapper>
   );

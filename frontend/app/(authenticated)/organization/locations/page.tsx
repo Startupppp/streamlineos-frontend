@@ -13,17 +13,19 @@ import {
   useDeleteOrgLocation,
 } from "@/hooks/api/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
+  SheetClose,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -128,11 +130,6 @@ function LocationForm({
             </FormItem>
           )}
         />
-        <SheetFooter>
-          <Button type="submit" form="location-form" disabled={isPending}>
-            {isPending ? "Saving…" : "Save"}
-          </Button>
-        </SheetFooter>
       </form>
     </Form>
   );
@@ -147,7 +144,7 @@ function TypeBadge({ type }: { type: LocationType }) {
     REMOTE: "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400",
   };
   return (
-    <Badge variant="outline" className={colors[type]}>
+    <Badge variant="outline" className={cn("h-4 px-1.5 py-0 text-[9px]", colors[type])}>
       {type.charAt(0) + type.slice(1).toLowerCase()}
     </Badge>
   );
@@ -291,109 +288,122 @@ export default function OrgLocationsPage() {
       }
     >
       {isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-md" />
-          ))}
-        </div>
+        <SkeletonTable rows={5} columns={5} />
       ) : filtered.length === 0 ? (
         search ? (
-          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-            <MapPin className="h-10 w-10 opacity-30" />
-            <p className="text-sm">No locations matching &quot;{search}&quot;</p>
-          </div>
+          <EmptyState
+            illustration={<MapPin className="h-8 w-8 text-muted-foreground/40" />}
+            title={`No locations matching "${search}"`}
+            description="Try a different search term."
+            compact
+            className="min-h-[200px]"
+          />
         ) : showArchived ? (
-          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-            <Archive className="h-10 w-10 opacity-30" />
-            <p className="text-sm">No archived locations</p>
-          </div>
+          <EmptyState
+            illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+            title="No archived locations"
+            compact
+            className="min-h-[200px]"
+          />
         ) : (
-          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-            <MapPin className="h-10 w-10 opacity-30" />
-            <p className="text-sm">No locations yet</p>
-            <Button size="sm" onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-1.5" />
-              Add Location
-            </Button>
-          </div>
+          <EmptyState
+            illustration={<MapPin className="h-8 w-8 text-muted-foreground/40" />}
+            title="No locations yet"
+            description="Create your first location to get started."
+            action={{ label: "Add Location", onClick: handleOpenCreate }}
+            className="min-h-[40vh]"
+          />
         )
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-28" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((l) => (
-              <TableRow key={l.id} className={l.status === "ARCHIVED" ? "opacity-60" : ""}>
-                <TableCell className="font-medium">{l.name}</TableCell>
-                <TableCell>
-                  <TypeBadge type={l.type} />
-                </TableCell>
-                <TableCell className="text-muted-foreground max-w-[250px] truncate">
-                  {l.address ?? "—"}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={l.status === "ACTIVE" ? "outline" : "secondary"}
-                    className={
-                      l.status === "ACTIVE"
-                        ? "text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
-                        : l.status === "ARCHIVED"
-                          ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
-                          : ""
-                    }
-                  >
-                    {l.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    {l.status === "ARCHIVED" ? (
-                      <>
-                        <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore">
-                          <RotateCcw className="h-4 w-4 text-blue-600" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(l)} title="Delete permanently">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={makeArchiveHandler(l)} title="Archive">
-                          <Archive className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <div className="min-w-[620px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Type</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Address</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
+                  <TableHead className="w-28 px-2 py-1.5" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((l) => (
+                  <TableRow key={l.id} className={cn("h-8", l.status === "ARCHIVED" && "opacity-60")}>
+                    <TableCell className="font-medium px-2 py-1 text-[11px]">{l.name}</TableCell>
+                    <TableCell className="px-2 py-1">
+                      <TypeBadge type={l.type} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground px-2 py-1 text-[11px] max-w-[250px] truncate">
+                      {l.address ?? "—"}
+                    </TableCell>
+                    <TableCell className="px-2 py-1">
+                      <Badge
+                        variant={l.status === "ACTIVE" ? "outline" : "secondary"}
+                        className={cn(
+                          "h-4 px-1.5 py-0 text-[9px]",
+                          l.status === "ACTIVE"
+                            ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
+                            : l.status === "ARCHIVED"
+                              ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                              : ""
+                        )}
+                      >
+                        {l.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-2 py-1">
+                      <div className="flex items-center gap-1">
+                        {l.status === "ARCHIVED" ? (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore">
+                              <RotateCcw className="h-4 w-4 text-blue-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(l)} title="Delete permanently">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={makeArchiveHandler(l)} title="Archive">
+                              <Archive className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       )}
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
-        <SheetContent className="p-0 flex flex-col gap-0">
+        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>New Location</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-5">
             <LocationForm onSubmit={handleCreate} isPending={create.isPending} />
           </div>
+          <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
+            <SheetClose asChild>
+              <Button variant="outline" size="sm">Cancel</Button>
+            </SheetClose>
+            <Button size="sm" type="submit" form="location-form" disabled={create.isPending}>
+              {create.isPending ? "Saving…" : "Save"}
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
 
       <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-        <SheetContent className="p-0 flex flex-col gap-0">
+        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Edit Location</SheetTitle>
           </SheetHeader>
@@ -409,6 +419,14 @@ export default function OrgLocationsPage() {
                 isPending={update.isPending}
               />
             )}
+          </div>
+          <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
+            <SheetClose asChild>
+              <Button variant="outline" size="sm">Cancel</Button>
+            </SheetClose>
+            <Button size="sm" type="submit" form="location-form" disabled={update.isPending}>
+              {update.isPending ? "Saving…" : "Save"}
+            </Button>
           </div>
         </SheetContent>
       </Sheet>

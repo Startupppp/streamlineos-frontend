@@ -1,231 +1,163 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { PASSWORD_REGEX, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/lib/password-utils";
-import { Lock } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
-import { useChangePassword } from "@/hooks/api/auth";
+import { Shield, Clock } from "lucide-react";
+import { useOrgSettings, useUpdateOrgSecuritySettings } from "@/hooks/api/organization";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const passwordRules = z
-  .string()
-  .min(PASSWORD_MIN_LENGTH, `Minimum ${PASSWORD_MIN_LENGTH} characters`)
-  .max(PASSWORD_MAX_LENGTH, `Maximum ${PASSWORD_MAX_LENGTH} characters`)
-  .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character");
-
-const setPasswordSchema = z
-  .object({
-    newPassword: passwordRules,
-    confirmPassword: z.string().min(1, "Please confirm your password"),
-  })
-  .refine((d) => d.newPassword === d.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: passwordRules,
-    confirmPassword: z.string().min(1, "Please confirm your password"),
-  })
-  .refine((d) => d.newPassword === d.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-type SetPasswordValues = z.infer<typeof setPasswordSchema>;
-type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
-
-function SetPasswordCard() {
-  const form = useForm<SetPasswordValues>({
-    resolver: zodResolver(setPasswordSchema),
-    defaultValues: { newPassword: "", confirmPassword: "" },
-  });
-  const changePassword = useChangePassword();
-
-  function onSubmit(data: SetPasswordValues) {
-    changePassword.mutate(
-      { newPassword: data.newPassword },
-      {
-        onSuccess: () => {
-          toast.success("Password set successfully");
-          form.reset();
-        },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Lock className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-base">Set a Password</CardTitle>
-        </div>
-        <CardDescription>
-          Your account uses Google Sign-In. You can add a password to also sign in with your email.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="newPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>New Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" autoComplete="new-password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" autoComplete="new-password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={changePassword.isPending} className="w-full">
-              {changePassword.isPending ? "Saving…" : "Set Password"}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ChangePasswordCard() {
-  const form = useForm<ChangePasswordValues>({
-    resolver: zodResolver(changePasswordSchema),
-    defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
-  });
-  const changePassword = useChangePassword();
-
-  function onSubmit(data: ChangePasswordValues) {
-    changePassword.mutate(
-      { currentPassword: data.currentPassword, newPassword: data.newPassword },
-      {
-        onSuccess: () => {
-          toast.success("Password changed successfully");
-          form.reset();
-        },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Lock className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-base">Change Password</CardTitle>
-        </div>
-        <CardDescription>
-          Choose a strong password with at least 8 characters including uppercase, lowercase,
-          number, and special character.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="currentPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Current Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" autoComplete="current-password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="newPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>New Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" autoComplete="new-password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm New Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" autoComplete="new-password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={changePassword.isPending} className="w-full">
-              {changePassword.isPending ? "Saving…" : "Change Password"}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
-  );
-}
+import { ErrorState } from "@/components/shared/error-state";
 
 export default function SecurityPage() {
-  const { data: session, status } = useSession();
+  const { data: org, isLoading, isError, refetch } = useOrgSettings();
+  const updateSecurity = useUpdateOrgSecuritySettings();
 
-  if (status === "loading") {
+  const [mfaEnforced, setMfaEnforced] = useState(false);
+  const [expiryDays, setExpiryDays] = useState("");
+
+  useEffect(() => {
+    if (!org) return;
+    setMfaEnforced(org.mfaEnforced ?? false);
+    setExpiryDays(org.passwordExpiryDays != null ? String(org.passwordExpiryDays) : "");
+  }, [org]);
+
+  const handleMfaChange = useCallback((checked: boolean) => {
+    setMfaEnforced(checked);
+  }, []);
+
+  const handleExpiryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setExpiryDays(e.target.value);
+  }, []);
+
+  const handleSave = useCallback(() => {
+    let passwordExpiryDays: number | null = null;
+
+    if (expiryDays.trim() !== "") {
+      const parsed = parseInt(expiryDays, 10);
+      if (isNaN(parsed) || parsed < 30 || parsed > 365) {
+        toast.error("Password expiry must be between 30 and 365 days");
+        return;
+      }
+      passwordExpiryDays = parsed;
+    }
+
+    updateSecurity.mutate(
+      { mfaEnforced, passwordExpiryDays },
+      {
+        onSuccess: () => toast.success("Security policy saved"),
+        onError: (err) => toast.error(getApiError(err)),
+      },
+    );
+  }, [expiryDays, mfaEnforced, updateSecurity]);
+
+  if (isLoading) {
     return (
-      <PageWrapper title="Security" subtitle="Manage your password and account security settings.">
-        <div className="max-w-lg space-y-4">
-          <Skeleton className="h-[280px] w-full rounded-lg" />
+      <PageWrapper
+        title="Password Policy"
+        subtitle="Configure organisation-level security and authentication requirements."
+      >
+        <div className="max-w-xl space-y-4 pt-2">
+          <Skeleton className="h-[120px] w-full rounded-xl" />
+          <Skeleton className="h-[120px] w-full rounded-xl" />
         </div>
       </PageWrapper>
     );
   }
 
-  const isOAuthUser = session?.authProvider !== undefined && session.authProvider !== "credentials";
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Password Policy"
+        subtitle="Configure organisation-level security and authentication requirements."
+      >
+        <div className="max-w-xl pt-2">
+          <ErrorState
+            title="Failed to load security settings"
+            description="Could not retrieve your organisation's security policy. Please try again."
+            onRetry={refetch}
+          />
+        </div>
+      </PageWrapper>
+    );
+  }
 
   return (
-    <PageWrapper title="Security" subtitle="Manage your password and account security settings.">
-      <div className="max-w-lg">
-        {isOAuthUser ? <SetPasswordCard /> : <ChangePasswordCard />}
+    <PageWrapper
+      title="Password Policy"
+      subtitle="Configure organisation-level security and authentication requirements."
+    >
+      <div className="max-w-xl space-y-4 pt-2">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Multi-Factor Authentication</CardTitle>
+            </div>
+            <CardDescription>
+              Require all members of this organisation to enrol in MFA before accessing the platform.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="mfa-enforced" className="text-sm font-medium">
+                Enforce MFA for all members
+              </Label>
+              <Switch
+                id="mfa-enforced"
+                checked={mfaEnforced}
+                onCheckedChange={handleMfaChange}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Password Expiry</CardTitle>
+            </div>
+            <CardDescription>
+              Force members to reset their password after a set number of days. Leave blank to disable expiry.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <Input
+                id="expiry-days"
+                type="number"
+                min={30}
+                max={365}
+                placeholder="e.g. 90"
+                value={expiryDays}
+                onChange={handleExpiryChange}
+                className="w-36"
+              />
+              <Label htmlFor="expiry-days" className="text-sm text-muted-foreground">
+                days (30–365)
+              </Label>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Separator />
+
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSave}
+            disabled={updateSecurity.isPending}
+            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            {updateSecurity.isPending ? "Saving…" : "Save Policy"}
+          </Button>
+        </div>
       </div>
     </PageWrapper>
   );

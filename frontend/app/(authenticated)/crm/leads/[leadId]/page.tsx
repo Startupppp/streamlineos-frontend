@@ -1,16 +1,16 @@
 "use client";
 
 import { use, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, AlertCircle, SearchX, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/hooks/api/leads";
 import { useCreateTask } from "@/hooks/api/tasks";
@@ -44,9 +44,10 @@ export default function LeadDetailPage({
 }) {
   const { leadId: leadIdStr } = use(params);
   const leadId = Number(leadIdStr);
-  const router = useRouter();
 
   const { data: lead, isLoading, isError: leadError, refetch: refetchLead } = useLeadDetail(leadId);
+
+  const handleRetry = useCallback(() => void refetchLead(), [refetchLead]);
   const { data: timeline, isLoading: timelineLoading } = useLeadTimeline(
     leadId,
     50,
@@ -188,10 +189,6 @@ export default function LeadDetailPage({
     [leadId, logActivityMutation],
   );
 
-  const handleBackToPipeline = useCallback(
-    () => router.push("/crm/leads"),
-    [router],
-  );
   const handleToggleEdit = useCallback(() => setIsEditing((prev) => !prev), []);
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
 
@@ -232,70 +229,47 @@ export default function LeadDetailPage({
 
   if (isLoading) {
     return (
-      <div className="space-y-4 p-4">
-        <Skeleton className="h-8 w-48" />
-        <div className="grid gap-4 lg:grid-cols-5">
-          <Skeleton className="h-[600px] lg:col-span-3" />
-          <Skeleton className="h-[600px] lg:col-span-2" />
+      <PageWrapper title="Lead" backHref="/crm/leads">
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-48" />
+          <div className="grid gap-4 lg:grid-cols-5">
+            <Skeleton className="h-[600px] lg:col-span-3" />
+            <Skeleton className="h-[600px] lg:col-span-2" />
+          </div>
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   if (leadError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
-        <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center">
-          <AlertCircle className="h-7 w-7 text-red-400" />
-        </div>
-        <div>
-          <p className="font-semibold text-slate-800">Failed to load lead</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            There was an error loading this lead. Please try again.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => void refetchLead()}>
-            Try Again
-          </Button>
-          <Button variant="ghost" onClick={handleBackToPipeline}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Pipeline
-          </Button>
-        </div>
-      </div>
+      <PageWrapper title="Lead" backHref="/crm/leads">
+        <ErrorState
+          title="Failed to load lead"
+          description="There was an error loading this lead. Please try again."
+          onRetry={handleRetry}
+          className="flex-1"
+        />
+      </PageWrapper>
     );
   }
 
   if (!lead) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
-        <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
-          <SearchX className="h-7 w-7 text-slate-400" />
-        </div>
-        <div>
-          <p className="font-semibold text-slate-800">Lead not found</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            This lead may have been deleted or you may not have access to it.
-          </p>
-        </div>
-        <Button variant="outline" onClick={handleBackToPipeline}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Pipeline
-        </Button>
-      </div>
+      <PageWrapper title="Lead" backHref="/crm/leads">
+        <ErrorState
+          title="Lead not found"
+          description="This lead may have been deleted or you may not have access to it."
+          className="flex-1"
+        />
+      </PageWrapper>
     );
   }
 
   return (
     <PageWrapper
       title={lead.name}
-      actions={
-        <Button variant="outline" size="sm" onClick={handleBackToPipeline}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Pipeline
-        </Button>
-      }
+      backHref="/crm/leads"
     >
       <motion.div
         className="space-y-4"

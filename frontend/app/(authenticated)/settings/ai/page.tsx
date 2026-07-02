@@ -73,11 +73,11 @@ export default function AiSettingsPage() {
   const updateFlag = useUpdateFeatureFlag();
 
   function handleRetryFlags() {
-    refetchFlags();
+    void refetchFlags();
   }
 
   function handleRetryUsage() {
-    refetchUsage();
+    void refetchUsage();
   }
 
   const handleToggle = useCallback(

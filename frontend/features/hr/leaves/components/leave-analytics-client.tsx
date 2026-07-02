@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { TrendingUp, Users, Clock, ArrowRight } from "lucide-react";
+import { TrendingUp, Users, Clock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,21 +46,8 @@ export function LeaveAnalyticsClient() {
   const pendingLeaves = leavesByStatus.find((s) => s.status === "PENDING")?.count ?? 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40 dark:from-background dark:via-background dark:to-violet-950/10">
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Leave Analytics</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Summary from the HR Analytics module</p>
-          </div>
-          <Button asChild variant="outline">
-            <Link href="/hr/analytics">
-              Full Report <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-
-        {isLoading ? (
+    <div className="space-y-6">
+      {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-32 rounded-2xl" />
@@ -139,11 +126,10 @@ export function LeaveAnalyticsClient() {
           <p className="text-sm text-violet-700 dark:text-violet-300">
             Leave analytics data is loaded from the HR Analytics module.
           </p>
-          <Button asChild size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shrink-0 ml-4">
+          <Button asChild size="sm" className="shrink-0 ml-4">
             <Link href="/hr/analytics">View Detailed Reports</Link>
           </Button>
         </motion.div>
-      </div>
     </div>
   );
 }

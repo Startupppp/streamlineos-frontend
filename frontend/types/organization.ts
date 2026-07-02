@@ -95,7 +95,6 @@ export interface Role {
   name: string;
   slug: string;
   isSystem: boolean;
-  permissions: string[];
   createdAt: Date;
   updatedAt: Date;
 }

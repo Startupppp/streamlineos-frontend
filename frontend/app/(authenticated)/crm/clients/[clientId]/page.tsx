@@ -2,14 +2,9 @@
 
 import { use, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   ExternalLink,
-  AlertCircle,
-  RefreshCw,
-  SearchX,
   CheckSquare,
   TrendingUp,
 } from "lucide-react";
@@ -21,6 +16,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { useClientAccount } from "@/hooks/api/crm/clients";
+import { ErrorState } from "@/components/shared";
 import { ClientOverviewTab } from "@/features/crm/clients/client-overview-tab";
 import { ClientTimelineTab } from "@/features/crm/clients/client-timeline-tab";
 import { ClientOpportunitiesTab } from "@/features/crm/clients/client-opportunities-tab";
@@ -48,7 +44,6 @@ export default function ClientDetailPage({
 }) {
   const { clientId: clientIdStr } = use(params);
   const clientId = Number(clientIdStr);
-  const router = useRouter();
 
   const {
     data: client,
@@ -57,12 +52,11 @@ export default function ClientDetailPage({
     refetch,
   } = useClientAccount(clientId);
 
-  const handleBack = useCallback(() => router.push("/crm/clients"), [router]);
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   if (isLoading) {
     return (
-      <PageWrapper title="Client" subtitle="Loading...">
+      <PageWrapper title="Client" subtitle="Loading..." backHref="/crm/clients">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
@@ -93,47 +87,26 @@ export default function ClientDetailPage({
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
-        <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center">
-          <AlertCircle className="h-7 w-7 text-red-400" />
-        </div>
-        <div>
-          <p className="font-semibold text-slate-800">Failed to load client</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            There was an error loading this client account. Please try again.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={handleRetry}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Try Again
-          </Button>
-          <Button variant="ghost" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Clients
-          </Button>
-        </div>
-      </div>
+      <PageWrapper title="Client" backHref="/crm/clients">
+        <ErrorState
+          title="Failed to load client"
+          description="There was an error loading this client account. Please try again."
+          onRetry={handleRetry}
+          className="flex-1"
+        />
+      </PageWrapper>
     );
   }
 
   if (!client) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
-        <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
-          <SearchX className="h-7 w-7 text-slate-400" />
-        </div>
-        <div>
-          <p className="font-semibold text-slate-800">Client not found</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            This client account may have been removed or you may not have access.
-          </p>
-        </div>
-        <Button variant="outline" onClick={handleBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Clients
-        </Button>
-      </div>
+      <PageWrapper title="Client" backHref="/crm/clients">
+        <ErrorState
+          title="Client not found"
+          description="This client account may have been removed or you may not have access."
+          className="flex-1"
+        />
+      </PageWrapper>
     );
   }
 
@@ -141,6 +114,7 @@ export default function ClientDetailPage({
     <PageWrapper
       variant="display"
       title={client.clientName}
+      backHref="/crm/clients"
       subtitle={
         <div className="flex items-center gap-2 flex-wrap">
           <Badge className={cn("text-[10px]", STATUS_COLORS[client.status])}>
@@ -152,18 +126,12 @@ export default function ClientDetailPage({
         </div>
       }
       actions={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/crm/leads/${client.leadId}`}>
-              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-              View Lead
-            </Link>
-          </Button>
-          <Button variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/crm/leads/${client.leadId}`}>
+            <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+            View Lead
+          </Link>
+        </Button>
       }
     >
       <motion.div

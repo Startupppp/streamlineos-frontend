@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -178,19 +179,12 @@ export default function BulkImportPage() {
   const previewRows = rows.slice(0, 10);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/hr/recruitment/candidates")} className="h-8 w-8">
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </Button>
-        <div>
-          <h1 className="text-xl font-semibold">Bulk Import Candidates</h1>
-          <p className="text-sm text-muted-foreground">Upload a CSV or Excel file to import candidates</p>
-        </div>
-      </div>
-
+    <PageWrapper
+      title="Bulk Import Candidates"
+      subtitle="Upload a CSV or Excel file to import candidates"
+      backHref="/hr/recruitment/candidates"
+    >
+      <div className="space-y-6">
       <div className="flex gap-2 text-xs">
         {(["upload", "map", "preview", "done"] as Step[]).map((s, i) => (
           <div key={s} className="flex items-center gap-2">
@@ -349,6 +343,7 @@ export default function BulkImportPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </PageWrapper>
   );
 }

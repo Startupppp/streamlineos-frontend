@@ -19,7 +19,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
@@ -132,14 +132,14 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
 
   return (
     <Sheet open onOpenChange={handleOpenChange}>
-      <SheetContent className="flex flex-col p-0 w-[380px] sm:max-w-[380px]">
+      <SheetContent className="flex flex-col p-0 w-full sm:max-w-lg">
         <SheetHeader className="px-4 py-3 border-b shrink-0">
           <SheetTitle className="flex items-center gap-2 text-sm font-semibold">
             <Activity className="h-4 w-4 text-muted-foreground" />
             Event Details
           </SheetTitle>
         </SheetHeader>
-        <div className="flex-1 min-h-0 px-4 py-3 space-y-4 overflow-hidden">
+        <div className="flex-1 min-h-0 px-4 py-3 space-y-4 overflow-y-auto">
           <DetailField label="Action">
             <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
               {log.action}
@@ -175,11 +175,16 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
           )}
           {log.metadata && Object.keys(log.metadata).length > 0 && (
             <DetailField label="Metadata">
-              <pre className="text-[11px] bg-muted/60 rounded-md p-3 border text-foreground overflow-y-auto overflow-x-hidden whitespace-pre-wrap wrap-break-word max-h-none h-[calc(100vh-360px)] min-h-[120px]">
+              <pre className="text-[11px] bg-muted/60 rounded-md p-3 border text-foreground overflow-x-auto whitespace-pre-wrap break-words">
                 {JSON.stringify(log.metadata, null, 2)}
               </pre>
             </DetailField>
           )}
+        </div>
+        <div className="shrink-0 px-4 py-3 border-t flex items-center justify-end">
+          <SheetClose asChild>
+            <Button variant="outline" size="sm">Close</Button>
+          </SheetClose>
         </div>
       </SheetContent>
     </Sheet>
@@ -195,8 +200,8 @@ function LogRow({ log, onSelect }: LogRowProps) {
   const handleClick = useCallback(() => onSelect(log), [log, onSelect]);
 
   return (
-    <TableRow className="cursor-pointer hover:bg-muted/40" onClick={handleClick}>
-      <TableCell className="text-[12px] text-muted-foreground font-mono whitespace-nowrap">
+    <TableRow className="h-8 cursor-pointer hover:bg-muted/40" onClick={handleClick}>
+      <TableCell className="text-[11px] text-muted-foreground font-mono whitespace-nowrap px-2 py-1">
         {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
       </TableCell>
       <TableCell>
@@ -205,21 +210,21 @@ function LogRow({ log, onSelect }: LogRowProps) {
             <AvatarImage src={resolveImageUrl(log.userImage)} />
             <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
           </Avatar>
-          <span className="text-[13px] font-medium truncate max-w-[120px]">
+          <span className="text-[11px] font-medium truncate max-w-[120px]">
             {log.userName ?? log.userEmail ?? log.userId}
           </span>
         </div>
       </TableCell>
       <TableCell className="whitespace-nowrap">
-        <Badge variant="outline" className={`text-[11px] ${actionBadgeClass(log.action)}`}>
+        <Badge variant="outline" className={`text-[10px] ${actionBadgeClass(log.action)}`}>
           {formatActionLabel(log.action)}
         </Badge>
       </TableCell>
-      <TableCell className="text-[12px] text-muted-foreground capitalize whitespace-nowrap">
+      <TableCell className="text-[11px] text-muted-foreground capitalize whitespace-nowrap px-2 py-1">
         {log.targetType ?? "—"}
-        {log.targetId && <span className="text-[11px] opacity-60"> #{log.targetId}</span>}
+        {log.targetId && <span className="text-[10px] opacity-60"> #{log.targetId}</span>}
       </TableCell>
-      <TableCell className="text-[12px] font-mono text-muted-foreground whitespace-nowrap">
+      <TableCell className="text-[11px] font-mono text-muted-foreground whitespace-nowrap px-2 py-1">
         {log.ipAddress ?? "—"}
       </TableCell>
       <TableCell>
@@ -363,8 +368,8 @@ function OrgAuditLogContent() {
         </div>
       }
       filters={
-        <div className="flex flex-wrap gap-2 items-end">
-          <div className="relative self-end">
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search actor or action…"
@@ -373,30 +378,21 @@ function OrgAuditLogContent() {
               className="pl-8 h-8 text-xs max-w-[220px]"
             />
           </div>
-          <div className="flex flex-col gap-1 min-w-[180px] flex-1">
-            <p className="text-[11px] font-medium text-muted-foreground">Action Type</p>
-            <Select value={actionFilter} onValueChange={handleActionChange}>
-              <SelectTrigger className="h-8 text-sm w-full">
-                <SelectValue placeholder="All org actions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Org Actions</SelectItem>
-                {ORG_ACTION_TYPES.map((a) => (
-                  <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1 min-w-[140px] flex-1">
-            <p className="text-[11px] font-medium text-muted-foreground">From</p>
-            <DatePicker value={dateFrom} onChange={handleFromChange} placeholder="From date" className="w-full" />
-          </div>
-          <div className="flex flex-col gap-1 min-w-[140px] flex-1">
-            <p className="text-[11px] font-medium text-muted-foreground">To</p>
-            <DatePicker value={dateTo} onChange={handleToChange} placeholder="To date" className="w-full" />
-          </div>
+          <Select value={actionFilter} onValueChange={handleActionChange}>
+            <SelectTrigger className="h-8 text-xs min-w-[180px]">
+              <SelectValue placeholder="All org actions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Org Actions</SelectItem>
+              {ORG_ACTION_TYPES.map((a) => (
+                <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <DatePicker value={dateFrom} onChange={handleFromChange} placeholder="From date" className="h-8 min-w-[140px]" />
+          <DatePicker value={dateTo} onChange={handleToChange} placeholder="To date" className="h-8 min-w-[140px]" />
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-sm self-end">Clear</Button>
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-sm">Clear</Button>
           )}
         </div>
       }
@@ -435,12 +431,12 @@ function OrgAuditLogContent() {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[170px] bg-card">Timestamp</TableHead>
-                        <TableHead className="w-[190px] bg-card">User</TableHead>
-                        <TableHead className="bg-card">Action</TableHead>
-                        <TableHead className="w-[110px] bg-card">Entity</TableHead>
-                        <TableHead className="w-[110px] bg-card">IP Address</TableHead>
-                        <TableHead className="w-[50px] bg-card" />
+                        <TableHead className="w-[170px] bg-card text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Timestamp</TableHead>
+                        <TableHead className="w-[190px] bg-card text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">User</TableHead>
+                        <TableHead className="bg-card text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Action</TableHead>
+                        <TableHead className="w-[110px] bg-card text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Entity</TableHead>
+                        <TableHead className="w-[110px] bg-card text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">IP</TableHead>
+                        <TableHead className="w-[50px] bg-card px-2 py-1.5" />
                       </TableRow>
                     </TableHeader>
                   </Table>

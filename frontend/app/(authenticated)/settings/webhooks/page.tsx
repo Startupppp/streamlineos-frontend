@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -75,12 +76,14 @@ function useWebhooks() {
   return useQuery({
     queryKey: queryKeys.webhooks.all,
     queryFn: () => apiClient.get<WebhookEndpoint[]>("/webhooks"),
+    staleTime: 60_000,
   });
 }
 
 function useCreateWebhook() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["webhooks", "create"] as const,
     mutationFn: (data: CreateWebhookInput) => apiClient.post<WebhookEndpoint>("/webhooks", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
   });
@@ -89,6 +92,7 @@ function useCreateWebhook() {
 function useToggleWebhook() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["webhooks", "toggle"] as const,
     mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
       apiClient.patch(`/webhooks/${id}`, { isActive }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
@@ -98,13 +102,14 @@ function useToggleWebhook() {
 function useDeleteWebhook() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["webhooks", "delete"] as const,
     mutationFn: (id: number) => apiClient.delete(`/webhooks/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
   });
 }
 
 export default function WebhooksPage() {
-  const { data: webhooks, isLoading } = useWebhooks();
+  const { data: webhooks, isLoading, isError, refetch } = useWebhooks();
   const createWebhook = useCreateWebhook();
   const toggleWebhook = useToggleWebhook();
   const deleteWebhook = useDeleteWebhook();
@@ -177,20 +182,12 @@ export default function WebhooksPage() {
     if (!open) setDeleteId(null);
   }, []);
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Webhooks" subtitle="Send real-time events to external endpoints">
-        <div className="space-y-4">
-          {[1, 2].map(i => <Skeleton key={i} className="h-32" />)}
-        </div>
-      </PageWrapper>
-    );
-  }
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   return (
     <PageWrapper
       title="Webhooks"
-      subtitle="Send real-time events to external systems when things happen in the CRM"
+      subtitle="Send real-time events to external systems when actions occur in your workspace."
       actions={
         <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-2" />
@@ -198,29 +195,41 @@ export default function WebhooksPage() {
         </Button>
       }
     >
-      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
-        {(!webhooks || webhooks.length === 0) ? (
-          <motion.div variants={fadeUp} className="flex flex-1 min-h-[60vh]">
-            <EmptyState
-              illustration={<EmptyDevicesIllustration />}
-              title="No webhooks configured"
-              description="Webhooks let external services receive notifications when events happen in your CRM."
-              action={{ label: "Add Webhook", onClick: handleOpenCreate }}
-              className="w-full"
-            />
-          </motion.div>
-        ) : (
-          webhooks.map((wh) => (
-            <WebhookCard
-              key={wh.id}
-              webhook={wh}
-              onCopyUrl={copyUrl}
-              onToggle={handleToggle}
-              onDelete={setDeleteId}
-            />
-          ))
-        )}
-      </motion.div>
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2].map((i) => <Skeleton key={i} className="h-32" />)}
+        </div>
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load webhooks"
+          description="Failed to fetch webhooks. Please try again."
+          onRetry={handleRetry}
+        />
+      ) : (
+        <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
+          {(!webhooks || webhooks.length === 0) ? (
+            <motion.div variants={fadeUp} className="flex flex-1 min-h-[60vh]">
+              <EmptyState
+                illustration={<EmptyDevicesIllustration />}
+                title="No webhooks configured"
+                description="Webhooks let external services receive notifications when events happen in your CRM."
+                action={{ label: "Add Webhook", onClick: handleOpenCreate }}
+                className="w-full"
+              />
+            </motion.div>
+          ) : (
+            webhooks.map((wh) => (
+              <WebhookCard
+                key={wh.id}
+                webhook={wh}
+                onCopyUrl={copyUrl}
+                onToggle={handleToggle}
+                onDelete={setDeleteId}
+              />
+            ))
+          )}
+        </motion.div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">

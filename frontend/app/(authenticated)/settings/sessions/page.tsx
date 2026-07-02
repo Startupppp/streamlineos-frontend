@@ -1,16 +1,16 @@
 "use client";
 
-import { Monitor, Trash2, LogOut } from "lucide-react";
+import { Trash2, LogOut } from "lucide-react";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
 import { format } from "date-fns";
-import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/auth";
+import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/hr/sessions";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Table,
   TableBody,
@@ -32,23 +32,12 @@ function SessionsSkeleton() {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center flex-1 min-h-[60vh] gap-3 text-muted-foreground">
-      <Monitor className="h-10 w-10 opacity-30" />
-      <p className="text-sm">No active sessions found</p>
-    </div>
-  );
-}
-
 function SessionRow({
   session,
-  currentSessionId,
   onRevoke,
   isRevokePending,
 }: {
   session: Session;
-  currentSessionId: string | undefined;
   onRevoke: (id: string) => void;
   isRevokePending: boolean;
 }) {
@@ -63,7 +52,7 @@ function SessionRow({
           <span className="truncate max-w-[200px]">
             {session.userAgent ?? "Unknown device"}
           </span>
-          {session.id === currentSessionId && (
+          {session.isCurrent && (
             <Badge variant="secondary" className="shrink-0 text-xs">
               Current
             </Badge>
@@ -80,7 +69,7 @@ function SessionRow({
         {format(new Date(session.createdAt), "MMM d, yyyy")}
       </TableCell>
       <TableCell>
-        {session.id !== currentSessionId && (
+        {!session.isCurrent && (
           <Button
             variant="ghost"
             size="sm"
@@ -96,12 +85,9 @@ function SessionRow({
 }
 
 export default function SessionsPage() {
-  const { data: authSession } = useSession();
   const { data: sessions, isLoading, isError, refetch } = useSessions();
   const revokeOne = useRevokeSession();
   const revokeAll = useRevokeAllSessions();
-
-  const currentSessionId = authSession?.sessionId;
 
   function handleRevoke(id: string) {
     revokeOne.mutate(id, {
@@ -147,30 +133,36 @@ export default function SessionsPage() {
           className="flex-1"
         />
       ) : !sessions || sessions.length === 0 ? (
-        <EmptyState />
+        <div className="flex flex-1 items-center justify-center min-h-[60vh]">
+          <EmptyState
+            title="No active sessions"
+            description="No other sessions are currently active."
+          />
+        </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Device / Browser</TableHead>
-              <TableHead>IP Address</TableHead>
-              <TableHead>Last Active</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="w-24" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sessions.map((s) => (
-              <SessionRow
-                key={s.id}
-                session={s}
-                currentSessionId={currentSessionId}
-                onRevoke={handleRevoke}
-                isRevokePending={revokeOne.isPending}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Device / Browser</TableHead>
+                <TableHead>IP Address</TableHead>
+                <TableHead>Last Active</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="w-24" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sessions.map((s) => (
+                <SessionRow
+                  key={s.id}
+                  session={s}
+                  onRevoke={handleRevoke}
+                  isRevokePending={revokeOne.isPending}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </PageWrapper>
   );

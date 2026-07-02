@@ -47,6 +47,7 @@ export const useCreateRole = () => {
     Error,
     { name: string; slug: string; permissions?: string[] }
   >({
+    mutationKey: ["roles", "create"],
     mutationFn: (data) => apiClient.post<Role>("/roles", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
@@ -57,6 +58,7 @@ export const useCreateRole = () => {
 export const useDeleteRole = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["roles", "delete"],
     mutationFn: (id) =>
       apiClient.delete<{ success: boolean }>(`/roles/${id}`),
     onSuccess: () => {
@@ -83,6 +85,7 @@ export function useRoleTemplates() {
 export function useCloneRoleTemplate() {
   const queryClient = useQueryClient();
   return useMutation<Role, Error, { templateId: string; name?: string; slug?: string }>({
+    mutationKey: ["roles", "clone-template"],
     mutationFn: (data) => apiClient.post<Role>("/roles/templates", data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.roles.all }),
   });
@@ -108,6 +111,7 @@ export const useRolePermissionGrants = (
 export const useSetRolePermissions = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, SetRolePermissionsInput>({
+    mutationKey: ["roles", "set-permissions"],
     mutationFn: ({ roleId, items }) =>
       apiClient.put<{ success: boolean }>(`/roles/${roleId}/permissions`, { items }),
     onSuccess: (_data, variables) => {
@@ -119,6 +123,7 @@ export const useSetRolePermissions = () => {
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
       queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.roles.permissionsMatrix() });
     },
   });
 };
@@ -142,6 +147,7 @@ export const useRoleMembers = (
 export const useAssignRoleMember = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, AssignRoleMemberInput>({
+    mutationKey: ["roles", "assign-member"],
     mutationFn: ({ roleId, ...body }) =>
       apiClient.post<{ success: boolean }>(`/roles/${roleId}/members`, body),
     onSuccess: (_data, variables) => {
@@ -157,6 +163,7 @@ export const useAssignRoleMember = () => {
 export const useUnassignRoleMember = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, UnassignRoleMemberInput>({
+    mutationKey: ["roles", "unassign-member"],
     mutationFn: ({ roleId, ...body }) =>
       apiClient.delete<{ success: boolean }>(`/roles/${roleId}/members`, body),
     onSuccess: (_data, variables) => {

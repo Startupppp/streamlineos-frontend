@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useOrgAuditLog } from "@/hooks/api/users";
 import {
   ChevronLeft,
@@ -26,18 +27,31 @@ import { formatDistanceToNow } from "date-fns";
 
 function RowSkeleton() {
   return (
-    <TableRow>
-      <TableCell><Skeleton className="h-3.5 w-32" /></TableCell>
-      <TableCell><Skeleton className="h-5 w-24 rounded-full" /></TableCell>
-      <TableCell><Skeleton className="h-3.5 w-28" /></TableCell>
-      <TableCell><Skeleton className="h-3.5 w-20" /></TableCell>
-      <TableCell><Skeleton className="h-3.5 w-24" /></TableCell>
+    <TableRow className="h-8">
+      <TableCell className="px-2 py-1">
+        <Skeleton className="h-3 w-32" />
+      </TableCell>
+      <TableCell className="px-2 py-1">
+        <Skeleton className="h-4 w-24 rounded-full" />
+      </TableCell>
+      <TableCell className="px-2 py-1">
+        <Skeleton className="h-3 w-28" />
+      </TableCell>
+      <TableCell className="px-2 py-1">
+        <Skeleton className="h-3 w-20" />
+      </TableCell>
+      <TableCell className="px-2 py-1">
+        <Skeleton className="h-3 w-24" />
+      </TableCell>
     </TableRow>
   );
 }
 
-function actionVariant(action: string): "default" | "secondary" | "outline" | "destructive" {
-  if (action.includes("delete") || action.includes("remove")) return "destructive";
+function actionVariant(
+  action: string,
+): "default" | "secondary" | "outline" | "destructive" {
+  if (action.includes("delete") || action.includes("remove"))
+    return "destructive";
   if (action.includes("create") || action.includes("invite")) return "default";
   return "secondary";
 }
@@ -49,7 +63,7 @@ export function OrgAuditLogPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
-  const { data, isLoading } = useOrgAuditLog({
+  const { data, isLoading, isError, refetch } = useOrgAuditLog({
     page,
     limit: 20,
     ...(actorSearch ? { actorUserId: actorSearch } : {}),
@@ -63,6 +77,11 @@ export function OrgAuditLogPage() {
 
   function handleActorSearch(e: React.ChangeEvent<HTMLInputElement>) {
     setActorSearch(e.target.value);
+    setPage(1);
+  }
+
+  function handleActionFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setActionFilter(e.target.value);
     setPage(1);
   }
 
@@ -84,13 +103,26 @@ export function OrgAuditLogPage() {
     setPage(1);
   }
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handlePrevPage = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
+  const handleNextPage = useCallback(
+    () =>
+      setPage((p) =>
+        pagination ? Math.min(pagination.totalPages, p + 1) : p + 1,
+      ),
+    [pagination],
+  );
+
   const hasFilters = actorSearch || actionFilter || from || to;
 
   return (
     <PageWrapper
       title="Audit Log"
+      eyebrow="People"
       subtitle="Organization-wide audit trail of user management actions."
-      badge={pagination?.total !== undefined ? String(pagination.total) : undefined}
+      badge={
+        pagination?.total !== undefined ? String(pagination.total) : undefined
+      }
       filters={
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[180px]">
@@ -105,7 +137,7 @@ export function OrgAuditLogPage() {
           <Input
             placeholder="Action (e.g. user.invite)"
             value={actionFilter}
-            onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
+            onChange={handleActionFilterChange}
             className="h-8 text-xs w-44"
           />
           <Input
@@ -135,24 +167,42 @@ export function OrgAuditLogPage() {
         </div>
       }
     >
-      {isLoading ? (
+      {isError ? (
+        <ErrorState
+          title="Failed to load audit log"
+          description="An error occurred while loading the audit log."
+          onRetry={handleRetry}
+        />
+      ) : isLoading ? (
         <div className="rounded-md border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40">
-                <TableHead className="text-xs">Actor</TableHead>
-                <TableHead className="text-xs">Action</TableHead>
-                <TableHead className="text-xs">Resource</TableHead>
-                <TableHead className="text-xs">IP</TableHead>
-                <TableHead className="text-xs">When</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: 10 }).map((_, i) => (
-                <RowSkeleton key={i} />
-              ))}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 h-8">
+                  <TableHead className="px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                    Actor
+                  </TableHead>
+                  <TableHead className="px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                    Action
+                  </TableHead>
+                  <TableHead className="px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                    Resource
+                  </TableHead>
+                  <TableHead className="px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                    IP
+                  </TableHead>
+                  <TableHead className="px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                    When
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <RowSkeleton key={i} />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       ) : entries.length === 0 ? (
         <EmptyState
@@ -172,68 +222,88 @@ export function OrgAuditLogPage() {
       ) : (
         <div className="space-y-3">
           <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40">
-                  <TableHead className="text-xs">Actor</TableHead>
-                  <TableHead className="text-xs">Action</TableHead>
-                  <TableHead className="text-xs">Resource</TableHead>
-                  <TableHead className="text-xs">IP</TableHead>
-                  <TableHead className="text-xs">When</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entries.map((entry) => (
-                  <TableRow key={entry.id} className="hover:bg-muted/20">
-                    <TableCell className="text-xs font-mono text-muted-foreground max-w-[140px] truncate">
-                      {entry.actorUserId ?? "system"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={actionVariant(entry.action)}
-                        className="text-[10px] h-5 px-1.5 font-normal font-mono"
-                      >
-                        {entry.action}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {entry.resourceType
-                        ? `${entry.resourceType}${entry.resourceId ? ` / ${entry.resourceId.slice(0, 8)}` : ""}`
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground font-mono">
-                      {entry.ipAddress ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                      {formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 h-8">
+                    <TableHead className="px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                      Actor
+                    </TableHead>
+                    <TableHead className="px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                      Action
+                    </TableHead>
+                    <TableHead className="px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                      Resource
+                    </TableHead>
+                    <TableHead className="px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                      IP
+                    </TableHead>
+                    <TableHead className="px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                      When
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {entries.map((entry) => (
+                    <TableRow
+                      key={entry.id}
+                      className="h-8 hover:bg-muted/20 transition-colors"
+                    >
+                      <TableCell className="px-2 py-1 text-[11px] font-mono text-muted-foreground max-w-[140px] truncate">
+                        {entry.actorUserId ?? "system"}
+                      </TableCell>
+                      <TableCell className="px-2 py-1">
+                        <Badge
+                          variant={actionVariant(entry.action)}
+                          className="text-[10px] h-4 px-1.5 font-normal font-mono"
+                        >
+                          {entry.action}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
+                        {entry.resourceType
+                          ? `${entry.resourceType}${entry.resourceId ? ` / ${entry.resourceId.slice(0, 8)}` : ""}`
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground font-mono tabular-nums">
+                        {entry.ipAddress ?? "—"}
+                      </TableCell>
+                      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(entry.createdAt), {
+                          addSuffix: true,
+                        })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {pagination && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>
-                Showing {(page - 1) * 20 + 1}–{Math.min(page * 20, pagination.total)} of {pagination.total}
+                Showing {(page - 1) * 20 + 1}–
+                {Math.min(page * 20, pagination.total)} of {pagination.total}
               </span>
               <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
                   size="sm"
                   className="h-7 w-7 p-0"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={handlePrevPage}
                   disabled={page === 1}
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
-                <span className="px-2">{page} / {pagination.totalPages}</span>
+                <span className="px-2">
+                  {page} / {pagination.totalPages}
+                </span>
                 <Button
                   variant="outline"
                   size="sm"
                   className="h-7 w-7 p-0"
-                  onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                  onClick={handleNextPage}
                   disabled={page === pagination.totalPages}
                 >
                   <ChevronRight className="h-3.5 w-3.5" />

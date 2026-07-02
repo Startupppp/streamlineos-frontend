@@ -23,6 +23,8 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
+import { Plus } from "lucide-react";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 
 const TRIGGER_LABELS: Record<string, string> = {
   STAGE_CHANGED: "Stage Changed",
@@ -213,21 +215,18 @@ export default function RecruitmentAutomationsPage() {
   function handleConfirmDelete() { if (deleteId != null) handleDelete(deleteId); }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Pipeline Automations</h1>
-          <p className="text-sm text-muted-foreground">Automate actions based on recruitment pipeline events</p>
-        </div>
+    <PageWrapper
+      title="Pipeline Automations"
+      subtitle="Automate actions based on recruitment pipeline events"
+      actions={
         <Button size="sm" onClick={handleOpenSheet}>
-          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          <Plus className="mr-2 h-4 w-4" />
           New Automation
         </Button>
-      </div>
-
-      {isLoading ? (
+      }
+    >
+      <>
+        {isLoading ? (
         <LoadingState variant="list" rows={3} />
       ) : !automations?.length ? (
         <EmptyState
@@ -310,6 +309,7 @@ export default function RecruitmentAutomationsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </>
+    </PageWrapper>
   );
 }

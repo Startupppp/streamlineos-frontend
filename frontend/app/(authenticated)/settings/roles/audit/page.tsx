@@ -71,6 +71,8 @@ function AuditContent() {
     <PageWrapper
       title="Access Audit Log"
       subtitle="Track role and permission changes across your organization"
+      backHref="/settings/roles"
+      eyebrow="Settings / Roles"
     >
       <div className="flex flex-col gap-4 flex-1 min-h-0">
         {query.isLoading && <AuditLoadingSkeleton />}
@@ -89,13 +91,13 @@ function AuditContent() {
               <ScrollArea type="auto">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border/50 text-muted-foreground">
-                        <th className="text-left px-4 py-3 font-medium text-xs whitespace-nowrap">When</th>
-                        <th className="text-left px-4 py-3 font-medium text-xs whitespace-nowrap">Actor</th>
-                        <th className="text-left px-4 py-3 font-medium text-xs whitespace-nowrap">Action</th>
-                        <th className="text-left px-4 py-3 font-medium text-xs whitespace-nowrap">Target</th>
-                        <th className="text-left px-4 py-3 font-medium text-xs whitespace-nowrap">Affected User</th>
+                    <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                      <tr className="border-b-2 border-border text-muted-foreground">
+                        <th className="text-left px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">When</th>
+                        <th className="text-left px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">Actor</th>
+                        <th className="text-left px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">Action</th>
+                        <th className="text-left px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">Target</th>
+                        <th className="text-left px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">Affected User</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/30">
@@ -149,11 +151,11 @@ function AuditLogRow({ log }: AuditLogRowProps) {
   const affectedUser = resolveAffectedUser(log);
 
   return (
-    <tr className="hover:bg-muted/20 transition-colors">
-      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+    <tr className="h-8 hover:bg-muted/30 transition-colors">
+      <td className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
         {formatTimestamp(log.createdAt)}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-2 py-1">
         <div className="flex items-center gap-2 min-w-0">
           <Avatar className="h-6 w-6 shrink-0">
             <AvatarImage src={log.userImage ?? undefined} />
@@ -169,7 +171,7 @@ function AuditLogRow({ log }: AuditLogRowProps) {
           </div>
         </div>
       </td>
-      <td className="px-4 py-3 whitespace-nowrap">
+      <td className="px-2 py-1 whitespace-nowrap">
         {meta ? (
           <Badge variant={meta.variant} className="text-[10px] px-1.5 gap-1 whitespace-nowrap">
             <meta.Icon className="h-3 w-3" />
@@ -181,14 +183,14 @@ function AuditLogRow({ log }: AuditLogRowProps) {
           </Badge>
         )}
       </td>
-      <td className="px-4 py-3 text-xs text-foreground">
+      <td className="px-2 py-1 text-[11px] text-foreground">
         {targetLabel ? (
           <span className="font-mono text-[11px] bg-muted/40 px-1.5 py-0.5 rounded">{targetLabel}</span>
         ) : (
           <span className="text-muted-foreground">—</span>
         )}
       </td>
-      <td className="px-4 py-3 text-xs text-muted-foreground">
+      <td className="px-2 py-1 text-[11px] text-muted-foreground">
         {affectedUser ?? <span>—</span>}
       </td>
     </tr>

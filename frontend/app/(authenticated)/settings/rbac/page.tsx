@@ -21,7 +21,7 @@ function StatCard({
 }) {
   return (
     <Card>
-      <CardContent className="flex items-center gap-4 p-6">
+      <CardContent className="flex items-center gap-4 p-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
           <Icon className="h-5 w-5 text-primary" />
         </div>
@@ -30,7 +30,7 @@ function StatCard({
           {value === undefined ? (
             <Skeleton className="h-7 w-16 mt-1" />
           ) : (
-            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-2xl font-bold tabular-nums">{value}</p>
           )}
         </div>
       </CardContent>
@@ -47,6 +47,7 @@ export default function RbacOverviewPage() {
       <PageWrapper
         title="RBAC Overview"
         subtitle="Role-based access control analytics and coverage"
+        eyebrow="Settings"
       >
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -107,12 +108,8 @@ export default function RbacOverviewPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-xs text-muted-foreground">
-                          {(role as { memberCount?: number }).memberCount ?? 0}{" "}
-                          members
-                        </span>
                         <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/settings/roles`}>Edit</Link>
+                          <Link href={`/settings/roles/${role.id}`}>Edit</Link>
                         </Button>
                       </div>
                     </div>

@@ -26,6 +26,7 @@ export function PageWrapper({
   subtitle,
   eyebrow,
   badge,
+  backHref,
   actions,
   filters,
   children,
@@ -43,27 +44,36 @@ export function PageWrapper({
     <div className={cn("flex flex-col flex-1 min-h-0", className)}>
       <div className="shrink-0 px-4 sm:px-6 pt-4 pb-2">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-          <div className="min-w-0 flex-1">
-            {eyebrow && (
-              <p className="text-[11px] font-medium text-muted-foreground mb-1 leading-none">
-                {eyebrow}
-              </p>
+          <div className="min-w-0 flex-1 flex items-start gap-1">
+            {backHref && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 mt-0.5" aria-label="Back" asChild>
+                <Link href={backHref}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              </Button>
             )}
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className={titleClass}>
-                {title}
-              </h1>
-              {badge && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[11px] font-medium tabular-nums border border-blue-200/70">
-                  {badge}
-                </span>
+            <div className="min-w-0 flex-1">
+              {eyebrow && (
+                <p className="text-[11px] font-medium text-muted-foreground mb-1 leading-none">
+                  {eyebrow}
+                </p>
+              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className={titleClass}>
+                  {title}
+                </h1>
+                {badge && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[11px] font-medium tabular-nums border border-blue-200/70">
+                    {badge}
+                  </span>
+                )}
+              </div>
+              {subtitle && (
+                <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
+                  {subtitle}
+                </p>
               )}
             </div>
-            {subtitle && (
-              <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
-                {subtitle}
-              </p>
-            )}
           </div>
 
           {actions && (

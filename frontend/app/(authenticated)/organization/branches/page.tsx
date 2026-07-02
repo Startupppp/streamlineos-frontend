@@ -14,17 +14,19 @@ import {
   useDeleteOrgBranch,
 } from "@/hooks/api/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
+  SheetClose,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -248,11 +250,6 @@ function BranchForm({
             )}
           />
         </div>
-        <SheetFooter>
-          <Button type="submit" form="branch-form" disabled={isPending}>
-            {isPending ? "Saving…" : "Save"}
-          </Button>
-        </SheetFooter>
       </form>
     </Form>
   );
@@ -423,109 +420,122 @@ export default function OrgBranchesPage() {
       }
     >
       {isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-md" />
-          ))}
-        </div>
+        <SkeletonTable rows={5} columns={5} />
       ) : filtered.length === 0 ? (
         search ? (
-          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-            <GitBranch className="h-10 w-10 opacity-30" />
-            <p className="text-sm">No branches matching &quot;{search}&quot;</p>
-          </div>
+          <EmptyState
+            illustration={<GitBranch className="h-8 w-8 text-muted-foreground/40" />}
+            title={`No branches matching "${search}"`}
+            description="Try a different search term."
+            compact
+            className="min-h-[200px]"
+          />
         ) : showArchived ? (
-          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-            <Archive className="h-10 w-10 opacity-30" />
-            <p className="text-sm">No archived branches</p>
-          </div>
+          <EmptyState
+            illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+            title="No archived branches"
+            compact
+            className="min-h-[200px]"
+          />
         ) : (
-          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-            <GitBranch className="h-10 w-10 opacity-30" />
-            <p className="text-sm">No branches yet</p>
-            <Button size="sm" onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-1.5" />
-              Add Branch
-            </Button>
-          </div>
+          <EmptyState
+            illustration={<GitBranch className="h-8 w-8 text-muted-foreground/40" />}
+            title="No branches yet"
+            description="Create your first branch to get started."
+            action={{ label: "Add Branch", onClick: handleOpenCreate }}
+            className="min-h-[40vh]"
+          />
         )
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Code</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-28" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((b) => (
-              <TableRow key={b.id} className={b.status === "ARCHIVED" ? "opacity-60" : ""}>
-                <TableCell className="font-medium">{b.name}</TableCell>
-                <TableCell>
-                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{b.code}</code>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {[b.city, b.state, b.country].filter(Boolean).join(", ") || "—"}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={b.status === "ACTIVE" ? "outline" : "secondary"}
-                    className={
-                      b.status === "ACTIVE"
-                        ? "text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
-                        : b.status === "ARCHIVED"
-                          ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
-                          : ""
-                    }
-                  >
-                    {b.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    {b.status === "ARCHIVED" ? (
-                      <>
-                        <Button variant="ghost" size="sm" onClick={makeRestoreHandler(b)} title="Restore">
-                          <RotateCcw className="h-4 w-4 text-blue-600" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(b)} title="Delete permanently">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(b)} title="Edit">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={makeArchiveHandler(b)} title="Archive">
-                          <Archive className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <div className="min-w-[580px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Code</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Location</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
+                  <TableHead className="w-28 px-2 py-1.5" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((b) => (
+                  <TableRow key={b.id} className={cn("h-8", b.status === "ARCHIVED" && "opacity-60")}>
+                    <TableCell className="font-medium px-2 py-1 text-[11px]">{b.name}</TableCell>
+                    <TableCell className="px-2 py-1">
+                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{b.code}</code>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground px-2 py-1 text-[11px]">
+                      {[b.city, b.state, b.country].filter(Boolean).join(", ") || "—"}
+                    </TableCell>
+                    <TableCell className="px-2 py-1">
+                      <Badge
+                        variant={b.status === "ACTIVE" ? "outline" : "secondary"}
+                        className={cn(
+                          "h-4 px-1.5 py-0 text-[9px]",
+                          b.status === "ACTIVE"
+                            ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
+                            : b.status === "ARCHIVED"
+                              ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                              : ""
+                        )}
+                      >
+                        {b.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-2 py-1">
+                      <div className="flex items-center gap-1">
+                        {b.status === "ARCHIVED" ? (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(b)} title="Restore">
+                              <RotateCcw className="h-4 w-4 text-blue-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(b)} title="Delete permanently">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(b)} title="Edit">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={makeArchiveHandler(b)} title="Archive">
+                              <Archive className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       )}
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
-        <SheetContent className="p-0 flex flex-col gap-0">
+        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>New Branch</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-5">
             <BranchForm businessUnits={businessUnits} onSubmit={handleCreate} isPending={create.isPending} />
           </div>
+          <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
+            <SheetClose asChild>
+              <Button variant="outline" size="sm">Cancel</Button>
+            </SheetClose>
+            <Button size="sm" type="submit" form="branch-form" disabled={create.isPending}>
+              {create.isPending ? "Saving…" : "Save"}
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
 
       <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-        <SheetContent className="p-0 flex flex-col gap-0">
+        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Edit Branch</SheetTitle>
           </SheetHeader>
@@ -549,6 +559,14 @@ export default function OrgBranchesPage() {
                 isPending={update.isPending}
               />
             )}
+          </div>
+          <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
+            <SheetClose asChild>
+              <Button variant="outline" size="sm">Cancel</Button>
+            </SheetClose>
+            <Button size="sm" type="submit" form="branch-form" disabled={update.isPending}>
+              {update.isPending ? "Saving…" : "Save"}
+            </Button>
           </div>
         </SheetContent>
       </Sheet>

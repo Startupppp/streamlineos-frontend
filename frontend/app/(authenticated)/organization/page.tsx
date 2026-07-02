@@ -81,7 +81,7 @@ function HealthCheck({ count, label, ok }: { count: number; label: string; ok: b
         <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
       )}
       <span className="text-muted-foreground">{label}</span>
-      <Badge variant={ok ? "outline" : "secondary"} className="ml-auto text-xs h-5">
+      <Badge variant={ok ? "outline" : "secondary"} className="ml-auto text-[10px] h-5 px-2">
         {count}
       </Badge>
     </div>
@@ -99,10 +99,15 @@ export default function OrganizationOverviewPage() {
   return (
     <PageWrapper
       title="Organization"
-      subtitle="Manage your company hierarchy, locations, and cost centers."
+      eyebrow="Organization"
+      subtitle={
+        overview
+          ? `${(overview.businessUnits ?? 0) + (overview.branches ?? 0) + (overview.departments ?? 0) + (overview.teams ?? 0)} entities across your hierarchy`
+          : "Manage your company hierarchy, locations, and cost centers."
+      }
     >
       <div className="space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {SECTIONS.map((section) => {
             const Icon = section.icon;
             const count = overview?.[section.key];

@@ -922,7 +922,7 @@ export default function CheckoutPage() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </Link>
                 <Link
-                  href="/settings/members"
+                  href="/users"
                   className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors"
                 >
                   <span className="text-sm">Invite your team</span>

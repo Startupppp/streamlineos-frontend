@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
-import { useCreateRole, useRoles, useRoleTemplates } from "@/hooks/api/roles";
+import { useCreateRole, useRoles, useRoleTemplates, useRolePermissionGrants } from "@/hooks/api/roles";
 
 const CLONE_NONE = "none";
 
@@ -82,10 +82,16 @@ export function CreateRoleDialog({
 
   const cloneFrom = watch("cloneFrom");
 
+  const cloneRoleId = useMemo(() => {
+    if (!cloneFrom.startsWith("role:")) return 0;
+    return Number(cloneFrom.slice("role:".length));
+  }, [cloneFrom]);
+
+  const cloneGrantsQuery = useRolePermissionGrants(cloneRoleId);
+
   const clonedPermissions = useMemo<string[]>(() => {
-    if (cloneFrom.startsWith("role:")) {
-      const roleId = Number(cloneFrom.slice("role:".length));
-      return roles?.find((role) => role.id === roleId)?.permissions ?? [];
+    if (cloneFrom.startsWith("role:") && cloneGrantsQuery.data) {
+      return cloneGrantsQuery.data.map((grant) => grant.permissionKey);
     }
     if (cloneFrom.startsWith("template:")) {
       const templateId = cloneFrom.slice("template:".length);
@@ -93,7 +99,7 @@ export function CreateRoleDialog({
       return source ? [...source.permissions] : [];
     }
     return [];
-  }, [cloneFrom, roles, templates]);
+  }, [cloneFrom, cloneGrantsQuery.data, templates]);
 
   const handleNameChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -273,13 +279,17 @@ export function CreateRoleDialog({
                 )}
               </SelectContent>
             </Select>
-            {clonedPermissions.length > 0 && (
+            {cloneFrom.startsWith("role:") && cloneGrantsQuery.isLoading ? (
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading permissions…
+              </p>
+            ) : clonedPermissions.length > 0 ? (
               <p className="text-xs text-muted-foreground">
                 {clonedPermissions.length} permission
-                {clonedPermissions.length === 1 ? "" : "s"} will be copied. You
-                can adjust permissions and scopes after creating.
+                {clonedPermissions.length === 1 ? "" : "s"} will be copied. You can adjust permissions and scopes after creating.
               </p>
-            )}
+            ) : null}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

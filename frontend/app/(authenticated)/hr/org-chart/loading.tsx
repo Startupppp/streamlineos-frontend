@@ -10,7 +10,7 @@ export default function OrgChartLoading() {
           <CardContent className="pt-6">
             <div className="flex flex-col items-center gap-8">
               <Skeleton className="h-24 w-48 rounded-xl" />
-              <div className="flex gap-12">
+              <div className="flex gap-6">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex flex-col items-center gap-4">
                     <Skeleton className="h-20 w-40 rounded-xl" />

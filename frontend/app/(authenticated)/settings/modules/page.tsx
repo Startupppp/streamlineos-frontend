@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Layers } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { useOrgModules, useToggleOrgModule } from "@/hooks/api/access/org-modules";
 import { getApiError } from "@/lib/api-client";
@@ -136,13 +136,12 @@ function ModulesContent() {
           onRetry={handleRetry}
         />
       ) : !modules || modules.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center py-24 gap-3 text-center">
-          <Layers className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm font-medium">No modules configured</p>
-          <p className="text-xs text-muted-foreground max-w-xs">
-            Your organization has no feature modules available to manage.
-          </p>
-        </div>
+        <EmptyState
+          illustration={null}
+          title="No modules configured"
+          description="Your organization has no feature modules available to manage."
+          className="flex-1"
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {modules.map((mod) => (

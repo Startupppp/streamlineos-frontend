@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { OrgAuditLogPage } from "@/features/users/org-audit-log-page";
 
 export const metadata: Metadata = {
@@ -6,5 +7,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <OrgAuditLogPage />;
+  return (
+    <Suspense>
+      <OrgAuditLogPage />
+    </Suspense>
+  );
 }

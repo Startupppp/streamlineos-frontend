@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useCan } from "@/hooks/api/access";
 import {
   useLeavePolicies,
@@ -145,10 +146,7 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
       <p className="text-slate-500 text-sm mt-1 max-w-xs">
         Define accrual rules and carry-forward policies for each leave type.
       </p>
-      <Button
-        className="mt-6 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-        onClick={onCreateClick}
-      >
+      <Button className="mt-6" onClick={onCreateClick}>
         <Plus className="h-4 w-4 mr-2" /> Create Policy
       </Button>
     </motion.div>
@@ -256,46 +254,39 @@ export default function LeavePoliciesPage() {
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/40">
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Leave Policies</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Define accrual and carry-forward rules per leave type</p>
-          </div>
-          {canManage && (
-            <Button
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-              onClick={handleCreateClick}
-            >
-              <Plus className="h-4 w-4 mr-2" /> New Policy
-            </Button>
-          )}
+    <PageWrapper
+      title="Leave Policies"
+      subtitle="Define accrual and carry-forward rules per leave type"
+      actions={
+        canManage ? (
+          <Button size="sm" onClick={handleCreateClick}>
+            <Plus className="h-4 w-4 mr-2" /> New Policy
+          </Button>
+        ) : undefined
+      }
+    >
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-52 rounded-2xl" />
+          ))}
         </div>
-
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-52 rounded-2xl" />
-            ))}
-          </div>
-        ) : !policies?.length ? (
-          <EmptyState onCreateClick={handleCreateClick} />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {policies.map((policy, i) => (
-              <PolicyCard
-                key={policy.id}
-                policy={policy}
-                index={i}
-                canManage={canManage}
-                onEdit={handleEditClick}
-                onDelete={handleDeleteClick}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      ) : !policies?.length ? (
+        <EmptyState onCreateClick={handleCreateClick} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {policies.map((policy, i) => (
+            <PolicyCard
+              key={policy.id}
+              policy={policy}
+              index={i}
+              canManage={canManage}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteClick}
+            />
+          ))}
+        </div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
@@ -439,11 +430,7 @@ export default function LeavePoliciesPage() {
               />
               </div>
               <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md"
-                >
+                <Button type="submit" disabled={isPending} className="w-full">
                   {isPending ? "Saving..." : editingPolicy ? "Update Policy" : "Create Policy"}
                 </Button>
               </SheetFooter>
@@ -451,6 +438,6 @@ export default function LeavePoliciesPage() {
           </Form>
         </SheetContent>
       </Sheet>
-    </div>
+    </PageWrapper>
   );
 }

@@ -79,6 +79,7 @@ function PermissionsContent() {
       <PageWrapper
         title="Permission Matrix"
         subtitle="Read-only overview of built-in permissions per system role"
+        eyebrow="Settings"
       >
         <MatrixSkeleton />
       </PageWrapper>
@@ -90,6 +91,7 @@ function PermissionsContent() {
       <PageWrapper
         title="Permission Matrix"
         subtitle="Read-only overview of built-in permissions per system role"
+        eyebrow="Settings"
       >
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
           <AlertTriangle className="h-8 w-8 text-muted-foreground" />
@@ -112,6 +114,7 @@ function PermissionsContent() {
       <PageWrapper
         title="Permission Matrix"
         subtitle="Read-only overview of built-in permissions per system role"
+        eyebrow="Settings"
       >
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
           <ShieldOff className="h-8 w-8 text-muted-foreground" />
@@ -137,6 +140,7 @@ function PermissionsContent() {
     <PageWrapper
       title="Permission Matrix"
       subtitle="Read-only overview of permissions per role"
+      eyebrow="Settings"
     >
       <div className="space-y-4">
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
@@ -189,7 +193,7 @@ function PermissionsContent() {
                     gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))`,
                   }}
                 >
-                  <div className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">
+                  <div className="px-4 py-2.5 text-xs font-semibold text-muted-foreground sticky left-0 z-20 bg-muted/50">
                     Permission
                   </div>
                   {roles.map((role) => (
@@ -264,7 +268,7 @@ function PermissionRow({
         gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))`,
       }}
     >
-      <div className="px-4 py-2 flex flex-col justify-center">
+      <div className="px-4 py-2 flex flex-col justify-center sticky left-0 z-10 bg-card">
         <p className="text-[12px] font-medium leading-snug">
           {permDescription}
         </p>

@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useCallback, useState, useMemo } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Check, CreditCard, Loader2, Zap, Calendar, Tag, X } from "lucide-react";
+import { Calendar, CreditCard } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   useSubscription,
   useCreateSubscriptionOrder,
@@ -19,7 +17,9 @@ import {
 } from "@/hooks/api/subscription";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-
+import { PlanCard } from "@/features/subscription/components/plan-card";
+import { CouponSection } from "@/features/subscription/components/coupon-section";
+import { RecentPaymentsTable } from "@/features/subscription/components/recent-payments-table";
 
 const PLAN_CONFIG: Record<
   SubscriptionPlan,
@@ -69,104 +69,6 @@ const STATUS_BADGE: Record<string, { label: string; variant: "default" | "second
   CANCELLED: { label: "Cancelled", variant: "outline" },
   EXPIRED: { label: "Expired", variant: "outline" },
 };
-
-function getAnnualMonthlyPrice(monthlyPrice: number) {
-  return Math.round(monthlyPrice * 0.8);
-}
-
-function PlanCard({
-  plan,
-  config,
-  billingCycle,
-  currentPlan,
-  currentStatus,
-  upgradingPlan,
-  isBusy,
-  isConfigured,
-  onUpgrade,
-}: {
-  plan: SubscriptionPlan;
-  config: { monthlyPrice: number; label: string; features: string[] };
-  billingCycle: BillingCycle;
-  currentPlan: SubscriptionPlan | null;
-  currentStatus: string | null;
-  upgradingPlan: SubscriptionPlan | null;
-  isBusy: boolean;
-  isConfigured: boolean | undefined;
-  onUpgrade: (plan: SubscriptionPlan) => void;
-}) {
-  const isCurrentPlan = currentPlan === plan && currentStatus === "ACTIVE";
-  const isUpgrading = upgradingPlan === plan && isBusy;
-  const displayPrice =
-    billingCycle === "annual"
-      ? getAnnualMonthlyPrice(config.monthlyPrice)
-      : config.monthlyPrice;
-  const annualTotal = Math.round(config.monthlyPrice * 12 * 0.8);
-
-  function handleUpgrade() {
-    onUpgrade(plan);
-  }
-
-  return (
-    <div
-      className={`relative flex flex-col rounded-lg border bg-card p-5 transition-shadow ${
-        isCurrentPlan
-          ? "border-primary ring-1 ring-primary/20"
-          : "border-border hover:shadow-sm"
-      }`}
-    >
-      {isCurrentPlan && (
-        <span className="absolute -top-px left-4 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
-          Current
-        </span>
-      )}
-
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-1">
-          <Zap className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-semibold text-foreground">{config.label}</h3>
-        </div>
-        <p className="text-2xl font-bold text-foreground">
-          ₹{displayPrice.toLocaleString("en-IN")}
-          <span className="text-sm font-normal text-muted-foreground">/mo</span>
-        </p>
-        {billingCycle === "annual" && (
-          <p className="text-xs text-muted-foreground mt-0.5">
-            ₹{annualTotal.toLocaleString("en-IN")} billed annually
-          </p>
-        )}
-      </div>
-
-      <ul className="flex-1 space-y-2 mb-5">
-        {config.features.map((feature) => (
-          <li key={feature} className="flex items-start gap-2 text-xs text-muted-foreground">
-            <Check className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
-            {feature}
-          </li>
-        ))}
-      </ul>
-
-      <Button
-        size="sm"
-        variant={isCurrentPlan ? "secondary" : "default"}
-        disabled={isCurrentPlan || !isConfigured || (isBusy && upgradingPlan !== plan)}
-        onClick={handleUpgrade}
-        className="w-full"
-      >
-        {isUpgrading ? (
-          <>
-            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-            Processing…
-          </>
-        ) : isCurrentPlan ? (
-          "Current Plan"
-        ) : (
-          "Upgrade"
-        )}
-      </Button>
-    </div>
-  );
-}
 
 export default function SubscriptionPage() {
   const { data: session } = useSession();
@@ -275,9 +177,7 @@ export default function SubscriptionPage() {
     [data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon],
   );
 
-  // eslint-disable-next-line react-hooks/purity
-  const now = useMemo(() => Date.now(), []);
-
+  const now = Date.now();
   const currentPlan = data?.subscription?.plan ?? null;
   const currentStatus = data?.subscription?.status ?? null;
   const statusInfo = currentStatus ? STATUS_BADGE[currentStatus] : null;
@@ -413,94 +313,18 @@ export default function SubscriptionPage() {
           ))}
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Tag className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Have a coupon code?</p>
-          </div>
-          {appliedCoupon ? (
-            <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
-              <Check className="h-4 w-4 text-emerald-600 shrink-0" />
-              <p className="text-sm text-emerald-700 flex-1">{appliedCoupon.message}</p>
-              <button
-                type="button"
-                onClick={handleRemoveCoupon}
-                className="text-emerald-600 hover:text-emerald-800 rounded"
-                aria-label="Remove coupon"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Input
-                value={couponInput}
-                onChange={handleCouponInputChange}
-                placeholder="Enter coupon code"
-                className="max-w-xs font-mono uppercase text-sm"
-                aria-label="Coupon code"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleApplyCoupon}
-                disabled={couponInput.trim().length < 3 || isValidatingCoupon}
-              >
-                {isValidatingCoupon ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  "Apply"
-                )}
-              </Button>
-            </div>
-          )}
-          {couponInput.trim().length >= 3 && !appliedCoupon && couponResult && !isValidatingCoupon && !couponResult.valid && (
-            <p className="text-xs text-destructive">{couponResult.message}</p>
-          )}
-        </div>
+        <CouponSection
+          couponInput={couponInput}
+          appliedCoupon={appliedCoupon}
+          couponResult={couponResult}
+          isValidatingCoupon={isValidatingCoupon}
+          onInputChange={handleCouponInputChange}
+          onApply={handleApplyCoupon}
+          onRemove={handleRemoveCoupon}
+        />
 
-        {data?.subscription?.payments && data.subscription.payments.length > 0 && (
-          <div className="space-y-2">
-            <h2 className="text-[0.9375rem] font-semibold text-foreground">Recent Payments</h2>
-            <div className="rounded-lg border border-border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/40">
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Payment ID</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Amount</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Date</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.subscription.payments.map((payment) => (
-                    <tr key={payment.id} className="border-b border-border last:border-0">
-                      <td className="px-4 py-2.5 text-xs font-mono text-muted-foreground">
-                        {payment.razorpayPaymentId ?? "—"}
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-foreground">
-                        ₹{Number(payment.amount).toLocaleString("en-IN")}
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                        {payment.paidAt
-                          ? new Date(payment.paidAt).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })
-                          : "—"}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <Badge variant="secondary" className="text-[10px]">
-                          {payment.status}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {data?.subscription?.payments && (
+          <RecentPaymentsTable payments={data.subscription.payments} />
         )}
       </div>
     </PageWrapper>

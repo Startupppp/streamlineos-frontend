@@ -1166,7 +1166,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Integrations",
         icon: Plug,
-        href: "/settings/integrations/recruitment",
+        href: "/settings/integrations",
         requiredPermission: "settings:manage",
       },
       {
@@ -1206,12 +1206,6 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:manage",
       },
       {
-        label: "IP Allow List",
-        icon: Shield,
-        href: "/settings/security/ip-allowlist",
-        requiredPermission: "settings:manage",
-      },
-      {
         label: "Audit Logs",
         icon: History,
         href: "/settings/audit-log",
@@ -1224,33 +1218,15 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: "settings:manage",
     routes: [
       {
-        label: "Events",
-        icon: Bell,
-        href: "/settings/developer/events",
-        requiredPermission: "settings:manage",
-      },
-      {
         label: "Webhooks",
         icon: Zap,
-        href: "/settings/developer/webhooks",
+        href: "/settings/webhooks",
         requiredPermission: "settings:manage",
       },
       {
         label: "API Tokens",
         icon: Key,
-        href: "/settings/developer/api-tokens",
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "Logs",
-        icon: FileText,
-        href: "/settings/developer/logs",
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "Sandbox",
-        icon: Terminal,
-        href: "/settings/developer/sandbox",
+        href: "/settings/api-tokens",
         requiredPermission: "settings:manage",
       },
     ],

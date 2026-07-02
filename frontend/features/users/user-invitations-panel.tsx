@@ -170,18 +170,9 @@ export function UserInvitationsPanel() {
   const handleOpenInvite = useCallback(() => setInviteOpen(true), []);
   const handleInviteChange = useCallback((v: boolean) => setInviteOpen(v), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleClearFilters = useCallback(
-    () => updateParams({ q: null, status: null, page: null }),
-    [updateParams],
-  );
-  const handlePrevPage = useCallback(
-    () => updateParams({ page: page <= 2 ? null : String(page - 1) }),
-    [page, updateParams],
-  );
-  const handleNextPage = useCallback(
-    () => updateParams({ page: String(page + 1) }),
-    [page, updateParams],
-  );
+  const handleClearFilters = useCallback(() => updateParams({ q: null, status: null, page: null }), [updateParams]);
+  const handlePrevPage = useCallback(() => updateParams({ page: page <= 2 ? null : String(page - 1) }), [page, updateParams]);
+  const handleNextPage = useCallback(() => updateParams({ page: String(page + 1) }), [page, updateParams]);
 
   const pagination = data?.pagination;
   const hasFilters = !!q || status !== "all";
@@ -191,41 +182,28 @@ export function UserInvitationsPanel() {
       <PageWrapper
         title="Invitations"
         eyebrow="People"
-        subtitle={
-          pagination
-            ? `${pagination.total} invitation${pagination.total === 1 ? "" : "s"}`
-            : undefined
-        }
+        subtitle={pagination ? `${pagination.total} invitation${pagination.total === 1 ? "" : "s"}` : undefined}
         actions={
           <Button size="sm" onClick={handleOpenInvite}>
             <Mail className="h-3.5 w-3.5 mr-1.5" />
             Invite User
           </Button>
         }
-        filters={
-          <>
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={q}
-                onChange={handleSearchChange}
-                placeholder="Search by email…"
-                className="h-8 pl-7 text-xs w-[200px]"
-              />
-            </div>
-            <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-8 text-xs w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-              </SelectContent>
-            </Select>
-          </>
-        }
+        filters={<>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input value={q} onChange={handleSearchChange} placeholder="Search by email…" className="h-8 pl-7 text-xs w-[200px]" />
+          </div>
+          <Select value={status} onValueChange={handleStatusChange}>
+            <SelectTrigger className="h-8 text-xs w-[140px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="accepted">Accepted</SelectItem>
+              <SelectItem value="expired">Expired</SelectItem>
+            </SelectContent>
+          </Select>
+        </>}
       >
         {isLoading ? (
           <SkeletonTable rows={8} columns={6} />

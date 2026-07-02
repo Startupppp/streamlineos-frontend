@@ -235,6 +235,7 @@ export default function AuditLogPage() {
   const [, startTransition] = useTransition();
   const [goToPage, setGoToPage] = useState("");
   const [selectedLog, setSelectedLog] = useState<AuditLogRow | null>(null);
+  const [userSearch, setUserSearch] = useState("");
 
   const page = Number(searchParams.get("page")) || 1;
   const pageSizeParam = Number(searchParams.get("size"));
@@ -274,8 +275,17 @@ export default function AuditLogPage() {
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
+  const filteredLogs = userSearch.trim()
+    ? logs.filter(
+        (log) =>
+          (log.userName ?? "").toLowerCase().includes(userSearch.toLowerCase()) ||
+          (log.userEmail ?? "").toLowerCase().includes(userSearch.toLowerCase()),
+      )
+    : logs;
+
   const resetFilters = useCallback(() => {
     updateParams({ action: null, target: null, from: null, to: null, page: null });
+    setUserSearch("");
   }, [updateParams]);
 
   const handleActionFilter = useCallback((v: string) => updateParams({ action: v === "all" ? null : v, page: null }), [updateParams]);
@@ -286,6 +296,9 @@ export default function AuditLogPage() {
   const handleNextPage = useCallback(() => updateParams({ page: String(Math.min(totalPages, page + 1)) }), [updateParams, totalPages, page]);
   const handleFirstPage = useCallback(() => updateParams({ page: null }), [updateParams]);
   const handleLastPage = useCallback(() => updateParams({ page: String(totalPages) }), [updateParams, totalPages]);
+  const handleUserSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserSearch(e.target.value);
+  }, []);
   const handleCloseSheet = useCallback(() => setSelectedLog(null), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
@@ -307,7 +320,7 @@ export default function AuditLogPage() {
     }
   }, [goToPage, totalPages, updateParams]);
 
-  const hasActiveFilters = actionFilter !== "all" || targetTypeFilter !== "all" || !!dateFrom || !!dateTo;
+  const hasActiveFilters = actionFilter !== "all" || targetTypeFilter !== "all" || !!dateFrom || !!dateTo || !!userSearch;
 
   const filtersBar = (
     <div className="flex flex-wrap gap-2 items-end">
@@ -347,6 +360,15 @@ export default function AuditLogPage() {
         <p className="text-[11px] font-medium text-muted-foreground">To</p>
         <DatePicker value={dateTo} onChange={handleDateTo} placeholder="To date" className="w-full" />
       </div>
+      <div className="flex flex-col gap-1 min-w-[140px] flex-1">
+        <p className="text-[11px] font-medium text-muted-foreground">User</p>
+        <Input
+          placeholder="Search by name or email"
+          value={userSearch}
+          onChange={handleUserSearch}
+          className="h-8 text-sm w-full"
+        />
+      </div>
       {hasActiveFilters && (
         <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-sm self-end">
           Clear
@@ -384,7 +406,7 @@ export default function AuditLogPage() {
                 <p className="text-sm text-muted-foreground">Failed to load audit events.</p>
                 <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
               </div>
-            ) : logs.length === 0 ? (
+            ) : filteredLogs.length === 0 ? (
               <div className="py-14 flex flex-col items-center gap-3 text-center">
                 <EmptyDocumentsIllustration className="h-40 w-40 opacity-95" />
                 <div className="space-y-1 text-muted-foreground">
@@ -419,7 +441,7 @@ export default function AuditLogPage() {
                   <div className="min-w-[700px]">
                     <Table>
                       <TableBody>
-                        {logs.map((log) => (
+                        {filteredLogs.map((log) => (
                           <LogTableRow key={log.id} log={log} onSelect={setSelectedLog} />
                         ))}
                       </TableBody>

@@ -137,7 +137,7 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/customer-executive": ["dashboard:customer-executive:view"],
   "/settings": ["settings:view"],
   "/settings/roles": ["settings:rbac:manage"],
-  "/settings/branches": ["settings:manage"],
+  "/organization/branches": ["settings:manage"],
   "/billing": ["settings:manage"],
   "/billing/invoices": ["settings:manage"],
   "/notifications": ["self:attendance"],

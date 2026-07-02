@@ -213,15 +213,17 @@ export default function OrgTreePage() {
     <PageWrapper
       title="Organization Tree"
       subtitle="Full hierarchy from business units down to teams"
-      actions={
-        <div className="relative w-56">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder="Search..."
-            value={search}
-            onChange={handleSearchChange}
-            className="pl-8 h-8 text-sm"
-          />
+      filters={
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Search nodes…"
+              value={search}
+              onChange={handleSearchChange}
+              className="pl-8 h-8 text-xs max-w-[240px]"
+            />
+          </div>
         </div>
       }
     >
@@ -239,7 +241,7 @@ export default function OrgTreePage() {
           })}
         </div>
 
-        <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">
+        <div className="border border-border rounded-xl bg-card shadow-sm overflow-x-auto">
           {isLoading && (
             <div className="p-4 space-y-2">
               {[...Array(6)].map((_, i) => (
@@ -248,13 +250,22 @@ export default function OrgTreePage() {
             </div>
           )}
           {isError && (
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              Failed to load organization tree.
+            <div className="py-12 flex flex-col items-center gap-3 text-center px-6">
+              <p className="text-sm font-medium text-foreground">Failed to load organization tree</p>
+              <p className="text-xs text-muted-foreground">Check your connection and try again.</p>
             </div>
           )}
           {!isLoading && !isError && filtered.length === 0 && (
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              {search ? "No results match your search." : "No business units found. Create one to get started."}
+            <div className="py-12 flex flex-col items-center gap-3 text-center px-6">
+              <Building2 className="h-8 w-8 text-muted-foreground/40" />
+              <p className="text-sm font-medium text-foreground">
+                {search ? "No results match your search." : "No business units found"}
+              </p>
+              {!search && (
+                <p className="text-xs text-muted-foreground">
+                  Create a business unit to build your organization tree.
+                </p>
+              )}
             </div>
           )}
           {!isLoading && !isError && filtered.length > 0 && (

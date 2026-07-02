@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { useRoles, useDeleteRole, useRolesAnalytics } from "@/hooks/api/roles";
+import { useRoles, useDeleteRole, useRolesAnalytics, useRolePermissionsMatrix } from "@/hooks/api/roles";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { Plus, Loader2, Trash2, Shield, Copy, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -39,6 +42,14 @@ export default function RolesPage() {
 function RolesContent() {
   const { data: roles, isLoading, isError: rolesError, refetch: refetchRoles } = useRoles();
   const { data: analytics, isLoading: analyticsLoading } = useRolesAnalytics();
+  const matrixQuery = useRolePermissionsMatrix();
+  const permCountByRoleId = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const entry of matrixQuery.data ?? []) {
+      map.set(entry.roleId, entry.permissions.length);
+    }
+    return map;
+  }, [matrixQuery.data]);
   const deleteRole = useDeleteRole();
 
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
@@ -167,6 +178,7 @@ function RolesContent() {
                       isSelected={selectedRoleId === role.id}
                       onSelect={handleSelectRole}
                       onDelete={setDeleteTarget}
+                      permCount={permCountByRoleId.get(role.id) ?? 0}
                     />
                   ))}
                 </div>
@@ -198,27 +210,29 @@ function RolesContent() {
         onOpenChange={setAssignmentsOpen}
       />
 
-      <Dialog open={!!deleteTarget} onOpenChange={handleDeleteDialogClose}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Delete role</DialogTitle>
-            <DialogDescription>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogClose}>
+        <AlertDialogContent className="sm:max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete role</AlertDialogTitle>
+            <AlertDialogDescription>
               Are you sure you want to delete{" "}
               <span className="font-semibold">{deleteTarget?.name}</span>? Users with this role will
               lose their assigned permissions.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={handleDeleteDialogClose}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteRole} disabled={deleteRole.isPending}>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteRole}
+              disabled={deleteRole.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               {deleteRole.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageWrapper>
   );
 }
@@ -228,9 +242,10 @@ interface RoleListItemProps {
   isSelected: boolean;
   onSelect: (roleId: number) => void;
   onDelete: (role: Role) => void;
+  permCount: number;
 }
 
-function RoleListItem({ role, isSelected, onSelect, onDelete }: RoleListItemProps) {
+function RoleListItem({ role, isSelected, onSelect, onDelete, permCount }: RoleListItemProps) {
   const handleSelect = useCallback(() => onSelect(role.id), [role.id, onSelect]);
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -263,7 +278,7 @@ function RoleListItem({ role, isSelected, onSelect, onDelete }: RoleListItemProp
       <div className="min-w-0">
         <p className="text-sm font-medium truncate">{role.name}</p>
         <p className="text-[11px] text-muted-foreground">
-          {role.permissions?.length ?? 0} permissions
+          {permCount} permissions
         </p>
       </div>
       <div className="flex items-center gap-2 shrink-0">

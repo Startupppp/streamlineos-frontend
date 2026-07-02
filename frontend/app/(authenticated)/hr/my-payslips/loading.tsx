@@ -32,7 +32,7 @@ export default function MyPayslipsLoading() {
 
             <Skeleton className="h-px w-full" />
 
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3">
                 <Skeleton className="h-5 w-20" />
                 {Array.from({ length: 4 }).map((_, i) => (
