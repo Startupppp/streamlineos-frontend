@@ -1,14 +1,24 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent, type MouseEvent } from "react";
-import { motion } from "framer-motion";
-import { Plus, Warehouse, MapPin, Building2, AlertCircle, Star } from "lucide-react";
+import { useState, useCallback, useMemo, type ChangeEvent, type MouseEvent } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
+import { Plus, Warehouse, MapPin, Building2, Star, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -17,11 +27,14 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ErrorState } from "@/components/shared";
 import { toast } from "sonner";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useWarehouses, useCreateWarehouse, useSetDefaultWarehouse } from "@/hooks/api/inventory/warehouses";
+import {
+  useWarehouses,
+  useCreateWarehouse,
+  useSetDefaultWarehouse,
+} from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import Link from "next/link";
 
@@ -52,10 +65,14 @@ function blankForm(): WarehouseFormState {
 }
 
 function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
+  const shouldReduceMotion = useReducedMotion();
   const setDefault = useSetDefaultWarehouse();
   const locationCount =
-    warehouse._count?.locations ?? (Array.isArray(warehouse.locations) ? warehouse.locations.length : 0);
-  const cityLine = [warehouse.city, warehouse.state, warehouse.country].filter(Boolean).join(", ");
+    warehouse._count?.locations ??
+    (Array.isArray(warehouse.locations) ? warehouse.locations.length : 0);
+  const cityLine = [warehouse.city, warehouse.state, warehouse.country]
+    .filter(Boolean)
+    .join(", ");
 
   const handleSetDefault = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
@@ -73,13 +90,13 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
   );
 
   return (
-    <motion.div variants={fadeUp}>
+    <motion.div {...(shouldReduceMotion ? {} : { variants: fadeUp })}>
       <Link href={`/inventory/warehouses/${warehouse.id}`} className="block group">
-        <Card className="cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary/30 group-focus-visible:ring-2 group-focus-visible:ring-ring">
+        <Card className="cursor-pointer transition-shadow duration-200 hover:shadow-md group-focus-visible:ring-2 group-focus-visible:ring-ring">
           <CardContent className="p-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
-                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
                   <Warehouse className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
@@ -88,21 +105,27 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
                       {warehouse.name}
                     </span>
                     {warehouse.isDefault && (
-                      <span className="bg-violet-100 text-violet-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                      <Badge
+                        variant="outline"
+                        className="h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200"
+                      >
                         Default
-                      </span>
+                      </Badge>
                     )}
                     {!warehouse.isActive && (
-                      <Badge variant="secondary" className="text-xs px-1.5 py-0.5 rounded-md">
+                      <Badge
+                        variant="outline"
+                        className="h-4 text-[9px] px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200"
+                      >
                         Inactive
                       </Badge>
                     )}
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground font-mono">
+                  <p className="mt-0.5 text-[11px] text-muted-foreground font-mono">
                     {warehouse.code}
                   </p>
                   {cityLine && (
-                    <div className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
                       <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
                       <span className="truncate">{cityLine}</span>
                     </div>
@@ -126,6 +149,7 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
                   className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
                   onClick={handleSetDefault}
                   disabled={setDefault.isPending}
+                  aria-label={`Set ${warehouse.name} as default warehouse`}
                 >
                   <Star className="h-3 w-3" aria-hidden="true" />
                   {setDefault.isPending ? "Updating…" : "Set as Default"}
@@ -141,10 +165,13 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
 
 function WarehousesLoading() {
   return (
-    <PageWrapper title="Warehouses" subtitle="Manage your storage facilities and locations">
+    <PageWrapper
+      eyebrow="Operations · Inventory"
+      title="Warehouses"
+    >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="shadow-sm">
+          <Card key={i}>
             <CardContent className="p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
@@ -171,18 +198,68 @@ function WarehousesLoading() {
 export default function WarehousesPage() {
   const { data, isLoading, isError, refetch } = useWarehouses();
   const createMutation = useCreateWarehouse();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<WarehouseFormState>(blankForm());
 
-  const warehouses = Array.isArray(data) ? data : [];
+  const warehouses = useMemo(() => (Array.isArray(data) ? data : []), [data]);
 
-  const setField = useCallback(
-    (key: keyof WarehouseFormState, value: string) => {
-      setForm((prev) => ({ ...prev, [key]: value }));
+  const searchValue = searchParams.get("q") ?? "";
+  const statusValue = searchParams.get("status") ?? "all";
+
+  const filtered = useMemo(() => {
+    const q = searchValue.toLowerCase();
+    return warehouses.filter((wh) => {
+      const matchesSearch =
+        !q ||
+        wh.name.toLowerCase().includes(q) ||
+        wh.code.toLowerCase().includes(q);
+      const matchesStatus =
+        statusValue === "all" ||
+        (statusValue === "active" && wh.isActive) ||
+        (statusValue === "inactive" && !wh.isActive);
+      return matchesSearch && matchesStatus;
+    });
+  }, [warehouses, searchValue, statusValue]);
+
+  const hasActiveFilters = searchValue.length > 0 || statusValue !== "all";
+
+  const handleSearchChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (e.target.value) {
+        params.set("q", e.target.value);
+      } else {
+        params.delete("q");
+      }
+      router.replace(`?${params.toString()}`, { scroll: false });
     },
-    [],
+    [searchParams, router],
   );
+
+  const handleStatusChange = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === "all") {
+        params.delete("status");
+      } else {
+        params.set("status", value);
+      }
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
+
+  const clearFilters = useCallback(() => {
+    router.replace("?", { scroll: false });
+  }, [router]);
+
+  const setField = useCallback((key: keyof WarehouseFormState, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }, []);
 
   const handleOpenSheet = useCallback(() => {
     setForm(blankForm());
@@ -196,31 +273,34 @@ export default function WarehousesPage() {
     }
   }, []);
 
-  function handleRetry() { void refetch(); }
+  function handleRetry() {
+    void refetch();
+  }
 
-  const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("name", e.target.value);
-  }, [setField]);
-
-  const handleCodeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("code", e.target.value);
-  }, [setField]);
-
-  const handleAddressChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("address", e.target.value);
-  }, [setField]);
-
-  const handleCityChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("city", e.target.value);
-  }, [setField]);
-
-  const handleStateChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("state", e.target.value);
-  }, [setField]);
-
-  const handleCountryChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("country", e.target.value);
-  }, [setField]);
+  const handleNameChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setField("name", e.target.value),
+    [setField],
+  );
+  const handleCodeChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setField("code", e.target.value),
+    [setField],
+  );
+  const handleAddressChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setField("address", e.target.value),
+    [setField],
+  );
+  const handleCityChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setField("city", e.target.value),
+    [setField],
+  );
+  const handleStateChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setField("state", e.target.value),
+    [setField],
+  );
+  const handleCountryChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setField("country", e.target.value),
+    [setField],
+  );
 
   const handleCancelSheet = useCallback(() => {
     setSheetOpen(false);
@@ -230,9 +310,14 @@ export default function WarehousesPage() {
   const handleSubmit = useCallback(() => {
     const name = form.name.trim();
     const code = form.code.trim().toUpperCase();
-    if (!name) { toast.error("Warehouse name is required"); return; }
-    if (!code) { toast.error("Warehouse code is required"); return; }
-
+    if (!name) {
+      toast.error("Warehouse name is required");
+      return;
+    }
+    if (!code) {
+      toast.error("Warehouse code is required");
+      return;
+    }
     createMutation.mutate(
       {
         name,
@@ -253,16 +338,49 @@ export default function WarehousesPage() {
     );
   }, [form, createMutation]);
 
+  const filterBar = (
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
+      <div className="relative min-w-0 flex-1 lg:max-w-md">
+        <Search
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none"
+          aria-hidden="true"
+        />
+        <Input
+          className="h-8 w-full min-w-0 pl-8 text-xs"
+          placeholder="Search warehouses…"
+          value={searchValue}
+          onChange={handleSearchChange}
+          aria-label="Search warehouses"
+        />
+      </div>
+      <div className="hidden min-w-0 items-center gap-2 sm:flex">
+        <Select value={statusValue} onValueChange={handleStatusChange}>
+          <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
   if (isLoading) return <WarehousesLoading />;
 
   if (isError) {
     return (
-      <PageWrapper title="Warehouses" subtitle="Manage your storage facilities and locations">
-        <EmptyState
-          illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+      <PageWrapper
+        eyebrow="Operations · Inventory"
+        title="Warehouses"
+        filters={filterBar}
+      >
+        <ErrorState
           title="Failed to load warehouses"
           description="An error occurred while fetching warehouse data. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );
@@ -270,27 +388,35 @@ export default function WarehousesPage() {
 
   return (
     <PageWrapper
+      eyebrow="Operations · Inventory"
       title="Warehouses"
-      subtitle="Manage your storage facilities and locations"
+      subtitle={`${filtered.length} ${filtered.length === 1 ? "warehouse" : "warehouses"}`}
       badge={String(warehouses.length)}
+      filters={filterBar}
       actions={
-        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
+        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenSheet}>
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           New Warehouse
         </Button>
       }
     >
-      {warehouses.length > 0 ? (
+      {filtered.length > 0 ? (
         <motion.div
           className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
+          {...(shouldReduceMotion
+            ? {}
+            : { variants: staggerContainer, initial: "hidden", animate: "visible" })}
         >
-          {warehouses.map((wh) => (
+          {filtered.map((wh) => (
             <WarehouseCard key={wh.id} warehouse={wh} />
           ))}
         </motion.div>
+      ) : hasActiveFilters ? (
+        <EmptyState
+          title="No warehouses found"
+          description="No warehouses match your current filters."
+          action={{ label: "Clear filters", onClick: clearFilters }}
+        />
       ) : (
         <EmptyState
           illustration={
@@ -304,15 +430,15 @@ export default function WarehousesPage() {
 
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetContent side="right" className="sm:max-w-md w-full flex flex-col gap-0 p-0">
-          <SheetHeader className="px-6 pt-6 pb-4 border-b">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b">
             <SheetTitle>New Warehouse</SheetTitle>
-            <SheetDescription>
-              Add a new storage facility to your organization.
-            </SheetDescription>
+            <SheetDescription>Add a new storage facility to your organization.</SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="wh-name">Name <span className="text-destructive">*</span></Label>
+              <Label htmlFor="wh-name">
+                Name <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="wh-name"
                 placeholder="Main Warehouse"
@@ -321,7 +447,9 @@ export default function WarehousesPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="wh-code">Code <span className="text-destructive">*</span></Label>
+              <Label htmlFor="wh-code">
+                Code <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="wh-code"
                 placeholder="WH-001"
@@ -369,17 +497,19 @@ export default function WarehousesPage() {
               />
             </div>
           </div>
-          <SheetFooter className="px-6 pb-6 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={handleCancelSheet}
-              disabled={createMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Creating…" : "Create Warehouse"}
-            </Button>
+          <SheetFooter className="shrink-0 px-6 py-4 border-t">
+            <div className="grid w-full grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                onClick={handleCancelSheet}
+                disabled={createMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit} disabled={createMutation.isPending}>
+                {createMutation.isPending ? "Creating…" : "Create Warehouse"}
+              </Button>
+            </div>
           </SheetFooter>
         </SheetContent>
       </Sheet>

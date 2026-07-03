@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useCallback, useMemo, use, type ChangeEvent } from "react";
-import { motion } from "framer-motion";
-import { Plus, MapPin, ArrowLeft, Layers, AlertCircle } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Plus, MapPin, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import {
   Sheet,
   SheetContent,
@@ -69,7 +70,7 @@ const LOCATION_TYPE_COLORS: Record<LocationType, string> = {
   ZONE: "bg-violet-50 text-violet-700 border-violet-200/70",
   AISLE: "bg-blue-50 text-blue-700 border-blue-200/70",
   RACK: "bg-amber-50 text-amber-700 border-amber-200/70",
-  BIN: "bg-green-50 text-green-700 border-green-200/70",
+  BIN: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
 };
 
 function groupByType(locations: Location[]): Map<LocationType, Location[]> {
@@ -89,18 +90,22 @@ function LocationRow({ location }: { location: Location }) {
     <div className="flex items-center justify-between gap-2 py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors">
       <div className="flex items-center gap-2 min-w-0">
         <Badge
+          variant="outline"
           className={cn(
-            "text-[10px] px-1.5 py-0 h-4 shrink-0",
+            "text-[9px] px-1.5 py-0 h-4 shrink-0",
             LOCATION_TYPE_COLORS[location.locationType],
           )}
         >
           {LOCATION_TYPE_LABELS[location.locationType]}
         </Badge>
         <span className="text-sm font-medium text-foreground truncate">{location.name}</span>
-        <span className="text-xs text-muted-foreground font-mono shrink-0">{location.code}</span>
+        <span className="text-[11px] text-muted-foreground font-mono shrink-0">{location.code}</span>
       </div>
       {!location.isActive && (
-        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
+        <Badge
+          variant="outline"
+          className="h-4 text-[9px] px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200 shrink-0"
+        >
           Inactive
         </Badge>
       )}
@@ -115,9 +120,20 @@ export default function WarehouseDetailPage({
 }) {
   const { warehouseId: warehouseIdStr } = use(params);
   const warehouseId = Number(warehouseIdStr);
+  const shouldReduceMotion = useReducedMotion();
 
-  const { data: warehouseData, isLoading: whLoading, isError: whError, refetch: refetchWarehouse } = useWarehouse(warehouseId);
-  const { data: locationsData, isLoading: locLoading, isError: locError, refetch: refetchLocations } = useLocations(warehouseId);
+  const {
+    data: warehouseData,
+    isLoading: whLoading,
+    isError: whError,
+    refetch: refetchWarehouse,
+  } = useWarehouse(warehouseId);
+  const {
+    data: locationsData,
+    isLoading: locLoading,
+    isError: locError,
+    refetch: refetchLocations,
+  } = useLocations(warehouseId);
   const createLocation = useCreateLocation();
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -133,17 +149,18 @@ export default function WarehouseDetailPage({
     () => (Array.isArray(locationsData) ? locationsData : []),
     [locationsData],
   );
-
   const grouped = useMemo(() => groupByType(locations), [locations]);
 
-  const parentOptions = useMemo(() => {
-    return locations.filter(
-      (l) =>
-        l.locationType === "ZONE" ||
-        l.locationType === "AISLE" ||
-        l.locationType === "RACK",
-    );
-  }, [locations]);
+  const parentOptions = useMemo(
+    () =>
+      locations.filter(
+        (l) =>
+          l.locationType === "ZONE" ||
+          l.locationType === "AISLE" ||
+          l.locationType === "RACK",
+      ),
+    [locations],
+  );
 
   const setField = useCallback(
     <K extends keyof AddLocationFormState>(key: K, value: AddLocationFormState[K]) => {
@@ -169,21 +186,27 @@ export default function WarehouseDetailPage({
     void refetchLocations();
   }
 
-  const handleLocationTypeChange = useCallback((v: string) => {
-    if (isLocationType(v)) setField("locationType", v);
-  }, [setField]);
+  const handleLocationTypeChange = useCallback(
+    (v: string) => {
+      if (isLocationType(v)) setField("locationType", v);
+    },
+    [setField],
+  );
 
-  const handleLocationNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("name", e.target.value);
-  }, [setField]);
+  const handleLocationNameChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setField("name", e.target.value),
+    [setField],
+  );
 
-  const handleLocationCodeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setField("code", e.target.value);
-  }, [setField]);
+  const handleLocationCodeChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setField("code", e.target.value),
+    [setField],
+  );
 
-  const handleParentLocationChange = useCallback((v: string) => {
-    setField("parentLocationId", v === "none" ? "" : v);
-  }, [setField]);
+  const handleParentLocationChange = useCallback(
+    (v: string) => setField("parentLocationId", v === "none" ? "" : v),
+    [setField],
+  );
 
   const handleCancelSheet = useCallback(() => {
     setSheetOpen(false);
@@ -193,9 +216,14 @@ export default function WarehouseDetailPage({
   const handleSubmit = useCallback(() => {
     const name = form.name.trim();
     const code = form.code.trim().toUpperCase();
-    if (!name) { toast.error("Location name is required"); return; }
-    if (!code) { toast.error("Location code is required"); return; }
-
+    if (!name) {
+      toast.error("Location name is required");
+      return;
+    }
+    if (!code) {
+      toast.error("Location code is required");
+      return;
+    }
     createLocation.mutate(
       {
         warehouseId,
@@ -217,13 +245,14 @@ export default function WarehouseDetailPage({
 
   const isLoading = whLoading || locLoading;
   const isError = whError || locError;
-  const cityLine = warehouse
-    ? [warehouse.city, warehouse.state, warehouse.country].filter(Boolean).join(", ")
-    : "";
 
   if (isLoading) {
     return (
-      <PageWrapper title="Warehouse" eyebrow="Inventory / Warehouses">
+      <PageWrapper
+        title="Warehouse"
+        eyebrow="Operations · Inventory"
+        backHref="/inventory/warehouses"
+      >
         <div className="space-y-4">
           <Card>
             <CardContent className="p-4">
@@ -255,12 +284,15 @@ export default function WarehouseDetailPage({
 
   if (isError) {
     return (
-      <PageWrapper title="Warehouse" eyebrow="Inventory / Warehouses">
-        <EmptyState
-          illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+      <PageWrapper
+        title="Warehouse"
+        eyebrow="Operations · Inventory"
+        backHref="/inventory/warehouses"
+      >
+        <ErrorState
           title="Failed to load warehouse"
           description="An error occurred while fetching warehouse data. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );
@@ -268,7 +300,11 @@ export default function WarehouseDetailPage({
 
   if (!warehouse) {
     return (
-      <PageWrapper title="Warehouse not found" eyebrow="Inventory / Warehouses">
+      <PageWrapper
+        title="Warehouse not found"
+        eyebrow="Operations · Inventory"
+        backHref="/inventory/warehouses"
+      >
         <EmptyState
           title="Warehouse not found"
           description="This warehouse does not exist or you do not have access."
@@ -278,13 +314,18 @@ export default function WarehouseDetailPage({
     );
   }
 
+  const cityLine = [warehouse.city, warehouse.state, warehouse.country].filter(Boolean).join(", ");
+
   return (
     <PageWrapper
       title={warehouse.name}
-      eyebrow="Inventory / Warehouses"
+      eyebrow="Operations · Inventory"
+      backHref="/inventory/warehouses"
       subtitle={
         <span className="flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{warehouse.code}</span>
+          <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">
+            {warehouse.code}
+          </span>
           {cityLine && (
             <span className="flex items-center gap-1 text-muted-foreground">
               <MapPin className="h-3 w-3" aria-hidden="true" />
@@ -292,26 +333,21 @@ export default function WarehouseDetailPage({
             </span>
           )}
           {warehouse.isDefault && (
-            <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-50 text-blue-700 border-blue-200/70">
+            <Badge
+              variant="outline"
+              className="h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200"
+            >
               Default
             </Badge>
           )}
         </span>
       }
-      badge={`${locations.length} locations`}
+      badge={`${locations.length} location${locations.length !== 1 ? "s" : ""}`}
       actions={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/inventory/warehouses">
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Back
-            </Link>
-          </Button>
-          <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Add Location
-          </Button>
-        </div>
+        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenSheet}>
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+          Add Location
+        </Button>
       }
     >
       {locations.length === 0 ? (
@@ -326,27 +362,28 @@ export default function WarehouseDetailPage({
       ) : (
         <motion.div
           className="space-y-4"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
+          {...(shouldReduceMotion
+            ? {}
+            : { variants: staggerContainer, initial: "hidden", animate: "visible" })}
         >
           {LOCATION_TYPE_ORDER.map((lt) => {
             const items = grouped.get(lt) ?? [];
             if (items.length === 0) return null;
             return (
-              <motion.div key={lt} variants={fadeUp}>
+              <motion.div
+                key={lt}
+                {...(shouldReduceMotion ? {} : { variants: fadeUp })}
+              >
                 <Card>
                   <CardHeader className="pb-2 pt-4 px-4">
                     <div className="flex items-center gap-2">
                       <Badge
-                        className={cn(
-                          "text-[11px] px-2 py-0.5",
-                          LOCATION_TYPE_COLORS[lt],
-                        )}
+                        variant="outline"
+                        className={cn("text-[9px] h-4 px-1.5 py-0", LOCATION_TYPE_COLORS[lt])}
                       >
                         {LOCATION_TYPE_LABELS[lt]}
                       </Badge>
-                      <span className="text-xs text-muted-foreground tabular-nums">
+                      <span className="text-[11px] text-muted-foreground tabular-nums">
                         {items.length} {items.length === 1 ? "location" : "locations"}
                       </span>
                     </div>
@@ -367,7 +404,7 @@ export default function WarehouseDetailPage({
 
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetContent side="right" className="sm:max-w-md w-full flex flex-col gap-0 p-0">
-          <SheetHeader className="px-6 pt-6 pb-4 border-b">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b">
             <SheetTitle>Add Location</SheetTitle>
             <SheetDescription>
               Add a zone, aisle, rack, or bin to {warehouse.name}.
@@ -375,11 +412,10 @@ export default function WarehouseDetailPage({
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="loc-type">Location Type <span className="text-destructive">*</span></Label>
-              <Select
-                value={form.locationType}
-                onValueChange={handleLocationTypeChange}
-              >
+              <Label htmlFor="loc-type">
+                Location Type <span className="text-destructive">*</span>
+              </Label>
+              <Select value={form.locationType} onValueChange={handleLocationTypeChange}>
                 <SelectTrigger id="loc-type">
                   <SelectValue />
                 </SelectTrigger>
@@ -393,7 +429,9 @@ export default function WarehouseDetailPage({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="loc-name">Name <span className="text-destructive">*</span></Label>
+              <Label htmlFor="loc-name">
+                Name <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="loc-name"
                 placeholder="Zone A"
@@ -402,7 +440,9 @@ export default function WarehouseDetailPage({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="loc-code">Code <span className="text-destructive">*</span></Label>
+              <Label htmlFor="loc-code">
+                Code <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="loc-code"
                 placeholder="ZA"
@@ -433,17 +473,19 @@ export default function WarehouseDetailPage({
               </div>
             )}
           </div>
-          <SheetFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancelSheet}
-              disabled={createLocation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={createLocation.isPending}>
-              {createLocation.isPending ? "Adding…" : "Add Location"}
-            </Button>
+          <SheetFooter className="shrink-0 px-6 py-4 border-t">
+            <div className="grid w-full grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                onClick={handleCancelSheet}
+                disabled={createLocation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit} disabled={createLocation.isPending}>
+                {createLocation.isPending ? "Adding…" : "Add Location"}
+              </Button>
+            </div>
           </SheetFooter>
         </SheetContent>
       </Sheet>

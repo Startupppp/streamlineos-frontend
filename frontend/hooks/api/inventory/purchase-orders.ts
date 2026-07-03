@@ -86,6 +86,7 @@ export function usePurchaseOrder(poId: number) {
 export function useCreatePurchaseOrder() {
   const qc = useQueryClient();
   return useMutation<PurchaseOrderSummary, Error, CreatePurchaseOrderInput>({
+    mutationKey: ["inventory", "purchase-orders", "create"],
     mutationFn: (data) => {
       const body: CreatePoWire = {
         vendorId: data.vendorId,
@@ -113,6 +114,7 @@ export function useCreatePurchaseOrder() {
 export function useSendPurchaseOrder(poId?: number) {
   const qc = useQueryClient();
   return useMutation<PurchaseOrderSummary, Error, SendPurchaseOrderInput | undefined>({
+    mutationKey: ["inventory", "purchase-orders", "send", poId],
     mutationFn: (vars) => {
       const id = poId ?? vars?.poId;
       if (!id) throw new Error("Purchase order id is required");
@@ -128,6 +130,7 @@ export function useSendPurchaseOrder(poId?: number) {
 export function useReceiveGoods(poId: number) {
   const qc = useQueryClient();
   return useMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>({
+    mutationKey: ["inventory", "purchase-orders", "receive", poId],
     mutationFn: (data) =>
       apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data),
     onSuccess: () => {

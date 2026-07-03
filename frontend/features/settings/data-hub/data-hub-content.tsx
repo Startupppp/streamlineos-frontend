@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
+import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { Building2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { staggerContainer } from "@/lib/motion-variants";
@@ -26,8 +26,7 @@ interface DataHubContentProps {
 
 export function DataHubContent({ defaultModule }: DataHubContentProps) {
   const router = useRouter();
-  const { data: session } = useSession();
-  const enabledModules = session?.enabledModules ?? [];
+  const enabledModules = useEnabledModules();
 
   const enabledGroups = useMemo(
     () =>

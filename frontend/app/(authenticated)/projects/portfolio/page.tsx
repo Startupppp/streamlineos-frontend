@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { RequireModule } from "@/components/auth/require-module";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import type { ProjectListItem, ProjectStatusValue } from "@/types/projects";
@@ -63,7 +65,7 @@ const statusConfig: Record<ProjectStatusValue, { label: string; color: string }>
 const DEFAULT_STATUS_CONFIG = { label: "Unknown", color: "bg-slate-100 text-slate-600 border-slate-200" };
 
 const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
-  { value: "ALL", label: "All" },
+  { value: "ALL", label: "All statuses" },
   { value: "ACTIVE", label: "Active" },
   { value: "COMPLETED", label: "Completed" },
   { value: "ARCHIVED", label: "Archived" },
@@ -80,34 +82,10 @@ function PortfolioSkeleton() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
+          <Skeleton key={i} className="h-14 rounded-lg" />
         ))}
       </div>
       <Skeleton className="h-64 rounded-lg" />
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  color,
-}: {
-  label: string;
-  value: number;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
-      <div className={cn("h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0", color)}>
-        <Icon className="h-4 w-4" />
-      </div>
-      <div>
-        <p className="text-xl font-bold">{value}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </div>
     </div>
   );
 }
@@ -174,7 +152,7 @@ function ProjectHealthCard({ project }: { project: ProjectListItem }) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-[11px] font-bold text-slate-400 font-mono shrink-0">{project.key}</span>
-          <h3 className="font-semibold text-slate-900 truncate text-sm">{project.name}</h3>
+          <h3 className="font-semibold text-foreground truncate text-sm">{project.name}</h3>
         </div>
         <Badge variant="outline" className={cn("text-[10px] shrink-0 border", sc.color)}>
           {sc.label}
@@ -221,7 +199,7 @@ function ProjectHealthCard({ project }: { project: ProjectListItem }) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs text-muted-foreground hover:text-foreground -ml-1"
+            className="h-7 text-xs text-muted-foreground hover:text-foreground -ml-1 active:scale-[0.98]"
           >
             View Project
             <ArrowRight className="h-3 w-3 ml-1" />
@@ -272,6 +250,7 @@ export default function PortfolioPage() {
     <div className="flex items-center gap-2 flex-wrap">
       <div className="flex items-center bg-muted/40 rounded-lg p-0.5 border border-border">
         <button
+          type="button"
           onClick={handleSetTableView}
           className={cn(
             "h-7 px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5",
@@ -283,6 +262,7 @@ export default function PortfolioPage() {
           <List className="h-3.5 w-3.5" /> Table
         </button>
         <button
+          type="button"
           onClick={handleSetCardsView}
           className={cn(
             "h-7 px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5",
@@ -295,7 +275,7 @@ export default function PortfolioPage() {
         </button>
       </div>
       <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 w-32 text-xs">
+        <SelectTrigger className="h-8 w-36 text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -321,67 +301,65 @@ export default function PortfolioPage() {
     </div>
   );
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Portfolio" filters={filters}>
-        <PortfolioSkeleton />
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper title="Portfolio" filters={filters}>
-        <ErrorState onRetry={handleRetry} />
-      </PageWrapper>
-    );
-  }
-
   return (
-    <PageWrapper title="Portfolio" badge={String(stats.total)} filters={filters}>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <StatCard label="Total" value={stats.total} icon={Briefcase} color="text-slate-600" />
-        <StatCard label="Active" value={stats.active} icon={TrendingUp} color="text-blue-600" />
-        <StatCard label="Completed" value={stats.completed} icon={CheckCircle2} color="text-emerald-600" />
-        <StatCard label="Archived" value={stats.archived} icon={Clock} color="text-slate-500" />
-      </div>
+    <RequireModule module="PROJECTS">
+      <PageWrapper
+        title="Portfolio"
+        badge={data ? String(stats.total) : undefined}
+        filters={filters}
+      >
+        {isLoading ? (
+          <PortfolioSkeleton />
+        ) : isError ? (
+          <ErrorState onRetry={handleRetry} className="flex-1" />
+        ) : (
+          <>
+            <StatCardGrid cols={4} className="mb-4">
+              <StatCard label="Total" value={stats.total} icon={Briefcase} tone="default" />
+              <StatCard label="Active" value={stats.active} icon={TrendingUp} tone="blue" />
+              <StatCard label="Completed" value={stats.completed} icon={CheckCircle2} tone="emerald" />
+              <StatCard label="Archived" value={stats.archived} icon={Clock} tone="default" />
+            </StatCardGrid>
 
-      {projects.length === 0 ? (
-        <EmptyState
-          title="No projects found"
-          description="Create a project to see it in the portfolio view."
-          action={{ label: "Go to Projects", href: "/projects" }}
-        />
-      ) : viewMode === "table" ? (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_minmax(100px,140px)_auto_auto] gap-3 px-4 py-2 bg-muted/40 border-b border-border">
-            <span className="text-xs font-semibold text-muted-foreground">Project</span>
-            <span className="text-xs font-semibold text-muted-foreground">Status</span>
-            <span className="text-xs font-semibold text-muted-foreground">Health</span>
-            <span className="text-xs font-semibold text-muted-foreground">Progress</span>
-            <span className="text-xs font-semibold text-muted-foreground">Due Date</span>
-            <span className="text-xs font-semibold text-muted-foreground">Manager</span>
-          </div>
-          <div className="divide-y divide-border/50">
-            {projects.map((project) => (
-              <ProjectTableRow key={project.id} project={project} />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <motion.div
-          className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          {projects.map((project) => (
-            <motion.div key={project.id} variants={fadeUp} className="h-full">
-              <ProjectHealthCard project={project} />
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-    </PageWrapper>
+            {projects.length === 0 ? (
+              <EmptyState
+                title="No projects found"
+                description="Create a project to see it in the portfolio view."
+                action={{ label: "Go to Projects", href: "/projects" }}
+              />
+            ) : viewMode === "table" ? (
+              <div className="rounded-lg border border-border overflow-hidden">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_minmax(100px,140px)_auto_auto] gap-3 px-4 py-2 bg-muted/40 border-b border-border">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Project</span>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Status</span>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Health</span>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Progress</span>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Due Date</span>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Manager</span>
+                </div>
+                <div className="divide-y divide-border/50">
+                  {projects.map((project) => (
+                    <ProjectTableRow key={project.id} project={project} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <motion.div
+                className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+              >
+                {projects.map((project) => (
+                  <motion.div key={project.id} variants={fadeUp} className="h-full">
+                    <ProjectHealthCard project={project} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </>
+        )}
+      </PageWrapper>
+    </RequireModule>
   );
 }

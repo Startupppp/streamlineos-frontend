@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useProjects } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { RequireModule } from "@/components/auth/require-module";
 import { NewProjectDialog } from "@/features/projects/project-list/new-project-dialog";
 import { ProjectCard } from "@/features/projects/project-list/project-card";
 import { ProjectListRow } from "@/features/projects/project-list/project-list-row";
@@ -89,6 +90,7 @@ export default function ProjectsPage() {
     : undefined;
 
   return (
+    <RequireModule module="PROJECTS">
     <PageWrapper
       title="Projects"
       badge={pagination?.total ? String(pagination.total) : undefined}
@@ -208,5 +210,6 @@ export default function ProjectsPage() {
         />
       )}
     </PageWrapper>
+    </RequireModule>
   );
 }

@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Package, AlertCircle, Check } from "lucide-react";
+import { ChevronLeft, ArrowRight, Package, AlertCircle, Check } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Table,
   TableBody,
@@ -33,10 +34,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<TransferStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200/70",
-  IN_TRANSIT: "bg-blue-50 text-blue-700 border-blue-200/70",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200/70",
+  PENDING: "bg-amber-50 text-amber-700 border-amber-200",
+  IN_TRANSIT: "bg-blue-50 text-blue-700 border-blue-200",
+  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 
 const STATUS_LABELS: Record<TransferStatus, string> = {
@@ -45,6 +46,8 @@ const STATUS_LABELS: Record<TransferStatus, string> = {
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
 };
+
+const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
 
 function StatusTimeline({ status }: { status: TransferStatus }) {
   const steps: TransferStatus[] =
@@ -62,14 +65,14 @@ function StatusTimeline({ status }: { status: TransferStatus }) {
         return (
           <div key={step} className="contents">
             {i > 0 && (
-              <div className={cn("h-px flex-1 mx-2", done ? "bg-violet-400" : "bg-border")} />
+              <div className={cn("h-px flex-1 mx-2", done ? "bg-blue-400" : "bg-border")} />
             )}
             <div className="flex flex-col items-center gap-1">
               <div
                 className={cn(
                   "h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0",
-                  done && "bg-violet-600 border-violet-600 text-white",
-                  active && !cancelled && "border-violet-500 bg-violet-50 text-violet-700",
+                  done && "bg-blue-600 border-blue-600 text-white",
+                  active && !cancelled && "border-blue-500 bg-blue-50 text-blue-700",
                   cancelled && "border-red-400 bg-red-50 text-red-600",
                   !done && !active && "border-border bg-background text-muted-foreground",
                 )}
@@ -82,7 +85,7 @@ function StatusTimeline({ status }: { status: TransferStatus }) {
               </div>
               <span className={cn(
                 "text-[10px] font-medium",
-                done ? "text-foreground" : active && !cancelled ? "text-violet-600" : cancelled ? "text-red-600" : "text-muted-foreground",
+                done ? "text-foreground" : active && !cancelled ? "text-blue-600" : cancelled ? "text-red-600" : "text-muted-foreground",
               )}>
                 {STATUS_LABELS[step]}
               </span>
@@ -143,7 +146,7 @@ function TransferDetailSkeleton() {
           </div>
         </CardContent></Card>
         <Card><CardContent className="p-4 space-y-2">
-          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
+          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
         </CardContent></Card>
       </div>
     </PageWrapper>
@@ -199,23 +202,47 @@ export default function TransferDetailPage({
   }
 
   if (isLoading) return <TransferDetailSkeleton />;
+
   if (isError) return (
-    <PageWrapper title="Transfer" eyebrow="Inventory / Transfers">
-      <EmptyState
-        illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+    <PageWrapper
+      title="Transfer"
+      eyebrow="Inventory / Transfers"
+      actions={
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/inventory/stock/transfers">
+            <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            Back to Transfers
+          </Link>
+        </Button>
+      }
+    >
+      <ErrorState
         title="Failed to load transfer"
         description="An error occurred while fetching this transfer. Please try again."
-        action={{ label: "Retry", onClick: handleRetry }}
+        onRetry={handleRetry}
+        className="flex-1 min-h-[40vh]"
       />
     </PageWrapper>
   );
 
   if (!transfer) return (
-    <PageWrapper title="Transfer not found" eyebrow="Inventory / Transfers">
+    <PageWrapper
+      title="Transfer not found"
+      eyebrow="Inventory / Transfers"
+      actions={
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/inventory/stock/transfers">
+            <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            Back to Transfers
+          </Link>
+        </Button>
+      }
+    >
       <EmptyState
         title="Transfer not found"
         description="This transfer does not exist or you do not have access."
         action={{ label: "Back to Transfers", href: "/inventory/stock/transfers" }}
+        className="flex-1 min-h-[40vh]"
       />
     </PageWrapper>
   );
@@ -228,22 +255,22 @@ export default function TransferDetailPage({
       title={transfer.referenceNumber}
       eyebrow="Inventory / Transfers"
       subtitle={
-        <Badge className={cn("text-[11px] px-2 py-0.5", STATUS_COLORS[transfer.status])}>
+        <Badge variant="outline" className={cn("h-5 text-[10px] px-2 py-0.5", STATUS_COLORS[transfer.status])}>
           {STATUS_LABELS[transfer.status]}
         </Badge>
       }
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
             <Link href="/inventory/stock/transfers">
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
               Back to Transfers
             </Link>
           </Button>
           {transfer.status === "PENDING" && (
             <Button
               size="sm"
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+              className="h-8 text-xs"
               onClick={handleDispatch}
               disabled={dispatchMutation.isPending}
             >
@@ -253,7 +280,7 @@ export default function TransferDetailPage({
           {transfer.status === "IN_TRANSIT" && (
             <Button
               size="sm"
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+              className="h-8 text-xs"
               onClick={handleOpenReceiveSheet}
             >
               Receive Transfer
@@ -312,7 +339,7 @@ export default function TransferDetailPage({
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <span className="text-sm font-semibold">Line Items</span>
-                <span className="text-xs text-muted-foreground tabular-nums">
+                <span className="text-[11px] text-muted-foreground tabular-nums">
                   ({lines.length})
                 </span>
               </div>
@@ -325,41 +352,41 @@ export default function TransferDetailPage({
                   description="This transfer has no product lines."
                 />
               ) : (
-                <div className="rounded-lg border overflow-hidden">
+                <div className="rounded-md border border-border overflow-hidden">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/50 hover:bg-muted/50">
-                        <TableHead className="text-xs font-semibold">Product</TableHead>
-                        <TableHead className="text-xs font-semibold">SKU</TableHead>
-                        <TableHead className="text-xs font-semibold text-right">Requested</TableHead>
-                        {isCompleted && <TableHead className="text-xs font-semibold text-right">Received</TableHead>}
-                        {isCompleted && <TableHead className="text-xs font-semibold text-right">Variance</TableHead>}
-                        <TableHead className="text-xs font-semibold">Notes</TableHead>
+                      <TableRow className="bg-muted/80 hover:bg-muted/80">
+                        <TableHead className={TH}>Product</TableHead>
+                        <TableHead className={TH}>SKU</TableHead>
+                        <TableHead className={cn(TH, "text-right")}>Requested</TableHead>
+                        {isCompleted && <TableHead className={cn(TH, "text-right")}>Received</TableHead>}
+                        {isCompleted && <TableHead className={cn(TH, "text-right")}>Variance</TableHead>}
+                        <TableHead className={TH}>Notes</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {lines.map((line) => {
                         const variance = line.quantityReceived - line.quantity;
                         return (
-                          <TableRow key={line.id} className="text-sm">
-                            <TableCell className="py-2.5 font-medium max-w-[180px] truncate">
+                          <TableRow key={line.id} className="h-8 hover:bg-muted/30 transition-colors">
+                            <TableCell className="px-2 py-1 text-[11px] font-medium max-w-[180px] truncate">
                               {line.productName}
                             </TableCell>
-                            <TableCell className="py-2.5 font-mono text-xs text-muted-foreground">
+                            <TableCell className="px-2 py-1 font-mono text-[11px] text-muted-foreground">
                               {line.sku}
                             </TableCell>
-                            <TableCell className="py-2.5 text-right tabular-nums">
+                            <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
                               {line.quantity.toLocaleString()}
                             </TableCell>
                             {isCompleted && (
-                              <TableCell className="py-2.5 text-right tabular-nums">
+                              <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
                                 {line.quantityReceived.toLocaleString()}
                               </TableCell>
                             )}
                             {isCompleted && (
                               <TableCell
                                 className={cn(
-                                  "py-2.5 text-right tabular-nums font-medium",
+                                  "px-2 py-1 text-right font-mono tabular-nums text-[11px] font-medium",
                                   variance < 0 && "text-red-600",
                                   variance > 0 && "text-amber-600",
                                   variance === 0 && "text-muted-foreground",
@@ -370,7 +397,7 @@ export default function TransferDetailPage({
                                   : `${variance > 0 ? "+" : ""}${variance.toLocaleString()}`}
                               </TableCell>
                             )}
-                            <TableCell className="py-2.5 text-xs text-muted-foreground max-w-[160px] truncate">
+                            <TableCell className="px-2 py-1 text-[11px] text-muted-foreground max-w-[160px] truncate">
                               {line.notes ?? "—"}
                             </TableCell>
                           </TableRow>

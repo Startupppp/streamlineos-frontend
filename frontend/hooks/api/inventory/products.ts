@@ -109,6 +109,7 @@ export function useUom() {
 export function useCreateProduct() {
   const qc = useQueryClient();
   return useMutation<InventoryProduct, Error, CreateProductInput>({
+    mutationKey: ["inventory", "product", "create"],
     mutationFn: (data) =>
       apiClient.post<InventoryProduct>("/inventory/products", serializeProductWrite(data)),
     onSuccess: () => {
@@ -120,6 +121,7 @@ export function useCreateProduct() {
 export function useUpdateProduct(id?: number) {
   const qc = useQueryClient();
   return useMutation<InventoryProduct, Error, UpdateProductPayload>({
+    mutationKey: ["inventory", "product", "update"],
     mutationFn: ({ productId, ...data }) => {
       const resolvedId = id ?? productId;
       if (resolvedId === undefined) throw new Error("Product id is required");
@@ -141,6 +143,7 @@ export function useUpdateProduct(id?: number) {
 export function useDeleteProduct() {
   const qc = useQueryClient();
   return useMutation<void, Error, number>({
+    mutationKey: ["inventory", "product", "delete"],
     mutationFn: (productId) =>
       apiClient.delete<void>(`/inventory/products/${productId}`),
     onSuccess: () => {
@@ -163,6 +166,7 @@ export function useProductVariants(filters?: ProductVariantFilters) {
 export function useCreateProductVariant(productId: number) {
   const qc = useQueryClient();
   return useMutation<InventoryProductVariant, Error, CreateProductVariantInput>({
+    mutationKey: ["inventory", "product", productId, "variant", "create"],
     mutationFn: (data) =>
       apiClient.post<InventoryProductVariant>(
         `/inventory/products/${productId}/variants`,
@@ -178,6 +182,7 @@ export function useCreateProductVariant(productId: number) {
 export function useCreateCategory() {
   const qc = useQueryClient();
   return useMutation<InventoryCategory, Error, CreateCategoryInput>({
+    mutationKey: ["inventory", "category", "create"],
     mutationFn: (data) =>
       apiClient.post<InventoryCategory>("/inventory/products/categories", data),
     onSuccess: () => {
@@ -189,6 +194,7 @@ export function useCreateCategory() {
 export function useCreateUom() {
   const qc = useQueryClient();
   return useMutation<InventoryUom, Error, CreateUomInput>({
+    mutationKey: ["inventory", "uom", "create"],
     mutationFn: (data) =>
       apiClient.post<InventoryUom>("/inventory/products/uom", data),
     onSuccess: () => {

@@ -2,11 +2,13 @@
 
 import { useState, useCallback, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { Plus, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { ActivityCard } from "@/features/crm/activities/activity-card";
 import { ActivityFilters } from "@/features/crm/activities/activity-filters";
 import { LogActivityDialog } from "@/features/crm/activities/log-activity-dialog";
@@ -42,6 +44,7 @@ function ActivitiesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const rawType       = searchParams.get("type") ?? "";
   const rawEntityType = searchParams.get("entityType") ?? "";
@@ -49,18 +52,18 @@ function ActivitiesContent() {
   const rawPage       = parseInt(searchParams.get("page") ?? "1", 10);
   const page          = isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
 
-  const typeFilter:       CrmActivityType | ""       = isCrmActivityType(rawType)       ? rawType       : "";
-  const entityTypeFilter: CrmActivityEntityType | "" = isCrmEntityType(rawEntityType)   ? rawEntityType : "";
-  const statusFilter:     CrmActivityStatus | ""     = isCrmActivityStatus(rawStatus)   ? rawStatus     : "";
+  const typeFilter:       CrmActivityType | ""       = isCrmActivityType(rawType)     ? rawType       : "";
+  const entityTypeFilter: CrmActivityEntityType | "" = isCrmEntityType(rawEntityType) ? rawEntityType : "";
+  const statusFilter:     CrmActivityStatus | ""     = isCrmActivityStatus(rawStatus) ? rawStatus     : "";
 
-  const hasActiveFilters = !!(typeFilter || entityTypeFilter || statusFilter);
+  const hasActiveFilters = !!(typeFilter || entityTypeFilter || statusFilter || search);
 
   const handleTypeChange = useCallback(
     (v: CrmActivityType | "") => {
       const params = new URLSearchParams(searchParams.toString());
       if (v) params.set("type", v); else params.delete("type");
       params.delete("page");
-      router.push(`?${params.toString()}`, { scroll: false });
+      router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router],
   );
@@ -70,7 +73,7 @@ function ActivitiesContent() {
       const params = new URLSearchParams(searchParams.toString());
       if (v) params.set("entityType", v); else params.delete("entityType");
       params.delete("page");
-      router.push(`?${params.toString()}`, { scroll: false });
+      router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router],
   );
@@ -80,13 +83,16 @@ function ActivitiesContent() {
       const params = new URLSearchParams(searchParams.toString());
       if (v) params.set("status", v); else params.delete("status");
       params.delete("page");
-      router.push(`?${params.toString()}`, { scroll: false });
+      router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router],
   );
 
+  const handleSearchChange = useCallback((v: string) => setSearch(v), []);
+
   const handleClearFilters = useCallback(() => {
-    router.push("?", { scroll: false });
+    setSearch("");
+    router.replace("?", { scroll: false });
   }, [router]);
 
   const { data, isLoading, isError, refetch } = useCrmActivities({
@@ -113,10 +119,21 @@ function ActivitiesContent() {
     ).length;
   }, [data?.tasks]);
 
+  const filteredActivities = useMemo(() => {
+    if (!data?.tasks) return [];
+    if (!search) return data.tasks;
+    const q = search.toLowerCase();
+    return data.tasks.filter(
+      (a) =>
+        a.title.toLowerCase().includes(q) ||
+        (a.notes?.toLowerCase().includes(q) ?? false),
+    );
+  }, [data?.tasks, search]);
+
   const logActivity = useLogCrmActivity();
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleOpenDialog = useCallback(() => setDialogOpen(true),  []);
+  const handleOpenDialog = useCallback(() => setDialogOpen(true), []);
   const handleCloseDialog = useCallback(() => setDialogOpen(false), []);
 
   const handleLogActivity = useCallback(
@@ -152,21 +169,18 @@ function ActivitiesContent() {
   return (
     <PageWrapper
       title="Activities"
-      subtitle="All CRM interactions and follow-ups across leads, deals, and contacts"
+      subtitle={!isLoading && data ? `${totalCount} activities` : undefined}
       badge={!isLoading && data ? String(totalCount) : undefined}
       actions={
-        <motion.div whileTap={{ scale: 0.97 }}>
-          <Button
-            onClick={handleOpenDialog}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 h-8 px-3 text-xs gap-1.5"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Log Activity
-          </Button>
-        </motion.div>
+        <Button onClick={handleOpenDialog} size="sm" className="h-8 px-3 text-xs gap-1.5">
+          <Plus className="h-3.5 w-3.5" />
+          Log Activity
+        </Button>
       }
       filters={
         <ActivityFilters
+          search={search}
+          onSearchChange={handleSearchChange}
           typeFilter={typeFilter}
           entityTypeFilter={entityTypeFilter}
           statusFilter={statusFilter}
@@ -191,69 +205,50 @@ function ActivitiesContent() {
         {isLoading && (
           <div className="space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+              <Skeleton key={i} className="h-20 w-full rounded-lg" />
             ))}
           </div>
         )}
 
         {!isLoading && isError && (
-          <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] gap-3">
-            <p className="text-sm text-muted-foreground">Failed to load activities.</p>
-            <Button variant="outline" size="sm" onClick={handleRetry}>
-              Retry
-            </Button>
-          </div>
+          <ErrorState
+            title="Failed to load activities"
+            description="Could not load activities. Please try again."
+            onRetry={handleRetry}
+            className="flex-1 min-h-[300px]"
+          />
         )}
 
-        {!isLoading && !isError && data?.tasks.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="flex flex-col items-center justify-center flex-1 min-h-[300px] gap-4"
-          >
-            <div className="rounded-full bg-violet-500/10 p-4">
-              <Activity className="h-8 w-8 text-violet-500" />
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-foreground">No activities yet</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {hasActiveFilters
-                  ? "Try adjusting the filters above"
-                  : "Log your first call, email, or meeting to get started"}
-              </p>
-            </div>
-            {!hasActiveFilters && (
-              <motion.div whileTap={{ scale: 0.97 }}>
-                <Button
-                  onClick={handleOpenDialog}
-                  className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Log Activity
-                </Button>
-              </motion.div>
-            )}
-          </motion.div>
+        {!isLoading && !isError && filteredActivities.length === 0 && (
+          <EmptyState
+            illustration={<Activity className="h-8 w-8 text-muted-foreground/40" />}
+            title={hasActiveFilters ? "No results found" : "No activities yet"}
+            description={
+              hasActiveFilters
+                ? "No results match your filters."
+                : "Log your first call, email, or meeting to get started."
+            }
+            action={
+              hasActiveFilters
+                ? { label: "Clear filters", onClick: handleClearFilters }
+                : { label: "Log Activity", onClick: handleOpenDialog }
+            }
+            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+          />
         )}
 
-        {!isLoading && !isError && data && data.tasks.length > 0 && (
+        {!isLoading && !isError && filteredActivities.length > 0 && (
           <>
             <div className="space-y-3">
               <AnimatePresence mode="popLayout">
-                {data.tasks.map((activity, idx) => (
+                {filteredActivities.map((activity, idx) => (
                   <ActivityCard key={activity.id} activity={activity} index={idx} />
                 ))}
               </AnimatePresence>
             </div>
 
             {totalPages > 1 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.2, delay: 0.3 }}
-                className="flex items-center justify-between pt-2"
-              >
+              <div className="flex items-center justify-between pt-2">
                 <p className="text-xs text-muted-foreground tabular-nums">
                   Page {page} of {totalPages} · {totalCount} total
                 </p>
@@ -277,7 +272,7 @@ function ActivitiesContent() {
                     Next
                   </Button>
                 </div>
-              </motion.div>
+              </div>
             )}
           </>
         )}
@@ -297,10 +292,10 @@ export default function CrmActivitiesPage() {
   return (
     <Suspense
       fallback={
-        <PageWrapper title="Activities" subtitle="All CRM interactions and follow-ups">
+        <PageWrapper title="Activities">
           <div className="space-y-3">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+              <Skeleton key={i} className="h-20 w-full rounded-lg" />
             ))}
           </div>
         </PageWrapper>

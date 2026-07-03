@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyTasksIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
   SheetContent,
@@ -112,7 +113,7 @@ export default function ModulesPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Modules">
+      <PageWrapper title="Modules" backHref={`/projects/${projectId}`}>
         <div className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (

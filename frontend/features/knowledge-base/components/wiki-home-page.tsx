@@ -40,7 +40,7 @@ function PageCard({ id, icon, title, updatedAt }: PageCardProps) {
   return (
     <Link
       href={`/knowledge-base/pages/${id}`}
-      className="block p-4 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors"
+      className="block p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
     >
       <div className="flex items-start gap-3">
         <span className="text-xl shrink-0">
@@ -80,9 +80,9 @@ export default function WikiHomePage() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
+      <PageWrapper title="Wiki">
         <LoadingState variant="cards" />
-      </div>
+      </PageWrapper>
     );
   }
 

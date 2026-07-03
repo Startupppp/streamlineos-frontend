@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Ruler } from "lucide-react";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Plus, Ruler, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +11,13 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -104,7 +112,7 @@ function CreateUomForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
         <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={createMutation.isPending}>
-            <Plus className="mr-1 h-4 w-4" />
+            <Plus className="mr-1 h-3.5 w-3.5" />
             {createMutation.isPending ? "Creating…" : "Add UOM"}
           </Button>
         </div>
@@ -113,10 +121,48 @@ function CreateUomForm({ onSuccess }: { onSuccess: () => void }) {
   );
 }
 
-export default function UomPage() {
+function UomPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [formKey, setFormKey] = useState<number>(0);
+
+  const search = searchParams.get("search") ?? "";
+  const statusParam = searchParams.get("status") ?? "all";
+
   const query = useUom();
   const uomList = query.data ?? [];
+
+  const filteredUom = uomList.filter((uom) => {
+    const matchesSearch =
+      !search ||
+      uom.name.toLowerCase().includes(search.toLowerCase()) ||
+      uom.abbreviation.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus =
+      statusParam === "all" ||
+      (statusParam === "active" && uom.isActive) ||
+      (statusParam === "inactive" && !uom.isActive);
+    return matchesSearch && matchesStatus;
+  });
+
+  function updateParams(updates: Record<string, string | null>): void {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (!value || value === "all") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    updateParams({ search: e.target.value || null });
+  }
+
+  function handleStatusChange(value: string): void {
+    updateParams({ status: value });
+  }
 
   function handleFormSuccess(): void {
     setFormKey((k) => k + 1);
@@ -126,12 +172,44 @@ export default function UomPage() {
     void query.refetch();
   }
 
+  const hasFilters = !!(search || (statusParam && statusParam !== "all"));
+
+  const filtersRow = (
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+      <div className="relative min-w-0 flex-1 lg:max-w-sm">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Input
+          value={search}
+          onChange={handleSearchChange}
+          placeholder="Search units..."
+          className="h-8 w-full min-w-0 pl-8 text-xs"
+        />
+      </div>
+      <div className="hidden min-w-0 items-center gap-2 sm:flex">
+        <Select value={statusParam} onValueChange={handleStatusChange}>
+          <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
   return (
     <PageWrapper
       eyebrow="Inventory · Products"
       title="Units of Measure"
-      subtitle="Define units used across product catalogues and transactions."
-      badge={uomList.length > 0 ? `${uomList.length}` : undefined}
+      subtitle={
+        uomList.length > 0
+          ? `${uomList.length} ${uomList.length === 1 ? "unit" : "units"}`
+          : "Define units used across product catalogues and transactions."
+      }
+      filters={filtersRow}
     >
       <div className="space-y-4">
         <Card>
@@ -153,30 +231,42 @@ export default function UomPage() {
             description={query.error.message}
             onRetry={handleRetry}
           />
-        ) : uomList.length === 0 ? (
+        ) : filteredUom.length === 0 ? (
           <EmptyState
             illustration={
-              <Ruler className="h-12 w-12 text-muted-foreground/40" />
+              <Ruler className="h-8 w-8 text-muted-foreground/40" />
             }
-            title="No units of measure yet"
-            description="Use the form above to add your first unit."
+            title={hasFilters ? "No units found" : "No units of measure yet"}
+            description={
+              hasFilters
+                ? "Try adjusting your search or filters."
+                : "Use the form above to add your first unit."
+            }
+            className="border-0 bg-transparent min-h-[20vh]"
           />
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+          <div className="rounded-md border border-border overflow-x-auto">
             <Table className="min-w-[360px]">
               <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="w-[160px]">Abbreviation</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
+                    Name
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[160px]">
+                    Abbreviation
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {uomList.map((uom) => (
-                  <TableRow key={uom.id}>
-                    <TableCell className="text-sm font-medium text-foreground">
+                {filteredUom.map((uom) => (
+                  <TableRow
+                    key={uom.id}
+                    className="h-8 hover:bg-muted/30 transition-colors"
+                  >
+                    <TableCell className="px-2 py-1 text-[11px] font-medium text-foreground">
                       {uom.name}
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
+                    <TableCell className="px-2 py-1 text-[11px] font-mono tabular-nums text-muted-foreground">
                       {uom.abbreviation}
                     </TableCell>
                   </TableRow>
@@ -187,5 +277,13 @@ export default function UomPage() {
         )}
       </div>
     </PageWrapper>
+  );
+}
+
+export default function UomPage() {
+  return (
+    <Suspense>
+      <UomPageInner />
+    </Suspense>
   );
 }

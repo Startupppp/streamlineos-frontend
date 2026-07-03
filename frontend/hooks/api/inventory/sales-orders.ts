@@ -15,7 +15,7 @@ interface SalesOrderFilters {
   limit?: number;
 }
 
-interface SalesOrderListItem {
+export interface SalesOrderListItem {
   id: number;
   soNumber: string;
   customerName: string | null;
@@ -263,6 +263,8 @@ export function useSalesOrders(filters?: SalesOrderFilters) {
       const raw = await apiClient.get<RawListResponse>("/inventory/sales-orders", {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.clientId ? { clientId: String(filters.clientId) } : {}),
+        ...(filters?.dateFrom ? { dateFrom: filters.dateFrom } : {}),
+        ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
       });
@@ -302,6 +304,7 @@ export function useSoAtp(soId: number) {
 export function useCreateSalesOrder() {
   const qc = useQueryClient();
   return useMutation<CreatedSalesOrder, Error, CreateSalesOrderInput>({
+    mutationKey: ["inventory", "salesOrders", "create"],
     mutationFn: (data) =>
       apiClient.post<CreatedSalesOrder>("/inventory/sales-orders", {
         clientId: data.customerId,
@@ -328,6 +331,7 @@ export function useCreateSalesOrder() {
 export function useConfirmSalesOrder() {
   const qc = useQueryClient();
   return useMutation<void, Error, ConfirmSalesOrderInput>({
+    mutationKey: ["inventory", "salesOrders", "confirm"],
     mutationFn: ({ soId }) => apiClient.post<void>(`/inventory/sales-orders/${soId}/confirm`, {}),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
@@ -339,6 +343,7 @@ export function useConfirmSalesOrder() {
 export function useShipSalesOrder() {
   const qc = useQueryClient();
   return useMutation<void, Error, ShipSalesOrderInput>({
+    mutationKey: ["inventory", "salesOrders", "ship"],
     mutationFn: ({ soId, shipDate, trackingNumber, notes }) =>
       apiClient.post<void>(`/inventory/sales-orders/${soId}/ship`, {
         shipDate: shipDate ?? todayIso(),
@@ -355,6 +360,7 @@ export function useShipSalesOrder() {
 export function useInvoiceSalesOrder() {
   const qc = useQueryClient();
   return useMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>({
+    mutationKey: ["inventory", "salesOrders", "invoice"],
     mutationFn: ({ soId }) => apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useKbPageTemplates, useDeleteKbPageTemplate } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
@@ -32,7 +33,7 @@ function TemplateCard({ template, canDelete, onUse }: TemplateCardProps) {
   }
 
   return (
-    <div className="flex items-start gap-3 p-4 rounded-xl border border-border hover:bg-muted/50 transition-colors">
+    <div className="flex items-start gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
       <span className="text-2xl shrink-0">{template.icon ?? "📄"}</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{template.name}</p>
@@ -98,18 +99,18 @@ export default function TemplatesDialog({
           {isLoading && (
             <div className="space-y-3 p-1">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full rounded-xl" />
+                <Skeleton key={i} className="h-20 w-full rounded-lg" />
               ))}
             </div>
           )}
           {!isLoading && templates.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <LayoutTemplate className="h-10 w-10 text-muted-foreground mb-3" />
-              <p className="text-sm font-medium">No templates yet</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Save a page as a template to see it here
-              </p>
-            </div>
+            <EmptyState
+              illustration={<LayoutTemplate className="h-8 w-8 text-muted-foreground/40" />}
+              title="No templates yet"
+              description="Save a page as a template to see it here."
+              compact
+              className="min-h-[160px]"
+            />
           )}
           <div className="space-y-2 p-1">
             {templates.map((t) => (

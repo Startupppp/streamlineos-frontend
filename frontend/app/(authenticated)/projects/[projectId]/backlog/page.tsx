@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useMemo, useCallback, useState, memo } from "react";
-import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useProject, useSprints } from "@/hooks/api";
 import { useBulkUpdateTickets } from "@/hooks/api/projects";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/projects";
@@ -13,6 +12,8 @@ import { PriorityBadge } from "@/features/projects/shared/priority-badge";
 import { StatusBadge } from "@/features/projects/shared/status-badge";
 import { TicketDetailsDialog } from "@/features/projects/ticket-details/ticket-details-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { Layers, X } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 
@@ -273,8 +274,8 @@ export default function BacklogPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Backlog" subtitle="Loading...">
-        <div className="rounded-lg border border-border overflow-hidden mx-4 mb-4">
+      <PageWrapper title="Backlog" subtitle="Loading..." backHref={`/projects/${projectId}`}>
+        <div className="rounded-lg border border-border overflow-hidden">
           <div className="h-8 bg-muted/40 border-b flex items-center px-2 gap-2">
             <Skeleton className="h-4 w-4" />
             {[80, 200, 100, 80, 120].map((w, i) => (
@@ -301,6 +302,7 @@ export default function BacklogPage({ params }: PageProps) {
     <PageWrapper
       title="Backlog"
       subtitle={`${tickets.length} ticket${tickets.length !== 1 ? "s" : ""}`}
+      backHref={`/projects/${projectId}`}
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={<TicketFilterBar members={members} showSprintFilter={false} />}
     >
@@ -355,7 +357,8 @@ export default function BacklogPage({ params }: PageProps) {
         </div>
       )}
 
-      <div className="rounded-lg border border-border overflow-hidden mx-4 mb-4">
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
         <div className="overflow-x-auto">
         <Table>
           <caption className="sr-only">Backlog tickets</caption>
@@ -379,11 +382,14 @@ export default function BacklogPage({ params }: PageProps) {
           <TableBody>
             {filteredTickets.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <EmptyTasksIllustration className="h-36 w-36 opacity-95" />
-                    <p>No tickets found. Create one to get started.</p>
-                  </div>
+                <TableCell colSpan={7} className="p-0">
+                  <EmptyState
+                    illustration={<Layers className="h-8 w-8 text-muted-foreground/40" />}
+                    title="No tickets found"
+                    description={tickets.length === 0 ? "Create a ticket to get started." : "No tickets match the active filters."}
+                    compact
+                    className="min-h-[200px] border-0 bg-transparent"
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -401,7 +407,8 @@ export default function BacklogPage({ params }: PageProps) {
           </TableBody>
         </Table>
         </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <TicketDetailsDialog
         ticketId={selectedTicketId}

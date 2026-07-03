@@ -89,10 +89,10 @@ export function CreateLeadSheet({
           New Lead
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex flex-col p-0 sm:max-w-[480px]">
+      <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-[480px]">
         <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-md bg-blue-500/10 flex items-center justify-center">
               <UserPlus className="h-5 w-5 text-blue-600" />
             </div>
             <div>
@@ -432,7 +432,7 @@ export function CreateLeadSheet({
           <Button
             type="submit"
             form="create-lead-form"
-            className="flex-1 h-9 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            className="flex-1 h-9"
             disabled={isPending}
           >
             {isPending ? "Creating..." : "Create Lead"}

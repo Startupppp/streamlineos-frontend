@@ -1,39 +1,10 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { useReducedMotion, motion } from "framer-motion";
 import Link from "next/link";
-import {
-  Search,
-  MoreHorizontal,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Send,
-  CheckCircle2,
-  XCircle,
-  Trash2,
-  FileText,
-  Download,
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Search, FileText, Download } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -45,15 +16,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import {
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, SkeletonTable } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useQuotes, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
 import { downloadQuotesCsv } from "@/hooks/api/crm/quotes";
@@ -61,115 +36,15 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { QuoteListItem, QuoteStatus } from "@/types/crm/quotes";
+import { QuoteRowActions } from "@/features/crm/quotes/components/quote-row-actions";
+import {
+  STATUS_LABELS,
+  STATUS_BADGE_CLASSES,
+  isQuoteStatus,
+  formatCurrency,
+} from "@/features/crm/quotes/lib/quote-utils";
 
 const PAGE_SIZE = 20;
-
-const STATUS_LABELS: Record<QuoteStatus, string> = {
-  DRAFT: "Draft",
-  SENT: "Sent",
-  ACCEPTED: "Accepted",
-  REJECTED: "Rejected",
-  EXPIRED: "Expired",
-};
-
-const STATUS_BADGE_CLASSES: Record<QuoteStatus, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  SENT: "bg-blue-50 text-blue-700 border-blue-200",
-  ACCEPTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  REJECTED: "bg-red-50 text-red-700 border-red-200",
-  EXPIRED: "bg-amber-50 text-amber-700 border-amber-200",
-};
-
-function isQuoteStatus(value: string): value is QuoteStatus {
-  return value in STATUS_LABELS;
-}
-
-function formatCurrency(amount: string, currency: string) {
-  const num = parseFloat(amount);
-  if (isNaN(num)) return "—";
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: currency || "INR",
-    maximumFractionDigits: 2,
-  }).format(num);
-}
-
-interface QuoteRowActionsProps {
-  quote: QuoteListItem;
-  onDelete: (id: number) => void;
-  onStatusUpdate: (id: number, status: QuoteStatus) => void;
-}
-
-function QuoteRowActions({ quote, onDelete, onStatusUpdate }: QuoteRowActionsProps) {
-  const router = useRouter();
-
-  const handleView = useCallback(() => {
-    router.push(`/crm/quotes/${quote.id}`);
-  }, [quote.id, router]);
-
-  const handleSend = useCallback(() => {
-    onStatusUpdate(quote.id, "SENT");
-  }, [quote.id, onStatusUpdate]);
-
-  const handleAccept = useCallback(() => {
-    onStatusUpdate(quote.id, "ACCEPTED");
-  }, [quote.id, onStatusUpdate]);
-
-  const handleReject = useCallback(() => {
-    onStatusUpdate(quote.id, "REJECTED");
-  }, [quote.id, onStatusUpdate]);
-
-  const handleDelete = useCallback(() => {
-    onDelete(quote.id);
-  }, [quote.id, onDelete]);
-
-  const canSend = quote.status === "DRAFT";
-  const canAcceptOrReject = quote.status === "SENT";
-  const canDelete = quote.status === "DRAFT";
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleView}>
-          <Eye className="h-3.5 w-3.5 mr-2" />
-          View Details
-        </DropdownMenuItem>
-        {canSend && (
-          <DropdownMenuItem onClick={handleSend}>
-            <Send className="h-3.5 w-3.5 mr-2 text-blue-600" />
-            Send Quote
-          </DropdownMenuItem>
-        )}
-        {canAcceptOrReject && (
-          <>
-            <DropdownMenuItem onClick={handleAccept}>
-              <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-emerald-600" />
-              Accept
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleReject}>
-              <XCircle className="h-3.5 w-3.5 mr-2 text-red-600" />
-              Reject
-            </DropdownMenuItem>
-          </>
-        )}
-        {canDelete && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600" onClick={handleDelete}>
-              <Trash2 className="h-3.5 w-3.5 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 export default function QuotesPage() {
   const searchParams = useSearchParams();
@@ -178,6 +53,7 @@ export default function QuotesPage() {
   const [, startTransition] = useTransition();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   const updateQuoteStatus = useUpdateQuoteStatus();
   const deleteQuote = useDeleteQuote();
@@ -214,9 +90,7 @@ export default function QuotesPage() {
   });
 
   const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const firstItem = total > 0 ? (page - 1) * PAGE_SIZE + 1 : 0;
-  const lastItem = Math.min(page * PAGE_SIZE, total);
+  const hasActiveFilters = !!apiSearch || statusFilter !== "all";
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -295,22 +169,117 @@ export default function QuotesPage() {
     [updateQuoteStatus],
   );
 
-  const handlePrevPage = useCallback(
-    () => updateParams({ page: page <= 2 ? null : String(page - 1) }),
-    [page, updateParams],
-  );
-  const handleNextPage = useCallback(
-    () => updateParams({ page: String(page + 1) }),
-    [page, updateParams],
+  const handlePageChange = useCallback(
+    (p: number) => {
+      updateParams({ page: p <= 1 ? null : String(p) });
+    },
+    [updateParams],
   );
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Quotes" subtitle="Quote management">
-        <SkeletonTable rows={8} columns={8} className="h-[calc(100dvh-16rem)]" />
-      </PageWrapper>
-    );
-  }
+  const handleClearFilters = useCallback(() => {
+    updateParams({ q: null, status: null, page: null });
+  }, [updateParams]);
+
+  const tableVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : fadeUp;
+
+  const columns = useMemo<DataTableColumn<QuoteListItem>[]>(
+    () => [
+      {
+        key: "quoteNumber",
+        header: "Quote #",
+        sortable: true,
+        sortValue: (q) => q.quoteNumber,
+        cell: (q) => (
+          <Link
+            href={`/crm/quotes/${q.id}`}
+            className="font-mono text-[11px] font-medium hover:text-blue-600 hover:underline transition-colors"
+          >
+            {q.quoteNumber}
+          </Link>
+        ),
+      },
+      {
+        key: "subject",
+        header: "Subject",
+        sortable: true,
+        sortValue: (q) => q.subject,
+        cell: (q) => (
+          <span className="text-[11px] font-medium truncate block max-w-[160px]">
+            {q.subject}
+          </span>
+        ),
+      },
+      {
+        key: "deal",
+        header: "Deal",
+        cell: (q) =>
+          q.deal ? (
+            <Link
+              href={`/crm/deals/${q.deal.id}`}
+              className="text-[11px] text-blue-600 hover:underline truncate max-w-[100px] block"
+            >
+              {q.deal.name}
+            </Link>
+          ) : (
+            <span className="text-[11px] text-muted-foreground">—</span>
+          ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        cell: (q) => (
+          <Badge
+            variant="outline"
+            className={`text-[9px] px-1.5 py-0 h-4 ${STATUS_BADGE_CLASSES[q.status]}`}
+          >
+            {STATUS_LABELS[q.status]}
+          </Badge>
+        ),
+      },
+      {
+        key: "netAmount",
+        header: "Amount",
+        headerClassName: "text-right",
+        className: "text-right font-mono tabular-nums text-muted-foreground whitespace-nowrap",
+        cell: (q) => formatCurrency(q.netAmount, q.currency),
+      },
+      {
+        key: "validUntil",
+        header: "Valid Until",
+        cell: (q) => (
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+            {q.validUntil ? new Date(q.validUntil).toLocaleDateString() : "—"}
+          </span>
+        ),
+      },
+      {
+        key: "createdAt",
+        header: "Created",
+        sortable: true,
+        sortValue: (q) => q.createdAt,
+        cell: (q) => (
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+            {q.createdAt ? new Date(q.createdAt).toLocaleDateString() : "—"}
+          </span>
+        ),
+      },
+      {
+        key: "actions",
+        header: "",
+        headerClassName: "w-8",
+        cell: (q) => (
+          <QuoteRowActions
+            quote={q}
+            onDelete={handleRequestDelete}
+            onStatusUpdate={handleStatusUpdate}
+          />
+        ),
+      },
+    ],
+    [handleRequestDelete, handleStatusUpdate],
+  );
 
   if (error) {
     return (
@@ -329,16 +298,18 @@ export default function QuotesPage() {
     <>
       <PageWrapper
         title="Quotes"
-        subtitle={`${total} quote${total === 1 ? "" : "s"}`}
+        subtitle={isLoading ? undefined : `${total} quote${total === 1 ? "" : "s"}`}
+        noInternalScroll
+        contentClassName="flex flex-col"
         filters={
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+            <div className="relative min-w-0 flex-1 lg:max-w-[240px]">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search quotes (min 3 chars)..."
+                placeholder="Search quotes..."
                 value={searchInput}
                 onChange={handleSearchChange}
-                className="pl-8 h-8 text-xs"
+                className="h-8 w-full min-w-0 pl-8 text-xs"
               />
             </div>
             <Select value={statusFilter} onValueChange={handleStatusChange}>
@@ -356,8 +327,7 @@ export default function QuotesPage() {
             </Select>
             <Button
               variant="outline"
-              size="sm"
-              className="h-8 text-xs"
+              className="ml-auto h-8 text-xs"
               onClick={handleExport}
               disabled={isExporting || total === 0}
             >
@@ -368,156 +338,44 @@ export default function QuotesPage() {
         }
       >
         <motion.div
-          className="space-y-4"
+          className="flex flex-col flex-1 min-h-0"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={fadeUp}>
-            <div className="border border-border rounded-md flex flex-col h-[calc(100dvh-16rem)] min-h-[320px]">
-              <div className="flex-1 min-h-0 overflow-auto">
-                <div className="min-w-max">
-                  <table className="w-full caption-bottom text-[11px]">
-                    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                      <TableRow className="border-b-2 border-border">
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                          Quote #
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                          Subject
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                          Deal
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                          Status
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                          Amount
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                          Valid Until
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                          Created
-                        </TableHead>
-                        <TableHead className="text-[10px] w-8 px-2" />
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {(data?.quotes ?? []).length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={8} className="p-0">
-                            <EmptyState
-                              illustration={
-                                <FileText className="text-muted-foreground/40" />
-                              }
-                              title="No quotes found"
-                              description={
-                                apiSearch || statusFilter !== "all"
-                                  ? "No quotes match your filters."
-                                  : "Quotes can be created from a deal's quotes section."
-                              }
-                              className="border-0 bg-transparent min-h-[40vh]"
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        data?.quotes.map((quote) => (
-                          <TableRow
-                            key={quote.id}
-                            className="h-8 hover:bg-muted/30 transition-colors"
-                          >
-                            <TableCell className="px-2 py-1">
-                              <Link
-                                href={`/crm/quotes/${quote.id}`}
-                                className="font-mono text-[11px] font-medium hover:text-blue-600 hover:underline transition-colors"
-                              >
-                                {quote.quoteNumber}
-                              </Link>
-                            </TableCell>
-                            <TableCell className="px-2 py-1 max-w-[160px]">
-                              <span className="text-[11px] font-medium truncate block">
-                                {quote.subject}
-                              </span>
-                            </TableCell>
-                            <TableCell className="px-2 py-1">
-                              {quote.deal ? (
-                                <Link
-                                  href={`/crm/deals/${quote.deal.id}`}
-                                  className="text-[11px] text-blue-600 hover:underline truncate max-w-[100px] block"
-                                >
-                                  {quote.deal.name}
-                                </Link>
-                              ) : (
-                                <span className="text-[11px] text-muted-foreground">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="px-2 py-1">
-                              <Badge
-                                variant="outline"
-                                className={`text-[9px] px-1.5 py-0 h-4 ${STATUS_BADGE_CLASSES[quote.status]}`}
-                              >
-                                {STATUS_LABELS[quote.status]}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="px-2 py-1 text-[11px] text-muted-foreground font-mono whitespace-nowrap">
-                              {formatCurrency(quote.netAmount, quote.currency)}
-                            </TableCell>
-                            <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
-                              {quote.validUntil
-                                ? new Date(quote.validUntil).toLocaleDateString()
-                                : "—"}
-                            </TableCell>
-                            <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
-                              {quote.createdAt
-                                ? new Date(quote.createdAt).toLocaleDateString()
-                                : "—"}
-                            </TableCell>
-                            <TableCell className="px-2 py-1">
-                              <QuoteRowActions
-                                quote={quote}
-                                onDelete={handleRequestDelete}
-                                onStatusUpdate={handleStatusUpdate}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </table>
-                </div>
-              </div>
-              <div className="shrink-0 flex items-center justify-between px-4 py-2 border-t">
-                {total > 0 ? (
-                  <span className="text-xs text-muted-foreground">
-                    Showing {firstItem}–{lastItem} of {total} quotes
-                  </span>
-                ) : (
-                  <span />
-                )}
-                {totalPages > 1 && (
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 1}
-                      onClick={handlePrevPage}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page >= totalPages}
-                      onClick={handleNextPage}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
+          <motion.div variants={tableVariants} className="flex flex-col flex-1 min-h-0">
+            <DataTable
+              data={data?.quotes ?? []}
+              columns={columns}
+              getRowKey={(q) => q.id}
+              isLoading={isLoading}
+              className="flex-1 min-h-0"
+              minWidth="700px"
+              emptyState={
+                <EmptyState
+                  illustration={<FileText className="text-muted-foreground/40" />}
+                  title="No quotes found"
+                  description={
+                    hasActiveFilters
+                      ? "No quotes match your filters."
+                      : "Quotes can be created from a deal's quotes section."
+                  }
+                  action={
+                    hasActiveFilters
+                      ? { label: "Clear filters", onClick: handleClearFilters }
+                      : undefined
+                  }
+                  className="border-0 bg-transparent min-h-[40vh]"
+                />
+              }
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: PAGE_SIZE,
+                total,
+                onPageChange: handlePageChange,
+              }}
+            />
           </motion.div>
         </motion.div>
       </PageWrapper>

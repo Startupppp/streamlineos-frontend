@@ -149,7 +149,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-full overflow-hidden bg-background">
-      <aside className="hidden md:flex flex-col w-[260px] shrink-0 border-r border-border/40 bg-card/50">
+      <aside className="hidden md:flex flex-col w-[260px] shrink-0 border-r border-border bg-card/50">
         {sidebarContent}
       </aside>
 

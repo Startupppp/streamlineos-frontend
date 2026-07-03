@@ -1,10 +1,10 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import type { ReactNode } from "react";
 import { Building2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useEnabledModules } from "@/hooks/api/access/org-modules";
 
 interface RequireModuleProps {
   module: string;
@@ -28,10 +28,9 @@ function ModuleDisabledState({ module }: { module: string }) {
 }
 
 export function RequireModule({ module, children }: RequireModuleProps) {
-  const { data: session } = useSession();
-  const modules = session?.enabledModules ?? [];
+  const enabledModules = useEnabledModules();
   const upperModule = module.toUpperCase();
-  const isEnabled = modules.length === 0 || modules.some((m) => m.toUpperCase() === upperModule);
+  const isEnabled = enabledModules.length === 0 || enabledModules.some((m) => m.toUpperCase() === upperModule);
   if (!isEnabled) {
     return <ModuleDisabledState module={module} />;
   }

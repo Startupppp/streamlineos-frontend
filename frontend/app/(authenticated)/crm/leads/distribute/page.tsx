@@ -1,67 +1,109 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { EmptyTasksIllustration } from "@/components/illustrations";
+import { useState, useMemo, useCallback, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
 import { LeadDistributionDialog } from "@/features/crm/leads/lead-distribution-dialog";
-import { StatCard } from "@/components/ui/stat-card";
-import { Search, Users, ArrowRight, FileSpreadsheet, AlertTriangle } from "lucide-react";
+import { Search, Users, ArrowRight, FileSpreadsheet } from "lucide-react";
 import { useLeads } from "@/hooks/api/leads";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
+import type { Lead, PipelineStatus } from "@/types/leads";
 
-interface DistributeLeadRowProps {
-  lead: { id: number; name: string; email?: string | null; phone?: string | null; source?: string | null; status: string; assignedTo?: { id: string | number; name?: string | null } | null };
-  isSelected: boolean;
-  onToggle: (id: number) => void;
-}
+const STATUS_BADGE: Record<string, string> = {
+  NEW: "bg-blue-50 text-blue-700 border-blue-200",
+  CONTACTED: "bg-amber-50 text-amber-700 border-amber-200",
+  INTERESTED: "bg-violet-50 text-violet-700 border-violet-200",
+  QUALIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CONVERTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  LOST: "bg-red-50 text-red-700 border-red-200",
+};
 
-function DistributeLeadRow({ lead, isSelected, onToggle }: DistributeLeadRowProps) {
-  const handleToggle = useCallback(() => onToggle(lead.id), [lead.id, onToggle]);
-  return (
-    <TableRow className={isSelected ? "bg-blue-500/5" : ""}>
-      <TableCell className="px-3">
-        <Checkbox checked={isSelected} onCheckedChange={handleToggle} />
-      </TableCell>
-      <TableCell className="text-sm font-medium">{lead.name}</TableCell>
-      <TableCell className="text-xs text-muted-foreground">{lead.email || "—"}</TableCell>
-      <TableCell className="text-xs text-muted-foreground font-mono">{lead.phone || "—"}</TableCell>
-      <TableCell>
-        <Badge variant="outline" className="text-[10px]">{lead.source || "—"}</Badge>
-      </TableCell>
-      <TableCell>
-        <Badge variant="outline" className="text-[10px]">{lead.status}</Badge>
-      </TableCell>
-      <TableCell className="text-xs">
-        {lead.assignedTo?.name || <span className="text-muted-foreground">Unassigned</span>}
-      </TableCell>
-    </TableRow>
-  );
-}
+const LEAD_COLUMNS: DataTableColumn<Lead>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (lead) => <span className="font-medium">{lead.name}</span>,
+    sortable: true,
+    sortValue: (lead) => lead.name,
+  },
+  {
+    key: "email",
+    header: "Email",
+    cell: (lead) => (
+      <span className="text-muted-foreground">{lead.email ?? "—"}</span>
+    ),
+  },
+  {
+    key: "phone",
+    header: "Phone",
+    className: "font-mono",
+    cell: (lead) => (
+      <span className="text-muted-foreground">{lead.phone ?? "—"}</span>
+    ),
+  },
+  {
+    key: "source",
+    header: "Source",
+    cell: (lead) => (
+      <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">
+        {lead.source ?? "—"}
+      </Badge>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (lead) => (
+      <Badge
+        variant="outline"
+        className={cn("text-[9px] px-1.5 py-0 h-4", STATUS_BADGE[lead.status] ?? "")}
+      >
+        {lead.status}
+      </Badge>
+    ),
+  },
+  {
+    key: "assignedTo",
+    header: "Assigned To",
+    cell: (lead) => (
+      <span className={lead.assignedTo?.name ? "" : "text-muted-foreground"}>
+        {lead.assignedTo?.name ?? "Unassigned"}
+      </span>
+    ),
+  },
+];
 
 export default function LeadDistributionPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const qc = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("NEW");
+
+  const [inputValue, setInputValue] = useState(searchParams.get("q") ?? "");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
+  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") ?? "all");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showDistribute, setShowDistribute] = useState(false);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data, isLoading, isError, error } = useLeads({
-    status: statusFilter as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" | undefined,
+    status: statusFilter !== "all" ? (statusFilter as PipelineStatus) : undefined,
     search: searchQuery || undefined,
     sortBy: "createdAt",
     sortOrder: "desc",
@@ -74,54 +116,91 @@ export default function LeadDistributionPage() {
 
   const filteredLeads = useMemo(() => data?.leads ?? [], [data]);
 
-  const allSelected = filteredLeads.length > 0 && filteredLeads.every((l) => selectedIds.has(l.id));
+  const unassignedCount = useMemo(
+    () => filteredLeads.filter((l) => !l.assignedTo?.id).length,
+    [filteredLeads],
+  );
 
-  const handleToggleAll = useCallback(() => {
-    if (allSelected) {
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      setInputValue(val);
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = setTimeout(() => {
+        setSearchQuery(val);
+        const params = new URLSearchParams(searchParams.toString());
+        if (val) params.set("q", val);
+        else params.delete("q");
+        router.replace(`?${params.toString()}`);
+      }, 300);
+    },
+    [searchParams, router],
+  );
+
+  const handleStatusChange = useCallback(
+    (value: string) => {
+      setStatusFilter(value);
       setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filteredLeads.map((l) => l.id)));
-    }
-  }, [allSelected, filteredLeads]);
+      const params = new URLSearchParams(searchParams.toString());
+      if (value !== "all") params.set("status", value);
+      else params.delete("status");
+      router.replace(`?${params.toString()}`);
+    },
+    [searchParams, router],
+  );
 
-  const handleToggleSelect = useCallback((id: number) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); } else { next.add(id); }
-      return next;
-    });
-  }, []);
+  const handleSelectionChange = useCallback(
+    (sel: Set<string | number>) => {
+      setSelectedIds(new Set([...sel].map(Number)));
+    },
+    [],
+  );
 
-  const unassignedCount = useMemo(() =>
-    filteredLeads.filter((l) => !l.assignedTo?.id).length,
-  [filteredLeads]);
-
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), []);
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const handleClearFilters = useCallback(() => {
+    setStatusFilter("all");
+    setSearchQuery("");
+    setInputValue("");
+    router.replace(window.location.pathname);
+  }, [router]);
+
   const handleShowDistribute = useCallback(() => setShowDistribute(true), []);
+
   const handleDistributeSuccess = useCallback(() => {
     setSelectedIds(new Set());
     refetch();
   }, [refetch]);
 
+  const emptyAction = useMemo(
+    () =>
+      statusFilter !== "all" || searchQuery
+        ? { label: "Clear filters", onClick: handleClearFilters }
+        : undefined,
+    [statusFilter, searchQuery, handleClearFilters],
+  );
+
   return (
     <PageWrapper
       title="Lead Distribution"
-      subtitle="Upload leads and distribute to your sales team via round-robin"
+      subtitle={isLoading ? undefined : `${data?.totalCount ?? 0} leads`}
       filters={
         <>
-          <div className="relative flex-1 max-w-sm min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative min-w-0 flex-1 lg:max-w-md">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Search leads..."
-              value={searchQuery}
+              value={inputValue}
               onChange={handleSearchChange}
-              className="pl-9"
+              className="pl-8 h-8 text-xs w-full"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[130px] h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className="h-8 text-xs w-[140px]">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all" className="text-xs">All statuses</SelectItem>
               <SelectItem value="NEW" className="text-xs">New</SelectItem>
               <SelectItem value="CONTACTED" className="text-xs">Contacted</SelectItem>
               <SelectItem value="INTERESTED" className="text-xs">Interested</SelectItem>
@@ -129,7 +208,12 @@ export default function LeadDistributionPage() {
             </SelectContent>
           </Select>
           {selectedIds.size > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleClearSelection}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={handleClearSelection}
+            >
               Clear selection
             </Button>
           )}
@@ -138,96 +222,72 @@ export default function LeadDistributionPage() {
       actions={
         <>
           <CsvUploadDialog onSuccess={refetch} />
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={selectedIds.size === 0}
-            onClick={handleShowDistribute}
-          >
-            <Users className="h-4 w-4 mr-1" /> Distribute ({selectedIds.size})
+          <Button disabled={selectedIds.size === 0} onClick={handleShowDistribute}>
+            <Users className="h-3.5 w-3.5 mr-1.5" />
+            Distribute ({selectedIds.size})
           </Button>
         </>
       }
     >
+      <div className="space-y-4">
+        <StatCardGrid cols={3}>
+          <StatCard
+            label="Total Leads"
+            value={data?.totalCount ?? 0}
+            icon={FileSpreadsheet}
+            tone="blue"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="Unassigned"
+            value={unassignedCount}
+            icon={Users}
+            tone="amber"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="Selected"
+            value={selectedIds.size}
+            icon={ArrowRight}
+            tone="default"
+          />
+        </StatCardGrid>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        {isLoading ? (
-          <>
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
-          </>
+        {isError ? (
+          <ErrorState
+            description={
+              error instanceof Error ? error.message : "Failed to load leads."
+            }
+            onRetry={refetch}
+            className="flex-1"
+          />
         ) : (
-          <>
-            <StatCard label="Total Leads" value={data?.totalCount ?? 0} icon={FileSpreadsheet} color="blue" index={0} />
-            <StatCard label="Unassigned" value={unassignedCount} icon={Users} color="amber" index={1} />
-            <StatCard label="Selected" value={selectedIds.size} icon={ArrowRight} color="cyan" index={2} />
-          </>
+          <DataTable
+            data={filteredLeads}
+            columns={LEAD_COLUMNS}
+            getRowKey={(lead) => lead.id}
+            isLoading={isLoading}
+            selection={{
+              selected: new Set<string | number>([...selectedIds]),
+              onChange: handleSelectionChange,
+            }}
+            pagination={{ pageSize: 50 }}
+            minWidth="640px"
+            emptyState={
+              <EmptyState
+                title="No leads found"
+                description={
+                  statusFilter !== "all" || searchQuery
+                    ? "No leads match your filters."
+                    : "Upload leads or adjust your search to get started."
+                }
+                action={emptyAction}
+                className="min-h-[40vh] border-0 bg-transparent"
+              />
+            }
+          />
         )}
       </div>
-
-      <Card>
-        {isError ? (
-          <div className="flex flex-col items-center justify-center min-h-[300px] gap-4 text-center">
-            <AlertTriangle className="h-10 w-10 text-destructive" />
-            <p className="text-sm text-muted-foreground">
-              {error instanceof Error ? error.message : "Failed to load leads. Please try again."}
-            </p>
-            <Button variant="outline" size="sm" onClick={refetch}>
-              Retry
-            </Button>
-          </div>
-        ) : (
-          <ScrollArea className="w-full max-h-[60vh]" type="auto">
-            <div className="min-w-max">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10 px-3">
-                    <Checkbox checked={allSelected} onCheckedChange={handleToggleAll} />
-                  </TableHead>
-                  <TableHead className="text-xs">Name</TableHead>
-                  <TableHead className="text-xs">Email</TableHead>
-                  <TableHead className="text-xs">Phone</TableHead>
-                  <TableHead className="text-xs">Source</TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs">Assigned To</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  Array.from({ length: 6 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell colSpan={7} className="h-12">
-                        <Skeleton className="h-4 w-full" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : filteredLeads.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <EmptyTasksIllustration className="h-36 w-36 opacity-95" />
-                        <p>No leads found. Upload leads or adjust filters.</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredLeads.map((lead) => (
-                    <DistributeLeadRow
-                      key={lead.id}
-                      lead={lead}
-                      isSelected={selectedIds.has(lead.id)}
-                      onToggle={handleToggleSelect}
-                    />
-                  ))
-                )}
-              </TableBody>
-            </Table>
-            </div>
-          </ScrollArea>
-        )}
-      </Card>
 
       <LeadDistributionDialog
         open={showDistribute}

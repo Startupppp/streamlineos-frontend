@@ -165,7 +165,7 @@ export function LeadDetailHeader({
     .join("");
 
   return (
-    <Card className="shadow-noir border-t-2 border-t-gold overflow-hidden">
+    <Card className="shadow-sm overflow-hidden">
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 p-4 pb-3">
           <div className="flex items-start gap-3 sm:contents">
@@ -290,7 +290,7 @@ export function LeadDetailHeader({
         </div>
 
         <div className="px-4 pb-4 pt-1">
-          <div className="flex flex-wrap items-start gap-2 px-2 py-2.5 rounded-xl bg-muted/30 border border-border/50">
+          <div className="flex flex-wrap items-start gap-2 px-2 py-2.5 rounded-md bg-muted/30 border border-border">
             {STATUS_PIPELINE.map((status, i) => (
               <PipelineStep
                 key={status}

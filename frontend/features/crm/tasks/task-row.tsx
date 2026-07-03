@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { format, isToday, isPast } from "date-fns";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -63,6 +63,7 @@ export function TaskRow({
   onDelete,
   index,
 }: TaskRowProps) {
+  const shouldReduceMotion = useReducedMotion();
   const isCompleted = task.status === "completed" || isOptimisticallyCompleted;
   const isOverdue =
     task.dueDate != null &&
@@ -78,14 +79,15 @@ export function TaskRow({
     ? task.assigneeId.slice(0, 2).toUpperCase()
     : null;
 
+  const motionProps = shouldReduceMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.15 } }
+    : { initial: { opacity: 0, y: 4 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.15, delay: index * 0.03 } };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.15, delay: index * 0.03 }}
-      whileTap={{ scale: 0.99 }}
+      {...motionProps}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors group",
+        "flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/30 transition-colors group",
         isOverdue && "border-l-2 border-l-red-400 pl-2.5",
       )}
     >
@@ -116,7 +118,7 @@ export function TaskRow({
         {task.entityType && task.entityId != null && (
           <Link
             href={`${ENTITY_PATHS[task.entityType]}/${task.entityId}`}
-            className="text-[11px] text-violet-600 hover:underline truncate"
+            className="text-[11px] text-blue-600 hover:underline truncate"
           >
             {ENTITY_LABELS[task.entityType]} #{task.entityId}
           </Link>
@@ -143,8 +145,11 @@ export function TaskRow({
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-slate-100">
-            <MoreHorizontal className="h-3.5 w-3.5 text-slate-500" />
+          <button
+            aria-label="Task actions"
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted/50"
+          >
+            <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-36">

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IndianRupee, Clock, TrendingUp, Pencil } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useProjectBudget, useUpdateProjectBudget } from "@/hooks/api/projects";
 import { toast } from "sonner";
 
@@ -46,7 +47,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
 
   if (isLoading) {
     return (
-      <PageWrapper title="Budget">
+      <PageWrapper title="Budget" eyebrow="Projects" backHref={`/projects/${projectId}`}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
         </div>
@@ -61,7 +62,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
   const overBudget = (budget?.remaining ?? 0) < 0;
 
   return (
-    <PageWrapper title="Budget" subtitle="Planned budget vs actual cost from billable timesheets">
+    <PageWrapper title="Budget" eyebrow="Projects" backHref={`/projects/${projectId}`} subtitle="Planned budget vs actual cost from billable timesheets">
       <div className="bg-muted/40 border border-border rounded-lg px-3 py-2 mb-4 flex items-center gap-2">
         {editMode ? (
           <>

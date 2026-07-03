@@ -43,6 +43,7 @@ interface AskKbInput {
 
 export function useAskKb() {
   return useMutation({
+    mutationKey: ["kb", "rag", "ask"],
     mutationFn: (input: AskKbInput) =>
       apiClient.post<KbAnswer>("/support/kb/ask", input),
   });
@@ -55,6 +56,7 @@ interface PublicAskKbInput {
 
 export function usePublicAskKb() {
   return useMutation({
+    mutationKey: ["kb", "rag", "public-ask"],
     mutationFn: ({ orgId, question }: PublicAskKbInput) =>
       apiClient.post<KbAnswer>("/public/kb/ask", { org: orgId, question }),
   });
@@ -73,6 +75,7 @@ export function useKbIndexStatus(id: number) {
 export function useReindexKbArticle() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kb", "rag", "reindex"],
     mutationFn: (id: number) =>
       apiClient.post<ReindexResult>(`/support/kb/articles/${id}/reindex`, {}),
     onSuccess: (_data, id) => {
@@ -86,6 +89,7 @@ export function useReindexKbArticle() {
 export function useReindexAllKb() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kb", "rag", "reindex-all"],
     mutationFn: () => apiClient.post<IndexAllResult>("/support/kb/reindex-all", {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.all }),
   });

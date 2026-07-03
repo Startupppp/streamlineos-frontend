@@ -1,7 +1,7 @@
 "use client";
 
-import { TrendingUp, IndianRupee, Trophy, Clock } from "lucide-react";
-import { StatCard } from "@/components/ui/stat-card";
+import { TrendingUp, IndianRupee, Trophy, Target } from "lucide-react";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatINRCompact } from "@/lib/format-utils";
 
 interface DealsStatsBarProps {
@@ -13,11 +13,11 @@ interface DealsStatsBarProps {
 
 export function DealsStatsBar({ total, totalValue, wonValue, avgProbability }: DealsStatsBarProps) {
   return (
-    <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-      <StatCard label="Total Deals" value={total} icon={TrendingUp} index={0} />
-      <StatCard label="Pipeline Value" value={formatINRCompact(totalValue)} icon={IndianRupee} index={1} />
-      <StatCard label="Won Value" value={formatINRCompact(wonValue)} icon={Trophy} index={2} />
-      <StatCard label="Avg Probability" value={`${avgProbability}%`} icon={Clock} index={3} />
-    </div>
+    <StatCardGrid cols={4}>
+      <StatCard label="Total Deals" value={total} icon={TrendingUp} tone="blue" />
+      <StatCard label="Pipeline Value" value={formatINRCompact(totalValue)} icon={IndianRupee} tone="default" />
+      <StatCard label="Won Value" value={formatINRCompact(wonValue)} icon={Trophy} tone="emerald" />
+      <StatCard label="Avg Probability" value={`${avgProbability}%`} icon={Target} tone="amber" />
+    </StatCardGrid>
   );
 }

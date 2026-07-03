@@ -3,14 +3,8 @@
 import { useState, useCallback, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import {
-  Search,
-  MoreHorizontal,
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-} from "lucide-react";
+import { useReducedMotion, motion } from "framer-motion";
+import { Search, MoreHorizontal, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,11 +23,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { SkeletonTable, ErrorState } from "@/components/shared";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
+import { fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { useClientAccounts } from "@/hooks/api/crm/clients";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { formatAmount, formatDate } from "@/features/crm/clients/utils";
 import type { ClientAccountStatus, ClientAccount } from "@/types/crm";
 
 const STATUS_LABELS: Record<ClientAccountStatus, string> = {
@@ -43,11 +39,11 @@ const STATUS_LABELS: Record<ClientAccountStatus, string> = {
   INVESTED: "Invested",
 };
 
-const STATUS_COLORS: Record<ClientAccountStatus, string> = {
-  ACCOUNT_OPENING: "bg-blue-500/10 text-blue-600 border-0",
-  QUERIES: "bg-amber-500/10 text-amber-600 border-0",
-  PLAN_SELECTED: "bg-muted text-foreground border-0",
-  INVESTED: "bg-emerald-500/10 text-emerald-600 border-0",
+const STATUS_BADGE_CLASSES: Record<ClientAccountStatus, string> = {
+  ACCOUNT_OPENING: "bg-blue-50 text-blue-700 border-blue-200",
+  QUERIES: "bg-amber-50 text-amber-700 border-amber-200",
+  PLAN_SELECTED: "bg-slate-100 text-slate-700 border-slate-200",
+  INVESTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
 const ALL_STATUSES: ClientAccountStatus[] = [
@@ -59,117 +55,118 @@ const ALL_STATUSES: ClientAccountStatus[] = [
 
 function StatusBadge({ status }: { status: ClientAccountStatus }) {
   return (
-    <Badge className={cn("text-[10px]", STATUS_COLORS[status])}>
+    <Badge
+      variant="outline"
+      className={cn("text-[9px] px-1.5 py-0 h-4", STATUS_BADGE_CLASSES[status])}
+    >
       {STATUS_LABELS[status]}
     </Badge>
   );
 }
 
-function formatAmount(amount: string | null) {
-  if (!amount) return "—";
-  const n = parseFloat(amount);
-  if (isNaN(n)) return amount;
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatDate(date: string | null) {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function ClientRow({ account }: { account: ClientAccount }) {
-  const router = useRouter();
-
-  const handleNavigate = useCallback(
-    () => router.push(`/crm/clients/${account.id}`),
-    [router, account.id],
-  );
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === " ") handleNavigate();
-    },
-    [handleNavigate],
-  );
-
-  const handleStopPropagation = useCallback(
-    (e: React.MouseEvent) => e.stopPropagation(),
-    [],
-  );
+function ClientRowActions({ account }: { account: ClientAccount }) {
+  function handleTriggerClick(e: React.MouseEvent) {
+    e.stopPropagation();
+  }
 
   return (
-    <tr
-      className="border-b border-border/50 last:border-0 h-8 hover:bg-muted/30 cursor-pointer transition-colors"
-      onClick={handleNavigate}
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
-      role="button"
-    >
-      <td className="px-3 py-1.5">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
-            {(account.clientName[0] ?? "?").toUpperCase()}
-          </div>
-          <span className="text-[11px] font-medium truncate max-w-[140px]">
-            {account.clientName}
-          </span>
-        </div>
-      </td>
-      <td className="px-3 py-1.5 text-[11px] text-muted-foreground truncate max-w-[160px]">
-        {account.clientEmail ?? "—"}
-      </td>
-      <td className="px-3 py-1.5 text-[11px] text-muted-foreground">
-        {account.clientPhone ?? "—"}
-      </td>
-      <td className="px-3 py-1.5">
-        <StatusBadge status={account.status} />
-      </td>
-      <td className="px-3 py-1.5 text-[11px] text-muted-foreground">
-        {account.salesRep?.name ?? "—"}
-      </td>
-      <td className="px-3 py-1.5 text-[11px] tabular-nums">
-        {formatAmount(account.investmentAmount)}
-      </td>
-      <td className="px-3 py-1.5 text-[11px] text-muted-foreground">
-        {formatDate(account.investedAt)}
-      </td>
-      <td className="px-3 py-1.5" onClick={handleStopPropagation}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link href={`/crm/clients/${account.id}`}>View Details</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href={`/crm/leads/${account.leadId}`}>
-                <ExternalLink className="h-3.5 w-3.5 mr-2" />
-                View Lead
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </td>
-    </tr>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleTriggerClick}
+          aria-label="Row actions"
+        >
+          <MoreHorizontal className="h-3.5 w-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem asChild>
+          <Link href={`/crm/clients/${account.id}`}>View Details</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={`/crm/leads/${account.leadId}`}>
+            <ExternalLink className="h-3.5 w-3.5 mr-2" />
+            View Lead
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
+
+const COLUMNS: DataTableColumn<ClientAccount>[] = [
+  {
+    key: "name",
+    header: "Client Name",
+    sortable: true,
+    sortValue: (a) => a.clientName,
+    cell: (a) => (
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
+          {(a.clientName[0] ?? "?").toUpperCase()}
+        </div>
+        <span className="font-medium truncate max-w-[140px]">{a.clientName}</span>
+      </div>
+    ),
+  },
+  {
+    key: "email",
+    header: "Email",
+    cell: (a) => (
+      <span className="text-muted-foreground truncate block max-w-[160px]">
+        {a.clientEmail ?? "—"}
+      </span>
+    ),
+  },
+  {
+    key: "phone",
+    header: "Phone",
+    cell: (a) => <span className="text-muted-foreground">{a.clientPhone ?? "—"}</span>,
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (a) => <StatusBadge status={a.status} />,
+  },
+  {
+    key: "salesRep",
+    header: "Sales Rep",
+    cell: (a) => <span className="text-muted-foreground">{a.salesRep?.name ?? "—"}</span>,
+  },
+  {
+    key: "investment",
+    header: "Investment",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (a) => (
+      <span className="font-mono tabular-nums">{formatAmount(a.investmentAmount)}</span>
+    ),
+  },
+  {
+    key: "investedAt",
+    header: "Invested At",
+    cell: (a) => (
+      <span className="text-muted-foreground">{formatDate(a.investedAt)}</span>
+    ),
+  },
+  {
+    key: "actions",
+    header: "",
+    headerClassName: "w-8",
+    className: "w-8",
+    cell: (a) => <ClientRowActions account={a} />,
+  },
+];
 
 export default function ClientsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
+  const shouldReduceMotion = useReducedMotion();
 
   const [rawSearch, setRawSearch] = useState(searchParams.get("q") ?? "");
   const debouncedSearch = useDebouncedValue(rawSearch, 300);
@@ -199,7 +196,6 @@ export default function ClientsPage() {
   });
 
   const totalCount = data?.totalCount ?? 0;
-  const totalPages = data?.totalPages ?? 0;
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,50 +207,73 @@ export default function ClientsPage() {
 
   const handleStatusChange = useCallback(
     (value: string) => {
-      updateParams({
-        status: value === "ALL" ? null : value,
-        page: null,
-      });
+      updateParams({ status: value === "all" ? null : value, page: null });
     },
     [updateParams],
   );
 
+  const handleClearFilters = useCallback(() => {
+    setRawSearch("");
+    updateParams({ q: null, status: null, page: null });
+  }, [updateParams]);
+
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
-  const handlePrevPage = useCallback(
-    () => updateParams({ page: page <= 2 ? null : String(page - 1) }),
-    [updateParams, page],
+  const handlePageChange = useCallback(
+    (newPage: number) =>
+      updateParams({ page: newPage <= 1 ? null : String(newPage) }),
+    [updateParams],
   );
 
-  const handleNextPage = useCallback(
-    () => updateParams({ page: String(page + 1) }),
-    [updateParams, page],
+  const handleRowClick = useCallback(
+    (account: ClientAccount) => router.push(`/crm/clients/${account.id}`),
+    [router],
   );
+
+  const hasFilters = Boolean(debouncedSearch || statusParam);
+
+  const emptyState = (
+    <EmptyState
+      title={hasFilters ? "No results" : "No clients yet"}
+      description={
+        hasFilters
+          ? "No clients match your filters."
+          : "Clients are created when a lead is converted."
+      }
+      action={
+        hasFilters
+          ? { label: "Clear filters", onClick: handleClearFilters }
+          : undefined
+      }
+      className="min-h-[40vh] border-0 bg-transparent"
+    />
+  );
+
+  const contentVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } }
+    : fadeUp;
 
   return (
     <PageWrapper
       title="Clients"
-      subtitle={isLoading ? "Loading..." : `${totalCount} accounts`}
+      subtitle={isLoading ? undefined : `${totalCount} accounts`}
       filters={
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+          <div className="relative min-w-0 flex-1 lg:max-w-[240px]">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Search clients..."
               value={rawSearch}
               onChange={handleSearchChange}
-              className="pl-8 h-8 text-xs w-56"
+              className="h-8 w-full min-w-0 pl-8 text-xs"
             />
           </div>
-          <Select
-            value={statusParam ?? "ALL"}
-            onValueChange={handleStatusChange}
-          >
-            <SelectTrigger className="h-8 text-xs w-40">
+          <Select value={statusParam ?? "all"} onValueChange={handleStatusChange}>
+            <SelectTrigger className="h-8 text-xs w-[160px] min-w-0 shrink-0">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">All statuses</SelectItem>
+              <SelectItem value="all">All statuses</SelectItem>
               {ALL_STATUSES.map((s) => (
                 <SelectItem key={s} value={s}>
                   {STATUS_LABELS[s]}
@@ -265,9 +284,7 @@ export default function ClientsPage() {
         </div>
       }
     >
-      {isLoading ? (
-        <SkeletonTable rows={8} columns={8} />
-      ) : isError ? (
+      {isError ? (
         <ErrorState
           title="Failed to load clients"
           description="An error occurred while loading client accounts. Please try again."
@@ -276,86 +293,26 @@ export default function ClientsPage() {
         />
       ) : (
         <motion.div
-          className="space-y-4"
-          variants={staggerContainer}
+          variants={contentVariants}
           initial="hidden"
           animate="visible"
         >
-          {(data?.accounts.length ?? 0) === 0 ? (
-            <EmptyState
-              title="No clients found"
-              description={
-                debouncedSearch || statusParam
-                  ? "No clients match your filters."
-                  : "Clients are created when a lead is converted."
-              }
-              className="min-h-[50vh]"
-            />
-          ) : (
-            <motion.div variants={fadeUp}>
-              <div className="border border-border rounded-md overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="sticky top-0 bg-muted/80 backdrop-blur-sm">
-                      <tr className="border-b border-border">
-                        <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Client Name
-                        </th>
-                        <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Email
-                        </th>
-                        <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Phone
-                        </th>
-                        <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Status
-                        </th>
-                        <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Sales Rep
-                        </th>
-                        <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Investment
-                        </th>
-                        <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Invested At
-                        </th>
-                        <th className="w-10" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data?.accounts.map((account) => (
-                        <ClientRow key={account.id} account={account} />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page <= 1}
-                    onClick={handlePrevPage}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground">
-                    Page {page} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page >= totalPages}
-                    onClick={handleNextPage}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </motion.div>
-          )}
+          <DataTable
+            data={data?.accounts ?? []}
+            columns={COLUMNS}
+            getRowKey={(a) => a.id}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            emptyState={emptyState}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 20,
+              total: totalCount,
+              onPageChange: handlePageChange,
+            }}
+            minWidth="700px"
+          />
         </motion.div>
       )}
     </PageWrapper>

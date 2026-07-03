@@ -24,6 +24,7 @@ import { SidebarHeader } from "./sidebar/sidebar-header"
 import { SidebarWorkspaceRow } from "./sidebar/sidebar-workspace-row"
 import { usePermissions } from "@/lib/rbac/hooks"
 import { useCan } from "@/hooks/api/access"
+import { useEnabledModules } from "@/hooks/api/access/org-modules"
 
 interface AppSidebarProps {
   isCollapsed?: boolean
@@ -61,7 +62,7 @@ export function AppSidebar({
 
   const { permissions } = usePermissions()
   const isAdmin = useCan("settings:manage")
-  const enabledModules = session?.enabledModules ?? []
+  const enabledModules = useEnabledModules()
 
   const navGroups = useMemo(
     () => getNavGroupsForProduct(activeProduct, effectiveRole, permissions, enabledModules),

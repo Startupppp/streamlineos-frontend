@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Tag, MoreHorizontal, Pencil, Archive, RotateCcw } from "lucide-react";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Plus, Tag, MoreHorizontal, Pencil, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,13 +36,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -55,6 +49,7 @@ import {
   useCreateCategory,
   useUpdateCategory,
 } from "@/hooks/api/inventory";
+import { CategoryEditSheet } from "@/features/inventory/components/category-edit-sheet";
 import type { InventoryCategory } from "@/types/inventory";
 
 const NO_PARENT = "none";
@@ -66,14 +61,6 @@ const categorySchema = z.object({
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
-
-const editCategorySchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  parentId: z.string().optional(),
-  description: z.string().max(500).optional(),
-});
-
-type EditCategoryFormValues = z.infer<typeof editCategorySchema>;
 
 function CreateCategoryForm({
   categories,
@@ -94,13 +81,16 @@ function CreateCategoryForm({
       await createMutation.mutateAsync({
         name: values.name,
         description: values.description || undefined,
-        parentCategoryId: values.parentId === NO_PARENT ? undefined : Number(values.parentId),
+        parentCategoryId:
+          values.parentId === NO_PARENT ? undefined : Number(values.parentId),
       });
       toast.success(`Category "${values.name}" created`);
       form.reset();
       onSuccess();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create category");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create category",
+      );
     }
   }
 
@@ -154,7 +144,11 @@ function CreateCategoryForm({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea rows={2} placeholder="Optional description" {...field} />
+                    <Textarea
+                      rows={2}
+                      placeholder="Optional description"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -164,7 +158,7 @@ function CreateCategoryForm({
         </div>
         <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={createMutation.isPending}>
-            <Plus className="mr-1 h-4 w-4" />
+            <Plus className="mr-1 h-3.5 w-3.5" />
             {createMutation.isPending ? "Creating…" : "Add Category"}
           </Button>
         </div>
@@ -173,128 +167,11 @@ function CreateCategoryForm({
   );
 }
 
-function EditCategorySheet({
-  category,
-  categories,
-  open,
-  onClose,
-}: {
-  category: InventoryCategory;
-  categories: InventoryCategory[];
-  open: boolean;
-  onClose: () => void;
-}) {
-  const updateMutation = useUpdateCategory();
-
-  const form = useForm<EditCategoryFormValues>({
-    resolver: zodResolver(editCategorySchema),
-    defaultValues: {
-      name: category.name,
-      parentId: category.parentCategoryId != null ? String(category.parentCategoryId) : NO_PARENT,
-      description: category.description ?? "",
-    },
-  });
-
-  function handleOpenChange(isOpen: boolean): void {
-    if (!isOpen) onClose();
-  }
-
-  async function onSubmit(values: EditCategoryFormValues): Promise<void> {
-    try {
-      await updateMutation.mutateAsync({
-        categoryId: category.id,
-        data: {
-          name: values.name,
-          parentCategoryId: values.parentId === NO_PARENT ? null : Number(values.parentId),
-          description: values.description || null,
-        },
-      });
-      toast.success("Category updated");
-      onClose();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update category");
-    }
-  }
-
-  function handleCancel(): void {
-    onClose();
-  }
-
-  const availableParents = categories.filter((c) => c.id !== category.id);
-
-  return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-md p-6">
-        <SheetHeader>
-          <SheetTitle>Edit Category</SheetTitle>
-          <SheetDescription>Update the category name, parent, or description.</SheetDescription>
-        </SheetHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Electronics" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="parentId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Parent Category</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="None (top-level)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={NO_PARENT}>None (top-level)</SelectItem>
-                      {availableParents.map((cat) => (
-                        <SelectItem key={cat.id} value={String(cat.id)}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea rows={3} placeholder="Optional description" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button type="submit" size="sm" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "Saving…" : "Save Changes"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
-  );
+interface CategoryRowProps {
+  cat: InventoryCategory;
+  categoryNameById: Map<number, string>;
+  onEdit: (cat: InventoryCategory) => void;
+  onArchiveToggle: (cat: InventoryCategory) => void;
 }
 
 function CategoryRow({
@@ -302,12 +179,7 @@ function CategoryRow({
   categoryNameById,
   onEdit,
   onArchiveToggle,
-}: {
-  cat: InventoryCategory;
-  categoryNameById: Map<number, string>;
-  onEdit: (cat: InventoryCategory) => void;
-  onArchiveToggle: (cat: InventoryCategory) => void;
-}) {
+}: CategoryRowProps) {
   function handleEdit(): void {
     onEdit(cat);
   }
@@ -317,29 +189,37 @@ function CategoryRow({
   }
 
   return (
-    <TableRow className={!cat.isActive ? "opacity-60" : undefined}>
-      <TableCell className="text-sm font-medium text-foreground">
+    <TableRow className={`h-8 hover:bg-muted/30 transition-colors${!cat.isActive ? " opacity-60" : ""}`}>
+      <TableCell className="px-2 py-1 text-[11px] font-medium text-foreground">
         <div className="flex items-center gap-2">
           {cat.name}
           {!cat.isActive && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge
+              variant="outline"
+              className="h-4 text-[9px] px-1.5 py-0 border-slate-200 text-slate-600 bg-slate-100"
+            >
               Archived
             </Badge>
           )}
         </div>
       </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
+      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
         {cat.parentCategoryId != null
           ? (categoryNameById.get(cat.parentCategoryId) ?? "—")
           : "—"}
       </TableCell>
-      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground max-w-xs truncate">
         {cat.description ?? "—"}
       </TableCell>
-      <TableCell>
+      <TableCell className="px-2 py-1 w-8">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              aria-label={`Actions for ${cat.name}`}
+            >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -350,7 +230,11 @@ function CategoryRow({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleArchiveToggle}
-              className={cat.isActive ? "text-destructive focus:text-destructive" : undefined}
+              className={
+                cat.isActive
+                  ? "text-destructive focus:text-destructive"
+                  : undefined
+              }
             >
               {cat.isActive ? (
                 <>
@@ -371,13 +255,53 @@ function CategoryRow({
   );
 }
 
-export default function CategoriesPage() {
+function CategoriesPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [formKey, setFormKey] = useState<number>(0);
-  const [editingCategory, setEditingCategory] = useState<InventoryCategory | null>(null);
+  const [editingCategory, setEditingCategory] =
+    useState<InventoryCategory | null>(null);
+
+  const search = searchParams.get("search") ?? "";
+  const statusParam = searchParams.get("status") ?? "all";
+
   const query = useCategories();
   const updateMutation = useUpdateCategory();
   const categories = query.data ?? [];
-  const categoryNameById = new Map(categories.map((cat) => [cat.id, cat.name]));
+
+  const filteredCategories = categories.filter((cat) => {
+    const matchesSearch =
+      !search || cat.name.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus =
+      statusParam === "all" ||
+      (statusParam === "active" && cat.isActive) ||
+      (statusParam === "archived" && !cat.isActive);
+    return matchesSearch && matchesStatus;
+  });
+
+  const categoryNameById = new Map(
+    categories.map((cat) => [cat.id, cat.name]),
+  );
+
+  function updateParams(updates: Record<string, string | null>) {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (!value || value === "all") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    updateParams({ search: e.target.value || null });
+  }
+
+  function handleStatusChange(value: string): void {
+    updateParams({ status: value });
+  }
 
   function handleFormSuccess(): void {
     setFormKey((k) => k + 1);
@@ -403,21 +327,57 @@ export default function CategoriesPage() {
       });
       toast.success(cat.isActive ? "Category archived" : "Category restored");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Action failed");
+      toast.error(
+        error instanceof Error ? error.message : "Action failed",
+      );
     }
   }
+
+  const hasFilters = !!(search || (statusParam && statusParam !== "all"));
+
+  const filtersRow = (
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+      <div className="relative min-w-0 flex-1 lg:max-w-sm">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Input
+          value={search}
+          onChange={handleSearchChange}
+          placeholder="Search categories..."
+          className="h-8 w-full min-w-0 pl-8 text-xs"
+        />
+      </div>
+      <div className="hidden min-w-0 items-center gap-2 sm:flex">
+        <Select value={statusParam} onValueChange={handleStatusChange}>
+          <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
 
   return (
     <PageWrapper
       eyebrow="Inventory · Products"
       title="Categories"
-      subtitle="Organise products into categories and sub-categories."
-      badge={categories.length > 0 ? `${categories.length}` : undefined}
+      subtitle={
+        categories.length > 0
+          ? `${categories.length} ${categories.length === 1 ? "category" : "categories"}`
+          : "Organise products into categories and sub-categories."
+      }
+      filters={filtersRow}
     >
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-semibold">Add Category</CardTitle>
+            <CardTitle className="text-sm font-semibold">
+              Add Category
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <CreateCategoryForm
@@ -436,25 +396,38 @@ export default function CategoriesPage() {
             description={query.error.message}
             onRetry={handleRetry}
           />
-        ) : categories.length === 0 ? (
+        ) : filteredCategories.length === 0 ? (
           <EmptyState
-            illustration={<Tag className="h-12 w-12 text-muted-foreground/40" />}
-            title="No categories yet"
-            description="Use the form above to add your first product category."
+            illustration={
+              <Tag className="h-8 w-8 text-muted-foreground/40" />
+            }
+            title={hasFilters ? "No categories found" : "No categories yet"}
+            description={
+              hasFilters
+                ? "Try adjusting your search or filters."
+                : "Use the form above to add your first product category."
+            }
+            className="border-0 bg-transparent min-h-[20vh]"
           />
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+          <div className="rounded-md border border-border overflow-x-auto">
             <Table className="min-w-[560px]">
               <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="w-[180px]">Parent</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="w-[40px]" />
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
+                    Name
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[180px]">
+                    Parent
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
+                    Description
+                  </TableHead>
+                  <TableHead className="bg-muted/80 w-8" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categories.map((cat) => (
+                {filteredCategories.map((cat) => (
                   <CategoryRow
                     key={cat.id}
                     cat={cat}
@@ -470,7 +443,7 @@ export default function CategoriesPage() {
       </div>
 
       {editingCategory !== null && (
-        <EditCategorySheet
+        <CategoryEditSheet
           key={editingCategory.id}
           category={editingCategory}
           categories={categories}
@@ -479,5 +452,13 @@ export default function CategoriesPage() {
         />
       )}
     </PageWrapper>
+  );
+}
+
+export default function CategoriesPage() {
+  return (
+    <Suspense>
+      <CategoriesPageInner />
+    </Suspense>
   );
 }

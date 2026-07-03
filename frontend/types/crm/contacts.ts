@@ -60,6 +60,7 @@ export interface ContactSearchResult {
 
 export interface ContactFilters {
   search?: string;
+  source?: string;
   organizationId?: number;
   limit?: number;
   offset?: number;

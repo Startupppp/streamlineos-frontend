@@ -141,7 +141,7 @@ function PoLineRow({ index, control, variants, isOnly, onRemoveAt, onVariantChan
           )}
         />
       </TableCell>
-      <TableCell className="text-right tabular-nums text-sm">
+      <TableCell className="text-right font-mono tabular-nums text-[11px] px-2 py-1">
         {amount.toFixed(2)}
       </TableCell>
       <TableCell>
@@ -265,9 +265,10 @@ export default function NewPurchaseOrderPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Purchase Orders"
+      eyebrow="Inventory / Purchase Orders"
       title="New purchase order"
       subtitle="Create a PO to order products from a supplier."
+      backHref="/inventory/purchase-orders"
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -349,13 +350,13 @@ export default function NewPurchaseOrderPage() {
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <Table className="min-w-[760px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product / SKU</TableHead>
-                    <TableHead className="text-right w-[100px]">Qty</TableHead>
-                    <TableHead className="text-right w-[130px]">Unit cost</TableHead>
-                    <TableHead className="text-right w-[100px]">Tax %</TableHead>
-                    <TableHead className="text-right w-[130px]">Amount</TableHead>
+                <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                  <TableRow className="border-b-2 border-border">
+                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Product / SKU</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[100px]">Qty</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[130px]">Unit cost</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[100px]">Tax %</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[130px]">Amount</TableHead>
                     <TableHead className="w-[52px]"></TableHead>
                   </TableRow>
                 </TableHeader>

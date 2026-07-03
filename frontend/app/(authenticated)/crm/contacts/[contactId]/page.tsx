@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, use, useCallback } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -24,23 +23,23 @@ import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 
 function ContactDetailSkeleton() {
   return (
-    <PageWrapper title="Contact" subtitle="Loading...">
+    <PageWrapper title="Contact" subtitle="Loading..." backHref="/crm/contacts">
       <div className="space-y-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="space-y-4">
-            <Skeleton className="h-72 rounded-2xl" />
+            <Skeleton className="h-72 rounded-lg" />
             <div className="grid grid-cols-3 gap-3">
-              <Skeleton className="h-20 rounded-xl" />
-              <Skeleton className="h-20 rounded-xl" />
-              <Skeleton className="h-20 rounded-xl" />
+              <Skeleton className="h-20 rounded-lg" />
+              <Skeleton className="h-20 rounded-lg" />
+              <Skeleton className="h-20 rounded-lg" />
             </div>
           </div>
           <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-64 rounded-2xl" />
-            <Skeleton className="h-40 rounded-2xl" />
+            <Skeleton className="h-64 rounded-lg" />
+            <Skeleton className="h-40 rounded-lg" />
           </div>
         </div>
-        <Skeleton className="h-48 rounded-2xl" />
+        <Skeleton className="h-48 rounded-lg" />
       </div>
     </PageWrapper>
   );
@@ -87,7 +86,7 @@ export default function ContactDetailPage({
 
   if (!contact) {
     return (
-      <PageWrapper title="Not Found" subtitle="">
+      <PageWrapper title="Not Found" subtitle="" backHref="/crm/contacts">
         <EmptyState
           title="Contact not found"
           description="This contact may have been deleted or you don't have access."
@@ -104,16 +103,13 @@ export default function ContactDetailPage({
     <>
       <PageWrapper
         title={contact.name}
-        eyebrow="Contacts"
+        eyebrow="CRM / Contacts"
         subtitle={[contact.title, contact.company].filter(Boolean).join(" · ") || undefined}
+        backHref="/crm/contacts"
         actions={
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              className="gap-1.5 text-xs bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-              onClick={handleOpenLogActivity}
-            >
-              <Plus className="h-3.5 w-3.5" />
+            <Button size="sm" onClick={handleOpenLogActivity}>
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
               Log Activity
             </Button>
             <Button
@@ -130,14 +126,9 @@ export default function ContactDetailPage({
               size="sm"
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={handleOpenDelete}
+              aria-label="Delete contact"
             >
               <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-            <Button variant="ghost" size="sm" className="gap-1.5 text-xs" asChild>
-              <Link href="/crm/contacts">
-                <ChevronLeft className="h-3.5 w-3.5" />
-                Back
-              </Link>
             </Button>
           </div>
         }

@@ -14,7 +14,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -59,7 +58,7 @@ interface VariantFormBodyProps {
 function VariantFormBody({ form, isPending, onCancel }: VariantFormBodyProps) {
   return (
     <>
-      <div className="flex-1 overflow-y-auto space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -152,23 +151,21 @@ function VariantFormBody({ form, isPending, onCancel }: VariantFormBodyProps) {
           )}
         />
       </div>
-      <SheetFooter>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isPending}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          {isPending ? "Saving…" : "Save"}
-        </Button>
-      </SheetFooter>
+      <div className="shrink-0 px-6 py-4 border-t">
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isPending}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Saving…" : "Save"}
+          </Button>
+        </div>
+      </div>
     </>
   );
 }
@@ -223,8 +220,8 @@ export function AddVariantSheet({ productId, open, onOpenChange }: AddVariantShe
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-md flex flex-col">
-        <SheetHeader>
+      <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle>Add Variant</SheetTitle>
           <SheetDescription>Add a new variant to this product.</SheetDescription>
         </SheetHeader>
@@ -304,8 +301,8 @@ export function EditVariantSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-md flex flex-col">
-        <SheetHeader>
+      <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle>Edit Variant</SheetTitle>
           <SheetDescription>Update the details of this variant.</SheetDescription>
         </SheetHeader>

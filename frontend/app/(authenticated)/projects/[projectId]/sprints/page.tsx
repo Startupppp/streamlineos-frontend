@@ -7,9 +7,9 @@ import {
 import { CreateSprintDialog } from "@/features/projects/sprints/create-sprint-dialog";
 import { BurndownChart } from "@/features/projects/sprints/burndown-chart";
 import { VelocityChart } from "@/features/projects/sprints/velocity-chart";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptySprintIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -106,7 +106,7 @@ export default function SprintsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Sprints" actions={<CreateSprintDialog projectId={projectId} />}>
+      <PageWrapper title="Sprints" backHref={`/projects/${projectId}`} actions={<CreateSprintDialog projectId={projectId} />}>
         <div className="space-y-6">
           <div className="space-y-2">
             <Skeleton className="h-3 w-20" />

@@ -223,7 +223,12 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   }
 
   return (
-    <PageWrapper title="Settings" subtitle={project.name}>
+    <PageWrapper
+      eyebrow="Projects"
+      title="Settings"
+      subtitle={project.name}
+      backHref={`/projects/${projectId}`}
+    >
       <div className="flex flex-col md:flex-row gap-6 pb-8">
         <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible md:w-44 shrink-0 pb-1 md:pb-0">
           {navSections.map((section) => (

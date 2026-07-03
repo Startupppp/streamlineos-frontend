@@ -132,6 +132,13 @@ export default function ProjectBoardPage({ params }: PageProps) {
     setSaveViewOpen(true);
   }, []);
 
+  const handleCloseSaveViewDialog = useCallback(() => setSaveViewOpen(false), []);
+
+  const handleSaveViewNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSaveViewName(e.target.value),
+    []
+  );
+
   const handleCloseSaveView = useCallback((open: boolean) => {
     setSaveViewOpen(open);
   }, []);
@@ -433,7 +440,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
               <Input
                 id="save-view-name"
                 value={saveViewName}
-                onChange={(e) => setSaveViewName(e.target.value)}
+                onChange={handleSaveViewNameChange}
                 onKeyDown={handleSaveViewKeyDown}
                 placeholder="My filtered view"
                 className="mt-1.5"
@@ -443,11 +450,11 @@ export default function ProjectBoardPage({ params }: PageProps) {
             <p className="text-xs text-muted-foreground">
               Saves current layout ({view}) and active filters.
             </p>
-            <div className="flex justify-end gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setSaveViewOpen(false)}
+                onClick={handleCloseSaveViewDialog}
                 disabled={createView.isPending}
               >
                 Cancel

@@ -3,9 +3,9 @@
 import { useState, useMemo, useCallback } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState, SkeletonTable } from "@/components/shared";
 import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
 import { LeadTableView } from "@/features/crm/leads/lead-table-view";
 import { LeadExportDialog } from "@/features/crm/leads/lead-export-dialog";
@@ -383,45 +383,36 @@ export default function LeadsPipelinePage() {
 
   if (boardLoading || statsLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
+      <PageWrapper title="Lead Pipeline">
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-[52px] flex-1 rounded-lg" />
+            ))}
+          </div>
+          <SkeletonTable rows={8} columns={6} />
         </div>
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-96" />
-          ))}
-        </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   if (boardError || statsError) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-24">
-        <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center">
-          <AlertCircle className="h-7 w-7 text-red-400" />
-        </div>
-        <div>
-          <p className="font-semibold text-slate-800">Failed to load leads</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            There was an error loading the lead pipeline. Please try again.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => void refetchBoard()}>
-          Try Again
-        </Button>
-      </div>
+      <PageWrapper title="Lead Pipeline">
+        <ErrorState
+          title="Failed to load leads"
+          description="There was an error loading the lead pipeline. Please try again."
+          onRetry={() => void refetchBoard()}
+          className="flex-1 min-h-[50vh]"
+        />
+      </PageWrapper>
     );
   }
 
   return (
     <PageWrapper
       title="Lead Pipeline"
-      subtitle="Track and manage leads through the conversion funnel"
+      subtitle={stats ? `${stats.total} leads` : undefined}
       badge={
         view === "table" && tableData ? String(tableData.totalCount) : undefined
       }

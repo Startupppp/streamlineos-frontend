@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useKbPagesTrash, useRestoreKbPage, useHardDeleteKbPage } from "@/hooks/api/kb";
 import type { KbPage } from "@/hooks/api/kb/pages";
 
@@ -102,11 +103,13 @@ export default function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
             </div>
           )}
           {!isLoading && trashedPages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full py-12 text-center">
-              <Trash2 className="h-10 w-10 text-muted-foreground mb-3" />
-              <p className="text-sm font-medium">Trash is empty</p>
-              <p className="text-xs text-muted-foreground mt-1">Deleted pages will appear here</p>
-            </div>
+            <EmptyState
+              illustration={<Trash2 className="h-8 w-8 text-muted-foreground/40" />}
+              title="Trash is empty"
+              description="Deleted pages will appear here."
+              compact
+              className="min-h-[160px]"
+            />
           )}
           <div className="space-y-2 p-1">
             {trashedPages.map((page) => (

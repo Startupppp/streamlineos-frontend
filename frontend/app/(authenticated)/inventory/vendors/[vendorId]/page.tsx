@@ -2,11 +2,12 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Package, Pencil } from "lucide-react";
+import { Pencil, Package } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,19 +28,13 @@ interface VendorDetailPageProps {
   params: Promise<{ vendorId: string }>;
 }
 
-const STATUS_VARIANT: Record<PurchaseOrderStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  DRAFT: "secondary",
-  SENT: "default",
-  PARTIAL: "outline",
-  RECEIVED: "default",
-  CLOSED: "secondary",
-  CANCELLED: "destructive",
-};
-
-const STATUS_CLASS: Partial<Record<PurchaseOrderStatus, string>> = {
+const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
+  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
   SENT: "bg-blue-50 text-blue-700 border-blue-200",
-  PARTIAL: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  RECEIVED: "bg-green-50 text-green-700 border-green-200",
+  PARTIAL: "bg-amber-50 text-amber-700 border-amber-200",
+  RECEIVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CLOSED: "bg-slate-100 text-slate-700 border-slate-200",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 
 const editVendorSchema = z.object({
@@ -68,9 +63,8 @@ function formatDate(value: string | null): string {
 }
 
 function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
-  const extraClass = STATUS_CLASS[status];
   return (
-    <Badge variant={STATUS_VARIANT[status]} className={extraClass}>
+    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", STATUS_BADGE[status])}>
       {status}
     </Badge>
   );
@@ -157,7 +151,7 @@ function EditVendorSheet({
       title="Edit Vendor"
       description="Update supplier details for inventory purchase orders."
       footer={
-        <>
+        <div className="grid grid-cols-2 gap-2 w-full">
           <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
@@ -169,7 +163,7 @@ function EditVendorSheet({
           >
             {updateMutation.isPending ? "Saving…" : "Save"}
           </Button>
-        </>
+        </div>
       }
     >
       <Form {...form}>
@@ -356,22 +350,15 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
   return (
     <>
       <PageWrapper
-        eyebrow="Inventory · Vendors"
+        eyebrow="Inventory / Vendors"
         title={vendor.name}
         subtitle={`${vendor.code} · ${vendor.currency}`}
+        backHref="/inventory/vendors"
         actions={
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={handleEditOpen}>
-              <Pencil className="mr-1 h-4 w-4" />
-              Edit
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/inventory/vendors">
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Back
-              </Link>
-            </Button>
-          </div>
+          <Button size="sm" variant="outline" onClick={handleEditOpen}>
+            <Pencil className="mr-1 h-3.5 w-3.5" />
+            Edit
+          </Button>
         }
       >
         <div className="space-y-4">
@@ -379,7 +366,7 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
             <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
               <dt className="text-muted-foreground">Status</dt>
               <dd>
-                <Badge variant={vendor.isActive ? "default" : "secondary"}>
+                <Badge variant={vendor.isActive ? "default" : "secondary"} className="h-4 text-[9px] px-1.5 py-0">
                   {vendor.isActive ? "Active" : "Inactive"}
                 </Badge>
               </dd>
@@ -394,9 +381,9 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
               <dt className="text-muted-foreground">Currency</dt>
               <dd>{vendor.currency}</dd>
               <dt className="text-muted-foreground">Lead time</dt>
-              <dd>{vendor.leadTimeDays} days</dd>
+              <dd className="font-mono tabular-nums text-[13px]">{vendor.leadTimeDays} days</dd>
               <dt className="text-muted-foreground">Payment terms</dt>
-              <dd>Net {vendor.paymentTermsDays}</dd>
+              <dd className="font-mono tabular-nums text-[13px]">Net {vendor.paymentTermsDays}</dd>
               {vendor.address && (
                 <>
                   <dt className="text-muted-foreground">Address</dt>
@@ -423,11 +410,11 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
             </div>
 
             {posQuery.isLoading && <LoadingState variant="table" rows={4} />}
-            {posQuery.error && <ErrorState description={posQuery.error.message} onRetry={handlePosRetry} />}
+            {posQuery.error && <ErrorState description={posQuery.error.message} onRetry={handlePosRetry} compact />}
 
             {!posQuery.isLoading && !posQuery.error && poItems.length === 0 && (
               <EmptyState
-                illustration={<Package className="h-12 w-12 text-muted-foreground/40" />}
+                illustration={<Package className="h-8 w-8 text-muted-foreground/40" />}
                 title="No purchase orders"
                 description="Create a purchase order for this vendor."
                 action={{ label: "New PO", href: `/inventory/purchase-orders/new?vendorId=${vendor.id}` }}
@@ -438,32 +425,32 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
             {poItems.length > 0 && (
               <Card className="overflow-x-auto">
                 <Table className="min-w-[640px]">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>PO #</TableHead>
-                      <TableHead>Order date</TableHead>
-                      <TableHead>Expected delivery</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead>Status</TableHead>
+                  <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                    <TableRow className="border-b-2 border-border">
+                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">PO #</TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Order date</TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Expected delivery</TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Total</TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {poItems.map((po) => (
-                      <TableRow key={po.id}>
-                        <TableCell className="font-mono text-xs">
+                      <TableRow key={po.id} className="h-8 hover:bg-muted/30 transition-colors">
+                        <TableCell className="px-2 py-1 font-mono text-[11px]">
                           <Link
                             href={`/inventory/purchase-orders/${po.id}`}
-                            className="text-foreground hover:text-blue-600 hover:underline"
+                            className="text-blue-600 hover:underline transition-colors"
                           >
                             {po.poNumber}
                           </Link>
                         </TableCell>
-                        <TableCell>{formatDate(po.orderDate)}</TableCell>
-                        <TableCell>{formatDate(po.expectedDeliveryDate)}</TableCell>
-                        <TableCell className="text-right tabular-nums">
+                        <TableCell className="px-2 py-1 font-mono tabular-nums text-[11px]">{formatDate(po.orderDate)}</TableCell>
+                        <TableCell className="px-2 py-1 font-mono tabular-nums text-[11px]">{formatDate(po.expectedDeliveryDate)}</TableCell>
+                        <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
                           {po.currency} {Number(po.total).toFixed(2)}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="px-2 py-1">
                           <StatusBadge status={po.status} />
                         </TableCell>
                       </TableRow>

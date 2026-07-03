@@ -68,6 +68,7 @@ import {
   ShoppingCart,
   Truck,
   Library,
+  NotebookPen,
   LayoutGrid,
   Workflow,
   PlayCircle,
@@ -77,6 +78,7 @@ import {
   Smartphone,
   Plug,
   Activity,
+  PenTool,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -926,6 +928,12 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
+        label: "Whiteboards",
+        icon: PenTool,
+        href: "/projects/whiteboards",
+        requiredPermission: "projects:view",
+      },
+      {
         label: "Goals & OKRs",
         icon: Target,
         href: "/goals",
@@ -954,7 +962,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Support",
     module: "helpdesk",
-    requiredPermission: ["projects:tickets:view", "support:kb:view", "kb:pages:view"],
+    requiredPermission: ["projects:tickets:view", "support:kb:view"],
     routes: [
       {
         label: "All Tickets",
@@ -977,12 +985,6 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "support:kb:view",
       },
       {
-        label: "Wiki",
-        icon: Library,
-        href: "/knowledge-base",
-        requiredPermission: "kb:pages:view",
-      },
-      {
         label: "Canned Responses",
         icon: MailOpen,
         href: "/support/macros",
@@ -993,6 +995,19 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Share2,
         href: "/support/routing",
         requiredPermission: "support:macros:view",
+      },
+    ],
+  },
+  {
+    label: "Knowledge",
+    module: "documents",
+    requiredPermission: ["kb:pages:view"],
+    routes: [
+      {
+        label: "Wiki",
+        icon: NotebookPen,
+        href: "/knowledge-base",
+        requiredPermission: "kb:pages:view",
       },
     ],
   },

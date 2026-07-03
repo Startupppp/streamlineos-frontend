@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,13 +59,6 @@ function actionSummary(actions: AutomationRule["actions"]) {
   return actions
     .map((a) => ACTION_TYPES.find((t) => t.value === a.type)?.label ?? a.type)
     .join(", ");
-}
-
-function useModuleEnabled(moduleKey: string): boolean {
-  const { data: session } = useSession();
-  const modules = session?.enabledModules ?? [];
-  if (modules.length === 0) return true;
-  return modules.map((m) => m.toUpperCase()).includes(moduleKey.toUpperCase());
 }
 
 function ModuleDisabledCard({ name }: { name: string }) {

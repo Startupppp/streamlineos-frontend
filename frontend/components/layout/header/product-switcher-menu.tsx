@@ -9,8 +9,8 @@ import { ChevronDown, Lock, Check, LayoutGrid } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { useSession } from "next-auth/react"
 import { useIsMobile } from "@/hooks/common/use-mobile"
+import { useEnabledModules } from "@/hooks/api/access/org-modules"
 import {
   PRODUCT_DEFINITIONS,
   getProductFromPathname,
@@ -193,12 +193,11 @@ interface ProductSwitcherMenuProps {
 export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
-  const { data: session } = useSession()
   const shouldReduceMotion = useReducedMotion()
   const isMobile = useIsMobile()
 
   const activeProduct = getProductFromPathname(pathname)
-  const enabledModules = session?.enabledModules ?? []
+  const enabledModules = useEnabledModules()
 
   const handleClose = useCallback(() => setOpen(false), [])
 

@@ -12,11 +12,11 @@ import {
   Mail,
   Phone,
   Twitter,
+  Users,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EmptyTeamIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { fadeUp } from "@/lib/motion-variants";
 import { SOURCE_LABELS } from "./contacts-constants";
@@ -28,15 +28,12 @@ interface ContactCardViewProps {
   total: number;
   page: number;
   totalPages: number;
-  firstItem: number;
-  lastItem: number;
   apiSearch: string;
   isEnrichPending: boolean;
   onRequestDelete: (id: number) => void;
   onEdit: (contact: Contact) => void;
   onEnrich: (contact: Contact) => void;
-  onPrevPage: () => void;
-  onNextPage: () => void;
+  onPageChange: (page: number) => void;
   onOpenCreate: () => void;
 }
 
@@ -45,17 +42,25 @@ export function ContactCardView({
   total,
   page,
   totalPages,
-  firstItem,
-  lastItem,
   apiSearch,
   isEnrichPending,
   onRequestDelete,
   onEdit,
   onEnrich,
-  onPrevPage,
-  onNextPage,
+  onPageChange,
   onOpenCreate,
 }: ContactCardViewProps) {
+  const firstItem = total > 0 ? (page - 1) * 20 + 1 : 0;
+  const lastItem = Math.min(page * 20, total);
+
+  function handlePrev() {
+    onPageChange(page - 1);
+  }
+
+  function handleNext() {
+    onPageChange(page + 1);
+  }
+
   return (
     <>
       <motion.div
@@ -65,11 +70,11 @@ export function ContactCardView({
         {items.map((contact) => (
           <Card
             key={contact.id}
-            className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 group"
+            className="bg-card rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow group"
           >
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-full bg-violet-100 flex items-center justify-center text-xs font-semibold text-violet-700 shrink-0">
+                <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-xs font-semibold text-blue-700 shrink-0">
                   {contact.name[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -163,8 +168,8 @@ export function ContactCardView({
               <div className="mt-3 flex flex-wrap items-center gap-1.5">
                 {contact.source && (
                   <Badge
-                    variant="secondary"
-                    className="text-[9px] px-1.5 py-0 h-4"
+                    variant="outline"
+                    className="text-[9px] px-1.5 py-0 h-4 bg-slate-50 text-slate-700 border-slate-200"
                   >
                     {SOURCE_LABELS[contact.source] ?? contact.source}
                   </Badge>
@@ -212,7 +217,7 @@ export function ContactCardView({
 
       {items.length === 0 && (
         <EmptyState
-          illustration={<EmptyTeamIllustration className="w-36 h-36" />}
+          illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
           title="No contacts found"
           description={
             apiSearch
@@ -239,22 +244,26 @@ export function ContactCardView({
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-7 w-7"
               disabled={page <= 1}
-              onClick={onPrevPage}
+              onClick={handlePrev}
+              aria-label="Previous page"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
+            <span className="text-xs text-muted-foreground">
+              {page} / {totalPages}
             </span>
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-7 w-7"
               disabled={page >= totalPages}
-              onClick={onNextPage}
+              onClick={handleNext}
+              aria-label="Next page"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </motion.div>

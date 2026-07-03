@@ -224,7 +224,7 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
       title="Receive Goods"
       description="Record quantities received for this purchase order."
       footer={
-        <>
+        <div className="grid grid-cols-2 gap-2 w-full">
           <Button variant="outline" size="sm" onClick={handleClose}>
             Cancel
           </Button>
@@ -236,7 +236,7 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
           >
             {receiveMutation.isPending ? "Recording…" : "Record receipt"}
           </Button>
-        </>
+        </div>
       }
     >
       <Form {...form}>

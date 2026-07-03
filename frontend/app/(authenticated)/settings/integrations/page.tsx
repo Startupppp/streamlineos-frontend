@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { CalendarCheck2, ChevronRight, GitBranch, Linkedin } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { isModuleEnabled } from "@/components/layout/sidebar/sidebar-nav-items";
+import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import type { ComponentType } from "react";
 
 interface IntegrationCard {
@@ -71,8 +71,7 @@ function SectionGroup({ label, cards }: { label: string; cards: IntegrationCard[
 }
 
 export default function IntegrationsPage() {
-  const { data: session } = useSession();
-  const enabledModules = session?.enabledModules ?? [];
+  const enabledModules = useEnabledModules();
   const hrEnabled = isModuleEnabled("hrms", enabledModules);
   const projectsEnabled = isModuleEnabled("projects", enabledModules);
   const noneEnabled = !hrEnabled && !projectsEnabled;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MessageSquare, Check, Edit2, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -223,7 +224,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+        <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             Comments
@@ -244,9 +245,12 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
             </div>
           )}
           {!isLoading && topLevel.length === 0 && resolved.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No comments yet. Be the first!
-            </p>
+            <EmptyState
+              title="No comments yet"
+              description="Be the first to add a comment."
+              compact
+              className="min-h-[120px]"
+            />
           )}
           <div className="space-y-5">
             {topLevel.map((comment) => (

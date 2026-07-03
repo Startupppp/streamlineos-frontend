@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInboxIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -20,7 +21,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ExternalLink, Copy, ArrowRight } from "lucide-react";
+import { Plus, ExternalLink, Copy } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm, Controller, useController } from "react-hook-form";
 import { z } from "zod";
@@ -161,6 +162,9 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
   }, [projectId]);
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
+  const handleCloseAccept = useCallback(() => setAcceptOpen(false), []);
+  const handleCloseDecline = useCallback(() => setDeclineOpen(false), []);
 
   const allItems = intakeData?.items ?? [];
   const filteredItems = allItems.filter((item) => activeTab === "all" || item.status === activeTab);

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { History, RotateCcw, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,7 +72,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+        <SheetHeader className="px-6 py-4 border-b shrink-0">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
               <History className="h-4 w-4" />
@@ -95,9 +96,12 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
               </div>
             )}
             {!isLoading && versions.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No versions saved yet.
-              </p>
+              <EmptyState
+                title="No versions yet"
+                description="Content changes will be saved as versions automatically."
+                compact
+                className="min-h-[120px]"
+              />
             )}
             <div className="space-y-2">
               {versions.map((v) => (
@@ -133,9 +137,12 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                   minHeightClassName="min-h-[200px]"
                 />
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No content in this version.
-                </p>
+                <EmptyState
+                  title="Empty version"
+                  description="No content was saved in this version."
+                  compact
+                  className="min-h-[120px]"
+                />
               )}
             </div>
             <div className="shrink-0 border-t px-6 py-4">

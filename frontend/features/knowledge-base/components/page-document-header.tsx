@@ -222,6 +222,7 @@ export default function PageDocumentHeader({
             size="icon"
             className={`h-8 w-8 ${page.isFavorite ? "text-amber-500" : ""}`}
             onClick={handleToggleFavorite}
+            aria-label={page.isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
             <Star
               className={`h-4 w-4 ${page.isFavorite ? "fill-amber-500" : ""}`}
@@ -233,6 +234,7 @@ export default function PageDocumentHeader({
             size="icon"
             className="h-8 w-8"
             onClick={handleOpenComments}
+            aria-label="Open comments"
           >
             <MessageSquare className="h-4 w-4" />
           </Button>
@@ -242,13 +244,14 @@ export default function PageDocumentHeader({
             size="icon"
             className="h-8 w-8"
             onClick={handleOpenHistory}
+            aria-label="View page history"
           >
             <History className="h-4 w-4" />
           </Button>
 
           <Popover open={backlinksOpen} onOpenChange={setBacklinksOpen}>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View backlinks">
                 <Link2 className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
@@ -280,7 +283,7 @@ export default function PageDocumentHeader({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

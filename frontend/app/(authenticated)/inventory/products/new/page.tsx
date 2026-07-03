@@ -161,7 +161,7 @@ export default function NewProductPage() {
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <Card className="p-5">
+          <Card className="p-4">
             <h2 className="text-sm font-semibold text-foreground mb-4">
               Basic Information
             </h2>
@@ -287,7 +287,7 @@ export default function NewProductPage() {
             </div>
           </Card>
 
-          <Card className="p-5">
+          <Card className="p-4">
             <h2 className="text-sm font-semibold text-foreground mb-4">
               Pricing
             </h2>
@@ -335,7 +335,7 @@ export default function NewProductPage() {
             </div>
           </Card>
 
-          <Card className="p-5">
+          <Card className="p-4">
             <h2 className="text-sm font-semibold text-foreground mb-4">
               Reorder Settings
             </h2>

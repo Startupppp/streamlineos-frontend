@@ -426,6 +426,7 @@ export const queryKeys = {
 
   whiteboards: {
     all: [...base, "whiteboards"] as const,
+    hub: () => [...base, "whiteboards", "hub"] as const,
     list: (projectId: number) => [...base, "whiteboards", "list", projectId] as const,
     detail: (id: number) => [...base, "whiteboards", "detail", id] as const,
     publicLink: (token: string) => [...base, "whiteboards", "publicLink", token] as const,

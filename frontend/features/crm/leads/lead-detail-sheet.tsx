@@ -138,9 +138,9 @@ export function LeadDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleSheetClose}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-0">
+      <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-lg overflow-hidden">
         {isLoading || !lead ? (
-          <div className="space-y-4 px-6 py-5">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-4 px-6 py-5">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-32 w-full" />
@@ -192,7 +192,7 @@ export function LeadDetailSheet({
               </div>
             </div>
 
-            <div className="px-6 py-5 space-y-6">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-6">
               <div className="space-y-2.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   AI Tools
@@ -297,7 +297,7 @@ export function LeadDetailSheet({
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     {lead.potentialValue && (
-                      <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
+                      <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
                         <p className="text-[11px] text-muted-foreground mb-1">
                           Potential Value
                         </p>
@@ -307,7 +307,7 @@ export function LeadDetailSheet({
                       </div>
                     )}
                     {lead.investmentInterest && (
-                      <div className="p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/15">
+                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
                         <p className="text-[11px] text-muted-foreground mb-1">
                           Investment Interest
                         </p>
@@ -328,7 +328,7 @@ export function LeadDetailSheet({
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Assigned To
                   </p>
-                  <div className="flex items-center gap-3 p-3.5 rounded-xl bg-muted/30 border border-border/50">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border">
                     <Avatar className="h-9 w-9">
                       <AvatarImage
                         src={resolveImageUrl(lead.assignedTo.image)}
@@ -354,7 +354,7 @@ export function LeadDetailSheet({
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Notes
                   </p>
-                  <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+                  <div className="p-3 rounded-lg bg-muted/20 border border-border">
                     <p className="text-sm leading-relaxed">{lead.notes}</p>
                   </div>
                 </div>

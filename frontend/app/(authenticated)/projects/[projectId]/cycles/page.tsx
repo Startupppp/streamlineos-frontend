@@ -6,6 +6,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,9 +71,18 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
     );
   }, [createMutation, projectId]);
 
+  const subtitleText =
+    [
+      activeCycles.length > 0 && `${activeCycles.length} active`,
+      upcomingCycles.length > 0 && `${upcomingCycles.length} upcoming`,
+      completedCycles.length > 0 && `${completedCycles.length} completed`,
+    ]
+      .filter((s): s is string => Boolean(s))
+      .join(", ") || undefined;
+
   if (isLoading) {
     return (
-      <PageWrapper title="Cycles">
+      <PageWrapper title="Cycles" backHref={`/projects/${projectIdStr}`}>
         <div className="space-y-6">
           <div className="space-y-2">
             <Skeleton className="h-3 w-12" />
@@ -112,6 +122,8 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
   return (
     <PageWrapper
       title="Cycles"
+      subtitle={subtitleText}
+      backHref={`/projects/${projectIdStr}`}
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>
@@ -124,7 +136,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
               <SheetTitle>Create Cycle</SheetTitle>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-6 py-5">
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <form id="cycle-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 <div className="space-y-1.5">
                   <Label htmlFor="name">Name</Label>
                   <Input id="name" placeholder="Enter cycle name..." {...form.register("name")} className="capitalize" />
@@ -152,10 +164,12 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                     )}
                   </div>
                 </div>
-                <Button type="submit" disabled={createMutation.isPending} className="w-full">
-                  {createMutation.isPending ? "Creating..." : "Create Cycle"}
-                </Button>
               </form>
+            </div>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <Button type="submit" form="cycle-form" disabled={createMutation.isPending} className="w-full">
+                {createMutation.isPending ? "Creating..." : "Create Cycle"}
+              </Button>
             </div>
           </SheetContent>
         </Sheet>
@@ -286,16 +300,13 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
       )}
 
       {!hasCycles && (
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[400px] text-center">
-          <EmptyCalendarIllustration className="mx-auto mb-4 w-36 h-36" />
-          <h3 className="text-base font-semibold mb-1">No cycles yet</h3>
-          <p className="text-sm text-muted-foreground mb-4 max-w-xs">
-            Create your first cycle to start planning work in time-boxed iterations.
-          </p>
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-1" /> Create First Cycle
-          </Button>
-        </div>
+        <EmptyState
+          illustration={<EmptyCalendarIllustration />}
+          title="No cycles yet"
+          description="Create your first cycle to start planning work in time-boxed iterations."
+          action={{ label: "Create First Cycle", onClick: handleOpenCreate }}
+          className="min-h-[40vh]"
+        />
       )}
     </PageWrapper>
   );

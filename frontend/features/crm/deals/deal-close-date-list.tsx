@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatINRCompact } from "@/lib/format-utils";
 import type { Deal, DealStage } from "@/types/crm";
@@ -11,7 +11,7 @@ const STAGE_DOT: Partial<Record<DealStage, string>> = {
   LEAD: "bg-blue-500",
   CONTACTED: "bg-sky-500",
   PROPOSAL: "bg-amber-500",
-  NEGOTIATION: "bg-purple-500",
+  NEGOTIATION: "bg-violet-500",
   WON: "bg-emerald-500",
   LOST: "bg-red-500",
 };
@@ -53,28 +53,25 @@ function isPastDue(dateStr: string): boolean {
   return new Date(dateStr) < new Date();
 }
 
-interface DealCloseDateListProps {
-  deals: Deal[];
-}
-
 interface DealRowProps {
   deal: DealWithCloseDate;
   delay: number;
   onNavigate: (id: number) => void;
+  shouldReduceMotion: boolean;
 }
 
-function DealRow({ deal, delay, onNavigate }: DealRowProps) {
+function DealRow({ deal, delay, onNavigate, shouldReduceMotion }: DealRowProps) {
   const handleClick = useCallback(() => onNavigate(deal.id), [deal.id, onNavigate]);
   const past = isPastDue(deal.expectedCloseDate);
 
   return (
     <motion.button
-      initial={{ opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay, duration: 0.22, ease: "easeOut" }}
-      whileTap={{ scale: 0.97 }}
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -8 }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+      transition={{ delay: shouldReduceMotion ? 0 : delay, duration: 0.22, ease: "easeOut" }}
+      whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
       onClick={handleClick}
-      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all duration-150 text-left"
+      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-muted/30 border border-transparent hover:border-border transition-all duration-150 text-left"
     >
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium truncate">{deal.name}</p>
@@ -95,7 +92,7 @@ function DealRow({ deal, delay, onNavigate }: DealRowProps) {
         <p className="text-sm font-semibold tabular-nums">
           {deal.value ? formatINRCompact(Number(deal.value)) : "—"}
         </p>
-        <p className={`text-[11px] tabular-nums ${past ? "text-red-500 font-medium" : "text-muted-foreground"}`}>
+        <p className={`text-[11px] tabular-nums ${past ? "text-red-600 font-medium" : "text-muted-foreground"}`}>
           {formatCloseDate(deal.expectedCloseDate)}
         </p>
       </div>
@@ -103,8 +100,13 @@ function DealRow({ deal, delay, onNavigate }: DealRowProps) {
   );
 }
 
+interface DealCloseDateListProps {
+  deals: Deal[];
+}
+
 export function DealCloseDateList({ deals }: DealCloseDateListProps) {
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion() ?? false;
 
   const handleNavigate = useCallback(
     (id: number) => router.push(`/crm/deals/${id}`),
@@ -133,7 +135,7 @@ export function DealCloseDateList({ deals }: DealCloseDateListProps) {
   const hasAny = bucketedDeals.some((b) => b.deals.length > 0);
 
   return (
-    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+    <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold">Closing Soon</CardTitle>
         <p className="text-xs text-muted-foreground">Deals by expected close date</p>
@@ -148,7 +150,7 @@ export function DealCloseDateList({ deals }: DealCloseDateListProps) {
             {bucketedDeals.map((bucket) => (
               <div key={bucket.label}>
                 <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     {bucket.label}
                   </h3>
                   <span className="text-xs text-muted-foreground">
@@ -165,6 +167,7 @@ export function DealCloseDateList({ deals }: DealCloseDateListProps) {
                         deal={deal}
                         delay={idx * 0.06}
                         onNavigate={handleNavigate}
+                        shouldReduceMotion={shouldReduceMotion}
                       />
                     ))}
                   </div>

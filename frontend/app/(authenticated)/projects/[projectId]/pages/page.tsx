@@ -5,6 +5,7 @@ import { usePages, useCreatePage, useUpdatePage } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
   SheetContent,
@@ -264,10 +265,11 @@ export default function PagesPage({
   );
 
   const handleOpenCreatePage = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
 
   if (isLoading) {
     return (
-      <PageWrapper title="Pages" noInternalScroll contentClassName="p-0">
+      <PageWrapper title="Pages" eyebrow="Projects" backHref={`/projects/${projectId}`} noInternalScroll contentClassName="p-0">
         <div className="flex h-full">
           <div className="w-64 border-r p-4 space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (

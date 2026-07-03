@@ -31,6 +31,7 @@ import {
   getNavGroupsForUser,
 } from "./sidebar/sidebar-nav-items";
 import { usePermissions } from "@/lib/rbac/hooks";
+import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { cn } from "@/lib/utils";
 
 interface SearchResult {
@@ -88,7 +89,7 @@ export function CommandPalette() {
   const { data: session } = useSession();
   const role = session?.user?.role;
   const { permissions } = usePermissions();
-  const enabledModules = session?.enabledModules ?? [];
+  const enabledModules = useEnabledModules();
 
   const pages = useMemo(() => {
     const groups = getNavGroupsForUser(role, permissions, enabledModules);

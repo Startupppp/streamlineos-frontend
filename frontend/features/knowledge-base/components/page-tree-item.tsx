@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ChevronRight, ChevronDown, Plus, MoreHorizontal, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,8 @@ export default function PageTreeItem({
   const deletePage = useDeleteKbPage();
   const duplicatePage = useDuplicateKbPage();
   const toggleFavorite = useToggleFavoriteKbPage();
+
+  const shouldReduceMotion = useReducedMotion();
 
   const children = allNodes
     .filter((n) => n.parentPageId === node.id)
@@ -130,7 +132,7 @@ export default function PageTreeItem({
         tabIndex={0}
         className={`group flex items-center gap-1 py-1 rounded-md cursor-pointer text-sm transition-colors select-none ${
           isActive
-            ? "bg-accent/10 text-accent font-medium"
+            ? "bg-blue-50 text-blue-700 font-medium"
             : "text-foreground/80 hover:bg-muted"
         }`}
         style={{ paddingLeft: 8 + depth * 16, paddingRight: 4 }}
@@ -167,7 +169,7 @@ export default function PageTreeItem({
         <span className="hidden group-hover:flex items-center gap-0.5 shrink-0">
           {canCreate && (
             <button
-              className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent/10"
+              className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
               onClick={handleAddChild}
               tabIndex={-1}
               aria-label="Add child page"
@@ -178,7 +180,7 @@ export default function PageTreeItem({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
                 onClick={handleMoreClick}
                 tabIndex={-1}
                 aria-label="Page options"
@@ -212,11 +214,10 @@ export default function PageTreeItem({
       <AnimatePresence initial={false}>
         {expanded && children.length > 0 && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="overflow-hidden"
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.15, ease: "easeOut" }}
           >
             {children.map((child) => (
               <PageTreeItem

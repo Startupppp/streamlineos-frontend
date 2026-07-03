@@ -172,6 +172,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 
 - **Loading:** skeletons matching the real layout, not lone spinners.
 - **Empty:** fills available content height (`flex-1`/`h-full`) with icon + message + primary action. Never a small floating block.
+- **Empty-state illustrations (living rule, 2026-07-03):** full-page/main-region empty states use a themed SVG component from `components/illustrations` (extend that set in the `_shared.tsx` tokens/style when nothing fits — compositions may be adapted from unDraw, but always shipped as recolored inline components, never raw downloaded SVG files). Icon-only empty states are for compact/table-cell contexts only.
 - **Error:** friendly message + retry.
 - Long content scrolls **inside the main content area only**; sidebar + shell never scroll with the page (sidebar `h-screen sticky`; main `overflow-y-auto`).
 - No unintended overflow/scrollbars: `min-w-0`, `truncate`, `flex-1`, proper overflow — not fixed heights that burst.

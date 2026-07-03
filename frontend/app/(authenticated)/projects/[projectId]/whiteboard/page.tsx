@@ -189,12 +189,40 @@ const BoardItem = memo(function BoardItem({
   );
 });
 
+const MobileBoardChip = memo(function MobileBoardChip({
+  board,
+  isSelected,
+  onSelect,
+}: {
+  board: WhiteboardSummary;
+  isSelected: boolean;
+  onSelect: (id: number) => void;
+}) {
+  const handleClick = useCallback(() => onSelect(board.id), [onSelect, board.id]);
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
+        isSelected
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-muted",
+      )}
+    >
+      {board.name}
+    </button>
+  );
+});
+
 export default function WhiteboardPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ board?: string }>;
 }) {
   const { projectId: projectIdStr } = use(params);
+  const { board: boardParam } = use(searchParams);
   const projectId = Number(projectIdStr);
 
   const canManage = useCan("projects:whiteboards:manage");
@@ -202,7 +230,10 @@ export default function WhiteboardPage({
   const createBoard = useCreateWhiteboard(projectId);
   const deleteBoard = useDeleteWhiteboard(projectId);
 
-  const [chosenBoardId, setChosenBoardId] = useState<number | null>(null);
+  const initialBoardId = boardParam !== undefined ? Number(boardParam) : Number.NaN;
+  const [chosenBoardId, setChosenBoardId] = useState<number | null>(
+    Number.isInteger(initialBoardId) ? initialBoardId : null,
+  );
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<WhiteboardSummary | null>(null);
 
@@ -245,6 +276,8 @@ export default function WhiteboardPage({
   return (
     <PageWrapper
       title="Whiteboard"
+      eyebrow="Projects"
+      backHref={`/projects/${projectId}`}
       subtitle="Sketch ideas visually with your team"
       noInternalScroll
       contentClassName="flex min-h-0"
@@ -295,18 +328,12 @@ export default function WhiteboardPage({
           {/* Mobile board selector */}
           <div className="flex gap-1.5 overflow-x-auto pb-1 border-b border-border shrink-0 md:hidden">
             {boards.map((board) => (
-              <button
+              <MobileBoardChip
                 key={board.id}
-                onClick={() => handleBoardSelect(board.id)}
-                className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
-                  board.id === (selectedBoard?.id ?? null)
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted",
-                )}
-              >
-                {board.name}
-              </button>
+                board={board}
+                isSelected={board.id === (selectedBoard?.id ?? null)}
+                onSelect={handleBoardSelect}
+              />
             ))}
           </div>
 
