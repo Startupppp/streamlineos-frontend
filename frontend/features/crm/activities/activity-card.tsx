@@ -78,23 +78,16 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
       ? `${ENTITY_PATHS[activity.entityType]}/${activity.entityId}`
       : null;
 
-  const motionProps = shouldReduceMotion
-    ? {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
-        transition: { duration: 0.15 },
-      }
-    : {
-        initial: { opacity: 0, y: 12 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: -8 },
-        transition: { duration: 0.22, ease: "easeOut", delay: Math.min(index * 0.05, 0.4) },
-      };
-
   return (
     <motion.div
-      {...motionProps}
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+      transition={
+        shouldReduceMotion
+          ? { duration: 0.15 }
+          : { duration: 0.22, ease: "easeOut", delay: Math.min(index * 0.05, 0.4) }
+      }
       className="bg-card rounded-lg border border-border shadow-sm p-4 hover:shadow-md transition-shadow duration-150 group"
     >
       <div className="flex items-start gap-3 min-w-0">

@@ -1,5 +1,6 @@
 "use client";
 import "@excalidraw/excalidraw/index.css";
+import "./whiteboard-theme.css";
 
 import { useState, useCallback, useEffect } from "react";
 import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
@@ -148,8 +149,8 @@ export function ExcalidrawCanvas({
         <div
           className={
             isFullscreen
-              ? "flex-1 min-h-0"
-              : "flex-1 min-h-0 rounded-lg overflow-hidden border border-border"
+              ? "wb-canvas flex-1 min-h-0"
+              : "wb-canvas flex-1 min-h-0 rounded-lg overflow-hidden border border-border"
           }
         >
           <Excalidraw

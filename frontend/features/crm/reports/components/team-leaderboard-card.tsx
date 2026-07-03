@@ -34,7 +34,7 @@ export function TeamLeaderboardCard({
         {isLoading ? (
           <div className="p-4 space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <Skeleton key={i} className="h-8 w-full" />
             ))}
           </div>
         ) : !leaderboard?.length ? (
@@ -47,14 +47,14 @@ export function TeamLeaderboardCard({
         ) : (
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">Rank</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="text-right">Leads</TableHead>
-                  <TableHead className="text-right">Converted</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
-                  <TableHead className="text-right">Conv. Rate</TableHead>
+              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                <TableRow className="border-b-2 border-border hover:bg-transparent">
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 w-10">Rank</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Leads</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Converted</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Revenue</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Conv. Rate</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -68,11 +68,11 @@ export function TeamLeaderboardCard({
                       : "0.0";
 
                   return (
-                    <TableRow key={rep.userId}>
-                      <TableCell className="font-medium">
+                    <TableRow key={rep.userId} className="h-8 hover:bg-muted/30 transition-colors">
+                      <TableCell className="px-2 py-1 text-[11px]">
                         <span
                           className={cn(
-                            "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
+                            "inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
                             i === 0 && "bg-amber-100 text-amber-700",
                             i === 1 && "bg-slate-100 text-slate-600",
                             i === 2 && "bg-orange-100 text-orange-700",
@@ -82,20 +82,20 @@ export function TeamLeaderboardCard({
                           {i + 1}
                         </span>
                       </TableCell>
-                      <TableCell className="font-medium">{rep.name}</TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="px-2 py-1 text-[11px] font-medium">{rep.name}</TableCell>
+                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
                         {rep.leadsAssigned}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-emerald-600">
+                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-emerald-600">
                         {rep.leadsConverted}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
                         {formatCurrency(rep.totalRevenue)}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="px-2 py-1 text-[11px] text-right">
                         <span
                           className={cn(
-                            "text-xs font-medium",
+                            "font-medium",
                             Number(convRate) >= 50
                               ? "text-emerald-600"
                               : Number(convRate) >= 25

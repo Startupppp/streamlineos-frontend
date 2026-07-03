@@ -53,10 +53,10 @@ function TemplateCard({ template, canDelete, onUse }: TemplateCardProps) {
 
   return (
     <>
-      <div className="flex items-start gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-        <span className="text-2xl shrink-0">{template.icon ?? "📄"}</span>
+      <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+        <span className="text-xl shrink-0">{template.icon ?? "📄"}</span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{template.name}</p>
+          <p className="text-[13px] font-medium truncate">{template.name}</p>
           {template.description && (
             <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
               {template.description}
@@ -130,7 +130,7 @@ export default function TemplatesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <LayoutTemplate className="h-4 w-4" />
@@ -151,7 +151,7 @@ export default function TemplatesDialog({
               title="No templates yet"
               description="Save a page as a template to see it here."
               compact
-              className="min-h-[160px]"
+              className="flex-1 min-h-[40vh]"
             />
           )}
           <div className="space-y-2 p-1">

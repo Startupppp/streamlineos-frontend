@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ChevronRight, ChevronDown, Plus, MoreHorizontal, FileText } from "lucide-react";
 import { toast } from "sonner";
@@ -12,11 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   useCreateKbPage,
   useDeleteKbPage,
   useDuplicateKbPage,
   useToggleFavoriteKbPage,
+  useUpdateKbPage,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
@@ -38,6 +40,9 @@ export default function PageTreeItem({
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const renameInputRef = useRef<HTMLInputElement>(null);
   const isActive = pathname === `/knowledge-base/pages/${node.id}`;
   const canCreate = useCan("kb:pages:create");
   const canDelete = useCan("kb:pages:delete");
@@ -45,6 +50,7 @@ export default function PageTreeItem({
   const deletePage = useDeleteKbPage();
   const duplicatePage = useDuplicateKbPage();
   const toggleFavorite = useToggleFavoriteKbPage();
+  const updatePage = useUpdateKbPage();
 
   const shouldReduceMotion = useReducedMotion();
 
@@ -67,6 +73,7 @@ export default function PageTreeItem({
   }
 
   function handleNavigate() {
+    if (renaming) return;
     router.push(`/knowledge-base/pages/${node.id}`);
     onCloseMobile?.();
   }
@@ -119,9 +126,57 @@ export default function PageTreeItem({
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
+    if (renaming) return;
     if (e.key === "Enter" || e.key === " ") {
       handleNavigate();
     }
+  }
+
+  function handleStartRename() {
+    setRenameValue(node.title || "");
+    setRenaming(true);
+    setMenuOpen(false);
+    setTimeout(() => renameInputRef.current?.focus(), 0);
+  }
+
+  function handleRenameCommit() {
+    const trimmed = renameValue.trim();
+    if (!trimmed) {
+      setRenaming(false);
+      return;
+    }
+    updatePage.mutate(
+      { pageId: node.id, title: trimmed },
+      {
+        onSuccess: () => setRenaming(false),
+        onError: () => {
+          toast.error("Failed to rename page");
+          setRenaming(false);
+        },
+      }
+    );
+  }
+
+  function handleRenameCancel() {
+    setRenaming(false);
+  }
+
+  function handleRenameKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleRenameCommit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      handleRenameCancel();
+    }
+  }
+
+  function handleRenameInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setRenameValue(e.target.value);
+  }
+
+  function handleRenameInputClick(e: React.MouseEvent) {
+    e.stopPropagation();
   }
 
   const showChevron = node.hasChildren || children.length > 0;
@@ -165,53 +220,68 @@ export default function PageTreeItem({
           )}
         </span>
 
-        <span className="flex-1 truncate min-w-0">{node.title || "Untitled"}</span>
+        {renaming ? (
+          <Input
+            ref={renameInputRef}
+            value={renameValue}
+            onChange={handleRenameInputChange}
+            onKeyDown={handleRenameKeyDown}
+            onBlur={handleRenameCommit}
+            onClick={handleRenameInputClick}
+            className="flex-1 h-6 text-sm py-0 px-1 min-w-0"
+          />
+        ) : (
+          <span className="flex-1 truncate min-w-0">{node.title || "Untitled"}</span>
+        )}
 
-        <span
-          className={`${menuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-0.5 shrink-0`}
-        >
-          {canCreate && (
-            <button
-              className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-              onClick={handleAddChild}
-              tabIndex={-1}
-              aria-label="Add child page"
-            >
-              <Plus className="h-3 w-3" />
-            </button>
-          )}
-          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger asChild>
+        {!renaming && (
+          <span
+            className={`${menuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-0.5 shrink-0`}
+          >
+            {canCreate && (
               <button
                 className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                onClick={handleMoreClick}
+                onClick={handleAddChild}
                 tabIndex={-1}
-                aria-label="Page options"
+                aria-label="Add child page"
               >
-                <MoreHorizontal className="h-3 w-3" />
+                <Plus className="h-3 w-3" />
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" side="right">
-              {canCreate && (
-                <DropdownMenuItem onSelect={handleDuplicate}>Duplicate</DropdownMenuItem>
-              )}
-              <DropdownMenuItem onSelect={handleAddToFavorites}>
-                Add to favorites
-              </DropdownMenuItem>
-              {canDelete && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onSelect={handleDelete}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </span>
+            )}
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                  onClick={handleMoreClick}
+                  tabIndex={-1}
+                  aria-label="Page options"
+                >
+                  <MoreHorizontal className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="right">
+                <DropdownMenuItem onSelect={handleStartRename}>Rename</DropdownMenuItem>
+                {canCreate && (
+                  <DropdownMenuItem onSelect={handleDuplicate}>Duplicate</DropdownMenuItem>
+                )}
+                <DropdownMenuItem onSelect={handleAddToFavorites}>
+                  Add to favorites
+                </DropdownMenuItem>
+                {canDelete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onSelect={handleDelete}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </span>
+        )}
       </div>
 
       <AnimatePresence initial={false}>

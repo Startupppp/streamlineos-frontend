@@ -234,7 +234,7 @@ export function KbArticleEditor({
       eyebrow="Documents · Knowledge Base"
       title={article.title}
       subtitle="Edit article content, metadata, and publishing settings."
-      backHref="/kb"
+      backHref="/support/kb"
       actions={
         <Button size="sm" onClick={handleSave} disabled={update.isPending}>
           <Save className="h-3.5 w-3.5 mr-1" />

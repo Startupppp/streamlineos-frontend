@@ -115,10 +115,10 @@ export function CrmCalendarMonthView({
               data-date={day.toISOString()}
               onClick={handleDayCellClick}
               className={[
-                "min-h-[120px] p-1.5 border-border relative cursor-pointer hover:bg-slate-50 transition-colors",
+                "min-h-[120px] p-1.5 border-border relative cursor-pointer hover:bg-muted/30 transition-colors",
                 isCurrentMonth ? "bg-white" : "bg-muted/30 text-muted-foreground",
                 isToday
-                  ? "outline outline-2 outline-violet-400 outline-offset-[-2px] bg-violet-50/30"
+                  ? "outline outline-2 outline-blue-400 outline-offset-[-2px] bg-blue-50/30"
                   : "",
               ]
                 .filter(Boolean)
@@ -126,7 +126,7 @@ export function CrmCalendarMonthView({
             >
               <div className="mb-1">
                 {isToday ? (
-                  <span className="h-5 w-5 rounded-full bg-violet-600 text-white flex items-center justify-center text-[11px] font-medium">
+                  <span className="h-5 w-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-medium">
                     {day.getDate()}
                   </span>
                 ) : (

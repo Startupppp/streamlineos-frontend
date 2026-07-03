@@ -56,7 +56,7 @@ export function KbAskPanel(props: KbAskPanelProps) {
     if (props.mode === "public") {
       return `/help/${props.orgId}/${source.slug}`;
     }
-    return `/kb/${source.articleId}`;
+    return `/support/kb/${source.articleId}`;
   }
 
   return (

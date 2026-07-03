@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { PERIOD_OPTIONS, type Period } from "../lib/types";
 
 interface PeriodFilterProps {
@@ -27,11 +26,7 @@ export function PeriodFilter({ period, onPeriodChange }: PeriodFilterProps) {
           data-period={opt.value}
           variant={period === opt.value ? "default" : "outline"}
           size="sm"
-          className={cn(
-            "h-7 text-xs px-3",
-            period === opt.value &&
-              "bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0 shadow-md hover:from-violet-700 hover:to-indigo-700",
-          )}
+          className="h-7 text-xs px-3"
           onClick={handleButtonClick}
         >
           {opt.label}

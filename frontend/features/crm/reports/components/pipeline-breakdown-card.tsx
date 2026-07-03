@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useReducedMotion, motion } from "framer-motion";
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { scaleIn } from "@/lib/motion-variants";
 import type { LeadStats } from "@/types/leads";
 import { PIPELINE_COLORS } from "../lib/types";
@@ -16,6 +17,12 @@ export function PipelineBreakdownCard({
   stats,
   maxPipelineCount,
 }: PipelineBreakdownCardProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  const itemVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : scaleIn;
+
   return (
     <Card className="rounded-lg border border-border">
       <CardHeader className="pb-3">
@@ -29,16 +36,13 @@ export function PipelineBreakdownCard({
           {Object.entries(stats.byStatus).map(([status, count]) => {
             const pct = stats.total > 0 ? (count / stats.total) * 100 : 0;
             const config =
-              PIPELINE_COLORS[status] ?? PIPELINE_COLORS["NEW"];
+              PIPELINE_COLORS[status] ?? PIPELINE_COLORS["NEW"]!;
 
             return (
-              <motion.div key={status} variants={scaleIn}>
+              <motion.div key={status} variants={itemVariants}>
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: config.color }}
-                    />
+                    <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", config.dot)} />
                     <span className="text-sm font-medium capitalize">
                       {status.toLowerCase()}
                     </span>
@@ -61,13 +65,10 @@ export function PipelineBreakdownCard({
                   aria-label={`${status} pipeline count`}
                 >
                   <motion.div
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: config.color }}
-                    initial={{ width: 0 }}
-                    animate={{
-                      width: `${(count / maxPipelineCount) * 100}%`,
-                    }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className={cn("h-full w-full rounded-full origin-left", config.dot)}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: maxPipelineCount > 0 ? count / maxPipelineCount : 0 }}
+                    transition={{ duration: 0.3, delay: 0.15, ease: "easeOut" }}
                   />
                 </div>
               </motion.div>

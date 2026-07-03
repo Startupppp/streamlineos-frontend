@@ -89,12 +89,8 @@ export default function CrmReportsPage() {
         <PeriodFilter period={period} onPeriodChange={handlePeriodChange} />
       }
       actions={
-        <Button
-          size="sm"
-          onClick={handleExport}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          <FileDown className="h-4 w-4 mr-2" />
+        <Button variant="outline" size="sm" onClick={handleExport}>
+          <FileDown className="h-3.5 w-3.5 mr-1.5" />
           Export
         </Button>
       }

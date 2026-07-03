@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parseISO, addHours, differenceInMinutes } from "date-fns";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Sheet,
   SheetContent,
@@ -28,7 +29,6 @@ import {
 import { Video, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 import {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
@@ -62,12 +62,20 @@ const eventSchema = z.object({
 type EventFormValues = z.infer<typeof eventSchema>;
 
 const COLOR_OPTIONS = [
-  { value: "blue", hex: "#3b82f6" },
-  { value: "green", hex: "#22c55e" },
-  { value: "red", hex: "#ef4444" },
-  { value: "yellow", hex: "#f59e0b" },
-  { value: "purple", hex: "#a855f7" },
-] as const;
+  { value: "blue" as const },
+  { value: "green" as const },
+  { value: "red" as const },
+  { value: "yellow" as const },
+  { value: "purple" as const },
+];
+
+const COLOR_BG_CLASSES: Record<string, string> = {
+  blue: "bg-blue-500",
+  green: "bg-green-500",
+  red: "bg-red-500",
+  yellow: "bg-amber-500",
+  purple: "bg-purple-500",
+};
 
 const COLOR_RING_CLASSES: Record<string, string> = {
   blue: "ring-blue-500",
@@ -131,6 +139,8 @@ export function CrmEventDialog({
   event,
 }: CrmEventDialogProps) {
   const isEdit = !!event;
+  const shouldReduceMotion = useReducedMotion();
+
   const numericId = useMemo(
     () => (isEdit && event?.id ? extractEventNumericId(event.id) : null),
     [isEdit, event?.id],
@@ -157,7 +167,11 @@ export function CrmEventDialog({
 
   useEffect(() => {
     if (open) {
-      form.reset(isEdit ? buildEditValues(event!) : buildDefaults(defaultDate));
+      if (isEdit && event) {
+        form.reset(buildEditValues(event));
+      } else {
+        form.reset(buildDefaults(defaultDate));
+      }
     }
   }, [open, defaultDate, event, isEdit, form]);
 
@@ -232,7 +246,10 @@ export function CrmEventDialog({
       allDay: values.allDay,
       color: values.color,
       category: values.category,
-      entityType: (values.entityType && values.entityType !== NO_ENTITY_TYPE) ? values.entityType : undefined,
+      entityType:
+        values.entityType && values.entityType !== NO_ENTITY_TYPE
+          ? values.entityType
+          : undefined,
       entityId: values.entityId || undefined,
       attendeeIds: values.attendeeIds,
     };
@@ -255,18 +272,21 @@ export function CrmEventDialog({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex flex-col p-0 w-full sm:max-w-[520px]">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-slate-100">
-          <SheetTitle className="text-lg font-semibold text-slate-900">
+      <SheetContent
+        side="right"
+        className="flex flex-col gap-0 overflow-hidden p-0 w-full sm:max-w-[520px]"
+      >
+        <SheetHeader className="shrink-0 px-6 py-4 border-b">
+          <SheetTitle className="text-base font-semibold text-foreground">
             {isEdit ? "Edit Meeting" : "New Meeting"}
           </SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 overflow-y-auto">
-          <form id="crm-event-form" onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
+        <ScrollArea className="flex-1 min-h-0">
+          <form id="crm-event-form" onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="title" className="text-sm font-medium text-slate-700">
-                Title <span className="text-red-500">*</span>
+              <Label htmlFor="title" className="text-[13px] font-medium text-foreground">
+                Title <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="title"
@@ -274,16 +294,16 @@ export function CrmEventDialog({
                 {...form.register("title")}
                 className={cn(
                   "h-9",
-                  form.formState.errors.title && "border-red-400 focus-visible:ring-red-400",
+                  form.formState.errors.title && "border-destructive focus-visible:ring-destructive",
                 )}
               />
               {form.formState.errors.title && (
-                <p className="text-xs text-red-500">{form.formState.errors.title.message}</p>
+                <p className="text-xs text-destructive">{form.formState.errors.title.message}</p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-slate-700">Category</Label>
+              <Label className="text-[13px] font-medium text-foreground">Category</Label>
               <Controller
                 control={form.control}
                 name="category"
@@ -304,27 +324,24 @@ export function CrmEventDialog({
               />
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3">
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
               <div>
-                <p className="text-sm font-medium text-slate-700">All Day</p>
-                <p className="text-xs text-slate-500">Event spans the entire day</p>
+                <p className="text-[13px] font-medium text-foreground">All Day</p>
+                <p className="text-xs text-muted-foreground">Event spans the entire day</p>
               </div>
               <Controller
                 control={form.control}
                 name="allDay"
                 render={({ field }) => (
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
                 )}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="startDate" className="text-sm font-medium text-slate-700">
-                  Start Date <span className="text-red-500">*</span>
+                <Label htmlFor="startDate" className="text-[13px] font-medium text-foreground">
+                  Start Date <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="startDate"
@@ -332,16 +349,18 @@ export function CrmEventDialog({
                   {...form.register("startDate")}
                   className={cn(
                     "h-9",
-                    form.formState.errors.startDate && "border-red-400",
+                    form.formState.errors.startDate && "border-destructive",
                   )}
                 />
                 {form.formState.errors.startDate && (
-                  <p className="text-xs text-red-500">{form.formState.errors.startDate.message}</p>
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.startDate.message}
+                  </p>
                 )}
               </div>
               {!allDay && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="startTime" className="text-sm font-medium text-slate-700">
+                  <Label htmlFor="startTime" className="text-[13px] font-medium text-foreground">
                     Start Time
                   </Label>
                   <Input
@@ -356,8 +375,8 @@ export function CrmEventDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="endDate" className="text-sm font-medium text-slate-700">
-                  End Date <span className="text-red-500">*</span>
+                <Label htmlFor="endDate" className="text-[13px] font-medium text-foreground">
+                  End Date <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="endDate"
@@ -365,16 +384,18 @@ export function CrmEventDialog({
                   {...form.register("endDate")}
                   className={cn(
                     "h-9",
-                    form.formState.errors.endDate && "border-red-400",
+                    form.formState.errors.endDate && "border-destructive",
                   )}
                 />
                 {form.formState.errors.endDate && (
-                  <p className="text-xs text-red-500">{form.formState.errors.endDate.message}</p>
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.endDate.message}
+                  </p>
                 )}
               </div>
               {!allDay && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="endTime" className="text-sm font-medium text-slate-700">
+                  <Label htmlFor="endTime" className="text-[13px] font-medium text-foreground">
                     End Time
                   </Label>
                   <Input
@@ -388,7 +409,7 @@ export function CrmEventDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="location" className="text-sm font-medium text-slate-700">
+              <Label htmlFor="location" className="text-[13px] font-medium text-foreground">
                 Location
               </Label>
               <div className="flex gap-2">
@@ -410,7 +431,7 @@ export function CrmEventDialog({
                     {createMeetLink.isPending ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      <Video className="h-3.5 w-3.5 text-green-600" />
+                      <Video className="h-3.5 w-3.5 text-emerald-600" />
                     )}
                     Meet
                   </Button>
@@ -433,7 +454,7 @@ export function CrmEventDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-sm font-medium text-slate-700">
+              <Label htmlFor="description" className="text-[13px] font-medium text-foreground">
                 Description
               </Label>
               <Textarea
@@ -444,12 +465,14 @@ export function CrmEventDialog({
                 className="resize-none text-sm"
               />
               {form.formState.errors.description && (
-                <p className="text-xs text-red-500">{form.formState.errors.description.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.description.message}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Color</Label>
+              <Label className="text-[13px] font-medium text-foreground">Color</Label>
               <div className="flex gap-2.5">
                 {COLOR_OPTIONS.map((color) => (
                   <button
@@ -459,29 +482,26 @@ export function CrmEventDialog({
                     onClick={handleColorButtonClick}
                     className={cn(
                       "h-7 w-7 rounded-full transition-all duration-150",
+                      COLOR_BG_CLASSES[color.value],
                       watchedColor === color.value &&
                         `ring-2 ring-offset-1 ${COLOR_RING_CLASSES[color.value]}`,
                     )}
-                    style={{ backgroundColor: color.hex }}
                     aria-label={`Select ${color.value} color`}
                   />
                 ))}
               </div>
             </div>
 
-            <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-4">
-              <p className="text-sm font-medium text-slate-700">CRM Entity</p>
+            <div className="space-y-3 rounded-lg border border-border bg-muted/40 px-4 py-4">
+              <p className="text-[13px] font-medium text-foreground">CRM Entity</p>
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500">Entity Type</Label>
+                <Label className="text-xs text-muted-foreground">Entity Type</Label>
                 <Controller
                   control={form.control}
                   name="entityType"
                   render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger className="h-9 bg-white">
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="h-9 bg-card">
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
                       <SelectContent>
@@ -497,21 +517,21 @@ export function CrmEventDialog({
 
               {watchedEntityType && watchedEntityType !== NO_ENTITY_TYPE && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="entityId" className="text-xs text-slate-500">
+                  <Label htmlFor="entityId" className="text-xs text-muted-foreground">
                     Entity ID
                   </Label>
                   <Input
                     id="entityId"
                     placeholder="Enter entity ID"
                     {...form.register("entityId")}
-                    className="h-9 bg-white"
+                    className="h-9 bg-card"
                   />
                 </div>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Attendees</Label>
+              <Label className="text-[13px] font-medium text-foreground">Attendees</Label>
               <EventAttendeesPicker
                 members={members}
                 selectedIds={watchedAttendeeIds}
@@ -521,31 +541,16 @@ export function CrmEventDialog({
           </form>
         </ScrollArea>
 
-        <SheetFooter className="shrink-0 px-6 py-4 border-t border-slate-100 flex flex-row gap-2 justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
-            disabled={isPending}
-            className="h-9"
-          >
+        <SheetFooter className="shrink-0 px-6 py-4 border-t flex flex-row gap-2 justify-end">
+          <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <motion.button
-            type="submit"
-            form="crm-event-form"
-            disabled={isPending}
-            whileTap={{ scale: 0.97 }}
-            className={cn(
-              "inline-flex items-center justify-center gap-2 rounded-md px-4 h-9 text-sm font-medium",
-              "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700",
-              "text-white shadow-md hover:shadow-lg transition-all duration-200",
-              "disabled:opacity-60 disabled:cursor-not-allowed",
-            )}
-          >
-            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isEdit ? "Save Changes" : "Create Meeting"}
-          </motion.button>
+          <motion.div whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}>
+            <Button type="submit" form="crm-event-form" disabled={isPending}>
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isEdit ? "Save Changes" : "Create Meeting"}
+            </Button>
+          </motion.div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

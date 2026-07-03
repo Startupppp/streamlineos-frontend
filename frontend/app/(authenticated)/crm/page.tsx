@@ -102,7 +102,7 @@ export default function CrmHubPage() {
         <div className="space-y-4 pb-4">
           <StatCardGrid cols={4}>
             {Array.from({ length: 8 }).map((_, i) => (
-              <StatCard key={i} isLoading label="" />
+              <StatCard key={i} isLoading label="" value="" />
             ))}
           </StatCardGrid>
 

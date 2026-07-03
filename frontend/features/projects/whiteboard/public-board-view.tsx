@@ -1,6 +1,7 @@
 "use client";
 
 import "@excalidraw/excalidraw/index.css";
+import "./whiteboard-theme.css";
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -221,7 +222,7 @@ export function PublicBoardView({ shareToken }: PublicBoardViewProps) {
         </div>
       </header>
 
-      <div className="flex-1 min-h-0">
+      <div className="wb-canvas flex-1 min-h-0">
         <ExcalidrawEditor
           initialData={initialData}
           viewMode={isViewOnly}

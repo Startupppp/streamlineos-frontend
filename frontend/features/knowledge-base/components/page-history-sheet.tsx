@@ -57,8 +57,10 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
   );
   const restoreVersion = useRestoreKbPageVersion();
 
-  function handleSelectVersion(v: KbPageVersion) {
-    setSelectedVersion(v.versionNumber);
+  function handleVersionButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
+    const vn = e.currentTarget.dataset.versionNumber;
+    if (!vn) return;
+    setSelectedVersion(Number(vn));
   }
 
   function handleRestore() {
@@ -91,15 +93,15 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
   return (
     <>
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
-        <SheetHeader className="px-6 py-4 border-b shrink-0">
+      <SheetContent side="right" className="p-0 flex flex-col gap-0 sm:max-w-md">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
               <History className="h-4 w-4" />
               {selectedVersion ? `Version ${selectedVersion}` : "Page history"}
             </SheetTitle>
             {selectedVersion && (
-              <Button variant="ghost" size="sm" onClick={handleBackToList} className="text-xs">
+              <Button variant="ghost" size="sm" onClick={handleBackToList} className="text-xs h-7">
                 ← All versions
               </Button>
             )}
@@ -107,45 +109,48 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
         </SheetHeader>
 
         {!selectedVersion ? (
-          <ScrollArea className="flex-1 min-h-0 px-6 py-4">
-            {isLoading && (
-              <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-14 w-full rounded-lg" />
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="px-6 py-4">
+              {isLoading && (
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                  ))}
+                </div>
+              )}
+              {!isLoading && versions.length === 0 && (
+                <EmptyState
+                  title="No versions yet"
+                  description="Content changes will be saved as versions automatically."
+                  compact
+                  className="flex-1 min-h-[40vh]"
+                />
+              )}
+              <div className="space-y-2">
+                {versions.map((v: KbPageVersion) => (
+                  <button
+                    key={v.versionNumber}
+                    data-version-number={String(v.versionNumber)}
+                    className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted transition-colors group"
+                    onClick={handleVersionButtonClick}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">Version {v.versionNumber}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatRelativeTime(v.createdAt)}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                    </div>
+                  </button>
                 ))}
               </div>
-            )}
-            {!isLoading && versions.length === 0 && (
-              <EmptyState
-                title="No versions yet"
-                description="Content changes will be saved as versions automatically."
-                compact
-                className="min-h-[120px]"
-              />
-            )}
-            <div className="space-y-2">
-              {versions.map((v) => (
-                <button
-                  key={v.versionNumber}
-                  className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted transition-colors group"
-                  onClick={() => handleSelectVersion(v)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Version {v.versionNumber}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatRelativeTime(v.createdAt)}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
-                  </div>
-                </button>
-              ))}
             </div>
           </ScrollArea>
         ) : (
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
               {detailLoading ? (
                 <Skeleton className="h-64 w-full" />
               ) : versionDetail?.content ? (
@@ -161,7 +166,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                   title="Empty version"
                   description="No content was saved in this version."
                   compact
-                  className="min-h-[120px]"
+                  className="flex-1 min-h-[40vh]"
                 />
               )}
             </div>
@@ -169,7 +174,8 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
               <Button
                 onClick={handleRestore}
                 disabled={restoreVersion.isPending}
-                className="w-full gap-2"
+                className="w-full gap-2 h-8"
+                size="sm"
               >
                 {restoreVersion.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

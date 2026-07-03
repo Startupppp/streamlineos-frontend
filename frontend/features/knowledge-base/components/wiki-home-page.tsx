@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, FileText, Clock, Star } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { EmptyKnowledgeIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -17,7 +18,8 @@ import {
   useCreateKbPage,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
-import type { KbPage, KbPageTreeNode } from "@/hooks/api/kb/pages";
+import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -41,7 +43,7 @@ function PageCard({ id, icon, title, updatedAt }: PageCardProps) {
   return (
     <Link
       href={`/knowledge-base/pages/${id}`}
-      className="block p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+      className="block p-3 rounded-lg border border-border bg-card shadow-soft hover:bg-muted/50 transition-colors"
     >
       <div className="flex items-start gap-3">
         <span className="text-xl shrink-0">
@@ -63,11 +65,17 @@ export default function WikiHomePage() {
   const { data: treeNodes = [], isLoading: treeLoading } = useKbPagesTree();
   const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
+  const shouldReduceMotion = useReducedMotion();
 
   const rootPages: KbPageTreeNode[] = treeNodes.filter(
     (n: KbPageTreeNode) => n.parentPageId === null
   );
   const isLoading = recentLoading || treeLoading;
+  const pageCount = treeNodes.length;
+
+  const itemVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : fadeUp;
 
   const handleNewPage = useCallback(() => {
     createPage.mutate(
@@ -110,16 +118,18 @@ export default function WikiHomePage() {
     </Button>
   ) : undefined;
 
+  const subtitle = pageCount > 0 ? `${pageCount} page${pageCount === 1 ? "" : "s"}` : undefined;
+
   return (
-    <PageWrapper title="Wiki" actions={newPageAction}>
+    <PageWrapper title="Wiki" subtitle={subtitle} actions={newPageAction}>
       {recentPages.length > 0 && (
-        <section className="mb-8">
+        <section className="mb-6">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">Recently visited</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {(recentPages as KbPage[]).slice(0, 6).map((page) => (
+            {recentPages.slice(0, 6).map((page) => (
               <PageCard
                 key={page.id}
                 id={page.id}
@@ -133,13 +143,13 @@ export default function WikiHomePage() {
       )}
 
       {favoritePages.length > 0 && (
-        <section className="mb-8">
+        <section className="mb-6">
           <div className="flex items-center gap-2 mb-3">
             <Star className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">Favorites</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {(favoritePages as KbPage[]).slice(0, 6).map((page) => (
+            {favoritePages.slice(0, 6).map((page) => (
               <PageCard
                 key={page.id}
                 id={page.id}
@@ -155,20 +165,26 @@ export default function WikiHomePage() {
       {rootPages.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-foreground mb-3">All pages</h2>
-          <div className="space-y-1">
+          <motion.div
+            className="space-y-1"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
             {rootPages.map((node) => (
-              <Link
-                key={node.id}
-                href={`/knowledge-base/pages/${node.id}`}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <span className="text-base shrink-0">
-                  {node.icon ?? <FileText className="h-4 w-4 text-muted-foreground" />}
-                </span>
-                <span className="flex-1 text-sm truncate">{node.title || "Untitled"}</span>
-              </Link>
+              <motion.div key={node.id} variants={itemVariants}>
+                <Link
+                  href={`/knowledge-base/pages/${node.id}`}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <span className="text-base shrink-0">
+                    {node.icon ?? <FileText className="h-4 w-4 text-muted-foreground" />}
+                  </span>
+                  <span className="flex-1 text-sm truncate">{node.title || "Untitled"}</span>
+                </Link>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </section>
       )}
     </PageWrapper>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, Loader2 } from "lucide-react";
 import {
@@ -24,6 +24,8 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
   const [inputValue, setInputValue] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const { data: results = [], isFetching } = useKbPagesSearch(debouncedQ);
+  const resultsRef = useRef<KbPageSearchResult[]>([]);
+  resultsRef.current = results;
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQ(inputValue.trim()), 300);
@@ -41,8 +43,11 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
     [onOpenChange]
   );
 
-  const handleSelectResult = useCallback(
-    (result: KbPageSearchResult) => {
+  const handleResultSelect = useCallback(
+    (value: string) => {
+      const id = Number(value.split("-")[0]);
+      const result = resultsRef.current.find((r) => r.id === id);
+      if (!result) return;
       router.push(`/knowledge-base/pages/${result.id}`);
       handleOpenChange(false);
     },
@@ -75,7 +80,7 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
               <CommandItem
                 key={result.id}
                 value={`${result.id}-${result.title}`}
-                onSelect={() => handleSelectResult(result)}
+                onSelect={handleResultSelect}
               >
                 <span className="mr-2 text-base">
                   {result.icon ?? <FileText className="h-4 w-4" />}

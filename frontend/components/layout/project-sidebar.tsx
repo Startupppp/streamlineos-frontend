@@ -202,7 +202,7 @@ function DesktopSidebar({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setIsCollapsed((c) => !c)}
+          onClick={handleToggleCollapse}
           className={cn(
             "w-full h-7 text-muted-foreground hover:text-foreground",
             isCollapsed ? "justify-center px-0" : "justify-start"

@@ -54,6 +54,7 @@ export function useClientAccount(id: number) {
 export function useLogClientActivity() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["clients", "activities", "create"] as const,
     mutationFn: (input: LogClientActivityInput) =>
       apiClient.post<ClientActivity>(
         `/clients/${input.clientAccountId}/activities`,
@@ -82,6 +83,7 @@ export function useCrmAssignmentStats(enabled = false) {
 export function useAssignCrmReps() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["clients", "assignCrm"] as const,
     mutationFn: () =>
       apiClient.post<CrmAssignmentStats>("/clients/assign-crm", {}),
     onSuccess: () => {
@@ -102,6 +104,7 @@ export function useRenewalAccounts() {
 export function useUpdateRenewal() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["clients", "renewals", "update"] as const,
     mutationFn: ({ accountId, ...data }: UpdateRenewalInput) =>
       apiClient.patch<ClientAccount>(`/clients/renewals/${accountId}`, data),
     onSuccess: (_, vars) => {
@@ -145,6 +148,7 @@ export function useClientOpportunities(clientId?: number) {
 export function useCreateClientOpportunity() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["clientOpportunities", "create"] as const,
     mutationFn: (input: CreateClientOpportunityInput) =>
       apiClient.post<ClientOpportunity>("/clients/opportunities", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
@@ -154,6 +158,7 @@ export function useCreateClientOpportunity() {
 export function useUpdateClientOpportunity() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["clientOpportunities", "update"] as const,
     mutationFn: ({ id, ...data }: Partial<CreateClientOpportunityInput> & { id: number }) =>
       apiClient.patch<ClientOpportunity>(`/clients/opportunities/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
@@ -163,6 +168,7 @@ export function useUpdateClientOpportunity() {
 export function useDeleteClientOpportunity() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["clientOpportunities", "delete"] as const,
     mutationFn: (id: number) => apiClient.delete(`/clients/opportunities/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
   });
@@ -188,6 +194,7 @@ export function useClientOnboardingItems(clientId: number) {
 export function useCreateOnboardingItem() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["clientOnboarding", "items", "create"] as const,
     mutationFn: (input: {
       clientId: number; title: string; description?: string;
       assignedTo?: string; dueDate?: string; templateId?: number;
@@ -199,6 +206,7 @@ export function useCreateOnboardingItem() {
 export function useToggleOnboardingItem() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["clientOnboarding", "items", "toggle"] as const,
     mutationFn: ({ id, completed }: { id: number; completed: boolean; clientId: number }) =>
       apiClient.patch<OnboardingItem>(`/clients/onboarding/items/${id}`, {
         completedAt: completed ? new Date().toISOString() : null,
@@ -210,6 +218,7 @@ export function useToggleOnboardingItem() {
 export function useDeleteOnboardingItem() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["clientOnboarding", "items", "delete"] as const,
     mutationFn: ({ id }: { id: number; clientId: number }) =>
       apiClient.delete(`/clients/onboarding/items/${id}`),
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
@@ -219,6 +228,7 @@ export function useDeleteOnboardingItem() {
 export function useCreateOnboardingTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["clientOnboarding", "templates", "create"] as const,
     mutationFn: (input: { name: string; description?: string; isDefault?: boolean }) =>
       apiClient.post<OnboardingTemplate>("/clients/onboarding/templates", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.templates() }),
@@ -245,6 +255,7 @@ export function useCsatSurveyResponses(surveyId: number) {
 export function useCreateCsatSurvey() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["csat", "create"] as const,
     mutationFn: (input: { title: string; question?: string; clientId?: number; scaleMax?: number }) =>
       apiClient.post<CsatSurvey>("/csat", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.csat.all }),
@@ -254,6 +265,7 @@ export function useCreateCsatSurvey() {
 export function useUpdateCsatSurvey() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["csat", "update"] as const,
     mutationFn: ({ id, ...data }: { id: number; status?: string; title?: string; question?: string }) =>
       apiClient.patch<CsatSurvey>(`/csat/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.csat.all }),
@@ -263,6 +275,7 @@ export function useUpdateCsatSurvey() {
 export function useDeleteCsatSurvey() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["csat", "delete"] as const,
     mutationFn: (id: number) => apiClient.delete(`/csat/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.csat.all }),
   });

@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared/error-state";
 import { staggerContainer } from "@/lib/motion-variants";
 import { PipelineFunnelChart } from "@/features/crm/analytics/pipeline-funnel-chart";
 import { SourceBreakdownChart } from "@/features/crm/analytics/source-breakdown-chart";
@@ -35,6 +36,8 @@ export default function CrmAnalyticsPage() {
 
   const {
     isLoading,
+    isError,
+    refetch,
     revenueGoalLoading,
     leaderboard,
     slaReport,
@@ -50,8 +53,26 @@ export default function CrmAnalyticsPage() {
     revenueGoalData,
   } = useAnalyticsData(dateRange);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   if (isLoading) {
     return <AnalyticsLoadingSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="CRM Analytics"
+        subtitle="Pipeline insights and performance metrics"
+      >
+        <ErrorState
+          title="Failed to load analytics"
+          description="Check your connection and try again."
+          onRetry={handleRetry}
+          className="flex-1 min-h-[50vh]"
+        />
+      </PageWrapper>
+    );
   }
 
   return (

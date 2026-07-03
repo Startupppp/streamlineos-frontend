@@ -1345,7 +1345,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
   { key: "helpdesk", label: "Helpdesk", href: "/support", icon: LifeBuoy },
-  { key: "documents", label: "Documents", href: "/kb", icon: Library },
+  { key: "documents", label: "Documents", href: "/support/kb", icon: Library },
   { key: "analytics", label: "Analytics", href: "/reports", icon: BarChart3 },
   {
     key: "administration",
@@ -1480,13 +1480,13 @@ export function getNavGroupsForProduct(
         routes: [
           {
             label: "Knowledge Base",
-            icon: Library,
-            href: "/kb",
+            icon: BookOpen,
+            href: "/support/kb",
             requiredPermission: "support:kb:view",
           },
           {
             label: "Wiki",
-            icon: Library,
+            icon: NotebookPen,
             href: "/knowledge-base",
             requiredPermission: "kb:pages:view",
           },
@@ -1546,7 +1546,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/accounting")) return "finance";
   if (pathname.startsWith("/analytics") || pathname.startsWith("/reports"))
     return "analytics";
-  if (pathname.startsWith("/kb")) return "documents";
+  if (pathname.startsWith("/support/kb")) return "documents";
   if (pathname.startsWith("/support")) return "helpdesk";
   if (pathname.startsWith("/knowledge-base")) return "documents";
   if (

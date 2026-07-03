@@ -68,8 +68,10 @@ export default function MovePageDialog({
     setSelectedParent(null);
   }
 
-  function handleSelectNode(id: number) {
-    setSelectedParent(id);
+  function handleNodeButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
+    const id = e.currentTarget.dataset.nodeId;
+    if (!id) return;
+    setSelectedParent(Number(id));
   }
 
   function handleCancel() {
@@ -107,13 +109,14 @@ export default function MovePageDialog({
                   return (
                     <button
                       key={node.id}
+                      data-node-id={String(node.id)}
                       className={`w-full text-left py-2 pr-3 rounded-md text-sm transition-colors flex items-center gap-2 ${
                         selectedParent === node.id
                           ? "bg-blue-50 text-blue-700 font-medium"
                           : "hover:bg-muted"
                       }`}
                       style={{ paddingLeft: 12 + depth * 16 }}
-                      onClick={() => handleSelectNode(node.id)}
+                      onClick={handleNodeButtonClick}
                     >
                       <span className="shrink-0 text-base leading-none">
                         {node.icon ?? <FileText className="h-3.5 w-3.5" />}
@@ -126,10 +129,10 @@ export default function MovePageDialog({
           </div>
         </ScrollArea>
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
+          <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={movePage.isPending}>
+          <Button size="sm" onClick={handleConfirm} disabled={movePage.isPending}>
             {movePage.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Move here
           </Button>

@@ -129,7 +129,7 @@ export default function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Trash2 className="h-4 w-4" />
@@ -150,7 +150,7 @@ export default function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
               title="Trash is empty"
               description="Deleted pages will appear here."
               compact
-              className="min-h-[160px]"
+              className="flex-1 min-h-[40vh]"
             />
           )}
           <div className="space-y-2 p-1">

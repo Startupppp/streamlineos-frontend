@@ -7,18 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fadeUp } from "@/lib/motion-variants";
 
-async function downloadXLSX(data: object[], filename: string) {
+async function downloadXLSX(data: Record<string, unknown>[], filename: string) {
   if (data.length === 0) return;
   const ExcelJS = (await import("exceljs")).default;
   const workbook = new ExcelJS.Workbook();
   const ws = workbook.addWorksheet("Data");
-  const first = data[0] as Record<string, unknown>;
+  const first = data[0];
+  if (!first) return;
   const headers = Object.keys(first);
   ws.columns = headers.map((h) => ({ header: h, key: h, width: Math.max(h.length + 4, 12) }));
   ws.getRow(1).font = { bold: true };
   for (const row of data) {
-    const r = row as Record<string, unknown>;
-    ws.addRow(headers.map((h) => r[h] ?? ""));
+    ws.addRow(headers.map((h) => row[h] ?? ""));
   }
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
@@ -34,13 +34,13 @@ async function downloadXLSX(data: object[], filename: string) {
 
 interface AnalyticsChartCardProps {
   title: string;
-  data: object[];
+  data: Record<string, unknown>[];
   filename: string;
   children: React.ReactNode;
 }
 
 export function AnalyticsChartCard({ title, data, filename, children }: AnalyticsChartCardProps) {
-  const handleDownload = useCallback(() => downloadXLSX(data, filename), [data, filename]);
+  const handleDownload = useCallback(() => { void downloadXLSX(data, filename); }, [data, filename]);
   return (
     <motion.div variants={fadeUp} className="h-full">
       <Card className="shadow-sm h-full">

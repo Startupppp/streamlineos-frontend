@@ -111,6 +111,7 @@ export function useNpsStats() {
 export function useCreateNpsSurvey() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["nps", "create"] as const,
     mutationFn: (input: CreateNpsSurveyInput) =>
       apiClient.post<NpsSurvey>("/customer-executive/nps", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.nps.all }),
@@ -120,6 +121,7 @@ export function useCreateNpsSurvey() {
 export function useUpdateNpsSurvey() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["nps", "update"] as const,
     mutationFn: ({ id, ...input }: UpdateNpsSurveyInput) =>
       apiClient.patch<NpsSurvey>(`/customer-executive/nps/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.nps.all }),
@@ -129,6 +131,7 @@ export function useUpdateNpsSurvey() {
 export function useDeleteNpsSurvey() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["nps", "delete"] as const,
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/customer-executive/nps/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.nps.all }),
@@ -150,6 +153,7 @@ export function usePublicNpsSurvey(token: string) {
 
 export function useSubmitNpsResponse(token: string) {
   return useMutation({
+    mutationKey: ["nps", "respond"] as const,
     mutationFn: (input: SubmitNpsResponseInput) =>
       apiClient.post<{ success: boolean }>(`/public/nps/${token}`, input),
   });

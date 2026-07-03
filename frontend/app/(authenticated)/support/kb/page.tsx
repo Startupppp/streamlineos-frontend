@@ -1,5 +1,15 @@
-import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { LoadingState } from "@/components/shared/loading-state";
+import { KbManagerContent } from "@/features/kb/components/kb-manager-content";
 
-export default function SupportKbRedirectPage() {
-  redirect("/kb");
+function KbManagerFallback() {
+  return <LoadingState variant="page" />;
+}
+
+export default function SupportKbPage() {
+  return (
+    <Suspense fallback={<KbManagerFallback />}>
+      <KbManagerContent />
+    </Suspense>
+  );
 }

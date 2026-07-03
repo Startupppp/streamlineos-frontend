@@ -94,6 +94,7 @@ export function useDealDetail(id: number) {
 export function useCreateDeal() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["deals", "create"] as const,
     mutationFn: (input: CreateDealInput) => apiClient.post<Deal>("/deals", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
@@ -106,6 +107,7 @@ export function useCreateDeal() {
 export function useUpdateDeal() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["deals", "update"] as const,
     mutationFn: ({ id, ...data }: UpdateDealInput) =>
       apiClient.patch<Deal>(`/deals/${id}`, data),
     onSuccess: (_, vars) => {
@@ -121,22 +123,23 @@ export function useUpdateDeal() {
 export function useUpdateDealStage() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["deals", "updateStage"] as const,
     mutationFn: ({ id, stage, lostReason, version }: UpdateDealStageInput) =>
       apiClient.patch<Deal>(`/deals/${id}`, { stage, lostReason, version }),
     onMutate: async ({ id, stage }) => {
       await qc.cancelQueries({ queryKey: queryKeys.deals.all });
-      const previous = qc.getQueryData<Deal[]>(queryKeys.deals.all);
-      if (previous) {
-        qc.setQueryData<Deal[]>(
-          queryKeys.deals.all,
-          previous.map((d) => (d.id === id ? { ...d, stage: stage as Deal["stage"] } : d))
-        );
-      }
-      return { previous };
+      const snapshots = qc.getQueriesData<Deal[]>({ queryKey: queryKeys.deals.all });
+      qc.setQueriesData<Deal[]>({ queryKey: queryKeys.deals.all }, (old) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((d) => (d.id === id ? { ...d, stage: stage as Deal["stage"] } : d));
+      });
+      return { snapshots };
     },
     onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        qc.setQueryData(queryKeys.deals.all, context.previous);
+      if (context) {
+        for (const [key, data] of context.snapshots) {
+          qc.setQueryData(key, data);
+        }
       }
     },
     onSettled: (_data, _err, vars) => {
@@ -152,6 +155,7 @@ export function useUpdateDealStage() {
 export function useDeleteDeal() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["deals", "delete"] as const,
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/deals/${id}`),
     onSuccess: () => {
@@ -165,6 +169,7 @@ export function useDeleteDeal() {
 export function useCloneDeal() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["deals", "clone"] as const,
     mutationFn: (id: number) =>
       apiClient.post<Deal>(`/deals/${id}/clone`, {}),
     onSuccess: () => {
@@ -191,6 +196,7 @@ export function useDealActivities(dealId: number, limit?: number) {
 export function useLogDealActivity() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["dealActivities", "create"] as const,
     mutationFn: ({ dealId, ...data }: LogDealActivityInput) =>
       apiClient.post<DealActivity>(`/deals/${dealId}/activities`, data),
     onSuccess: (_, vars) => {
@@ -212,6 +218,7 @@ export function useDealMeetings(dealId: number) {
 export function useCreateDealMeeting(dealId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["deals", "meetings", "create"] as const,
     mutationFn: (input: CreateDealMeetingInput) =>
       apiClient.post<DealMeeting>(`/deals/${dealId}/meetings`, input),
     onSuccess: () => {
@@ -223,6 +230,7 @@ export function useCreateDealMeeting(dealId: number) {
 export function useDeleteDealMeeting(dealId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["deals", "meetings", "delete"] as const,
     mutationFn: (meetingId: number) =>
       apiClient.delete<{ success: boolean }>(`/deals/${dealId}/meetings/${meetingId}`),
     onSuccess: () => {
@@ -251,7 +259,7 @@ export function useDealAging() {
   return useQuery<AgingResponse>({
     queryKey: queryKeys.deals.aging(),
     queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
-    staleTime: 5 * 60_000,
+    staleTime: 0,
     refetchInterval: 300_000,
   });
 }
@@ -259,6 +267,7 @@ export function useDealAging() {
 export function useResolveDealApproval() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["deals", "approvals", "resolve"] as const,
     mutationFn: (input: { approvalId: number; action: "approve" | "reject"; rejectionReason?: string }) =>
       apiClient.post("/deals/approvals", input),
     onSuccess: () => {
@@ -279,6 +288,7 @@ export function useSalesQuotas(params?: { userId?: string; period?: string }) {
 export function useCreateSalesQuota() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["salesQuotas", "create"] as const,
     mutationFn: (input: { userId: string; period: string; startDate: string; endDate: string; targetRevenue: string; notes?: string }) =>
       apiClient.post<SalesQuota>("/sales/quotas", input),
     onSuccess: () => {
@@ -316,6 +326,7 @@ export function useCommissions(params?: { userId?: string; status?: string }) {
 export function useUpdateCommissionStatus() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["commissions", "updateStatus"] as const,
     mutationFn: ({ id, status }: { id: number; status: "approved" | "paid" }) =>
       apiClient.patch(`/sales/commissions/${id}`, { status }),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "commissions"] }),
@@ -333,6 +344,7 @@ export function useCommissionRules() {
 export function useCreateCommissionRule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["commissions", "rules", "create"] as const,
     mutationFn: (input: { name: string; type: string; flatRate?: string; tiers?: Array<{ minValue: number; maxValue?: number; rate: number }>; appliesTo?: string }) =>
       apiClient.post("/sales/commission-rules", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "commissionRules"] }),

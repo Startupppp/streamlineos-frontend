@@ -393,7 +393,7 @@ export default function PageDocumentHeader({
       </AlertDialog>
 
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md gap-3">
           <DialogHeader>
             <DialogTitle>Save as template</DialogTitle>
           </DialogHeader>
@@ -403,10 +403,11 @@ export default function PageDocumentHeader({
             placeholder="Template name"
           />
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancelTemplate}>
+            <Button variant="outline" size="sm" onClick={handleCancelTemplate}>
               Cancel
             </Button>
             <Button
+              size="sm"
               onClick={handleConfirmTemplate}
               disabled={createTemplate.isPending || !templateName.trim()}
             >

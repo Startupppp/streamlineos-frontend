@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Trash2, LayoutTemplate, PanelLeftOpen, Star } from "lucide-react";
+import { Plus, Search, Trash2, LayoutTemplate, PanelLeftOpen, PanelLeftClose, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -22,6 +22,9 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const canCreate = useCan("kb:pages:create");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    () => typeof window !== "undefined" && localStorage.getItem("wiki-tree-collapsed") === "true"
+  );
 
   const handleNewPage = useCallback(() => {
     createPage.mutate(
@@ -53,6 +56,14 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     setMobileOpen(open);
   }, []);
 
+  function handleToggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("wiki-tree-collapsed", String(next));
+      return next;
+    });
+  }
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -68,22 +79,8 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     router.push("/knowledge-base");
   }
 
-  const sidebarContent = (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 py-2 shrink-0">
-        <span className="text-sm font-semibold text-foreground">Wiki</span>
-        {canCreate && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={handleNewPage}
-            disabled={createPage.isPending}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+  const sidebarInner = (
+    <>
       <ScrollArea className="flex-1 min-h-0">
         <div className="px-2 pb-2">
           {favorites.length > 0 && (
@@ -144,13 +141,78 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           <span>Trash</span>
         </Button>
       </div>
+    </>
+  );
+
+  const mobileSidebarContent = (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-3 py-2 shrink-0">
+        <span className="text-sm font-semibold text-foreground">Wiki</span>
+        {canCreate && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={handleNewPage}
+            disabled={createPage.isPending}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+      {sidebarInner}
     </div>
   );
 
   return (
     <div className="flex h-full overflow-hidden bg-background">
-      <aside className="hidden md:flex flex-col w-[260px] shrink-0 border-r border-border bg-card/50">
-        {sidebarContent}
+      <aside
+        className={`hidden md:flex flex-col shrink-0 border-r border-border bg-card/50 overflow-hidden transition-[width] duration-300 ease-in-out ${
+          collapsed ? "w-10" : "w-[260px]"
+        }`}
+      >
+        {collapsed ? (
+          <div className="flex flex-col items-center py-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={handleToggleCollapsed}
+              aria-label="Expand sidebar"
+            >
+              <PanelLeftOpen className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col h-full">
+            <div className="flex items-center justify-between px-3 py-2 shrink-0">
+              <span className="text-sm font-semibold text-foreground">Wiki</span>
+              <div className="flex items-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={handleToggleCollapsed}
+                  aria-label="Collapse sidebar"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </Button>
+                {canCreate && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={handleNewPage}
+                    disabled={createPage.isPending}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            {sidebarInner}
+          </div>
+        )}
       </aside>
 
       <Sheet open={mobileOpen} onOpenChange={handleMobileOpenChange}>
@@ -164,7 +226,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[260px] p-0 flex flex-col">
-          {sidebarContent}
+          {mobileSidebarContent}
         </SheetContent>
       </Sheet>
 

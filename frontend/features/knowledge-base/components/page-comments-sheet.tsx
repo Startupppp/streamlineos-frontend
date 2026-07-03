@@ -96,10 +96,10 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium">{comment.authorName ?? "Unknown"}</span>
+            <span className="text-[13px] font-medium">{comment.authorName ?? "Unknown"}</span>
             <span className="text-xs text-muted-foreground">{formatRelativeTime(comment.createdAt)}</span>
             {isResolved && (
-              <Badge variant="secondary" className="text-xs h-4">
+              <Badge variant="secondary" className="text-[10px] h-4 px-1.5 py-0">
                 Resolved
               </Badge>
             )}
@@ -116,11 +116,11 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
                   size="sm"
                   onClick={handleSaveEdit}
                   disabled={updateComment.isPending}
-                  className="h-6 text-xs"
+                  className="h-7 text-xs"
                 >
                   Save
                 </Button>
-                <Button size="sm" variant="ghost" onClick={handleCancelEdit} className="h-6 text-xs">
+                <Button size="sm" variant="ghost" onClick={handleCancelEdit} className="h-7 text-xs">
                   Cancel
                 </Button>
               </div>
@@ -131,14 +131,14 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
           {!editing && (
             <div className="flex items-center gap-2 mt-1">
               <button
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 onClick={handleReplyClick}
               >
                 Reply
               </button>
               {!isResolved && (
                 <button
-                  className="text-xs text-muted-foreground hover:text-green-600"
+                  className="text-xs text-muted-foreground hover:text-green-600 transition-colors"
                   onClick={handleResolve}
                 >
                   <Check className="h-3 w-3 inline mr-0.5" />
@@ -146,14 +146,14 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
                 </button>
               )}
               <button
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 onClick={handleStartEdit}
               >
                 <Edit2 className="h-3 w-3 inline mr-0.5" />
                 Edit
               </button>
               <button
-                className="text-xs text-muted-foreground hover:text-destructive"
+                className="text-xs text-muted-foreground hover:text-destructive transition-colors"
                 onClick={handleDelete}
               >
                 <X className="h-3 w-3 inline mr-0.5" />
@@ -223,69 +223,71 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
-        <SheetHeader className="px-6 py-4 border-b shrink-0">
+      <SheetContent side="right" className="p-0 flex flex-col gap-0 sm:max-w-md">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             Comments
           </SheetTitle>
         </SheetHeader>
-        <ScrollArea className="flex-1 min-h-0 px-6 py-4">
-          {isLoading && (
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex gap-2">
-                  <Skeleton className="h-6 w-6 rounded-full shrink-0" />
-                  <div className="flex-1 space-y-1">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-8 w-full" />
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="px-6 py-4">
+            {isLoading && (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Skeleton className="h-6 w-6 rounded-full shrink-0" />
+                    <div className="flex-1 space-y-1">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-8 w-full" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {!isLoading && topLevel.length === 0 && resolved.length === 0 && (
-            <EmptyState
-              title="No comments yet"
-              description="Be the first to add a comment."
-              compact
-              className="min-h-[120px]"
-            />
-          )}
-          <div className="space-y-5">
-            {topLevel.map((comment) => (
-              <CommentRow
-                key={comment.id}
-                comment={comment}
-                replies={comments.filter((c) => c.parentId === comment.id)}
-                pageId={pageId}
-                onReply={handleSetReplyingTo}
-              />
-            ))}
-            {resolved.length > 0 && (
-              <>
-                <Separator />
-                <p className="text-xs font-medium text-muted-foreground">
-                  Resolved ({resolved.length})
-                </p>
-                {resolved.map((comment) => (
-                  <CommentRow
-                    key={comment.id}
-                    comment={comment}
-                    replies={comments.filter((c) => c.parentId === comment.id)}
-                    pageId={pageId}
-                    onReply={handleSetReplyingTo}
-                  />
                 ))}
-              </>
+              </div>
             )}
+            {!isLoading && topLevel.length === 0 && resolved.length === 0 && (
+              <EmptyState
+                title="No comments yet"
+                description="Be the first to add a comment."
+                compact
+                className="flex-1 min-h-[40vh]"
+              />
+            )}
+            <div className="space-y-5">
+              {topLevel.map((comment) => (
+                <CommentRow
+                  key={comment.id}
+                  comment={comment}
+                  replies={comments.filter((c) => c.parentId === comment.id)}
+                  pageId={pageId}
+                  onReply={handleSetReplyingTo}
+                />
+              ))}
+              {resolved.length > 0 && (
+                <>
+                  <Separator />
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Resolved ({resolved.length})
+                  </p>
+                  {resolved.map((comment) => (
+                    <CommentRow
+                      key={comment.id}
+                      comment={comment}
+                      replies={comments.filter((c) => c.parentId === comment.id)}
+                      pageId={pageId}
+                      onReply={handleSetReplyingTo}
+                    />
+                  ))}
+                </>
+              )}
+            </div>
           </div>
         </ScrollArea>
         <div className="shrink-0 border-t px-6 py-4 space-y-2">
           {replyingTo && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
               <span>Replying to comment…</span>
-              <button onClick={handleClearReply} className="ml-auto hover:text-foreground">
+              <button onClick={handleClearReply} className="ml-auto hover:text-foreground transition-colors">
                 <X className="h-3 w-3" />
               </button>
             </div>
@@ -296,18 +298,19 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
             placeholder="Write a comment…"
             className="resize-none min-h-[80px] text-sm"
           />
-          <Button
-            onClick={handlePost}
-            disabled={!newContent.trim() || createComment.isPending}
-            size="sm"
-            className="w-full"
-          >
-            {createComment.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Post comment"
-            )}
-          </Button>
+          <div className="flex justify-end">
+            <Button
+              onClick={handlePost}
+              disabled={!newContent.trim() || createComment.isPending}
+              className="h-8"
+            >
+              {createComment.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Post comment"
+              )}
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

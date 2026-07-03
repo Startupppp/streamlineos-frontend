@@ -65,7 +65,7 @@ export function KbNewArticleDialog({ categories, onClose }: KbNewArticleDialogPr
         onSuccess: (article) => {
           toast.success("Article created");
           onClose();
-          router.push(`/kb/${article.id}`);
+          router.push(`/support/kb/${article.id}`);
         },
         onError: (e) => toast.error(getApiError(e)),
       },

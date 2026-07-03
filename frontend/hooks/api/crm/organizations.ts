@@ -39,6 +39,7 @@ export function useCrmOrganizationDetail(id: number) {
 export function useCreateCrmOrganization() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crmOrganizations", "create"] as const,
     mutationFn: (input: CreateCrmOrganizationInput) =>
       apiClient.post<CrmOrganization>("/crm/organizations", input),
     onSuccess: () => {
@@ -50,6 +51,7 @@ export function useCreateCrmOrganization() {
 export function useUpdateCrmOrganization() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crmOrganizations", "update"] as const,
     mutationFn: ({ id, ...input }: Partial<CreateCrmOrganizationInput> & { id: number; parentId?: number | null; notes?: string | null; healthScore?: number | null }) =>
       apiClient.patch<CrmOrganization>(`/crm/organizations/${id}`, input),
     onSuccess: (_data, variables) => {
@@ -62,6 +64,7 @@ export function useUpdateCrmOrganization() {
 export function useDeleteCrmOrganization() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["crmOrganizations", "delete"] as const,
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/organizations/${id}`),
     onSuccess: () => {
