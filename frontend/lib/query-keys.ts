@@ -272,6 +272,7 @@ export const queryKeys = {
 
   onboardingFlow: {
     all: [...base, "onboarding-flow"] as const,
+    session: () => [...base, "onboarding-flow", "session"] as const,
     moduleChecklists: () => [...base, "onboarding-flow", "module-checklists"] as const,
     tours: () => [...base, "onboarding-flow", "tours"] as const,
   },

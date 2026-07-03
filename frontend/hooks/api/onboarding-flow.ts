@@ -4,6 +4,32 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
+export type OnboardingFlowSession = {
+  id: number;
+  status: "not_started" | "in_progress" | "completed" | "skipped" | "abandoned";
+  currentStep: string | null;
+  completedSteps: string[];
+};
+
+export function useOnboardingSessionQuery(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.onboardingFlow.session(),
+    queryFn: () => apiClient.get<OnboardingFlowSession>("/onboarding/session"),
+    staleTime: 30_000,
+    retry: false,
+    enabled,
+  });
+}
+
+export function usePatchOnboardingSessionMutation() {
+  return useMutation({
+    mutationKey: ["onboarding", "session", "patch"],
+    mutationFn: (payload: { currentStep?: string; completedSteps?: string[] }) =>
+      apiClient.patch<OnboardingFlowSession>("/onboarding/session", payload),
+    retry: false,
+  });
+}
+
 export type ChecklistItemStatus = "todo" | "in_progress" | "done" | "skipped" | "blocked";
 
 export type ModuleChecklistItem = {

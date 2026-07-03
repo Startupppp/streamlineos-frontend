@@ -80,16 +80,8 @@ export function PersonalInfoTab({
 
   const { errors } = form.formState;
 
-  function buildFormData(values: PersonalFormValues): FormData {
-    const fd = new FormData();
-    Object.entries(values).forEach(([k, v]) => {
-      if (v !== undefined && v !== null) fd.append(k, String(v));
-    });
-    return fd;
-  }
-
   function handleFormSubmit(values: PersonalFormValues) {
-    mutate(buildFormData(values), {
+    mutate(values, {
       onSuccess: () => {
         toast.success("Personal details saved!");
         onComplete(values as Record<string, string | undefined>);
