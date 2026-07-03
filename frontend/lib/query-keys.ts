@@ -270,6 +270,12 @@ export const queryKeys = {
     session: () => [...base, "org-setup", "session"] as const,
   },
 
+  onboardingFlow: {
+    all: [...base, "onboarding-flow"] as const,
+    moduleChecklists: () => [...base, "onboarding-flow", "module-checklists"] as const,
+    tours: () => [...base, "onboarding-flow", "tours"] as const,
+  },
+
   access: {
     all: [...base, "access"] as const,
     me: () => [...base, "access", "me"] as const,
