@@ -220,10 +220,10 @@ export default function ModulesPage({
     >
       <div className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="Total" value={total} icon={Package} color="blue" index={0} />
-          <StatCard label="In Progress" value={inProgress} icon={Activity} color="blue" index={1} />
-          <StatCard label="Completed" value={completed} icon={CheckCircle2} color="green" index={2} />
-          <StatCard label="Planned" value={planned} icon={Calendar} color="amber" index={3} />
+          <StatCard label="Total" value={total} icon={Package} tone="blue" index={0} />
+          <StatCard label="In Progress" value={inProgress} icon={Activity} tone="blue" index={1} />
+          <StatCard label="Completed" value={completed} icon={CheckCircle2} tone="emerald" index={2} />
+          <StatCard label="Planned" value={planned} icon={Calendar} tone="amber" index={3} />
         </div>
 
         {!modules?.length ? (

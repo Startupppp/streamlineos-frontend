@@ -277,9 +277,9 @@ export default function WarehousesPage() {
       {filtered.length > 0 ? (
         <motion.div
           className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-          {...(shouldReduceMotion
-            ? {}
-            : { variants: staggerContainer, initial: "hidden", animate: "visible" })}
+          variants={shouldReduceMotion ? undefined : staggerContainer}
+          initial={shouldReduceMotion ? undefined : "hidden"}
+          animate={shouldReduceMotion ? undefined : "visible"}
         >
           {filtered.map((wh) => (
             <WarehouseCard key={wh.id} warehouse={wh} />

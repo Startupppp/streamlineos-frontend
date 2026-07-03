@@ -107,7 +107,7 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
               className="flex items-center gap-4"
             >
               <div className="w-24 text-right shrink-0">
-                <span className="text-xs font-medium text-slate-600">
+                <span className="text-xs font-medium text-muted-foreground">
                   {STAGE_LABELS[stage]}
                 </span>
               </div>
@@ -155,9 +155,9 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 + idx * 0.05 }}
-            className={`rounded-xl border p-3 text-center ${STAGE_BG[stage]}`}
+            className={`rounded-lg border p-3 text-center ${STAGE_BG[stage]}`}
           >
-            <p className="text-lg font-bold text-slate-800">{count}</p>
+            <p className="text-lg font-bold text-foreground">{count}</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">{STAGE_LABELS[stage]}</p>
           </motion.div>
         ))}

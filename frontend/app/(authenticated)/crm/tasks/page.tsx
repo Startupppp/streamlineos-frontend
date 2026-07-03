@@ -51,20 +51,19 @@ function getTaskBucket(dueDate: string | null): TaskBucket {
 
 const BUCKET_ORDER: TaskBucket[] = ["OVERDUE", "TODAY", "THIS_WEEK", "UPCOMING", "NO_DATE"];
 
-const TASK_TYPES: readonly TaskType[] = ["CALL", "EMAIL", "MEETING", "DEMO", "FOLLOW_UP", "REMINDER", "CUSTOM"];
-const TASK_STATUSES: readonly TaskStatus[] = ["pending", "completed", "cancelled"];
-const TASK_ENTITY_TYPES: readonly TaskEntityType[] = ["LEAD", "DEAL", "CONTACT", "PROJECT"];
-
 function isTaskType(v: string): v is TaskType {
-  return (TASK_TYPES as readonly string[]).includes(v);
+  const types: string[] = ["CALL", "EMAIL", "MEETING", "DEMO", "FOLLOW_UP", "REMINDER", "CUSTOM"];
+  return types.includes(v);
 }
 
 function isTaskStatus(v: string): v is TaskStatus {
-  return (TASK_STATUSES as readonly string[]).includes(v);
+  const statuses: string[] = ["pending", "completed", "cancelled"];
+  return statuses.includes(v);
 }
 
 function isTaskEntityType(v: string): v is TaskEntityType {
-  return (TASK_ENTITY_TYPES as readonly string[]).includes(v);
+  const entityTypes: string[] = ["LEAD", "DEAL", "CONTACT", "PROJECT"];
+  return entityTypes.includes(v);
 }
 
 function CrmTasksContent() {

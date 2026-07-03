@@ -143,7 +143,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
             <CardTitle className="text-sm">Member Cost Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="rounded-lg border border-border overflow-hidden">
+            <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">

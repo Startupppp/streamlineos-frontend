@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { RefreshCw, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { RefreshCw, Users, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -201,7 +201,7 @@ function DuplicatesSkeleton() {
   return (
     <div className="space-y-6">
       <StatCardGrid cols={2}>
-        <StatCard label="Duplicate Groups Found" value={0} tone="red" icon={Users} isLoading />
+        <StatCard label="Duplicate Groups Found" value={0} tone="red" icon={AlertTriangle} isLoading />
         <StatCard label="Leads at Risk" value={0} tone="amber" icon={Users} isLoading />
       </StatCardGrid>
       <div className="space-y-4">

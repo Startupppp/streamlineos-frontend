@@ -362,9 +362,9 @@ export default function WarehouseDetailPage({
       ) : (
         <motion.div
           className="space-y-4"
-          {...(shouldReduceMotion
-            ? {}
-            : { variants: staggerContainer, initial: "hidden", animate: "visible" })}
+          variants={shouldReduceMotion ? undefined : staggerContainer}
+          initial={shouldReduceMotion ? undefined : "hidden"}
+          animate={shouldReduceMotion ? undefined : "visible"}
         >
           {LOCATION_TYPE_ORDER.map((lt) => {
             const items = grouped.get(lt) ?? [];

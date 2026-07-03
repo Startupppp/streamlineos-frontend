@@ -220,7 +220,8 @@ function ModuleRuleList({
   onDelete: (rule: AutomationRule) => void;
   onViewRuns: (rule: AutomationRule) => void;
 }) {
-  const enabled = useModuleEnabled(moduleEnabledKey);
+  const enabledModules = useEnabledModules();
+  const enabled = enabledModules.length === 0 || enabledModules.includes(moduleEnabledKey.toUpperCase());
 
   function handleAdd() {
     onAdd(sectionModule);

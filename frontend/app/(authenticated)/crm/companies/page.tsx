@@ -192,7 +192,7 @@ export default function CompaniesPage() {
               className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
             >
               {data?.organizations.map((org) => {
-                const health = getHealthBadgeClasses(org.healthScore);
+                const healthClass = getHealthBadgeClasses(org.healthScore);
                 return (
                   <Link
                     key={org.id}
@@ -219,7 +219,7 @@ export default function CompaniesPage() {
                           </div>
                           <Badge
                             variant="outline"
-                            className={cn("text-[9px] px-1.5 py-0 h-4 shrink-0", health.className)}
+                            className={cn("text-[9px] px-1.5 py-0 h-4 shrink-0", healthClass)}
                           >
                             {org.healthScore !== null ? `${org.healthScore}%` : "N/A"}
                           </Badge>

@@ -74,7 +74,7 @@ function ReorderReportContent() {
     void query.refetch();
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
+  function handleSearchChange(e: ChangeEvent<HTMLInputElement>): void {
     const params = new URLSearchParams(searchParams.toString());
     if (e.target.value) {
       params.set("q", e.target.value);

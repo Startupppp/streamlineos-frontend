@@ -179,9 +179,6 @@ function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
                   <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add line
                 </Button>
               </div>
-              {errors.lines?.root && (
-                <p className="text-xs text-destructive">{errors.lines.root.message}</p>
-              )}
               {fields.map((f, index) => (
                 <div key={f.id} className="flex gap-2 items-start">
                   <div className="flex-1 space-y-1">

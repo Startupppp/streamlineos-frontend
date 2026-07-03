@@ -51,7 +51,7 @@ export function WarehouseCard({ warehouse }: { warehouse: WarehouseCardData }) {
   );
 
   return (
-    <motion.div {...(shouldReduceMotion ? {} : { variants: fadeUp })}>
+    <motion.div variants={shouldReduceMotion ? undefined : fadeUp}>
       <Link href={`/inventory/warehouses/${warehouse.id}`} className="block group">
         <Card className="cursor-pointer transition-shadow duration-200 hover:shadow-md group-focus-visible:ring-2 group-focus-visible:ring-ring">
           <CardContent className="p-3">
