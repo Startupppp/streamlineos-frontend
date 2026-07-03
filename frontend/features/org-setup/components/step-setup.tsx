@@ -38,7 +38,6 @@ export function StepSetup({ data, recommendedReasons, onToggleModule, patch, onB
           {Object.entries(MODULE_CATALOG).map(([key, meta]) => {
             const selected = data.modules.includes(key);
             const reason = recommendedReasons?.[key];
-            const isRecommended = !!reason;
             return (
               <div
                 key={key}
@@ -53,9 +52,9 @@ export function StepSetup({ data, recommendedReasons, onToggleModule, patch, onB
                     <span className="text-[12.5px] font-medium text-foreground">{meta.label}</span>
                     <span className={cn(
                       "text-[9.5px] font-medium px-1.5 py-0.5 rounded-full border",
-                      isRecommended ? "border-blue-200 bg-blue-100 text-blue-700" : "border-border bg-muted text-muted-foreground",
+                      selected ? "border-blue-200 bg-blue-100 text-blue-700" : "border-border bg-muted text-muted-foreground",
                     )}>
-                      {isRecommended ? "Included" : "Optional"}
+                      {selected ? "Included" : "Optional"}
                     </span>
                   </div>
                   <p className="text-[10.5px] text-muted-foreground truncate">{reason ?? meta.description}</p>

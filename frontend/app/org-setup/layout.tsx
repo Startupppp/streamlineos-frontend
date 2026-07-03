@@ -30,7 +30,7 @@ export default function OrgSetupLayout({ children }: { children: ReactNode }) {
         <main
           id="main-content"
           aria-label="Organization setup"
-          className="flex flex-1 flex-col items-start justify-start py-6 lg:py-10 px-4 sm:px-8"
+          className="flex flex-1 flex-col items-center justify-start py-6 lg:py-10 px-4 sm:px-8"
         >
           {children}
         </main>

@@ -2,9 +2,6 @@ import type { WizardData } from "./types";
 
 export const DRAFT_KEY = "org-setup-draft";
 
-// Payments step only appears when the owner picked a commerce-ish goal — matches
-// PRD 04_UI_UX_Every_Screen.md "Payments Step: show only when user selected commerce,
-// invoices, accounting, subscriptions, ecommerce, sales, or online payments".
 const COMMERCE_GOALS = new Set(["sales", "finance", "everything"]);
 
 export function needsPaymentsStep(goals: string[]): boolean {
