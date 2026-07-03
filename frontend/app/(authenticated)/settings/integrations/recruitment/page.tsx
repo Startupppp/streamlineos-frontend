@@ -10,7 +10,6 @@ import {
   RefreshCw,
   CheckCircle2,
   XCircle,
-  ChevronRight,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -20,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RequireModule } from "@/components/auth/require-module";
 
 import {
   useSourcePortals,
@@ -28,7 +28,6 @@ import {
   type UpsertPortalInput,
 } from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
-import Link from "next/link";
 
 
 interface PlatformConfig {
@@ -181,58 +180,47 @@ export default function RecruitmentIntegrationsPage() {
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Recruitment Integrations"
-        subtitle="Connect job boards to automatically ingest applications into the ATS."
-      >
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Failed to load integrations.</p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
-        </div>
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="Recruitment Integrations"
       subtitle="Connect job boards to automatically ingest applications into the ATS."
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/settings">
-            <ChevronRight className="mr-1 h-3.5 w-3.5 rotate-180" />
-            Back to Settings
-          </Link>
-        </Button>
-      }
+      backHref="/settings/integrations"
+      badge="HR module"
     >
-      <div className="space-y-6 max-w-3xl">
-        <div className="rounded-lg border border-blue-200 bg-blue-500/5 p-4 text-sm text-blue-700">
-          <strong>How it works:</strong> Each platform sends a webhook to the URL shown below
-          whenever a candidate applies. The CRM automatically creates a candidate record and
-          deduplicates by email/phone.
-        </div>
-
-        {isLoading ? (
-          <div className="space-y-4">
-            {PLATFORMS.map((p) => (
-              <Skeleton key={p.id} className="h-48 w-full rounded-xl" />
-            ))}
+      <RequireModule module="HR">
+        {isError ? (
+          <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16 text-center">
+            <p className="text-sm text-muted-foreground">Failed to load integrations.</p>
+            <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {PLATFORMS.map((config) => (
-              <PortalCard
-                key={config.id}
-                config={config}
-                portal={portalByPlatform(config.id)}
-              />
-            ))}
+          <div className="space-y-6 max-w-3xl">
+            <div className="rounded-lg border border-blue-200 bg-blue-500/5 p-4 text-sm text-blue-700">
+              <strong>How it works:</strong> Each platform sends a webhook to the URL shown below
+              whenever a candidate applies. The CRM automatically creates a candidate record and
+              deduplicates by email/phone.
+            </div>
+
+            {isLoading ? (
+              <div className="space-y-4">
+                {PLATFORMS.map((p) => (
+                  <Skeleton key={p.id} className="h-48 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {PLATFORMS.map((config) => (
+                  <PortalCard
+                    key={config.id}
+                    config={config}
+                    portal={portalByPlatform(config.id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
-      </div>
+      </RequireModule>
     </PageWrapper>
   );
 }

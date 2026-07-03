@@ -954,7 +954,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Support",
     module: "helpdesk",
-    requiredPermission: ["projects:tickets:view", "support:kb:view"],
+    requiredPermission: ["projects:tickets:view", "support:kb:view", "kb:pages:view"],
     routes: [
       {
         label: "All Tickets",
@@ -975,6 +975,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: BookOpen,
         href: "/support/kb",
         requiredPermission: "support:kb:view",
+      },
+      {
+        label: "Wiki",
+        icon: Library,
+        href: "/knowledge-base",
+        requiredPermission: "kb:pages:view",
       },
       {
         label: "Canned Responses",
@@ -1152,7 +1158,7 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:manage",
       },
       {
-        label: "Automation",
+        label: "Automations",
         icon: Workflow,
         href: "/settings/automations",
         requiredPermission: "settings:automations:view",
@@ -1192,6 +1198,16 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Clock,
         href: "/settings/sessions",
         requiredPermission: "settings:manage",
+      },
+      {
+        label: "Trusted Devices",
+        icon: Smartphone,
+        href: "/settings/devices",
+      },
+      {
+        label: "Login History",
+        icon: History,
+        href: "/settings/login-history",
       },
       {
         label: "Audit Logs",
@@ -1459,6 +1475,12 @@ export function getNavGroupsForProduct(
             href: "/support/kb",
             requiredPermission: "support:kb:view",
           },
+          {
+            label: "Wiki",
+            icon: Library,
+            href: "/knowledge-base",
+            requiredPermission: "kb:pages:view",
+          },
         ],
       },
     ];
@@ -1516,6 +1538,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/analytics") || pathname.startsWith("/reports"))
     return "analytics";
   if (pathname.startsWith("/support")) return "helpdesk";
+  if (pathname.startsWith("/knowledge-base")) return "documents";
   if (
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||

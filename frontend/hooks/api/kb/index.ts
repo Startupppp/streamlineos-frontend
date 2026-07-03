@@ -12,3 +12,6 @@ export * from "./tags";
 export * from "./translations";
 export * from "./comments";
 export * from "./from-ticket";
+export * from "./pages";
+export * from "./page-comments";
+export * from "./page-templates";

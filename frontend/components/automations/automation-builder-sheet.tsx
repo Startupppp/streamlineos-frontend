@@ -42,11 +42,14 @@ import {
   CONDITION_OPS,
   ACTION_TYPES,
   getTriggerMeta,
+  type TriggerMeta,
 } from "./automation-meta";
 
 interface AutomationBuilderSheetProps {
   rule?: AutomationRule;
   onClose: () => void;
+  triggerOptions?: TriggerMeta[];
+  defaultTrigger?: AutomationTrigger;
 }
 
 function defaultActionConfig(type: AutomationActionType): AutomationAction {
@@ -88,14 +91,32 @@ function ActionResultBadge({ status }: { status: AutomationTestResult["status"] 
   );
 }
 
-export function AutomationBuilderSheet({ rule, onClose }: AutomationBuilderSheetProps) {
+export function AutomationBuilderSheet({
+  rule,
+  onClose,
+  triggerOptions,
+  defaultTrigger,
+}: AutomationBuilderSheetProps) {
   const isEdit = !!rule;
+
+  const effectiveTriggerOptions = useMemo(() => {
+    const base = triggerOptions ?? TRIGGER_META;
+    if (rule && !base.some((t) => t.value === rule.triggerEvent)) {
+      const existing = TRIGGER_META.find((t) => t.value === rule.triggerEvent);
+      return existing ? [existing, ...base] : base;
+    }
+    return base;
+  }, [triggerOptions, rule]);
+
+  const resolvedDefault: AutomationTrigger =
+    rule?.triggerEvent ??
+    defaultTrigger ??
+    effectiveTriggerOptions[0]?.value ??
+    "ticket.created";
 
   const [name, setName] = useState(rule?.name ?? "");
   const [description, setDescription] = useState(rule?.description ?? "");
-  const [triggerEvent, setTriggerEvent] = useState<AutomationTrigger>(
-    rule?.triggerEvent ?? "lead.created",
-  );
+  const [triggerEvent, setTriggerEvent] = useState<AutomationTrigger>(resolvedDefault);
   const [conditions, setConditions] = useState<AutomationCondition[]>(rule?.conditions ?? []);
   const [actions, setActions] = useState<AutomationAction[]>(rule?.actions ?? []);
   const [isEnabled, setIsEnabled] = useState(rule?.isEnabled ?? true);
@@ -244,7 +265,7 @@ export function AutomationBuilderSheet({ rule, onClose }: AutomationBuilderSheet
         <SheetHeader className="px-6 pt-6">
           <SheetTitle>{isEdit ? "Edit automation" : "New automation"}</SheetTitle>
           <SheetDescription>
-            Trigger on a CRM event, filter with conditions, then run actions.
+            Configure a trigger, optional conditions, and the actions to run.
           </SheetDescription>
         </SheetHeader>
 
@@ -276,7 +297,7 @@ export function AutomationBuilderSheet({ rule, onClose }: AutomationBuilderSheet
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {TRIGGER_META.map((t) => (
+                  {effectiveTriggerOptions.map((t) => (
                     <SelectItem key={t.value} value={t.value}>
                       {t.label} — {t.description}
                     </SelectItem>

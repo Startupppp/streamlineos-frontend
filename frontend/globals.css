@@ -812,3 +812,377 @@
   border: 1px solid var(--border);
   border-radius: 0.75rem;
 }
+
+/* ─── TipTap Document Editor ─────────────────────────────────────────────── */
+
+.document-editor .ProseMirror {
+  outline: none;
+}
+
+.document-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Task list */
+.document-editor .ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+
+.document-editor .ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.document-editor .ProseMirror ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+  cursor: pointer;
+}
+
+.document-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  border: 1.5px solid var(--border);
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--background);
+  cursor: pointer;
+  position: relative;
+}
+
+.document-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.document-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid var(--primary-foreground);
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+.document-editor .ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+/* Table */
+.document-editor .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.document-editor .ProseMirror table td,
+.document-editor .ProseMirror table th {
+  border: 1px solid var(--border);
+  padding: 0.375rem 0.625rem;
+  vertical-align: top;
+  min-width: 80px;
+}
+
+.document-editor .ProseMirror table th {
+  background: var(--muted);
+  font-weight: 600;
+}
+
+.document-editor .ProseMirror table .selectedCell::after {
+  background: color-mix(in srgb, var(--ring) 15%, transparent);
+  content: "";
+  left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+/* Callout */
+.document-editor .ProseMirror .callout {
+  position: relative;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.875rem 0.75rem 3rem;
+  margin: 0.75rem 0;
+  background: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.document-editor .ProseMirror .callout::before {
+  content: attr(data-emoji);
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+
+.document-editor .ProseMirror .callout[data-color="info"] {
+  background: color-mix(in srgb, #3b82f6 8%, transparent);
+  border-color: color-mix(in srgb, #3b82f6 30%, transparent);
+}
+
+.document-editor .ProseMirror .callout[data-color="warning"] {
+  background: color-mix(in srgb, #f59e0b 8%, transparent);
+  border-color: color-mix(in srgb, #f59e0b 30%, transparent);
+}
+
+.document-editor .ProseMirror .callout[data-color="success"] {
+  background: color-mix(in srgb, #22c55e 8%, transparent);
+  border-color: color-mix(in srgb, #22c55e 30%, transparent);
+}
+
+.document-editor .ProseMirror .callout[data-color="danger"] {
+  background: color-mix(in srgb, #ef4444 8%, transparent);
+  border-color: color-mix(in srgb, #ef4444 30%, transparent);
+}
+
+/* Mention chips */
+.document-editor .ProseMirror .mention-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: default;
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+.document-editor .ProseMirror .mention-chip-user {
+  background: color-mix(in srgb, #3b82f6 12%, transparent);
+  color: #1d4ed8;
+  border: 1px solid color-mix(in srgb, #3b82f6 25%, transparent);
+}
+
+.dark .document-editor .ProseMirror .mention-chip-user {
+  color: #60a5fa;
+  background: color-mix(in srgb, #3b82f6 18%, transparent);
+  border-color: color-mix(in srgb, #3b82f6 30%, transparent);
+}
+
+.document-editor .ProseMirror .mention-chip-page {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.document-editor .ProseMirror .mention-chip-page:hover {
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+/* Code block (lowlight / highlight.js) */
+.document-editor .ProseMirror pre {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  margin: 0.75rem 0;
+}
+
+.document-editor .ProseMirror pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  color: var(--foreground);
+}
+
+.document-editor .ProseMirror pre .hljs-comment,
+.document-editor .ProseMirror pre .hljs-quote { color: var(--muted-foreground); }
+.document-editor .ProseMirror pre .hljs-keyword,
+.document-editor .ProseMirror pre .hljs-selector-tag { color: #a855f7; }
+.document-editor .ProseMirror pre .hljs-string,
+.document-editor .ProseMirror pre .hljs-attr { color: #22c55e; }
+.document-editor .ProseMirror pre .hljs-number,
+.document-editor .ProseMirror pre .hljs-literal { color: #f59e0b; }
+.document-editor .ProseMirror pre .hljs-title,
+.document-editor .ProseMirror pre .hljs-section { color: #3b82f6; }
+.document-editor .ProseMirror pre .hljs-type,
+.document-editor .ProseMirror pre .hljs-built_in { color: #06b6d4; }
+
+/* Details / toggle */
+.document-editor .ProseMirror details {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
+
+.document-editor .ProseMirror details > summary {
+  padding: 0.5rem 0.75rem;
+  background: var(--muted);
+  cursor: pointer;
+  font-weight: 500;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.document-editor .ProseMirror details > summary::before {
+  content: "▶";
+  font-size: 0.625rem;
+  transition: transform 0.15s ease;
+}
+
+.document-editor .ProseMirror details.is-open > summary::before {
+  transform: rotate(90deg);
+}
+
+.document-editor .ProseMirror details > div {
+  padding: 0.75rem;
+}
+
+/* ─── Suggestion popup ─────────────────────────────────────────────────────── */
+
+.tiptap-suggestion-portal {
+  max-width: 18rem;
+  min-width: 10rem;
+}
+
+.tiptap-suggestion-popup {
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06);
+  padding: 0.25rem;
+  overflow: hidden;
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.tiptap-suggestion-empty {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+
+.tiptap-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.375rem 0.625rem;
+  border-radius: calc(var(--radius-md) - 2px);
+  font-size: 0.8125rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--popover-foreground);
+  transition: background 0.1s ease;
+}
+
+.tiptap-suggestion-item:hover,
+.tiptap-suggestion-item[data-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.tiptap-suggestion-item-label {
+  flex: 1;
+  min-width: 0;
+  truncate: true;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tiptap-suggestion-item-description {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.tiptap-image-input {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tiptap-image-input-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tiptap-image-input-field {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  outline: none;
+}
+
+.tiptap-image-input-field:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 20%, transparent);
+}
+
+.tiptap-image-input-actions {
+  display: flex;
+  gap: 0.375rem;
+  justify-content: flex-end;
+}
+
+.tiptap-image-input-submit,
+.tiptap-image-input-cancel {
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: background 0.1s ease;
+}
+
+.tiptap-image-input-submit {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.tiptap-image-input-submit:hover {
+  opacity: 0.9;
+}
+
+.tiptap-image-input-cancel {
+  background: transparent;
+  color: var(--foreground);
+}
+
+.tiptap-image-input-cancel:hover {
+  background: var(--muted);
+}
+
+/* Images in document editor */
+.document-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  margin: 0.5rem 0;
+}

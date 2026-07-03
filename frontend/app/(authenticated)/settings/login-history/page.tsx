@@ -1,43 +1,67 @@
 "use client";
 
 import { useState } from "react";
-import { History, ChevronLeft, ChevronRight } from "lucide-react";
+import { History } from "lucide-react";
 import { format } from "date-fns";
 import { useLoginHistory } from "@/hooks/api/auth";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
+type LoginEntry = NonNullable<ReturnType<typeof useLoginHistory>["data"]>["data"][number];
 type SuccessFilter = "all" | "success" | "failure";
 
-function LoginHistorySkeleton() {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Skeleton key={i} className="h-12 w-full rounded-md" />
-      ))}
-    </div>
-  );
-}
+const PAGE_SIZE = 20;
 
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center flex-1 min-h-[60vh] gap-3 text-muted-foreground">
-      <History className="h-10 w-10 opacity-30" />
-      <p className="text-sm">No login history found</p>
-    </div>
-  );
-}
+const COLUMNS: DataTableColumn<LoginEntry>[] = [
+  {
+    key: "createdAt",
+    header: "Time",
+    cell: (e) => (
+      <span className="text-muted-foreground whitespace-nowrap text-xs">
+        {format(new Date(e.createdAt), "MMM d, yyyy HH:mm")}
+      </span>
+    ),
+  },
+  {
+    key: "event",
+    header: "Event",
+    cell: (e) => <span className="font-medium">{e.event}</span>,
+  },
+  {
+    key: "result",
+    header: "Result",
+    cell: (e) =>
+      e.success ? (
+        <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200/60">
+          Success
+        </Badge>
+      ) : (
+        <Badge variant="destructive">Failed</Badge>
+      ),
+  },
+  {
+    key: "ipAddress",
+    header: "IP Address",
+    cell: (e) => (
+      <span className="text-muted-foreground font-mono text-xs">
+        {e.ipAddress ?? "—"}
+      </span>
+    ),
+  },
+  {
+    key: "userAgent",
+    header: "User Agent",
+    cell: (e) => (
+      <span className="text-muted-foreground text-xs max-w-[200px] truncate block">
+        {e.userAgent ?? "—"}
+      </span>
+    ),
+  },
+];
 
 function FilterButton({
   value,
@@ -51,6 +75,7 @@ function FilterButton({
   function handleClick() {
     onSelect(value);
   }
+
   return (
     <Button
       variant={current === value ? "secondary" : "ghost"}
@@ -70,21 +95,18 @@ export default function LoginHistoryPage() {
   const successParam =
     filter === "success" ? true : filter === "failure" ? false : undefined;
 
-  const { data, isLoading, isError, refetch } = useLoginHistory({ page, success: successParam });
-
-  const totalPages = data ? Math.ceil(data.total / data.limit) : 1;
+  const { data, isLoading, isError, refetch } = useLoginHistory({
+    page,
+    success: successParam,
+  });
 
   function handleSelectFilter(f: SuccessFilter) {
     setFilter(f);
     setPage(1);
   }
 
-  function handlePrevPage() {
-    setPage((p) => Math.max(1, p - 1));
-  }
-
-  function handleNextPage() {
-    setPage((p) => Math.min(totalPages, p + 1));
+  function handlePageChange(newPage: number) {
+    setPage(newPage);
   }
 
   function handleRetry() {
@@ -108,80 +130,36 @@ export default function LoginHistoryPage() {
         </div>
       }
     >
-      {isLoading ? (
-        <LoginHistorySkeleton />
-      ) : isError ? (
+      {isError ? (
         <ErrorState
           title="Couldn't load login history"
           description="Something went wrong while fetching your login history."
           onRetry={handleRetry}
           className="flex-1"
         />
-      ) : !data || data.data.length === 0 ? (
-        <EmptyState />
       ) : (
-        <div className="space-y-3">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Time</TableHead>
-                <TableHead>Event</TableHead>
-                <TableHead>Result</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>User Agent</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.data.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell className="text-muted-foreground whitespace-nowrap">
-                    {format(new Date(entry.createdAt), "MMM d, yyyy HH:mm")}
-                  </TableCell>
-                  <TableCell className="font-medium">{entry.event}</TableCell>
-                  <TableCell>
-                    {entry.success ? (
-                      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200/60">
-                        Success
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive">Failed</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {entry.ipAddress ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                    {entry.userAgent ?? "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-end gap-2 pt-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePrevPage}
-                disabled={page === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNextPage}
-                disabled={page === totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
+        <DataTable
+          data={data?.data ?? []}
+          columns={COLUMNS}
+          getRowKey={(e) => e.id}
+          isLoading={isLoading}
+          pagination={{
+            mode: "server",
+            page,
+            pageSize: PAGE_SIZE,
+            total: data?.total ?? 0,
+            onPageChange: handlePageChange,
+          }}
+          emptyState={
+            <EmptyState
+              illustration={<History className="h-8 w-8 text-muted-foreground/40" />}
+              title="No login history found"
+              description="No sign-in events have been recorded for your account."
+              className="min-h-[200px]"
+            />
+          }
+          minWidth="600px"
+        />
       )}
     </PageWrapper>
   );

@@ -428,6 +428,7 @@ export const queryKeys = {
     all: [...base, "whiteboards"] as const,
     list: (projectId: number) => [...base, "whiteboards", "list", projectId] as const,
     detail: (id: number) => [...base, "whiteboards", "detail", id] as const,
+    publicLink: (token: string) => [...base, "whiteboards", "publicLink", token] as const,
   },
 
   gitIntegration: {
@@ -464,6 +465,18 @@ export const queryKeys = {
 
   kb: {
     all: [...base, "kb"] as const,
+    kbPages: () => [...base, "kb", "pages"] as const,
+    pagesTree: () => [...base, "kb", "pages", "tree"] as const,
+    pagesRecent: () => [...base, "kb", "pages", "recent"] as const,
+    pagesFavorites: () => [...base, "kb", "pages", "favorites"] as const,
+    pagesTrash: () => [...base, "kb", "pages", "trash"] as const,
+    pagesSearch: (q: string) => [...base, "kb", "pages", "search", q] as const,
+    page: (pageId: number) => [...base, "kb", "pages", pageId] as const,
+    pageBacklinks: (pageId: number) => [...base, "kb", "pages", pageId, "backlinks"] as const,
+    pageVersions: (pageId: number) => [...base, "kb", "pages", pageId, "versions"] as const,
+    pageVersion: (pageId: number, versionNumber: number) => [...base, "kb", "pages", pageId, "versions", versionNumber] as const,
+    pageComments: (pageId: number) => [...base, "kb", "pages", pageId, "comments"] as const,
+    pageTemplates: () => [...base, "kb", "page-templates"] as const,
     spaces: () => [...base, "kb", "spaces"] as const,
     space: (spaceId: number) => [...base, "kb", "space", spaceId] as const,
     spaceCategories: (spaceId: number) => [...base, "kb", "spaceCategories", spaceId] as const,
