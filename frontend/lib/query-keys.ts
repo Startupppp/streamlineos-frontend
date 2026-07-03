@@ -277,6 +277,17 @@ export const queryKeys = {
     tours: () => [...base, "onboarding-flow", "tours"] as const,
   },
 
+  payments: {
+    all: [...base, "payments"] as const,
+    catalog: () => [...base, "payments", "catalog"] as const,
+    providers: () => [...base, "payments", "providers"] as const,
+    provider: (providerKey: string) => [...base, "payments", "providers", providerKey] as const,
+    testTransactions: (providerKey: string) => [...base, "payments", "providers", providerKey, "test-transactions"] as const,
+    webhookEvents: (providerKey: string) => [...base, "payments", "providers", providerKey, "webhook-events"] as const,
+    readiness: (providerKey: string) => [...base, "payments", "providers", providerKey, "readiness"] as const,
+    audit: (providerKey?: string) => [...base, "payments", "audit", providerKey ?? "all"] as const,
+  },
+
   access: {
     all: [...base, "access"] as const,
     me: () => [...base, "access", "me"] as const,
