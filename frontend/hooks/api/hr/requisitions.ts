@@ -20,6 +20,7 @@ export interface JobRequisition {
   rejectionReason?: string;
   justification?: string;
   targetDate?: string;
+  linkedJobId?: number;
   createdAt: string;
 }
 
@@ -67,6 +68,16 @@ export function useRejectRequisition() {
     mutationKey: ["hr", "requisitions", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
       apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/reject`, { reason }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "requisitions"] }),
+  });
+}
+
+export function useCreateJobFromRequisition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "requisitions", "create-job"],
+    mutationFn: (id: number) =>
+      apiClient.post<{ jobId: number; jobTitle: string }>(`/hr/recruitment/requisitions/${id}/create-job`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "requisitions"] }),
   });
 }

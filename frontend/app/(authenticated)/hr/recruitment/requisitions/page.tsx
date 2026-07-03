@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +13,7 @@ import {
   useSubmitRequisition,
   useApproveRequisition,
   useRejectRequisition,
+  useCreateJobFromRequisition,
 } from "@/hooks/api/hr/requisitions";
 import type { JobRequisition } from "@/hooks/api/hr/requisitions";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -431,7 +431,7 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
           <Button
             onClick={form.handleSubmit(handleSubmitForApproval)}
             disabled={isPending}
-            className="flex-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg"
+            className="flex-1"
           >
             <Send className="mr-1.5 h-3.5 w-3.5" />
             {isPending ? "Submitting…" : "Submit for Approval"}
@@ -447,14 +447,25 @@ interface RequisitionCardProps {
   onSubmit: (id: number) => void;
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
+  onConvertToJob: (id: number) => void;
   isSubmitting: boolean;
   isApproving: boolean;
+  isConverting: boolean;
 }
 
-function RequisitionCard({ req, onSubmit, onApprove, onReject, isSubmitting, isApproving }: RequisitionCardProps) {
-  const router = useRouter();
+function RequisitionCard({
+  req,
+  onSubmit,
+  onApprove,
+  onReject,
+  onConvertToJob,
+  isSubmitting,
+  isApproving,
+  isConverting,
+}: RequisitionCardProps) {
   const statusStyle = STATUS_STYLES[req.status] ?? STATUS_STYLES.DRAFT;
   const priorityStyle = PRIORITY_STYLES[req.priority] ?? PRIORITY_STYLES.MEDIUM;
+  const alreadyConverted = !!req.linkedJobId;
 
   function handleSubmitClick() {
     onSubmit(req.id);
@@ -469,7 +480,7 @@ function RequisitionCard({ req, onSubmit, onApprove, onReject, isSubmitting, isA
   }
 
   function handleConvertToJob() {
-    router.push(`/hr/recruitment/jobs/new?requisitionId=${req.id}`);
+    onConvertToJob(req.id);
   }
 
   return (
@@ -532,9 +543,9 @@ function RequisitionCard({ req, onSubmit, onApprove, onReject, isSubmitting, isA
                   <DropdownMenuSeparator />
                 </>
               )}
-              {req.status === "APPROVED" && (
+              {req.status === "APPROVED" && !alreadyConverted && (
                 <>
-                  <DropdownMenuItem onClick={handleConvertToJob}>
+                  <DropdownMenuItem onClick={handleConvertToJob} disabled={isConverting}>
                     <ChevronRight className="mr-2 h-3.5 w-3.5" /> Convert to Job Posting
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -625,13 +636,12 @@ function RequisitionCard({ req, onSubmit, onApprove, onReject, isSubmitting, isA
             {req.status === "APPROVED" && (
               <Button
                 size="sm"
-                className="h-7 text-xs bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm"
-                asChild
+                className="h-7 text-xs"
+                onClick={handleConvertToJob}
+                disabled={isConverting || alreadyConverted}
               >
-                <Link href={`/hr/recruitment/jobs/new?requisitionId=${req.id}`}>
-                  <ChevronRight className="mr-1 h-3 w-3" />
-                  Create Job
-                </Link>
+                <ChevronRight className="mr-1 h-3 w-3" />
+                {alreadyConverted ? "Job created" : isConverting ? "Creating…" : "Create Job"}
               </Button>
             )}
           </div>
@@ -642,6 +652,7 @@ function RequisitionCard({ req, onSubmit, onApprove, onReject, isSubmitting, isA
 }
 
 export default function RequisitionsPage() {
+  const router = useRouter();
   const [activeStatus, setActiveStatus] = useState<string | undefined>(undefined);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<number | null>(null);
@@ -650,6 +661,7 @@ export default function RequisitionsPage() {
   const submitRequisition = useSubmitRequisition();
   const approveRequisition = useApproveRequisition();
   const rejectRequisition = useRejectRequisition();
+  const createJobFromRequisition = useCreateJobFromRequisition();
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
   const handleCloseSheet = useCallback(() => setSheetOpen(false), []);
@@ -672,6 +684,19 @@ export default function RequisitionsPage() {
       });
     },
     [approveRequisition]
+  );
+
+  const handleConvertToJob = useCallback(
+    (id: number) => {
+      createJobFromRequisition.mutate(id, {
+        onSuccess: (data) => {
+          toast.success(`Job posting "${data.jobTitle}" created`);
+          router.push(`/hr/recruitment/jobs/${data.jobId}/edit`);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [createJobFromRequisition, router]
   );
 
   const handleRejectOpen = useCallback((id: number) => setRejectTarget(id), []);
@@ -703,11 +728,7 @@ export default function RequisitionsPage() {
         subtitle="Manage headcount requests and approvals"
         badge={requisitions ? `${requisitions.length}` : undefined}
         actions={
-          <Button
-            size="sm"
-            onClick={handleOpenSheet}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-          >
+          <Button size="sm" onClick={handleOpenSheet}>
             <Plus className="mr-1.5 h-4 w-4" /> New Requisition
           </Button>
         }
@@ -757,11 +778,7 @@ export default function RequisitionsPage() {
                   : "Create your first headcount request to get started."}
               </p>
             </div>
-            <Button
-              size="sm"
-              onClick={handleOpenSheet}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg"
-            >
+            <Button size="sm" onClick={handleOpenSheet}>
               <Plus className="mr-1.5 h-3.5 w-3.5" /> New Requisition
             </Button>
           </div>
@@ -775,8 +792,10 @@ export default function RequisitionsPage() {
                   onSubmit={handleSubmit}
                   onApprove={handleApprove}
                   onReject={handleRejectOpen}
+                  onConvertToJob={handleConvertToJob}
                   isSubmitting={submitRequisition.isPending}
                   isApproving={approveRequisition.isPending}
+                  isConverting={createJobFromRequisition.isPending}
                 />
               ))}
             </div>
