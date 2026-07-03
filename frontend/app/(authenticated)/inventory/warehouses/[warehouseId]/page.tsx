@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useMemo, use, type ChangeEvent } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Plus, MapPin, Layers } from "lucide-react";
+import { Plus, MapPin } from "lucide-react";
+import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -306,6 +307,7 @@ export default function WarehouseDetailPage({
         backHref="/inventory/warehouses"
       >
         <EmptyState
+          illustration={<EmptyWarehouseIllustration />}
           title="Warehouse not found"
           description="This warehouse does not exist or you do not have access."
           action={{ label: "Back to Warehouses", href: "/inventory/warehouses" }}
@@ -352,9 +354,7 @@ export default function WarehouseDetailPage({
     >
       {locations.length === 0 ? (
         <EmptyState
-          illustration={
-            <Layers className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
-          }
+          illustration={<EmptyWarehouseIllustration />}
           title="No locations yet"
           description="Add zones, aisles, racks, and bins to organize stock within this warehouse."
           action={{ label: "Add Location", onClick: handleOpenSheet }}

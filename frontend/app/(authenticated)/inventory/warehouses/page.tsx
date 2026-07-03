@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo, type ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { Plus, Building2, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import { EmptyWarehouseIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -287,15 +288,14 @@ export default function WarehousesPage() {
         </motion.div>
       ) : hasActiveFilters ? (
         <EmptyState
+          illustration={<EmptySearchIllustration />}
           title="No warehouses found"
           description="No warehouses match your current filters."
           action={{ label: "Clear filters", onClick: clearFilters }}
         />
       ) : (
         <EmptyState
-          illustration={
-            <Building2 className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
-          }
+          illustration={<EmptyWarehouseIllustration />}
           title="No warehouses yet"
           description="Add your first warehouse to start managing stock locations."
           action={{ label: "New Warehouse", onClick: handleOpenSheet }}

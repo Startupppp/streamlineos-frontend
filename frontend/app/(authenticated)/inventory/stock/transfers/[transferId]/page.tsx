@@ -3,6 +3,7 @@
 import { use, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ArrowRight, Package, Check } from "lucide-react";
+import { EmptyTransferIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -239,6 +240,7 @@ export default function TransferDetailPage({
       }
     >
       <EmptyState
+        illustration={<EmptyTransferIllustration />}
         title="Transfer not found"
         description="This transfer does not exist or you do not have access."
         action={{ label: "Back to Transfers", href: "/inventory/stock/transfers" }}

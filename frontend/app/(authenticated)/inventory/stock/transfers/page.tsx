@@ -6,7 +6,8 @@ import { useForm, useFieldArray, useWatch, Controller, type Control, type UseFor
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Plus, ArrowRightLeft, Search, Trash2 } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
+import { EmptyTransferIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -332,7 +333,7 @@ export default function TransfersPage() {
       ) : transfers.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
-            illustration={<ArrowRightLeft className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />}
+            illustration={hasActiveFilters ? <EmptySearchIllustration /> : <EmptyTransferIllustration />}
             title={hasActiveFilters ? "No results" : "No transfers found"}
             description={
               hasActiveFilters

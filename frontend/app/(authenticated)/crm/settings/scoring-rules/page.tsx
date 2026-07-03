@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,7 +29,6 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useScoringRules, useCreateScoringRule, useUpdateScoringRule, useDeleteScoringRule,
 } from "@/hooks/api/crm-settings";
@@ -80,6 +78,89 @@ const SAMPLE_LEAD = {
   investmentInterest: "3000000",
 };
 
+type ScoringRuleData = { id: number; field: string; operator: string; value: string; points: number };
+
+interface ScoringRuleRowProps {
+  rule: ScoringRuleData;
+  isEditing: boolean;
+  editForm: UseFormReturn<RuleForm>;
+  onEditSubmit: (data: RuleForm) => void;
+  onEdit: (rule: ScoringRuleData) => void;
+  onDeleteRequest: (id: number) => void;
+  onCancelEdit: () => void;
+  updatePending: boolean;
+}
+
+function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDeleteRequest, onCancelEdit, updatePending }: ScoringRuleRowProps) {
+  const handleEdit = useCallback(() => onEdit(rule), [rule, onEdit]);
+  const handleDeleteRequest = useCallback(() => onDeleteRequest(rule.id), [rule.id, onDeleteRequest]);
+
+  return (
+    <TableRow className="h-8">
+      {isEditing ? (
+        <>
+          <TableCell colSpan={4} className="px-2 py-1">
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="flex items-end gap-2">
+                <FormField control={editForm.control} name="field" render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>{FIELDS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                )} />
+                <FormField control={editForm.control} name="operator" render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>{OPERATORS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                )} />
+                <FormField control={editForm.control} name="value" render={({ field }) => (
+                  <Input {...field} className="h-8 w-24 text-xs" />
+                )} />
+                <FormField control={editForm.control} name="points" render={({ field }) => (
+                  <Input type="number" {...field} className="h-8 w-16 text-xs" />
+                )} />
+                <Button type="submit" size="sm" className="h-8 text-xs" disabled={updatePending}>Save</Button>
+                <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={onCancelEdit}>Cancel</Button>
+              </form>
+            </Form>
+          </TableCell>
+          <TableCell className="px-2 py-1" />
+        </>
+      ) : (
+        <>
+          <TableCell className="text-[11px] px-2 py-1 capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
+          <TableCell className="text-[11px] px-2 py-1">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
+          <TableCell className="text-[11px] px-2 py-1">{rule.value}</TableCell>
+          <TableCell className="text-[11px] px-2 py-1 text-right">
+            <Badge
+              variant="outline"
+              className={cn(
+                "text-[9px] h-4 px-1.5 py-0 font-mono tabular-nums",
+                rule.points >= 0
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-red-50 text-red-700 border-red-200"
+              )}
+            >
+              {rule.points > 0 ? "+" : ""}{rule.points}
+            </Badge>
+          </TableCell>
+          <TableCell className="text-[11px] px-2 py-1 text-right">
+            <div className="flex items-center justify-end gap-1">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit">
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </TableCell>
+        </>
+      )}
+    </TableRow>
+  );
+}
+
 export default function ScoringRulesPage() {
   const { data: rules, isLoading, isError, refetch } = useScoringRules();
   const [createOpen, setCreateOpen] = useState(false);
@@ -120,7 +201,7 @@ export default function ScoringRulesPage() {
     );
   }, [editingId, updateRule]);
 
-  const handleStartEdit = useCallback((rule: { id: number; field: string; operator: string; value: string; points: number }) => {
+  const handleStartEdit = useCallback((rule: ScoringRuleData) => {
     setEditingId(rule.id);
     editForm.reset({
       field: rule.field,
@@ -131,10 +212,7 @@ export default function ScoringRulesPage() {
   }, [editForm]);
 
   const handleCancelEdit = useCallback(() => setEditingId(null), []);
-
-  const handleDeleteRequest = useCallback((id: number) => {
-    setDeleteTargetId(id);
-  }, []);
+  const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
 
   const handleDeleteConfirm = useCallback(() => {
     if (deleteTargetId === null) return;
@@ -145,11 +223,8 @@ export default function ScoringRulesPage() {
   }, [deleteRule, deleteTargetId]);
 
   const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
 
   const sampleScore = useMemo(() => {
@@ -171,27 +246,7 @@ export default function ScoringRulesPage() {
     return score;
   }, [rules]);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-10 w-48" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-6">
-        <EmptyState
-          illustration={<Zap className="h-10 w-10 text-muted-foreground" />}
-          title="Failed to load scoring rules"
-          description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
-        />
-      </div>
-    );
-  }
+  const count = rules?.length ?? 0;
 
   return (
     <>
@@ -217,11 +272,11 @@ export default function ScoringRulesPage() {
 
       <PageWrapper
         title="Lead Scoring Rules"
-        subtitle="Define rules to automatically score leads"
+        subtitle={isLoading ? undefined : `${count} rule${count !== 1 ? "s" : ""}`}
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+              <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 New Rule
               </Button>
@@ -274,7 +329,7 @@ export default function ScoringRulesPage() {
                       <FormMessage />
                     </FormItem>
                   )} />
-                  <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={createRule.isPending}>
+                  <Button type="submit" className="w-full" disabled={createRule.isPending}>
                     {createRule.isPending ? "Creating..." : "Create Rule"}
                   </Button>
                 </form>
@@ -283,27 +338,35 @@ export default function ScoringRulesPage() {
           </Dialog>
         }
       >
-        <motion.div
-          className="space-y-6"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div variants={fadeUp}>
-            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-base">Rules</CardTitle>
+        {isLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        ) : isError ? (
+          <EmptyState
+            illustration={<Zap className="h-8 w-8 text-muted-foreground/40" />}
+            title="Failed to load scoring rules"
+            description="Something went wrong. Please try again."
+            action={{ label: "Retry", onClick: handleRetry }}
+            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+          />
+        ) : (
+          <div className="space-y-6">
+            <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+              <CardHeader className="px-4 py-3">
+                <CardTitle className="text-sm font-semibold">Rules</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 {rules && rules.length > 0 ? (
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-xs">Field</TableHead>
-                        <TableHead className="text-xs">Operator</TableHead>
-                        <TableHead className="text-xs">Value</TableHead>
-                        <TableHead className="text-xs text-right">Points</TableHead>
-                        <TableHead className="text-xs text-right">Actions</TableHead>
+                    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                      <TableRow className="border-b-2 border-border hover:bg-transparent">
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Field</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Operator</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Value</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Points</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -323,28 +386,27 @@ export default function ScoringRulesPage() {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="py-14">
+                  <div className="py-14 px-4">
                     <EmptyState
-                      illustration={<Zap className="h-10 w-10 text-muted-foreground" />}
+                      illustration={<Zap className="h-8 w-8 text-muted-foreground/40" />}
                       title="No scoring rules defined"
                       description="Create your first rule to start scoring leads automatically."
                       action={{ label: "New Rule", onClick: handleOpenCreate }}
+                      className="border-0 bg-transparent"
                     />
                   </div>
                 )}
               </CardContent>
             </Card>
-          </motion.div>
 
-          <motion.div variants={fadeUp}>
-            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
+            <Card className="bg-card rounded-lg border border-border shadow-sm">
+              <CardHeader className="px-4 py-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <Zap className="h-4 w-4 text-blue-600" />
-                  Live Preview - Sample Lead
+                  Live Preview — Sample Lead
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-4 pb-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   {Object.entries(SAMPLE_LEAD).map(([key, value]) => (
                     <div key={key}>
@@ -353,97 +415,25 @@ export default function ScoringRulesPage() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-blue-500/5 to-emerald-500/5 border border-border/50 flex items-center justify-between">
+                <div className="mt-4 p-4 rounded-lg bg-muted/30 border border-border flex items-center justify-between">
                   <span className="text-sm font-medium">Calculated Score</span>
-                  <Badge className={cn(
-                    "text-lg px-4 py-1 font-bold",
-                    sampleScore <= 30 ? "bg-red-500/15 text-red-700 dark:text-red-400" :
-                    sampleScore <= 60 ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" :
-                    "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-                  )}>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-base px-4 py-1 font-bold tabular-nums font-mono",
+                      sampleScore <= 30 ? "bg-red-50 text-red-700 border-red-200" :
+                      sampleScore <= 60 ? "bg-amber-50 text-amber-700 border-amber-200" :
+                      "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    )}
+                  >
                     {sampleScore} pts
                   </Badge>
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
-        </motion.div>
+          </div>
+        )}
       </PageWrapper>
     </>
-  );
-}
-
-type ScoringRuleData = { id: number; field: string; operator: string; value: string; points: number };
-
-interface ScoringRuleRowProps {
-  rule: ScoringRuleData;
-  isEditing: boolean;
-  editForm: UseFormReturn<RuleForm>;
-  onEditSubmit: (data: RuleForm) => void;
-  onEdit: (rule: ScoringRuleData) => void;
-  onDeleteRequest: (id: number) => void;
-  onCancelEdit: () => void;
-  updatePending: boolean;
-}
-
-function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDeleteRequest, onCancelEdit, updatePending }: ScoringRuleRowProps) {
-  const handleEdit = useCallback(() => onEdit(rule), [rule, onEdit]);
-  const handleDeleteRequest = useCallback(() => onDeleteRequest(rule.id), [rule.id, onDeleteRequest]);
-
-  return (
-    <TableRow>
-      {isEditing ? (
-        <>
-          <TableCell colSpan={4}>
-            <Form {...editForm}>
-              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="flex items-end gap-2">
-                <FormField control={editForm.control} name="field" render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>{FIELDS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                )} />
-                <FormField control={editForm.control} name="operator" render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>{OPERATORS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                )} />
-                <FormField control={editForm.control} name="value" render={({ field }) => (
-                  <Input {...field} className="h-8 w-24 text-xs" />
-                )} />
-                <FormField control={editForm.control} name="points" render={({ field }) => (
-                  <Input type="number" {...field} className="h-8 w-16 text-xs" />
-                )} />
-                <Button type="submit" size="sm" className="h-8 text-xs" disabled={updatePending}>Save</Button>
-                <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={onCancelEdit}>Cancel</Button>
-              </form>
-            </Form>
-          </TableCell>
-          <TableCell />
-        </>
-      ) : (
-        <>
-          <TableCell className="text-xs capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
-          <TableCell className="text-xs">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
-          <TableCell className="text-xs">{rule.value}</TableCell>
-          <TableCell className="text-xs text-right">
-            <Badge variant={rule.points >= 0 ? "default" : "destructive"} className="text-[10px]">
-              {rule.points > 0 ? "+" : ""}{rule.points}
-            </Badge>
-          </TableCell>
-          <TableCell className="text-right">
-            <div className="flex items-center justify-end gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit">
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </TableCell>
-        </>
-      )}
-    </TableRow>
   );
 }

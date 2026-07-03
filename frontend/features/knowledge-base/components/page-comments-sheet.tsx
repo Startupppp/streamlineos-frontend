@@ -92,11 +92,11 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
     <div className={`space-y-2 ${isResolved ? "opacity-60" : ""}`}>
       <div className="flex items-start gap-2">
         <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium shrink-0">
-          {(comment.authorId ?? "?")[0]?.toUpperCase() ?? "?"}
+          {(comment.authorName ?? "?")[0]?.toUpperCase() ?? "?"}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium">{comment.authorId ?? "Unknown"}</span>
+            <span className="text-xs font-medium">{comment.authorName ?? "Unknown"}</span>
             <span className="text-xs text-muted-foreground">{formatRelativeTime(comment.createdAt)}</span>
             {isResolved && (
               <Badge variant="secondary" className="text-xs h-4">

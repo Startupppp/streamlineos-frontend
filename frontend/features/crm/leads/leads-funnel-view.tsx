@@ -41,11 +41,11 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
   if (!board) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 text-center">
-        <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
-          <TrendingDown className="h-7 w-7 text-slate-400" />
+        <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+          <TrendingDown className="h-7 w-7 text-muted-foreground" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-700">No funnel data</p>
+          <p className="text-sm font-semibold text-foreground">No funnel data</p>
           <p className="text-xs text-muted-foreground mt-1">
             Add leads to the pipeline to see the conversion funnel
           </p>
@@ -128,7 +128,7 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
               <div className="w-24 shrink-0 flex items-center gap-1">
                 {conversionRate !== null && (
                   <>
-                    <ArrowRight className="h-3 w-3 text-slate-400" />
+                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
                     <span
                       className={`text-xs font-medium ${
                         conversionRate >= 50

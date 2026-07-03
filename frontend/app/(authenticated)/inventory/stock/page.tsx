@@ -3,7 +3,8 @@
 import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { AlertTriangle, TrendingDown, CheckCircle2, Package, Search } from "lucide-react";
+import { AlertTriangle, TrendingDown, CheckCircle2, Search } from "lucide-react";
+import { EmptyWarehouseIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -263,8 +264,8 @@ export default function StockLevelsPage() {
           <EmptyState
             illustration={
               hasActiveFilters
-                ? <Package className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />
-                : <Package className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />
+                ? <EmptySearchIllustration />
+                : <EmptyWarehouseIllustration />
             }
             title={hasActiveFilters ? "No results" : "No stock records"}
             description={

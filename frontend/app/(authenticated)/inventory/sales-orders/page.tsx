@@ -3,7 +3,8 @@
 import { Suspense, useDeferredValue, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Search, ShoppingCart } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -252,7 +253,7 @@ function SalesOrdersListContent() {
 
   const emptyState = isFiltered ? (
     <EmptyState
-      illustration={<ShoppingCart className="h-8 w-8 text-muted-foreground/40" />}
+      illustration={<EmptySearchIllustration />}
       title="No matching orders"
       description="No sales orders match your current filters."
       action={{ label: "Clear filters", onClick: handleClearFilters }}
@@ -260,7 +261,7 @@ function SalesOrdersListContent() {
     />
   ) : (
     <EmptyState
-      illustration={<ShoppingCart className="h-8 w-8 text-muted-foreground/40" />}
+      illustration={<EmptyOrdersIllustration />}
       title="No sales orders yet"
       description="Create a sales order to start fulfilling customer requests."
       action={{ label: "New SO", href: "/inventory/sales-orders/new" }}

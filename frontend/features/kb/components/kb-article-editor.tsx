@@ -231,10 +231,10 @@ export function KbArticleEditor({
 
   return (
     <PageWrapper
-      eyebrow="Support · Knowledge Base"
+      eyebrow="Documents · Knowledge Base"
       title={article.title}
       subtitle="Edit article content, metadata, and publishing settings."
-      backHref="/support/kb"
+      backHref="/kb"
       actions={
         <Button size="sm" onClick={handleSave} disabled={update.isPending}>
           <Save className="h-3.5 w-3.5 mr-1" />

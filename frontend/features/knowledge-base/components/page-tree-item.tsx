@@ -37,6 +37,7 @@ export default function PageTreeItem({
   const router = useRouter();
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const isActive = pathname === `/knowledge-base/pages/${node.id}`;
   const canCreate = useCan("kb:pages:create");
   const canDelete = useCan("kb:pages:delete");
@@ -166,7 +167,9 @@ export default function PageTreeItem({
 
         <span className="flex-1 truncate min-w-0">{node.title || "Untitled"}</span>
 
-        <span className="hidden group-hover:flex items-center gap-0.5 shrink-0">
+        <span
+          className={`${menuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-0.5 shrink-0`}
+        >
           {canCreate && (
             <button
               className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -177,7 +180,7 @@ export default function PageTreeItem({
               <Plus className="h-3 w-3" />
             </button>
           )}
-          <DropdownMenu>
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger asChild>
               <button
                 className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"

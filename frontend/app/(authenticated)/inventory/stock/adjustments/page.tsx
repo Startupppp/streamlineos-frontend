@@ -6,7 +6,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Plus, ClipboardList, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import { EmptyActivityIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -214,7 +215,7 @@ export default function AdjustmentsPage() {
       ) : adjustments.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
-            illustration={<ClipboardList className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />}
+            illustration={hasActiveFilters ? <EmptySearchIllustration /> : <EmptyActivityIllustration />}
             title={hasActiveFilters ? "No results" : "No adjustments yet"}
             description={
               hasActiveFilters

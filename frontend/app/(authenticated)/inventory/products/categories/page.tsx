@@ -400,7 +400,7 @@ function CategoriesPageInner() {
         ) : filteredCategories.length === 0 ? (
           <EmptyState
             illustration={
-              <Tag className="h-8 w-8 text-muted-foreground/40" />
+              hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
             }
             title={hasFilters ? "No categories found" : "No categories yet"}
             description={

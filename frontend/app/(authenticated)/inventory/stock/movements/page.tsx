@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowUpDown, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -228,7 +229,7 @@ export default function MovementsPage() {
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
             illustration={
-              <ArrowUpDown className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />
+              <EmptyActivityIllustration />
             }
             title="No movements found"
             description="No stock movements match the selected filters."

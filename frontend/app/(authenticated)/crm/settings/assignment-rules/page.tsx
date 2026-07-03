@@ -210,7 +210,7 @@ export default function AssignmentRulesPage() {
       {
         name: data.name,
         assignmentType: data.assignmentType,
-        assignToUserId: data.assignmentType === "assign_user" ? data.assignToUserId ?? undefined : undefined,
+        assignToUserId: data.assignmentType === "assign_user" ? data.assignToUserId || undefined : undefined,
         roundRobinUserIds: data.assignmentType === "round_robin"
           ? data.roundRobinUserIds?.split(",").map(s => s.trim()).filter(Boolean) ?? []
           : undefined,

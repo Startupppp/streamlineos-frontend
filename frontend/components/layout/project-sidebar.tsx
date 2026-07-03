@@ -25,6 +25,8 @@ import {
   Activity,
   PenTool,
   Zap,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -91,15 +93,28 @@ function useIsActive(baseUrl: string) {
   };
 }
 
+const SIDEBAR_COLLAPSED_KEY = "streamlineos:project-sidebar:collapsed";
+
 function DesktopSidebar({
   projectId,
   projectName,
   projectKey,
 }: ProjectSidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+  });
   const baseUrl = `/projects/${projectId}`;
   const sections = useSections(baseUrl);
   const isActive = useIsActive(baseUrl);
+
+  function handleToggleCollapse() {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+      return next;
+    });
+  }
 
   return (
     <div

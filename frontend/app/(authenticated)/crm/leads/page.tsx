@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState, SkeletonTable } from "@/components/shared";
 import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";

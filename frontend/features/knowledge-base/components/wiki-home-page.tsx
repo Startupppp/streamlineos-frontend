@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, FileText, Clock, Star } from "lucide-react";
+import { EmptyKnowledgeIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -90,11 +91,13 @@ export default function WikiHomePage() {
     return (
       <div className="flex h-full items-center justify-center p-8">
         <EmptyState
+          illustration={<EmptyKnowledgeIllustration />}
           title="Your wiki starts here"
           description="Create your first page to build a shared knowledge base for your team."
           action={
             canCreate ? { label: "New page", onClick: handleNewPage } : undefined
           }
+          className="flex-1 min-h-[50vh]"
         />
       </div>
     );

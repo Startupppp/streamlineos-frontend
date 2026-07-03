@@ -1,8 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { LayoutTemplate, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,51 +30,82 @@ interface TemplateCardProps {
 
 function TemplateCard({ template, canDelete, onUse }: TemplateCardProps) {
   const deleteTemplate = useDeleteKbPageTemplate();
+  const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
 
   function handleUse() {
     onUse(template.id);
   }
 
   function handleDelete() {
-    if (!window.confirm(`Delete template "${template.name}"?`)) return;
+    setDeleteAlertOpen(true);
+  }
+
+  function handleConfirmDelete() {
     deleteTemplate.mutate(template.id, {
       onSuccess: () => toast.success("Template deleted"),
       onError: () => toast.error("Failed to delete template"),
     });
   }
 
+  function handleDeleteAlertOpenChange(open: boolean) {
+    setDeleteAlertOpen(open);
+  }
+
   return (
-    <div className="flex items-start gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-      <span className="text-2xl shrink-0">{template.icon ?? "📄"}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{template.name}</p>
-        {template.description && (
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-            {template.description}
-          </p>
-        )}
-      </div>
-      <div className="flex items-center gap-1 shrink-0">
-        <Button size="sm" onClick={handleUse} className="h-7 text-xs">
-          Use
-        </Button>
-        {canDelete && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleDelete}
-            disabled={deleteTemplate.isPending}
-            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-          >
-            {deleteTemplate.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="h-3.5 w-3.5" />
-            )}
+    <>
+      <div className="flex items-start gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+        <span className="text-2xl shrink-0">{template.icon ?? "📄"}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{template.name}</p>
+          {template.description && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+              {template.description}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button size="sm" onClick={handleUse} className="h-7 text-xs">
+            Use
           </Button>
-        )}
+          {canDelete && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleDelete}
+              disabled={deleteTemplate.isPending}
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+            >
+              {deleteTemplate.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
+
+      <AlertDialog open={deleteAlertOpen} onOpenChange={handleDeleteAlertOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete template?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{template.name}&rdquo; will be permanently deleted and cannot be recovered.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleConfirmDelete}
+              disabled={deleteTemplate.isPending}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

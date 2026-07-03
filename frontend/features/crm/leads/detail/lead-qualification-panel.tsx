@@ -173,7 +173,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
               transition={{ duration: 0.18 }}
             >
               <Button
-                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                className="w-full"
                 size="sm"
                 onClick={handleSave}
                 disabled={updateLead.isPending}

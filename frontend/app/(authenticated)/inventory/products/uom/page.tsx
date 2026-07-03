@@ -235,7 +235,7 @@ function UomPageInner() {
         ) : filteredUom.length === 0 ? (
           <EmptyState
             illustration={
-              <Ruler className="h-8 w-8 text-muted-foreground/40" />
+              hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
             }
             title={hasFilters ? "No units found" : "No units of measure yet"}
             description={

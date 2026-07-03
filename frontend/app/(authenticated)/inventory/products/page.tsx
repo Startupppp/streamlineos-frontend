@@ -312,7 +312,7 @@ function ProductsPageInner() {
           emptyState={
             <EmptyState
               illustration={
-                <Package className="h-8 w-8 text-muted-foreground/40" />
+                hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
               }
               title={hasFilters ? "No products found" : "No products yet"}
               description={

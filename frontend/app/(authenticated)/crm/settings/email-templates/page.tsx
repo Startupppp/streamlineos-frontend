@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,7 +27,6 @@ import {
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useEmailTemplates, useCreateEmailTemplate, useUpdateEmailTemplate, useDeleteEmailTemplate,
 } from "@/hooks/api/crm-settings";
@@ -111,7 +109,7 @@ function TemplateCard({ template, onPreviewToggle, onEdit, onDeleteRequest }: Te
   const handleDeleteRequest = useCallback(() => onDeleteRequest(template.id), [template.id, onDeleteRequest]);
 
   return (
-    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
+    <Card className="bg-card rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <TooltipProvider>
@@ -220,9 +218,7 @@ export default function EmailTemplatesPage() {
     f.setValue("body", current + variable);
   }, [createForm, editForm]);
 
-  const handleDeleteRequest = useCallback((id: number) => {
-    setDeleteTargetId(id);
-  }, []);
+  const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
 
   const handleDeleteConfirm = useCallback(() => {
     if (deleteTargetId === null) return;
@@ -233,17 +229,13 @@ export default function EmailTemplatesPage() {
   }, [deleteTemplate, deleteTargetId]);
 
   const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-
   const handlePreviewToggle = useCallback((id: number) => {
     setPreviewId((prev) => (prev === id ? null : id));
   }, []);
-
   const handleCloseEdit = useCallback(() => setEditingId(null), []);
   const handleClosePreview = useCallback(() => setPreviewId(null), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
 
   const previewTemplate = useMemo(() => {
@@ -251,29 +243,7 @@ export default function EmailTemplatesPage() {
     return templates.find(t => t.id === previewId) ?? null;
   }, [previewId, templates]);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-10 w-48" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-40" />)}
-        </div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-6">
-        <EmptyState
-          illustration={<Mail className="h-10 w-10 text-muted-foreground" />}
-          title="Failed to load email templates"
-          description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
-        />
-      </div>
-    );
-  }
+  const count = templates?.length ?? 0;
 
   return (
     <>
@@ -299,11 +269,11 @@ export default function EmailTemplatesPage() {
 
       <PageWrapper
         title="Email Templates"
-        subtitle="Manage reusable email templates with dynamic variables"
+        subtitle={isLoading ? undefined : `${count} template${count !== 1 ? "s" : ""}`}
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+              <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 New Template
               </Button>
@@ -346,7 +316,7 @@ export default function EmailTemplatesPage() {
                       ))}
                     </div>
                   </div>
-                  <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={createTemplate.isPending}>
+                  <Button type="submit" className="w-full" disabled={createTemplate.isPending}>
                     {createTemplate.isPending ? "Creating..." : "Create Template"}
                   </Button>
                 </form>
@@ -355,38 +325,46 @@ export default function EmailTemplatesPage() {
           </Dialog>
         }
       >
-        <motion.div
-          className="space-y-6"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {templates && templates.length > 0 ? (
-              templates.map(template => (
-                <TemplateCard
-                  key={template.id}
-                  template={template}
-                  onPreviewToggle={handlePreviewToggle}
-                  onEdit={handleStartEdit}
-                  onDeleteRequest={handleDeleteRequest}
-                />
-              ))
-            ) : (
-              <div className="col-span-full flex flex-1 items-center justify-center py-14">
-                <EmptyState
-                  illustration={<Mail className="h-10 w-10 text-muted-foreground" />}
-                  title="No email templates"
-                  description="Create reusable templates with dynamic variables to speed up outreach."
-                  action={{ label: "New Template", onClick: handleOpenCreate }}
-                />
-              </div>
-            )}
-          </motion.div>
+        {isLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map(i => <Skeleton key={i} className="h-40" />)}
+          </div>
+        ) : isError ? (
+          <EmptyState
+            illustration={<Mail className="h-8 w-8 text-muted-foreground/40" />}
+            title="Failed to load email templates"
+            description="Something went wrong. Please try again."
+            action={{ label: "Retry", onClick: handleRetry }}
+            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+          />
+        ) : (
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {templates && templates.length > 0 ? (
+                templates.map(template => (
+                  <TemplateCard
+                    key={template.id}
+                    template={template}
+                    onPreviewToggle={handlePreviewToggle}
+                    onEdit={handleStartEdit}
+                    onDeleteRequest={handleDeleteRequest}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full">
+                  <EmptyState
+                    illustration={<Mail className="h-8 w-8 text-muted-foreground/40" />}
+                    title="No email templates"
+                    description="Create reusable templates with dynamic variables to speed up outreach."
+                    action={{ label: "New Template", onClick: handleOpenCreate }}
+                    className="flex-1 min-h-[40vh] border-0 bg-transparent"
+                  />
+                </div>
+              )}
+            </div>
 
-          {editingId !== null && (
-            <motion.div variants={fadeUp}>
-              <Card className="shadow-sm border-blue-500/30">
+            {editingId !== null && (
+              <Card className="bg-card rounded-lg border border-border shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-base">Edit Template</CardTitle>
                 </CardHeader>
@@ -427,7 +405,7 @@ export default function EmailTemplatesPage() {
                       </div>
                       <div className="flex justify-end gap-3">
                         <Button type="button" variant="outline" onClick={handleCloseEdit}>Cancel</Button>
-                        <Button type="submit" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={updateTemplate.isPending}>
+                        <Button type="submit" disabled={updateTemplate.isPending}>
                           {updateTemplate.isPending ? "Saving..." : "Save Changes"}
                         </Button>
                       </div>
@@ -435,23 +413,21 @@ export default function EmailTemplatesPage() {
                   </Form>
                 </CardContent>
               </Card>
-            </motion.div>
-          )}
+            )}
 
-          {previewTemplate && (
-            <motion.div variants={fadeUp}>
-              <Card className="shadow-sm border-emerald-500/30">
+            {previewTemplate && (
+              <Card className="bg-card rounded-lg border border-border shadow-sm">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-emerald-400" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                       Preview: {previewTemplate.name}
                     </CardTitle>
                     <Button variant="ghost" size="sm" onClick={handleClosePreview}>Close</Button>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="p-4 rounded-lg bg-muted/20 border border-border/30 space-y-3">
+                  <div className="p-4 rounded-lg bg-muted/20 border border-border space-y-3">
                     <div>
                       <p className="text-xs text-muted-foreground">Subject</p>
                       <p className="text-sm font-medium">{interpolate(previewTemplate.subject, SAMPLE_DATA)}</p>
@@ -464,9 +440,9 @@ export default function EmailTemplatesPage() {
                   <p className="text-[10px] text-muted-foreground mt-2">Preview uses sample data for variable interpolation</p>
                 </CardContent>
               </Card>
-            </motion.div>
-          )}
-        </motion.div>
+            )}
+          </div>
+        )}
       </PageWrapper>
     </>
   );
