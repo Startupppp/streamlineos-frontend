@@ -9,8 +9,10 @@ import { cn } from "@/lib/utils";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { clearAll } from "@/features/org-setup/lib/draft";
-import { useOrgSetupMutation } from "@/lib/api/hooks/org";
-import type { WizardData } from "../lib/types";
+import { useCompleteOrgSetupMutation, type OrgSetupPayload } from "@/lib/api/hooks/org";
+import { useGenerateWorkspace } from "@/hooks/api/workspace-onboarding";
+import { useBulkInviteUsers } from "@/hooks/api/users";
+import type { Invitee, WizardData } from "../lib/types";
 import { GENERATION_STEPS } from "../lib/constants";
 
 const SETUP_DONE_KEY = "org-setup-complete";
@@ -18,6 +20,16 @@ const SETUP_DONE_KEY = "org-setup-complete";
 type StepGenerationProps = {
   data: WizardData;
 };
+
+function groupInviteesByRole(invitees: Invitee[]): { role: string; emails: string[] }[] {
+  const byRole = new Map<string, string[]>();
+  for (const invitee of invitees) {
+    const emails = byRole.get(invitee.role) ?? [];
+    emails.push(invitee.email);
+    byRole.set(invitee.role, emails);
+  }
+  return Array.from(byRole.entries()).map(([role, emails]) => ({ role, emails }));
+}
 
 export function StepGeneration({ data }: StepGenerationProps) {
   const [completedSteps, setCompletedSteps] = useState(0);
@@ -32,18 +44,24 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const apiDoneRef = useRef(false);
   const hasRunRef = useRef(false);
 
-  const orgMutation = useOrgSetupMutation();
-  const orgMutationRef = useRef(orgMutation);
-  orgMutationRef.current = orgMutation;
+  const generateWorkspace = useGenerateWorkspace();
+  const completeOrgSetup = useCompleteOrgSetupMutation();
+  const bulkInvite = useBulkInviteUsers();
+  const generateWorkspaceRef = useRef(generateWorkspace);
+  generateWorkspaceRef.current = generateWorkspace;
+  const completeOrgSetupRef = useRef(completeOrgSetup);
+  completeOrgSetupRef.current = completeOrgSetup;
+  const bulkInviteRef = useRef(bulkInvite);
+  bulkInviteRef.current = bulkInvite;
 
-  function buildPayload(d: WizardData) {
+  function buildPayload(d: WizardData): OrgSetupPayload {
     return {
       industry: d.industry || "IT Services",
       companyName: d.companyName,
       companySize: d.teamSize || "1-10",
       ...(d.country ? { country: d.country } : {}),
       ...(d.timezone ? { timezone: d.timezone } : {}),
-      enabledModules: d.installedApps.length > 0 ? d.installedApps : ["HR", "CRM", "PROJECTS"],
+      enabledModules: d.modules.length > 0 ? d.modules : ["HR", "CRM", "PROJECTS"],
     };
   }
 
@@ -68,7 +86,8 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
     await new Promise<void>(resolve => setTimeout(resolve, 1500));
     clearAll();
-    window.location.replace("/dashboard");
+    const importFlag = dataRef.current.startingData === "import" ? "?setup=import" : "";
+    window.location.replace(`/dashboard${importFlag}`);
   }
 
   function handleError(msg: string) {
@@ -106,7 +125,17 @@ export function StepGeneration({ data }: StepGenerationProps) {
     const payload = buildPayload(dataRef.current);
 
     try {
-      const res = await orgMutationRef.current.mutateAsync(payload);
+      await generateWorkspaceRef.current.mutateAsync({
+        industry: payload.industry,
+        enabledModules: payload.enabledModules,
+      });
+      const res = await completeOrgSetupRef.current.mutateAsync(payload);
+
+      const inviteGroups = groupInviteesByRole(dataRef.current.invitees);
+      for (const group of inviteGroups) {
+        await bulkInviteRef.current.mutateAsync(group).catch(() => null);
+      }
+
       await handleSuccess(res?.autoLoginToken ?? null);
     } catch (err) {
       handleError(getErrorMessage(err));

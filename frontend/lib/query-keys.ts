@@ -265,6 +265,11 @@ export const queryKeys = {
     settings: () => [...base, "organization", "settings"] as const,
   },
 
+  orgSetup: {
+    all: [...base, "org-setup"] as const,
+    session: () => [...base, "org-setup", "session"] as const,
+  },
+
   access: {
     all: [...base, "access"] as const,
     me: () => [...base, "access", "me"] as const,
