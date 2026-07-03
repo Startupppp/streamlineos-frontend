@@ -342,10 +342,10 @@ export default function RecruitmentCommandCenterPage() {
                 {!statsLoading && !stats?.totalCandidates && (
                   <div className="rounded-2xl border border-dashed border-border p-6 text-center">
                     <EmptyPersonIllustration className="mx-auto mb-3 h-16 w-16 opacity-80" />
-                    <p className="text-xs font-medium text-foreground flex items-center justify-center gap-1.5">
+                    <div className="text-xs font-medium text-foreground flex items-center justify-center gap-1.5">
                       <UserSearchIcon className="h-3.5 w-3.5" />
                       No candidates yet
-                    </p>
+                    </div>
                     <p className="text-[11px] text-muted-foreground mt-1">
                       Publish a job or import resumes to get started.
                     </p>
