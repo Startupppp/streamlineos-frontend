@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Users } from "lucide-react";
 import {
-  calculateSavingsVsOdoo,
+  calculateSavingsVsAllInOne,
   calculateSavingsVsStack,
   COMPETITOR_PRICES,
   PRICING_TIERS,
@@ -23,7 +23,10 @@ function seatTickPosition(value: number) {
 export function SavingsCalculator() {
   const [seats, setSeats] = useState(20);
 
-  const vsOdoo = useMemo(() => calculateSavingsVsOdoo(seats, "annual"), [seats]);
+  const vsAllInOne = useMemo(
+    () => calculateSavingsVsAllInOne(seats, "annual"),
+    [seats],
+  );
   const vsStack = useMemo(() => calculateSavingsVsStack(seats), [seats]);
 
   const startupAnnual = PRICING_TIERS[1].annual ?? 399;
@@ -85,27 +88,27 @@ export function SavingsCalculator() {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <ComparisonCard
-          label="Odoo Standard"
-          subtitle={`${INR(COMPETITOR_PRICES.odooStandard)} × ${seats} × 12 mo`}
-          amount={INR(vsOdoo.odooAnnual)}
+          label="Typical all-in-one platform"
+          subtitle={`${INR(COMPETITOR_PRICES.allInOneErp)} × ${seats} × 12 mo`}
+          amount={INR(vsAllInOne.competitorAnnual)}
         />
         <ComparisonCard
           label="StreamlineOS Startup"
           subtitle={`${INR(startupAnnual)} × ${seats} × 12 mo`}
-          amount={INR(vsOdoo.streamlineAnnual)}
+          amount={INR(vsAllInOne.streamlineAnnual)}
           highlight
         />
       </div>
 
       <div className="mt-4 rounded-xl bg-blue-600 px-5 py-4 text-white">
-        <p className="text-xs font-medium text-blue-100">Annual savings vs Odoo</p>
+        <p className="text-xs font-medium text-blue-100">Annual savings</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
           <p className="font-display text-3xl font-extrabold tabular-nums">
-            {INR(vsOdoo.savings)}
+            {INR(vsAllInOne.savings)}
             <span className="ml-2 text-sm font-medium text-blue-100">/ year</span>
           </p>
           <span className="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
-            {vsOdoo.savingsPct}% less
+            {vsAllInOne.savingsPct}% less
           </span>
         </div>
       </div>

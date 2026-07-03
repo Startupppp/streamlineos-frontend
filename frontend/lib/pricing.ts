@@ -54,7 +54,7 @@ export const PRICING_TIERS: PricingTier[] = [
   {
     id: "startup",
     name: "Startup",
-    tagline: "31% cheaper than Odoo",
+    tagline: "Built for growing teams",
     description: "Unlimited seats with everything an early-stage team needs to operate.",
     monthly: 499,
     annual: 399,
@@ -128,8 +128,7 @@ export const PRICING_TIERS: PricingTier[] = [
 ];
 
 export const COMPETITOR_PRICES = {
-  odooStandard: 580,
-  odooCustom: 890,
+  allInOneErp: 580,
   zohoOne: 2500,
   keka: 120,
   hubspotStarter: 1700,
@@ -140,27 +139,29 @@ export const COMPETITOR_PRICES = {
 } as const;
 
 type SavingsBreakdown = {
-  odooAnnual: number;
+  competitorAnnual: number;
   streamlineAnnual: number;
   savings: number;
   savingsPct: number;
 };
 
-export function calculateSavingsVsOdoo(
+export function calculateSavingsVsAllInOne(
   seats: number,
   billingPeriod: BillingPeriod = "annual",
 ): SavingsBreakdown {
-  const odooAnnual = COMPETITOR_PRICES.odooStandard * seats * 12;
+  const competitorAnnual = COMPETITOR_PRICES.allInOneErp * seats * 12;
   const streamlinePerSeat =
     billingPeriod === "annual"
       ? PRICING_TIERS[1].annual ?? 0
       : PRICING_TIERS[1].monthly ?? 0;
   const streamlineAnnual = streamlinePerSeat * seats * 12;
   return {
-    odooAnnual,
+    competitorAnnual,
     streamlineAnnual,
-    savings: odooAnnual - streamlineAnnual,
-    savingsPct: Math.round(((odooAnnual - streamlineAnnual) / odooAnnual) * 100),
+    savings: competitorAnnual - streamlineAnnual,
+    savingsPct: Math.round(
+      ((competitorAnnual - streamlineAnnual) / competitorAnnual) * 100,
+    ),
   };
 }
 
@@ -182,7 +183,7 @@ export function calculateSavingsVsStack(seats: number) {
 }
 
 export function bundleSavingsCopy(): string {
-  return `Odoo Standard charges ${fmt(COMPETITOR_PRICES.odooStandard)}/seat for the same bundle. We're 31% cheaper on annual.`;
+  return `Typical all-in-one platforms charge ${fmt(COMPETITOR_PRICES.allInOneErp)}/seat or more for the same bundle. StreamlineOS Startup is ${fmt(PRICING_TIERS[1].annual ?? 399)}/seat on annual billing.`;
 }
 
 export function cheapestAnnualLabel(): string {
