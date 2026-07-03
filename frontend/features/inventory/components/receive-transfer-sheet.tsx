@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,6 +23,14 @@ import type { TransferDetail } from "@/hooks/api/inventory/stock";
 
 type Line = TransferDetail["lines"][number];
 type LineInput = { transferLineId: number; quantityReceived: number; notes: string };
+
+function buildInitialInputs(lines: TransferDetail["lines"]): LineInput[] {
+  return lines.map((l) => ({
+    transferLineId: l.id,
+    quantityReceived: l.quantity,
+    notes: "",
+  }));
+}
 
 function ReceiveLineRow({
   line,
@@ -75,41 +83,23 @@ function ReceiveLineRow({
   );
 }
 
-export function ReceiveTransferSheet({
-  open,
-  onOpenChange,
+function ReceiveTransferForm({
   transfer,
   onSubmit,
   isPending,
+  onClose,
 }: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
   transfer: TransferDetail;
   onSubmit: (lines: { transferLineId: number; quantityReceived: number }[]) => void;
   isPending: boolean;
+  onClose: () => void;
 }) {
-  const [lineInputs, setLineInputs] = useState<LineInput[]>([]);
-
-  useEffect(() => {
-    if (open) {
-      setLineInputs(
-        transfer.lines.map((l) => ({
-          transferLineId: l.id,
-          quantityReceived: l.quantity,
-          notes: "",
-        })),
-      );
-    }
-  }, [open, transfer.lines]);
+  const [lineInputs, setLineInputs] = useState<LineInput[]>(() =>
+    buildInitialInputs(transfer.lines),
+  );
 
   function handleReceiveAll() {
-    setLineInputs(
-      transfer.lines.map((l) => ({
-        transferLineId: l.id,
-        quantityReceived: l.quantity,
-        notes: "",
-      })),
-    );
+    setLineInputs(buildInitialInputs(transfer.lines));
   }
 
   function handleQtyChange(id: number, v: string) {
@@ -137,6 +127,78 @@ export function ReceiveTransferSheet({
     );
   }
 
+  return (
+    <>
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[13px] font-medium">Line Items</span>
+          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleReceiveAll}>
+            Receive All
+          </Button>
+        </div>
+        <div className="rounded-md border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/80 hover:bg-muted/80">
+                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                  Product / SKU
+                </TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
+                  Requested
+                </TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                  Received
+                </TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                  Notes
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {lineInputs.map((li) => {
+                const line = transfer.lines.find((l) => l.id === li.transferLineId);
+                if (!line) return null;
+                return (
+                  <ReceiveLineRow
+                    key={li.transferLineId}
+                    line={line}
+                    input={li}
+                    onQtyChange={handleQtyChange}
+                    onNotesChange={handleNotesChange}
+                  />
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+      <SheetFooter className="shrink-0 px-6 py-4 border-t">
+        <div className="grid grid-cols-2 gap-2 w-full">
+          <Button variant="outline" onClick={onClose} disabled={isPending}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isPending}>
+            {isPending ? "Receiving…" : "Confirm Receipt"}
+          </Button>
+        </div>
+      </SheetFooter>
+    </>
+  );
+}
+
+export function ReceiveTransferSheet({
+  open,
+  onOpenChange,
+  transfer,
+  onSubmit,
+  isPending,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  transfer: TransferDetail;
+  onSubmit: (lines: { transferLineId: number; quantityReceived: number }[]) => void;
+  isPending: boolean;
+}) {
   function handleClose() {
     onOpenChange(false);
   }
@@ -151,59 +213,12 @@ export function ReceiveTransferSheet({
             {transfer.toLocation?.name ?? "—"}
           </SheetDescription>
         </SheetHeader>
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-medium">Line Items</span>
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleReceiveAll}>
-              Receive All
-            </Button>
-          </div>
-          <div className="rounded-md border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/80 hover:bg-muted/80">
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                    Product / SKU
-                  </TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
-                    Requested
-                  </TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                    Received
-                  </TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                    Notes
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lineInputs.map((li) => {
-                  const line = transfer.lines.find((l) => l.id === li.transferLineId);
-                  if (!line) return null;
-                  return (
-                    <ReceiveLineRow
-                      key={li.transferLineId}
-                      line={line}
-                      input={li}
-                      onQtyChange={handleQtyChange}
-                      onNotesChange={handleNotesChange}
-                    />
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-        <SheetFooter className="shrink-0 px-6 py-4 border-t">
-          <div className="grid grid-cols-2 gap-2 w-full">
-            <Button variant="outline" onClick={handleClose} disabled={isPending}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={isPending}>
-              {isPending ? "Receiving…" : "Confirm Receipt"}
-            </Button>
-          </div>
-        </SheetFooter>
+        <ReceiveTransferForm
+          transfer={transfer}
+          onSubmit={onSubmit}
+          isPending={isPending}
+          onClose={handleClose}
+        />
       </SheetContent>
     </Sheet>
   );

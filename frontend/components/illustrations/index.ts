@@ -27,3 +27,7 @@ export { EmptyOrdersIllustration } from "./empty-orders";
 export { EmptyTransferIllustration } from "./empty-transfer";
 export { EmptyReportIllustration } from "./empty-report";
 export { EmptyKnowledgeIllustration } from "./empty-knowledge";
+export { EmptyLeadsIllustration } from "./empty-leads";
+export { EmptyDealsIllustration } from "./empty-deals";
+export { EmptyCompaniesIllustration } from "./empty-companies";
+export { EmptyClientsIllustration } from "./empty-clients";

@@ -9,7 +9,6 @@ import {
   Target,
   BarChart3,
   IndianRupee,
-  BarChart2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +17,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDealsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -112,7 +112,7 @@ export default function WinLossAnalysisPage() {
         eyebrow="CRM / Deals"
       >
         <EmptyState
-          illustration={<BarChart2 className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<EmptyDealsIllustration />}
           title="No closed deals yet"
           description="Win/loss data will appear once deals are marked as won or lost."
           className="flex-1 min-h-[50vh]"

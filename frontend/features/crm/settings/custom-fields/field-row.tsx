@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { fadeUp } from "@/lib/motion-variants";
-import type { CustomFieldDefinition } from "@/hooks/api/crm/activities";
+import type { CustomFieldDefinition } from "@/hooks/api/crm/custom-fields";
 
 export type EntityType = "lead" | "deal" | "contact";
 

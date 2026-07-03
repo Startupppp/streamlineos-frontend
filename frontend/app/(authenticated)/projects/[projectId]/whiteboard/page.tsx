@@ -29,15 +29,30 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, StickyNote, Lock, Globe, PanelLeftClose } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  StickyNote,
+  Lock,
+  Globe,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from "lucide-react";
 import {
   useWhiteboards,
+  useWhiteboard,
   useCreateWhiteboard,
   useDeleteWhiteboard,
+  useUpdateWhiteboard,
   type WhiteboardSummary,
+  type ExcalidrawSceneData,
 } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
+import { useWhiteboardAutosave } from "@/features/projects/whiteboard/use-whiteboard-autosave";
+import { WhiteboardToolbar } from "@/features/projects/whiteboard/whiteboard-toolbar";
+import { ShareDialog } from "@/features/projects/whiteboard/share-dialog";
+import { computeStoredVersion } from "@/features/projects/whiteboard/scene-utils";
 
 const BOARDS_COLLAPSED_KEY = "streamlineos:whiteboard:boards-collapsed";
 
@@ -50,10 +65,6 @@ const ExcalidrawCanvas = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex items-center justify-between pb-2 shrink-0">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-8 w-20" />
-        </div>
         <Skeleton className="flex-1 rounded-lg" />
       </div>
     ),
@@ -248,6 +259,44 @@ export default function WhiteboardPage({
     return boards.find((b) => b.id === chosenBoardId) ?? boards[0];
   }, [boards, chosenBoardId]);
 
+  const {
+    data: detail,
+    isLoading: detailLoading,
+    isError: detailError,
+    refetch: refetchDetail,
+  } = useWhiteboard(projectId, selectedBoard?.id ?? null);
+  const updateBoard = useUpdateWhiteboard(projectId);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+
+  const initialVersion = computeStoredVersion(detail?.data.elements ?? []);
+
+  const handleSaveAsync = useCallback(
+    async (boardId: number, data: ExcalidrawSceneData) => {
+      await updateBoard.mutateAsync({ id: boardId, data });
+    },
+    [updateBoard],
+  );
+  const handleSaveError = useCallback(() => toast.error("Failed to save board"), []);
+
+  const {
+    status: saveStatus,
+    handleSceneChange,
+    manualSave,
+  } = useWhiteboardAutosave({
+    boardId: selectedBoard?.id ?? null,
+    access: detail?.access ?? "view",
+    initialVersion,
+    saveAsync: handleSaveAsync,
+    onSaveError: handleSaveError,
+  });
+
+  const handleToggleFullscreen = useCallback(() => setIsFullscreen((prev) => !prev), []);
+  const handleExitFullscreen = useCallback(() => setIsFullscreen(false), []);
+  const handleOpenShare = useCallback(() => setShareOpen(true), []);
+  const handleShareOpenChange = useCallback((open: boolean) => setShareOpen(open), []);
+  const handleDetailRetry = useCallback(() => refetchDetail(), [refetchDetail]);
+
   const handleBoardSelect = useCallback((id: number) => setChosenBoardId(id), []);
   const handleBoardDelete = useCallback((board: WhiteboardSummary) => setDeleteTarget(board), []);
   const handleAlertOpenChange = useCallback((open: boolean) => {
@@ -286,21 +335,64 @@ export default function WhiteboardPage({
     });
   }
 
-  return (
-    <PageWrapper
-      title="Whiteboard"
-      eyebrow="Projects"
-      backHref={`/projects/${projectId}`}
-      subtitle="Sketch ideas visually with your team"
-      noInternalScroll
-      contentClassName="flex min-h-0"
-      actions={
-        canManage ? (
+  const visibilityBadge =
+    selectedBoard?.visibility === "private"
+      ? "Private"
+      : selectedBoard?.visibility === "public"
+        ? "Public"
+        : undefined;
+
+  const leadingToggle =
+    boards && boards.length > 0 ? (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 shrink-0 mt-0.5 hidden md:inline-flex"
+        onClick={handleToggleList}
+        aria-label={listCollapsed ? "Show boards panel" : "Hide boards panel"}
+      >
+        {listCollapsed ? (
+          <PanelLeftOpen className="h-4 w-4" />
+        ) : (
+          <PanelLeftClose className="h-4 w-4" />
+        )}
+      </Button>
+    ) : undefined;
+
+  const showToolbar = Boolean(detail && selectedBoard);
+  const headerActions =
+    showToolbar || canManage ? (
+      <>
+        {detail !== undefined && selectedBoard !== null && (
+          <WhiteboardToolbar
+            saveStatus={saveStatus}
+            isViewMode={detail.access === "view"}
+            canManage={detail.access === "manage"}
+            isFullscreen={isFullscreen}
+            listCollapsed={listCollapsed}
+            shareToken={detail.sharing?.shareToken ?? null}
+            onManualSave={manualSave}
+            onToggleFullscreen={handleToggleFullscreen}
+            onToggleList={handleToggleList}
+            onOpenShare={handleOpenShare}
+          />
+        )}
+        {canManage && (
           <Button size="sm" onClick={handleOpenCreate}>
             <Plus className="h-4 w-4 mr-1" /> New Board
           </Button>
-        ) : undefined
-      }
+        )}
+      </>
+    ) : undefined;
+
+  return (
+    <PageWrapper
+      title={selectedBoard?.name ?? "Whiteboard"}
+      badge={visibilityBadge}
+      leading={leadingToggle}
+      noInternalScroll
+      contentClassName="flex min-h-0"
+      actions={headerActions}
     >
       {isLoading ? (
         <div className="flex-1">
@@ -324,17 +416,8 @@ export default function WhiteboardPage({
         <div className="flex flex-1 min-h-0 gap-3">
           {!listCollapsed && (
             <aside className="w-48 shrink-0 border-r border-border pr-3 hidden md:flex md:flex-col">
-              <div className="flex items-center justify-between mb-1 shrink-0">
+              <div className="flex items-center mb-1 shrink-0">
                 <span className="text-xs font-medium text-muted-foreground">Boards</span>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6 shrink-0"
-                  onClick={handleToggleList}
-                  aria-label="Collapse boards panel"
-                >
-                  <PanelLeftClose className="h-3.5 w-3.5" />
-                </Button>
               </div>
               <ul className="space-y-0.5 overflow-y-auto flex-1 min-h-0">
                 {boards.map((board) => (
@@ -364,13 +447,22 @@ export default function WhiteboardPage({
 
           <div className="flex flex-1 min-h-0 flex-col">
             {selectedBoard ? (
-              <ExcalidrawCanvas
-                key={selectedBoard.id}
-                projectId={projectId}
-                board={selectedBoard}
-                listCollapsed={listCollapsed}
-                onToggleList={handleToggleList}
-              />
+              detailLoading ? (
+                <LoadingState variant="page" />
+              ) : detailError || !detail ? (
+                <div className="flex flex-1 items-center justify-center">
+                  <ErrorState onRetry={handleDetailRetry} />
+                </div>
+              ) : (
+                <ExcalidrawCanvas
+                  key={selectedBoard.id}
+                  detail={detail}
+                  isFullscreen={isFullscreen}
+                  saveStatus={saveStatus}
+                  onSceneChange={handleSceneChange}
+                  onExitFullscreen={handleExitFullscreen}
+                />
+              )
             ) : (
               <div className="flex flex-1 items-center justify-center">
                 <EmptyState
@@ -391,6 +483,15 @@ export default function WhiteboardPage({
           onOpenChange={setCreateOpen}
           onCreate={handleCreate}
           isPending={createBoard.isPending}
+        />
+      )}
+
+      {detail !== undefined && detail.access === "manage" && detail.sharing !== null && (
+        <ShareDialog
+          projectId={projectId}
+          whiteboard={detail}
+          open={shareOpen}
+          onOpenChange={handleShareOpenChange}
         />
       )}
 

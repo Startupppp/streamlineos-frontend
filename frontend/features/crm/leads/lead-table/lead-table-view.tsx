@@ -12,9 +12,10 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Columns3, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Columns3, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import {
   LeadTableViewProps, ALL_COLUMNS, PAGE_SIZES, getStoredColumns,
@@ -247,11 +248,10 @@ export function LeadTableView({
                 <TableRow>
                   <TableCell colSpan={cols.length + 1} className="p-0">
                     <EmptyState
-                      illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
+                      illustration={<EmptyLeadsIllustration />}
                       title="No leads found"
                       description="No leads match your current filters."
                       className="border-0 bg-transparent min-h-[40vh]"
-                      compact
                     />
                   </TableCell>
                 </TableRow>

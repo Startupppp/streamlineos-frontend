@@ -5,7 +5,7 @@ export * from "./deals";
 export * from "./contacts";
 export * from "./clients";
 export * from "./organizations";
-export * from "./activities";
+export * from "./custom-fields";
 export * from "./crm-activities";
 export * from "./analytics";
 export * from "./nps";

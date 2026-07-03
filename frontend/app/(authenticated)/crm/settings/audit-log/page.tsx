@@ -3,11 +3,12 @@
 import { useCallback, useTransition, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Shield, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   Select,
   SelectContent,
@@ -209,7 +210,7 @@ export default function CrmAuditLogPage() {
           <motion.div key="empty" variants={itemVariants} initial="hidden" animate="visible" exit={{ opacity: 0 }}>
             <EmptyState
               className="flex-1 min-h-[50vh] border-0 bg-transparent"
-              illustration={<Shield className="h-10 w-10 text-muted-foreground" />}
+              illustration={<EmptyActivityIllustration />}
               title="No audit entries found"
               description={
                 hasActiveFilters

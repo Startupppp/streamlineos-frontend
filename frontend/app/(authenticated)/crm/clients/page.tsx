@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyClientsIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { fadeUp } from "@/lib/motion-variants";
@@ -234,6 +235,7 @@ export default function ClientsPage() {
 
   const emptyState = (
     <EmptyState
+      illustration={<EmptyClientsIllustration />}
       title={hasFilters ? "No results" : "No clients yet"}
       description={
         hasFilters

@@ -3,11 +3,12 @@
 import { useState, useCallback, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
-import { Plus, Activity } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
 import { ActivityCard } from "@/features/crm/activities/activity-card";
 import { ActivityFilters } from "@/features/crm/activities/activity-filters";
@@ -221,7 +222,7 @@ function ActivitiesContent() {
 
         {!isLoading && !isError && filteredActivities.length === 0 && (
           <EmptyState
-            illustration={<Activity className="h-8 w-8 text-muted-foreground/40" />}
+            illustration={<EmptyActivityIllustration />}
             title={hasActiveFilters ? "No results found" : "No activities yet"}
             description={
               hasActiveFilters

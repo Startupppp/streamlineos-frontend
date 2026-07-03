@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   Dialog,
   DialogContent,
@@ -51,7 +52,7 @@ import {
   useUpdateCustomField,
   useDeleteCustomField,
   type CustomFieldDefinition,
-} from "@/hooks/api/crm/activities";
+} from "@/hooks/api/crm/custom-fields";
 import {
   ENTITY_TABS,
   type EntityType,
@@ -418,6 +419,7 @@ export default function CustomFieldsPage() {
               ))
             ) : (
               <EmptyState
+                illustration={<EmptyDocumentsIllustration />}
                 className="flex-1 min-h-[50vh] border-0 bg-transparent"
                 title={`No custom fields for ${entityLabel} yet`}
                 description="Add your first field to capture additional data for this entity type."

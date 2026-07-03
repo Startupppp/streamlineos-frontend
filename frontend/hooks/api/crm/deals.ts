@@ -16,7 +16,6 @@ import type {
   DealMeeting,
   CreateDealMeetingInput,
   WinLossAnalysis,
-  SalesQuota,
 } from "@/types/crm";
 
 export type {
@@ -26,7 +25,6 @@ export type {
   DealMeeting,
   CreateDealMeetingInput,
   WinLossAnalysis,
-  SalesQuota,
 };
 
 interface DealApproval {
@@ -249,7 +247,7 @@ export function useWinLossAnalysis() {
 
 export function useDealApprovals(params?: { status?: string }) {
   return useQuery({
-    queryKey: [...queryKeys.deals.all, "approvals", params] as const,
+    queryKey: queryKeys.deals.approvals(params as Record<string, unknown>),
     queryFn: () => apiClient.get<DealApproval[]>("/deals/approvals", params as Record<string, unknown>),
     staleTime: 2 * 60_000,
   });
@@ -271,82 +269,8 @@ export function useResolveDealApproval() {
     mutationFn: (input: { approvalId: number; action: "approve" | "reject"; rejectionReason?: string }) =>
       apiClient.post("/deals/approvals", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "approvals"] });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.approvals() });
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
     },
-  });
-}
-
-export function useSalesQuotas(params?: { userId?: string; period?: string }) {
-  return useQuery({
-    queryKey: queryKeys.salesQuotas.list(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<SalesQuota[]>("/sales/quotas", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCreateSalesQuota() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["salesQuotas", "create"] as const,
-    mutationFn: (input: { userId: string; period: string; startDate: string; endDate: string; targetRevenue: string; notes?: string }) =>
-      apiClient.post<SalesQuota>("/sales/quotas", input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.salesQuotas.all });
-    },
-  });
-}
-
-export interface CommissionItem {
-  id: number;
-  userName: string | null;
-  dealName: string | null;
-  dealValue: string;
-  commissionRate: string;
-  commissionAmount: string;
-  status: string;
-  createdAt: string | null;
-}
-
-export interface CommissionRule {
-  id: number;
-  name: string;
-  type: string;
-  flatRate: string | null;
-}
-
-export function useCommissions(params?: { userId?: string; status?: string }) {
-  return useQuery({
-    queryKey: [...queryKeys.deals.all, "commissions", params] as const,
-    queryFn: () => apiClient.get<{ items: CommissionItem[]; totalPending: number; totalPaid: number }>("/sales/commissions", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useUpdateCommissionStatus() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["commissions", "updateStatus"] as const,
-    mutationFn: ({ id, status }: { id: number; status: "approved" | "paid" }) =>
-      apiClient.patch(`/sales/commissions/${id}`, { status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "commissions"] }),
-  });
-}
-
-export function useCommissionRules() {
-  return useQuery({
-    queryKey: [...queryKeys.deals.all, "commissionRules"] as const,
-    queryFn: () => apiClient.get<CommissionRule[]>("/sales/commission-rules"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCreateCommissionRule() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["commissions", "rules", "create"] as const,
-    mutationFn: (input: { name: string; type: string; flatRate?: string; tiers?: Array<{ minValue: number; maxValue?: number; rate: number }>; appliesTo?: string }) =>
-      apiClient.post("/sales/commission-rules", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "commissionRules"] }),
   });
 }

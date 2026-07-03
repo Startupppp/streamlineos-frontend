@@ -297,7 +297,7 @@ export default function DealApprovalsPage() {
           isLoading={isLoading}
           emptyState={
             <EmptyState
-              illustration={<EmptyApprovalIllustration className="h-8 w-8" />}
+              illustration={<EmptyApprovalIllustration />}
               title="No approvals found"
               description="There are no deal approvals matching the current filter."
               action={{ label: "Clear filter", onClick: handleClearFilter }}

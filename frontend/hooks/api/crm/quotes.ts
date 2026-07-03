@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import type {
   Quote,
   QuoteListItem,
@@ -18,7 +19,7 @@ export interface QuoteListResponse {
 
 export function useQuotes(filters?: QuoteFilters) {
   return useQuery({
-    queryKey: ["quotes", "list", filters] as const,
+    queryKey: queryKeys.crmQuotes.list(filters as Record<string, unknown>),
     queryFn: () => {
       const params: Record<string, string | number> = {};
       if (filters?.status !== undefined) params.status = filters.status;
@@ -34,7 +35,7 @@ export function useQuotes(filters?: QuoteFilters) {
 
 export function useQuoteDetail(id: number) {
   return useQuery({
-    queryKey: ["quotes", "detail", id] as const,
+    queryKey: queryKeys.crmQuotes.detail(id),
     queryFn: () => apiClient.get<Quote>(`/quotes/${id}`),
     enabled: id > 0,
     staleTime: 2 * 60_000,
@@ -43,7 +44,7 @@ export function useQuoteDetail(id: number) {
 
 export function useDealQuotes(dealId: number) {
   return useQuery({
-    queryKey: ["quotes", "deal", dealId] as const,
+    queryKey: queryKeys.crmQuotes.byDeal(dealId),
     queryFn: () => apiClient.get<QuoteListResponse>("/quotes", { dealId, pageSize: 100 }),
     enabled: dealId > 0,
     staleTime: 2 * 60_000,
@@ -54,12 +55,12 @@ function invalidateQuoteCaches(
   qc: ReturnType<typeof useQueryClient>,
   vars: { id?: number; dealId?: number },
 ) {
-  void qc.invalidateQueries({ queryKey: ["quotes", "list"] });
+  void qc.invalidateQueries({ queryKey: queryKeys.crmQuotes.all });
   if (vars.id !== undefined) {
-    void qc.invalidateQueries({ queryKey: ["quotes", "detail", vars.id] });
+    void qc.invalidateQueries({ queryKey: queryKeys.crmQuotes.detail(vars.id) });
   }
   if (vars.dealId !== undefined) {
-    void qc.invalidateQueries({ queryKey: ["quotes", "deal", vars.dealId] });
+    void qc.invalidateQueries({ queryKey: queryKeys.crmQuotes.byDeal(vars.dealId) });
   }
 }
 

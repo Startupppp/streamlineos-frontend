@@ -12,12 +12,12 @@ import {
   Mail,
   Phone,
   Twitter,
-  Users,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 import { fadeUp } from "@/lib/motion-variants";
 import { SOURCE_LABELS } from "./contacts-constants";
 import { ContactActionsMenu } from "./contact-actions-menu";
@@ -217,7 +217,7 @@ export function ContactCardView({
 
       {items.length === 0 && (
         <EmptyState
-          illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<EmptyPersonIllustration />}
           title="No contacts found"
           description={
             apiSearch

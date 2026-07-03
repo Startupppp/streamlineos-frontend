@@ -63,10 +63,14 @@ export function PipelineBreakdownCard({
                     className={cn("h-full w-full rounded-full origin-left", config.dot)}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: maxPipelineCount > 0 ? count / maxPipelineCount : 0 }}
-                    transition={{ duration: 0.3, delay: 0.15, ease: "easeOut" }}
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0 }
+                        : { duration: 0.3, delay: 0.15, ease: "easeOut" }
+                    }
                   />
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

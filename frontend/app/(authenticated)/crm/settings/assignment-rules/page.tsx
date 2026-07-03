@@ -5,7 +5,7 @@ import { useForm, useFieldArray, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Plus, Trash2, ChevronUp, ChevronDown, Settings,
+  Plus, Trash2, ChevronUp, ChevronDown,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -385,7 +386,7 @@ export default function AssignmentRulesPage() {
           </div>
         ) : isError ? (
           <EmptyState
-            illustration={<Settings className="h-8 w-8 text-muted-foreground/40" />}
+            illustration={<EmptyTargetIllustration />}
             title="Failed to load assignment rules"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
@@ -407,7 +408,7 @@ export default function AssignmentRulesPage() {
           </div>
         ) : (
           <EmptyState
-            illustration={<Settings className="h-8 w-8 text-muted-foreground/40" />}
+            illustration={<EmptyTargetIllustration />}
             title="No assignment rules"
             description="Create rules to automatically assign incoming leads to the right people."
             action={{ label: "New Rule", onClick: handleOpenCreate }}

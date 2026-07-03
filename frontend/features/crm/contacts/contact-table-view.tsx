@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Users } from "lucide-react";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+
 import { fadeUp } from "@/lib/motion-variants";
 import { PAGE_SIZE, SOURCE_LABELS } from "./contacts-constants";
 import { ContactActionsMenu } from "./contact-actions-menu";
@@ -151,7 +152,7 @@ export function ContactTableView({
         }}
         emptyState={
           <EmptyState
-            illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
+            illustration={<EmptyPersonIllustration />}
             title="No contacts found"
             description={
               apiSearch

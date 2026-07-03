@@ -5,6 +5,7 @@ import { TrendingUp, Target, Handshake } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDealsIllustration } from "@/components/illustrations";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useDeals } from "@/hooks/api/crm";
@@ -59,7 +60,7 @@ export default function DealForecastPage() {
     >
       {openDeals.length === 0 ? (
         <EmptyState
-          illustration={<TrendingUp className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<EmptyDealsIllustration />}
           title="No open deals to forecast"
           description="Create deals in your pipeline to see revenue forecasts here."
           action={{ label: "Go to Deals", href: "/crm/deals" }}

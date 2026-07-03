@@ -4,9 +4,10 @@ import { useState, useCallback } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Zap, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -333,7 +334,7 @@ export default function AutomationsPage() {
               >
                 <EmptyState
                   className="flex-1 min-h-[50vh] border-0 bg-transparent"
-                  illustration={<Zap className="h-10 w-10 text-muted-foreground" />}
+                  illustration={<EmptyActivityIllustration />}
                   title="No automations yet"
                   description="Create your first automation to start saving time on repetitive CRM tasks."
                   action={{ label: "Create Automation", onClick: handleOpenSheet }}

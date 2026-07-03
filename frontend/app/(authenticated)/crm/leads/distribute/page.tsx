@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
@@ -275,6 +276,7 @@ export default function LeadDistributionPage() {
             minWidth="640px"
             emptyState={
               <EmptyState
+                illustration={<EmptyLeadsIllustration />}
                 title="No leads found"
                 description={
                   statusFilter !== "all" || searchQuery

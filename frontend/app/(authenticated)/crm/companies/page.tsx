@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyProjectsIllustration } from "@/components/illustrations";
+import { EmptyCompaniesIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
@@ -172,7 +172,7 @@ export default function CompaniesPage() {
         >
           {(data?.organizations.length ?? 0) === 0 ? (
             <EmptyState
-              illustration={<EmptyProjectsIllustration className="w-36 h-36" />}
+              illustration={<EmptyCompaniesIllustration className="w-36 h-36" />}
               title="No companies found"
               description={
                 search

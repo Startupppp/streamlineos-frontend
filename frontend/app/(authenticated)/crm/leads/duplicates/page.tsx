@@ -5,6 +5,7 @@ import { RefreshCw, Users, ChevronDown, ChevronUp, AlertTriangle } from "lucide-
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -291,6 +292,7 @@ export default function DuplicateLeadsPage() {
 
           {!data?.groups.length ? (
             <EmptyState
+              illustration={<EmptyLeadsIllustration />}
               title="No Duplicates Found"
               description="Great news — no potential duplicate leads were detected across your pipeline."
               className="flex-1 min-h-[40vh]"

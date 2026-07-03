@@ -19,7 +19,10 @@ import {
   Loader2,
   ChevronRight,
   Save,
+  Info,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import PageMetadataSheet from "./page-metadata-sheet";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import {
@@ -60,6 +63,7 @@ import type { KbPageDetail } from "@/hooks/api/kb/pages";
 import PageCommentsSheet from "./page-comments-sheet";
 import PageHistorySheet from "./page-history-sheet";
 import MovePageDialog from "./move-page-dialog";
+import PageSharePopover from "./page-share-popover";
 import { exportPageToHtml } from "@/features/knowledge-base/lib/export-page";
 
 interface PageDocumentHeaderProps {
@@ -68,6 +72,13 @@ interface PageDocumentHeaderProps {
   saveState: "idle" | "pending" | "saving" | "saved";
   onNavigate: (pageId: number) => void;
 }
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: "Draft",
+  in_review: "In Review",
+  published: "Published",
+  archived: "Archived",
+};
 
 export default function PageDocumentHeader({
   page,
@@ -79,6 +90,7 @@ export default function PageDocumentHeader({
   const canCreate = useCan("kb:pages:create");
   const canDelete = useCan("kb:pages:delete");
   const canManage = useCan("kb:pages:manage");
+  const canUpdate = useCan("kb:pages:update");
   const canTemplates = useCan("kb:templates:manage");
 
   const toggleFavorite = useToggleFavoriteKbPage();
@@ -95,6 +107,7 @@ export default function PageDocumentHeader({
   const [templateName, setTemplateName] = useState("");
   const [backlinksOpen, setBacklinksOpen] = useState(false);
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
+  const [metaSheetOpen, setMetaSheetOpen] = useState(false);
 
   function handleToggleFavorite() {
     toggleFavorite.mutate(
@@ -140,6 +153,14 @@ export default function PageDocumentHeader({
 
   function handleDeleteAlertOpenChange(open: boolean) {
     setDeleteAlertOpen(open);
+  }
+
+  function handleOpenMetaSheet() {
+    setMetaSheetOpen(true);
+  }
+
+  function handleMetaSheetOpenChange(open: boolean) {
+    setMetaSheetOpen(open);
   }
 
   function handleExportHtml() {
@@ -195,6 +216,13 @@ export default function PageDocumentHeader({
 
   const ancestors = page.ancestors ?? [];
 
+  const statusBadgeClass: Record<string, string> = {
+    draft: "bg-slate-100 text-slate-600 border-slate-200",
+    in_review: "bg-amber-50 text-amber-700 border-amber-200",
+    published: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    archived: "bg-slate-100 text-slate-500 border-slate-200 opacity-60",
+  };
+
   return (
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -224,6 +252,33 @@ export default function PageDocumentHeader({
           </span>
         </nav>
 
+        {page.status && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Badge
+              variant="outline"
+              className={`text-[10px] h-4 px-1.5 ${statusBadgeClass[page.status] ?? ""}`}
+            >
+              {STATUS_LABELS[page.status] ?? page.status}
+            </Badge>
+            {page.trustState === "verified" && (
+              <Badge
+                variant="outline"
+                className="text-[10px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200"
+              >
+                Verified
+              </Badge>
+            )}
+            {page.trustState === "verification_expired" && (
+              <Badge
+                variant="outline"
+                className="text-[10px] h-4 px-1.5 bg-amber-50 text-amber-700 border-amber-200"
+              >
+                Stale
+              </Badge>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center gap-1 shrink-0">
           {(saveState === "pending" || saveState === "saving") && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground mr-2">
@@ -234,6 +289,16 @@ export default function PageDocumentHeader({
           {saveState === "saved" && (
             <span className="text-xs text-muted-foreground mr-2">Saved</span>
           )}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleOpenMetaSheet}
+            aria-label="Page settings"
+          >
+            <Info className="h-4 w-4" />
+          </Button>
 
           <Button
             variant="ghost"
@@ -266,6 +331,8 @@ export default function PageDocumentHeader({
           >
             <History className="h-4 w-4" />
           </Button>
+
+          {canUpdate && <PageSharePopover page={page} />}
 
           <Popover open={backlinksOpen} onOpenChange={setBacklinksOpen}>
             <PopoverTrigger asChild>
@@ -416,6 +483,13 @@ export default function PageDocumentHeader({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PageMetadataSheet
+        pageId={pageId}
+        page={page}
+        open={metaSheetOpen}
+        onOpenChange={handleMetaSheetOpenChange}
+      />
     </>
   );
 }

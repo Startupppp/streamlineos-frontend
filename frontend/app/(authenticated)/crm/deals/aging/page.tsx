@@ -19,7 +19,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { useDealAging } from "@/hooks/api/crm";
 import { formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
-import { EmptyTargetIllustration } from "@/components/illustrations";
+import { EmptyDealsIllustration } from "@/components/illustrations";
 
 type AgingDealRow = NonNullable<ReturnType<typeof useDealAging>["data"]>["deals"][number];
 
@@ -232,7 +232,7 @@ export default function DealAgingPage() {
             isLoading={isLoading}
             emptyState={
               <EmptyState
-                illustration={<EmptyTargetIllustration className="h-8 w-8" />}
+                illustration={<EmptyDealsIllustration />}
                 title="All deals are moving smoothly"
                 description="No deals are currently stuck in any pipeline stage."
                 className="border-0 bg-transparent min-h-[40vh]"

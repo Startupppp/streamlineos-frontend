@@ -28,7 +28,6 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { useQuoteDetail, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { QuoteStatus } from "@/types/crm/quotes";
 import { QuoteStatusProgress } from "@/features/crm/quotes/components/quote-status-progress";
 import { QuoteLineItemsTable } from "@/features/crm/quotes/components/quote-line-items-table";
 import {

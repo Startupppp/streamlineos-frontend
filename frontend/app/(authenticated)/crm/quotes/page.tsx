@@ -4,7 +4,7 @@ import { useState, useCallback, useTransition, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useReducedMotion, motion } from "framer-motion";
 import Link from "next/link";
-import { Search, FileText, Download } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
 import {
   AlertDialog,
@@ -353,7 +354,7 @@ export default function QuotesPage() {
               minWidth="700px"
               emptyState={
                 <EmptyState
-                  illustration={<FileText className="text-muted-foreground/40" />}
+                  illustration={<EmptyDocumentsIllustration />}
                   title="No quotes found"
                   description={
                     hasActiveFilters

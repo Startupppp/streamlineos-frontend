@@ -16,6 +16,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -150,6 +151,7 @@ export default function LeadSourceReportPage() {
               <CardContent>
                 {!data?.sources || data.sources.length === 0 ? (
                   <EmptyState
+                    illustration={<EmptyLeadsIllustration />}
                     title="No source data"
                     description="No lead source data is available yet."
                     className="min-h-[300px] border-0 bg-transparent"

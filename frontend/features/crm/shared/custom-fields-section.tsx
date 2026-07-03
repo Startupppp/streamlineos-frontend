@@ -1,8 +1,8 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCustomFields } from "@/hooks/api/crm/activities";
-import type { CustomFieldDefinition } from "@/hooks/api/crm/activities";
+import { useCustomFields } from "@/hooks/api/crm/custom-fields";
+import type { CustomFieldDefinition } from "@/hooks/api/crm/custom-fields";
 
 interface CustomFieldsSectionProps {
   entityType: "lead" | "deal" | "contact";

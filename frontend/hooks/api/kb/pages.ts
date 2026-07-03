@@ -27,6 +27,16 @@ export type KbPage = {
 export type KbPageDetail = KbPage & {
   ancestors: Array<{ id: number; title: string }>;
   isFavorite: boolean;
+  visibility: "private" | "org" | "public";
+  publicToken: string | null;
+  status: "draft" | "in_review" | "published" | "archived";
+  contentType: string;
+  trustState: "unverified" | "verified" | "verification_expired";
+  ownerUserId: string | null;
+  verifiedById: string | null;
+  verifiedUntil: string | null;
+  nextReviewAt: string | null;
+  publicSlug: string | null;
 };
 
 export type KbPageTreeNode = {
@@ -36,6 +46,9 @@ export type KbPageTreeNode = {
   icon: string | null;
   sortOrder: number;
   hasChildren: boolean;
+  visibility: "private" | "org" | "public";
+  createdById: string | null;
+  status: string;
 };
 
 export type KbPageSearchResult = {
@@ -74,6 +87,9 @@ export type UpdateKbPageInput = {
   coverImage?: string | null;
   content?: Record<string, unknown>;
   contentText?: string;
+  status?: "draft" | "in_review" | "published" | "archived";
+  contentType?: string;
+  ownerUserId?: string | null;
 };
 
 export type MoveKbPageInput = {
@@ -299,6 +315,19 @@ export function useRecordKbPageVisit() {
   });
 }
 
+export function useSetKbPageVisibility() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["kb", "pages", "visibility"],
+    mutationFn: ({ pageId, visibility }: { pageId: number; visibility: "private" | "org" | "public" }) =>
+      apiClient.patch<KbPageDetail>(`/kb/pages/${pageId}/visibility`, { visibility }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
+    },
+  });
+}
+
 export function useRestoreKbPageVersion() {
   const qc = useQueryClient();
   return useMutation({
@@ -308,6 +337,67 @@ export function useRestoreKbPageVersion() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pageVersions(variables.pageId) });
+    },
+  });
+}
+
+export function usePublishKbPage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["kb", "pages", "publish"],
+    mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/publish`, {}),
+    onSuccess: (_data, pageId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.kb.page(pageId) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
+    },
+  });
+}
+
+export function useArchiveKbPage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["kb", "pages", "archive"],
+    mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/archive`, {}),
+    onSuccess: (_data, pageId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.kb.page(pageId) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
+    },
+  });
+}
+
+export function useUnarchiveKbPage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["kb", "pages", "unarchive"],
+    mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/unarchive`, {}),
+    onSuccess: (_data, pageId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.kb.page(pageId) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
+    },
+  });
+}
+
+export function useVerifyKbPage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["kb", "pages", "verify"],
+    mutationFn: ({ pageId, intervalDays }: { pageId: number; intervalDays?: number }) =>
+      apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/verify`, { intervalDays }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
+    },
+  });
+}
+
+export function useMarkStaleKbPage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["kb", "pages", "markStale"],
+    mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/mark-stale`, {}),
+    onSuccess: (_data, pageId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.kb.page(pageId) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
     },
   });
 }

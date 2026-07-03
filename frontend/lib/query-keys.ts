@@ -131,6 +131,7 @@ export const queryKeys = {
     aging: () => [...base, "deals", "aging"] as const,
     winLoss: () => [...base, "deals", "winLoss"] as const,
     meetings: (dealId: number) => [...base, "deals", "meetings", dealId] as const,
+    approvals: (params?: Record<string, unknown>) => [...base, "deals", "approvals", params] as const,
   },
 
   contacts: {
@@ -145,8 +146,8 @@ export const queryKeys = {
     list: (params?: Record<string, unknown>) => [...base, "clients", "list", params] as const,
     detail: (id: number) => [...base, "clients", "detail", id] as const,
     activities: (id: number) => [...base, "clients", "activities", id] as const,
-    crmStats: () => [...base, "clients", "crmStats"] as const,
     simpleList: () => [...base, "clients", "simpleList"] as const,
+    timeline: (clientId: number) => [...base, "clients", "timeline", clientId] as const,
   },
 
   clientOpportunities: {
@@ -318,11 +319,6 @@ export const queryKeys = {
     relatedLeads: (id: number) => [...base, "crmOrganizations", "relatedLeads", id] as const,
   },
 
-  clientStats: {
-    all: [...base, "clientStats"] as const,
-    stats: () => [...base, "clientStats", "stats"] as const,
-  },
-
   dealActivities: {
     all: [...base, "dealActivities"] as const,
     list: (dealId: number, params?: Record<string, unknown>) => [...base, "dealActivities", "list", dealId, params] as const,
@@ -331,11 +327,6 @@ export const queryKeys = {
   salesTeamCapacity: {
     all: [...base, "salesTeamCapacity"] as const,
     list: () => [...base, "salesTeamCapacity", "list"] as const,
-  },
-
-  salesQuotas: {
-    all: [...base, "salesQuotas"] as const,
-    list: (params?: Record<string, unknown>) => [...base, "salesQuotas", "list", params] as const,
   },
 
   salesLeaderboard: {
@@ -532,11 +523,6 @@ export const queryKeys = {
   },
 
   nps: {
-    all: [...base, "nps"] as const,
-    surveys: (params?: Record<string, unknown>) => [...base, "nps", "surveys", params] as const,
-    survey: (id: number) => [...base, "nps", "survey", id] as const,
-    responses: (surveyId: number) => [...base, "nps", "responses", surveyId] as const,
-    stats: () => [...base, "nps", "stats"] as const,
     publicSurvey: (token: string) => [...base, "nps", "publicSurvey", token] as const,
   },
 
@@ -566,17 +552,6 @@ export const queryKeys = {
     analytics: () => [...base, "workflows", "analytics"] as const,
     schedules: (workflowId: string) => [...base, "workflows", workflowId, "schedules"] as const,
     secrets: (workflowId: string) => [...base, "workflows", workflowId, "secrets"] as const,
-  },
-
-  csat: {
-    all: [...base, "csat"] as const,
-    surveys: () => [...base, "csat", "surveys"] as const,
-    responses: (surveyId: number) => [...base, "csat", "responses", surveyId] as const,
-  },
-
-  sla: {
-    all: [...base, "sla"] as const,
-    compliance: () => [...base, "sla", "compliance"] as const,
   },
 
   mfa: {

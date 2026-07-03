@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -345,7 +346,7 @@ export default function ScoringRulesPage() {
           </div>
         ) : isError ? (
           <EmptyState
-            illustration={<Zap className="h-8 w-8 text-muted-foreground/40" />}
+            illustration={<EmptyTargetIllustration />}
             title="Failed to load scoring rules"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}

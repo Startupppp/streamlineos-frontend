@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
@@ -325,6 +326,7 @@ export default function SmartLeadSearchPage() {
               minWidth="700px"
               emptyState={
                 <EmptyState
+                  illustration={<EmptyLeadsIllustration />}
                   title="No leads match your search"
                   description="Try adjusting your query or use different keywords."
                   className="min-h-[40vh] border-0 bg-transparent"

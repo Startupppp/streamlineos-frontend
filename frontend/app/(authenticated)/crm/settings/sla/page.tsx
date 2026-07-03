@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -301,7 +302,7 @@ export default function SlaPage() {
           </div>
         ) : isError ? (
           <EmptyState
-            illustration={<Shield className="h-8 w-8 text-muted-foreground/40" />}
+            illustration={<EmptyTimeIllustration />}
             title="Failed to load SLA policies"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}

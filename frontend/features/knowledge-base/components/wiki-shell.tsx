@@ -2,7 +2,21 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Trash2, LayoutTemplate, PanelLeftOpen, PanelLeftClose, Star } from "lucide-react";
+import Link from "next/link";
+import {
+  Plus,
+  Search,
+  Trash2,
+  LayoutTemplate,
+  PanelLeftOpen,
+  PanelLeftClose,
+  Star,
+  Clock,
+  BarChart2,
+  Lock,
+  Users,
+  LayoutGrid,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -12,8 +26,18 @@ import { useKbPagesTree, useKbPagesFavorites, useCreateKbPage } from "@/hooks/ap
 import { useCan } from "@/hooks/api/access";
 import PageTree from "./page-tree";
 import QuickFindDialog from "./quick-find-dialog";
-import TrashDialog from "./trash-dialog";
-import TemplatesDialog from "./templates-dialog";
+import {
+  KNOWLEDGE_BASE,
+  KB_RECENT,
+  KB_FAVORITES,
+  KB_TEMPLATES,
+  KB_TRASH,
+  KB_ANALYTICS,
+  KB_PRIVATE,
+  KB_SHARED,
+  KB_SPACES,
+  pageHref,
+} from "@/features/knowledge-base/lib/knowledge-routes";
 import type { KbPage } from "@/hooks/api/kb/pages";
 
 export default function WikiShell({ children }: { children: React.ReactNode }) {
@@ -22,9 +46,8 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const { data: favorites = [] } = useKbPagesFavorites();
   const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
+  const canViewAnalytics = useCan("kb:analytics:view");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
-  const [trashOpen, setTrashOpen] = useState(false);
-  const [templatesOpen, setTemplatesOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(
     () => typeof window !== "undefined" && localStorage.getItem("wiki-tree-collapsed") === "true"
@@ -35,7 +58,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
       {},
       {
         onSuccess: (page) => {
-          router.push(`/knowledge-base/pages/${page.id}`);
+          router.push(pageHref(page.id));
         },
         onError: () => {
           toast.error("Failed to create page");
@@ -68,6 +91,14 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     });
   }
 
+  function handleNavigateTemplates() {
+    router.push(KB_TEMPLATES);
+  }
+
+  function handleNavigateTrash() {
+    router.push(KB_TRASH);
+  }
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -79,41 +110,68 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  function handleTemplatesClick() {
-    setTemplatesOpen(true);
-  }
-
-  function handleTrashClick() {
-    setTrashOpen(true);
-  }
-
-  function handleTrashOpenChange(open: boolean) {
-    setTrashOpen(open);
-  }
-
-  function handleTemplatesOpenChange(open: boolean) {
-    setTemplatesOpen(open);
-  }
-
-  function handleUseTemplate(templateId: number) {
-    createPage.mutate(
-      { templateId },
-      {
-        onSuccess: (page) => {
-          setTemplatesOpen(false);
-          router.push(`/knowledge-base/pages/${page.id}`);
-        },
-        onError: () => {
-          toast.error("Failed to create page from template");
-        },
-      }
-    );
-  }
+  const navLinks = (
+    <div className="px-2 pb-1 pt-1 space-y-0.5">
+      <Link
+        href={KB_RECENT}
+        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      >
+        <Clock className="h-4 w-4 shrink-0" />
+        <span>Recent</span>
+      </Link>
+      <Link
+        href={KB_FAVORITES}
+        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      >
+        <Star className="h-4 w-4 shrink-0" />
+        <span>Favorites</span>
+      </Link>
+      <Link
+        href={KB_PRIVATE}
+        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      >
+        <Lock className="h-4 w-4 shrink-0" />
+        <span>Private</span>
+      </Link>
+      <Link
+        href={KB_SHARED}
+        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      >
+        <Users className="h-4 w-4 shrink-0" />
+        <span>Shared</span>
+      </Link>
+      <Link
+        href={KB_SPACES}
+        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      >
+        <LayoutGrid className="h-4 w-4 shrink-0" />
+        <span>Spaces</span>
+      </Link>
+      {canViewAnalytics && (
+        <Link
+          href={KB_ANALYTICS}
+          className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <BarChart2 className="h-4 w-4 shrink-0" />
+          <span>Analytics</span>
+        </Link>
+      )}
+      <Link
+        href={KB_TEMPLATES}
+        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      >
+        <LayoutTemplate className="h-4 w-4 shrink-0" />
+        <span>Templates</span>
+      </Link>
+      <Separator className="my-1" />
+    </div>
+  );
 
   const sidebarInner = (
     <>
       <ScrollArea className="flex-1 min-h-0">
         <div className="px-2 pb-2">
+          {navLinks}
           {favorites.length > 0 && (
             <div className="mb-2">
               <p className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -122,7 +180,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
               {favorites.map((page: KbPage) => (
                 <a
                   key={page.id}
-                  href={`/knowledge-base/pages/${page.id}`}
+                  href={pageHref(page.id)}
                   className="flex items-center gap-2 px-2 py-1 text-sm rounded-md hover:bg-muted transition-colors"
                 >
                   <Star className="h-3 w-3 text-amber-500 fill-amber-500 shrink-0" />
@@ -157,7 +215,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           variant="ghost"
           size="sm"
           className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
-          onClick={handleTemplatesClick}
+          onClick={handleNavigateTemplates}
         >
           <LayoutTemplate className="h-4 w-4" />
           <span>Templates</span>
@@ -166,7 +224,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           variant="ghost"
           size="sm"
           className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
-          onClick={handleTrashClick}
+          onClick={handleNavigateTrash}
         >
           <Trash2 className="h-4 w-4" />
           <span>Trash</span>
@@ -217,7 +275,12 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
         ) : (
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between px-3 py-2 shrink-0">
-              <span className="text-sm font-semibold text-foreground">Wiki</span>
+              <Link
+                href={KNOWLEDGE_BASE}
+                className="text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
+              >
+                Wiki
+              </Link>
               <div className="flex items-center gap-0.5">
                 <Button
                   variant="ghost"
@@ -264,12 +327,6 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
       <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
 
       <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
-      <TrashDialog open={trashOpen} onOpenChange={handleTrashOpenChange} />
-      <TemplatesDialog
-        open={templatesOpen}
-        onOpenChange={handleTemplatesOpenChange}
-        onUseTemplate={handleUseTemplate}
-      />
     </div>
   );
 }

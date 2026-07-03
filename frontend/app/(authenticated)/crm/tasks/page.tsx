@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTasksIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
@@ -302,7 +303,7 @@ function CrmTasksContent() {
           </div>
         ) : (
           <EmptyState
-            illustration={<CheckSquare className="h-8 w-8 text-muted-foreground/40" />}
+            illustration={<EmptyTasksIllustration />}
             title="No tasks yet"
             description="Create your first task to track follow-ups and action items."
             action={{ label: "Create Task", onClick: handleCreateOpen }}

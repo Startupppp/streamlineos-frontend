@@ -2,12 +2,13 @@
 
 import { useState, useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Package, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyProductsIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   AlertDialog,
@@ -279,7 +280,7 @@ export default function ProductCatalogPage() {
             emptyState={
               <EmptyState
                 className="flex-1 min-h-[50vh] border-0 bg-transparent"
-                illustration={<Package className="h-10 w-10 text-muted-foreground" />}
+                illustration={<EmptyProductsIllustration />}
                 title={debouncedSearch ? "No products match your search" : "No products yet"}
                 description={
                   debouncedSearch

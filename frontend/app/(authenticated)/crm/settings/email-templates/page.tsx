@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Plus, Trash2, Pencil, Mail, Eye,
+  Plus, Trash2, Pencil, Eye,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyMailIllustration } from "@/components/illustrations";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -331,7 +332,7 @@ export default function EmailTemplatesPage() {
           </div>
         ) : isError ? (
           <EmptyState
-            illustration={<Mail className="h-8 w-8 text-muted-foreground/40" />}
+            illustration={<EmptyMailIllustration />}
             title="Failed to load email templates"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
@@ -353,7 +354,7 @@ export default function EmailTemplatesPage() {
               ) : (
                 <div className="col-span-full">
                   <EmptyState
-                    illustration={<Mail className="h-8 w-8 text-muted-foreground/40" />}
+                    illustration={<EmptyMailIllustration />}
                     title="No email templates"
                     description="Create reusable templates with dynamic variables to speed up outreach."
                     action={{ label: "New Template", onClick: handleOpenCreate }}
