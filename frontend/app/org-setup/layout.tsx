@@ -14,7 +14,7 @@ export default function OrgSetupLayout({ children }: { children: ReactNode }) {
       </a>
 
       <div className="relative flex flex-1 flex-col overflow-y-auto scrollbar-hide">
-        <header className="shrink-0 flex items-center px-6 sm:px-10 py-5">
+        <header className="lg:hidden shrink-0 flex items-center px-6 sm:px-10 py-5">
           <Link
             href="/"
             className="flex items-center gap-2.5 group"
@@ -30,12 +30,12 @@ export default function OrgSetupLayout({ children }: { children: ReactNode }) {
         <main
           id="main-content"
           aria-label="Organization setup"
-          className="flex flex-1 flex-col items-center justify-center py-8 px-4 sm:px-8"
+          className="flex flex-1 flex-col items-start justify-start py-6 lg:py-10 px-4 sm:px-8"
         >
           {children}
         </main>
 
-        <footer className="shrink-0 px-6 sm:px-10 py-5 flex items-center justify-between text-[12px] font-medium text-slate-400">
+        <footer className="hidden lg:flex shrink-0 px-6 sm:px-10 py-5 items-center justify-between text-[12px] font-medium text-slate-400">
           <p>
             &copy; {new Date().getFullYear()} {BRAND_NAME}
           </p>

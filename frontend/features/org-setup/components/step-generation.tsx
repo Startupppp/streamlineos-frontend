@@ -37,7 +37,15 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const dataRef = useRef(data);
   dataRef.current = data;
 
-  const total = GENERATION_STEPS.length;
+  const wantsPayments = !!data.paymentsChoice && data.paymentsChoice !== "skip";
+  const wantsInvites = data.invitees.length > 0;
+  const generationSteps = GENERATION_STEPS.filter((label) => {
+    if (label === "Preparing payment setup") return wantsPayments;
+    if (label === "Sending invites") return wantsInvites;
+    return true;
+  });
+
+  const total = generationSteps.length;
   const HOLD_AT = total - 1;
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -86,6 +94,12 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
     await new Promise<void>(resolve => setTimeout(resolve, 1500));
     clearAll();
+
+    const choice = dataRef.current.paymentsChoice;
+    if (choice && choice !== "skip") {
+      window.location.replace("/settings/payments?from=org-setup");
+      return;
+    }
     const importFlag = dataRef.current.startingData === "import" ? "?setup=import" : "";
     window.location.replace(`/dashboard${importFlag}`);
   }
@@ -174,7 +188,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
         <div className="flex items-center justify-between">
           <p className="text-[11px] text-muted-foreground">
             {completedSteps < total
-              ? GENERATION_STEPS[completedSteps] ?? "Finishing up…"
+              ? generationSteps[completedSteps] ?? "Finishing up…"
               : "All done!"}
           </p>
           <p className="text-[11px] tabular-nums text-muted-foreground">{progress}%</p>
@@ -182,7 +196,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
       </div>
 
       <ul className="space-y-1" aria-label="Setup progress">
-        {GENERATION_STEPS.map((label, i) => {
+        {generationSteps.map((label, i) => {
           const done = i < completedSteps;
           const active = i === completedSteps && !error;
           const pending = i > completedSteps;

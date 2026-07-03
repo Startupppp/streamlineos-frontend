@@ -26,6 +26,10 @@ export function loadDraft(): WizardData {
       teamSize: typeof p.teamSize === "string" ? p.teamSize : DEFAULT_DATA.teamSize,
       country: typeof p.country === "string" ? p.country : undefined,
       timezone: typeof p.timezone === "string" ? p.timezone : undefined,
+      currency: typeof p.currency === "string" ? p.currency : undefined,
+      fiscalYearStart: typeof p.fiscalYearStart === "string" ? p.fiscalYearStart : undefined,
+      businessAddress: typeof p.businessAddress === "string" ? p.businessAddress : undefined,
+      taxId: typeof p.taxId === "string" ? p.taxId : undefined,
       installedApps: Array.isArray(p.installedApps)
         ? p.installedApps.filter((m): m is string => typeof m === "string")
         : DEFAULT_DATA.installedApps,

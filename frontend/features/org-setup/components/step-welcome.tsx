@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, LayoutGrid, Loader2, Users, Zap } from "lucide-react";
+import { ArrowRight, Clock, LayoutGrid, Loader2, Users, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type StepWelcomeProps = {
@@ -12,16 +12,19 @@ type StepWelcomeProps = {
 
 const HIGHLIGHTS = [
   { icon: Users, label: "Set up your team and roles" },
-  { icon: LayoutGrid, label: "Choose the modules you need" },
-  { icon: Zap, label: "Ready in under 5 minutes" },
+  { icon: LayoutGrid, label: "Get modules recommended for your goals" },
+  { icon: Zap, label: "Land on a workspace that's ready to use" },
 ];
 
 export function StepWelcome({ onNext, onSkip, isSkipping = false }: StepWelcomeProps) {
   return (
     <div className="space-y-5 text-center">
-      <div className="space-y-1.5">
+      <div className="space-y-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+          <Clock className="h-3 w-3" /> Takes about 4 minutes
+        </span>
         <p className="text-sm text-muted-foreground">
-          Let&apos;s get your workspace configured for your team.
+          A few quick questions, then your workspace is ready to run your business.
         </p>
       </div>
 

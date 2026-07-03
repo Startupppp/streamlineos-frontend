@@ -2,41 +2,41 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, Rocket, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { INVITE_ROLES } from "../lib/constants";
-import type { Invitee } from "../lib/types";
-import { NavButtons } from "./nav-buttons";
+import type { Invitee, WizardData } from "../lib/types";
+import { StepGeneration } from "./step-generation";
 
-type StepInviteTeamProps = {
-  invitees: Invitee[];
-  onChange: (invitees: Invitee[]) => void;
+type StepInviteLaunchProps = {
+  data: WizardData;
+  onChangeInvitees: (invitees: Invitee[]) => void;
   onBack: () => void;
-  onNext: () => void;
 };
 
-export function StepInviteTeam({ invitees, onChange, onBack, onNext }: StepInviteTeamProps) {
+export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteLaunchProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>(INVITE_ROLES[0]);
+  const [launching, setLaunching] = useState(false);
 
   function handleAdd() {
     const trimmed = email.trim();
     if (!trimmed || !trimmed.includes("@")) return;
-    if (invitees.some((i) => i.email.toLowerCase() === trimmed.toLowerCase())) return;
-    onChange([...invitees, { email: trimmed, role }]);
+    if (data.invitees.some((i) => i.email.toLowerCase() === trimmed.toLowerCase())) return;
+    onChangeInvitees([...data.invitees, { email: trimmed, role }]);
     setEmail("");
   }
 
   function handleRemove(target: string) {
-    onChange(invitees.filter((i) => i.email !== target));
+    onChangeInvitees(data.invitees.filter((i) => i.email !== target));
+  }
+
+  if (launching) {
+    return <StepGeneration data={data} />;
   }
 
   return (
@@ -74,9 +74,9 @@ export function StepInviteTeam({ invitees, onChange, onBack, onNext }: StepInvit
         </Button>
       </div>
 
-      {invitees.length > 0 && (
+      {data.invitees.length > 0 && (
         <ul className="space-y-1">
-          {invitees.map((invitee, i) => (
+          {data.invitees.map((invitee, i) => (
             <motion.li
               key={invitee.email}
               initial={{ opacity: 0, x: -6 }}
@@ -101,7 +101,14 @@ export function StepInviteTeam({ invitees, onChange, onBack, onNext }: StepInvit
         </ul>
       )}
 
-      <NavButtons onBack={onBack} onNext={onNext} nextLabel={invitees.length > 0 ? "Continue" : "Skip"} />
+      <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-background px-4 py-3 lg:static lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:pt-1">
+        <Button type="button" variant="outline" onClick={onBack} className="h-9 px-3 text-sm">
+          <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
+        </Button>
+        <Button type="button" onClick={() => setLaunching(true)} className="flex-1 h-9 text-sm gap-1.5">
+          <Rocket className="h-3.5 w-3.5" /> Build my workspace <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+      </div>
     </div>
   );
 }
