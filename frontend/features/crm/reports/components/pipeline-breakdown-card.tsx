@@ -4,7 +4,6 @@ import { useReducedMotion, motion } from "framer-motion";
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { scaleIn } from "@/lib/motion-variants";
 import type { LeadStats } from "@/types/leads";
 import { PIPELINE_COLORS } from "../lib/types";
 
@@ -19,10 +18,6 @@ export function PipelineBreakdownCard({
 }: PipelineBreakdownCardProps) {
   const shouldReduceMotion = useReducedMotion();
 
-  const itemVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : scaleIn;
-
   return (
     <Card className="rounded-lg border border-border">
       <CardHeader className="pb-3">
@@ -36,10 +31,10 @@ export function PipelineBreakdownCard({
           {Object.entries(stats.byStatus).map(([status, count]) => {
             const pct = stats.total > 0 ? (count / stats.total) * 100 : 0;
             const config =
-              PIPELINE_COLORS[status] ?? PIPELINE_COLORS["NEW"]!;
+              PIPELINE_COLORS[status] ?? PIPELINE_COLORS["NEW"];
 
             return (
-              <motion.div key={status} variants={itemVariants}>
+              <div key={status}>
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", config.dot)} />

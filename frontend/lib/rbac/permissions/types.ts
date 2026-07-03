@@ -89,6 +89,7 @@ export type PermissionKey =
   | "projects:roadmap:view"
   | "projects:roadmap:manage"
   | "projects:whiteboards:manage"
+  | "projects:workspace:manage"
   | "reports:view"
   | "reports:create"
   | "reports:export"

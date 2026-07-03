@@ -12,6 +12,8 @@ import { useKbPagesTree, useKbPagesFavorites, useCreateKbPage } from "@/hooks/ap
 import { useCan } from "@/hooks/api/access";
 import PageTree from "./page-tree";
 import QuickFindDialog from "./quick-find-dialog";
+import TrashDialog from "./trash-dialog";
+import TemplatesDialog from "./templates-dialog";
 import type { KbPage } from "@/hooks/api/kb/pages";
 
 export default function WikiShell({ children }: { children: React.ReactNode }) {
@@ -21,6 +23,8 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
+  const [trashOpen, setTrashOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(
     () => typeof window !== "undefined" && localStorage.getItem("wiki-tree-collapsed") === "true"
@@ -76,7 +80,34 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   function handleTemplatesClick() {
-    router.push("/knowledge-base");
+    setTemplatesOpen(true);
+  }
+
+  function handleTrashClick() {
+    setTrashOpen(true);
+  }
+
+  function handleTrashOpenChange(open: boolean) {
+    setTrashOpen(open);
+  }
+
+  function handleTemplatesOpenChange(open: boolean) {
+    setTemplatesOpen(open);
+  }
+
+  function handleUseTemplate(templateId: number) {
+    createPage.mutate(
+      { templateId },
+      {
+        onSuccess: (page) => {
+          setTemplatesOpen(false);
+          router.push(`/knowledge-base/pages/${page.id}`);
+        },
+        onError: () => {
+          toast.error("Failed to create page from template");
+        },
+      }
+    );
   }
 
   const sidebarInner = (
@@ -135,7 +166,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           variant="ghost"
           size="sm"
           className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
-          disabled
+          onClick={handleTrashClick}
         >
           <Trash2 className="h-4 w-4" />
           <span>Trash</span>
@@ -233,6 +264,12 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
       <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
 
       <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
+      <TrashDialog open={trashOpen} onOpenChange={handleTrashOpenChange} />
+      <TemplatesDialog
+        open={templatesOpen}
+        onOpenChange={handleTemplatesOpenChange}
+        onUseTemplate={handleUseTemplate}
+      />
     </div>
   );
 }

@@ -268,6 +268,7 @@ Ordered money-path first. Check off each page after fixing.
 ---
 
 ## Inventory
+> 2026-07-03 — full UI/UX conformance pass (all 24 pages): PageWrapper + URL-synced filters everywhere, DataTable/condensed table density, StatCard adoption, semantic badges, skeleton/empty/error states with themed illustrations, sheet 3-zone anatomy, gradients/violet removed, mutationKeys + calibrated staleTimes, dashboard client moved to `features/inventory` and de-cast (2 redundant queries dropped), dead assets deleted. tsc green.
 - [x] `/inventory` — Inventory overview
 - [x] `/inventory/products` — Products list
 - [x] `/inventory/products/new` — New product
@@ -366,6 +367,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/goals/[goalId]` — Goal detail: key results + check-in Dialog (auto progress rollup), updates timeline, linked work items.
 - [x] `/support/kb` — Knowledge Base manager: categories + articles, status/visibility filters, search (`kb_categories`/`kb_articles`/`kb_article_feedback`; subject `support:kb`).
 - [x] `/support/kb/[articleId]` — KB article editor (title/category/excerpt/visibility/status/tags/content) + feedback summary.
+> 2026-07-03 — refactored: monolithic pages (843/1041 lines) decomposed into `features/kb/components/*` (manager-content, article-editor + card/dialog/panels); PageWrapper filters w/ URL sync, StatCardGrid, themed empty-state illustrations, AlertDialog confirms, mutationKeys on all 16 KB mutations; `/support/kb` stays canonical (`?create=1` quick-create supported). Open item: editor is a Textarea — TipTap migration needs backend HTML contract.
 - [x] `/help/[orgId]` & `/help/[orgId]/[slug]` — Public help center (no auth): browse/search published-public articles, helpful/not-helpful feedback.
 - [x] `/projects/roadmap` — Roadmap manager: roadmap items by status, feedback (by votes), changelog (`roadmap_items`/`roadmap_votes`/`feedback_posts`/`feedback_votes`/`changelog_entries`; subject `projects:roadmap`).
 - [x] `/roadmap/[orgId]` — Public roadmap board (no auth): upvote (localStorage voterKey), submit feedback, changelog feed.
@@ -501,5 +503,6 @@ Full end-to-end: backend NestJS API → TanStack Query hooks → Next.js pages +
 ---
 
 ## Knowledge Base Wiki (Notion-style Pages) — PRD-knowledge-base-wiki.md
+> 2026-07-03 — conformance pass: Skeleton loading states, EmptyState adoption (+ EmptyKnowledgeIllustration on wiki home), sheet header/border fixes, `--accent` misuse → blue tokens, GPU-safe tree animation + useReducedMotion, aria-labels on icon buttons, all 4 `window.confirm` → AlertDialog, casts removed.
 - [x] `/knowledge-base` — Wiki home: Recents, Favorites, root pages, New page action, template starters + full-height empty state; layout owns collapsible page-tree panel (Favorites section, add-child/context menu per node, Quick find Ctrl+K, Templates, Trash)
 - [x] `/knowledge-base/pages/[pageId]` — Notion-style document: breadcrumbs, gradient/URL cover, emoji icon, inline title, TipTap document editor (slash commands, to-dos, tables, images, code highlight, callouts, toggles, @user mentions, [[page links]]), 1.5s autosave with save indicator, favorite, threaded comments Sheet, version history Sheet with restore, backlinks, duplicate/move/lock/export HTML/delete, trash restore + permanent delete, word count + edited-ago; backend: kb_pages + 6 sibling tables, 6 RBAC keys (kb:pages:*, kb:templates:manage), FTS search; migrations 0139/0140 pending TTY

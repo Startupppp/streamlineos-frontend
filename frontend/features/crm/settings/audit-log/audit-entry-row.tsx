@@ -68,11 +68,12 @@ export interface AuditFilters {
 export function useAuditLogs(filters: AuditFilters) {
   return useQuery({
     queryKey: ["crm-audit-logs", filters] as const,
-    queryFn: () =>
-      apiClient.get<AuditLogsResponse>(
-        "/crm/audit-logs",
-        filters as Record<string, unknown>,
-      ),
+    queryFn: () => {
+      const params = Object.fromEntries(
+        Object.entries(filters).filter(([, v]) => v !== undefined),
+      );
+      return apiClient.get<AuditLogsResponse>("/crm/audit-logs", params);
+    },
     staleTime: 30_000,
   });
 }

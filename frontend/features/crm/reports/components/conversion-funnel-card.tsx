@@ -29,11 +29,12 @@ export function ConversionFunnelCard({ stats }: ConversionFunnelCardProps) {
             const count = stats.byStatus[status] ?? 0;
             const maxCount = stats.byStatus.NEW || 1;
             const widthPct = Math.max(18, (count / maxCount) * 100);
-            const config = PIPELINE_COLORS[status] ?? PIPELINE_COLORS["NEW"]!;
+            const config = PIPELINE_COLORS[status] ?? PIPELINE_COLORS["NEW"];
+            const prevStage = arr[i - 1];
             const prevCount =
-              i === 0
+              i === 0 || !prevStage
                 ? stats.total
-                : (stats.byStatus[arr[i - 1]!] ?? count);
+                : (stats.byStatus[prevStage] ?? count);
             const convPct =
               prevCount > 0
                 ? ((count / prevCount) * 100).toFixed(0)
