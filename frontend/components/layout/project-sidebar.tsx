@@ -135,13 +135,26 @@ function DesktopSidebar({
           <ChevronLeft className="h-3 w-3 shrink-0" />
           {!isCollapsed && <span className="ml-1">Projects</span>}
         </Link>
-        <div className={cn("flex items-center", isCollapsed ? "justify-center" : "gap-2")}>
+        <div className={cn("flex items-center", isCollapsed ? "flex-col gap-1.5" : "gap-2")}>
           <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
             {(projectKey || "??").substring(0, 2).toUpperCase()}
           </div>
           {!isCollapsed && (
-            <span className="text-sm font-semibold truncate">{projectName}</span>
+            <span className="text-sm font-semibold truncate flex-1 min-w-0">{projectName}</span>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+            onClick={handleToggleCollapse}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen className="h-3.5 w-3.5" />
+            ) : (
+              <PanelLeftClose className="h-3.5 w-3.5" />
+            )}
+          </Button>
         </div>
       </div>
 
