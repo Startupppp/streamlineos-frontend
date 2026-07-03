@@ -24,15 +24,18 @@ type ProviderCardProps = {
 
 export function ProviderCard({ catalogEntry, provider, selected, onSelect, onConnect, isConnecting }: ProviderCardProps) {
   const Icon = PROVIDER_ICONS[catalogEntry.key] ?? Wallet;
+  // Manual/offline methods have no provider row to connect — they're always selectable.
+  const isManual = catalogEntry.key === "manual";
+  const canSelect = isManual || !!provider;
 
   return (
     <button
       type="button"
-      onClick={provider ? onSelect : undefined}
+      onClick={canSelect ? onSelect : undefined}
       className={cn(
         "flex flex-col gap-2 rounded-xl border bg-card p-4 text-left transition-colors",
         selected ? "border-blue-500 shadow-sm" : "border-border hover:border-blue-300",
-        !provider && "cursor-default",
+        !canSelect && "cursor-default",
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -51,6 +54,8 @@ export function ProviderCard({ catalogEntry, provider, selected, onSelect, onCon
 
       {!catalogEntry.isImplemented ? (
         <p className="text-[11px] text-muted-foreground italic">Coming soon</p>
+      ) : isManual ? (
+        <p className="text-[11px] text-muted-foreground">Configure instructions for invoices</p>
       ) : provider ? (
         <p className="text-[11px] text-muted-foreground">
           {provider.environment === "live" ? "Live environment" : "Test environment"}

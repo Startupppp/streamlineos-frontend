@@ -14,6 +14,7 @@ import {
 import { ProviderCard } from "@/features/payments/components/provider-card";
 import { ProviderDetail } from "@/features/payments/components/provider-detail";
 import { ReadinessRail } from "@/features/payments/components/readiness-rail";
+import { ManualMethodsPanel } from "@/features/payments/components/manual-methods-panel";
 
 export default function PaymentsSettingsPage() {
   const { data: catalog, isLoading: catalogLoading } = usePaymentCatalog();
@@ -85,7 +86,11 @@ export default function PaymentsSettingsPage() {
                 ))}
           </div>
 
-          {selectedProvider ? (
+          {selectedKey === "manual" ? (
+            <div className="rounded-xl border border-border bg-card p-4">
+              <ManualMethodsPanel />
+            </div>
+          ) : selectedProvider ? (
             <ProviderDetail provider={selectedProvider} environment={environment} />
           ) : (
             <div className="rounded-xl border border-dashed border-border p-8 text-center">
