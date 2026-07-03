@@ -513,6 +513,7 @@ export const queryKeys = {
     recordLinksByRecord: (targetType: string, targetId: string) => [...base, "kb", "record-links", "by-record", targetType, targetId] as const,
     importJobs: () => [...base, "kb", "import-jobs"] as const,
     exportJobs: () => [...base, "kb", "export-jobs"] as const,
+    articleMigrationPreview: () => [...base, "kb", "article-migration", "preview"] as const,
     pageAnalytics: () => [...base, "kb", "pageAnalytics"] as const,
     knowledgeGaps: (range?: Record<string, unknown>) =>
       range === undefined
