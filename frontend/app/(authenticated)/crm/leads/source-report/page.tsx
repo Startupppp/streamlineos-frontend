@@ -41,6 +41,12 @@ const SOURCE_COLORS = [
   { bar: "bg-slate-500", badge: "bg-slate-100 text-slate-700 border-slate-200" },
 ];
 
+const FALLBACK_COLOR = { bar: "bg-slate-500", badge: "bg-slate-100 text-slate-700 border-slate-200" };
+
+function getSourceColor(index: number) {
+  return SOURCE_COLORS[index % SOURCE_COLORS.length] ?? FALLBACK_COLOR;
+}
+
 function formatCurrency(val: number) {
   if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
   if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
@@ -151,7 +157,7 @@ export default function LeadSourceReportPage() {
                 ) : (
                   <div className="space-y-5">
                     {data.sources.map((s, i) => {
-                      const color = SOURCE_COLORS[i % SOURCE_COLORS.length];
+                      const color = getSourceColor(i);
                       const label = SOURCE_LABELS[s.source] ?? s.source;
                       const barPct = (s.count / maxCount) * 100;
 
@@ -245,7 +251,7 @@ export default function LeadSourceReportPage() {
                             const srcIdx = data.sources.findIndex(
                               (x) => x.source === s.source,
                             );
-                            const color = SOURCE_COLORS[srcIdx % SOURCE_COLORS.length];
+                            const color = getSourceColor(srcIdx);
                             const barH = Math.max(8, (s.conversionRate / 100) * 128);
                             const label = SOURCE_LABELS[s.source] ?? s.source;
                             return (

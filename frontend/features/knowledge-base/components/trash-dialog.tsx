@@ -1,8 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { Trash2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +37,7 @@ interface TrashItemProps {
 function TrashItem({ page }: TrashItemProps) {
   const restorePage = useRestoreKbPage();
   const hardDelete = useHardDeleteKbPage();
+  const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
 
   function handleRestore() {
     restorePage.mutate(page.id, {
@@ -35,45 +47,75 @@ function TrashItem({ page }: TrashItemProps) {
   }
 
   function handleDelete() {
-    if (!window.confirm("Permanently delete this page? This cannot be undone.")) return;
+    setDeleteAlertOpen(true);
+  }
+
+  function handleConfirmDelete() {
     hardDelete.mutate(page.id, {
       onSuccess: () => toast.success("Page permanently deleted"),
       onError: () => toast.error("Failed to delete page"),
     });
   }
 
+  function handleDeleteAlertOpenChange(open: boolean) {
+    setDeleteAlertOpen(open);
+  }
+
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-      <span className="text-base shrink-0">{page.icon ?? "📄"}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{page.title || "Untitled"}</p>
-        <p className="text-xs text-muted-foreground">
-          Deleted {page.deletedAt ? formatRelativeTime(page.deletedAt) : ""}
-        </p>
+    <>
+      <div className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+        <span className="text-base shrink-0">{page.icon ?? "📄"}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{page.title || "Untitled"}</p>
+          <p className="text-xs text-muted-foreground">
+            Deleted {page.deletedAt ? formatRelativeTime(page.deletedAt) : ""}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleRestore}
+            disabled={restorePage.isPending}
+            className="h-7 text-xs gap-1"
+          >
+            <RotateCcw className="h-3 w-3" />
+            Restore
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleDelete}
+            disabled={hardDelete.isPending}
+            className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-3 w-3" />
+            Delete forever
+          </Button>
+        </div>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={handleRestore}
-          disabled={restorePage.isPending}
-          className="h-7 text-xs gap-1"
-        >
-          <RotateCcw className="h-3 w-3" />
-          Restore
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={handleDelete}
-          disabled={hardDelete.isPending}
-          className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
-        >
-          <Trash2 className="h-3 w-3" />
-          Delete forever
-        </Button>
-      </div>
-    </div>
+
+      <AlertDialog open={deleteAlertOpen} onOpenChange={handleDeleteAlertOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently delete this page?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. &ldquo;{page.title || "Untitled"}&rdquo; will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleConfirmDelete}
+              disabled={hardDelete.isPending}
+            >
+              Delete forever
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

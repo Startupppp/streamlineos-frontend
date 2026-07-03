@@ -147,22 +147,22 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Member</th>
-                    <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Hours</th>
-                    <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cost</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Member</th>
+                    <th className="px-2 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hours</th>
+                    <th className="px-2 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cost</th>
                   </tr>
                 </thead>
                 <tbody>
                   {budget.memberBreakdown.map((m) => (
-                    <tr key={m.userId} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="px-3 py-2">
+                    <tr key={m.userId} className="border-b border-border/50 hover:bg-muted/30 transition-colors h-8">
+                      <td className="px-2 py-1">
                         <div className="flex items-center gap-2">
                           <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-muted-foreground font-mono text-xs">{m.userId.substring(0, 8)}…</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-sm text-muted-foreground">{m.hours.toFixed(1)} hrs</td>
-                      <td className="px-3 py-2 text-right font-mono text-sm font-medium">{fmt(m.cost)}</td>
+                      <td className="px-2 py-1 text-right font-mono text-sm text-muted-foreground">{m.hours.toFixed(1)} hrs</td>
+                      <td className="px-2 py-1 text-right font-mono text-sm font-medium">{fmt(m.cost)}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -29,7 +29,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, StickyNote, Lock, Globe } from "lucide-react";
+import { Plus, Trash2, StickyNote, Lock, Globe, PanelLeftClose } from "lucide-react";
 import {
   useWhiteboards,
   useCreateWhiteboard,
@@ -38,6 +38,8 @@ import {
 } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
+
+const BOARDS_COLLAPSED_KEY = "streamlineos:whiteboard:boards-collapsed";
 
 const ExcalidrawCanvas = dynamic(
   () =>
@@ -236,6 +238,10 @@ export default function WhiteboardPage({
   );
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<WhiteboardSummary | null>(null);
+  const [listCollapsed, setListCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(BOARDS_COLLAPSED_KEY) === "true";
+  });
 
   const selectedBoard = useMemo(() => {
     if (!boards || boards.length === 0) return null;
@@ -249,6 +255,13 @@ export default function WhiteboardPage({
   }, []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleRefetch = useCallback(() => refetch(), [refetch]);
+  const handleToggleList = useCallback(() => {
+    setListCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem(BOARDS_COLLAPSED_KEY, String(next));
+      return next;
+    });
+  }, []);
 
   function handleCreate(name: string) {
     createBoard.mutate(name, {
@@ -309,23 +322,35 @@ export default function WhiteboardPage({
         </div>
       ) : (
         <div className="flex flex-1 min-h-0 gap-3">
-          {/* Board list sidebar */}
-          <aside className="w-48 shrink-0 overflow-y-auto border-r border-border pr-3 hidden md:block">
-            <ul className="space-y-0.5">
-              {boards.map((board) => (
-                <BoardItem
-                  key={board.id}
-                  board={board}
-                  isSelected={board.id === (selectedBoard?.id ?? null)}
-                  canManage={canManage}
-                  onSelect={handleBoardSelect}
-                  onDelete={handleBoardDelete}
-                />
-              ))}
-            </ul>
-          </aside>
+          {!listCollapsed && (
+            <aside className="w-48 shrink-0 border-r border-border pr-3 hidden md:flex md:flex-col">
+              <div className="flex items-center justify-between mb-1 shrink-0">
+                <span className="text-xs font-medium text-muted-foreground">Boards</span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 shrink-0"
+                  onClick={handleToggleList}
+                  aria-label="Collapse boards panel"
+                >
+                  <PanelLeftClose className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <ul className="space-y-0.5 overflow-y-auto flex-1 min-h-0">
+                {boards.map((board) => (
+                  <BoardItem
+                    key={board.id}
+                    board={board}
+                    isSelected={board.id === (selectedBoard?.id ?? null)}
+                    canManage={canManage}
+                    onSelect={handleBoardSelect}
+                    onDelete={handleBoardDelete}
+                  />
+                ))}
+              </ul>
+            </aside>
+          )}
 
-          {/* Mobile board selector */}
           <div className="flex gap-1.5 overflow-x-auto pb-1 border-b border-border shrink-0 md:hidden">
             {boards.map((board) => (
               <MobileBoardChip
@@ -337,13 +362,14 @@ export default function WhiteboardPage({
             ))}
           </div>
 
-          {/* Canvas area */}
           <div className="flex flex-1 min-h-0 flex-col">
             {selectedBoard ? (
               <ExcalidrawCanvas
                 key={selectedBoard.id}
                 projectId={projectId}
                 board={selectedBoard}
+                listCollapsed={listCollapsed}
+                onToggleList={handleToggleList}
               />
             ) : (
               <div className="flex flex-1 items-center justify-center">

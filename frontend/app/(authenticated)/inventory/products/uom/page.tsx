@@ -2,7 +2,8 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Ruler, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ArrowRight, Package, AlertCircle, Check } from "lucide-react";
+import { ChevronLeft, ArrowRight, Package, Check } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

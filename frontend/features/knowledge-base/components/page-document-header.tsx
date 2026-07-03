@@ -36,6 +36,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import {
   useToggleFavoriteKbPage,
@@ -84,6 +94,7 @@ export default function PageDocumentHeader({
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [backlinksOpen, setBacklinksOpen] = useState(false);
+  const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
 
   function handleToggleFavorite() {
     toggleFavorite.mutate(
@@ -114,7 +125,10 @@ export default function PageDocumentHeader({
   }
 
   function handleDelete() {
-    if (!window.confirm("Move this page to trash?")) return;
+    setDeleteAlertOpen(true);
+  }
+
+  function handleConfirmDelete() {
     deletePage.mutate(pageId, {
       onSuccess: () => {
         toast.success("Page moved to trash");
@@ -122,6 +136,10 @@ export default function PageDocumentHeader({
       },
       onError: () => toast.error("Failed to delete page"),
     });
+  }
+
+  function handleDeleteAlertOpenChange(open: boolean) {
+    setDeleteAlertOpen(open);
   }
 
   function handleExportHtml() {
@@ -352,6 +370,27 @@ export default function PageDocumentHeader({
         open={moveOpen}
         onOpenChange={setMoveOpen}
       />
+
+      <AlertDialog open={deleteAlertOpen} onOpenChange={handleDeleteAlertOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move page to trash?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This page will be moved to trash. You can restore it from trash later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleConfirmDelete}
+              disabled={deletePage.isPending}
+            >
+              Move to trash
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent>

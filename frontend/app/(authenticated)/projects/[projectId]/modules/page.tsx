@@ -92,7 +92,7 @@ export default function ModulesPage({
     [leadIdField]
   );
 
-  const onSubmit = (data: CreateModuleForm) => {
+  const onSubmit = useCallback((data: CreateModuleForm) => {
     createMutation.mutate(
       { ...data, projectId },
       {
@@ -104,7 +104,7 @@ export default function ModulesPage({
         onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
-  };
+  }, [createMutation, form, projectId]);
 
   const total = modules?.length ?? 0;
   const inProgress = modules?.filter(m => m.status === "in-progress").length ?? 0;
@@ -146,7 +146,7 @@ export default function ModulesPage({
               <SheetTitle>Create Module</SheetTitle>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-6 py-5">
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form id="module-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <Label htmlFor="mod-name">Name</Label>
                   <Input id="mod-name" {...form.register("name")} />
@@ -209,10 +209,12 @@ export default function ModulesPage({
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" disabled={createMutation.isPending} className="w-full">
-                  {createMutation.isPending ? "Creating..." : "Create Module"}
-                </Button>
               </form>
+            </div>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <Button type="submit" form="module-form" disabled={createMutation.isPending} className="w-full">
+                {createMutation.isPending ? "Creating..." : "Create Module"}
+              </Button>
             </div>
           </SheetContent>
         </Sheet>
@@ -227,16 +229,13 @@ export default function ModulesPage({
         </div>
 
         {!modules?.length ? (
-          <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[300px] text-center py-16">
-            <EmptyTasksIllustration className="mx-auto mb-4 w-36 h-36" />
-            <h3 className="text-lg font-semibold mb-1">No modules yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create your first module to organize work into feature areas.
-            </p>
-            <Button size="sm" onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-1" /> Create First Module
-            </Button>
-          </div>
+          <EmptyState
+            illustration={<EmptyTasksIllustration />}
+            title="No modules yet"
+            description="Create your first module to organize work into feature areas."
+            action={{ label: "Create First Module", onClick: handleOpenCreate }}
+            className="min-h-[40vh]"
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {modules.map((mod) => (

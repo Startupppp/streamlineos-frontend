@@ -979,12 +979,6 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
-        label: "Knowledge Base",
-        icon: BookOpen,
-        href: "/support/kb",
-        requiredPermission: "support:kb:view",
-      },
-      {
         label: "Canned Responses",
         icon: MailOpen,
         href: "/support/macros",

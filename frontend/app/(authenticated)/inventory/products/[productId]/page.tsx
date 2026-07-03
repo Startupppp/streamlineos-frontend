@@ -35,33 +35,6 @@ interface ProductDetailPageProps {
   params: Promise<{ productId: string }>;
 }
 
-interface ProductVariant {
-  id: number;
-  name: string;
-  sku: string;
-  barcode?: string | null;
-  costPrice?: string | number | null;
-  sellingPrice?: string | number | null;
-  isActive: boolean;
-}
-
-interface ProductDetail {
-  id: number;
-  name: string;
-  sku: string;
-  description?: string | null;
-  categoryId?: number | null;
-  categoryName?: string | null;
-  uomId?: number | null;
-  uomName?: string | null;
-  costPrice?: string | number | null;
-  sellingPrice?: string | number | null;
-  reorderPoint?: number | string | null;
-  status?: "ACTIVE" | "INACTIVE" | "DISCONTINUED";
-  isActive?: boolean;
-  variants?: ProductVariant[];
-}
-
 function formatPrice(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === "") return "—";
   const n = Number(value);
@@ -142,7 +115,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const productQuery = useProduct(productId);
   const stockQuery = useStockLevels({ productId });
 
-  const product = productQuery.data as ProductDetail | undefined;
+  const product = productQuery.data;
   const stockItems = stockQuery.data?.items ?? [];
 
   function handleEditClick(): void {

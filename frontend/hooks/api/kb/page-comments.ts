@@ -9,6 +9,7 @@ export type KbPageComment = {
   orgId: string;
   pageId: number;
   authorId: string | null;
+  authorName: string | null;
   parentId: number | null;
   content: string;
   resolvedAt: string | null;

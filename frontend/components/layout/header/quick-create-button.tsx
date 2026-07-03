@@ -66,7 +66,7 @@ const PRODUCT_ACTIONS: Record<string, CreateAction[]> = {
     { label: "New Expense", href: "/accounting/expenses?create=1", icon: Receipt },
   ],
   documents: [
-    { label: "New Document", href: "/support/kb?create=1", icon: FileText },
+    { label: "New Document", href: "/kb?create=1", icon: FileText },
   ],
   administration: [
     { label: "Invite User", href: "/users/invite", icon: UserPlus },
@@ -74,7 +74,7 @@ const PRODUCT_ACTIONS: Record<string, CreateAction[]> = {
 }
 
 const GLOBAL_ACTIONS: CreateAction[] = [
-  { label: "New Document", href: "/support/kb?create=1", icon: FileText },
+  { label: "New Document", href: "/kb?create=1", icon: FileText },
   { label: "Invite User", href: "/users/invite", icon: UserPlus },
 ]
 

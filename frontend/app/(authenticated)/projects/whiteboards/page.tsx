@@ -1,16 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
-import { Briefcase, Globe, Lock, PenTool } from "lucide-react";
-import { useAllWhiteboards, type WhiteboardHubItem } from "@/hooks/api/projects";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Briefcase, Globe, Lock, PenTool, Plus } from "lucide-react";
+import {
+  useAllWhiteboards,
+  useCreateWhiteboardInProject,
+  useProjects,
+  type WhiteboardHubItem,
+} from "@/hooks/api/projects";
+import { useCan } from "@/hooks/api/access";
+import { toast } from "sonner";
 
 function VisibilityIcon({ visibility }: { visibility: WhiteboardHubItem["visibility"] }) {
   if (visibility === "private") {
@@ -70,16 +95,125 @@ function BoardGridSkeleton() {
   );
 }
 
+interface CreateBoardHubDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: (projectId: number, boardId: number) => void;
+}
+
+function CreateBoardHubDialog({ open, onOpenChange, onSuccess }: CreateBoardHubDialogProps) {
+  const [projectId, setProjectId] = useState<string>("");
+  const [name, setName] = useState("");
+  const { data: projectsData } = useProjects(undefined, { enabled: open });
+  const create = useCreateWhiteboardInProject();
+
+  const projects = projectsData?.data ?? [];
+  const isValid = projectId !== "" && name.trim() !== "";
+
+  function handleOpenChange(next: boolean) {
+    if (!next) {
+      setProjectId("");
+      setName("");
+    }
+    onOpenChange(next);
+  }
+
+  function handleSubmit() {
+    if (!isValid || create.isPending) return;
+    create.mutate(
+      { projectId: Number(projectId), name: name.trim() },
+      {
+        onSuccess: (board) => {
+          toast.success("Board created");
+          handleOpenChange(false);
+          onSuccess(Number(projectId), board.id);
+        },
+        onError: () => toast.error("Failed to create board"),
+      },
+    );
+  }
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setName(e.target.value);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") handleSubmit();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>New Board</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-1">
+          <div className="space-y-1.5">
+            <Label>Project</Label>
+            <Select value={projectId} onValueChange={setProjectId}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Select a project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={String(p.id)}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Board name</Label>
+            <Input
+              autoFocus
+              placeholder="e.g. Sprint brainstorm"
+              value={name}
+              onChange={handleNameChange}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={!isValid || create.isPending}>
+            {create.isPending ? "Creating…" : "Create"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function WhiteboardsHubPage() {
+  const router = useRouter();
+  const canManage = useCan("projects:whiteboards:manage");
   const { data: boards, isLoading, isError, refetch } = useAllWhiteboards();
+  const [createOpen, setCreateOpen] = useState(false);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCreateSuccess = useCallback(
+    (projectId: number, boardId: number) => {
+      router.push(`/projects/${projectId}/whiteboard?board=${boardId}`);
+    },
+    [router],
+  );
 
   return (
     <RequireModule module="PROJECTS">
       <PageWrapper
         title="Whiteboards"
         subtitle="Every board you can access across your projects"
+        actions={
+          canManage ? (
+            <Button size="sm" onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-1" /> New board
+            </Button>
+          ) : undefined
+        }
       >
         {isLoading ? (
           <BoardGridSkeleton />
@@ -90,7 +224,11 @@ export default function WhiteboardsHubPage() {
             illustration={<EmptyUploadIllustration />}
             title="No whiteboards yet"
             description="Boards live inside projects. Open a project and create one from its Whiteboard tab."
-            action={{ label: "Go to projects", href: "/projects" }}
+            action={
+              canManage
+                ? { label: "New board", onClick: handleOpenCreate }
+                : { label: "Go to projects", href: "/projects" }
+            }
             className="flex-1"
           />
         ) : (
@@ -99,6 +237,14 @@ export default function WhiteboardsHubPage() {
               <BoardCard key={board.id} board={board} />
             ))}
           </div>
+        )}
+
+        {canManage && (
+          <CreateBoardHubDialog
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            onSuccess={handleCreateSuccess}
+          />
         )}
       </PageWrapper>
     </RequireModule>

@@ -86,7 +86,7 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
           <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
           Attachments
         </h3>
@@ -114,13 +114,13 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2].map((i) => (
-            <div key={i} className="h-10 bg-slate-100 rounded-lg animate-pulse" />
+            <div key={i} className="h-10 bg-muted rounded-lg animate-pulse" />
           ))}
         </div>
       ) : attachments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-6 border border-dashed border-slate-200 rounded-xl bg-slate-50/50 text-center">
-          <Paperclip className="h-6 w-6 text-slate-300 mb-1.5" />
-          <p className="text-xs text-slate-400">No files attached</p>
+        <div className="flex flex-col items-center justify-center py-6 border border-dashed border-border rounded-lg bg-muted/20 text-center">
+          <Paperclip className="h-6 w-6 text-muted-foreground/40 mb-1.5" />
+          <p className="text-xs text-muted-foreground">No files attached</p>
         </div>
       ) : (
         <AnimatePresence>
@@ -131,16 +131,16 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ delay: idx * 0.04 }}
-              className="flex items-center gap-2.5 p-2.5 bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-sm group"
+              className="flex items-center gap-2.5 p-2.5 bg-card rounded-lg border border-border shadow-sm group"
             >
-              <File className="h-4 w-4 text-violet-500 shrink-0" />
+              <File className="h-4 w-4 text-blue-600 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-slate-700 truncate">{att.fileName}</p>
+                <p className="text-xs font-medium text-foreground truncate">{att.fileName}</p>
                 <p className="text-[10px] text-muted-foreground">{formatFileSize(att.fileSize)}</p>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <a href={att.url} download className="p-1 rounded hover:bg-muted transition-colors">
-                  <Download className="h-3.5 w-3.5 text-slate-500" />
+                  <Download className="h-3.5 w-3.5 text-muted-foreground" />
                 </a>
                 <button
                   type="button"

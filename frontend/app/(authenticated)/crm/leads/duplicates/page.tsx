@@ -279,7 +279,7 @@ export default function DuplicateLeadsPage() {
               label="Duplicate Groups Found"
               value={data?.total ?? 0}
               tone="red"
-              icon={Users}
+              icon={AlertTriangle}
             />
             <StatCard
               label="Leads at Risk"

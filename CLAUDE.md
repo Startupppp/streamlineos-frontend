@@ -87,7 +87,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 - Always reuse existing components; never create a new one if an existing (or variant) can serve.
 - Lazy-load heavy client components (dynamic import). `React.memo`/`useMemo` only for **measured** hot paths.
 - **Icons:** Use `@animateicons/react` exclusively. Only use icons available at https://animateicons.in/icons/lucide (248 Lucide) and https://animateicons.in/icons/huge (33 Huge). For any icon not available there, fall back to `lucide-react` static icon — never `@phosphor-icons/react` or any other icon library for new code.
-- **Rich text (living rule, 2026-07-02):** every rich-text surface (ticket descriptions, wiki/pages, blog) reuses `components/editor/tiptap-editor.tsx` (TipTap on shadcn styling) — extend it (props/variants) rather than adding a second editor library. Plate (`platejs.org`, shadcn-based) is the approved alternative only if TipTap cannot serve a requirement. Lazy-load the editor in dialogs/sheets.
+- **Rich text (living rule, updated 2026-07-03):** simple rich-text fields (ticket descriptions, blog, comments) reuse `components/editor/tiptap-editor.tsx` (TipTap on shadcn styling) — extend it rather than adding another simple editor. **Notion-style document surfaces (KB Wiki pages) use Plate (`platejs`, shadcn-based)** under `components/editor/plate/` — do not build document-editor features on TipTap. Lazy-load editors in dialogs/sheets.
 
 ## 9. File & Folder Structure + Naming (STRICT)
 

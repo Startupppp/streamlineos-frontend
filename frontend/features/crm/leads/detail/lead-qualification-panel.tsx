@@ -36,7 +36,7 @@ function getScoreConfig(score: number): ScoreConfig {
   if (score === 3) return { label: "Mostly Qualified", badgeClass: "bg-orange-50 text-orange-700 border border-orange-200", dotColor: "bg-orange-500" };
   if (score === 2) return { label: "Partially Qualified", badgeClass: "bg-amber-50 text-amber-700 border border-amber-200", dotColor: "bg-amber-500" };
   if (score === 1) return { label: "Weakly Qualified", badgeClass: "bg-red-50 text-red-700 border border-red-200", dotColor: "bg-red-500" };
-  return { label: "Unqualified", badgeClass: "bg-slate-100 text-slate-500 border border-slate-200", dotColor: "bg-slate-400" };
+  return { label: "Unqualified", badgeClass: "bg-muted text-muted-foreground border border-border", dotColor: "bg-muted-foreground/40" };
 }
 
 const DEFAULT_BANT: BANTData = { budget: false, authority: false, need: false, timeline: false, notes: "" };
@@ -97,7 +97,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
     >
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+      <Card className="shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">
@@ -108,9 +108,9 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
               {score}/4 · {scoreConfig.label}
             </Badge>
           </div>
-          <div className="mt-2 w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+          <div className="mt-2 w-full h-1.5 rounded-full bg-muted overflow-hidden">
             <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
+              className="h-full rounded-full bg-blue-500"
               initial={{ width: 0 }}
               animate={{ width: `${(score / 4) * 100}%` }}
               transition={{ duration: 0.4, ease: "easeOut" }}
@@ -130,20 +130,20 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
                   whileTap={{ scale: 0.97 }}
                   data-criterion={criterion.key}
                   onClick={handleCriterionClick}
-                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-200 text-left ${
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-md border transition-colors duration-150 text-left ${
                     checked
-                      ? "bg-violet-50 border-violet-200 hover:bg-violet-100"
-                      : "bg-white/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                      ? "bg-blue-50 border-blue-200 hover:bg-blue-100"
+                      : "bg-card border-border hover:bg-muted"
                   }`}
                 >
                   {checked ? (
-                    <CheckCircle2 className="h-4 w-4 text-violet-600 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
                   ) : (
-                    <Circle className="h-4 w-4 text-slate-300 shrink-0" />
+                    <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
                   )}
-                  <criterion.icon className={`h-4 w-4 shrink-0 ${checked ? "text-violet-500" : "text-slate-400"}`} />
+                  <criterion.icon className={`h-4 w-4 shrink-0 ${checked ? "text-blue-500" : "text-muted-foreground"}`} />
                   <div className="min-w-0">
-                    <p className={`text-xs font-semibold ${checked ? "text-violet-700" : "text-slate-600"}`}>
+                    <p className={`text-xs font-semibold ${checked ? "text-blue-700" : "text-foreground"}`}>
                       {criterion.label}
                     </p>
                     <p className="text-[10px] text-muted-foreground">{criterion.description}</p>

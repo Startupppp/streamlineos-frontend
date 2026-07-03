@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { ErrorState } from "@/components/shared";
 import { ActivityCard } from "@/features/crm/activities/activity-card";
 import { ActivityFilters } from "@/features/crm/activities/activity-filters";
 import { LogActivityDialog } from "@/features/crm/activities/log-activity-dialog";

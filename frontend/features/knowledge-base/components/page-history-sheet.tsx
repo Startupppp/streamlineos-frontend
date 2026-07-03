@@ -5,6 +5,16 @@ import dynamic from "next/dynamic";
 import { History, RotateCcw, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -39,6 +49,7 @@ interface PageHistorySheetProps {
 
 export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHistorySheetProps) {
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
+  const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
   const { data: versions = [], isLoading } = useKbPageVersions(pageId);
   const { data: versionDetail, isLoading: detailLoading } = useKbPageVersion(
     pageId,
@@ -52,7 +63,11 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
 
   function handleRestore() {
     if (!selectedVersion) return;
-    if (!window.confirm("Restore this version? The current content will be saved as a new version.")) return;
+    setRestoreAlertOpen(true);
+  }
+
+  function handleConfirmRestore() {
+    if (!selectedVersion) return;
     restoreVersion.mutate(
       { pageId, versionNumber: selectedVersion },
       {
@@ -65,11 +80,16 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
     );
   }
 
+  function handleRestoreAlertOpenChange(open: boolean) {
+    setRestoreAlertOpen(open);
+  }
+
   function handleBackToList() {
     setSelectedVersion(null);
   }
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
         <SheetHeader className="px-6 py-4 border-b shrink-0">
@@ -163,5 +183,27 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
         )}
       </SheetContent>
     </Sheet>
+
+    <AlertDialog open={restoreAlertOpen} onOpenChange={handleRestoreAlertOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Restore this version?</AlertDialogTitle>
+          <AlertDialogDescription>
+            The current content will be saved as a new version before restoring.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={handleConfirmRestore}
+            disabled={restoreVersion.isPending}
+          >
+            Restore
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

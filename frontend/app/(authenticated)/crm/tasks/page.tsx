@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { ErrorState } from "@/components/shared";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   useTasks,

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { SkeletonTable, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptySearchIllustration } from "@/components/illustrations";
+import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useStockSummary, type StockSummaryRow } from "@/hooks/api/inventory/reports";
 
 function StockLevelBadge({
@@ -167,7 +167,7 @@ function StockSummaryContent() {
 
       {!query.isLoading && !query.error && rows.length === 0 && (
         <EmptyState
-          illustration={<EmptySearchIllustration />}
+          illustration={<EmptyReportIllustration />}
           title="No stock data"
           description="No products have stock levels recorded yet."
           className="min-h-[40vh]"

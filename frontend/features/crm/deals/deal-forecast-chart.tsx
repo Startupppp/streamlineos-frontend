@@ -71,7 +71,9 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
       row.weightedValue += value * (prob / 100);
     }
 
-    const stageRows = STAGE_ORDER.map((s) => map.get(s)!).filter((r) => r.count > 0);
+    const stageRows = STAGE_ORDER
+      .map((s) => map.get(s))
+      .filter((r): r is StageRow => r !== undefined && r.count > 0);
     const max = Math.max(...stageRows.map((r) => r.weightedValue), 1);
 
     return { rows: stageRows, maxWeighted: max };

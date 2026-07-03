@@ -180,7 +180,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-border/50 bg-muted/20 p-4 space-y-3">
+      <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3">
         <p className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
           <Plus className="h-3.5 w-3.5 text-blue-600" />
           Schedule Follow-up

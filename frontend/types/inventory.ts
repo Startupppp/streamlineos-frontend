@@ -56,6 +56,9 @@ export interface InventoryProduct {
   updatedAt: string;
   category?: InventoryCategory | null;
   uom?: InventoryUom | null;
+  categoryName?: string | null;
+  uomName?: string | null;
+  isActive?: boolean;
   variants?: InventoryProductVariant[];
   totalStock?: number;
 }

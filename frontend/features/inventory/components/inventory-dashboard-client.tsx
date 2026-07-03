@@ -16,68 +16,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared";
-import { useInventoryDashboard, useStockSummary, useReorderReport } from "@/hooks/api/inventory/reports";
-import { useProducts } from "@/hooks/api/inventory/products";
+import { EmptyProductsIllustration } from "@/components/illustrations";
+import {
+  useInventoryDashboard,
+  useReorderReport,
+  type ReorderReportRow,
+} from "@/hooks/api/inventory/reports";
 import { RecentMovementsTable } from "./inventory-recent-movements";
 
-interface DashboardData {
-  salesOrders: { totalOpen: number; totalShipped: number };
-  inventory: {
-    totalStockValue: string;
-    lowStockItemCount: number;
-    pendingPurchaseOrders: number;
-  };
-}
-
-interface StockSummaryRow {
-  productId: number;
-  onHandQty: number;
-}
-
-interface ReorderReportRow {
-  productId: number;
-  productName: string;
-  sku: string;
-  availableQty: number;
-  reorderPoint: number;
-}
-
-interface ReorderItem {
-  productId: number;
-  productName: string;
-  variantSku: string;
-  onHand: number;
-  reorderPoint: number;
-  deficit: number;
-  urgency: "critical" | "high" | "medium";
-}
-
-function extractItems<T>(raw: T[] | { items?: T[] } | null | undefined): T[] {
-  if (!raw) return [];
-  return Array.isArray(raw) ? raw : (raw.items ?? []);
-}
-
-function mapReorderRow(row: ReorderReportRow): ReorderItem {
-  const deficit = Math.max(0, row.reorderPoint - row.availableQty);
-  const urgency: ReorderItem["urgency"] =
-    row.availableQty <= 0
-      ? "critical"
-      : row.reorderPoint > 0 && row.availableQty / row.reorderPoint <= 0.25
-        ? "high"
-        : "medium";
-  return {
-    productId: row.productId,
-    productName: row.productName,
-    variantSku: row.sku,
-    onHand: row.availableQty,
-    reorderPoint: row.reorderPoint,
-    deficit,
-    urgency,
-  };
-}
-
 const URGENCY_CONFIG: Record<
-  ReorderItem["urgency"],
+  ReorderReportRow["urgency"],
   { label: string; className: string; dotClass: string }
 > = {
   critical: { label: "Critical", className: "bg-red-50 border-red-200", dotClass: "bg-red-500" },
@@ -122,10 +70,7 @@ function LowStockSkeleton() {
 }
 
 function LowStockAlertSection() {
-  const { data: rawItems, isLoading, error, refetch } = useReorderReport();
-  const items = extractItems(rawItems as ReorderReportRow[] | { items?: ReorderReportRow[] }).map(
-    mapReorderRow,
-  );
+  const { data: items = [], isLoading, error, refetch } = useReorderReport();
 
   function handleRetry(): void {
     void refetch();
@@ -157,7 +102,7 @@ function LowStockAlertSection() {
   return (
     <div className="space-y-2">
       {items.map((item) => {
-        const urgency = URGENCY_CONFIG[item.urgency] ?? URGENCY_CONFIG.medium;
+        const urgency = URGENCY_CONFIG[item.urgency];
         return (
           <div
             key={`${item.productId}-${item.variantSku}`}
@@ -191,43 +136,21 @@ function LowStockAlertSection() {
 
 export function InventoryDashboardClient() {
   const {
-    data: rawDashboard,
-    isLoading: dashLoading,
-    error: dashError,
+    data: dashboard,
+    isLoading: isKpiLoading,
+    error: kpiError,
     refetch: dashRefetch,
   } = useInventoryDashboard();
-  const {
-    data: productsData,
-    isLoading: productsLoading,
-    error: productsError,
-    refetch: productsRefetch,
-  } = useProducts({ limit: 1 });
-  const {
-    data: rawStockSummary,
-    isLoading: stockSummaryLoading,
-    error: stockSummaryError,
-    refetch: stockSummaryRefetch,
-  } = useStockSummary();
 
-  const dashboard = rawDashboard as DashboardData | undefined;
-  const stockSummaryRows = extractItems(
-    rawStockSummary as StockSummaryRow[] | { items?: StockSummaryRow[] },
-  );
-
-  const isKpiLoading = dashLoading || productsLoading || stockSummaryLoading;
-  const isKpiError = !!(dashError || productsError || stockSummaryError);
-
-  const totalSkus = productsData?.total ?? 0;
-  const totalOnHand = stockSummaryRows.reduce((acc, item) => acc + item.onHandQty, 0);
-  const lowStockCount = dashboard?.inventory.lowStockItemCount ?? 0;
-  const openSalesOrders = dashboard?.salesOrders.totalOpen ?? 0;
+  const totalSkus = dashboard?.totalSkus ?? 0;
+  const totalOnHand = dashboard?.totalOnHand ?? 0;
+  const lowStockCount = dashboard?.lowStockCount ?? 0;
+  const openSalesOrders = dashboard?.openSoCount ?? 0;
 
   const hasAnyData = !isKpiLoading && (totalSkus > 0 || totalOnHand > 0);
 
   function handleKpiRetry(): void {
     void dashRefetch();
-    void productsRefetch();
-    void stockSummaryRefetch();
   }
 
   const addProductAction = (
@@ -240,7 +163,7 @@ export function InventoryDashboardClient() {
     </Link>
   );
 
-  if (!isKpiLoading && !isKpiError && !hasAnyData) {
+  if (!isKpiLoading && !kpiError && !hasAnyData) {
     return (
       <PageWrapper
         eyebrow="Operations · Inventory"
@@ -249,6 +172,7 @@ export function InventoryDashboardClient() {
         actions={addProductAction}
       >
         <EmptyState
+          illustration={<EmptyProductsIllustration />}
           title="No inventory data yet"
           description="Add your first product to start tracking stock levels and movements."
           action={{ label: "Add Product", href: "/inventory/products" }}
@@ -267,7 +191,7 @@ export function InventoryDashboardClient() {
       <div className="space-y-6">
         {isKpiLoading ? (
           <KpiSkeletons />
-        ) : isKpiError ? (
+        ) : kpiError ? (
           <ErrorState
             title="Failed to load dashboard"
             description="Could not retrieve inventory metrics. Please try again."

@@ -372,7 +372,7 @@ export default function WarehouseDetailPage({
             return (
               <motion.div
                 key={lt}
-                {...(shouldReduceMotion ? {} : { variants: fadeUp })}
+                variants={shouldReduceMotion ? undefined : fadeUp}
               >
                 <Card>
                   <CardHeader className="pb-2 pt-4 px-4">

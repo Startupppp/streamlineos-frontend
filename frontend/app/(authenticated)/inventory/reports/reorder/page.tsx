@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { SkeletonTable, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptySearchIllustration } from "@/components/illustrations";
+import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useReorderReport } from "@/hooks/api/inventory/reports";
 
 function UrgencyBadge({ available, reorderPoint }: { available: number; reorderPoint: number }) {
@@ -118,7 +118,7 @@ function ReorderReportContent() {
 
       {!query.isLoading && !query.error && rows.length === 0 && (
         <EmptyState
-          illustration={<EmptySearchIllustration />}
+          illustration={<EmptyReportIllustration />}
           title="No products need reordering"
           description="All products are above their reorder points."
           className="min-h-[40vh]"

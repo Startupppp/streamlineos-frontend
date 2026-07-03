@@ -114,6 +114,8 @@ function WebhookCard({
     setExpanded((v) => !v);
   }
 
+  const handleConfirmDelete = useCallback(() => onDelete(webhook.id), [onDelete, webhook.id]);
+
   return (
     <motion.div
       layout
@@ -172,7 +174,7 @@ function WebhookCard({
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => onDelete(webhook.id)}
+                onClick={handleConfirmDelete}
                 className="bg-red-600 hover:bg-red-700"
               >
                 Delete
@@ -224,7 +226,7 @@ interface PageProps {
 export default function WebhooksPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
-  const [showForm, setShowForm] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const { data: webhooks = [], isLoading, isError, refetch } = useWebhooks(projectId);
   const createWebhook = useCreateWebhook(projectId);
@@ -242,7 +244,7 @@ export default function WebhooksPage({ params }: PageProps) {
         {
           onSuccess: () => {
             form.reset();
-            setShowForm(false);
+            setSheetOpen(false);
             toast.success("Webhook created");
           },
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -262,17 +264,21 @@ export default function WebhooksPage({ params }: PageProps) {
     [deleteWebhook],
   );
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const handleCancelForm = useCallback(() => {
-    setShowForm(false);
+    setSheetOpen(false);
     form.reset();
   }, [form]);
 
-  const handleShowForm = useCallback(() => setShowForm(true), []);
+  const handleShowForm = useCallback(() => setSheetOpen(true), []);
 
   return (
     <PageWrapper
+      eyebrow="Projects"
       title="Webhooks"
       subtitle="Receive HTTP POST notifications when project events occur"
+      backHref={`/projects/${projectId}`}
       actions={
         <Button size="sm" onClick={handleShowForm}>
           <Plus className="h-3.5 w-3.5 mr-1" />
@@ -288,12 +294,12 @@ export default function WebhooksPage({ params }: PageProps) {
             ))}
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <p className="text-sm text-muted-foreground">Failed to load webhooks.</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
-              Retry
-            </Button>
-          </div>
+          <ErrorState
+            title="Could not load webhooks"
+            description="Failed to load webhooks."
+            onRetry={handleRetry}
+            className="flex-1 min-h-[40vh]"
+          />
         ) : (
           <>
             <AnimatePresence initial={false}>
@@ -310,156 +316,117 @@ export default function WebhooksPage({ params }: PageProps) {
               ))}
             </AnimatePresence>
 
-            {webhooks.length === 0 && !showForm && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center justify-center py-20 gap-3"
-              >
-                <div className="h-14 w-14 rounded-lg bg-muted border border-border flex items-center justify-center">
-                  <Zap className="h-7 w-7 text-muted-foreground" />
-                </div>
-                <p className="text-sm font-semibold text-slate-700">No webhooks configured</p>
-                <p className="text-xs text-muted-foreground text-center max-w-xs">
-                  Get notified in real-time when tickets, sprints, or members change.
-                </p>
-                <Button
-                  onClick={handleShowForm}
-                  className="mt-2 gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create Webhook
-                </Button>
-              </motion.div>
-            )}
-
-            {webhooks.length > 0 && !showForm && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShowForm}
-                className="gap-1.5 h-8 text-xs"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add Webhook
-              </Button>
+            {webhooks.length === 0 && (
+              <EmptyState
+                illustration={<Zap className="h-8 w-8 text-muted-foreground/40" />}
+                title="No webhooks configured"
+                description="Get notified in real-time when tickets, sprints, or members change."
+                action={{ label: "Create Webhook", onClick: handleShowForm }}
+                className="min-h-[40vh]"
+              />
             )}
           </>
         )}
 
-        <AnimatePresence>
-          {showForm && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="border border-border rounded-lg bg-muted/30 p-5"
-            >
-              <h3 className="text-sm font-semibold text-slate-800 mb-4">New Webhook</h3>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="url"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-slate-600">Payload URL</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="https://example.com/webhook"
-                            className="h-8 text-sm font-mono"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="events"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-slate-600">
-                          Events to subscribe
-                        </FormLabel>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          {WEBHOOK_EVENTS.map((ev) => (
-                            <label
-                              key={ev.value}
-                              className={cn(
-                                "flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-all duration-150 select-none",
-                                field.value.includes(ev.value)
-                                  ? "border-primary bg-primary/5 text-foreground"
-                                  : "border-border hover:border-border/80 bg-card",
-                              )}
-                            >
-                              <Checkbox
-                                checked={field.value.includes(ev.value)}
-                                onCheckedChange={(checked) => {
-                                  const next = checked
-                                    ? [...field.value, ev.value]
-                                    : field.value.filter((v) => v !== ev.value);
-                                  field.onChange(next);
-                                }}
-                                className="h-3.5 w-3.5"
-                              />
-                              <span className="text-xs font-medium">{ev.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="secret"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-slate-600">
-                          Signing Secret{" "}
-                          <span className="text-muted-foreground font-normal">(optional)</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Used to sign payloads"
-                            type="password"
-                            className="h-8 text-sm font-mono"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      type="submit"
-                      size="sm"
-                      disabled={createWebhook.isPending}
-                      className="h-8 text-xs gap-1.5"
-                    >
-                      {createWebhook.isPending ? "Creating..." : "Create Webhook"}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleCancelForm}
-                      className="h-8 text-xs"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md overflow-hidden">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+            <SheetTitle>New Webhook</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <Form {...form}>
+              <form id="webhook-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-slate-600">Payload URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://example.com/webhook"
+                          className="h-8 text-sm font-mono"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="events"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-slate-600">
+                        Events to subscribe
+                      </FormLabel>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {WEBHOOK_EVENTS.map((ev) => (
+                          <label
+                            key={ev.value}
+                            className={cn(
+                              "flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-all duration-150 select-none",
+                              field.value.includes(ev.value)
+                                ? "border-primary bg-primary/5 text-foreground"
+                                : "border-border hover:border-border/80 bg-card",
+                            )}
+                          >
+                            <Checkbox
+                              checked={field.value.includes(ev.value)}
+                              onCheckedChange={(checked) => {
+                                const next = checked
+                                  ? [...field.value, ev.value]
+                                  : field.value.filter((v) => v !== ev.value);
+                                field.onChange(next);
+                              }}
+                              className="h-3.5 w-3.5"
+                            />
+                            <span className="text-xs font-medium">{ev.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="secret"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-slate-600">
+                        Signing Secret{" "}
+                        <span className="text-muted-foreground font-normal">(optional)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Used to sign payloads"
+                          type="password"
+                          className="h-8 text-sm font-mono"
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </form>
+            </Form>
+          </div>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" size="sm" onClick={handleCancelForm}>Cancel</Button>
+              <Button size="sm" type="submit" form="webhook-form" disabled={createWebhook.isPending}>
+                {createWebhook.isPending ? "Creating…" : "Create Webhook"}
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </PageWrapper>
   );
 }
