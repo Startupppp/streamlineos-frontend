@@ -75,21 +75,21 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-3 gap-4 mb-2">
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm p-4 text-center">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-xs text-muted-foreground">Total Leads</p>
-          <p className="text-2xl font-bold text-slate-800">
+          <p className="text-2xl font-bold tabular-nums text-foreground">
             {STAGE_ORDER.reduce((s, st) => s + (board[st]?.length ?? 0), 0)}
           </p>
         </div>
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm p-4 text-center">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-xs text-muted-foreground">Converted</p>
-          <p className="text-2xl font-bold text-emerald-600">
+          <p className="text-2xl font-bold tabular-nums text-emerald-600">
             {board["CONVERTED"]?.length ?? 0}
           </p>
         </div>
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm p-4 text-center">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-xs text-muted-foreground">Pipeline Value</p>
-          <p className="text-2xl font-bold text-violet-600">
+          <p className="text-2xl font-bold tabular-nums text-blue-600">
             ₹{(totalRevenue / 100000).toFixed(1)}L
           </p>
         </div>
@@ -114,7 +114,7 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
 
               <div className="flex-1 relative h-10">
                 <motion.div
-                  className={`h-full bg-gradient-to-r ${STAGE_COLORS[stage]} rounded-xl flex items-center px-3`}
+                  className={`h-full bg-gradient-to-r ${STAGE_COLORS[stage]} rounded-md flex items-center px-3`}
                   initial={{ width: "0%" }}
                   animate={{ width: `${widthPct}%` }}
                   transition={{ delay: idx * 0.08 + 0.1, duration: 0.5, ease: "easeOut" }}

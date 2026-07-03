@@ -366,7 +366,15 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
             <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
               <dt className="text-muted-foreground">Status</dt>
               <dd>
-                <Badge variant={vendor.isActive ? "default" : "secondary"} className="h-4 text-[9px] px-1.5 py-0">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "h-4 text-[9px] px-1.5 py-0",
+                    vendor.isActive
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-slate-100 text-slate-700 border-slate-200",
+                  )}
+                >
                   {vendor.isActive ? "Active" : "Inactive"}
                 </Badge>
               </dd>

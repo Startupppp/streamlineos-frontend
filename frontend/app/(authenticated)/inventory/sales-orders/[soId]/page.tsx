@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { ChevronLeft, CheckCircle, Truck, FileText } from "lucide-react";
+import { CheckCircle, Truck, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
@@ -138,8 +138,9 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
       eyebrow="Inventory · Sales Orders"
       title={so.soNumber}
       subtitle={`${so.customerName ?? "Unknown customer"} · ${formatDate(so.orderDate)}`}
+      backHref="/inventory/sales-orders"
       actions={
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           {canConfirm && (
             <Button size="sm" onClick={handleConfirm} disabled={isMutating}>
               <CheckCircle className="mr-1 size-4" />
@@ -166,12 +167,6 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
               </Link>
             </Button>
           )}
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/inventory/sales-orders">
-              <ChevronLeft className="mr-1 size-4" />
-              Back
-            </Link>
-          </Button>
         </div>
       }
     >
@@ -181,8 +176,8 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
             <dt className="text-muted-foreground">Status</dt>
             <dd>
               <Badge
-                variant={STATUS_VARIANT[so.status]}
-                className={STATUS_CLASS[so.status] || undefined}
+                variant="outline"
+                className={`h-5 text-[10px] px-2 py-0.5 ${STATUS_BADGE_CLASS[so.status]}`}
               >
                 {so.status}
               </Badge>

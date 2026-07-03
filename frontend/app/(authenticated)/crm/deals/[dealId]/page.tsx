@@ -2,9 +2,8 @@
 
 import { use, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
-  ArrowLeft,
   Edit2,
   Trophy,
   XCircle,
@@ -16,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
@@ -37,7 +37,6 @@ import {
   type EditFormValues,
 } from "@/features/crm/deals/detail/deal-edit-form";
 import { LogActivityDialog } from "@/features/crm/deals/detail/log-activity-dialog";
-import { AIPredictDealButton } from "@/features/crm/deals/ai-predict-deal-button";
 import {
   MeetingDialog,
   CreateProjectDialog,
@@ -48,28 +47,22 @@ import { DealOrdersSection } from "@/features/crm/deals/deal-orders-section";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 
 const STAGES = [
-  { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },
-  {
-    key: "CONTACTED",
-    label: "Contacted",
-    color: "#0EA5E9",
-    bg: "bg-sky-500/10",
-  },
-  {
-    key: "PROPOSAL",
-    label: "Proposal",
-    color: "#F59E0B",
-    bg: "bg-amber-500/10",
-  },
-  {
-    key: "NEGOTIATION",
-    label: "Negotiation",
-    color: "#8B5CF6",
-    bg: "bg-purple-500/10",
-  },
-  { key: "WON", label: "Won", color: "#10B981", bg: "bg-emerald-500/10" },
-  { key: "LOST", label: "Lost", color: "#EF4444", bg: "bg-red-500/10" },
+  { key: "LEAD", label: "Lead", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
+  { key: "CONTACTED", label: "Contacted", badgeClass: "bg-sky-50 text-sky-700 border-sky-200" },
+  { key: "PROPOSAL", label: "Proposal", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
+  { key: "NEGOTIATION", label: "Negotiation", badgeClass: "bg-violet-50 text-violet-700 border-violet-200" },
+  { key: "WON", label: "Won", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  { key: "LOST", label: "Lost", badgeClass: "bg-red-50 text-red-700 border-red-200" },
 ] as const;
+
+const STAGE_ACTIVE_CLASSES: Record<string, string> = {
+  LEAD: "bg-blue-50 text-blue-700 ring-1 ring-blue-300",
+  CONTACTED: "bg-sky-50 text-sky-700 ring-1 ring-sky-300",
+  PROPOSAL: "bg-amber-50 text-amber-700 ring-1 ring-amber-300",
+  NEGOTIATION: "bg-violet-50 text-violet-700 ring-1 ring-violet-300",
+  WON: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300",
+  LOST: "bg-red-50 text-red-700 ring-1 ring-red-300",
+};
 
 type DealStage = (typeof STAGES)[number]["key"];
 
@@ -88,6 +81,7 @@ export default function DealDetailPage({
   const { dealId: dealIdStr } = use(params);
   const dealId = Number(dealIdStr);
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
 
   const { data: deal, isLoading } = useDealDetail(dealId);
   const [isEditing, setIsEditing] = useState(false);
@@ -164,20 +158,10 @@ export default function DealDetailPage({
     [dealId, updateDeal],
   );
 
-  const handleBackToDeals = useCallback(
-    () => router.push("/crm/deals"),
-    [router],
-  );
   const handleToggleEdit = useCallback(() => setIsEditing((v) => !v), []);
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
-  const handleMarkWon = useCallback(
-    () => handleStageChange("WON"),
-    [handleStageChange],
-  );
-  const handleMarkLost = useCallback(
-    () => handleStageChange("LOST"),
-    [handleStageChange],
-  );
+  const handleMarkWon = useCallback(() => handleStageChange("WON"), [handleStageChange]);
+  const handleMarkLost = useCallback(() => handleStageChange("LOST"), [handleStageChange]);
 
   const handleStagePipelineClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -203,12 +187,7 @@ export default function DealDetailPage({
     (notes: string) => {
       if (!pendingAction) return;
       logActivity.mutate(
-        {
-          dealId,
-          type: pendingAction.type,
-          subject: pendingAction.label,
-          notes,
-        },
+        { dealId, type: pendingAction.type, subject: pendingAction.label, notes },
         {
           onSuccess: () => {
             toast.success("Activity logged");
@@ -269,12 +248,7 @@ export default function DealDetailPage({
       try {
         const newProject = await apiClient.post<{ id: number }>(
           "/projects/from-deal",
-          {
-            dealId,
-            name: data.name.trim(),
-            startDate: data.startDate,
-            endDate: data.endDate,
-          },
+          { dealId, name: data.name.trim(), startDate: data.startDate, endDate: data.endDate },
         );
         toast.success("Project created successfully");
         setCreateProjectOpen(false);
@@ -288,36 +262,45 @@ export default function DealDetailPage({
     [dealId, router],
   );
 
-  const handleOpenMeetingDialog = useCallback(
-    () => setMeetingDialogOpen(true),
-    [],
-  );
-  const handleOpenCreateProject = useCallback(
-    () => setCreateProjectOpen(true),
-    [],
-  );
+  const handleOpenMeetingDialog = useCallback(() => setMeetingDialogOpen(true), []);
+  const handleOpenCreateProject = useCallback(() => setCreateProjectOpen(true), []);
+
+  const containerVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : staggerContainer;
+  const itemVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : fadeUp;
 
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-8 w-48" />
-        <div className="grid gap-6 lg:grid-cols-5">
-          <Skeleton className="h-[500px] lg:col-span-3" />
-          <Skeleton className="h-[500px] lg:col-span-2" />
+      <PageWrapper title={`Deal #${dealIdStr}`} backHref="/crm/deals">
+        <div className="space-y-6">
+          <div className="flex flex-wrap gap-1 p-2 rounded-lg bg-muted/30 border border-border">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-7 w-20 rounded-lg" />
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-5">
+            <Skeleton className="h-64 lg:col-span-3 rounded-lg" />
+            <Skeleton className="h-64 lg:col-span-2 rounded-lg" />
+          </div>
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   if (!deal) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <p className="text-muted-foreground">Deal not found</p>
-        <Button variant="outline" onClick={handleBackToDeals}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Deals
-        </Button>
-      </div>
+      <PageWrapper title="Deal Not Found" backHref="/crm/deals">
+        <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+          <EmptyState
+            title="Deal not found"
+            description="This deal may have been deleted or you may not have access."
+            action={{ label: "Back to Deals", href: "/crm/deals" }}
+          />
+        </div>
+      </PageWrapper>
     );
   }
 
@@ -331,95 +314,78 @@ export default function DealDetailPage({
     { label: "Actual Close", value: deal.actualCloseDate },
   ];
 
+  const isActiveDeal = deal.stage !== "WON" && deal.stage !== "LOST";
+
   return (
     <PageWrapper
       title={deal.name}
+      backHref="/crm/deals"
       subtitle={
         <span className="flex items-center gap-2">
           <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded select-all">
             {formatDealId(dealId)}
           </span>
-          <span>{formatINR(dealValue)}</span>
+          <span className="tabular-nums">{formatINR(dealValue)}</span>
         </span>
       }
       badge={
         <Badge
-          className="text-sm px-3 py-1"
-          style={{
-            backgroundColor: `${stageConfig.color}20`,
-            color: stageConfig.color,
-          }}
+          variant="outline"
+          className={cn("text-xs px-2 py-0.5", stageConfig.badgeClass)}
         >
           {stageConfig.label}
         </Badge>
       }
       actions={
-        <>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleBackToDeals}
-            aria-label="Back to deals"
-          >
-            <ArrowLeft className="h-5 w-5" />
+        isEditing ? (
+          <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+            Cancel
           </Button>
-          {deal.probability !== null && (
-            <Badge variant="secondary" className="text-xs">
-              {deal.probability}% probability
-            </Badge>
-          )}
-          <AIPredictDealButton dealId={dealId} compact />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleClone}
-            disabled={cloneDeal.isPending}
-          >
-            <Copy className="h-4 w-4 mr-1" />
-            Clone
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleToggleEdit}>
-            <Edit2 className="h-4 w-4 mr-1" />
-            {isEditing ? "Cancel" : "Edit"}
-          </Button>
-          {deal.stage !== "WON" && deal.stage !== "LOST" && (
-            <>
-              <Button
-                size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                onClick={handleMarkWon}
-              >
-                <Trophy className="h-4 w-4 mr-1" />
-                Mark Won
+        ) : (
+          <>
+            {isActiveDeal && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleMarkLost}
+                >
+                  <XCircle className="h-3.5 w-3.5 mr-1" />
+                  Lost
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={handleMarkWon}
+                >
+                  <Trophy className="h-3.5 w-3.5 mr-1" />
+                  Won
+                </Button>
+              </>
+            )}
+            {deal.stage === "WON" && (
+              <Button size="sm" variant="outline" onClick={handleOpenCreateProject}>
+                <FolderKanban className="h-3.5 w-3.5 mr-1" />
+                Create Project
               </Button>
-              <Button size="sm" variant="destructive" onClick={handleMarkLost}>
-                <XCircle className="h-4 w-4 mr-1" />
-                Mark Lost
-              </Button>
-            </>
-          )}
-          {(deal.stage === "WON" || deal.stage === "NEGOTIATION") && (
-            <Button
-              size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={handleOpenCreateProject}
-            >
-              <FolderKanban className="h-4 w-4 mr-1" />
-              Create Project
+            )}
+            <Button size="sm" onClick={handleToggleEdit}>
+              <Edit2 className="h-3.5 w-3.5 mr-1" />
+              Edit
             </Button>
-          )}
-        </>
+          </>
+        )
       }
     >
       <motion.div
         className="space-y-6"
-        variants={staggerContainer}
+        variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <motion.div
-          variants={fadeUp}
-          className="flex flex-wrap items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50"
+          variants={itemVariants}
+          className="flex flex-wrap items-center gap-1 p-2 rounded-lg bg-muted/30 border border-border"
         >
           {STAGES.map((stage, i) => {
             const isActive = stage.key === deal.stage;
@@ -430,14 +396,13 @@ export default function DealDetailPage({
                 data-stage={stage.key}
                 onClick={handleStagePipelineClick}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap",
                   isActive
-                    ? cn(stage.bg, "ring-1 ring-current/20")
+                    ? STAGE_ACTIVE_CLASSES[stage.key]
                     : isPast
                       ? "bg-muted/50 text-muted-foreground"
                       : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30",
                 )}
-                style={isActive ? { color: stage.color } : undefined}
               >
                 {stage.label}
                 {i < STAGES.length - 1 && (
@@ -449,7 +414,7 @@ export default function DealDetailPage({
         </motion.div>
 
         <div className="grid gap-6 lg:grid-cols-5">
-          <motion.div variants={fadeUp} className="lg:col-span-3 space-y-6">
+          <motion.div variants={itemVariants} className="lg:col-span-3 space-y-6">
             {isEditing ? (
               <DealEditForm
                 deal={deal}
@@ -458,12 +423,24 @@ export default function DealDetailPage({
                 onCancel={handleCancelEdit}
               />
             ) : (
-              <DealInfoCard deal={deal} />
+              <>
+                <DealInfoCard deal={deal} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClone}
+                  disabled={cloneDeal.isPending}
+                  className="w-full"
+                >
+                  <Copy className="h-3.5 w-3.5 mr-1.5" />
+                  Clone Deal
+                </Button>
+              </>
             )}
             <DealOrdersSection dealId={dealId} dealStage={deal.stage} />
           </motion.div>
 
-          <motion.div variants={fadeUp} className="lg:col-span-2 space-y-6">
+          <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6">
             <DealSidebarCards
               assignedTo={deal.assignedTo}
               lead={deal.lead}

@@ -174,7 +174,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
 
   if (isLoading) {
     return (
-      <PageWrapper title="Intake">
+      <PageWrapper title="Intake" eyebrow="Projects" backHref={`/projects/${projectId}`}>
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full" />

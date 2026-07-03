@@ -173,11 +173,12 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
       )}
 
       {(budget?.memberBreakdown?.length ?? 0) === 0 && !isLoading && (
-        <div className="flex flex-1 flex-col items-center justify-center py-16 gap-2">
-          <Clock className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-base font-semibold">No billable time logged</p>
-          <p className="text-sm text-muted-foreground">Log billable hours to track costs against this project&apos;s budget.</p>
-        </div>
+        <EmptyState
+          illustration={<Clock className="h-8 w-8 text-muted-foreground/40" />}
+          title="No billable time logged"
+          description="Log billable hours to track costs against this project's budget."
+          className="flex-1 min-h-[40vh]"
+        />
       )}
     </PageWrapper>
   );

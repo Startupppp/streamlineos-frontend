@@ -20,8 +20,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { useStockSummary, type StockSummaryRow } from "@/hooks/api/inventory/reports";
 
-const STATUS_BADGE = "h-4 text-[9px] px-1.5 py-0";
-
 function StockLevelBadge({
   available,
   reorderPoint,
@@ -31,20 +29,20 @@ function StockLevelBadge({
 }) {
   if (reorderPoint !== null && available <= 0) {
     return (
-      <Badge variant="outline" className={`${STATUS_BADGE} bg-red-50 text-red-700 border-red-200`}>
+      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-red-50 text-red-700 border-red-200">
         Out of stock
       </Badge>
     );
   }
   if (reorderPoint !== null && available <= reorderPoint) {
     return (
-      <Badge variant="outline" className={`${STATUS_BADGE} bg-amber-50 text-amber-700 border-amber-200`}>
+      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200">
         Low stock
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className={`${STATUS_BADGE} bg-emerald-50 text-emerald-700 border-emerald-200`}>
+    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200">
       OK
     </Badge>
   );

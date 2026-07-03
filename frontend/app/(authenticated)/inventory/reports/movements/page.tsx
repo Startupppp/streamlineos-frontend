@@ -41,18 +41,16 @@ const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
 ];
 
 const TYPE_CLASS: Record<MovementType, string> = {
-  PURCHASE: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  SALE: "bg-blue-50 text-blue-700 border-blue-200",
-  GRN: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  ADJUSTMENT_IN: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  ADJUSTMENT_OUT: "bg-amber-50 text-amber-700 border-amber-200",
-  TRANSFER_IN: "bg-blue-50 text-blue-700 border-blue-200",
-  TRANSFER_OUT: "bg-amber-50 text-amber-700 border-amber-200",
-  RETURN_IN: "bg-blue-50 text-blue-700 border-blue-200",
-  RETURN_OUT: "bg-red-50 text-red-700 border-red-200",
+  PURCHASE: "h-4 text-[9px] px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200",
+  SALE: "h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200",
+  GRN: "h-4 text-[9px] px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200",
+  ADJUSTMENT_IN: "h-4 text-[9px] px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200",
+  ADJUSTMENT_OUT: "h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200",
+  TRANSFER_IN: "h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200",
+  TRANSFER_OUT: "h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200",
+  RETURN_IN: "h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200",
+  RETURN_OUT: "h-4 text-[9px] px-1.5 py-0 bg-red-50 text-red-700 border-red-200",
 };
-
-const BADGE_BASE = "h-4 text-[9px] px-1.5 py-0";
 
 function formatDate(value: string): string {
   const d = new Date(value);
@@ -261,10 +259,7 @@ function MovementsReportContent() {
                     {formatDate(row.createdAt)}
                   </TableCell>
                   <TableCell className="px-2 py-1">
-                    <Badge
-                      variant="outline"
-                      className={`${BADGE_BASE} ${TYPE_CLASS[row.type]}`}
-                    >
+                    <Badge variant="outline" className={TYPE_CLASS[row.type]}>
                       {row.type.replace(/_/g, " ")}
                     </Badge>
                   </TableCell>

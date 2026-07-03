@@ -30,14 +30,12 @@ import { CreateOrgDialog } from "@/features/crm/companies/create-org-dialog";
 
 const PAGE_SIZE = 20;
 
-function getHealthBadgeClasses(score: number | null): { label: string; className: string } {
+function getHealthBadgeClasses(score: number | null): string {
   if (score === null || score === undefined)
-    return { label: "N/A", className: "bg-slate-100 text-slate-700 border-slate-200" };
-  if (score >= 70)
-    return { label: "Healthy", className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-  if (score >= 40)
-    return { label: "At Risk", className: "bg-amber-50 text-amber-700 border-amber-200" };
-  return { label: "Critical", className: "bg-red-50 text-red-700 border-red-200" };
+    return "bg-slate-100 text-slate-700 border-slate-200";
+  if (score >= 70) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (score >= 40) return "bg-amber-50 text-amber-700 border-amber-200";
+  return "bg-red-50 text-red-700 border-red-200";
 }
 
 export default function CompaniesPage() {

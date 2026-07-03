@@ -250,7 +250,6 @@ export function LeadTableView({
                       illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
                       title="No leads found"
                       description="No leads match your current filters."
-                      action={{ label: "Clear filters", onClick: () => undefined }}
                       className="border-0 bg-transparent min-h-[40vh]"
                       compact
                     />

@@ -1,23 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import {
-  CheckCircle2,
-  XCircle,
-  ClipboardCheck,
-  AlertCircle,
-} from "lucide-react";
+import { CheckCircle2, XCircle, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,192 +23,109 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import { useDealApprovals, useResolveDealApproval } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
+
+type ApprovalRow = NonNullable<ReturnType<typeof useDealApprovals>["data"]>[number];
+
 function fmt(amount: string | number) {
   return `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
-const STATUS_BADGE: Record<
-  string,
-  {
-    label: string;
-    variant: "default" | "secondary" | "destructive" | "outline";
-  }
-> = {
-  pending: { label: "Pending", variant: "secondary" },
-  approved: { label: "Approved", variant: "default" },
-  rejected: { label: "Rejected", variant: "destructive" },
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  pending: { label: "Pending", className: "bg-amber-50 text-amber-700 border-amber-200" },
+  approved: { label: "Approved", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  rejected: { label: "Rejected", className: "bg-red-50 text-red-700 border-red-200" },
 };
 
-interface ApprovalItem {
-  id: number;
-  status: string;
-  dealName?: string | null;
-  dealId: number;
-  dealValue?: string | number | null;
-  requesterName?: string | null;
-  requestedStage: string;
-  createdAt?: string | null;
-  rejectionReason?: string | null;
-}
-
-interface ApprovalTableRowProps {
-  item: ApprovalItem;
+interface ApprovalRowActionsProps {
+  item: ApprovalRow;
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
 }
 
-function ApprovalTableRow({
-  item,
-  onApprove,
-  onReject,
-}: ApprovalTableRowProps) {
-  const badge = STATUS_BADGE[item.status] ?? {
-    label: item.status,
-    variant: "secondary" as const,
-  };
+function ApprovalRowActions({ item, onApprove, onReject }: ApprovalRowActionsProps) {
+  const handleApproveClick = useCallback(() => onApprove(item.id), [item.id, onApprove]);
+  const handleRejectClick = useCallback(() => onReject(item.id), [item.id, onReject]);
 
-  const handleApprove = useCallback(
-    () => onApprove(item.id),
-    [onApprove, item.id],
-  );
-  const handleReject = useCallback(
-    () => onReject(item.id),
-    [onReject, item.id],
-  );
+  if (item.status === "pending") {
+    return (
+      <div className="flex items-center justify-end gap-1.5">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 text-xs text-emerald-600 hover:text-emerald-700"
+          onClick={handleApproveClick}
+        >
+          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+          Approve
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 text-xs text-destructive hover:text-destructive"
+          onClick={handleRejectClick}
+        >
+          <XCircle className="h-3.5 w-3.5 mr-1" />
+          Reject
+        </Button>
+      </div>
+    );
+  }
 
-  return (
-    <TableRow key={item.id}>
-      <TableCell className="font-medium text-sm">
-        {item.dealName ?? `Deal #${item.dealId}`}
-      </TableCell>
-      <TableCell className="text-right text-sm">
-        {item.dealValue ? fmt(item.dealValue) : "—"}
-      </TableCell>
-      <TableCell className="text-sm">{item.requesterName ?? "—"}</TableCell>
-      <TableCell>
-        <Badge variant="outline" className="text-[11px]">
-          {item.requestedStage}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        <Badge variant={badge.variant} className="text-[11px]">
-          {badge.label}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-xs text-muted-foreground">
-        {item.createdAt ? format(new Date(item.createdAt), "dd MMM yyyy") : "—"}
-      </TableCell>
-      <TableCell className="text-right">
-        {item.status === "pending" && (
-          <div className="flex items-center justify-end gap-1.5">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 text-xs text-green-600 hover:text-green-700"
-              onClick={handleApprove}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-              Approve
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 text-xs text-destructive hover:text-destructive"
-              onClick={handleReject}
-            >
-              <XCircle className="h-3.5 w-3.5 mr-1" />
-              Reject
-            </Button>
-          </div>
-        )}
-        {item.status === "rejected" && item.rejectionReason && (
-          <span
-            className="text-xs text-muted-foreground italic"
-            title={item.rejectionReason}
-          >
-            {item.rejectionReason.slice(0, 30)}
-            {item.rejectionReason.length > 30 ? "..." : ""}
-          </span>
-        )}
-      </TableCell>
-    </TableRow>
-  );
-}
+  if (item.status === "rejected" && item.rejectionReason) {
+    return (
+      <span
+        className="text-xs text-muted-foreground italic truncate block max-w-[120px]"
+        title={item.rejectionReason}
+      >
+        {item.rejectionReason.slice(0, 30)}
+        {item.rejectionReason.length > 30 ? "…" : ""}
+      </span>
+    );
+  }
 
-function ApprovalsTableSkeleton() {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Deal</TableHead>
-          <TableHead className="text-right">Value</TableHead>
-          <TableHead>Requester</TableHead>
-          <TableHead>Stage</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Created</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {[1, 2, 3, 4, 5].map((i) => (
-          <TableRow key={i}>
-            <TableCell>
-              <Skeleton className="h-4 w-32" />
-            </TableCell>
-            <TableCell className="text-right">
-              <Skeleton className="h-4 w-20 ml-auto" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-4 w-24" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-5 w-16 rounded-full" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-4 w-20" />
-            </TableCell>
-            <TableCell className="text-right">
-              <Skeleton className="h-7 w-28 ml-auto" />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
+  return null;
 }
 
 export default function DealApprovalsPage() {
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(
-    "pending",
-  );
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const statusFilter = searchParams.get("status") ?? "all";
+
   const [confirmAction, setConfirmAction] = useState<{
     id: number;
     action: "approve" | "reject";
   } | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+
   const { data, isLoading, isError, refetch } = useDealApprovals({
-    status: statusFilter,
+    status: statusFilter === "all" ? undefined : statusFilter,
   });
   const resolve = useResolveDealApproval();
 
-  const items = Array.isArray(data) ? data : [];
+  const items: ApprovalRow[] = Array.isArray(data) ? data : [];
 
-  const handleFilterChange = useCallback((value: string) => {
-    setStatusFilter(value === "all" ? undefined : value);
-  }, []);
+  const handleFilterChange = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === "all") {
+        params.delete("status");
+      } else {
+        params.set("status", value);
+      }
+      router.replace(`?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
 
   const handleOpenConfirm = useCallback(
     (id: number, action: "approve" | "reject") => {
@@ -239,10 +151,12 @@ export default function DealApprovalsPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
   const handleApprove = useCallback(
     (id: number) => handleOpenConfirm(id, "approve"),
     [handleOpenConfirm],
   );
+
   const handleReject = useCallback(
     (id: number) => handleOpenConfirm(id, "reject"),
     [handleOpenConfirm],
@@ -260,9 +174,7 @@ export default function DealApprovalsPage() {
       {
         onSuccess: () => {
           toast.success(
-            confirmAction.action === "approve"
-              ? "Deal approved"
-              : "Deal rejected",
+            confirmAction.action === "approve" ? "Deal approved" : "Deal rejected",
           );
           setConfirmAction(null);
           setRejectionReason("");
@@ -272,85 +184,128 @@ export default function DealApprovalsPage() {
     );
   }, [confirmAction, rejectionReason, resolve]);
 
-  const filterTabs = (
-    <Tabs value={statusFilter ?? "all"} onValueChange={handleFilterChange}>
-      <TabsList className="h-8">
-        <TabsTrigger value="pending" className="text-xs px-3 h-7">
-          Pending
-        </TabsTrigger>
-        <TabsTrigger value="approved" className="text-xs px-3 h-7">
-          Approved
-        </TabsTrigger>
-        <TabsTrigger value="rejected" className="text-xs px-3 h-7">
-          Rejected
-        </TabsTrigger>
-        <TabsTrigger value="all" className="text-xs px-3 h-7">
-          All
-        </TabsTrigger>
-      </TabsList>
-    </Tabs>
+  const handleClearFilter = useCallback(() => handleFilterChange("all"), [handleFilterChange]);
+
+  const columns = useMemo<DataTableColumn<ApprovalRow>[]>(
+    () => [
+      {
+        key: "dealName",
+        header: "Deal",
+        sortable: true,
+        sortValue: (r) => r.dealName ?? "",
+        cell: (r) => (
+          <span className="font-medium truncate block max-w-[180px]">
+            {r.dealName ?? `Deal #${r.dealId}`}
+          </span>
+        ),
+      },
+      {
+        key: "dealValue",
+        header: "Value",
+        headerClassName: "text-right",
+        className: "text-right font-mono tabular-nums",
+        sortable: true,
+        sortValue: (r) => Number(r.dealValue ?? 0),
+        cell: (r) => (r.dealValue ? fmt(r.dealValue) : "—"),
+      },
+      {
+        key: "requesterName",
+        header: "Requester",
+        cell: (r) => r.requesterName ?? "—",
+      },
+      {
+        key: "requestedStage",
+        header: "Stage",
+        cell: (r) => (
+          <Badge
+            variant="outline"
+            className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200"
+          >
+            {r.requestedStage}
+          </Badge>
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        cell: (r) => {
+          const badge = STATUS_BADGE[r.status];
+          return (
+            <Badge
+              variant="outline"
+              className={cn("text-[9px] h-4 px-1.5 py-0", badge?.className)}
+            >
+              {badge?.label ?? r.status}
+            </Badge>
+          );
+        },
+      },
+      {
+        key: "createdAt",
+        header: "Created",
+        className: "font-mono tabular-nums",
+        cell: (r) =>
+          r.createdAt ? format(new Date(r.createdAt), "dd MMM yyyy") : "—",
+      },
+      {
+        key: "actions",
+        header: "",
+        headerClassName: "w-40",
+        cell: (r) => (
+          <ApprovalRowActions item={r} onApprove={handleApprove} onReject={handleReject} />
+        ),
+      },
+    ],
+    [handleApprove, handleReject],
+  );
+
+  const filterBar = (
+    <div className="flex w-full min-w-0 items-center gap-2">
+      <Select value={statusFilter} onValueChange={handleFilterChange}>
+        <SelectTrigger className="h-8 text-xs w-[160px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="approved">Approved</SelectItem>
+          <SelectItem value="rejected">Rejected</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
   );
 
   return (
     <PageWrapper
       title="Deal Approvals"
       subtitle="Review and approve high-value deals"
-      filters={filterTabs}
+      filters={filterBar}
+      eyebrow="CRM / Deals"
     >
       {isError ? (
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-20 text-center">
-          <AlertCircle className="h-10 w-10 text-destructive" />
-          <p className="text-sm text-muted-foreground">
-            Failed to load approvals.
-          </p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            Retry
-          </Button>
-        </div>
+        <ErrorState
+          title="Failed to load approvals"
+          description="An error occurred while loading deal approvals."
+          onRetry={handleRetry}
+          className="flex-1 min-h-[40vh]"
+        />
       ) : (
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
-          {isLoading ? (
-            <ScrollArea className="w-full" type="auto">
-              <div className="min-w-[750px]">
-                <ApprovalsTableSkeleton />
-              </div>
-            </ScrollArea>
-          ) : items.length === 0 ? (
+        <DataTable
+          data={items}
+          columns={columns}
+          getRowKey={(r) => r.id}
+          isLoading={isLoading}
+          emptyState={
             <EmptyState
-              illustration={<EmptyApprovalIllustration className="h-32 w-32" />}
+              illustration={<EmptyApprovalIllustration className="h-8 w-8" />}
               title="No approvals found"
               description="There are no deal approvals matching the current filter."
+              action={{ label: "Clear filter", onClick: handleClearFilter }}
+              className="border-0 bg-transparent min-h-[40vh]"
             />
-          ) : (
-            <ScrollArea className="w-full" type="auto">
-              <div className="min-w-[750px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Deal</TableHead>
-                      <TableHead className="text-right">Value</TableHead>
-                      <TableHead>Requester</TableHead>
-                      <TableHead>Stage</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((a) => (
-                      <ApprovalTableRow
-                        key={a.id}
-                        item={a}
-                        onApprove={handleApprove}
-                        onReject={handleReject}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </ScrollArea>
-          )}
-        </div>
+          }
+          minWidth="720px"
+        />
       )}
 
       <AlertDialog open={!!confirmAction} onOpenChange={handleCloseConfirm}>
@@ -359,12 +314,13 @@ export default function DealApprovalsPage() {
             <AlertDialogTitle>
               {confirmAction?.action === "approve" ? (
                 <span className="flex items-center gap-2">
-                  <ClipboardCheck className="h-4 w-4 text-green-600" /> Approve
-                  Deal?
+                  <ClipboardCheck className="h-4 w-4 text-emerald-600" />
+                  Approve Deal?
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <XCircle className="h-4 w-4 text-destructive" /> Reject Deal?
+                  <XCircle className="h-4 w-4 text-destructive" />
+                  Reject Deal?
                 </span>
               )}
             </AlertDialogTitle>
@@ -376,8 +332,11 @@ export default function DealApprovalsPage() {
           </AlertDialogHeader>
           {confirmAction?.action === "reject" && (
             <div className="space-y-1.5 py-2">
-              <label className="text-sm font-medium">Rejection Reason</label>
+              <label htmlFor="rejection-reason" className="text-[13px] font-medium">
+                Rejection Reason
+              </label>
               <Textarea
+                id="rejection-reason"
                 placeholder="Why is this deal being rejected?"
                 value={rejectionReason}
                 onChange={handleReasonChange}
@@ -387,12 +346,9 @@ export default function DealApprovalsPage() {
           )}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleResolve}
-              disabled={resolve.isPending}
-            >
+            <AlertDialogAction onClick={handleResolve} disabled={resolve.isPending}>
               {resolve.isPending
-                ? "Processing..."
+                ? "Processing…"
                 : confirmAction?.action === "approve"
                   ? "Approve"
                   : "Reject"}

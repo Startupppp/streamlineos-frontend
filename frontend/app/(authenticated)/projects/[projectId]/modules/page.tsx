@@ -133,6 +133,7 @@ export default function ModulesPage({
   return (
     <PageWrapper
       title="Modules"
+      backHref={`/projects/${projectId}`}
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>

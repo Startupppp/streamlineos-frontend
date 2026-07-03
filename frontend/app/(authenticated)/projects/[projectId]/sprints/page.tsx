@@ -150,6 +150,7 @@ export default function SprintsPage({ params }: PageProps) {
     <PageWrapper
       title="Sprints"
       subtitle={subtitle}
+      backHref={`/projects/${projectId}`}
       actions={<CreateSprintDialog projectId={projectId} />}
     >
       {planningSprintId && planningSprint && (

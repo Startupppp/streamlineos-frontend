@@ -16,7 +16,6 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState, SkeletonTable } from "@/components/shared";
 import { staggerContainer } from "@/lib/motion-variants";
-import { cn } from "@/lib/utils";
 import { useContacts, useDeleteContact } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { CreateContactDialog } from "@/features/crm/contacts/create-contact-dialog";
@@ -206,7 +205,7 @@ export default function ContactsPage() {
         subtitle={`${total} contacts`}
         actions={
           <>
-            <div className={cn("flex items-center border border-border rounded-md overflow-hidden")}>
+            <div className="flex items-center border border-border rounded-md overflow-hidden">
               <Button
                 variant={view === "table" ? "default" : "ghost"}
                 size="sm"

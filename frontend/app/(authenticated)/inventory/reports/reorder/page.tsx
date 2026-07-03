@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, type ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Package, AlertTriangle, AlertCircle, Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";

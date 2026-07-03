@@ -83,13 +83,61 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+function ProductStatusBadge({
+  status,
+  isActive,
+}: {
+  status?: string;
+  isActive?: boolean;
+}) {
+  const effectiveStatus = status ?? (isActive ? "ACTIVE" : "INACTIVE");
+  if (effectiveStatus === "ACTIVE") {
+    return (
+      <Badge
+        variant="outline"
+        className="h-5 text-[10px] px-2 py-0 border-emerald-200 text-emerald-700 bg-emerald-50"
+      >
+        Active
+      </Badge>
+    );
+  }
+  if (effectiveStatus === "DISCONTINUED") {
+    return (
+      <Badge
+        variant="outline"
+        className="h-5 text-[10px] px-2 py-0 border-amber-200 text-amber-700 bg-amber-50"
+      >
+        Discontinued
+      </Badge>
+    );
+  }
+  return (
+    <Badge
+      variant="outline"
+      className="h-5 text-[10px] px-2 py-0 border-slate-200 text-slate-600 bg-slate-100"
+    >
+      Inactive
+    </Badge>
+  );
+}
+
+const BACK_LINK = (
+  <Button variant="ghost" size="sm" asChild>
+    <Link href="/inventory/products">
+      <ChevronLeft className="mr-1 h-3.5 w-3.5" />
+      Back to Products
+    </Link>
+  </Button>
+);
+
 export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { productId: productIdStr } = use(params);
   const productId = Number.parseInt(productIdStr, 10);
 
   const [editing, setEditing] = useState<boolean>(false);
   const [addVariantOpen, setAddVariantOpen] = useState<boolean>(false);
-  const [editingVariant, setEditingVariant] = useState<ProductVariantForSheet | null>(null);
+  const [editingVariant, setEditingVariant] =
+    useState<ProductVariantForSheet | null>(null);
 
   const productQuery = useProduct(productId);
   const stockQuery = useStockLevels({ productId });
@@ -122,23 +170,37 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   }
 
   if (productQuery.isLoading) {
-    return <LoadingState variant="page" />;
+    return (
+      <PageWrapper
+        eyebrow="Inventory · Products"
+        title="Product"
+        actions={BACK_LINK}
+      >
+        <LoadingState variant="page" />
+      </PageWrapper>
+    );
   }
 
   if (productQuery.error || !product || !Number.isInteger(productId)) {
     return (
-      <ErrorState
-        title="Product not found"
-        description={
-          productQuery.error?.message ??
-          "This product does not exist or you do not have access."
-        }
-      />
+      <PageWrapper
+        eyebrow="Inventory · Products"
+        title="Product"
+        actions={BACK_LINK}
+      >
+        <ErrorState
+          title="Product not found"
+          description={
+            productQuery.error?.message ??
+            "This product does not exist or you do not have access."
+          }
+          className="min-h-[40vh]"
+        />
+      </PageWrapper>
     );
   }
 
   const variants = product.variants ?? [];
-  const isProductActive = product.isActive ?? product.status === "ACTIVE";
 
   return (
     <PageWrapper
@@ -149,16 +211,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         <div className="flex items-center gap-2">
           {!editing && (
             <Button variant="outline" size="sm" onClick={handleEditClick}>
-              <Pencil className="mr-1 h-4 w-4" />
+              <Pencil className="mr-1 h-3.5 w-3.5" />
               Edit
             </Button>
           )}
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/inventory/products">
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back to Products
-            </Link>
-          </Button>
+          {BACK_LINK}
         </div>
       }
     >
@@ -166,14 +223,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         <TabsList>
           <TabsTrigger value="info">Info</TabsTrigger>
           <TabsTrigger value="variants">
-            Variants {variants.length > 0 ? `(${variants.length})` : ""}
+            Variants{variants.length > 0 ? ` (${variants.length})` : ""}
           </TabsTrigger>
           <TabsTrigger value="stock">Stock</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info">
           <Card>
-            <CardContent className="p-5">
+            <CardContent className="p-4">
               {editing ? (
                 <ProductEditForm
                   product={product}
@@ -200,7 +257,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <InfoRow
                     label="Cost Price"
                     value={
-                      <span className="tabular-nums">
+                      <span className="font-mono tabular-nums">
                         {formatPrice(product.costPrice)}
                       </span>
                     }
@@ -208,7 +265,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <InfoRow
                     label="Selling Price"
                     value={
-                      <span className="tabular-nums font-medium">
+                      <span className="font-mono tabular-nums font-medium">
                         {formatPrice(product.sellingPrice)}
                       </span>
                     }
@@ -224,9 +281,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <InfoRow
                     label="Status"
                     value={
-                      <Badge variant={isProductActive ? "default" : "secondary"}>
-                        {isProductActive ? "Active" : "Inactive"}
-                      </Badge>
+                      <ProductStatusBadge
+                        status={product.status}
+                        isActive={product.isActive}
+                      />
                     }
                   />
                   {product.description && (
@@ -252,13 +310,13 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-semibold">Variants</CardTitle>
               <Button size="sm" variant="outline" onClick={handleAddVariantClick}>
-                <Plus className="mr-1 h-4 w-4" />
+                <Plus className="mr-1 h-3.5 w-3.5" />
                 Add Variant
               </Button>
             </CardHeader>
             <CardContent className="p-0">
               {variants.length === 0 ? (
-                <div className="px-5 pb-5">
+                <div className="px-4 pb-4">
                   <EmptyState
                     compact
                     title="No variants"
@@ -269,17 +327,23 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead className="w-[140px]">SKU</TableHead>
-                        <TableHead className="w-[120px] text-right">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
+                          Name
+                        </TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[140px]">
+                          SKU
+                        </TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[120px] text-right">
                           Cost Price
                         </TableHead>
-                        <TableHead className="w-[120px] text-right">
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[120px] text-right">
                           Selling Price
                         </TableHead>
-                        <TableHead className="w-[90px]">Status</TableHead>
-                        <TableHead className="w-[48px]" />
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[90px]">
+                          Status
+                        </TableHead>
+                        <TableHead className="bg-muted/80 w-8" />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -307,11 +371,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             </CardHeader>
             <CardContent className="p-0">
               {stockQuery.isLoading ? (
-                <div className="px-5 pb-5">
+                <div className="px-4 pb-4">
                   <LoadingState variant="table" rows={4} />
                 </div>
               ) : stockQuery.error ? (
-                <div className="px-5 pb-5">
+                <div className="px-4 pb-4">
                   <ErrorState
                     compact
                     title="Failed to load stock"
@@ -320,7 +384,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   />
                 </div>
               ) : stockItems.length === 0 ? (
-                <div className="px-5 pb-5">
+                <div className="px-4 pb-4">
                   <EmptyState
                     compact
                     title="No stock records"
@@ -331,24 +395,31 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Warehouse</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead className="w-[120px] text-right">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
+                          Warehouse
+                        </TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
+                          Location
+                        </TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[120px] text-right">
                           Quantity
                         </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {stockItems.map((row) => (
-                        <TableRow key={row.id}>
-                          <TableCell className="text-sm font-medium text-foreground">
+                        <TableRow
+                          key={row.id}
+                          className="h-8 hover:bg-muted/30 transition-colors"
+                        >
+                          <TableCell className="px-2 py-1 text-[11px] font-medium text-foreground">
                             {row.warehouseName}
                           </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
+                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
                             {row.locationCode ?? "—"}
                           </TableCell>
-                          <TableCell className="text-right text-sm tabular-nums font-medium">
+                          <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums font-medium">
                             {row.onHand}
                           </TableCell>
                         </TableRow>
@@ -389,25 +460,28 @@ function VariantRow({ variant, onEdit }: VariantRowProps) {
   }
 
   return (
-    <TableRow>
-      <TableCell className="text-sm font-medium text-foreground">
+    <TableRow className="h-8 hover:bg-muted/30 transition-colors">
+      <TableCell className="px-2 py-1 text-[11px] font-medium text-foreground">
         {variant.name}
       </TableCell>
-      <TableCell className="font-mono text-xs text-muted-foreground">
+      <TableCell className="px-2 py-1 text-[11px] font-mono tabular-nums text-muted-foreground">
         {variant.sku}
       </TableCell>
-      <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-muted-foreground">
         {formatPrice(variant.costPrice)}
       </TableCell>
-      <TableCell className="text-right text-sm tabular-nums font-medium">
+      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums font-medium">
         {formatPrice(variant.sellingPrice)}
       </TableCell>
-      <TableCell>
-        <Badge variant={variant.isActive ? "default" : "secondary"}>
+      <TableCell className="px-2 py-1">
+        <Badge
+          variant="outline"
+          className={`h-4 text-[9px] px-1.5 py-0 ${variant.isActive ? "border-emerald-200 text-emerald-700 bg-emerald-50" : "border-slate-200 text-slate-600 bg-slate-100"}`}
+        >
           {variant.isActive ? "Active" : "Inactive"}
         </Badge>
       </TableCell>
-      <TableCell>
+      <TableCell className="px-2 py-1">
         <Button
           variant="ghost"
           size="icon"
