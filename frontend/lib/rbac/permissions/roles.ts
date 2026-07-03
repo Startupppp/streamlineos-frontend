@@ -4,6 +4,7 @@ import { SHARED_PERMISSIONS } from "./shared";
 import { SUPPORT_PERMISSIONS } from "./support";
 import { KB_PERMISSIONS } from "./kb";
 import { INVENTORY_PERMISSIONS } from "./inventory";
+import { SURVEYS_PERMISSIONS } from "./surveys";
 import { ROLES } from "@/lib/constants/roles";
 
 export const PERMISSIONS = [
@@ -13,6 +14,7 @@ export const PERMISSIONS = [
   ...SUPPORT_PERMISSIONS,
   ...KB_PERMISSIONS,
   ...INVENTORY_PERMISSIONS,
+  ...SURVEYS_PERMISSIONS,
 ];
 
 const EMPLOYEE_SELF_SERVICE = [

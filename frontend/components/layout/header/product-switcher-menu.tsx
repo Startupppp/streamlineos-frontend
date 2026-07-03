@@ -32,6 +32,7 @@ const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   helpdesk: "Tickets & support",
   documents: "Knowledge base",
   analytics: "Reports & insights",
+  surveys: "Surveys & feedback",
   administration: "Settings & access",
 }
 

@@ -1006,6 +1006,19 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Surveys",
+    module: "surveys",
+    requiredPermission: "surveys:view",
+    routes: [
+      {
+        label: "Surveys",
+        icon: ClipboardList,
+        href: "/surveys",
+        requiredPermission: "surveys:view",
+      },
+    ],
+  },
+  {
     label: "Organization",
     module: "hrms",
     requiredPermission: ["settings:manage", "settings:view"],
@@ -1328,6 +1341,7 @@ export type ProductKey =
   | "helpdesk"
   | "documents"
   | "analytics"
+  | "surveys"
   | "administration";
 
 export interface ProductDefinition {
@@ -1347,6 +1361,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "helpdesk", label: "Helpdesk", href: "/support", icon: LifeBuoy },
   { key: "documents", label: "Documents", href: "/support/kb", icon: Library },
   { key: "analytics", label: "Analytics", href: "/reports", icon: BarChart3 },
+  { key: "surveys", label: "Surveys", href: "/surveys", icon: ClipboardList },
   {
     key: "administration",
     label: "Settings",
@@ -1417,6 +1432,12 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-blue-600 dark:bg-blue-500",
     border: "border-blue-600 dark:border-blue-500",
   },
+  surveys: {
+    text: "!text-teal-600 dark:!text-teal-400",
+    bg: "bg-teal-50 dark:bg-teal-950/40",
+    indicator: "bg-teal-600 dark:bg-teal-500",
+    border: "border-teal-600 dark:border-teal-500",
+  },
   administration: {
     text: "!text-slate-600 dark:!text-slate-400",
     bg: "bg-slate-100 dark:bg-slate-800/40",
@@ -1435,6 +1456,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   helpdesk: ["Support"],
   documents: [],
   analytics: [],
+  surveys: ["Surveys"],
   administration: [
     "Organization",
     "People",
@@ -1506,6 +1528,7 @@ const MODULE_KEY_MAP: Partial<Record<ProductKey, string>> = {
   inventory: "INVENTORY",
   finance: "FINANCE",
   helpdesk: "HELPDESK",
+  surveys: "SURVEYS",
 };
 
 export function isModuleEnabled(
@@ -1549,6 +1572,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/support/kb")) return "documents";
   if (pathname.startsWith("/support")) return "helpdesk";
   if (pathname.startsWith("/knowledge")) return "documents";
+  if (pathname.startsWith("/surveys")) return "surveys";
   if (
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||
