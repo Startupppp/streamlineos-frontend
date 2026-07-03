@@ -163,6 +163,7 @@ export function useKbCategories() {
 export function useCreateKbCategory() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kb", "categories", "create"],
     mutationFn: (input: CreateKbCategoryInput) =>
       apiClient.post<KbCategory>("/support/kb/categories", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.categories() }),
@@ -172,6 +173,7 @@ export function useCreateKbCategory() {
 export function useUpdateKbCategory() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kb", "categories", "update"],
     mutationFn: ({ id, ...input }: UpdateKbCategoryInput & { id: number }) =>
       apiClient.patch<KbCategory>(`/support/kb/categories/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.categories() }),
@@ -181,6 +183,7 @@ export function useUpdateKbCategory() {
 export function useDeleteKbCategory() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kb", "categories", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/kb/categories/${id}`),
     onSuccess: () => {
@@ -220,6 +223,7 @@ export function useKbArticleFeedback(id: number) {
 export function useCreateKbArticle() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kb", "articles", "create"],
     mutationFn: (input: CreateKbArticleInput) =>
       apiClient.post<KbArticleListItem>("/support/kb/articles", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.kb.all, "articles"] }),
@@ -229,6 +233,7 @@ export function useCreateKbArticle() {
 export function useUpdateKbArticle() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kb", "articles", "update"],
     mutationFn: ({ id, ...input }: UpdateKbArticleInput & { id: number }) =>
       apiClient.patch<KbArticleListItem>(`/support/kb/articles/${id}`, input),
     onSuccess: (_data, variables) => {
@@ -241,6 +246,7 @@ export function useUpdateKbArticle() {
 export function useDeleteKbArticle() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kb", "articles", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/kb/articles/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.kb.all, "articles"] }),
@@ -270,6 +276,7 @@ export function usePublicKbArticle(orgId: string, slug: string) {
 export function useSubmitKbFeedback() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kb", "feedback", "submit"],
     mutationFn: ({ orgId, slug, ...body }: SubmitKbFeedbackInput) =>
       apiClient.post<{ success: boolean }>(
         `/public/kb/${slug}/feedback?org=${encodeURIComponent(orgId)}`,

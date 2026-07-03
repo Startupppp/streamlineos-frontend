@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useRef, useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Search,
   Building2,
@@ -11,7 +11,6 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
-  Heart,
   ArrowRight,
   Plus,
 } from "lucide-react";
@@ -20,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyProjectsIllustration } from "@/components/illustrations";
+import { EmptyCompaniesIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
@@ -31,18 +30,12 @@ import { CreateOrgDialog } from "@/features/crm/companies/create-org-dialog";
 
 const PAGE_SIZE = 20;
 
-function getHealthBadge(score: number | null) {
+function getHealthBadgeClasses(score: number | null): string {
   if (score === null || score === undefined)
-    return { label: "N/A", color: "text-muted-foreground", bg: "bg-muted/50" };
-  if (score >= 70)
-    return {
-      label: "Healthy",
-      color: "text-emerald-400",
-      bg: "bg-emerald-500/15",
-    };
-  if (score >= 40)
-    return { label: "At Risk", color: "text-amber-400", bg: "bg-amber-500/15" };
-  return { label: "Critical", color: "text-red-400", bg: "bg-red-500/15" };
+    return "bg-slate-100 text-slate-700 border-slate-200";
+  if (score >= 70) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (score >= 40) return "bg-amber-50 text-amber-700 border-amber-200";
+  return "bg-red-50 text-red-700 border-red-200";
 }
 
 export default function CompaniesPage() {
@@ -51,9 +44,12 @@ export default function CompaniesPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shouldReduceMotion = useReducedMotion();
 
-  const search = searchParams.get("q") || "";
+  const search = searchParams.get("q") ?? "";
   const page = Number(searchParams.get("page")) || 1;
+  const [inputValue, setInputValue] = useState(search);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -78,9 +74,12 @@ export default function CompaniesPage() {
   const totalPages = data?.totalPages ?? 0;
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleClearFilters = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setInputValue("");
+    updateParams({ q: null, page: null });
+  }, [updateParams]);
   const handlePrevPage = useCallback(
     () => updateParams({ page: page <= 2 ? null : String(page - 1) }),
     [updateParams, page],
@@ -89,68 +88,73 @@ export default function CompaniesPage() {
     () => updateParams({ page: String(page + 1) }),
     [updateParams, page],
   );
-
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      updateParams({ q: e.target.value || null, page: null }),
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setInputValue(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        updateParams({ q: value || null, page: null });
+      }, 300);
+    },
     [updateParams],
   );
+
+  const containerVariants = shouldReduceMotion ? {} : staggerContainer;
+  const itemVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : fadeUp;
 
   return (
     <PageWrapper
       title="Companies"
-      subtitle={
-        isLoading ? "Loading..." : `${data?.totalCount ?? 0} companies`
-      }
+      subtitle={isLoading ? "Loading..." : `${data?.totalCount ?? 0} companies`}
       actions={
         <>
-          <motion.div whileTap={{ scale: 0.97 }}>
-            <Button
-              onClick={handleOpenCreate}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              <Plus className="h-4 w-4 mr-2" /> New Company
+          <motion.div whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}>
+            <Button onClick={handleOpenCreate}>
+              <Plus className="h-3.5 w-3.5 mr-1.5" /> New Company
             </Button>
           </motion.div>
           <CreateOrgDialog open={createOpen} onOpenChange={setCreateOpen} />
         </>
       }
       filters={
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search companies..."
-            value={search}
-            onChange={handleSearchChange}
-            className="pl-9 h-8 text-sm"
-          />
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
+          <div className="relative min-w-0 flex-1 lg:max-w-md">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search companies..."
+              value={inputValue}
+              onChange={handleSearchChange}
+              className="h-8 w-full min-w-0 pl-8 text-xs"
+            />
+          </div>
         </div>
       }
     >
       {isLoading ? (
-        <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="shadow-sm">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
-                      <div className="space-y-1.5">
-                        <Skeleton className="h-3.5 w-28" />
-                        <Skeleton className="h-3 w-20" />
-                      </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="shadow-sm">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <Skeleton className="h-8 w-8 rounded-md shrink-0" />
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-3.5 w-28" />
+                      <Skeleton className="h-3 w-20" />
                     </div>
-                    <Skeleton className="h-5 w-14 rounded-full shrink-0" />
                   </div>
-                  <div className="space-y-1.5 mt-3">
-                    <Skeleton className="h-3 w-36" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <Skeleton className="h-4 w-14 rounded-full shrink-0" />
+                </div>
+                <div className="space-y-1.5 mt-3">
+                  <Skeleton className="h-3 w-36" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       ) : isError ? (
         <ErrorState
@@ -162,13 +166,13 @@ export default function CompaniesPage() {
       ) : (
         <motion.div
           className="space-y-4"
-          variants={staggerContainer}
+          variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {(data?.organizations.length ?? 0) === 0 ? (
             <EmptyState
-              illustration={<EmptyProjectsIllustration className="w-36 h-36" />}
+              illustration={<EmptyCompaniesIllustration className="w-36 h-36" />}
               title="No companies found"
               description={
                 search
@@ -177,29 +181,29 @@ export default function CompaniesPage() {
               }
               action={
                 search
-                  ? undefined
+                  ? { label: "Clear filters", onClick: handleClearFilters }
                   : { label: "New Company", onClick: handleOpenCreate }
               }
               className="min-h-[50vh]"
             />
           ) : (
             <motion.div
-              variants={fadeUp}
+              variants={itemVariants}
               className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
             >
               {data?.organizations.map((org) => {
-                const health = getHealthBadge(org.healthScore);
+                const healthClass = getHealthBadgeClasses(org.healthScore);
                 return (
                   <Link
                     key={org.id}
                     href={`/crm/companies/${org.id}`}
                     className="block group"
                   >
-                    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 hover:shadow-md transition-all hover:border-violet-500/40 h-full">
+                    <Card className="bg-card rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow h-full">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-3">
-                            <div className="h-8 w-8 rounded-full bg-violet-100 flex items-center justify-center text-xs font-semibold text-violet-700 shrink-0">
+                            <div className="h-8 w-8 rounded-md bg-blue-50 flex items-center justify-center text-xs font-semibold text-blue-600 shrink-0">
                               {org.name[0]?.toUpperCase() ?? "?"}
                             </div>
                             <div className="min-w-0">
@@ -214,16 +218,10 @@ export default function CompaniesPage() {
                             </div>
                           </div>
                           <Badge
-                            className={cn(
-                              "text-[10px] shrink-0",
-                              health.bg,
-                              health.color,
-                            )}
+                            variant="outline"
+                            className={cn("text-[9px] px-1.5 py-0 h-4 shrink-0", healthClass)}
                           >
-                            <Heart className="h-2.5 w-2.5 mr-0.5" />
-                            {org.healthScore !== null
-                              ? `${org.healthScore}%`
-                              : "N/A"}
+                            {org.healthScore !== null ? `${org.healthScore}%` : "N/A"}
                           </Badge>
                         </div>
 
@@ -254,7 +252,7 @@ export default function CompaniesPage() {
                           </p>
                         )}
                         <div className="mt-3 flex justify-end">
-                          <span className="text-xs text-violet-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-xs text-blue-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             View details <ArrowRight className="h-3 w-3" />
                           </span>
                         </div>
@@ -268,7 +266,7 @@ export default function CompaniesPage() {
 
           {totalPages > 1 && (
             <motion.div
-              variants={fadeUp}
+              variants={itemVariants}
               className="flex items-center justify-center gap-2"
             >
               <Button

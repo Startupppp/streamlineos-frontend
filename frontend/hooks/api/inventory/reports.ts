@@ -63,7 +63,7 @@ export interface StockSummaryRow {
   totalValue: number;
 }
 
-interface ReorderReportRow {
+export interface ReorderReportRow {
   productId: number;
   productName: string;
   sku: string;

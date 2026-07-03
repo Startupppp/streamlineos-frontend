@@ -154,7 +154,7 @@ export function LeadInfoCard({
 }: LeadInfoCardProps) {
   if (isEditing) {
     return (
-      <Card className="shadow-noir">
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Edit Lead</CardTitle>
         </CardHeader>
@@ -351,7 +351,7 @@ export function LeadInfoCard({
   ];
 
   return (
-    <Card className="shadow-noir">
+    <Card className="shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Lead Information</CardTitle>
       </CardHeader>
@@ -384,7 +384,7 @@ export function LeadInfoCard({
         {(lead.potentialValue || lead.investmentInterest) && (
           <div
             className={cn(
-"grid gap-4 p-4 rounded-xl border border-border/40",
+"grid gap-4 p-4 rounded-lg border border-border",
               lead.potentialValue && lead.investmentInterest
                 ?"grid-cols-2"
                 :"grid-cols-1",

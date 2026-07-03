@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PIPELINE_STAGES } from "@/features/crm/shared/constants";
@@ -11,17 +11,21 @@ interface CrmPipelineMiniProps {
 }
 
 export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
+  const prefersReducedMotion = useReducedMotion();
   const maxCount = Math.max(1, ...Object.values(byStatus));
 
   return (
     <Card className="shadow-sm h-full">
       <CardHeader className="pb-2 px-3 pt-3">
-        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pipeline Funnel</CardTitle>
+        <CardTitle className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          Pipeline Funnel
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 px-3 pb-3">
-        {PIPELINE_STAGES.filter(s => s.key !== "LOST").map((stage, i) => {
+        {PIPELINE_STAGES.filter((s) => s.key !== "LOST").map((stage, i) => {
           const count = byStatus[stage.key] ?? 0;
           const pct = total > 0 ? ((count / total) * 100).toFixed(0) : "0";
+          const scaleTarget = count / maxCount;
           return (
             <div key={stage.key} className="space-y-0.5">
               <div className="flex items-center justify-between text-[10px]">
@@ -35,13 +39,20 @@ export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
                 </div>
               </div>
               <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ backgroundColor: stage.color }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(count / maxCount) * 100}%` }}
-                  transition={{ duration: 0.5, delay: i * 0.06 }}
-                />
+                {prefersReducedMotion ? (
+                  <div
+                    className={cn("h-full rounded-full", stage.dot)}
+                    style={{ width: `${scaleTarget * 100}%` }}
+                  />
+                ) : (
+                  <motion.div
+                    className={cn("h-full rounded-full w-full", stage.dot)}
+                    style={{ transformOrigin: "left" }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: scaleTarget }}
+                    transition={{ duration: 0.3, delay: i * 0.06, ease: "easeOut" }}
+                  />
+                )}
               </div>
             </div>
           );

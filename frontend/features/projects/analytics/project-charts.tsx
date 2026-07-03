@@ -124,8 +124,8 @@ export function VolumeOverTimeChart({ data }: VolumeChartProps) {
         <Area
           type="monotone"
           dataKey="created"
-          stroke="#6366f1"
-          fill="#6366f1"
+          stroke="#1d4ed8"
+          fill="#1d4ed8"
           fillOpacity={0.15}
           strokeWidth={2}
           name="Created"
@@ -283,8 +283,8 @@ export function SprintBurndownChart({
               <Area
                 type="monotone"
                 dataKey="remaining"
-                stroke="#6366f1"
-                fill="#6366f1"
+                stroke="#1d4ed8"
+                fill="#1d4ed8"
                 fillOpacity={0.15}
                 strokeWidth={2}
                 name="Remaining"

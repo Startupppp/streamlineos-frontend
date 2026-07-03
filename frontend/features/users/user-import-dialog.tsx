@@ -67,6 +67,7 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
   const { mutate: doImport, isPending } = useMutation<ImportResult, Error, ImportRow[]>({
+    mutationKey: ["users", "import"],
     mutationFn: (rows) => apiClient.post<ImportResult>("/users/import", { rows }),
     onSuccess: (result) => {
       setImportResult(result);

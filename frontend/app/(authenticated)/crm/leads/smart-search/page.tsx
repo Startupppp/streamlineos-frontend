@@ -2,23 +2,15 @@
 
 import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Search, Sparkles, ArrowRight, X, AlertTriangle } from "lucide-react";
+import { Search, Sparkles, ArrowRight, X } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptySearchIllustration } from "@/components/illustrations";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { EmptyLeadsIllustration } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared/error-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import { useNLSearch, type NLSearchLead } from "@/hooks/api/ai";
 
@@ -29,19 +21,19 @@ const EXAMPLE_QUERIES = [
   "Cold leads from Mumbai",
 ];
 
-const STATUS_STYLES: Record<string, string> = {
-  NEW: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  CONTACTED: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  INTERESTED: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  QUALIFIED: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  CONVERTED: "bg-green-500/10 text-green-400 border-green-500/20",
-  LOST: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+const STATUS_BADGE: Record<string, string> = {
+  NEW: "bg-blue-50 text-blue-700 border-blue-200",
+  CONTACTED: "bg-amber-50 text-amber-700 border-amber-200",
+  INTERESTED: "bg-violet-50 text-violet-700 border-violet-200",
+  QUALIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CONVERTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  LOST: "bg-red-50 text-red-700 border-red-200",
 };
 
-const PRIORITY_STYLES: Record<string, string> = {
-  HOT: "bg-red-500/10 text-red-400 border-red-500/20",
-  WARM: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  COLD: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+const PRIORITY_BADGE: Record<string, string> = {
+  HOT: "bg-red-50 text-red-700 border-red-200",
+  WARM: "bg-amber-50 text-amber-700 border-amber-200",
+  COLD: "bg-blue-50 text-blue-700 border-blue-200",
 };
 
 function formatValue(val: number | null) {
@@ -65,33 +57,30 @@ function FilterBadges({ filters }: { filters: Record<string, unknown> }) {
 
   if (!entries.length) return null;
 
-  const label = (key: string) => {
-    const map: Record<string, string> = {
-      status: "Status",
-      priority: "Priority",
-      source: "Source",
-      city: "City",
-      minValue: "Min Value",
-      maxValue: "Max Value",
-      company: "Company",
-      nameSearch: "Name",
-      assignedToName: "Assigned To",
-    };
-    return map[key] ?? key;
+  const labelMap: Record<string, string> = {
+    status: "Status",
+    priority: "Priority",
+    source: "Source",
+    city: "City",
+    minValue: "Min Value",
+    maxValue: "Max Value",
+    company: "Company",
+    nameSearch: "Name",
+    assignedToName: "Assigned To",
   };
 
   const format = (key: string, val: unknown): string => {
     if (key === "minValue" || key === "maxValue") return formatValue(Number(val));
-    if (Array.isArray(val)) return val.join(", ");
+    if (Array.isArray(val)) return (val as unknown[]).join(", ");
     return String(val);
   };
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
-      <span className="text-sm text-muted-foreground font-medium">Interpreted as:</span>
+      <span className="text-[11px] text-muted-foreground font-medium">Interpreted as:</span>
       {entries.map(([key, val]) => (
-        <Badge key={key} variant="outline" className="text-xs gap-1">
-          <span className="text-muted-foreground">{label(key)}:</span>
+        <Badge key={key} variant="outline" className="text-[10px] gap-1 h-5 px-2">
+          <span className="text-muted-foreground">{labelMap[key] ?? key}:</span>
           <span className="font-medium">{format(key, val)}</span>
         </Badge>
       ))}
@@ -99,96 +88,86 @@ function FilterBadges({ filters }: { filters: Record<string, unknown> }) {
   );
 }
 
-function ResultsTable({ leads }: { leads: NLSearchLead[] }) {
-  if (!leads.length) {
-    return (
-      <EmptyState
-        illustration={<EmptySearchIllustration className="h-40 w-40" />}
-        title="No leads match your search"
-        description="Try adjusting your query or use different keywords."
-      />
-    );
-  }
-
-  return (
-    <ScrollArea className="w-full" type="auto">
-      <div className="min-w-[700px]">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40">
-              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</TableHead>
-              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Company</TableHead>
-              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Priority</TableHead>
-              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Value</TableHead>
-              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Source</TableHead>
-              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">City</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {leads.map((lead) => (
-              <TableRow key={lead.id} className="border-b border-border/50 hover:bg-muted/30">
-                <TableCell className="px-3 py-2 text-sm">
-                  <Link
-                    href={`/crm/leads/${lead.id}`}
-                    className="font-medium hover:text-primary transition-colors"
-                  >
-                    {lead.name}
-                  </Link>
-                  {lead.email && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{lead.email}</p>
-                  )}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">
-                  {lead.company ?? "—"}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-sm">
-                  <Badge
-                    variant="outline"
-                    className={cn("text-xs font-medium", STATUS_STYLES[lead.status] ?? "")}
-                  >
-                    {capitalize(lead.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="px-3 py-2 text-sm">
-                  {lead.priority ? (
-                    <Badge
-                      variant="outline"
-                      className={cn("text-xs font-medium", PRIORITY_STYLES[lead.priority] ?? "")}
-                    >
-                      {capitalize(lead.priority)}
-                    </Badge>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-sm font-medium tabular-nums">
-                  {formatValue(lead.value)}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-sm text-muted-foreground capitalize hidden md:table-cell">
-                  {lead.source ? lead.source.replace(/_/g, " ") : "—"}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">
-                  {lead.city ?? "—"}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+const COLUMNS: DataTableColumn<NLSearchLead>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (lead) => (
+      <div>
+        <Link
+          href={`/crm/leads/${lead.id}`}
+          className="font-medium text-blue-600 hover:underline transition-colors"
+        >
+          {lead.name}
+        </Link>
+        {lead.email && (
+          <p className="text-[10px] text-muted-foreground mt-0.5">{lead.email}</p>
+        )}
       </div>
-    </ScrollArea>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-3">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Skeleton key={i} className="h-14 w-full" />
-      ))}
-    </div>
-  );
-}
+    ),
+    sortable: true,
+    sortValue: (lead) => lead.name,
+  },
+  {
+    key: "company",
+    header: "Company",
+    cell: (lead) => (
+      <span className="text-muted-foreground">{lead.company ?? "—"}</span>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (lead) => (
+      <Badge
+        variant="outline"
+        className={cn("text-[9px] px-1.5 py-0 h-4", STATUS_BADGE[lead.status] ?? "")}
+      >
+        {capitalize(lead.status)}
+      </Badge>
+    ),
+  },
+  {
+    key: "priority",
+    header: "Priority",
+    cell: (lead) =>
+      lead.priority ? (
+        <Badge
+          variant="outline"
+          className={cn("text-[9px] px-1.5 py-0 h-4", PRIORITY_BADGE[lead.priority] ?? "")}
+        >
+          {capitalize(lead.priority)}
+        </Badge>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      ),
+  },
+  {
+    key: "value",
+    header: "Value",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    cell: (lead) => formatValue(lead.value),
+    sortable: true,
+    sortValue: (lead) => lead.value ?? 0,
+  },
+  {
+    key: "source",
+    header: "Source",
+    cell: (lead) => (
+      <span className="text-muted-foreground capitalize">
+        {lead.source ? lead.source.replace(/_/g, " ") : "—"}
+      </span>
+    ),
+  },
+  {
+    key: "city",
+    header: "City",
+    cell: (lead) => (
+      <span className="text-muted-foreground">{lead.city ?? "—"}</span>
+    ),
+  },
+];
 
 export default function SmartLeadSearchPage() {
   const [inputValue, setInputValue] = useState("");
@@ -223,9 +202,12 @@ export default function SmartLeadSearchPage() {
     inputRef.current?.focus();
   }, [reset]);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  }, []);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInputValue(e.target.value);
+    },
+    [],
+  );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -233,6 +215,10 @@ export default function SmartLeadSearchPage() {
     },
     [handleSearch],
   );
+
+  const handleRetry = useCallback(() => {
+    handleSearch();
+  }, [handleSearch]);
 
   const hasResult = !!data;
 
@@ -251,41 +237,40 @@ export default function SmartLeadSearchPage() {
         <div className="space-y-3 rounded-lg bg-muted/40 p-3">
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 ref={inputRef}
                 value={inputValue}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder='Try: "hot leads from Mumbai with value above 5 lakhs"'
-                className="pl-9 pr-9 h-8 text-sm w-full"
+                className="pl-8 pr-9 h-8 text-xs w-full"
                 aria-label="Natural language lead search"
               />
               {inputValue && (
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Clear search"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
             <Button
               onClick={handleSearch}
               disabled={!inputValue.trim() || isPending}
-              size="sm"
-              className="gap-2 w-full sm:w-auto"
+              className="gap-1.5 h-8 w-full sm:w-auto"
             >
               {isPending ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <>
+                  <span className="h-3 w-3 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
                   Searching...
-                </span>
+                </>
               ) : (
                 <>
-                  <Sparkles className="h-4 w-4" />
+                  <Sparkles className="h-3.5 w-3.5" />
                   Search
                 </>
               )}
@@ -312,34 +297,50 @@ export default function SmartLeadSearchPage() {
           </div>
         </div>
 
-        {isPending ? (
-          <LoadingSkeleton />
-        ) : isError ? (
-          <div className="flex flex-col items-center justify-center min-h-[300px] gap-4 text-center">
-            <AlertTriangle className="h-10 w-10 text-destructive" />
-            <p className="text-muted-foreground text-sm">Search failed. Please try again.</p>
-            <Button size="sm" variant="outline" onClick={handleSearch}>Retry</Button>
-          </div>
+        {isError ? (
+          <ErrorState
+            title="Search failed"
+            description="Failed to complete the search. Please try again."
+            onRetry={handleRetry}
+            className="flex-1"
+          />
+        ) : isPending ? (
+          <DataTable
+            data={[]}
+            columns={COLUMNS}
+            getRowKey={(lead) => lead.id}
+            isLoading={true}
+            minWidth="700px"
+          />
         ) : hasResult ? (
           <div className="space-y-4">
             <FilterBadges filters={data.parsedFilters} />
-
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground">{data.total}</span>{" "}
-                {data.total === 1 ? "result" : "results"} found
-              </p>
-            </div>
-
-            <ResultsTable leads={data.leads} />
+            <p className="text-[11px] text-muted-foreground">
+              <span className="font-semibold text-foreground tabular-nums">{data.total}</span>{" "}
+              {data.total === 1 ? "result" : "results"} found
+            </p>
+            <DataTable
+              data={data.leads}
+              columns={COLUMNS}
+              getRowKey={(lead) => lead.id}
+              minWidth="700px"
+              emptyState={
+                <EmptyState
+                  illustration={<EmptyLeadsIllustration />}
+                  title="No leads match your search"
+                  description="Try adjusting your query or use different keywords."
+                  className="min-h-[40vh] border-0 bg-transparent"
+                />
+              }
+            />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-            <div className="rounded-full bg-primary/10 p-5">
-              <Sparkles className="h-10 w-10 text-primary" />
+            <div className="rounded-full bg-muted p-5">
+              <Sparkles className="h-10 w-10 text-muted-foreground" />
             </div>
             <div className="space-y-1">
-              <h3 className="font-semibold text-lg">Ask anything about your leads</h3>
+              <h3 className="font-semibold text-base">Ask anything about your leads</h3>
               <p className="text-muted-foreground text-sm max-w-sm">
                 Use plain English to search leads by status, priority, city, value, source, and more.
               </p>
@@ -351,7 +352,7 @@ export default function SmartLeadSearchPage() {
                   type="button"
                   data-query={q}
                   onClick={handleChipButtonClick}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-blue-600 transition-colors group"
                 >
                   <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                   {q}

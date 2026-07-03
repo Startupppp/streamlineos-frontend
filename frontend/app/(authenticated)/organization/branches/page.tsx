@@ -47,6 +47,7 @@ import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgBranch } from "@/types/org-hierarchy";
+import { RequireModule } from "@/components/auth/require-module";
 
 const NO_BUSINESS_UNIT = "none";
 
@@ -89,7 +90,7 @@ function BranchForm({
 
   return (
     <Form {...form}>
-      <form id="branch-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+      <form id="branch-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
@@ -483,6 +484,7 @@ export default function OrgBranchesPage() {
   ];
 
   return (
+    <RequireModule module="HR">
     <PageWrapper
       title="Branches"
       subtitle="Branches within your organization."
@@ -587,5 +589,6 @@ export default function OrgBranchesPage() {
         destructive
       />
     </PageWrapper>
+    </RequireModule>
   );
 }

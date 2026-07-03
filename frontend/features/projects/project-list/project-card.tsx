@@ -2,7 +2,6 @@
 
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { Calendar, MoreHorizontal, Pencil, Archive, Trash2, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,14 +56,6 @@ interface ProjectCardProps {
   };
 }
 
-const projectStatusAccent: Record<string, string> = {
-  ACTIVE: "border-l-violet-600",
-  PLANNING: "border-l-indigo-500",
-  COMPLETED: "border-l-slate-400",
-  ON_HOLD: "border-l-amber-500",
-  ARCHIVED: "border-l-slate-300",
-};
-
 export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectCardProps) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
@@ -81,13 +72,9 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
   const isArchived = status === "ARCHIVED";
   const displayLabel = projectStatusDisplayLabels[status] ?? status;
   const statusColor = getColorSafe(projectStatusColors, status);
-  const statusAccent = getColorSafe(projectStatusAccent, status);
   const dateStr = project.startDate ? format(new Date(project.startDate), "MMM d") : null;
   const progressValue = project.progress.total > 0 ? project.progress.percentage : 0;
-  const progressLabel =
-    project.progress.total > 0
-      ? `${project.progress.done}/${project.progress.total}`
-      : "0/0";
+  const hasTickets = project.progress.total > 0;
 
   const handleCardClick = useCallback(() => {
     router.push(`/projects/${project.id}`);
@@ -152,15 +139,11 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
 
   return (
     <>
-      <motion.div
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+      <div
         className={cn(
-          "relative overflow-hidden rounded-2xl border border-slate-200/80 border-l-[3px] bg-white/90 backdrop-blur-sm p-3 shadow-sm",
+          "relative overflow-hidden rounded-lg border border-border bg-card p-3 shadow-sm",
           "flex h-full flex-col group cursor-pointer",
-          "transition-shadow duration-200 hover:border-violet-500/30 hover:shadow-md",
-          statusAccent,
+          "transition-all duration-200 hover:shadow-md hover:-translate-y-px",
         )}
         role="listitem"
         onClick={handleCardClick}
@@ -168,13 +151,8 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
         onKeyDown={handleCardKeyDown}
         aria-label={`${project.name} — ${displayLabel}. Press Enter to open.`}
       >
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent"
-          aria-hidden="true"
-        />
-
         <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="rounded-md bg-violet-50 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-violet-600/90">
+          <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground">
             {project.key}
           </span>
           <div className="flex items-center gap-1">
@@ -234,7 +212,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           </div>
         </div>
 
-        <h3 className="mb-0.5 line-clamp-1 text-sm font-bold text-slate-900 transition-colors group-hover:text-violet-700">
+        <h3 className="mb-0.5 line-clamp-1 text-sm font-bold text-foreground">
           {project.name}
         </h3>
 
@@ -248,19 +226,28 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           </p>
         )}
 
-        <div className="mt-auto border-t border-slate-100/80 pt-2">
-          <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
-            <span className="font-medium">Progress</span>
-            <span className="tabular-nums font-medium">{progressLabel}</span>
-          </div>
-          <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-violet-600 to-indigo-600"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressValue}%` }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            />
-          </div>
+        <div className="mt-auto border-t border-border pt-2">
+          {hasTickets ? (
+            <>
+              <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
+                <span className="font-medium">Progress</span>
+                <span className="tabular-nums font-medium">
+                  {project.progress.done}/{project.progress.total}
+                </span>
+              </div>
+              <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn(
+                    "h-full rounded-full",
+                    progressValue >= 100 ? "bg-emerald-500" : "bg-primary",
+                  )}
+                  style={{ width: `${progressValue}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <p className="text-[10px] italic text-muted-foreground/60">No tickets yet</p>
+          )}
 
           <div className="mt-2 flex items-center justify-between">
             <AvatarStack
@@ -276,7 +263,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       <EditProjectSheet
         open={editOpen}

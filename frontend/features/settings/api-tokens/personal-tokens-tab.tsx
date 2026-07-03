@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Key, Plus, Clock, ShieldOff } from "lucide-react";
+import { Key, Clock, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 import {
   useUserApiTokens,
@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TokenCreatedDialog } from "./token-created-dialog";
 import { CreateUserTokenSheet } from "./create-user-token-sheet";
@@ -36,7 +37,7 @@ function RevokeTokenButton({
     onRevoke(token);
   }
   return (
-    <Button variant="ghost" size="sm" onClick={handleClick} aria-label="Revoke token">
+    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleClick} aria-label="Revoke token">
       <ShieldOff className="h-4 w-4 text-amber-600" />
     </Button>
   );
@@ -90,11 +91,7 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
   const handleCloseCreated = useCallback(() => setCreatedRawToken(null), []);
 
   return (
-    <div className="space-y-3">
-      <p className="text-[13px] text-muted-foreground">
-        Personal tokens act on your behalf. Only you can see and manage them.
-      </p>
-
+    <>
       {isLoading ? (
         <div className="space-y-1.5">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -102,78 +99,64 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
           ))}
         </div>
       ) : tokens.length === 0 ? (
-        <div className="flex min-h-[calc(100vh-320px)] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card text-muted-foreground">
-          <Key className="h-8 w-8 opacity-30" />
-          <p className="text-sm">No personal access tokens yet</p>
-          <Button size="sm" variant="outline" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            New Token
-          </Button>
-        </div>
+        <EmptyState
+          illustration={<Key className="h-8 w-8 text-muted-foreground/40" />}
+          title="No personal access tokens yet"
+          description="Personal tokens act on your behalf and are only visible to you."
+          action={{ label: "New Token", onClick: handleOpenCreate }}
+          className="min-h-[40vh]"
+        />
       ) : (
         <div className="rounded-md border border-border overflow-hidden">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Prefix</TableHead>
-                <TableHead>Scopes</TableHead>
-                <TableHead>Expires</TableHead>
-                <TableHead>Last Used</TableHead>
-                <TableHead className="w-16" />
+                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Prefix</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Scopes</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Expires</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Last Used</TableHead>
+                <TableHead className="w-8" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {tokens.map((t) => {
                 const expired = isExpired(t.expiresAt);
                 return (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-medium">{t.name}</TableCell>
-                    <TableCell>
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                  <TableRow key={t.id} className="h-8 hover:bg-muted/30 transition-colors">
+                    <TableCell className="px-2 py-1 text-[11px] font-medium">{t.name}</TableCell>
+                    <TableCell className="px-2 py-1">
+                      <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">
                         {t.prefix}…
                       </code>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-2 py-1">
                       <div className="flex flex-wrap gap-1 max-w-[200px]">
                         {t.scopes.slice(0, 3).map((s) => (
-                          <Badge
-                            key={s}
-                            variant="outline"
-                            className="text-xs px-1.5 py-0"
-                          >
+                          <Badge key={s} variant="outline" className="h-4 text-[9px] px-1.5 py-0">
                             {s}
                           </Badge>
                         ))}
                         {t.scopes.length > 3 && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs px-1.5 py-0"
-                          >
+                          <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
                             +{t.scopes.length - 3}
                           </Badge>
                         )}
                         {t.scopes.length === 0 && (
-                          <span className="text-xs text-muted-foreground">
-                            No scopes
-                          </span>
+                          <span className="text-[11px] text-muted-foreground">No scopes</span>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        {expired && (
-                          <Clock className="h-3.5 w-3.5 text-destructive" />
-                        )}
-                        <span className={expired ? "text-destructive" : ""}>
-                          {formatDate(t.expiresAt)}
-                        </span>
+                        {expired && <Clock className="h-3 w-3 text-destructive" />}
+                        <span className={expired ? "text-destructive" : ""}>{formatDate(t.expiresAt)}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
                       {formatDate(t.lastUsedAt)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-2 py-1">
                       <RevokeTokenButton token={t} onRevoke={setRevoking} />
                     </TableCell>
                   </TableRow>
@@ -203,6 +186,6 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
         isPending={revoke.isPending}
         destructive
       />
-    </div>
+    </>
   );
 }

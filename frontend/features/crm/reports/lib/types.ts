@@ -12,13 +12,13 @@ export const PERIOD_OPTIONS: PeriodOption[] = [
   { label: "This Year", value: "year" },
 ];
 
-export const PIPELINE_COLORS: Record<string, { color: string }> = {
-  NEW: { color: "#3B82F6" },
-  CONTACTED: { color: "#0EA5E9" },
-  INTERESTED: { color: "#F59E0B" },
-  QUALIFIED: { color: "#8B5CF6" },
-  CONVERTED: { color: "#10B981" },
-  LOST: { color: "#EF4444" },
+export const PIPELINE_COLORS: Record<string, { bgLight: string; borderLeft: string; text: string; dot: string }> = {
+  NEW:        { bgLight: "bg-blue-500/10",    borderLeft: "border-l-blue-500",   text: "text-blue-600",   dot: "bg-blue-500" },
+  CONTACTED:  { bgLight: "bg-sky-500/10",     borderLeft: "border-l-sky-500",    text: "text-sky-600",    dot: "bg-sky-500" },
+  INTERESTED: { bgLight: "bg-amber-500/10",   borderLeft: "border-l-amber-500",  text: "text-amber-600",  dot: "bg-amber-500" },
+  QUALIFIED:  { bgLight: "bg-violet-500/10",  borderLeft: "border-l-violet-500", text: "text-violet-600", dot: "bg-violet-500" },
+  CONVERTED:  { bgLight: "bg-emerald-500/10", borderLeft: "border-l-emerald-500",text: "text-emerald-600",dot: "bg-emerald-500" },
+  LOST:       { bgLight: "bg-red-500/10",     borderLeft: "border-l-red-500",    text: "text-red-600",    dot: "bg-red-500" },
 };
 
 export const FUNNEL_STAGES = [

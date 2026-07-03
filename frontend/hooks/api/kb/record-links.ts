@@ -1,0 +1,72 @@
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+
+export type KbPageRecordLink = {
+  id: number;
+  targetType: string;
+  targetId: string | null;
+  label: string | null;
+};
+
+export type KbLinkedPage = {
+  pageId: number;
+  title: string;
+  icon: string | null;
+};
+
+export type CreateKbPageRecordLinkInput = {
+  targetType: string;
+  targetId: string;
+  label: string;
+};
+
+export function useKbPageRecordLinks(pageId: number) {
+  return useQuery({
+    queryKey: queryKeys.kb.pageRecordLinks(pageId),
+    queryFn: () => apiClient.get<KbPageRecordLink[]>(`/kb/pages/${pageId}/record-links`),
+    staleTime: 30_000,
+  });
+}
+
+export function useAddKbPageRecordLink() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["kb", "record-links", "add"],
+    mutationFn: (params: { pageId: number } & CreateKbPageRecordLinkInput) =>
+      apiClient.post<KbPageRecordLink>(`/kb/pages/${params.pageId}/record-links`, {
+        targetType: params.targetType,
+        targetId: params.targetId,
+        label: params.label,
+      }),
+    onSuccess: (_, params) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.kb.pageRecordLinks(params.pageId) });
+    },
+  });
+}
+
+export function useRemoveKbPageRecordLink() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["kb", "record-links", "remove"],
+    mutationFn: (params: { linkId: number; pageId: number }) =>
+      apiClient.delete(`/kb/record-links/${params.linkId}`),
+    onSuccess: (_, params) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.kb.pageRecordLinks(params.pageId) });
+    },
+  });
+}
+
+export function useKbLinkedPages(targetType: string, targetId: string) {
+  return useQuery({
+    queryKey: queryKeys.kb.recordLinksByRecord(targetType, targetId),
+    queryFn: () =>
+      apiClient.get<KbLinkedPage[]>(
+        `/kb/record-links/by-record?targetType=${encodeURIComponent(targetType)}&targetId=${encodeURIComponent(targetId)}`,
+      ),
+    staleTime: 30_000,
+    enabled: Boolean(targetType && targetId),
+  });
+}

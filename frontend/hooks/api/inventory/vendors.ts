@@ -51,6 +51,7 @@ export function useVendor(vendorId: number) {
 export function useCreateVendor() {
   const qc = useQueryClient();
   return useMutation<InventoryVendor, Error, CreateVendorInput>({
+    mutationKey: ["inventory", "vendors", "create"],
     mutationFn: (data) => apiClient.post<InventoryVendor>("/inventory/vendors", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.vendors() });
@@ -61,6 +62,7 @@ export function useCreateVendor() {
 export function useUpdateVendor(vendorId?: number) {
   const qc = useQueryClient();
   return useMutation<InventoryVendor, Error, UpdateVendorPayload>({
+    mutationKey: ["inventory", "vendors", "update", vendorId],
     mutationFn: ({ id, ...data }) => {
       const targetId = vendorId ?? id;
       return apiClient.patch<InventoryVendor>(`/inventory/vendors/${targetId}`, data);

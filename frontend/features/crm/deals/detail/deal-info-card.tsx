@@ -74,7 +74,7 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
   ];
 
   return (
-    <Card className="shadow-noir">
+    <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="text-base">Deal Information</CardTitle>
       </CardHeader>
@@ -97,9 +97,9 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
           ))}
         </div>
 
-        <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/5 to-blue-500/5 border border-border/50">
+        <div className="p-4 rounded-lg bg-muted/40 border border-border">
           <p className="text-xs text-muted-foreground">Deal Value</p>
-          <p className="text-3xl font-bold text-blue-600">{formatINR(dealValue)}</p>
+          <p className="text-3xl font-bold text-foreground tabular-nums">{formatINR(dealValue)}</p>
           {deal.probability !== null && deal.probability !== undefined && deal.probability > 0 && (
             <div className="mt-2">
               <div className="h-2 rounded-full bg-muted overflow-hidden">

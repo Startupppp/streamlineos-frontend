@@ -11,9 +11,11 @@ import {
   useSubtasks,
 } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
+import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import dynamic from "next/dynamic";
 import { ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -30,6 +32,16 @@ import { TicketActivityLog } from "@/features/projects/tickets/ticket-activity-l
 import { TicketChecklists } from "./ticket-checklists";
 import { TicketCustomFields } from "./ticket-custom-fields";
 import type { TicketDetailsDialogProps, ProjectMember } from "./types";
+
+const TiptapEditorDynamic = dynamic(
+  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-md border border-input bg-background animate-pulse min-h-[120px]" />
+    ),
+  },
+);
 
 interface AttachmentImageProps {
   fileUrl: string;
@@ -103,8 +115,8 @@ export function TicketDetailsDialog({
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [localTitle, setLocalTitle] = useState("");
-  const [localDescription, setLocalDescription] = useState("");
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedAtRef = useRef<string | undefined>(undefined);
 
   const {
     data: ticket,
@@ -157,12 +169,20 @@ export function TicketDetailsDialog({
   }, [queryClient, projectId, ticketId]);
 
   const updateTicketMutation = useUpdateTicket(projectId, {
-    onSuccess: () => {
+    onSuccess: (data) => {
+      lastSavedAtRef.current = data.updatedAt;
       setSaving(false);
       invalidateAll();
     },
     onError: (error) => {
       setSaving(false);
+      if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
+        toast.warning("This ticket was changed elsewhere — refreshed with the latest version.");
+        if (ticketId !== null) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
+        }
+        return;
+      }
       toast.error(getErrorMessage(error));
     },
   });
@@ -176,11 +196,17 @@ export function TicketDetailsDialog({
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
+  useEffect(() => {
+    if (ticket?.updatedAt) {
+      lastSavedAtRef.current = new Date(ticket.updatedAt).toISOString();
+    }
+  }, [ticket?.updatedAt]);
+
   const autoSave = useCallback(
     (field: Record<string, unknown>) => {
       if (!ticketId) return;
       setSaving(true);
-      updateTicketMutation.mutate({ ticketId, ...field });
+      updateTicketMutation.mutate({ ticketId, expectedUpdatedAt: lastSavedAtRef.current, ...field });
     },
     [ticketId, updateTicketMutation],
   );
@@ -191,7 +217,7 @@ export function TicketDetailsDialog({
       setSaving(true);
       debounceTimerRef.current = setTimeout(() => {
         if (!ticketId) return;
-        updateTicketMutation.mutate({ ticketId, ...field });
+        updateTicketMutation.mutate({ ticketId, expectedUpdatedAt: lastSavedAtRef.current, ...field });
       }, 500);
     },
     [ticketId, updateTicketMutation],
@@ -199,9 +225,7 @@ export function TicketDetailsDialog({
 
   useEffect(() => {
     if (ticket) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalTitle(ticket.title);
-      setLocalDescription(ticket.description || "");
     }
   }, [ticket]);
 
@@ -221,12 +245,13 @@ export function TicketDetailsDialog({
     debouncedSave({ title: e.target.value });
   };
 
-  const handleDescriptionChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ) => {
-    setLocalDescription(e.target.value);
-    debouncedSave({ description: e.target.value });
-  };
+  const handleDescriptionEditorChange = useCallback(
+    (html: string) => {
+      if (html === (ticket?.description ?? "")) return;
+      debouncedSave({ description: html });
+    },
+    [debouncedSave, ticket?.description],
+  );
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -237,6 +262,7 @@ export function TicketDetailsDialog({
         <TicketHeader
           ticketId={ticketId}
           ticketNumber={ticket?.ticketNumber}
+          projectKey={projectData?.key}
           priority={ticket?.priority || "MEDIUM"}
           status={ticket?.status || "TODO"}
           title={ticket?.title || ""}
@@ -252,8 +278,7 @@ export function TicketDetailsDialog({
               <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
               <p className="text-muted-foreground text-sm">Loading...</p>
             </div>
-          ) : ticketError?.message?.includes("don't have access") ||
-            ticketError?.message?.includes("FORBIDDEN") ? (
+          ) : isApiError(ticketError) && getApiErrorCode(ticketError) === "PROJECTS_FORBIDDEN_TICKET" ? (
             <div className="py-16 text-center">
               <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="h-6 w-6 text-muted-foreground" />
@@ -264,6 +289,21 @@ export function TicketDetailsDialog({
               <p className="text-sm text-muted-foreground">
                 You can only view details of tickets assigned to you.
               </p>
+            </div>
+          ) : isApiError(ticketError) && getApiErrorCode(ticketError) === "PROJECTS_TICKET_NOT_FOUND" ? (
+            <div className="py-16 text-center">
+              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="font-medium text-foreground mb-2">
+                Ticket not found
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                This ticket may have been deleted.
+              </p>
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                Back to board
+              </Button>
             </div>
           ) : ticket ? (
             <>
@@ -287,10 +327,12 @@ export function TicketDetailsDialog({
                   placeholder="Ticket title"
                 />
 
-                <Textarea
-                  value={localDescription}
-                  onChange={handleDescriptionChange}
-                  className="min-h-[80px] text-sm border-0 bg-muted/30 focus-visible:bg-background focus-visible:ring-1 resize-none rounded-lg"
+                <TiptapEditorDynamic
+                  content={ticket.description ?? ""}
+                  contentKey={ticketId ?? 0}
+                  onChangeHtml={handleDescriptionEditorChange}
+                  output="html"
+                  minHeightClassName="min-h-[120px]"
                   placeholder="Add a description..."
                 />
 
@@ -302,7 +344,7 @@ export function TicketDetailsDialog({
 
                 {ticket.attachments && ticket.attachments.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                    <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
                       Attachments
                     </h4>
                     <div className="grid grid-cols-3 gap-2">

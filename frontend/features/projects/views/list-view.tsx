@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Bug, Bookmark, Zap, CheckSquare, ChevronRight } from "lucide-react";
+import { getStatusDotClass } from "../shared/status-badge";
+import { formatTicketKey } from "../shared/format-ticket-key";
 
 interface Ticket {
   id: number;
@@ -21,6 +23,7 @@ interface ListViewProps {
   tickets: Ticket[];
   onTicketClick: (ticketId: number) => void;
   groupBy?: keyof Ticket;
+  projectKey?: string | null;
 }
 
 const typeIcons: Record<string, typeof CheckSquare> = {
@@ -37,14 +40,8 @@ const priorityColors: Record<string, string> = {
   LOW: "text-blue-400",
 };
 
-const statusColors: Record<string, string> = {
-  TODO: "bg-slate-400",
-  IN_PROGRESS: "bg-blue-500",
-  IN_REVIEW: "bg-purple-500",
-  DONE: "bg-green-500",
-};
 
-export function ListView({ tickets, onTicketClick, groupBy }: ListViewProps) {
+export function ListView({ tickets, onTicketClick, groupBy, projectKey }: ListViewProps) {
   const grouped = groupBy
     ? tickets.reduce<Record<string, Ticket[]>>((acc, t) => {
         const key = String(t[groupBy] ?? "None");
@@ -65,19 +62,19 @@ export function ListView({ tickets, onTicketClick, groupBy }: ListViewProps) {
               <Badge variant="secondary" className="text-xs">{items.length}</Badge>
             </div>
           )}
-          <div className="border rounded-lg divide-y divide-border">
+          <div className="border border-border rounded-lg divide-y divide-border">
             {items.map((ticket) => {
               const TypeIcon = typeIcons[ticket.type] ?? CheckSquare;
               return (
                 <button
                   key={ticket.id}
                   onClick={handleTicketClick(ticket.id)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/30 transition-colors text-left"
                 >
-                  <div className={cn("h-2 w-2 rounded-full flex-shrink-0", statusColors[ticket.status] ?? "bg-slate-400")} />
+                  <div className={cn("h-2 w-2 rounded-full flex-shrink-0", getStatusDotClass(ticket.status))} />
                   <TypeIcon className={cn("h-4 w-4 flex-shrink-0", ticket.type === "BUG" ? "text-red-500" : "text-muted-foreground")} />
                   <span className="text-xs text-muted-foreground font-mono flex-shrink-0">
-                    {ticket.sequenceId ?? `#${ticket.ticketNumber}`}
+                    {formatTicketKey(projectKey, ticket.ticketNumber, ticket.sequenceId ?? undefined)}
                   </span>
                   <span className="text-sm text-foreground truncate flex-1">{ticket.title}</span>
                   {ticket.priority && (

@@ -131,6 +131,7 @@ export const queryKeys = {
     aging: () => [...base, "deals", "aging"] as const,
     winLoss: () => [...base, "deals", "winLoss"] as const,
     meetings: (dealId: number) => [...base, "deals", "meetings", dealId] as const,
+    approvals: (params?: Record<string, unknown>) => [...base, "deals", "approvals", params] as const,
   },
 
   contacts: {
@@ -145,8 +146,8 @@ export const queryKeys = {
     list: (params?: Record<string, unknown>) => [...base, "clients", "list", params] as const,
     detail: (id: number) => [...base, "clients", "detail", id] as const,
     activities: (id: number) => [...base, "clients", "activities", id] as const,
-    crmStats: () => [...base, "clients", "crmStats"] as const,
     simpleList: () => [...base, "clients", "simpleList"] as const,
+    timeline: (clientId: number) => [...base, "clients", "timeline", clientId] as const,
   },
 
   clientOpportunities: {
@@ -321,11 +322,6 @@ export const queryKeys = {
     relatedLeads: (id: number) => [...base, "crmOrganizations", "relatedLeads", id] as const,
   },
 
-  clientStats: {
-    all: [...base, "clientStats"] as const,
-    stats: () => [...base, "clientStats", "stats"] as const,
-  },
-
   dealActivities: {
     all: [...base, "dealActivities"] as const,
     list: (dealId: number, params?: Record<string, unknown>) => [...base, "dealActivities", "list", dealId, params] as const,
@@ -334,11 +330,6 @@ export const queryKeys = {
   salesTeamCapacity: {
     all: [...base, "salesTeamCapacity"] as const,
     list: () => [...base, "salesTeamCapacity", "list"] as const,
-  },
-
-  salesQuotas: {
-    all: [...base, "salesQuotas"] as const,
-    list: (params?: Record<string, unknown>) => [...base, "salesQuotas", "list", params] as const,
   },
 
   salesLeaderboard: {
@@ -429,8 +420,10 @@ export const queryKeys = {
 
   whiteboards: {
     all: [...base, "whiteboards"] as const,
+    hub: () => [...base, "whiteboards", "hub"] as const,
     list: (projectId: number) => [...base, "whiteboards", "list", projectId] as const,
     detail: (id: number) => [...base, "whiteboards", "detail", id] as const,
+    publicLink: (token: string) => [...base, "whiteboards", "publicLink", token] as const,
   },
 
   gitIntegration: {
@@ -467,6 +460,18 @@ export const queryKeys = {
 
   kb: {
     all: [...base, "kb"] as const,
+    kbPages: () => [...base, "kb", "pages"] as const,
+    pagesTree: () => [...base, "kb", "pages", "tree"] as const,
+    pagesRecent: () => [...base, "kb", "pages", "recent"] as const,
+    pagesFavorites: () => [...base, "kb", "pages", "favorites"] as const,
+    pagesTrash: () => [...base, "kb", "pages", "trash"] as const,
+    pagesSearch: (q: string) => [...base, "kb", "pages", "search", q] as const,
+    page: (pageId: number) => [...base, "kb", "pages", pageId] as const,
+    pageBacklinks: (pageId: number) => [...base, "kb", "pages", pageId, "backlinks"] as const,
+    pageVersions: (pageId: number) => [...base, "kb", "pages", pageId, "versions"] as const,
+    pageVersion: (pageId: number, versionNumber: number) => [...base, "kb", "pages", pageId, "versions", versionNumber] as const,
+    pageComments: (pageId: number) => [...base, "kb", "pages", pageId, "comments"] as const,
+    pageTemplates: () => [...base, "kb", "page-templates"] as const,
     spaces: () => [...base, "kb", "spaces"] as const,
     space: (spaceId: number) => [...base, "kb", "space", spaceId] as const,
     spaceCategories: (spaceId: number) => [...base, "kb", "spaceCategories", spaceId] as const,
@@ -502,6 +507,21 @@ export const queryKeys = {
     translations: (articleId: number) => [...base, "kb", "translations", articleId] as const,
     translation: (articleId: number, locale: string) => [...base, "kb", "translation", articleId, locale] as const,
     comments: (articleId: number) => [...base, "kb", "comments", articleId] as const,
+    pageReviews: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "kb", "pageReviews"] as const)
+        : ([...base, "kb", "pageReviews", params] as const),
+    pageReviewsDue: () => [...base, "kb", "pageReviewsDue"] as const,
+    pageRecordLinks: (pageId: number) => [...base, "kb", "pages", pageId, "record-links"] as const,
+    recordLinksByRecord: (targetType: string, targetId: string) => [...base, "kb", "record-links", "by-record", targetType, targetId] as const,
+    importJobs: () => [...base, "kb", "import-jobs"] as const,
+    exportJobs: () => [...base, "kb", "export-jobs"] as const,
+    articleMigrationPreview: () => [...base, "kb", "article-migration", "preview"] as const,
+    pageAnalytics: () => [...base, "kb", "pageAnalytics"] as const,
+    knowledgeGaps: (range?: Record<string, unknown>) =>
+      range === undefined
+        ? ([...base, "kb", "knowledgeGaps"] as const)
+        : ([...base, "kb", "knowledgeGaps", range] as const),
   },
 
   roadmap: {
@@ -521,11 +541,6 @@ export const queryKeys = {
   },
 
   nps: {
-    all: [...base, "nps"] as const,
-    surveys: (params?: Record<string, unknown>) => [...base, "nps", "surveys", params] as const,
-    survey: (id: number) => [...base, "nps", "survey", id] as const,
-    responses: (surveyId: number) => [...base, "nps", "responses", surveyId] as const,
-    stats: () => [...base, "nps", "stats"] as const,
     publicSurvey: (token: string) => [...base, "nps", "publicSurvey", token] as const,
   },
 
@@ -555,17 +570,6 @@ export const queryKeys = {
     analytics: () => [...base, "workflows", "analytics"] as const,
     schedules: (workflowId: string) => [...base, "workflows", workflowId, "schedules"] as const,
     secrets: (workflowId: string) => [...base, "workflows", workflowId, "secrets"] as const,
-  },
-
-  csat: {
-    all: [...base, "csat"] as const,
-    surveys: () => [...base, "csat", "surveys"] as const,
-    responses: (surveyId: number) => [...base, "csat", "responses", surveyId] as const,
-  },
-
-  sla: {
-    all: [...base, "sla"] as const,
-    compliance: () => [...base, "sla", "compliance"] as const,
   },
 
   mfa: {

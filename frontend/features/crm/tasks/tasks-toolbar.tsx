@@ -56,12 +56,12 @@ export function TasksToolbar({
     [onAssigneeFilterChange],
   );
 
-  const hasFilters = !!(typeFilter || statusFilter || entityTypeFilter || assigneeFilter);
+  const hasFilters = !!(typeFilter || statusFilter || entityTypeFilter || assigneeFilter || search);
 
   return (
     <div className="flex items-center gap-2 flex-wrap w-full">
       <div className="relative flex-1 min-w-[140px] sm:flex-none sm:w-[180px] sm:max-w-xs">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
         <Input
           placeholder="Search tasks..."
           value={search}
@@ -123,7 +123,8 @@ export function TasksToolbar({
 
       {hasFilters && (
         <Button variant="ghost" size="sm" className="h-8 text-[11px] px-2" onClick={onClearFilters}>
-          <X className="h-3 w-3 mr-1" />Clear
+          <X className="h-3 w-3 mr-1" />
+          Clear
         </Button>
       )}
     </div>

@@ -55,7 +55,7 @@ export function useCreateTicket(
     mutationKey: ["projects", "tickets", "create"],
     mutationFn: ({ projectId, ...data }) =>
       apiClient.post<Ticket>(`/projects/${projectId}/tickets`, data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
       });
@@ -70,40 +70,54 @@ export function useCreateTicket(
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
       queryClient.invalidateQueries({ queryKey: [...queryKeys.dashboard.all, "myIssues"] });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
 
+export interface UpdateTicketResponse {
+  updated: boolean;
+  updatedAt: string;
+}
+
 export function useUpdateTicket(
   projectId: number,
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, UpdateTicketInput>, "mutationFn">
+  options?: Omit<UseMutationOptions<UpdateTicketResponse, Error, UpdateTicketInput>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, UpdateTicketInput>({
+  return useMutation<UpdateTicketResponse, Error, UpdateTicketInput>({
     ...options,
     mutationKey: ["projects", "tickets", "update"],
     mutationFn: ({ ticketId, ...data }) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch<UpdateTicketResponse>(
         `/projects/${projectId}/tickets/${ticketId}`,
         data
       ),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.tickets({ projectId }),
       });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.sprints(projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: [...queryKeys.projects.all, "burndown"],
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.dashboard.all, "myIssues"] });
-      options?.onSuccess?.(data, variables, context);
+      const affectsAggregates =
+        variables.status !== undefined ||
+        variables.sprintId !== undefined ||
+        variables.priority !== undefined ||
+        variables.points !== undefined ||
+        variables.assigneeId !== undefined ||
+        variables.assigneeIds !== undefined;
+      if (affectsAggregates) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.sprints(projectId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: [...queryKeys.projects.all, "burndown"],
+        });
+        queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
+        queryClient.invalidateQueries({ queryKey: [...queryKeys.dashboard.all, "myIssues"] });
+      }
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -120,7 +134,7 @@ export function useDeleteTicket(
       apiClient.delete<{ success: boolean }>(
         `/projects/${projectId}/tickets/${ticketId}`
       ),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.tickets({ projectId }),
       });
@@ -135,7 +149,7 @@ export function useDeleteTicket(
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
       queryClient.invalidateQueries({ queryKey: [...queryKeys.dashboard.all, "myIssues"] });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -149,7 +163,7 @@ export function useMoveTicket(
     mutationKey: ["projects", "tickets", "move"],
     mutationFn: ({ projectId, items }: MoveTicketInput) =>
       apiClient.patch<{ success: boolean }>(`/projects/${projectId}/tickets/reorder`, { items }),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
       });
@@ -157,7 +171,7 @@ export function useMoveTicket(
         queryKey: [...queryKeys.projects.all, "burndown"],
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -185,11 +199,11 @@ export function useAddComment(
         `/projects/${projectId}/tickets/${ticketId}/comments`,
         { content, parentCommentId }
       ),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -203,11 +217,11 @@ export function useAddLabelToTicket(
     mutationKey: ["projects", "tickets", "labels", "add"],
     mutationFn: ({ ticketId, projectId = 0, labelId }) =>
       apiClient.post<{ success: boolean }>(`/projects/${projectId}/tickets/${ticketId}/labels`, { labelId }),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -223,11 +237,11 @@ export function useRemoveLabelFromTicket(
       apiClient.delete<{ success: boolean }>(
         `/projects/${projectId}/tickets/${ticketId}/labels/${labelId}`
       ),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -261,9 +275,9 @@ export function useCreateOrgLabel(
     mutationKey: ["projects", "labels", "create"],
     mutationFn: (data) =>
       apiClient.post<TicketLabel>("/projects/labels", data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.labels() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -374,11 +388,11 @@ export function useAddAttachment(
         fileSize,
         mimeType,
       }),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }

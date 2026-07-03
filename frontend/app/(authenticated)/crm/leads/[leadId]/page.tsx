@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -231,10 +230,16 @@ export default function LeadDetailPage({
     return (
       <PageWrapper title="Lead" backHref="/crm/leads">
         <div className="space-y-4">
-          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-[72px] w-full rounded-lg" />
           <div className="grid gap-4 lg:grid-cols-5">
-            <Skeleton className="h-[600px] lg:col-span-3" />
-            <Skeleton className="h-[600px] lg:col-span-2" />
+            <div className="lg:col-span-3 space-y-4">
+              <Skeleton className="h-48 w-full rounded-lg" />
+              <Skeleton className="h-32 w-full rounded-lg" />
+            </div>
+            <div className="lg:col-span-2 space-y-4">
+              <Skeleton className="h-32 w-full rounded-lg" />
+              <Skeleton className="h-24 w-full rounded-lg" />
+            </div>
           </div>
         </div>
       </PageWrapper>
@@ -346,7 +351,7 @@ export default function LeadDetailPage({
                 </div>
               </CardContent>
             </Card>
-            <Card className="shadow-noir">
+            <Card className="shadow-sm">
               <CardContent className="p-4">
                 <LeadAttachmentsSection leadId={leadId} />
               </CardContent>

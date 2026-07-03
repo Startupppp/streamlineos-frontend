@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { ChevronLeft, CheckCircle, Truck, FileText } from "lucide-react";
+import { CheckCircle, Truck, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
@@ -26,20 +26,12 @@ interface SalesOrderDetailPageProps {
   params: Promise<{ soId: string }>;
 }
 
-const STATUS_VARIANT: Record<SoStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  DRAFT: "secondary",
-  CONFIRMED: "default",
-  SHIPPED: "outline",
-  INVOICED: "default",
-  CANCELLED: "destructive",
-};
-
-const STATUS_CLASS: Record<SoStatus, string> = {
-  DRAFT: "",
-  CONFIRMED: "bg-blue-100 text-blue-800 border-blue-200",
-  SHIPPED: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  INVOICED: "bg-green-100 text-green-800 border-green-200",
-  CANCELLED: "",
+const STATUS_BADGE_CLASS: Record<SoStatus, string> = {
+  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
+  CONFIRMED: "bg-blue-50 text-blue-700 border-blue-200",
+  SHIPPED: "bg-amber-50 text-amber-700 border-amber-200",
+  INVOICED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 
 function formatDate(value: string | null): string {
@@ -64,8 +56,8 @@ function AtpIndicator({ available, requested }: { available: number; requested: 
   }
   if (available > 0) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-yellow-700 bg-yellow-50 border border-yellow-200 rounded px-1.5 py-0.5">
-        <span className="size-1.5 rounded-full bg-yellow-500 inline-block" />
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+        <span className="size-1.5 rounded-full bg-amber-500 inline-block" />
         Partial ({available})
       </span>
     );
@@ -146,8 +138,9 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
       eyebrow="Inventory · Sales Orders"
       title={so.soNumber}
       subtitle={`${so.customerName ?? "Unknown customer"} · ${formatDate(so.orderDate)}`}
+      backHref="/inventory/sales-orders"
       actions={
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           {canConfirm && (
             <Button size="sm" onClick={handleConfirm} disabled={isMutating}>
               <CheckCircle className="mr-1 size-4" />
@@ -174,12 +167,6 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
               </Link>
             </Button>
           )}
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/inventory/sales-orders">
-              <ChevronLeft className="mr-1 size-4" />
-              Back
-            </Link>
-          </Button>
         </div>
       }
     >
@@ -189,8 +176,8 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
             <dt className="text-muted-foreground">Status</dt>
             <dd>
               <Badge
-                variant={STATUS_VARIANT[so.status]}
-                className={STATUS_CLASS[so.status] || undefined}
+                variant="outline"
+                className={`h-5 text-[10px] px-2 py-0.5 ${STATUS_BADGE_CLASS[so.status]}`}
               >
                 {so.status}
               </Badge>
@@ -204,7 +191,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
             <dt className="text-muted-foreground">Currency</dt>
             <dd>{so.currency ?? "—"}</dd>
             <dt className="text-muted-foreground">Total</dt>
-            <dd className="tabular-nums font-medium">{formatNum(so.total)}</dd>
+            <dd className="font-mono tabular-nums font-medium">{formatNum(so.total)}</dd>
             {so.shippingAddress && (
               <>
                 <dt className="text-muted-foreground">Shipping Address</dt>
@@ -223,39 +210,39 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <Table className="min-w-[700px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Unit Price</TableHead>
-                  <TableHead className="text-right">Tax %</TableHead>
-                  <TableHead className="text-right">Disc %</TableHead>
-                  <TableHead className="text-right">Line Total</TableHead>
-                  <TableHead>ATP</TableHead>
+              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                <TableRow className="border-b-2 border-border hover:bg-transparent">
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Product</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">SKU</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Qty</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Unit Price</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Tax %</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Disc %</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Line Total</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">ATP</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {so.lines.map((ln) => {
                   const atp = getAtp(ln.productId);
                   return (
-                    <TableRow key={ln.id}>
-                      <TableCell>{ln.productName ?? "—"}</TableCell>
-                      <TableCell className="font-mono text-xs">{ln.productSku ?? "—"}</TableCell>
-                      <TableCell className="text-right tabular-nums">{formatNum(ln.quantity)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{formatNum(ln.unitPrice)}</TableCell>
-                      <TableCell className="text-right tabular-nums">
+                    <TableRow key={ln.id} className="h-8 hover:bg-muted/30 transition-colors">
+                      <TableCell className="px-2 py-1 text-[11px]">{ln.productName ?? "—"}</TableCell>
+                      <TableCell className="px-2 py-1 text-[11px] font-mono">{ln.productSku ?? "—"}</TableCell>
+                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">{formatNum(ln.quantity)}</TableCell>
+                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">{formatNum(ln.unitPrice)}</TableCell>
+                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
                         {ln.taxRate ? `${formatNum(ln.taxRate)}%` : "—"}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
                         {ln.discount ? `${formatNum(ln.discount)}%` : "—"}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">{formatNum(ln.lineTotal)}</TableCell>
-                      <TableCell>
+                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">{formatNum(ln.lineTotal)}</TableCell>
+                      <TableCell className="px-2 py-1 text-[11px]">
                         {atp ? (
                           <AtpIndicator available={atp.available} requested={Number(ln.quantity)} />
                         ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -267,16 +254,16 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
         </Card>
 
         <Card className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm tabular-nums">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
             <div />
             <div className="space-y-1">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>{formatNum(so.subtotal)}</span>
+                <span className="font-mono tabular-nums">{formatNum(so.subtotal)}</span>
               </div>
               <div className="border-t border-border pt-1 flex justify-between font-medium text-base">
                 <span>Total</span>
-                <span>{formatNum(so.total)}</span>
+                <span className="font-mono tabular-nums">{formatNum(so.total)}</span>
               </div>
             </div>
           </div>

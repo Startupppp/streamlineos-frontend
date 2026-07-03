@@ -214,6 +214,15 @@ export interface ProjectAnalytics {
     estimated: string | null;
     actual: number;
   }[];
+  healthScore?: number;
+  healthStatus?: string;
+  healthBreakdown?: {
+    completionPct: number;
+    onTimePct: number;
+    velocityScore: number;
+    overdueTickets: number;
+    totalTickets: number;
+  };
 }
 
 export interface CreateProjectInput {

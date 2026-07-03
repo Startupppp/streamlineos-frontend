@@ -47,6 +47,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgDepartment } from "@/types/org-hierarchy";
+import { RequireModule } from "@/components/auth/require-module";
 
 const NO_BRANCH = "none";
 
@@ -83,7 +84,7 @@ function DeptForm({
 
   return (
     <Form {...form}>
-      <form id="dept-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+      <form id="dept-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -397,6 +398,7 @@ export default function OrgDepartmentsPage() {
   );
 
   return (
+    <RequireModule module="HR">
     <PageWrapper
       title="Departments"
       subtitle="Departments organized within branches."
@@ -496,5 +498,6 @@ export default function OrgDepartmentsPage() {
         destructive
       />
     </PageWrapper>
+    </RequireModule>
   );
 }

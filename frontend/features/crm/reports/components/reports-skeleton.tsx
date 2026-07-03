@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export function ReportsSkeleton() {
@@ -9,25 +9,17 @@ export function ReportsSkeleton() {
       subtitle="Sales performance and pipeline analytics"
     >
       <div className="space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-3.5 space-y-2">
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-6 w-16" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <StatCardGrid cols={4}>
+          <StatCard label="Total Leads" value="" isLoading />
+          <StatCard label="Active Deals" value="" isLoading />
+          <StatCard label="Pipeline Value" value="" isLoading />
+          <StatCard label="Won Revenue" value="" isLoading />
+        </StatCardGrid>
         {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-4 w-40" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-48 w-full" />
-            </CardContent>
-          </Card>
+          <div key={i} className="bg-card rounded-lg border border-border p-4 space-y-3">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-48 w-full" />
+          </div>
         ))}
       </div>
     </PageWrapper>

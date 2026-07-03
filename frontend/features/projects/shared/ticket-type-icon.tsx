@@ -13,7 +13,7 @@ const typeMap = {
   TASK: { icon: CheckSquare, color: "text-blue-500" },
   BUG: { icon: Bug, color: "text-red-500" },
   STORY: { icon: BookOpen, color: "text-green-500" },
-  EPIC: { icon: Layers, color: "text-purple-500" },
+  EPIC: { icon: Layers, color: "text-violet-600" },
   SUBTASK: { icon: GitBranch, color: "text-muted-foreground" },
 } as const;
 

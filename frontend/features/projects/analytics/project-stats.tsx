@@ -20,7 +20,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 export const CHART_COLORS = [
-  "#6366f1",
+  "#1d4ed8",
   "#8b5cf6",
   "#ec4899",
   "#f43f5e",

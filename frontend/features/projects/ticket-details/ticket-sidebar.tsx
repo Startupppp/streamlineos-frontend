@@ -225,7 +225,7 @@ export function TicketSidebar({
                   </SelectItem>
                   <SelectItem value="IN_REVIEW">
                     <span className="flex items-center gap-1.5">
-                      <AlertCircle className="h-3 w-3 text-purple-500" /> In
+                      <AlertCircle className="h-3 w-3 text-amber-500" /> In
                       Review
                     </span>
                   </SelectItem>

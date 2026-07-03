@@ -90,7 +90,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 
       <div className="flex items-start gap-1.5">
         <TicketTypeIcon type={ticket.type} className="mt-0.5 shrink-0" />
-        <p className="text-sm font-medium leading-snug line-clamp-2 flex-1">
+        <p className="text-[13px] font-medium leading-snug line-clamp-2 flex-1">
           {ticket.title}
         </p>
       </div>
@@ -149,16 +149,16 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         </div>
 
         {primaryAssignee ? (
-          <Avatar className="h-6 w-6 border border-background shrink-0">
+          <Avatar className="h-5 w-5 border border-background shrink-0">
             <AvatarImage src={resolveImageUrl(primaryAssignee.image)} />
-            <AvatarFallback className="text-[8px] bg-primary/10 text-primary font-medium">
+            <AvatarFallback className="text-[7px] bg-primary/10 text-primary font-medium">
               {primaryAssignee.firstName?.[0]}
               {primaryAssignee.lastName?.[0]}
             </AvatarFallback>
           </Avatar>
         ) : (
-          <div className="h-6 w-6 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center shrink-0">
-            <span className="text-[8px] text-muted-foreground">?</span>
+          <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center shrink-0">
+            <span className="text-[7px] text-muted-foreground">?</span>
           </div>
         )}
       </div>

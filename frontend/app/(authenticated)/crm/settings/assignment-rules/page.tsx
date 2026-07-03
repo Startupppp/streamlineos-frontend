@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
 import { useForm, useFieldArray, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Plus, Trash2, ChevronUp, ChevronDown, Settings,
+  Plus, Trash2, ChevronUp, ChevronDown,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -30,7 +30,6 @@ import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useAssignmentRules, useCreateAssignmentRule, useUpdateAssignmentRule,
   useDeleteAssignmentRule, useReorderAssignmentRules,
@@ -94,7 +93,7 @@ function RuleCard({ rule, index, totalRules, onMove, onToggle, onDeleteRequest }
   const handleDeleteRequest = useCallback(() => onDeleteRequest(rule.id), [rule.id, onDeleteRequest]);
 
   return (
-    <Card className={cn("bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm transition-all", !rule.isActive && "opacity-60")}>
+    <Card className={cn("bg-card rounded-lg border border-border shadow-sm transition-shadow", !rule.isActive && "opacity-60")}>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div className="flex flex-col gap-0.5">
@@ -106,16 +105,18 @@ function RuleCard({ rule, index, totalRules, onMove, onToggle, onDeleteRequest }
             </Button>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-medium truncate">{rule.name}</h3>
-              <Badge variant="secondary" className="text-[10px]">Priority {rule.priority}</Badge>
-              <Badge variant={rule.assignmentType === "round_robin" ? "default" : "secondary"} className="text-[10px]">
+              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200">
+                Priority {rule.priority}
+              </Badge>
+              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
                 {rule.assignmentType === "round_robin" ? "Round Robin" : "Direct Assign"}
               </Badge>
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1.5">
               {rule.conditions.map((c, ci) => (
-                <Badge key={ci} variant="outline" className="text-[10px]">
+                <Badge key={ci} variant="outline" className="text-[9px] h-4 px-1.5 py-0">
                   {FIELDS.find(f => f.value === c.field)?.label ?? c.field} {c.operator} {c.value}
                 </Badge>
               ))}
@@ -215,7 +216,7 @@ export default function AssignmentRulesPage() {
           ? data.roundRobinUserIds?.split(",").map(s => s.trim()).filter(Boolean) ?? []
           : undefined,
         conditions: data.conditions,
-        priority: (rules?.length ?? 0),
+        priority: rules?.length ?? 0,
       },
       {
         onSuccess: () => { toast.success("Rule created"); setCreateOpen(false); form.reset(); },
@@ -247,9 +248,7 @@ export default function AssignmentRulesPage() {
     addCondition({ field: "", operator: "eq", value: "" });
   }, [addCondition]);
 
-  const handleDeleteRequest = useCallback((id: number) => {
-    setDeleteTargetId(id);
-  }, []);
+  const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
 
   const handleDeleteConfirm = useCallback(() => {
     if (deleteTargetId === null) return;
@@ -260,38 +259,11 @@ export default function AssignmentRulesPage() {
   }, [deleteRule, deleteTargetId]);
 
   const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-10 w-48" />
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-20 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-6">
-        <EmptyState
-          illustration={<Settings className="h-10 w-10 text-muted-foreground" />}
-          title="Failed to load assignment rules"
-          description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
-        />
-      </div>
-    );
-  }
+  const count = rules?.length ?? 0;
 
   return (
     <>
@@ -317,11 +289,11 @@ export default function AssignmentRulesPage() {
 
       <PageWrapper
         title="Assignment Rules"
-        subtitle="Auto-assign leads based on conditions"
+        subtitle={isLoading ? undefined : `${count} rule${count !== 1 ? "s" : ""}`}
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+              <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 New Rule
               </Button>
@@ -339,7 +311,6 @@ export default function AssignmentRulesPage() {
                       <FormMessage />
                     </FormItem>
                   )} />
-
                   <div>
                     <FormLabel className="text-sm">Conditions</FormLabel>
                     <div className="space-y-2 mt-2">
@@ -358,7 +329,6 @@ export default function AssignmentRulesPage() {
                       <Plus className="h-3 w-3 mr-1" /> Add Condition
                     </Button>
                   </div>
-
                   <FormField control={form.control} name="assignmentType" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assignment Type</FormLabel>
@@ -374,7 +344,6 @@ export default function AssignmentRulesPage() {
                       <FormMessage />
                     </FormItem>
                   )} />
-
                   {assignmentType === "assign_user" && (
                     <FormField control={form.control} name="assignToUserId" render={({ field }) => (
                       <FormItem>
@@ -393,7 +362,6 @@ export default function AssignmentRulesPage() {
                       </FormItem>
                     )} />
                   )}
-
                   {assignmentType === "round_robin" && (
                     <FormField control={form.control} name="roundRobinUserIds" render={({ field }) => (
                       <FormItem>
@@ -403,8 +371,7 @@ export default function AssignmentRulesPage() {
                       </FormItem>
                     )} />
                   )}
-
-                  <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={createRule.isPending}>
+                  <Button type="submit" className="w-full" disabled={createRule.isPending}>
                     {createRule.isPending ? "Creating..." : "Create Rule"}
                   </Button>
                 </form>
@@ -413,37 +380,41 @@ export default function AssignmentRulesPage() {
           </Dialog>
         }
       >
-        <motion.div
-          className="space-y-3"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div variants={fadeUp} className="space-y-3">
-            {rules && rules.length > 0 ? (
-              rules.map((rule, index) => (
-                <RuleCard
-                  key={rule.id}
-                  rule={rule}
-                  index={index}
-                  totalRules={rules.length}
-                  onMove={handleMoveRule}
-                  onToggle={handleToggleActive}
-                  onDeleteRequest={handleDeleteRequest}
-                />
-              ))
-            ) : (
-              <div className="flex flex-1 items-center justify-center py-14">
-                <EmptyState
-                  illustration={<Settings className="h-10 w-10 text-muted-foreground" />}
-                  title="No assignment rules"
-                  description="Create rules to automatically assign incoming leads to the right people."
-                  action={{ label: "New Rule", onClick: handleOpenCreate }}
-                />
-              </div>
-            )}
-          </motion.div>
-        </motion.div>
+        {isLoading ? (
+          <div className="space-y-3">
+            {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+          </div>
+        ) : isError ? (
+          <EmptyState
+            illustration={<EmptyTargetIllustration />}
+            title="Failed to load assignment rules"
+            description="Something went wrong. Please try again."
+            action={{ label: "Retry", onClick: handleRetry }}
+            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+          />
+        ) : rules && rules.length > 0 ? (
+          <div className="space-y-3">
+            {rules.map((rule, index) => (
+              <RuleCard
+                key={rule.id}
+                rule={rule}
+                index={index}
+                totalRules={rules.length}
+                onMove={handleMoveRule}
+                onToggle={handleToggleActive}
+                onDeleteRequest={handleDeleteRequest}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            illustration={<EmptyTargetIllustration />}
+            title="No assignment rules"
+            description="Create rules to automatically assign incoming leads to the right people."
+            action={{ label: "New Rule", onClick: handleOpenCreate }}
+            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+          />
+        )}
       </PageWrapper>
     </>
   );

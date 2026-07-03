@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   format,
@@ -35,6 +36,7 @@ import {
   Sparkles,
   RefreshCw,
   CheckCircle,
+  Ticket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -63,7 +65,15 @@ import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";
 import { CalendarAiAssistant } from "./calendar-ai-assistant";
 import { CalendarEventsPanel } from "./calendar-events-panel";
+import { CreateTicketFromCalendarDialog } from "./create-ticket-from-calendar-dialog";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const BigCalendarWrapper = dynamic(
   () =>
@@ -116,6 +126,7 @@ function GoogleIcon() {
 }
 
 export function CalendarView() {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<View>("week"); // Default to week view matching screenshot
   const [viewMode, setViewMode] = useState<"calendar" | "list" | "history">("calendar");
@@ -141,6 +152,10 @@ export function CalendarView() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSlotChoiceOpen, setIsSlotChoiceOpen] = useState(false);
+  const [pendingSlot, setPendingSlot] = useState<{ start: Date; end: Date } | null>(null);
+  const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
+  const [createTicketSlot, setCreateTicketSlot] = useState<{ start: Date; end: Date } | null>(null);
 
   const rangeStart = useMemo(
     () => startOfMonth(subMonths(currentDate, 1)),
@@ -190,6 +205,9 @@ export function CalendarView() {
           location: e.location,
           source: e.source,
           myRsvpStatus: e.myRsvpStatus,
+          entityType: e.entityType,
+          entityId: e.entityId,
+          projectId: e.projectId,
         },
       })),
     [events],
@@ -203,20 +221,63 @@ export function CalendarView() {
   }, [calEvents, currentDate]);
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
-    setCreateSlot({ start: slotInfo.start, end: slotInfo.end });
-    setIsCreateOpen(true);
+    setPendingSlot({ start: slotInfo.start, end: slotInfo.end });
+    setIsSlotChoiceOpen(true);
   }, []);
+
+  const handleSlotChooseEvent = useCallback(() => {
+    setIsSlotChoiceOpen(false);
+    setCreateSlot(pendingSlot);
+    setIsCreateOpen(true);
+  }, [pendingSlot]);
+
+  const handleSlotChooseTicket = useCallback(() => {
+    setIsSlotChoiceOpen(false);
+    setCreateTicketSlot(pendingSlot);
+    setIsCreateTicketOpen(true);
+  }, [pendingSlot]);
 
   const handleOpenCreate = useCallback(() => {
     setCreateSlot(null);
     setIsCreateOpen(true);
   }, []);
 
-  const handleSelectEvent = useCallback((event: BigCalEvent) => {
-    setSelectedEventId(String(event.id));
+  const handleOpenCreateTicket = useCallback(() => {
+    setCreateTicketSlot(null);
+    setIsCreateTicketOpen(true);
   }, []);
 
+  const handleSelectEvent = useCallback(
+    (event: BigCalEvent) => {
+      if (
+        event.resource?.source === "task" &&
+        event.resource.entityType === "ticket" &&
+        event.resource.projectId != null &&
+        event.resource.entityId != null
+      ) {
+        router.push(
+          `/projects/${event.resource.projectId}?ticket=${event.resource.entityId}`,
+        );
+        return;
+      }
+      setSelectedEventId(String(event.id));
+    },
+    [router],
+  );
+
   const eventPropGetter = useCallback((event: BigCalEvent) => {
+    if (event.resource?.source === "task") {
+      return {
+        style: {
+          backgroundColor: "transparent",
+          border: "1px solid var(--border)",
+          borderRadius: "4px",
+          color: "var(--foreground)",
+          fontSize: "11px",
+          padding: "1px 6px",
+        },
+      };
+    }
     const rsvp = event.resource?.myRsvpStatus as string | null | undefined;
     const rsvpBorderColor = rsvp ? (RSVP_BORDER_COLORS[rsvp] ?? null) : null;
     const categoryColor = event.resource?.category
@@ -458,12 +519,24 @@ export function CalendarView() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Add Event button */}
-          <Button size="sm" className="h-8 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white" onClick={handleOpenCreate}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            <span className="hidden sm:inline">Add Event</span>
-            <span className="inline sm:hidden">Add</span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="h-8 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white gap-1">
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Add</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem className="text-xs" onClick={handleOpenCreate}>
+                <Plus className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                Add event
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-xs" onClick={handleOpenCreateTicket}>
+                <Ticket className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                Add ticket due date
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <div className="h-4 border-l border-border mx-1" />
 
@@ -663,6 +736,41 @@ export function CalendarView() {
         onOpenChange={setIsCreateOpen}
         defaultSlot={createSlot}
       />
+
+      <CreateTicketFromCalendarDialog
+        open={isCreateTicketOpen}
+        onClose={() => setIsCreateTicketOpen(false)}
+        defaultSlot={createTicketSlot}
+      />
+
+      <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
+        <DialogContent className="max-w-xs p-4">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">What would you like to create?</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Choose the type of item to add for the selected time.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-1.5">
+            <Button
+              variant="outline"
+              className="justify-start h-8 text-xs gap-2"
+              onClick={handleSlotChooseEvent}
+            >
+              <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+              Calendar event
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-8 text-xs gap-2"
+              onClick={handleSlotChooseTicket}
+            >
+              <Ticket className="h-3.5 w-3.5 text-muted-foreground" />
+              Ticket due date
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
     </div>

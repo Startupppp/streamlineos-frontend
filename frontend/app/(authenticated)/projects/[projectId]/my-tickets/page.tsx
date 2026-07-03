@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 
 interface MyTicketRowProps {
   ticket: {
@@ -34,11 +35,13 @@ interface MyTicketRowProps {
     points?: number | null;
     dueDate?: string | Date | null;
   };
+  projectKey?: string | null;
   onSelect: (id: number) => void;
 }
 
 const TicketRow = memo(function TicketRow({
   ticket,
+  projectKey,
   onSelect,
 }: MyTicketRowProps) {
   const handleClick = useCallback(
@@ -53,7 +56,8 @@ const TicketRow = memo(function TicketRow({
     >
       <TableCell className="px-3 py-1.5 font-mono text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <TicketTypeIcon type={ticket.type} />#{ticket.ticketNumber}
+          <TicketTypeIcon type={ticket.type} />
+          {formatTicketKey(projectKey, ticket.ticketNumber)}
         </span>
       </TableCell>
       <TableCell className="px-3 py-1.5 max-w-md">
@@ -250,6 +254,7 @@ export default function MyTicketsPage({ params }: PageProps) {
                   <TicketRow
                     key={ticket.id}
                     ticket={ticket}
+                    projectKey={data?.key}
                     onSelect={handleTicketSelect}
                   />
                 ))

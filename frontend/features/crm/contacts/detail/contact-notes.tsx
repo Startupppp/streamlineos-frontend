@@ -50,7 +50,7 @@ export function ContactNotes({ contactId, initialNotes }: ContactNotesProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: 0.08 }}
     >
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+      <Card className="bg-card rounded-lg border border-border shadow-sm">
         <CardHeader className="px-4 py-3 border-b">
           <CardTitle className="text-sm font-medium">Notes</CardTitle>
         </CardHeader>
@@ -88,7 +88,7 @@ export function ContactNotes({ contactId, initialNotes }: ContactNotesProps) {
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  className="gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md"
+                  className="gap-1.5"
                   onClick={handleSave}
                   disabled={updateMutation.isPending}
                 >

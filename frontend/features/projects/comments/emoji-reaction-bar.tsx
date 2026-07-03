@@ -54,8 +54,8 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
           className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-all",
             r.hasReacted
-              ? "bg-violet-50 border-violet-200 text-violet-800"
-              : "bg-slate-50 border-slate-200 text-slate-600 hover:border-violet-200 hover:bg-violet-50"
+              ? "bg-blue-50 border-blue-200 text-blue-800"
+              : "bg-slate-50 border-slate-200 text-slate-600 hover:border-blue-200/60 hover:bg-blue-50/50"
           )}
         >
           <span>{r.emoji}</span>
@@ -68,7 +68,7 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
           type="button"
           onClick={handleToggle}
           aria-label="Add reaction"
-          className="h-6 w-6 flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 hover:border-violet-200 hover:bg-violet-50 transition-all opacity-0 group-hover:opacity-100"
+          className="h-6 w-6 flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 hover:border-border hover:bg-muted transition-all opacity-0 group-hover:opacity-100"
         >
           <SmilePlus className="h-3 w-3 text-slate-400" />
         </button>
@@ -88,7 +88,7 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
                   type="button"
                   onClick={() => handleEmojiClick(e)}
                   aria-label={`React with ${e}`}
-                  className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-violet-50 transition-colors text-base"
+                  className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-base"
                 >
                   {e}
                 </button>

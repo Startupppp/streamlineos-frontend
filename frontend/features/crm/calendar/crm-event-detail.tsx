@@ -18,8 +18,7 @@ import {
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { toast } from "sonner";
-import { resolveImageUrl } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { resolveImageUrl, cn } from "@/lib/utils";
 import Link from "next/link";
 
 const CATEGORY_DOT_COLORS: Record<string, string> = {
@@ -83,19 +82,38 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
     });
   }, [numericId, deleteEvent, onClose]);
 
-  const handleRsvp = useCallback(
-    (status: "accepted" | "declined" | "tentative") => {
-      if (!numericId) return;
-      rsvp(
-        { eventId: numericId, status },
-        {
-          onSuccess: () => toast.success("RSVP updated"),
-          onError: () => toast.error("Failed to update RSVP"),
-        },
-      );
-    },
-    [numericId, rsvp],
-  );
+  const handleRsvpAccepted = useCallback(() => {
+    if (!numericId) return;
+    rsvp(
+      { eventId: numericId, status: "accepted" },
+      {
+        onSuccess: () => toast.success("RSVP updated"),
+        onError: () => toast.error("Failed to update RSVP"),
+      },
+    );
+  }, [numericId, rsvp]);
+
+  const handleRsvpTentative = useCallback(() => {
+    if (!numericId) return;
+    rsvp(
+      { eventId: numericId, status: "tentative" },
+      {
+        onSuccess: () => toast.success("RSVP updated"),
+        onError: () => toast.error("Failed to update RSVP"),
+      },
+    );
+  }, [numericId, rsvp]);
+
+  const handleRsvpDeclined = useCallback(() => {
+    if (!numericId) return;
+    rsvp(
+      { eventId: numericId, status: "declined" },
+      {
+        onSuccess: () => toast.success("RSVP updated"),
+        onError: () => toast.error("Failed to update RSVP"),
+      },
+    );
+  }, [numericId, rsvp]);
 
   const dotColor = event ? (CATEGORY_DOT_COLORS[event.category] ?? "bg-slate-400") : "bg-slate-400";
 
@@ -118,20 +136,23 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
   return (
     <>
       <Sheet open={!!event} onOpenChange={handleSheetChange}>
-        <SheetContent side="right" className="flex flex-col p-0 w-[380px] sm:max-w-[380px]">
-          <SheetHeader className="px-5 pt-5 pb-3">
+        <SheetContent
+          side="right"
+          className="flex flex-col gap-0 p-0 w-[380px] sm:max-w-[380px]"
+        >
+          <SheetHeader className="shrink-0 px-5 py-4 border-b">
             <div className="flex items-center gap-2">
               <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", dotColor)} />
-              <SheetTitle className="text-base font-semibold leading-snug">{event?.title}</SheetTitle>
+              <SheetTitle className="text-base font-semibold leading-snug text-foreground">
+                {event?.title}
+              </SheetTitle>
             </div>
           </SheetHeader>
 
-          <Separator />
-
           <ScrollArea className="flex-1 min-h-0">
             <div className="px-5 py-4 flex flex-col gap-4">
-              <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                <CalendarIcon className="h-4 w-4 mt-0.5 shrink-0 text-slate-400" />
+              <div className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                <CalendarIcon className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>
                   {formattedStart}
                   {!event?.allDay && ` – ${formattedEnd}`}
@@ -139,14 +160,14 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
               </div>
 
               {event?.location && (
-                <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                  <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-slate-400" />
+                <div className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
                   {event.location.startsWith("http") ? (
                     <a
                       href={event.location}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-violet-600 hover:underline truncate"
+                      className="flex items-center gap-1 text-blue-600 hover:underline truncate"
                     >
                       {event.location}
                       <ExternalLink className="h-3 w-3 shrink-0" />
@@ -158,14 +179,14 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
               )}
 
               <div className="flex items-center gap-2.5 text-sm">
-                <Tag className="h-4 w-4 shrink-0 text-slate-400" />
+                <Tag className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <Badge variant="secondary" className="capitalize text-xs">
                   {event?.category}
                 </Badge>
               </div>
 
               {event?.description && (
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                   {event.description}
                 </p>
               )}
@@ -174,12 +195,12 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
                 <>
                   <Separator />
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 uppercase tracking-wide font-medium">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
                       Linked {entityLabel}
                     </span>
                     <Link
                       href={entityPath}
-                      className="flex items-center gap-1 text-violet-600 hover:underline text-sm font-medium"
+                      className="flex items-center gap-1 text-blue-600 hover:underline text-sm font-medium"
                     >
                       View {entityLabel}
                       <ExternalLink className="h-3 w-3" />
@@ -189,9 +210,9 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
               )}
 
               {event?.creatorName && (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted-foreground">
                   Created by{" "}
-                  <span className="text-slate-600 font-medium">{event.creatorName}</span>
+                  <span className="text-foreground font-medium">{event.creatorName}</span>
                 </p>
               )}
 
@@ -199,7 +220,7 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
                 <>
                   <Separator />
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wide font-medium mb-2">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-2">
                       Your RSVP
                     </p>
                     <div className="flex gap-2">
@@ -209,9 +230,9 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
                         className={cn(
                           "flex-1 h-8 text-xs",
                           event?.myRsvpStatus === "accepted" &&
-                            "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0",
+                            "bg-emerald-600 hover:bg-emerald-700 text-white border-0",
                         )}
-                        onClick={() => handleRsvp("accepted")}
+                        onClick={handleRsvpAccepted}
                       >
                         Accept
                       </Button>
@@ -221,9 +242,9 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
                         className={cn(
                           "flex-1 h-8 text-xs",
                           event?.myRsvpStatus === "tentative" &&
-                            "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0",
+                            "bg-amber-500 hover:bg-amber-600 text-white border-0",
                         )}
-                        onClick={() => handleRsvp("tentative")}
+                        onClick={handleRsvpTentative}
                       >
                         Maybe
                       </Button>
@@ -235,7 +256,7 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
                           event?.myRsvpStatus === "declined" &&
                             "bg-destructive text-destructive-foreground border-0 hover:bg-destructive/90",
                         )}
-                        onClick={() => handleRsvp("declined")}
+                        onClick={handleRsvpDeclined}
                       >
                         Decline
                       </Button>
@@ -249,8 +270,8 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
                   <Separator />
                   <div>
                     <div className="flex items-center gap-1.5 mb-3">
-                      <Users className="h-3.5 w-3.5 text-slate-400" />
-                      <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
                         Attendees ({attendees.length})
                       </p>
                     </div>
@@ -276,16 +297,16 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
                                 }
                                 alt={attendee.user?.name ?? ""}
                               />
-                              <AvatarFallback className="text-[10px] font-semibold bg-violet-100 text-violet-700">
+                              <AvatarFallback className="text-[10px] font-semibold bg-muted text-muted-foreground">
                                 {initials}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-700 truncate">
+                              <p className="text-sm font-medium text-foreground truncate">
                                 {attendee.user?.name ?? attendee.user?.email}
                               </p>
                               {attendee.user?.name && (
-                                <p className="text-xs text-slate-400 truncate">
+                                <p className="text-xs text-muted-foreground truncate">
                                   {attendee.user.email}
                                 </p>
                               )}
@@ -295,7 +316,7 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
                               className={cn(
                                 "text-[10px] shrink-0 capitalize",
                                 attendee.status === "accepted" &&
-                                  "border-green-200 text-green-700 bg-green-50",
+                                  "border-emerald-200 text-emerald-700 bg-emerald-50",
                                 attendee.status === "declined" &&
                                   "border-red-200 text-red-700 bg-red-50",
                                 attendee.status === "tentative" &&
@@ -314,9 +335,7 @@ export function CrmEventDetail({ event, onClose, onEdit }: CrmEventDetailProps) 
             </div>
           </ScrollArea>
 
-          <Separator />
-
-          <div className="flex items-center justify-between px-5 py-3">
+          <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t">
             <Button
               variant="ghost"
               size="sm"

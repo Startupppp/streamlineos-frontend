@@ -4,10 +4,13 @@ import type {
   AutomationConditionOp,
 } from "@/hooks/api/automations";
 
+export type TriggerModule = "crm" | "support" | "finance" | "hr";
+
 export interface TriggerMeta {
   value: AutomationTrigger;
   label: string;
   description: string;
+  module: TriggerModule;
   fields: { value: string; label: string }[];
   samplePayload: Record<string, unknown>;
 }
@@ -17,6 +20,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "lead.created",
     label: "Lead created",
     description: "Runs when a new lead is added to the CRM",
+    module: "crm",
     fields: [
       { value: "name", label: "Lead name" },
       { value: "email", label: "Email" },
@@ -35,6 +39,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "deal.stage_changed",
     label: "Deal stage changed",
     description: "Runs when a deal moves to a different stage",
+    module: "crm",
     fields: [
       { value: "name", label: "Deal name" },
       { value: "value", label: "Deal value" },
@@ -55,6 +60,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "ticket.created",
     label: "Support ticket created",
     description: "Runs when a new support ticket is opened",
+    module: "support",
     fields: [
       { value: "subject", label: "Subject" },
       { value: "priority", label: "Priority (LOW, HIGH, URGENT)" },
@@ -73,6 +79,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "invoice.overdue",
     label: "Invoice overdue",
     description: "Runs when an invoice passes its due date unpaid",
+    module: "finance",
     fields: [
       { value: "number", label: "Invoice number" },
       { value: "amount", label: "Amount due" },
@@ -91,6 +98,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "candidate.application_created",
     label: "Candidate applied",
     description: "Runs when a new candidate application is submitted",
+    module: "hr",
     fields: [
       { value: "source", label: "Application source" },
       { value: "jobTitle", label: "Job title" },
@@ -110,6 +118,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "candidate.stage_changed",
     label: "Candidate stage changed",
     description: "Runs when a candidate moves to a different stage",
+    module: "hr",
     fields: [
       { value: "newStatus", label: "New stage" },
       { value: "previousStatus", label: "Previous stage" },
@@ -126,6 +135,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "interview.scheduled",
     label: "Interview scheduled",
     description: "Runs when a new interview is scheduled for a candidate",
+    module: "hr",
     fields: [
       { value: "type", label: "Interview type" },
       { value: "durationMinutes", label: "Duration (minutes)" },
@@ -148,6 +158,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "interview.completed",
     label: "Interview completed",
     description: "Runs when an interview result is recorded",
+    module: "hr",
     fields: [
       { value: "result", label: "Result (PASS, FAIL, HOLD, NO_SHOW)" },
       { value: "rating", label: "Rating (1–5)" },
@@ -167,6 +178,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "scorecard.submitted",
     label: "Scorecard submitted",
     description: "Runs when an interviewer submits an evaluation scorecard",
+    module: "hr",
     fields: [{ value: "recommendation", label: "Recommendation" }],
     samplePayload: {
       interviewId: 1,
@@ -181,6 +193,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "offer.sent",
     label: "Offer sent",
     description: "Runs when a job offer is dispatched to a candidate",
+    module: "hr",
     fields: [],
     samplePayload: {
       offerId: 1,
@@ -198,6 +211,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "offer.accepted",
     label: "Offer accepted",
     description: "Runs when a candidate accepts a job offer",
+    module: "hr",
     fields: [{ value: "decision", label: "Decision" }],
     samplePayload: {
       offerId: 1,
@@ -213,6 +227,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "offer.rejected",
     label: "Offer declined",
     description: "Runs when a candidate declines a job offer",
+    module: "hr",
     fields: [{ value: "decision", label: "Decision" }],
     samplePayload: {
       offerId: 1,
@@ -229,6 +244,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     label: "BGV status changed",
     description:
       "Runs when a candidate's background verification status changes",
+    module: "hr",
     fields: [{ value: "newBgvStatus", label: "New BGV status" }],
     samplePayload: {
       candidateId: 1,
@@ -244,6 +260,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     label: "Recruitment SLA breached",
     description:
       "Runs when a candidate has been in a stage beyond the allowed time",
+    module: "hr",
     fields: [
       { value: "stage", label: "Stage" },
       { value: "hoursInStage", label: "Hours in stage" },
@@ -261,6 +278,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "onboarding.started",
     label: "Onboarding started",
     description: "Runs when a new hire's onboarding process begins",
+    module: "hr",
     fields: [],
     samplePayload: {
       userId: "",
@@ -276,6 +294,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     label: "Onboarding task overdue",
     description:
       "Runs when an onboarding task passes its due date without completion",
+    module: "hr",
     fields: [
       { value: "ownerRole", label: "Task owner role" },
       { value: "daysOverdue", label: "Days overdue" },
@@ -294,6 +313,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "onboarding.document_submitted",
     label: "Onboarding document submitted",
     description: "Runs when a new hire uploads a required onboarding document",
+    module: "hr",
     fields: [],
     samplePayload: {
       documentId: 1,
@@ -308,6 +328,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "onboarding.completed",
     label: "Onboarding completed",
     description: "Runs when all onboarding tasks for an employee are completed",
+    module: "hr",
     fields: [],
     samplePayload: {
       userId: "",
@@ -320,6 +341,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "leave.requested",
     label: "Leave requested",
     description: "Runs when an employee submits a leave request",
+    module: "hr",
     fields: [
       { value: "leaveType", label: "Leave type" },
       { value: "totalDays", label: "Total days" },
@@ -341,6 +363,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "leave.approved",
     label: "Leave approved",
     description: "Runs when a leave request is approved",
+    module: "hr",
     fields: [
       { value: "decision", label: "Decision" },
       { value: "leaveType", label: "Leave type" },
@@ -363,6 +386,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "leave.rejected",
     label: "Leave rejected",
     description: "Runs when a leave request is rejected",
+    module: "hr",
     fields: [
       { value: "decision", label: "Decision" },
       { value: "leaveType", label: "Leave type" },
@@ -386,6 +410,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     label: "Attendance anomaly",
     description:
       "Runs when an employee has missed check-ins beyond a threshold",
+    module: "hr",
     fields: [{ value: "missedDays", label: "Missed days" }],
     samplePayload: {
       userId: "",
@@ -399,6 +424,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "resignation.submitted",
     label: "Resignation submitted",
     description: "Runs when an employee submits their resignation",
+    module: "hr",
     fields: [],
     samplePayload: {
       resignationId: 1,
@@ -415,6 +441,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "resignation.approved",
     label: "Resignation approved",
     description: "Runs when a resignation is formally approved",
+    module: "hr",
     fields: [],
     samplePayload: {
       resignationId: 1,
@@ -429,6 +456,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "employee.terminated",
     label: "Employee terminated",
     description: "Runs when an employee termination is executed",
+    module: "hr",
     fields: [],
     samplePayload: {
       terminationId: 1,
@@ -444,6 +472,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     label: "Certification expiring",
     description:
       "Runs when an employee certification is within 30 days of expiry",
+    module: "hr",
     fields: [{ value: "daysUntilExpiry", label: "Days until expiry" }],
     samplePayload: {
       certificationId: 1,
@@ -460,6 +489,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "document.review_requested",
     label: "Document review requested",
     description: "Runs when a document is submitted for review",
+    module: "hr",
     fields: [],
     samplePayload: {
       documentId: 1,
@@ -474,6 +504,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "performance.review_cycle_started",
     label: "Performance review cycle started",
     description: "Runs when a new performance review cycle is kicked off",
+    module: "hr",
     fields: [],
     samplePayload: {
       cycleId: 1,
@@ -487,6 +518,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "expense.submitted",
     label: "Expense submitted",
     description: "Runs when an employee submits a new expense claim",
+    module: "hr",
     fields: [],
     samplePayload: {
       expenseId: 1,
@@ -501,6 +533,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "reimbursement.approved",
     label: "Reimbursement approved",
     description: "Runs when a reimbursement request is approved",
+    module: "hr",
     fields: [{ value: "decision", label: "Decision" }],
     samplePayload: {
       reimbursementId: 1,
@@ -515,6 +548,7 @@ export const TRIGGER_META: TriggerMeta[] = [
     value: "reimbursement.rejected",
     label: "Reimbursement rejected",
     description: "Runs when a reimbursement request is rejected",
+    module: "hr",
     fields: [{ value: "decision", label: "Decision" }],
     samplePayload: {
       reimbursementId: 1,
@@ -526,6 +560,15 @@ export const TRIGGER_META: TriggerMeta[] = [
     },
   },
 ];
+
+export const NON_CRM_TRIGGER_META = TRIGGER_META.filter((t) => t.module !== "crm");
+
+export function getModuleForTrigger(
+  trigger: AutomationTrigger,
+): TriggerModule {
+  const entry = TRIGGER_META.find((t) => t.value === trigger);
+  return entry?.module ?? "hr";
+}
 
 export const CONDITION_OPS: { value: AutomationConditionOp; label: string }[] =
   [

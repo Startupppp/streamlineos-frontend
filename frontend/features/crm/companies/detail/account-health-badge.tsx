@@ -20,13 +20,36 @@ export function computeHealthScore(rollup: OrgRollup): number {
   return Math.min(score, 100);
 }
 
-export function getHealthLabel(score: number): { label: string; color: string; dot: string } {
-  if (score >= 70) return { label: "Healthy", color: "text-emerald-400", dot: "bg-emerald-400" };
-  if (score >= 40) return { label: "At Risk", color: "text-amber-400", dot: "bg-amber-400" };
-  return { label: "Critical", color: "text-red-400", dot: "bg-red-400" };
+export function getHealthLabel(score: number): {
+  label: string;
+  badgeClass: string;
+  dotClass: string;
+} {
+  if (score >= 70)
+    return {
+      label: "Healthy",
+      badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      dotClass: "bg-emerald-500",
+    };
+  if (score >= 40)
+    return {
+      label: "At Risk",
+      badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+      dotClass: "bg-amber-500",
+    };
+  return {
+    label: "Critical",
+    badgeClass: "bg-red-50 text-red-700 border-red-200",
+    dotClass: "bg-red-500",
+  };
 }
 
-export function AccountHealthBadge({ healthScore, rollup, showComputed = false, className }: AccountHealthBadgeProps) {
+export function AccountHealthBadge({
+  healthScore,
+  rollup,
+  showComputed = false,
+  className,
+}: AccountHealthBadgeProps) {
   const score =
     healthScore !== null && healthScore !== undefined
       ? healthScore
@@ -36,24 +59,27 @@ export function AccountHealthBadge({ healthScore, rollup, showComputed = false, 
 
   if (score === null) {
     return (
-      <Badge className={cn("text-xs bg-muted/50 text-muted-foreground border-0", className)}>
+      <Badge
+        variant="outline"
+        className={cn("text-[10px] bg-slate-100 text-slate-700 border-slate-200", className)}
+      >
         N/A
       </Badge>
     );
   }
 
-  const { label, color, dot } = getHealthLabel(score);
+  const { label, badgeClass, dotClass } = getHealthLabel(score);
 
   return (
     <Badge
+      variant="outline"
       className={cn(
-        "text-xs border-0 flex items-center gap-1.5 px-2 py-0.5",
-        score >= 70 ? "bg-emerald-500/15" : score >= 40 ? "bg-amber-500/15" : "bg-red-500/15",
-        color,
+        "text-[10px] flex items-center gap-1.5 px-2 py-0.5",
+        badgeClass,
         className,
       )}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", dot)} />
+      <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", dotClass)} />
       {label} · {score}%
     </Badge>
   );

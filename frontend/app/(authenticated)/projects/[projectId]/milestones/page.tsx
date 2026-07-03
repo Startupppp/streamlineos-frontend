@@ -5,7 +5,9 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -105,7 +107,7 @@ function MilestoneDialog({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Milestone" : "New Milestone"}</DialogTitle>
         </DialogHeader>
@@ -137,10 +139,12 @@ function MilestoneDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave} disabled={isPending || !name.trim() || !targetDate}>
-            {isPending ? "Saving…" : isEdit ? "Save Changes" : "Create Milestone"}
-          </Button>
+          <div className="grid w-full grid-cols-2 gap-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSave} disabled={isPending || !name.trim() || !targetDate}>
+              {isPending ? "Saving…" : isEdit ? "Save Changes" : "Create Milestone"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -256,27 +260,27 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
     <PageWrapper
       title="Milestones"
       subtitle="Key checkpoints and target dates for this project"
+      backHref={`/projects/${projectId}`}
       actions={
         <Button
           size="sm"
           onClick={handleOpenCreate}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
         >
           <Plus className="h-4 w-4 mr-1" /> New Milestone
         </Button>
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3">
-          <StatCard label="Total" value={total} icon={Diamond} color="violet" index={0} />
-          <StatCard label="Achieved" value={achieved} icon={CheckCircle2} color="green" index={1} />
-          <StatCard label="Pending" value={pending} icon={Clock} color="blue" index={2} />
-          <StatCard label="Overdue" value={overdue} icon={AlertCircle} color="red" index={3} />
-        </div>
+        <StatCardGrid cols={4}>
+          <StatCard label="Total" value={total} icon={Diamond} tone="default" index={0} />
+          <StatCard label="Achieved" value={achieved} icon={CheckCircle2} tone="emerald" index={1} />
+          <StatCard label="Pending" value={pending} icon={Clock} tone="blue" index={2} />
+          <StatCard label="Overdue" value={overdue} icon={AlertCircle} tone="red" index={3} />
+        </StatCardGrid>
 
         {isLoading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />)}
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
           </div>
         ) : milestones && milestones.length > 0 ? (
           <div className="space-y-3">
@@ -290,13 +294,13 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] py-16 text-center space-y-3">
-            <Diamond className="h-10 w-10 text-muted-foreground/50" />
-            <p className="text-muted-foreground">No milestones yet.</p>
-            <Button variant="outline" size="sm" onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-1" /> Add first milestone
-            </Button>
-          </div>
+          <EmptyState
+            illustration={<Diamond className="h-8 w-8 text-muted-foreground/40" fill="currentColor" />}
+            title="No milestones yet"
+            description="Add milestones to track key checkpoints and target dates."
+            action={{ label: "Add Milestone", onClick: handleOpenCreate }}
+            className="min-h-[40vh]"
+          />
         )}
       </div>
 

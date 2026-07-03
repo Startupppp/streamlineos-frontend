@@ -58,7 +58,12 @@ interface DateRange {
 }
 
 export function useAnalyticsData(dateRange: DateRange) {
-  const { data: leadStats, isLoading: statsLoading } = useLeadStats({
+  const {
+    data: leadStats,
+    isLoading: statsLoading,
+    isError: statsError,
+    refetch,
+  } = useLeadStats({
     dateFrom: dateRange.from,
     dateTo: dateRange.to,
   });
@@ -92,6 +97,8 @@ export function useAnalyticsData(dateRange: DateRange) {
     slaLoading ||
     leadsLoading ||
     summaryLoading;
+
+  const isError = statsError;
 
   const funnelData = useMemo((): FunnelEntry[] => {
     if (!leadStats) return [];
@@ -189,6 +196,8 @@ export function useAnalyticsData(dateRange: DateRange) {
 
   return {
     isLoading,
+    isError,
+    refetch,
     slaLoading,
     revenueGoalLoading,
     leaderboard,

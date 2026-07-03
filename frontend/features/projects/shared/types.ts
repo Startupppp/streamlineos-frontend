@@ -7,6 +7,7 @@ export interface KanbanTicket {
   status: string;
   priority?: TicketPriority | string | null;
   ticketNumber?: number;
+  sequenceId?: string | null;
   points?: number | null;
   storyPoints?: number | null;
   assigneeId?: string | null;
@@ -14,6 +15,7 @@ export interface KanbanTicket {
   sprintId?: number | null;
   order?: number | null;
   dueDate?: string | null;
+  startDate?: string | null;
   timeSpent?: string | null;
   assignee?: {
     id: string;
@@ -74,7 +76,7 @@ export const typeConfig: Record<
   TASK: { label: "Task", color: "text-blue-500" },
   BUG: { label: "Bug", color: "text-red-500" },
   STORY: { label: "Story", color: "text-green-500" },
-  EPIC: { label: "Epic", color: "text-purple-500" },
+  EPIC: { label: "Epic", color: "text-violet-600" },
   SUBTASK: { label: "Subtask", color: "text-muted-foreground" },
 };
 

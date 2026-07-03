@@ -56,7 +56,7 @@ export function LeadActivityTimeline({
   isLoading,
 }: LeadActivityTimelineProps) {
   return (
-    <Card className="shadow-noir">
+    <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">
           Activity Timeline

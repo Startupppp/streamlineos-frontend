@@ -848,8 +848,11 @@ Every empty state uses `<EmptyState>` (`components/ui/empty-state.tsx`). Rules:
 - **Always fills the available height** of its container: `flex-1 h-full min-h-[40vh]` or
   `min-h-[60vh]` for full-page empty states.
 - **Three elements, in order:** illustration/icon → title → description → one CTA.
-- **Icon context:** use a lucide-react icon at `h-8 w-8 text-muted-foreground/40` for empty table
-  bodies. Use an `@animateicons/react` animated icon for full-page empty states.
+- **Illustration context (living rule, 2026-07-03):** full-page/main-region empty states use a
+  themed SVG component from `components/illustrations` (shared `Wrapper` + `_shared.tsx` tokens;
+  extend the set in the same style when nothing fits — unDraw compositions may be adapted but are
+  always committed as recolored inline components, never raw downloaded SVG files). Compact and
+  table-cell empty bodies keep a lucide-react icon at `h-8 w-8 text-muted-foreground/40`.
 - **Title:** short noun phrase — "No employees yet", "No deals found", "Nothing here".
 - **Description:** one sentence — what the user would need to do or why the state exists.
 - **CTA:** one `<Button>` linking to the create action. Never two CTAs.
@@ -858,14 +861,10 @@ Every empty state uses `<EmptyState>` (`components/ui/empty-state.tsx`). Rules:
 
 ```tsx
 <EmptyState
-  illustration={<UserIcon className="h-8 w-8 text-muted-foreground/40" />}
+  illustration={<EmptyPersonIllustration />}
   title="No employees yet"
   description="Add your first employee to get started with HR management."
-  action={
-    <Button size="sm" onClick={onCreateEmployee}>
-      Add Employee
-    </Button>
-  }
+  action={{ label: "Add Employee", onClick: onCreateEmployee }}
   className="flex-1 min-h-[50vh] border-0 bg-transparent"
 />
 ```

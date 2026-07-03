@@ -72,7 +72,7 @@ export function IntakeItemCard({ item, onAccept, onDecline, onDuplicate }: Intak
         <div className="flex items-center gap-1 shrink-0 py-3 pr-3">
           <Button
             size="sm"
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm text-xs h-7"
+            className="text-xs h-7"
             onClick={handleAccept}
           >
             <Check className="h-3.5 w-3.5 mr-1" /> Accept

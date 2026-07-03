@@ -6,10 +6,16 @@ import { motion } from "framer-motion";
 import { Download, LayoutGrid, Plus, Search, TableIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState, SkeletonTable } from "@/components/shared";
 import { staggerContainer } from "@/lib/motion-variants";
-import { cn } from "@/lib/utils";
 import { useContacts, useDeleteContact } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { CreateContactDialog } from "@/features/crm/contacts/create-contact-dialog";
@@ -17,7 +23,7 @@ import { EditContactSheet } from "@/features/crm/contacts/edit-contact-sheet";
 import { ContactsCsvImportDialog } from "@/features/crm/contacts/contacts-csv-import-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PAGE_SIZE } from "@/features/crm/contacts/contacts-constants";
+import { PAGE_SIZE, SOURCE_LABELS } from "@/features/crm/contacts/contacts-constants";
 import { useEnrichContact } from "@/features/crm/contacts/contact-actions-menu";
 import { ContactTableView } from "@/features/crm/contacts/contact-table-view";
 import { ContactCardView } from "@/features/crm/contacts/contact-card-view";
@@ -37,6 +43,7 @@ export default function ContactsPage() {
 
   const view = (searchParams.get("view") || "table") as "table" | "card";
   const searchInput = searchParams.get("q") || "";
+  const sourceFilter = searchParams.get("source") || "all";
   const page = Number(searchParams.get("page")) || 1;
 
   const debouncedSearch = useDebouncedValue(searchInput, 300);
@@ -61,6 +68,7 @@ export default function ContactsPage() {
 
   const { data, isLoading, error, refetch } = useContacts({
     search: apiSearch || undefined,
+    source: sourceFilter !== "all" ? sourceFilter : undefined,
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
   });
@@ -71,8 +79,6 @@ export default function ContactsPage() {
 
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
-  const firstItem = total > 0 ? (page - 1) * PAGE_SIZE + 1 : 0;
-  const lastItem = Math.min(page * PAGE_SIZE, total);
 
   const handleViewTable = useCallback(
     () => updateParams({ view: null }),
@@ -87,6 +93,13 @@ export default function ContactsPage() {
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       updateParams({ q: e.target.value || null, page: null });
+    },
+    [updateParams],
+  );
+
+  const handleSourceChange = useCallback(
+    (value: string) => {
+      updateParams({ source: value !== "all" ? value : null, page: null });
     },
     [updateParams],
   );
@@ -143,23 +156,17 @@ export default function ContactsPage() {
     if (!open) setDeleteId(null);
   }, []);
 
-  const handlePrevPage = useCallback(
-    () => updateParams({ page: page <= 2 ? null : String(page - 1) }),
-    [page, updateParams],
-  );
-  const handleNextPage = useCallback(
-    () => updateParams({ page: String(page + 1) }),
-    [page, updateParams],
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      updateParams({ page: newPage > 1 ? String(newPage) : null });
+    },
+    [updateParams],
   );
 
   if (isLoading) {
     return (
-      <PageWrapper title="Contacts" subtitle="People directory">
-        <SkeletonTable
-          rows={8}
-          columns={7}
-          className="h-[calc(100dvh-16rem)]"
-        />
+      <PageWrapper title="Contacts" subtitle="Loading...">
+        <SkeletonTable rows={8} columns={7} className="h-[calc(100dvh-16rem)]" />
       </PageWrapper>
     );
   }
@@ -182,15 +189,12 @@ export default function ContactsPage() {
     total,
     page,
     totalPages,
-    firstItem,
-    lastItem,
     apiSearch,
     isEnrichPending: enrichContact.isPending,
     onRequestDelete: handleRequestDelete,
     onEdit: handleEdit,
     onEnrich: handleEnrich,
-    onPrevPage: handlePrevPage,
-    onNextPage: handleNextPage,
+    onPageChange: handlePageChange,
     onOpenCreate: handleOpenCreate,
   };
 
@@ -201,50 +205,71 @@ export default function ContactsPage() {
         subtitle={`${total} contacts`}
         actions={
           <>
-            <div className="flex items-center border border-border rounded-md">
+            <div className="flex items-center border border-border rounded-md overflow-hidden">
               <Button
                 variant={view === "table" ? "default" : "ghost"}
                 size="sm"
-                className={cn("rounded-r-none")}
+                className="rounded-none h-8 px-2"
                 onClick={handleViewTable}
+                aria-label="Table view"
               >
-                <TableIcon className="h-4 w-4" />
+                <TableIcon className="h-3.5 w-3.5" />
               </Button>
               <Button
                 variant={view === "card" ? "default" : "ghost"}
                 size="sm"
-                className={cn("rounded-l-none")}
+                className="rounded-none h-8 px-2"
                 onClick={handleViewCard}
+                aria-label="Card view"
               >
-                <LayoutGrid className="h-4 w-4" />
+                <LayoutGrid className="h-3.5 w-3.5" />
               </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
             <ContactsCsvImportDialog onSuccess={handleRetry} />
-            <Button
-              onClick={handleOpenCreate}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              <Plus className="h-4 w-4 mr-2" /> New Contact
+            <Button onClick={handleOpenCreate}>
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
+              New Contact
             </Button>
-            <CreateContactDialog
-              open={createOpen}
-              onOpenChange={setCreateOpen}
-            />
+            <CreateContactDialog open={createOpen} onOpenChange={setCreateOpen} />
           </>
         }
         filters={
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search contacts (min 3 chars)..."
-              value={searchInput}
-              onChange={handleSearchChange}
-              className="pl-8 h-8 text-xs"
-            />
+          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
+            <div className="relative min-w-0 flex-1 lg:max-w-md">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search contacts (min 3 chars)..."
+                value={searchInput}
+                onChange={handleSearchChange}
+                className="h-8 w-full min-w-0 pl-8 text-xs"
+              />
+            </div>
+            <div className="hidden min-w-0 items-center gap-2 sm:flex lg:gap-3">
+              <Select value={sourceFilter} onValueChange={handleSourceChange}>
+                <SelectTrigger className="h-8 min-w-0 w-[140px] text-xs">
+                  <SelectValue placeholder="All sources" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All sources</SelectItem>
+                  {Object.entries(SOURCE_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="ml-auto shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={handleExport}
+              >
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                Export
+              </Button>
+            </div>
           </div>
         }
       >

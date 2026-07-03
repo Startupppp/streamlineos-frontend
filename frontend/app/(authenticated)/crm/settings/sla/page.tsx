@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,13 +9,14 @@ import {
   CheckCircle2, XCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -34,18 +34,17 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useSlaPolicies, useSlaReport, useSlaBreachedLeads,
   useCreateSlaPolicy, useUpdateSlaPolicy, useDeleteSlaPolicy,
 } from "@/hooks/api/crm-settings";
 import { toast } from "sonner";
 
-const PRIORITY_COLORS: Record<string, { color: string; bg: string }> = {
-  low: { color: "text-blue-400", bg: "bg-blue-500/15" },
-  medium: { color: "text-amber-400", bg: "bg-amber-500/15" },
-  high: { color: "text-orange-400", bg: "bg-orange-500/15" },
-  urgent: { color: "text-red-400", bg: "bg-red-500/15" },
+const PRIORITY_BADGE: Record<string, string> = {
+  low: "bg-blue-50 text-blue-700 border-blue-200",
+  medium: "bg-amber-50 text-amber-700 border-amber-200",
+  high: "bg-orange-50 text-orange-700 border-orange-200",
+  urgent: "bg-red-50 text-red-700 border-red-200",
 };
 
 const policySchema = z.object({
@@ -62,6 +61,57 @@ const policySchema = z.object({
     .refine((v) => !isNaN(Number(v)) && Number.isInteger(Number(v)) && Number(v) > 0, "Must be a positive integer"),
 });
 type PolicyForm = z.infer<typeof policySchema>;
+
+type SlaPolicyData = {
+  id: number;
+  name: string;
+  appliesTo: string;
+  priority: string;
+  firstResponseHours: number;
+  resolutionHours: number;
+};
+
+interface SlaTableRowProps {
+  policy: SlaPolicyData;
+  onEdit: (policy: SlaPolicyData) => void;
+  onDeleteRequest: (id: number) => void;
+}
+
+function SlaTableRow({ policy, onEdit, onDeleteRequest }: SlaTableRowProps) {
+  const handleEdit = useCallback(() => onEdit(policy), [policy, onEdit]);
+  const handleDeleteRequest = useCallback(() => onDeleteRequest(policy.id), [policy.id, onDeleteRequest]);
+
+  return (
+    <TableRow className="h-8 hover:bg-muted/30 transition-colors">
+      <TableCell className="text-[11px] px-2 py-1 font-medium">{policy.name}</TableCell>
+      <TableCell className="text-[11px] px-2 py-1">
+        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200 capitalize">
+          {policy.appliesTo}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-[11px] px-2 py-1">
+        <Badge
+          variant="outline"
+          className={cn("text-[9px] h-4 px-1.5 py-0 capitalize", PRIORITY_BADGE[policy.priority] ?? PRIORITY_BADGE.medium)}
+        >
+          {policy.priority}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-[11px] px-2 py-1 text-right font-mono tabular-nums">{policy.firstResponseHours}h</TableCell>
+      <TableCell className="text-[11px] px-2 py-1 text-right font-mono tabular-nums">{policy.resolutionHours}h</TableCell>
+      <TableCell className="text-[11px] px-2 py-1 text-right">
+        <div className="flex items-center justify-end gap-1">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit">
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 export default function SlaPage() {
   const { data: policies, isLoading, isError, refetch } = useSlaPolicies();
@@ -114,14 +164,7 @@ export default function SlaPage() {
     );
   }, [editingId, updatePolicy]);
 
-  const handleStartEdit = useCallback((policy: {
-    id: number;
-    name: string;
-    appliesTo: string;
-    priority: string;
-    firstResponseHours: number;
-    resolutionHours: number;
-  }) => {
+  const handleStartEdit = useCallback((policy: SlaPolicyData) => {
     setEditingId(policy.id);
     editForm.reset({
       name: policy.name,
@@ -133,10 +176,7 @@ export default function SlaPage() {
   }, [editForm]);
 
   const handleCancelEdit = useCallback(() => setEditingId(null), []);
-
-  const handleDeleteRequest = useCallback((id: number) => {
-    setDeleteTargetId(id);
-  }, []);
+  const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
 
   const handleDeleteConfirm = useCallback(() => {
     if (deleteTargetId === null) return;
@@ -147,37 +187,11 @@ export default function SlaPage() {
   }, [deletePolicy, deleteTargetId]);
 
   const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
 
-  if (isLoading || reportLoading) {
-    return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-10 w-48" />
-        <div className="grid gap-4 md:grid-cols-3">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-24" />)}
-        </div>
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-6">
-        <EmptyState
-          illustration={<Shield className="h-10 w-10 text-muted-foreground" />}
-          title="Failed to load SLA policies"
-          description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
-        />
-      </div>
-    );
-  }
+  const count = policies?.length ?? 0;
 
   return (
     <>
@@ -203,11 +217,11 @@ export default function SlaPage() {
 
       <PageWrapper
         title="SLA Policies"
-        subtitle="Service Level Agreement policies for leads and deals"
+        subtitle={isLoading ? undefined : `${count} polic${count !== 1 ? "ies" : "y"}`}
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+              <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 New Policy
               </Button>
@@ -270,7 +284,7 @@ export default function SlaPage() {
                       </FormItem>
                     )} />
                   </div>
-                  <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={createPolicy.isPending}>
+                  <Button type="submit" className="w-full" disabled={createPolicy.isPending}>
                     {createPolicy.isPending ? "Creating..." : "Create Policy"}
                   </Button>
                 </form>
@@ -279,43 +293,52 @@ export default function SlaPage() {
           </Dialog>
         }
       >
-        <motion.div
-          className="space-y-6"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          {slaReport && (
-            <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
-              <StatCard label="Total with SLA" value={slaReport.total} icon={Shield} color="blue" index={0} />
-              <StatCard label="Compliant" value={slaReport.compliant} icon={CheckCircle2} color="green" index={1} />
-              <StatCard label="Breached" value={slaReport.breached} icon={XCircle} color="red" index={2} />
-              <StatCard
-                label="Compliance Rate"
-                value={`${slaReport.complianceRate}%`}
-                icon={Clock}
-                color={slaReport.complianceRate >= 80 ? "green" : slaReport.complianceRate >= 50 ? "amber" : "red"}
-                index={3}
-              />
-            </motion.div>
-          )}
+        {isLoading || reportLoading ? (
+          <div className="space-y-4">
+            <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
+              {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-14" />)}
+            </div>
+            <Skeleton className="h-64 w-full" />
+          </div>
+        ) : isError ? (
+          <EmptyState
+            illustration={<EmptyTimeIllustration />}
+            title="Failed to load SLA policies"
+            description="Something went wrong. Please try again."
+            action={{ label: "Retry", onClick: handleRetry }}
+            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+          />
+        ) : (
+          <div className="space-y-6">
+            {slaReport && (
+              <StatCardGrid cols={4}>
+                <StatCard label="Total with SLA" value={slaReport.total} icon={Shield} tone="blue" />
+                <StatCard label="Compliant" value={slaReport.compliant} icon={CheckCircle2} tone="emerald" />
+                <StatCard label="Breached" value={slaReport.breached} icon={XCircle} tone="red" />
+                <StatCard
+                  label="Compliance Rate"
+                  value={`${slaReport.complianceRate}%`}
+                  icon={Clock}
+                  tone={slaReport.complianceRate >= 80 ? "emerald" : slaReport.complianceRate >= 50 ? "amber" : "red"}
+                />
+              </StatCardGrid>
+            )}
 
-          <motion.div variants={fadeUp}>
-            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-base">Policies</CardTitle>
+            <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+              <CardHeader className="px-4 py-3">
+                <CardTitle className="text-sm font-semibold">Policies</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 {policies && policies.length > 0 ? (
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-xs">Name</TableHead>
-                        <TableHead className="text-xs">Applies To</TableHead>
-                        <TableHead className="text-xs">Priority</TableHead>
-                        <TableHead className="text-xs text-right">First Response</TableHead>
-                        <TableHead className="text-xs text-right">Resolution</TableHead>
-                        <TableHead className="text-xs text-right">Actions</TableHead>
+                    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                      <TableRow className="border-b-2 border-border hover:bg-transparent">
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Applies To</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Priority</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">First Response</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Resolution</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -330,26 +353,25 @@ export default function SlaPage() {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="py-14">
+                  <div className="py-14 px-4">
                     <EmptyState
-                      illustration={<Shield className="h-10 w-10 text-muted-foreground" />}
+                      illustration={<Shield className="h-8 w-8 text-muted-foreground/40" />}
                       title="No SLA policies defined"
                       description="Create a policy to track response and resolution time commitments."
                       action={{ label: "New Policy", onClick: handleOpenCreate }}
+                      className="border-0 bg-transparent"
                     />
                   </div>
                 )}
               </CardContent>
             </Card>
-          </motion.div>
 
-          {editingId !== null && (
-            <motion.div variants={fadeUp}>
-              <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-violet-200/60 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-base">Edit Policy</CardTitle>
+            {editingId !== null && (
+              <Card className="bg-card rounded-lg border border-border shadow-sm">
+                <CardHeader className="px-4 py-3">
+                  <CardTitle className="text-sm font-semibold">Edit Policy</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 pb-4">
                   <Form {...editForm}>
                     <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
                       <FormField control={editForm.control} name="name" render={({ field }) => (
@@ -406,7 +428,7 @@ export default function SlaPage() {
                       </div>
                       <div className="flex justify-end gap-3">
                         <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                        <Button type="submit" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200" disabled={updatePolicy.isPending}>
+                        <Button type="submit" disabled={updatePolicy.isPending}>
                           {updatePolicy.isPending ? "Saving..." : "Save Changes"}
                         </Button>
                       </div>
@@ -414,35 +436,35 @@ export default function SlaPage() {
                   </Form>
                 </CardContent>
               </Card>
-            </motion.div>
-          )}
+            )}
 
-          {breachedLeads && breachedLeads.length > 0 && (
-            <motion.div variants={fadeUp}>
-              <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-red-200/60 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-red-400" />
+            {breachedLeads && breachedLeads.length > 0 && (
+              <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+                <CardHeader className="px-4 py-3">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
                     SLA Breached Leads ({breachedLeads.length})
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0">
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-xs">Lead</TableHead>
-                        <TableHead className="text-xs">Status</TableHead>
-                        <TableHead className="text-xs text-right">Breached Since</TableHead>
+                    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                      <TableRow className="border-b-2 border-border hover:bg-transparent">
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Lead</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Breached Since</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {breachedLeads.map(lead => (
-                        <TableRow key={lead.id}>
-                          <TableCell className="text-xs font-medium">{lead.name}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="text-[10px]">{lead.status}</Badge>
+                        <TableRow key={lead.id} className="h-8 hover:bg-muted/30 transition-colors">
+                          <TableCell className="text-[11px] px-2 py-1 font-medium">{lead.name}</TableCell>
+                          <TableCell className="text-[11px] px-2 py-1">
+                            <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200">
+                              {lead.status}
+                            </Badge>
                           </TableCell>
-                          <TableCell className="text-xs text-right text-red-400">
+                          <TableCell className="text-[11px] px-2 py-1 text-right text-red-700 font-mono tabular-nums">
                             {lead.slaDeadline ? new Date(lead.slaDeadline).toLocaleDateString() : "N/A"}
                           </TableCell>
                         </TableRow>
@@ -451,55 +473,10 @@ export default function SlaPage() {
                   </Table>
                 </CardContent>
               </Card>
-            </motion.div>
-          )}
-        </motion.div>
+            )}
+          </div>
+        )}
       </PageWrapper>
     </>
-  );
-}
-
-type SlaPolicyData = {
-  id: number;
-  name: string;
-  appliesTo: string;
-  priority: string;
-  firstResponseHours: number;
-  resolutionHours: number;
-};
-
-interface SlaTableRowProps {
-  policy: SlaPolicyData;
-  onEdit: (policy: SlaPolicyData) => void;
-  onDeleteRequest: (id: number) => void;
-}
-
-function SlaTableRow({ policy, onEdit, onDeleteRequest }: SlaTableRowProps) {
-  const pColor = PRIORITY_COLORS[policy.priority] ?? PRIORITY_COLORS.medium;
-  const handleEdit = useCallback(() => onEdit(policy), [policy, onEdit]);
-  const handleDeleteRequest = useCallback(() => onDeleteRequest(policy.id), [policy.id, onDeleteRequest]);
-
-  return (
-    <TableRow>
-      <TableCell className="text-xs font-medium">{policy.name}</TableCell>
-      <TableCell>
-        <Badge variant="secondary" className="text-[10px] capitalize">{policy.appliesTo}</Badge>
-      </TableCell>
-      <TableCell>
-        <Badge className={cn("text-[10px] capitalize", pColor.bg, pColor.color)}>{policy.priority}</Badge>
-      </TableCell>
-      <TableCell className="text-xs text-right">{policy.firstResponseHours}h</TableCell>
-      <TableCell className="text-xs text-right">{policy.resolutionHours}h</TableCell>
-      <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit">
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete">
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
   );
 }

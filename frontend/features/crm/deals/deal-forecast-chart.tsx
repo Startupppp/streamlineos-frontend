@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatINRCompact } from "@/lib/format-utils";
@@ -21,7 +21,7 @@ const STAGE_DOT: Partial<Record<DealStage, string>> = {
   LEAD: "bg-blue-500",
   CONTACTED: "bg-sky-500",
   PROPOSAL: "bg-amber-500",
-  NEGOTIATION: "bg-purple-500",
+  NEGOTIATION: "bg-violet-500",
   WON: "bg-emerald-500",
 };
 
@@ -48,6 +48,8 @@ interface DealForecastChartProps {
 }
 
 export function DealForecastChart({ deals }: DealForecastChartProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   const { rows, maxWeighted } = useMemo(() => {
     const map = new Map<DealStage, StageRow>();
 
@@ -69,14 +71,20 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
       row.weightedValue += value * (prob / 100);
     }
 
-    const rows = STAGE_ORDER.map((s) => map.get(s)!).filter((r) => r.count > 0);
-    const maxWeighted = Math.max(...rows.map((r) => r.weightedValue), 1);
+    const stageRows = STAGE_ORDER
+      .map((s) => map.get(s))
+      .filter((r): r is StageRow => r !== undefined && r.count > 0);
+    const max = Math.max(...stageRows.map((r) => r.weightedValue), 1);
 
-    return { rows, maxWeighted };
+    return { rows: stageRows, maxWeighted: max };
   }, [deals]);
 
+  const itemVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : fadeUp;
+
   return (
-    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+    <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold">Pipeline by Stage</CardTitle>
         <p className="text-xs text-muted-foreground">Weighted value per stage</p>
@@ -94,7 +102,7 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
             {rows.map((row, idx) => (
               <motion.div
                 key={row.stage}
-                variants={fadeUp}
+                variants={itemVariants}
                 transition={{ delay: idx * 0.08 }}
               >
                 <div className="flex items-center justify-between mb-1.5 gap-2">
@@ -119,12 +127,15 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
                     </p>
                   </div>
                 </div>
-                <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(row.weightedValue / maxWeighted) * 100}%` }}
-                    transition={{ delay: idx * 0.08 + 0.15, duration: 0.4, ease: "easeOut" }}
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full w-full rounded-full bg-blue-600 origin-left"
+                    style={{
+                      transform: `scaleX(${row.weightedValue / maxWeighted})`,
+                      transition: shouldReduceMotion
+                        ? "none"
+                        : `transform 0.35s ease-out ${idx * 0.08 + 0.15}s`,
+                    }}
                   />
                 </div>
               </motion.div>

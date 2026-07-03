@@ -1,117 +1,111 @@
 "use client";
 import "@excalidraw/excalidraw/index.css";
+import "./whiteboard-theme.css";
 
-import { useRef, useState, useCallback } from "react";
-import { Excalidraw, serializeAsJSON } from "@excalidraw/excalidraw";
-import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excalidraw/excalidraw/types";
+import { useEffect } from "react";
+import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
+import { Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Save } from "lucide-react";
-import { toast } from "sonner";
-import { useWhiteboard, useUpdateWhiteboard } from "@/hooks/api/projects";
-import { LoadingState } from "@/components/shared/loading-state";
-import { ErrorState } from "@/components/shared/error-state";
+import type { ExcalidrawProps } from "@excalidraw/excalidraw/types";
+import type { WhiteboardDetail } from "@/hooks/api/projects";
+import { isExcalidrawScene } from "./scene-utils";
+import type { SaveStatus } from "./use-whiteboard-autosave";
 
 interface ExcalidrawCanvasProps {
-  projectId: number;
-  board: { id: number; name: string };
+  detail: WhiteboardDetail;
+  isFullscreen: boolean;
+  saveStatus: SaveStatus;
+  onSceneChange: NonNullable<ExcalidrawProps["onChange"]>;
+  onExitFullscreen: () => void;
 }
 
-export function ExcalidrawCanvas({ projectId, board }: ExcalidrawCanvasProps) {
-  const { data, isLoading, isError, refetch } = useWhiteboard(projectId, board.id);
-  const update = useUpdateWhiteboard(projectId);
-  const apiRef = useRef<ExcalidrawImperativeAPI | null>(null);
-  const [isDirty, setIsDirty] = useState(false);
+export function ExcalidrawCanvas({
+  detail,
+  isFullscreen,
+  saveStatus,
+  onSceneChange,
+  onExitFullscreen,
+}: ExcalidrawCanvasProps) {
+  useEffect(() => {
+    if (!isFullscreen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onExitFullscreen();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen, onExitFullscreen]);
 
-  const handleRetry = useCallback(() => refetch(), [refetch]);
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const prevOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = prevOverflow;
+    };
+  }, [isFullscreen]);
 
-  const setApi = useCallback((api: ExcalidrawImperativeAPI) => {
-    apiRef.current = api;
-  }, []);
-
-  const handleChange = useCallback(() => {
-    setIsDirty(true);
-  }, []);
-
-  const handleSave = useCallback(() => {
-    const api = apiRef.current;
-    if (!api) return;
-    const serialized = serializeAsJSON(
-      api.getSceneElements(),
-      api.getAppState(),
-      api.getFiles(),
-      "database",
-    );
-    const sceneData = JSON.parse(serialized) as Record<string, unknown>;
-    update.mutate(
-      { id: board.id, data: sceneData },
-      {
-        onSuccess: () => {
-          toast.success("Board saved");
-          setIsDirty(false);
-        },
-        onError: () => toast.error("Failed to save board"),
-      },
-    );
-  }, [board.id, update]);
-
-  if (isLoading) return <LoadingState variant="page" />;
-  if (isError || !data) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <ErrorState onRetry={handleRetry} />
-      </div>
-    );
-  }
-
-  const storedData = data.data;
-  const hasScene =
-    storedData &&
-    typeof storedData === "object" &&
-    "elements" in storedData &&
-    Array.isArray(storedData.elements);
-
-  // Safe cast: storedData is the output of serializeAsJSON parsed back from JSONB
-  const initialData = hasScene ? (storedData as unknown as ExcalidrawInitialDataState) : undefined;
+  const initialData = isExcalidrawScene(detail.data) ? detail.data : undefined;
+  const isViewMode = detail.access === "view";
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex items-center justify-between pb-2 shrink-0">
-        <span className="text-sm font-semibold truncate text-foreground">{board.name}</span>
-        <div className="flex items-center gap-2">
-          {isDirty && (
-            <Badge
-              variant="outline"
-              className="text-amber-600 border-amber-300 bg-amber-50 dark:bg-amber-950 text-xs font-medium"
-            >
-              Unsaved
-            </Badge>
+    <div
+      className={
+        isFullscreen
+          ? "fixed inset-0 z-50 bg-background flex flex-col"
+          : "flex flex-col flex-1 min-h-0"
+      }
+    >
+      {isFullscreen && (
+        <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-3">
+          <span className="flex-1 truncate text-sm font-semibold text-foreground">
+            {detail.name}
+          </span>
+          {saveStatus === "dirty" && (
+            <span className="text-xs text-amber-600 font-medium">Unsaved</span>
+          )}
+          {saveStatus === "saving" && (
+            <span className="text-xs text-muted-foreground">Saving…</span>
+          )}
+          {saveStatus === "saved" && (
+            <span className="text-xs text-muted-foreground">Saved</span>
           )}
           <Button
-            size="sm"
-            className="h-8"
-            onClick={handleSave}
-            disabled={!isDirty || update.isPending}
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 active:scale-[0.98]"
+            onClick={onExitFullscreen}
+            aria-label="Exit fullscreen"
           >
-            <Save className="h-3.5 w-3.5 mr-1" />
-            {update.isPending ? "Saving…" : "Save"}
+            <Minimize2 className="h-4 w-4" />
           </Button>
         </div>
-      </div>
+      )}
 
-      <div className="flex-1 min-h-0 rounded-lg overflow-hidden border border-border">
+      <div
+        className={
+          isFullscreen
+            ? "wb-canvas flex-1 min-h-0"
+            : "wb-canvas flex-1 min-h-0 rounded-lg overflow-hidden border border-border"
+        }
+      >
         <Excalidraw
-          key={board.id}
-          excalidrawAPI={setApi}
           initialData={initialData}
-          onChange={handleChange}
+          onChange={onSceneChange}
+          viewModeEnabled={isViewMode}
           UIOptions={{
             canvasActions: {
-              export: false,
+              export: isViewMode ? false : undefined,
               loadScene: false,
             },
           }}
-        />
+        >
+          <MainMenu>
+            {!isViewMode && <MainMenu.DefaultItems.ClearCanvas />}
+            <MainMenu.DefaultItems.ToggleTheme />
+            <MainMenu.DefaultItems.ChangeCanvasBackground />
+            <MainMenu.DefaultItems.SaveAsImage />
+          </MainMenu>
+        </Excalidraw>
       </div>
     </div>
   );

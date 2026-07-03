@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { getStatusHexColor } from "../shared/status-badge";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -33,12 +34,6 @@ interface GanttViewProps {
   onTicketClick: (ticketId: number) => void;
 }
 
-const statusColors: Record<string, string> = {
-  TODO: "#94a3b8",
-  IN_PROGRESS: "#3b82f6",
-  IN_REVIEW: "#8b5cf6",
-  DONE: "#22c55e",
-};
 
 export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
   const [weekOffset, setWeekOffset] = useState(0);
@@ -118,7 +113,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
 
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between bg-muted/40 rounded-lg px-3 py-2 mb-4 flex-wrap gap-2">
+      <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
         <div className="flex items-center gap-1.5">
           <Select
             value={String(displayMonth)}
@@ -233,7 +228,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
                       width={barWidth}
                       height={rowHeight - 12}
                       rx={4}
-                      fill={statusColors[ticket.status] ?? "#94a3b8"}
+                      fill={getStatusHexColor(ticket.status)}
                       opacity={0.8}
                     />
                   )}

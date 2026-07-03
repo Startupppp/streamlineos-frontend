@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export const GOLD = "#06b6d4";
@@ -13,8 +17,22 @@ export interface IllustrationProps {
 }
 
 export function Wrapper({ className, children }: IllustrationProps & { children: React.ReactNode }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || typeof svg.pauseAnimations !== "function") return;
+    if (shouldReduceMotion) {
+      svg.pauseAnimations();
+    } else {
+      svg.unpauseAnimations();
+    }
+  }, [shouldReduceMotion]);
+
   return (
     <svg
+      ref={svgRef}
       className={cn("w-32 h-32", className)}
       viewBox="0 0 200 200"
       fill="none"

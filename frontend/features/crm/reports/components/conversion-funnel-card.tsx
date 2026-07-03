@@ -1,9 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useReducedMotion, motion } from "framer-motion";
 import { TrendingUp, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { LeadStats } from "@/types/leads";
 import { PIPELINE_COLORS, FUNNEL_STAGES } from "../lib/types";
 
@@ -12,6 +13,8 @@ interface ConversionFunnelCardProps {
 }
 
 export function ConversionFunnelCard({ stats }: ConversionFunnelCardProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <Card className="rounded-lg border border-border">
       <CardHeader className="pb-3">
@@ -26,11 +29,12 @@ export function ConversionFunnelCard({ stats }: ConversionFunnelCardProps) {
             const count = stats.byStatus[status] ?? 0;
             const maxCount = stats.byStatus.NEW || 1;
             const widthPct = Math.max(18, (count / maxCount) * 100);
-            const config = PIPELINE_COLORS[status];
+            const config = PIPELINE_COLORS[status] ?? PIPELINE_COLORS["NEW"];
+            const prevStage = arr[i - 1];
             const prevCount =
-              i === 0
+              i === 0 || !prevStage
                 ? stats.total
-                : (stats.byStatus[arr[i - 1]] ?? count);
+                : (stats.byStatus[prevStage] ?? count);
             const convPct =
               prevCount > 0
                 ? ((count / prevCount) * 100).toFixed(0)
@@ -40,21 +44,23 @@ export function ConversionFunnelCard({ stats }: ConversionFunnelCardProps) {
               <motion.div
                 key={status}
                 className="flex flex-col items-center w-full"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.08, duration: 0.3 }}
+                initial={shouldReduceMotion ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: i * 0.08, duration: 0.22 }}
               >
                 <div
-                  className="h-11 rounded-lg flex items-center justify-between px-4 gap-3 w-full max-w-full transition-all"
-                  style={{
-                    maxWidth: `${widthPct}%`,
-                    backgroundColor: config.color + "1A",
-                    borderLeft: `3px solid ${config.color}`,
-                  }}
+                  className={cn(
+                    "h-11 rounded-lg flex items-center justify-between px-4 gap-3 w-full max-w-full transition-all border-l-[3px]",
+                    config.bgLight,
+                    config.borderLeft,
+                  )}
+                  style={{ maxWidth: `${widthPct}%` }}
                 >
                   <span
-                    className="text-sm font-semibold capitalize whitespace-nowrap"
-                    style={{ color: config.color }}
+                    className={cn(
+                      "text-sm font-semibold capitalize whitespace-nowrap",
+                      config.text,
+                    )}
                   >
                     {status.charAt(0) + status.slice(1).toLowerCase()}
                   </span>

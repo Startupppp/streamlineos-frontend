@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { format, addDays, isSameDay, parseISO } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -40,7 +40,7 @@ function getInitials(first?: string | null, last?: string | null): string {
 }
 
 function getUtilizationClass(count: number): string {
-  if (count === 0) return "bg-slate-100";
+  if (count === 0) return "bg-muted";
   if (count <= 2) return "bg-emerald-100 text-emerald-700";
   if (count <= 4) return "bg-amber-100 text-amber-700";
   return "bg-red-100 text-red-700";
@@ -49,7 +49,7 @@ function getUtilizationClass(count: number): string {
 function getTotalColor(total: number): string {
   if (total > 5) return "text-red-600";
   if (total > 3) return "text-amber-600";
-  return "text-slate-700";
+  return "text-foreground";
 }
 
 function ticketMatchesDay(ticket: KanbanTicket, day: Date): boolean {
@@ -71,6 +71,7 @@ function isTicketOverdue(ticket: KanbanTicket): boolean {
 }
 
 export function WorkloadView({ tickets, members }: WorkloadViewProps) {
+  const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
     new Set(),
   );
@@ -110,7 +111,7 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
       label: "Total Tickets",
       value: tickets.length,
       icon: TrendingUp,
-      color: "text-violet-600",
+      color: "text-blue-600",
     },
     {
       label: "Assigned",
@@ -138,32 +139,32 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/80 p-3 flex items-center gap-3"
+            className="bg-card rounded-lg border border-border p-3 flex items-center gap-3 shadow-sm"
           >
             <div
               className={cn(
-                "h-9 w-9 rounded-lg bg-slate-50 flex items-center justify-center shrink-0",
+                "h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0",
                 stat.color,
               )}
             >
               <stat.icon className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-xl font-bold text-slate-900">{stat.value}</p>
+              <p className="text-lg font-semibold text-foreground tabular-nums">{stat.value}</p>
               <p className="text-[11px] text-muted-foreground">{stat.label}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 overflow-hidden">
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-max">
-            <div className="flex border-b bg-slate-50/60">
-              <div className="w-48 shrink-0 px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <div className="flex border-b bg-muted/50">
+              <div className="w-48 shrink-0 px-4 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Member
               </div>
-              <div className="w-16 shrink-0 px-2 py-2.5 text-xs font-semibold text-slate-500 text-center">
+              <div className="w-16 shrink-0 px-2 py-2.5 text-[10px] font-bold text-muted-foreground text-center">
                 Total
               </div>
               {days.map((day, i) => (
@@ -171,18 +172,18 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
                   key={i}
                   className={cn(
                     "w-12 shrink-0 px-1 py-2.5 text-center",
-                    isSameDay(day, new Date()) && "bg-violet-50",
+                    isSameDay(day, new Date()) && "bg-primary/5",
                   )}
                 >
-                  <p className="text-[10px] font-semibold text-slate-500">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     {format(day, "EEE")}
                   </p>
                   <p
                     className={cn(
                       "text-[11px]",
                       isSameDay(day, new Date())
-                        ? "text-violet-700 font-bold"
-                        : "text-slate-400",
+                        ? "text-blue-600 font-bold"
+                        : "text-muted-foreground",
                     )}
                   >
                     {format(day, "d")}
@@ -200,14 +201,14 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
                 ({ member, memberTickets, ticketsByDay, total, overdue }, idx) => (
                   <motion.div
                     key={member.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.04 }}
+                    initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                    animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.04, duration: 0.2, ease: "easeOut" }}
                   >
                     <div
                       className={cn(
-                        "flex items-center border-b cursor-pointer hover:bg-slate-50/60 transition-colors",
-                        expandedMembers.has(member.id) && "bg-violet-50/30",
+                        "flex items-center border-b cursor-pointer hover:bg-muted/30 transition-colors",
+                        expandedMembers.has(member.id) && "bg-muted/40",
                       )}
                       role="button"
                       onClick={() => handleToggleExpand(member.id)}
@@ -219,9 +220,9 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
                     >
                       <div className="w-48 shrink-0 px-4 py-3 flex items-center gap-2">
                         {expandedMembers.has(member.id) ? (
-                          <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         ) : (
-                          <ChevronRight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         )}
                         <Avatar className="h-6 w-6 shrink-0">
                           <AvatarImage src={resolveImageUrl(member.image)} />
@@ -255,7 +256,7 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
                           key={i}
                           className={cn(
                             "w-12 shrink-0 px-1 py-3 flex items-center justify-center",
-                            isSameDay(days[i]!, new Date()) && "bg-violet-50/50",
+                            isSameDay(days[i]!, new Date()) && "bg-primary/5",
                           )}
                         >
                           {count > 0 && (
@@ -280,17 +281,17 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="overflow-hidden bg-slate-50/40"
+                            className="overflow-hidden bg-muted/20"
                           >
                             {memberTickets.slice(0, 10).map((ticket) => (
                               <div
                                 key={ticket.id}
-                                className="flex items-center border-b border-slate-100 px-8 py-2 gap-2"
+                                className="flex items-center border-b border-border/40 px-8 py-2 gap-2"
                               >
                                 <span className="text-xs text-muted-foreground font-mono w-12 shrink-0">
                                   #{ticket.ticketNumber}
                                 </span>
-                                <span className="text-xs text-slate-700 truncate flex-1">
+                                <span className="text-xs text-foreground truncate flex-1">
                                   {ticket.title}
                                 </span>
                                 {ticket.dueDate && (
@@ -315,10 +316,10 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
             )}
 
             {unassigned.length > 0 && (
-              <div className="flex items-center border-b bg-amber-50/20">
+              <div className="flex items-center border-b bg-muted/20">
                 <div className="w-48 shrink-0 px-4 py-3 flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-                    <Users className="h-3 w-3 text-slate-500" />
+                  <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <Users className="h-3 w-3 text-muted-foreground" />
                   </div>
                   <span className="text-sm text-muted-foreground">
                     Unassigned

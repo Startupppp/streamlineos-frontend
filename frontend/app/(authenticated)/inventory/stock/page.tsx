@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { AlertTriangle, TrendingDown, CheckCircle2, Package } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { AlertTriangle, TrendingDown, CheckCircle2, Search } from "lucide-react";
+import { EmptyWarehouseIllustration, EmptySearchIllustration } from "@/components/illustrations";
+import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import {
   Select,
   SelectContent,
@@ -13,8 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -54,128 +56,92 @@ function StockStatusIcon({ status }: { status: StockStatus }) {
   return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-label="Stock OK" />;
 }
 
+const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
+
 function StockTable({ rows }: { rows: StockLevelRow[] }) {
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
-            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Status
-            </TableHead>
-            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Product
-            </TableHead>
-            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
-              SKU
-            </TableHead>
-            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
-              Warehouse / Location
-            </TableHead>
-            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">
-              On Hand
-            </TableHead>
-            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right hidden md:table-cell">
-              Committed
-            </TableHead>
-            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right hidden md:table-cell">
-              On Order
-            </TableHead>
-            <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">
-              Available
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => {
-            const status = getStockStatus(row);
-            const available = row.onHand - row.committed;
-            return (
-              <TableRow
-                key={row.id}
-                className={cn(
-                  "border-b border-border/50 transition-colors",
-                  status === "critical" && "bg-red-50/50 hover:bg-red-50/70",
-                  status === "low" && "bg-amber-50/50 hover:bg-amber-50/70",
-                  status === "ok" && "hover:bg-muted/30",
-                )}
-              >
-                <TableCell className="px-3 py-2">
-                  <StockStatusIcon status={status} />
-                </TableCell>
-                <TableCell className="px-3 py-2 font-medium max-w-[200px] truncate text-sm">
-                  {row.productName}
-                </TableCell>
-                <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground hidden md:table-cell">
-                  {row.sku}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-muted-foreground text-xs hidden md:table-cell">
-                  {[row.warehouseName, row.locationCode].filter(Boolean).join(" / ") || "—"}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-right tabular-nums text-sm">
-                  {row.onHand.toLocaleString()}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-right tabular-nums text-muted-foreground text-sm hidden md:table-cell">
-                  {row.committed.toLocaleString()}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-right tabular-nums text-muted-foreground text-sm hidden md:table-cell">
-                  {row.onOrder.toLocaleString()}
-                </TableCell>
-                <TableCell
+    <div className="rounded-md border border-border overflow-hidden bg-card">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/80 hover:bg-muted/80">
+              <TableHead className={TH}>Status</TableHead>
+              <TableHead className={TH}>Product</TableHead>
+              <TableHead className={cn(TH, "hidden md:table-cell")}>SKU</TableHead>
+              <TableHead className={cn(TH, "hidden md:table-cell")}>Warehouse / Location</TableHead>
+              <TableHead className={cn(TH, "text-right")}>On Hand</TableHead>
+              <TableHead className={cn(TH, "text-right hidden md:table-cell")}>Committed</TableHead>
+              <TableHead className={cn(TH, "text-right hidden md:table-cell")}>On Order</TableHead>
+              <TableHead className={cn(TH, "text-right")}>Available</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => {
+              const status = getStockStatus(row);
+              const available = row.onHand - row.committed;
+              return (
+                <TableRow
+                  key={row.id}
                   className={cn(
-                    "px-3 py-2 text-right tabular-nums font-semibold text-sm",
-                    status === "critical" && "text-red-600",
-                    status === "low" && "text-amber-600",
-                    status === "ok" && "text-emerald-600",
+                    "h-8 border-b border-border/50 transition-colors",
+                    status === "critical" && "bg-red-50/50 hover:bg-red-50/70",
+                    status === "low" && "bg-amber-50/50 hover:bg-amber-50/70",
+                    status === "ok" && "hover:bg-muted/30",
                   )}
                 >
-                  {available.toLocaleString()}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-
-function StockTableSkeleton() {
-  return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <TableHead key={i} className="px-3">
-                <Skeleton className="h-3 w-16" />
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <TableRow key={i} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-              {Array.from({ length: 8 }).map((__, j) => (
-                <TableCell key={j} className="px-3 py-2">
-                  <Skeleton className="h-4 w-full" />
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                  <TableCell className="px-2 py-1">
+                    <StockStatusIcon status={status} />
+                  </TableCell>
+                  <TableCell className="px-2 py-1 font-medium max-w-[200px] truncate text-[11px]">
+                    {row.productName}
+                  </TableCell>
+                  <TableCell className="px-2 py-1 font-mono text-[11px] text-muted-foreground hidden md:table-cell">
+                    {row.sku}
+                  </TableCell>
+                  <TableCell className="px-2 py-1 text-muted-foreground text-[11px] hidden md:table-cell">
+                    {[row.warehouseName, row.locationCode].filter(Boolean).join(" / ") || "—"}
+                  </TableCell>
+                  <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
+                    {row.onHand.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-muted-foreground text-[11px] hidden md:table-cell">
+                    {row.committed.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-muted-foreground text-[11px] hidden md:table-cell">
+                    {row.onOrder.toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      "px-2 py-1 text-right font-mono tabular-nums font-semibold text-[11px]",
+                      status === "critical" && "text-red-600",
+                      status === "low" && "text-amber-600",
+                      status === "ok" && "text-emerald-600",
+                    )}
+                  >
+                    {available.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
 
 export default function StockLevelsPage() {
-  const [warehouseId, setWarehouseId] = useState<number | undefined>(undefined);
-  const [lowStockOnly, setLowStockOnly] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const { data: stockData, isLoading: stockLoading, isError: stockError, refetch } = useStockLevels(
-    warehouseId ? { warehouseId } : undefined,
-  );
+  const warehouseParam = searchParams.get("warehouse") ?? "all";
+  const lowStockParam = searchParams.get("lowStock") === "true";
+  const searchQ = searchParams.get("q") ?? "";
+
+  const warehouseId = warehouseParam !== "all" ? Number(warehouseParam) || undefined : undefined;
+
+  const { data: stockData, isLoading: stockLoading, isError: stockError, refetch } =
+    useStockLevels(warehouseId ? { warehouseId } : undefined);
   const { data: warehousesData } = useWarehouses();
 
   const warehouses: WarehouseOption[] = Array.isArray(warehousesData) ? warehousesData : [];
@@ -183,63 +149,91 @@ export default function StockLevelsPage() {
   const rawRows = useMemo<StockLevelRow[]>(() => stockData?.items ?? [], [stockData]);
 
   const rows = useMemo(() => {
-    const filtered = lowStockOnly
-      ? rawRows.filter((r) => getStockStatus(r) !== "ok")
-      : rawRows;
+    let filtered = rawRows;
+    if (lowStockParam) {
+      filtered = filtered.filter((r) => getStockStatus(r) !== "ok");
+    }
+    if (searchQ) {
+      const q = searchQ.toLowerCase();
+      filtered = filtered.filter(
+        (r) =>
+          r.productName.toLowerCase().includes(q) ||
+          r.sku.toLowerCase().includes(q) ||
+          (r.warehouseName?.toLowerCase().includes(q) ?? false),
+      );
+    }
     return [...filtered].sort(
       (a, b) => STOCK_STATUS_ORDER[getStockStatus(a)] - STOCK_STATUS_ORDER[getStockStatus(b)],
     );
-  }, [rawRows, lowStockOnly]);
+  }, [rawRows, lowStockParam, searchQ]);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (e.target.value) params.set("q", e.target.value);
+    else params.delete("q");
+    router.replace(`?${params.toString()}`);
+  }, [router, searchParams]);
 
   const handleWarehouseChange = useCallback((val: string) => {
-    setWarehouseId(val === "all" ? undefined : Number(val));
-  }, []);
+    const params = new URLSearchParams(searchParams.toString());
+    if (val === "all") params.delete("warehouse");
+    else params.set("warehouse", val);
+    router.replace(`?${params.toString()}`);
+  }, [router, searchParams]);
 
-  const handleLowStockToggle = useCallback((checked: boolean) => {
-    setLowStockOnly(checked);
-  }, []);
+  const handleLowStockChange = useCallback((val: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (val === "true") params.set("lowStock", "true");
+    else params.delete("lowStock");
+    router.replace(`?${params.toString()}`);
+  }, [router, searchParams]);
 
   function handleRetry() { void refetch(); }
-  function handleClearFilter() { setLowStockOnly(false); }
+
+  const hasActiveFilters = searchQ || warehouseParam !== "all" || lowStockParam;
+  const subtitle = stockData ? `${rawRows.length} item${rawRows.length !== 1 ? "s" : ""}` : undefined;
 
   return (
     <PageWrapper
       title="Stock Levels"
-      subtitle="Monitor on-hand, committed, and available inventory across locations"
-      badge={String(rows.length)}
+      eyebrow="Inventory / Stock"
+      subtitle={subtitle}
       filters={
-        <>
-          <Select
-            value={warehouseId ? String(warehouseId) : "all"}
-            onValueChange={handleWarehouseChange}
-          >
-            <SelectTrigger className="h-8 text-sm w-44">
-              <SelectValue placeholder="All warehouses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All warehouses</SelectItem>
-              {warehouses.map((wh) => (
-                <SelectItem key={wh.id} value={String(wh.id)}>
-                  {wh.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="flex items-center gap-2">
-            <Switch
-              id="low-stock-toggle"
-              checked={lowStockOnly}
-              onCheckedChange={handleLowStockToggle}
-              className="scale-90"
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+          <div className="relative min-w-0 flex-1 lg:max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
+            <Input
+              placeholder="Search product or SKU…"
+              value={searchQ}
+              onChange={handleSearchChange}
+              className="h-8 w-full pl-8 text-xs"
             />
-            <Label
-              htmlFor="low-stock-toggle"
-              className="text-xs text-muted-foreground cursor-pointer select-none"
-            >
-              Low stock only
-            </Label>
           </div>
-          <div className="flex items-center gap-3 ml-auto text-[11px] text-muted-foreground">
+          <div className="hidden sm:flex min-w-0 flex-row flex-nowrap items-center gap-2">
+            <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
+              <SelectTrigger className="h-8 text-xs w-[160px]">
+                <SelectValue placeholder="All warehouses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All warehouses</SelectItem>
+                {warehouses.map((wh) => (
+                  <SelectItem key={wh.id} value={String(wh.id)}>
+                    {wh.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={lowStockParam ? "true" : "all"} onValueChange={handleLowStockChange}>
+              <SelectTrigger className="h-8 text-xs w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All stock levels</SelectItem>
+                <SelectItem value="true">Low stock only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="ml-auto hidden lg:flex items-center gap-3 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1">
               <AlertTriangle className="h-3 w-3 text-red-500" aria-hidden="true" />
               Below reorder point
@@ -253,47 +247,42 @@ export default function StockLevelsPage() {
               OK
             </span>
           </div>
-        </>
+        </div>
       }
     >
       {stockLoading ? (
-        <StockTableSkeleton />
+        <SkeletonTable rows={8} columns={8} />
       ) : stockError ? (
-        <motion.div variants={fadeUp} initial="hidden" animate="visible">
-          <EmptyState
-            illustration={<AlertTriangle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
-            title="Failed to load stock levels"
-            description="An error occurred while fetching stock data. Please try again."
-            action={{ label: "Retry", onClick: handleRetry }}
-          />
-        </motion.div>
+        <ErrorState
+          title="Failed to load stock levels"
+          description="An error occurred while fetching stock data. Please try again."
+          onRetry={handleRetry}
+          className="flex-1 min-h-[40vh]"
+        />
       ) : rows.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
             illustration={
-              lowStockOnly
-                ? <CheckCircle2 className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
-                : <Package className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
+              hasActiveFilters
+                ? <EmptySearchIllustration />
+                : <EmptyWarehouseIllustration />
             }
-            title={lowStockOnly ? "No low-stock items" : "No stock records"}
+            title={hasActiveFilters ? "No results" : "No stock records"}
             description={
-              lowStockOnly
-                ? "All items are stocked above their minimum levels."
+              hasActiveFilters
+                ? "No items match your filters."
                 : "Stock levels will appear here once products are received."
             }
             action={
-              lowStockOnly
-                ? { label: "Show All Items", onClick: handleClearFilter }
+              hasActiveFilters
+                ? { label: "Clear Filters", href: "?" }
                 : { label: "Record Adjustment", href: "/inventory/stock/adjustments" }
             }
+            className="flex-1 min-h-[40vh]"
           />
         </motion.div>
       ) : (
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
           <motion.div variants={fadeUp}>
             <StockTable rows={rows} />
           </motion.div>

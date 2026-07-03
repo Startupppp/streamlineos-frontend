@@ -9,48 +9,83 @@ import Underline from "@tiptap/extension-underline";
 import { TiptapToolbar } from "./tiptap-toolbar";
 import { useEffect, useRef } from "react";
 
-interface TiptapEditorProps {
+export interface TiptapEditorProps {
   content?: unknown;
-  onChange?: (json: unknown) => void;
+  onChange?: (json: Record<string, unknown>) => void;
+  onChangeHtml?: (html: string) => void;
+  output?: "json" | "html";
   placeholder?: string;
   editable?: boolean;
+  minHeightClassName?: string;
+  contentKey?: string | number;
+}
+
+function normalizeToHtml(raw: unknown): string | Record<string, unknown> | undefined {
+  if (raw == null) return undefined;
+  if (typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, unknown>;
+  if (typeof raw !== "string") return undefined;
+  if (raw === "" || raw.trimStart().startsWith("<")) return raw;
+  return raw
+    .split("\n")
+    .map((line) => {
+      const escaped = line
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+      return escaped.length > 0 ? `<p>${escaped}</p>` : "<p><br></p>";
+    })
+    .join("");
 }
 
 export function TiptapEditor({
   content,
   onChange,
+  onChangeHtml,
+  output = "json",
   placeholder = "Start writing...",
   editable = true,
+  minHeightClassName = "min-h-[300px]",
+  contentKey,
 }: TiptapEditorProps) {
-  const hasInitialized = useRef(false);
+  const lastInitKey = useRef<string | number | boolean>(false);
+
+  const extensions = [
+    StarterKit,
+    Placeholder.configure({ placeholder }),
+    Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
+    TextAlign.configure({ types: ["heading", "paragraph"] }),
+    Underline,
+  ];
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [
-      StarterKit,
-      Placeholder.configure({ placeholder }),
-      Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Underline,
-    ],
-    content: content as Record<string, unknown> | undefined,
+    extensions,
+    content: normalizeToHtml(content),
     editable,
-    onUpdate: ({ editor }) => {
-      onChange?.(editor.getJSON());
+    onUpdate: ({ editor: e }) => {
+      if (output === "html") {
+        onChangeHtml?.(e.isEmpty ? "" : e.getHTML());
+      } else {
+        onChange?.(e.getJSON());
+      }
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm dark:prose-invert max-w-none min-h-[300px] p-4 focus:outline-none",
+        class: `prose prose-sm dark:prose-invert max-w-none ${minHeightClassName} p-4 focus:outline-none`,
       },
     },
   });
 
   useEffect(() => {
-    if (editor && content && !hasInitialized.current) {
-      editor.commands.setContent(content as Record<string, unknown>);
-      hasInitialized.current = true;
+    if (!editor || editor.isDestroyed || content == null) return;
+    const targetKey = contentKey ?? true;
+    if (lastInitKey.current !== targetKey) {
+      editor.commands.setContent(normalizeToHtml(content) ?? "", { emitUpdate: false });
+      lastInitKey.current = targetKey;
     }
-  }, [editor, content]);
+  }, [editor, content, contentKey]);
 
   return (
     <div className="rounded-md border bg-background">

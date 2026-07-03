@@ -49,7 +49,7 @@ import { useHuddleRealtime } from "./huddle-realtime";
 import { HuddlePanel } from "./huddle-panel";
 import { VideoMeetingPanel } from "./video-meeting-panel";
 import { getInitials, getDateLabel } from "./chat-helpers";
-import type { Message, TicketEntityRef } from "./chat-types";
+import type { Message, TicketEntityRef, MessageMetadata } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/projects";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
@@ -194,6 +194,7 @@ export function MessagePanel({
     {
       content: string;
       replyToId?: number;
+      metadata?: MessageMetadata;
       attachments?: {
         fileName: string;
         fileUrl: string;
@@ -265,6 +266,7 @@ export function MessagePanel({
             content: msg.content,
             replyToId: msg.replyToId,
             attachments: msg.attachments,
+            metadata: msg.metadata,
           });
         } catch {}
       }
@@ -577,6 +579,7 @@ export function MessagePanel({
         content: content || "",
         replyToId: replyId,
         attachments: attachments.length > 0 ? attachments : undefined,
+        metadata,
       });
       toast.info("You're offline — message will be sent when you reconnect");
       return;

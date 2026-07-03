@@ -18,6 +18,9 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
+import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   useAutomations,
   useCreateAutomation,
@@ -69,26 +72,39 @@ interface AutomationCardProps {
   onEdit: (automation: ProjectAutomation) => void;
 }
 
+function RemoveButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-destructive transition-colors"
+    >
+      <X className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
 function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCardProps) {
   const handleSwitchChange = useCallback(
     (v: boolean) => onToggle(automation.id, v),
     [automation.id, onToggle],
   );
   const handleEdit = useCallback(() => onEdit(automation), [automation, onEdit]);
+  const handleDeleteAutomation = useCallback(() => onDelete(automation.id), [automation.id, onDelete]);
 
   return (
     <motion.div layout className="rounded-lg border border-border bg-card hover:shadow-md transition-shadow p-4">
       <div className="flex items-start gap-3">
-        <div className={cn("relative h-9 w-9 rounded-xl flex items-center justify-center shrink-0",
-          automation.isActive ? "bg-violet-50 border border-violet-100" : "bg-slate-100 border border-slate-200")}>
-          <Zap className={cn("h-4 w-4", automation.isActive ? "text-violet-600" : "text-slate-400")} />
+        <div className={cn("relative h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
+          automation.isActive ? "bg-blue-50 border border-blue-100" : "bg-muted border border-border")}>
+          <Zap className={cn("h-4 w-4", automation.isActive ? "text-blue-600" : "text-muted-foreground")} />
           <span className={cn("absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white",
             automation.isActive ? "bg-emerald-500" : "bg-slate-300")} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-slate-800 truncate">{automation.name}</p>
-            <Badge variant="secondary" className="text-[10px] bg-violet-50 text-violet-700 border-violet-100 shrink-0">
+            <Badge variant="secondary" className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 shrink-0">
               {getTriggerLabel(automation.triggerEvent)}
             </Badge>
           </div>
@@ -126,7 +142,7 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDelete(automation.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                <AlertDialogAction onClick={handleDeleteAutomation} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -219,6 +235,13 @@ export default function AutomationsPage({ params }: PageProps) {
   const handleCloseSheet = useCallback(() => setSheetOpen(false), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  function makeRemoveConditionHandler(idx: number) {
+    return () => removeCondition(idx);
+  }
+  function makeRemoveActionHandler(idx: number) {
+    return () => removeAction(idx);
+  }
+
   const handleAppendCondition = useCallback(() => {
     appendCondition({ field: "status", operator: "equals", value: "" });
   }, [appendCondition]);
@@ -228,30 +251,46 @@ export default function AutomationsPage({ params }: PageProps) {
   }, [appendAction]);
 
   return (
-    <PageWrapper title="Automations" subtitle="Automate repetitive actions with if-then rules">
+    <PageWrapper
+      eyebrow="Projects"
+      title="Automations"
+      subtitle="Automate repetitive actions with if-then rules"
+      backHref={`/projects/${projectId}`}
+      actions={
+        <Button size="sm" onClick={handleOpenNew}>
+          <Plus className="h-3.5 w-3.5 mr-1" />New Automation
+        </Button>
+      }
+    >
       <div className="max-w-2xl mx-auto space-y-3 pb-8">
         {isLoading ? (
           <div className="space-y-3">
-            {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}
+            {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-lg" />)}
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <p className="text-sm text-muted-foreground">Failed to load automations.</p>
-            <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
-          </div>
+          <ErrorState
+            title="Could not load automations"
+            description="Failed to load automations."
+            onRetry={handleRetry}
+            className="flex-1 min-h-[40vh]"
+          />
         ) : (
           <>
             {automations.length > 0 && (
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-muted/40 rounded-xl p-3 text-center">
-                  <p className="text-lg font-bold text-emerald-600">{automations.filter(a => a.isActive).length}</p>
-                  <p className="text-xs text-muted-foreground">Active</p>
-                </div>
-                <div className="bg-muted/40 rounded-xl p-3 text-center">
-                  <p className="text-lg font-bold text-slate-500">{automations.filter(a => !a.isActive).length}</p>
-                  <p className="text-xs text-muted-foreground">Inactive</p>
-                </div>
-              </div>
+              <StatCardGrid cols={2} className="mb-4">
+                <StatCard
+                  label="Active"
+                  value={automations.filter((a) => a.isActive).length}
+                  icon={Zap}
+                  tone="emerald"
+                />
+                <StatCard
+                  label="Inactive"
+                  value={automations.filter((a) => !a.isActive).length}
+                  icon={Zap}
+                  tone="default"
+                />
+              </StatCardGrid>
             )}
 
             <AnimatePresence initial={false}>
@@ -274,25 +313,15 @@ export default function AutomationsPage({ params }: PageProps) {
             </AnimatePresence>
 
             {automations.length === 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20 gap-3">
-                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 flex items-center justify-center">
-                  <Zap className="h-7 w-7 text-violet-500" />
-                </div>
-                <p className="text-sm font-semibold text-slate-700">No automations yet</p>
-                <p className="text-xs text-muted-foreground text-center max-w-xs">
-                  Automate repetitive work — assign tickets, change statuses, and more with if-then rules.
-                </p>
-                <Button onClick={handleOpenNew} className="mt-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 gap-2">
-                  <Plus className="h-4 w-4" />Create Automation
-                </Button>
-              </motion.div>
+              <EmptyState
+                illustration={<Zap className="h-8 w-8 text-muted-foreground/40" />}
+                title="No automations yet"
+                description="Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
+                action={{ label: "Create Automation", onClick: handleOpenNew }}
+                className="min-h-[40vh]"
+              />
             )}
 
-            {automations.length > 0 && (
-              <Button variant="outline" size="sm" onClick={handleOpenNew} className="gap-1.5 h-8 text-xs">
-                <Plus className="h-3.5 w-3.5" />New Automation
-              </Button>
-            )}
           </>
         )}
       </div>
@@ -336,7 +365,7 @@ export default function AutomationsPage({ params }: PageProps) {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-slate-700">Conditions (optional)</label>
-                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1 text-violet-600 hover:text-violet-700" onClick={handleAppendCondition}>
+                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendCondition}>
                       <Plus className="h-3 w-3" />Add Condition
                     </Button>
                   </div>
@@ -366,9 +395,7 @@ export default function AutomationsPage({ params }: PageProps) {
                           className="h-7 text-xs w-24"
                         />
                       )}
-                      <button type="button" onClick={() => removeCondition(idx)} className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-red-500 transition-colors">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
+                      <RemoveButton onClick={makeRemoveConditionHandler(idx)} />
                     </div>
                   ))}
                 </div>
@@ -378,7 +405,7 @@ export default function AutomationsPage({ params }: PageProps) {
                     <label className="text-xs font-medium text-slate-700">
                       Actions <span className="text-red-500">*</span>
                     </label>
-                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1 text-violet-600 hover:text-violet-700" onClick={handleAppendAction}>
+                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendAction}>
                       <Plus className="h-3 w-3" />Add Action
                     </Button>
                   </div>
@@ -398,9 +425,7 @@ export default function AutomationsPage({ params }: PageProps) {
                         placeholder="value"
                         className="h-7 text-xs flex-1"
                       />
-                      <button type="button" onClick={() => removeAction(idx)} className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-red-500 transition-colors">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
+                      <RemoveButton onClick={makeRemoveActionHandler(idx)} />
                     </div>
                   ))}
                   {form.formState.errors.actions?.root && (
@@ -411,12 +436,12 @@ export default function AutomationsPage({ params }: PageProps) {
             </Form>
           </div>
 
-          <SheetFooter className="px-6 py-3 border-t shrink-0 flex-row gap-2">
+          <SheetFooter className="px-6 py-4 border-t shrink-0 flex-row gap-2">
             <Button
               form="automation-form"
               type="submit"
               disabled={createAutomation.isPending || updateAutomation.isPending}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 h-8 text-xs flex-1"
+              className="h-8 text-xs flex-1"
             >
               {(createAutomation.isPending || updateAutomation.isPending)
                 ? "Saving..."

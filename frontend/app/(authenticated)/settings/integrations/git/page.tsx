@@ -49,6 +49,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
+import { RequireModule } from "@/components/auth/require-module";
 import {
   useGitConnections,
   useCreateGitConnection,
@@ -416,6 +417,8 @@ export default function GitIntegrationPage() {
     <PageWrapper
       title="Git Integration"
       subtitle="Connect a repository to link commits and pull requests to tickets automatically"
+      backHref="/settings/integrations"
+      badge="Projects module"
       actions={
         <Button onClick={handleOpenDialog}>
           <Plus className="h-4 w-4 mr-2" />
@@ -423,6 +426,7 @@ export default function GitIntegrationPage() {
         </Button>
       }
     >
+      <RequireModule module="PROJECTS">
       {isLoading ? (
         <LoadingState variant="cards" rows={3} />
       ) : isError ? (
@@ -549,6 +553,7 @@ export default function GitIntegrationPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </RequireModule>
     </PageWrapper>
   );
 }

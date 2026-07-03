@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type Task, type TaskBucket } from "@/hooks/api/tasks";
@@ -58,6 +58,7 @@ export function TaskBucketSection({
   onDelete,
 }: TaskBucketSectionProps) {
   const [isOpen, setIsOpen] = useState(() => DEFAULT_OPEN_BUCKETS.includes(bucket));
+  const shouldReduceMotion = useReducedMotion();
   const config = BUCKET_CONFIG[bucket];
 
   const handleToggle = useCallback(() => setIsOpen((prev) => !prev), []);
@@ -67,15 +68,16 @@ export function TaskBucketSection({
   return (
     <div className="space-y-0.5">
       <button
+        type="button"
         onClick={handleToggle}
-        className="flex items-center gap-2 w-full px-1 py-1.5 rounded hover:bg-slate-50 transition-colors group"
+        className="flex items-center gap-2 w-full px-1 py-1.5 rounded hover:bg-muted/30 transition-colors group"
       >
         {isOpen ? (
-          <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
         ) : (
-          <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
         )}
-        <span className="text-xs font-semibold text-slate-700">{config.label}</span>
+        <span className="text-xs font-semibold text-foreground">{config.label}</span>
         <span
           className={cn(
             "text-[10px] font-medium px-1.5 py-0.5 rounded-full border",
@@ -90,11 +92,10 @@ export function TaskBucketSection({
         {isOpen && (
           <motion.div
             key="bucket-content"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: "easeOut" }}
           >
             <div className="space-y-0.5 pt-0.5">
               {tasks.map((task, idx) => (

@@ -89,6 +89,7 @@ export function useLocations(warehouseId: number) {
 export function useCreateWarehouse() {
   const qc = useQueryClient();
   return useMutation<Warehouse, Error, CreateWarehouseInput>({
+    mutationKey: ["inventory", "warehouses", "create"],
     mutationFn: (data) => apiClient.post<Warehouse>("/inventory/warehouses", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
@@ -99,6 +100,7 @@ export function useCreateWarehouse() {
 export function useUpdateWarehouse() {
   const qc = useQueryClient();
   return useMutation<Warehouse, Error, UpdateWarehouseInput>({
+    mutationKey: ["inventory", "warehouses", "update"],
     mutationFn: ({ warehouseId, ...data }) =>
       apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, data),
     onSuccess: (_, vars) => {
@@ -111,6 +113,7 @@ export function useUpdateWarehouse() {
 export function useCreateLocation() {
   const qc = useQueryClient();
   return useMutation<WarehouseLocation, Error, CreateLocationInput>({
+    mutationKey: ["inventory", "locations", "create"],
     mutationFn: ({ warehouseId, ...data }) =>
       apiClient.post<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations`, data),
     onSuccess: (_, vars) => {

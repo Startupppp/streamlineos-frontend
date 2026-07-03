@@ -53,7 +53,6 @@ import {
   UserCog,
   SlidersHorizontal,
   UserX,
-  Sparkles,
   Brain,
   Copy,
   Search,
@@ -69,16 +68,17 @@ import {
   ShoppingCart,
   Truck,
   Library,
+  NotebookPen,
   LayoutGrid,
   Workflow,
   PlayCircle,
   CheckSquare,
   Lock,
   Key,
-  Upload,
   Smartphone,
   Plug,
   Activity,
+  PenTool,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -158,7 +158,11 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "HR – People",
     module: "hrms",
-    requiredPermission: ["hr:employees:view", "hr:attendance:view", "hr:leaves:view"],
+    requiredPermission: [
+      "hr:employees:view",
+      "hr:attendance:view",
+      "hr:leaves:view",
+    ],
     routes: [
       {
         label: "Employees",
@@ -924,6 +928,12 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
+        label: "Whiteboards",
+        icon: PenTool,
+        href: "/projects/whiteboards",
+        requiredPermission: "projects:view",
+      },
+      {
         label: "Goals & OKRs",
         icon: Target,
         href: "/goals",
@@ -969,12 +979,6 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
-        label: "Knowledge Base",
-        icon: BookOpen,
-        href: "/support/kb",
-        requiredPermission: "support:kb:view",
-      },
-      {
         label: "Canned Responses",
         icon: MailOpen,
         href: "/support/macros",
@@ -985,6 +989,19 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Share2,
         href: "/support/routing",
         requiredPermission: "support:macros:view",
+      },
+    ],
+  },
+  {
+    label: "Knowledge",
+    module: "documents",
+    requiredPermission: ["kb:pages:view"],
+    routes: [
+      {
+        label: "Wiki",
+        icon: NotebookPen,
+        href: "/knowledge",
+        requiredPermission: "kb:pages:view",
       },
     ],
   },
@@ -1071,12 +1088,6 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/users/archived",
         requiredPermission: "settings:view",
       },
-      {
-        label: "Import / Export",
-        icon: Upload,
-        href: "/users/import",
-        requiredPermission: "settings:manage",
-      },
     ],
   },
   {
@@ -1156,22 +1167,10 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:manage",
       },
       {
-        label: "Custom Fields",
-        icon: Sliders,
-        href: "/settings/custom-fields",
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "Automation",
+        label: "Automations",
         icon: Workflow,
         href: "/settings/automations",
         requiredPermission: "settings:automations:view",
-      },
-      {
-        label: "Notification Templates",
-        icon: MailOpen,
-        href: "/settings/email-templates",
-        requiredPermission: "settings:manage",
       },
       {
         label: "Integrations",
@@ -1208,6 +1207,16 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Clock,
         href: "/settings/sessions",
         requiredPermission: "settings:manage",
+      },
+      {
+        label: "Trusted Devices",
+        icon: Smartphone,
+        href: "/settings/devices",
+      },
+      {
+        label: "Login History",
+        icon: History,
+        href: "/settings/login-history",
       },
       {
         label: "Audit Logs",
@@ -1253,7 +1262,8 @@ function filterRoute(
   granted: Set<string>,
   enabledModules: string[],
 ): NavRoute | null {
-  if (route.module && !isModuleEnabled(route.module, enabledModules)) return null;
+  if (route.module && !isModuleEnabled(route.module, enabledModules))
+    return null;
   if (!isOwner && !matchesPermission(route.requiredPermission, granted))
     return null;
   if (route.children && route.children.length > 0) {
@@ -1277,8 +1287,9 @@ export function getNavGroupsForUser(
   const isOwner = role === "OWNER";
   const granted = new Set(permissions ?? []);
 
-  return NAV_GROUPS
-    .filter((group) => !group.module || isModuleEnabled(group.module, enabledModules))
+  return NAV_GROUPS.filter(
+    (group) => !group.module || isModuleEnabled(group.module, enabledModules),
+  )
     .map((group) => {
       const visibleRoutes = group.routes
         .map((r) => filterRoute(r, isOwner, granted, enabledModules))
@@ -1317,7 +1328,6 @@ export type ProductKey =
   | "helpdesk"
   | "documents"
   | "analytics"
-  | "ai"
   | "administration";
 
 export interface ProductDefinition {
@@ -1336,9 +1346,13 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
   { key: "helpdesk", label: "Helpdesk", href: "/support", icon: LifeBuoy },
   { key: "documents", label: "Documents", href: "/support/kb", icon: Library },
-  { key: "analytics", label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { key: "ai", label: "AI", href: "/ai", icon: Sparkles },
-  { key: "administration", label: "Admin", href: "/organization", icon: Building2 },
+  { key: "analytics", label: "Analytics", href: "/reports", icon: BarChart3 },
+  {
+    key: "administration",
+    label: "Settings",
+    href: "/organization",
+    icon: Building2,
+  },
 ];
 
 export interface ModuleAccent {
@@ -1349,17 +1363,66 @@ export interface ModuleAccent {
 }
 
 export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
-  home:           { text: "!text-slate-600 dark:!text-slate-400",     bg: "bg-slate-100 dark:bg-slate-800/40",    indicator: "bg-slate-500 dark:bg-slate-400",    border: "border-slate-400 dark:border-slate-500"    },
-  crm:            { text: "!text-blue-600 dark:!text-blue-400",       bg: "bg-blue-50 dark:bg-blue-950/40",       indicator: "bg-blue-600 dark:bg-blue-500",       border: "border-blue-600 dark:border-blue-500"       },
-  hrms:           { text: "!text-emerald-600 dark:!text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40", indicator: "bg-emerald-600 dark:bg-emerald-500",  border: "border-emerald-600 dark:border-emerald-500"  },
-  projects:       { text: "!text-violet-600 dark:!text-violet-400",   bg: "bg-violet-50 dark:bg-violet-950/40",  indicator: "bg-violet-600 dark:bg-violet-500",   border: "border-violet-600 dark:border-violet-500"   },
-  inventory:      { text: "!text-amber-600 dark:!text-amber-400",     bg: "bg-amber-50 dark:bg-amber-950/40",    indicator: "bg-amber-600 dark:bg-amber-500",     border: "border-amber-600 dark:border-amber-500"     },
-  finance:        { text: "!text-cyan-700 dark:!text-cyan-400",       bg: "bg-cyan-50 dark:bg-cyan-950/40",      indicator: "bg-cyan-700 dark:bg-cyan-500",       border: "border-cyan-700 dark:border-cyan-500"       },
-  helpdesk:       { text: "!text-rose-600 dark:!text-rose-400",       bg: "bg-rose-50 dark:bg-rose-950/40",      indicator: "bg-rose-600 dark:bg-rose-500",       border: "border-rose-600 dark:border-rose-500"       },
-  documents:      { text: "!text-slate-600 dark:!text-slate-400",     bg: "bg-slate-100 dark:bg-slate-800/40",   indicator: "bg-slate-500 dark:bg-slate-400",    border: "border-slate-400 dark:border-slate-500"    },
-  analytics:      { text: "!text-blue-600 dark:!text-blue-400",       bg: "bg-blue-50 dark:bg-blue-950/40",      indicator: "bg-blue-600 dark:bg-blue-500",       border: "border-blue-600 dark:border-blue-500"       },
-  ai:             { text: "!text-violet-600 dark:!text-violet-400",   bg: "bg-violet-50 dark:bg-violet-950/40",  indicator: "bg-violet-600 dark:bg-violet-500",   border: "border-violet-600 dark:border-violet-500"   },
-  administration: { text: "!text-slate-600 dark:!text-slate-400",     bg: "bg-slate-100 dark:bg-slate-800/40",   indicator: "bg-slate-500 dark:bg-slate-400",    border: "border-slate-400 dark:border-slate-500"    },
+  home: {
+    text: "!text-slate-600 dark:!text-slate-400",
+    bg: "bg-slate-100 dark:bg-slate-800/40",
+    indicator: "bg-slate-500 dark:bg-slate-400",
+    border: "border-slate-400 dark:border-slate-500",
+  },
+  crm: {
+    text: "!text-blue-600 dark:!text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/40",
+    indicator: "bg-blue-600 dark:bg-blue-500",
+    border: "border-blue-600 dark:border-blue-500",
+  },
+  hrms: {
+    text: "!text-emerald-600 dark:!text-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-950/40",
+    indicator: "bg-emerald-600 dark:bg-emerald-500",
+    border: "border-emerald-600 dark:border-emerald-500",
+  },
+  projects: {
+    text: "!text-violet-600 dark:!text-violet-400",
+    bg: "bg-violet-50 dark:bg-violet-950/40",
+    indicator: "bg-violet-600 dark:bg-violet-500",
+    border: "border-violet-600 dark:border-violet-500",
+  },
+  inventory: {
+    text: "!text-amber-600 dark:!text-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-950/40",
+    indicator: "bg-amber-600 dark:bg-amber-500",
+    border: "border-amber-600 dark:border-amber-500",
+  },
+  finance: {
+    text: "!text-cyan-700 dark:!text-cyan-400",
+    bg: "bg-cyan-50 dark:bg-cyan-950/40",
+    indicator: "bg-cyan-700 dark:bg-cyan-500",
+    border: "border-cyan-700 dark:border-cyan-500",
+  },
+  helpdesk: {
+    text: "!text-rose-600 dark:!text-rose-400",
+    bg: "bg-rose-50 dark:bg-rose-950/40",
+    indicator: "bg-rose-600 dark:bg-rose-500",
+    border: "border-rose-600 dark:border-rose-500",
+  },
+  documents: {
+    text: "!text-slate-600 dark:!text-slate-400",
+    bg: "bg-slate-100 dark:bg-slate-800/40",
+    indicator: "bg-slate-500 dark:bg-slate-400",
+    border: "border-slate-400 dark:border-slate-500",
+  },
+  analytics: {
+    text: "!text-blue-600 dark:!text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/40",
+    indicator: "bg-blue-600 dark:bg-blue-500",
+    border: "border-blue-600 dark:border-blue-500",
+  },
+  administration: {
+    text: "!text-slate-600 dark:!text-slate-400",
+    bg: "bg-slate-100 dark:bg-slate-800/40",
+    indicator: "bg-slate-500 dark:bg-slate-400",
+    border: "border-slate-400 dark:border-slate-500",
+  },
 };
 
 const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
@@ -1372,7 +1435,6 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   helpdesk: ["Support"],
   documents: [],
   analytics: [],
-  ai: [],
   administration: [
     "Organization",
     "People",
@@ -1403,26 +1465,11 @@ export function getNavGroupsForProduct(
       },
     ];
   }
-  if (productKey === "ai") {
-    return [
-      {
-        label: "AI",
-        routes: [
-          {
-            label: "AI Hub",
-            icon: Sparkles,
-            href: "/ai",
-            requiredPermission: "settings:manage",
-          },
-        ],
-      },
-    ];
-  }
   if (productKey === "analytics")
     return [
       {
         label: "Analytics",
-        routes: [{ label: "Analytics", icon: BarChart3, href: "/analytics" }],
+        routes: [{ label: "Reports", icon: BarChart3, href: "/reports" }],
       },
     ];
 
@@ -1433,9 +1480,15 @@ export function getNavGroupsForProduct(
         routes: [
           {
             label: "Knowledge Base",
-            icon: Library,
+            icon: BookOpen,
             href: "/support/kb",
             requiredPermission: "support:kb:view",
+          },
+          {
+            label: "Wiki",
+            icon: NotebookPen,
+            href: "/knowledge",
+            requiredPermission: "kb:pages:view",
           },
         ],
       },
@@ -1455,7 +1508,10 @@ const MODULE_KEY_MAP: Partial<Record<ProductKey, string>> = {
   helpdesk: "HELPDESK",
 };
 
-export function isModuleEnabled(key: ProductKey, enabledModules: string[]): boolean {
+export function isModuleEnabled(
+  key: ProductKey,
+  enabledModules: string[],
+): boolean {
   if (key === "home" || key === "administration") return true;
   if (enabledModules.length === 0) return true;
   const moduleName = MODULE_KEY_MAP[key];
@@ -1488,16 +1544,16 @@ export function getProductFromPathname(pathname: string): ProductKey {
     return "projects";
   if (pathname.startsWith("/inventory")) return "inventory";
   if (pathname.startsWith("/accounting")) return "finance";
-  if (pathname.startsWith("/analytics")) return "analytics";
-  if (pathname.startsWith("/support"))
-    return "helpdesk";
-  if (pathname.startsWith("/ai")) return "ai";
+  if (pathname.startsWith("/analytics") || pathname.startsWith("/reports"))
+    return "analytics";
+  if (pathname.startsWith("/support/kb")) return "documents";
+  if (pathname.startsWith("/support")) return "helpdesk";
+  if (pathname.startsWith("/knowledge")) return "documents";
   if (
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||
     pathname.startsWith("/settings") ||
-    pathname.startsWith("/billing") ||
-    pathname.startsWith("/reports")
+    pathname.startsWith("/billing")
   )
     return "administration";
   return "home";

@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowDown, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, Link, Loader2, MessageSquare, Pencil, Pin, Reply, Smile, Ticket, Trash2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,10 +26,13 @@ import {
   resolveFileUrl,
   getForwardedDisplay,
 } from "./chat-helpers";
-import type { Message, TicketEntityRef, MessageMetadata } from "./chat-types";
+import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
-import { apiClient } from "@/lib/api-client";
-import { LinkPreviewCard } from "./link-preview-card";
+import { apiClient, isApiError } from "@/lib/api-client";
+import { ticketPermalinkQueryOptions } from "@/hooks/api/projects/comment-permalink";
+import { InternalLinkPreview } from "./internal-link-preview";
+import { getStatusBadgeClass } from "@/features/projects/shared/status-badge";
+import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 import { renderFormattedContent } from "./formatted-message-content";
 
 const TICKET_STATUS_DISPLAY: Record<string, string> = {
@@ -37,12 +41,6 @@ const TICKET_STATUS_DISPLAY: Record<string, string> = {
   IN_REVIEW: "In Review",
   DONE: "Done",
 };
-const TICKET_STATUS_COLORS: Record<string, string> = {
-  TODO: "bg-slate-100 text-slate-700",
-  IN_PROGRESS: "bg-blue-100 text-blue-700",
-  IN_REVIEW: "bg-amber-100 text-amber-700",
-  DONE: "bg-green-100 text-green-700",
-};
 
 function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId: number }) {
   const router = useRouter();
@@ -50,7 +48,8 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const canUpdate = useCan("projects:tickets:update");
 
-  const ticketKey = entity.projectKey && entity.ticketNumber
+  const hasFullInfo = Boolean(entity.projectKey && entity.ticketNumber);
+  const ticketKey = hasFullInfo
     ? `${entity.projectKey}-${entity.ticketNumber}`
     : `Ticket #${entity.id}`;
 
@@ -70,9 +69,18 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
           ticketId: Number(entity.id),
           nextStatus,
         });
-      } catch {
+      } catch (err) {
         setCurrentStatus(prev);
-        toast.error("Failed to update ticket status");
+        const code = isApiError(err) ? err.code : undefined;
+        if (code === "CHAT_ACTION_FORBIDDEN") {
+          toast.error("You don't have permission to change this ticket's status.");
+        } else if (code === "PROJECTS_TICKET_NOT_FOUND") {
+          toast.error("This ticket no longer exists.");
+        } else if (code === "CHAT_ACTION_TICKET_STATUS_FAILED") {
+          toast.error("This status change isn't allowed.");
+        } else {
+          toast.error("Failed to update ticket status");
+        }
       } finally {
         setIsChangingStatus(false);
       }
@@ -80,22 +88,38 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
     [currentStatus, channelId, entity],
   );
 
+  if (!hasFullInfo) {
+    return (
+      <div className="inline-flex items-center rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 hover:border-border/80 transition-all duration-150 ease-out motion-reduce:transition-none my-1">
+        <button
+          type="button"
+          onClick={handlePillClick}
+          className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground hover:text-foreground"
+          aria-label={`Open ${ticketKey}`}
+        >
+          <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+          {ticketKey}
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/80 px-2.5 py-1.5 shadow-sm hover:shadow-md transition-all my-1">
+    <div className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 hover:border-border/80 transition-all duration-150 ease-out motion-reduce:transition-none my-1">
       <button
         type="button"
         onClick={handlePillClick}
-        className="flex items-center gap-1.5 font-mono text-[12px] text-violet-600 hover:text-violet-700 font-semibold"
+        className="flex items-center gap-1 font-mono text-[11px] text-muted-foreground hover:text-foreground shrink-0"
         aria-label={`Open ticket ${ticketKey}`}
       >
-        <Ticket className="h-3.5 w-3.5" />
+        <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/60" />
         {ticketKey}
       </button>
       {entity.title && (
         <button
           type="button"
           onClick={handlePillClick}
-          className="text-[12px] text-foreground hover:underline truncate max-w-[200px]"
+          className="text-[12px] text-foreground/80 hover:underline truncate max-w-[160px]"
         >
           {entity.title}
         </button>
@@ -107,8 +131,8 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
               type="button"
               disabled={isChangingStatus}
               className={cn(
-                "inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity",
-                TICKET_STATUS_COLORS[currentStatus] ?? "bg-muted text-muted-foreground",
+                "inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity duration-150 ease-out motion-reduce:transition-none",
+                getStatusBadgeClass(currentStatus),
               )}
               aria-label="Change ticket status"
             >
@@ -135,13 +159,41 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
         <span
           className={cn(
             "inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium",
-            TICKET_STATUS_COLORS[currentStatus] ?? "bg-muted text-muted-foreground",
+            getStatusBadgeClass(currentStatus),
           )}
         >
           {TICKET_STATUS_DISPLAY[currentStatus] ?? currentStatus}
         </span>
       )}
     </div>
+  );
+}
+
+function CommentPill({ entity }: { entity: CommentEntityRef }) {
+  const router = useRouter();
+  const { data: ticket } = useQuery(
+    ticketPermalinkQueryOptions(entity.projectId, entity.ticketId),
+  );
+
+  const href = `/projects/${entity.projectId}?ticket=${entity.ticketId}&comment=${entity.id}`;
+  const label = ticket
+    ? `Comment on ${formatTicketKey(ticket.projectKey, ticket.ticketNumber)}`
+    : "Comment";
+
+  const handleClick = useCallback(() => {
+    router.push(href);
+  }, [router, href]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/80 px-2 py-1 shadow-sm hover:shadow-md transition-all duration-150 ease-out motion-reduce:transition-none text-[11px] text-muted-foreground hover:text-foreground my-1"
+      aria-label={label}
+    >
+      <MessageSquare className="h-3 w-3 shrink-0 text-blue-500" />
+      {label}
+    </button>
   );
 }
 
@@ -254,7 +306,7 @@ export function ChatBubble({
           {showSender ? (
             <Avatar className="h-7 w-7 border border-border/30 shadow-sm">
               <AvatarImage src={resolveImageUrl(message.sender?.image)} />
-              <AvatarFallback className="text-[8px] font-bold bg-gradient-to-br from-blue-100 to-indigo-50 text-blue">
+              <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
                 {getInitials(message.sender?.name)}
               </AvatarFallback>
             </Avatar>
@@ -334,20 +386,27 @@ export function ChatBubble({
               </div>
             )}
 
-            {displayContent && /https?:\/\//.test(displayContent) && (
-              <LinkPreviewCard content={displayContent} isOwn={isOwn} />
+            {message.content && /https?:\/\//.test(message.content) && (
+              <InternalLinkPreview content={message.content} isOwn={isOwn} />
             )}
 
             {(() => {
               const meta = message.metadata as MessageMetadata | null;
-              const ticketEntities = (meta?.entities ?? []).filter(
+              const entities = meta?.entities ?? [];
+              const ticketEntities = entities.filter(
                 (e): e is TicketEntityRef => e.type === "ticket",
               );
-              if (ticketEntities.length === 0) return null;
+              const commentEntities = entities.filter(
+                (e): e is CommentEntityRef => e.type === "comment",
+              );
+              if (ticketEntities.length === 0 && commentEntities.length === 0) return null;
               return (
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {ticketEntities.map((entity) => (
                     <TicketPill key={entity.id} entity={entity} channelId={message.channelId} />
+                  ))}
+                  {commentEntities.map((entity) => (
+                    <CommentPill key={entity.id} entity={entity} />
                   ))}
                 </div>
               );

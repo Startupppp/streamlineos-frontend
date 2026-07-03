@@ -4,17 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-interface SessionData {
-  id: string;
-  userId: string;
-  userAgent: string | null;
-  ipAddress: string | null;
-  deviceId: string | null;
-  lastActive: string;
-  expiresAt: string | null;
-  createdAt: string;
-}
-
 interface DeviceData {
   id: string;
   userId: string;
@@ -44,31 +33,6 @@ interface LoginHistoryPage {
   total: number;
   page: number;
   limit: number;
-}
-
-export function useSessions() {
-  return useQuery({
-    queryKey: queryKeys.auth.sessions(),
-    queryFn: () => apiClient.get<SessionData[]>("/hr/sessions"),
-    staleTime: 30_000,
-  });
-}
-
-export function useRevokeSession() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (sessionId: string) =>
-      apiClient.delete<{ message: string }>(`/hr/sessions/${sessionId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.sessions() }),
-  });
-}
-
-export function useRevokeAllSessions() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: () => apiClient.delete<{ message: string }>("/hr/sessions"),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.sessions() }),
-  });
 }
 
 export function useDevices() {

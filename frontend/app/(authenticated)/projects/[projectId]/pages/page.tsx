@@ -5,6 +5,7 @@ import { usePages, useCreatePage, useUpdatePage } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
   SheetContent,
@@ -104,7 +105,7 @@ function PageTreeItem({
     <div>
       <div
         className={`flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer transition-colors group ${
-          isActive ? "bg-violet-50 text-violet-700 font-medium" : "hover:bg-muted"
+          isActive ? "bg-muted text-foreground font-medium" : "hover:bg-muted"
         }`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={handleSelect}
@@ -170,7 +171,7 @@ const PinnedPageItem = memo(function PinnedPageItem({
       onClick={handleClick}
       className={`flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors ${
         activePage === page.id
-          ? "bg-violet-50 text-violet-700 font-medium"
+          ? "bg-muted text-foreground font-medium"
           : "hover:bg-muted"
       }`}
     >
@@ -264,10 +265,11 @@ export default function PagesPage({
   );
 
   const handleOpenCreatePage = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
 
   if (isLoading) {
     return (
-      <PageWrapper title="Pages" noInternalScroll contentClassName="p-0">
+      <PageWrapper title="Pages" eyebrow="Projects" backHref={`/projects/${projectId}`} noInternalScroll contentClassName="p-0">
         <div className="flex h-full">
           <div className="w-64 border-r p-4 space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -285,10 +287,12 @@ export default function PagesPage({
   return (
     <PageWrapper
       title="Pages"
+      eyebrow="Projects"
+      backHref={`/projects/${projectId}`}
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>
-            <Button size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm">
+            <Button size="sm">
               <Plus className="h-4 w-4 mr-1" /> New Page
             </Button>
           </SheetTrigger>
@@ -298,6 +302,7 @@ export default function PagesPage({
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-6 py-5">
             <form
+              id="create-page-form"
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-4"
             >
@@ -319,14 +324,15 @@ export default function PagesPage({
                   {...form.register("icon")}
                 />
               </div>
-              <Button
-                type="submit"
-                disabled={createMutation.isPending}
-                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm"
-              >
-                {createMutation.isPending ? "Creating..." : "Create Page"}
-              </Button>
             </form>
+            </div>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" onClick={handleCloseCreate}>Cancel</Button>
+                <Button size="sm" type="submit" form="create-page-form" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Creating…" : "Create Page"}
+                </Button>
+              </div>
             </div>
           </SheetContent>
         </Sheet>
@@ -335,18 +341,13 @@ export default function PagesPage({
       contentClassName="p-0"
     >
       {!pages?.length ? (
-        <div className="flex items-center justify-center flex-1">
-          <div className="text-center">
-            <EmptyDocumentsIllustration className="mx-auto mb-4 w-36 h-36" />
-            <h3 className="text-lg font-semibold mb-1">No pages yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create your first page to start documenting your project.
-            </p>
-            <Button onClick={handleOpenCreatePage} className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm">
-              <Plus className="h-4 w-4 mr-1" /> Create First Page
-            </Button>
-          </div>
-        </div>
+        <EmptyState
+          illustration={<EmptyDocumentsIllustration />}
+          title="No pages yet"
+          description="Create your first page to start documenting your project."
+          action={{ label: "Create First Page", onClick: handleOpenCreatePage }}
+          className="flex-1 min-h-[60vh]"
+        />
       ) : (
         <div className="flex h-full overflow-hidden">
           <div className="w-64 border-r overflow-y-auto p-3 space-y-1 bg-muted/20">
@@ -404,13 +405,13 @@ export default function PagesPage({
                 />
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <EmptyDocumentsIllustration className="mx-auto mb-3 w-32 h-32" />
-                  <p className="text-sm font-medium text-foreground">Select a page</p>
-                  <p className="text-xs text-muted-foreground mt-1">Choose a page from the list to start editing</p>
-                </div>
-              </div>
+              <EmptyState
+                illustration={<EmptyDocumentsIllustration />}
+                title="Select a page"
+                description="Choose a page from the list to start editing."
+                compact
+                className="flex-1"
+              />
             )}
           </div>
         </div>

@@ -25,31 +25,31 @@ export function RepPerformanceTable({ leaderboard }: RepPerformanceTableProps) {
     <AnalyticsChartCard title="Rep Performance" data={data} filename="rep-performance">
       <div className="max-h-[280px] overflow-y-auto">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs">Rep</TableHead>
-              <TableHead className="text-xs text-right">Leads</TableHead>
-              <TableHead className="text-xs text-right">Converted</TableHead>
-              <TableHead className="text-xs text-right">Calls</TableHead>
-              <TableHead className="text-xs text-right">Score</TableHead>
+          <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+            <TableRow className="border-b-2 border-border hover:bg-transparent">
+              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Rep</TableHead>
+              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Leads</TableHead>
+              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Converted</TableHead>
+              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Calls</TableHead>
+              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Score</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {leaderboard?.map((rep, i) => (
-              <TableRow key={rep.userId}>
-                <TableCell className="text-xs font-medium">
+              <TableRow key={rep.userId} className="h-8 hover:bg-muted/30 transition-colors">
+                <TableCell className="px-2 py-1 text-[11px] font-medium">
                   <span className="mr-1.5 text-muted-foreground">{i + 1}.</span>
                   {rep.name}
                 </TableCell>
-                <TableCell className="text-xs text-right">{rep.leadsAssigned}</TableCell>
-                <TableCell className="text-xs text-right text-emerald-400">{rep.leadsConverted}</TableCell>
-                <TableCell className="text-xs text-right">{rep.totalCalls}</TableCell>
-                <TableCell className="text-xs text-right font-semibold">{rep.score}</TableCell>
+                <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">{rep.leadsAssigned}</TableCell>
+                <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-emerald-600">{rep.leadsConverted}</TableCell>
+                <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">{rep.totalCalls}</TableCell>
+                <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums font-semibold">{rep.score}</TableCell>
               </TableRow>
             ))}
             {(!leaderboard || leaderboard.length === 0) && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">No data</TableCell>
+                <TableCell colSpan={5} className="text-center text-[11px] text-muted-foreground py-6">No data</TableCell>
               </TableRow>
             )}
           </TableBody>

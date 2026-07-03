@@ -45,6 +45,7 @@ declare module "next-auth" {
     userOnboardingCompletedAt?: string | null;
     isPlatformAdmin?: boolean;
     name?: string | null;
+    sessionId?: string;
   }
 }
 

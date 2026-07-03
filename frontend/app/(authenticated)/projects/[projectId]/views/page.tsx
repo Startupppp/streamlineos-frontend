@@ -11,6 +11,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptySearchIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
   SheetContent,
@@ -50,7 +51,7 @@ const createViewSchema = z.object({
 type CreateViewForm = z.infer<typeof createViewSchema>;
 
 const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
-  board: { icon: <Kanban className="h-4 w-4" />, label: "Board", color: "text-violet-600 bg-violet-50" },
+  board: { icon: <Kanban className="h-4 w-4" />, label: "Board", color: "text-slate-600 bg-slate-100" },
   list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-blue-600 bg-blue-50" },
   table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-emerald-600 bg-emerald-50" },
   calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-amber-600 bg-amber-50" },
@@ -97,7 +98,7 @@ const ViewCard = memo(function ViewCard({
       onClick={handleNavigate}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className={cn("shrink-0 h-8 w-8 rounded-md flex items-center justify-center", meta?.color ?? "text-violet-600 bg-violet-50")}>
+        <div className={cn("shrink-0 h-8 w-8 rounded-md flex items-center justify-center", meta?.color ?? "text-slate-600 bg-slate-100")}>
           {meta?.icon}
         </div>
         <div className="min-w-0">
@@ -108,7 +109,7 @@ const ViewCard = memo(function ViewCard({
           </p>
         </div>
         {isPinned && (
-          <Badge variant="secondary" className="text-[10px] shrink-0">Pinned</Badge>
+          <Badge variant="outline" className="text-[10px] shrink-0 bg-amber-50 text-amber-700 border-amber-200">Pinned</Badge>
         )}
       </div>
       <div
@@ -220,7 +221,7 @@ export default function ViewsPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Views">
+      <PageWrapper title="Views" backHref={`/projects/${projectIdStr}`}>
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full rounded-lg" />
@@ -233,6 +234,7 @@ export default function ViewsPage({
   return (
     <PageWrapper
       title="Views"
+      backHref={`/projects/${projectIdStr}`}
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>
@@ -245,7 +247,7 @@ export default function ViewsPage({
               <SheetTitle>Create View</SheetTitle>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-6 py-5">
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <form id="view-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 <div>
                   <Label htmlFor="view-name">Name</Label>
                   <Input id="view-name" className="mt-1.5" {...form.register("name")} />
@@ -273,8 +275,8 @@ export default function ViewsPage({
                               className={cn(
                                 "flex flex-col items-center gap-1.5 rounded-lg border p-3 text-xs font-medium transition-all",
                                 isSelected
-                                  ? "border-violet-500 bg-violet-50 text-violet-700"
-                                  : "border-border bg-muted/40 text-muted-foreground hover:border-violet-300 hover:bg-violet-50/50"
+                                  ? "border-primary bg-primary/5 text-foreground"
+                                  : "border-border bg-muted/40 text-muted-foreground hover:border-border hover:bg-muted"
                               )}
                             >
                               {m?.icon}
@@ -289,14 +291,17 @@ export default function ViewsPage({
                 <p className="text-xs text-muted-foreground">
                   Filters can be applied from the board view after creation.
                 </p>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending}
-                  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
-                >
-                  {createMutation.isPending ? "Creating..." : "Create View"}
-                </Button>
               </form>
+            </div>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <Button
+                type="submit"
+                form="view-form"
+                disabled={createMutation.isPending}
+                className="w-full"
+              >
+                {createMutation.isPending ? "Creating..." : "Create View"}
+              </Button>
             </div>
           </SheetContent>
         </Sheet>
@@ -304,16 +309,13 @@ export default function ViewsPage({
     >
       <div className="space-y-6">
         {!views?.length ? (
-          <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[300px] text-center py-16">
-            <EmptySearchIllustration className="mx-auto mb-4 w-36 h-36" />
-            <h3 className="text-lg font-semibold mb-1">No saved views</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create custom views with saved filters and layouts.
-            </p>
-            <Button onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-1" /> Create First View
-            </Button>
-          </div>
+          <EmptyState
+            illustration={<EmptySearchIllustration />}
+            title="No saved views"
+            description="Create custom views with saved filters and layouts."
+            action={{ label: "Create First View", onClick: handleOpenCreate }}
+            className="min-h-[40vh]"
+          />
         ) : (
           <>
             {pinnedViews.length > 0 && (

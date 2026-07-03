@@ -30,6 +30,7 @@ export function useKbComments(articleId: number) {
 export function useAddKbComment(articleId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kbComments", "add"],
     mutationFn: (body: string) =>
       apiClient.post<KbArticleComment>(
         `/support/kb/articles/${articleId}/comments`,
@@ -43,6 +44,7 @@ export function useAddKbComment(articleId: number) {
 export function useDeleteKbComment(articleId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kbComments", "delete"],
     mutationFn: (commentId: number) =>
       apiClient.delete<{ success: boolean }>(
         `/support/kb/articles/${articleId}/comments/${commentId}`

@@ -338,3 +338,20 @@ export interface KbComment {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface KbPageAnalyticsRow {
+  id: number;
+  title: string;
+  status: "draft" | "in_review" | "published" | "archived";
+  trustState: "unverified" | "verified" | "verification_expired";
+  updatedAt: string;
+  uniqueViewers: number;
+  commentCount: number;
+  versionCount: number;
+}
+
+export interface KbGapRow {
+  query: string | null;
+  count: number;
+  lastOccurredAt: string;
+}

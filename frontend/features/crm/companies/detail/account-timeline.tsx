@@ -11,10 +11,10 @@ const eventConfig: Record<
   OrgTimelineEventType,
   { icon: React.ComponentType<{ className?: string }>; color: string; bg: string }
 > = {
-  contact_created: { icon: UserPlus, color: "text-blue-400", bg: "bg-blue-500/15" },
-  deal_created: { icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-500/10" },
-  lead_linked: { icon: Link2, color: "text-purple-400", bg: "bg-purple-500/15" },
-  note_added: { icon: FileText, color: "text-emerald-400", bg: "bg-emerald-500/15" },
+  contact_created: { icon: UserPlus, color: "text-blue-600", bg: "bg-blue-50" },
+  deal_created: { icon: TrendingUp, color: "text-blue-700", bg: "bg-blue-50" },
+  lead_linked: { icon: Link2, color: "text-violet-600", bg: "bg-violet-50" },
+  note_added: { icon: FileText, color: "text-emerald-600", bg: "bg-emerald-50" },
 };
 
 interface AccountTimelineProps {

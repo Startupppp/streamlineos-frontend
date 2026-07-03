@@ -64,12 +64,9 @@ interface CalendarEvent {
 
 
 export interface CalendarListItem {
-  
   id: string;
   title: string;
-  
   start: string;
-  
   end: string;
   allDay?: boolean;
   color?: string | null;
@@ -80,6 +77,14 @@ export interface CalendarListItem {
   creatorName?: string | null;
   entityId?: string | null;
   entityType?: string | null;
+  projectId?: number | null;
+  linkedTicket?: {
+    id: number;
+    key: string;
+    title: string;
+    projectId: number;
+    status: string;
+  } | null;
   myRsvpStatus?: string | null;
 }
 
@@ -105,8 +110,11 @@ interface CreateCalendarEventPayload {
   recurringRule?: string;
 }
 
-interface UpdateCalendarEventPayload extends Partial<CreateCalendarEventPayload> {
+interface UpdateCalendarEventPayload
+  extends Omit<Partial<CreateCalendarEventPayload>, "entityType" | "entityId"> {
   id: number;
+  entityType?: string | null;
+  entityId?: string | null;
 }
 
 export function useCalendarEvents(start: Date, end: Date) {

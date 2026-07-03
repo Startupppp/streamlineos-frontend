@@ -13,6 +13,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Columns3, ChevronLeft, ChevronRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import {
   LeadTableViewProps, ALL_COLUMNS, PAGE_SIZES, getStoredColumns,
@@ -230,16 +233,26 @@ export function LeadTableView({
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 10 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={cols.length + 1} className="h-7 px-2">
-                      <div className="h-3 w-full bg-muted/50 rounded animate-pulse" />
+                  <TableRow key={i} className="h-8">
+                    <TableCell className="px-2 py-1">
+                      <Skeleton className="h-3 w-3.5" />
                     </TableCell>
+                    {cols.map((col) => (
+                      <TableCell key={col.key} className="px-2 py-1">
+                        <Skeleton className="h-3 w-full" />
+                      </TableCell>
+                    ))}
                   </TableRow>
                 ))
               ) : leads.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={cols.length + 1} className="text-center py-12 text-muted-foreground text-xs">
-                    No leads match your filters
+                  <TableCell colSpan={cols.length + 1} className="p-0">
+                    <EmptyState
+                      illustration={<EmptyLeadsIllustration />}
+                      title="No leads found"
+                      description="No leads match your current filters."
+                      className="border-0 bg-transparent min-h-[40vh]"
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

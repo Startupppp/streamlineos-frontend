@@ -1,20 +1,23 @@
 "use client";
 
-import { useState, useMemo, useCallback, useTransition } from "react";
+import { useState, useMemo, useCallback, useTransition, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { Plus, Download, LayoutGrid, TableIcon, TrendingUp } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Plus, Download, LayoutGrid, TableIcon, Search } from "lucide-react";
 import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DealTableView } from "@/features/crm/deals/deal-table-view";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useDeals, useUpdateDealStage, useDeleteDeal } from "@/hooks/api/crm";
-import type { Deal } from "@/types/crm";
+import type { Deal, DealStage } from "@/types/crm";
 import { useHrEmployees } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -24,12 +27,12 @@ import { DealsStatsBar } from "@/features/crm/deals/deals-stats-bar";
 import { DealForecastWidget } from "@/features/crm/deals/deal-forecast-widget";
 import { DealsLoadingSkeleton } from "@/features/crm/deals/deals-loading-skeleton";
 import { DealsCreateSheet } from "@/features/crm/deals/deals-create-sheet";
-import { KanbanFilterBar } from "@/features/crm/deals/kanban-filter-bar";
 import { KanbanColumn } from "@/features/crm/deals/kanban-column";
 import { WinLossDialog } from "@/features/crm/deals/win-loss-dialog";
 import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 import { useDealsExport } from "@/features/crm/deals/use-deals-export";
 import { DealsCsvImportDialog } from "@/features/crm/deals/deals-csv-import-dialog";
+import { ErrorState } from "@/components/shared/error-state";
 
 const STAGE_ORDER = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION"] as const;
 
@@ -38,12 +41,15 @@ export default function DealsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
+  const shouldReduceMotion = useReducedMotion();
 
   const rawView = searchParams.get("view");
   const view: "table" | "kanban" = rawView === "kanban" ? "kanban" : "table";
   const dealSortCol = searchParams.get("sort") || "createdAt";
   const rawDir = searchParams.get("dir");
   const dealSortDir: "asc" | "desc" = rawDir === "asc" ? "asc" : "desc";
+
+  const [searchInput, setSearchInput] = useState(searchParams.get("q") ?? "");
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -59,76 +65,57 @@ export default function DealsPage() {
     [searchParams, router, pathname],
   );
 
-  const { data: allDeals, isLoading } = useDeals();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateParams({ q: searchInput || null });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput, updateParams]);
+
+  const stageFromUrl = searchParams.get("stage");
+  const stageFilter = DEAL_STAGES.find((s) => s.key === stageFromUrl)?.key;
+
+  const { data: allDeals, isLoading, isError, refetch } = useDeals(
+    stageFilter ? { stage: stageFilter as DealStage } : undefined,
+  );
   const { data: rawEmployees } = useHrEmployees();
-  const employees = Array.isArray(rawEmployees)
-    ? rawEmployees
-    : (rawEmployees?.data ?? []);
+  const employees = Array.isArray(rawEmployees) ? rawEmployees : (rawEmployees?.data ?? []);
 
   const handleExport = useDealsExport(allDeals);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [dealToDelete, setDealToDelete] = useState<number | null>(null);
   const [sidePanelDealId, setSidePanelDealId] = useState<number | null>(null);
-  const [winLossDialog, setWinLossDialog] = useState<{
-    id: number;
-    stage: "WON" | "LOST";
-  } | null>(null);
+  const [winLossDialog, setWinLossDialog] = useState<{ id: number; stage: "WON" | "LOST" } | null>(null);
   const [winLossCategory, setWinLossCategory] = useState("");
   const [winLossNotes, setWinLossNotes] = useState("");
   const [stageSkipDialog, setStageSkipDialog] = useState<{
-    id: number;
-    from: string;
-    to: string;
-    skipped: string[];
+    id: number; from: string; to: string; skipped: string[];
   } | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
   const handleConfettiDone = useCallback(() => setShowConfetti(false), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleCreateOpenChange = useCallback(
-    (open: boolean) => setCreateOpen(open),
-    [],
-  );
+  const handleCreateOpenChange = useCallback((open: boolean) => setCreateOpen(open), []);
   const handleCreateSuccess = useCallback(() => setCreateOpen(false), []);
   const handleSidePanelClose = useCallback(() => setSidePanelDealId(null), []);
 
-  const [filterAssignee, setFilterAssignee] = useState<string>("all");
-  const [filterMinValue, setFilterMinValue] = useState("");
-  const [filterMaxValue, setFilterMaxValue] = useState("");
-  const [appliedFilters, setAppliedFilters] = useState<{
-    assignee: string;
-    minValue: string;
-    maxValue: string;
-  }>({ assignee: "all", minValue: "", maxValue: "" });
-
-  const handleApplyFilters = useCallback(() => {
-    setAppliedFilters({
-      assignee: filterAssignee,
-      minValue: filterMinValue,
-      maxValue: filterMaxValue,
-    });
-  }, [filterAssignee, filterMinValue, filterMaxValue]);
-
-  const handleClearFilters = useCallback(() => {
-    setFilterAssignee("all");
-    setFilterMinValue("");
-    setFilterMaxValue("");
-    setAppliedFilters({ assignee: "all", minValue: "", maxValue: "" });
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
   }, []);
 
-  const hasActiveFilters =
-    appliedFilters.assignee !== "all" ||
-    appliedFilters.minValue !== "" ||
-    appliedFilters.maxValue !== "";
+  const handleStageFilterChange = useCallback((value: string) => {
+    updateParams({ stage: value === "all" ? null : value });
+  }, [updateParams]);
+
+  const handleAssigneeFilterChange = useCallback((value: string) => {
+    updateParams({ assignee: value === "all" ? null : value });
+  }, [updateParams]);
 
   const handleDealSort = useCallback(
     (col: string) => {
       if (dealSortCol === col) {
-        updateParams({
-          sort: col,
-          dir: dealSortDir === "asc" ? "desc" : "asc",
-        });
+        updateParams({ sort: col, dir: dealSortDir === "asc" ? "desc" : "asc" });
       } else {
         updateParams({ sort: col, dir: "desc" });
       }
@@ -136,14 +123,8 @@ export default function DealsPage() {
     [dealSortCol, dealSortDir, updateParams],
   );
 
-  const handleViewTable = useCallback(
-    () => updateParams({ view: null }),
-    [updateParams],
-  );
-  const handleViewKanban = useCallback(
-    () => updateParams({ view: "kanban" }),
-    [updateParams],
-  );
+  const handleViewTable = useCallback(() => updateParams({ view: null }), [updateParams]);
+  const handleViewKanban = useCallback(() => updateParams({ view: "kanban" }), [updateParams]);
 
   const updateStageMutation = useUpdateDealStage();
   const deleteMutation = useDeleteDeal();
@@ -171,29 +152,18 @@ export default function DealsPage() {
       }
       const currentDeal = allDeals?.find((d) => d.id === id);
       const currentStage = currentDeal?.stage;
-      const fromIdx = STAGE_ORDER.indexOf(
-        currentStage as (typeof STAGE_ORDER)[number],
-      );
+      const fromIdx = STAGE_ORDER.indexOf(currentStage as (typeof STAGE_ORDER)[number]);
       const toIdx = STAGE_ORDER.indexOf(stage as (typeof STAGE_ORDER)[number]);
       if (fromIdx !== -1 && toIdx !== -1 && toIdx > fromIdx + 1) {
         const skipped = STAGE_ORDER.slice(fromIdx + 1, toIdx);
-        setStageSkipDialog({
-          id,
-          from: currentStage!,
-          to: stage,
-          skipped: [...skipped],
-        });
+        setStageSkipDialog({ id, from: currentStage!, to: stage, skipped: [...skipped] });
         return;
       }
       const version = currentDeal?.updatedAt
         ? new Date(currentDeal.updatedAt).toISOString()
         : undefined;
       updateStageMutation.mutate(
-        {
-          id,
-          stage: stage as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST",
-          version,
-        },
+        { id, stage: stage as DealStage, version },
         {
           onSuccess: () => toast.success("Deal stage updated"),
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -245,10 +215,7 @@ export default function DealsPage() {
   const handleConfirmSkip = useCallback(() => {
     if (!stageSkipDialog) return;
     updateStageMutation.mutate(
-      {
-        id: stageSkipDialog.id,
-        stage: stageSkipDialog.to as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST",
-      },
+      { id: stageSkipDialog.id, stage: stageSkipDialog.to as DealStage },
       {
         onSuccess: () => {
           toast.success("Deal stage updated");
@@ -259,25 +226,17 @@ export default function DealsPage() {
     );
   }, [stageSkipDialog, updateStageMutation]);
 
+  const assigneeFilter = searchParams.get("assignee");
+
   const filteredDeals = useMemo(() => {
     if (!allDeals) return [];
+    const q = searchInput.toLowerCase().trim();
     return allDeals.filter((d) => {
-      if (
-        appliedFilters.assignee !== "all" &&
-        d.assignedToId !== appliedFilters.assignee
-      )
-        return false;
-      if (appliedFilters.minValue !== "") {
-        const min = Number(appliedFilters.minValue);
-        if (!Number.isNaN(min) && Number(d.value ?? 0) < min) return false;
-      }
-      if (appliedFilters.maxValue !== "") {
-        const max = Number(appliedFilters.maxValue);
-        if (!Number.isNaN(max) && Number(d.value ?? 0) > max) return false;
-      }
+      if (q && !d.name.toLowerCase().includes(q)) return false;
+      if (assigneeFilter && assigneeFilter !== "all" && d.assignedToId !== assigneeFilter) return false;
       return true;
     });
-  }, [allDeals, appliedFilters]);
+  }, [allDeals, searchInput, assigneeFilter]);
 
   const dealsByStage = useMemo(() => {
     const map: Record<string, Deal[]> = {};
@@ -302,8 +261,7 @@ export default function DealsPage() {
   }, [allDeals]);
 
   const stats = useMemo(() => {
-    if (!allDeals)
-      return { total: 0, totalValue: 0, wonValue: 0, avgProbability: 0 };
+    if (!allDeals) return { total: 0, totalValue: 0, wonValue: 0, avgProbability: 0 };
     const active = allDeals.filter((d) => d.stage !== "LOST");
     return {
       total: allDeals.length,
@@ -313,55 +271,112 @@ export default function DealsPage() {
         .reduce((s, d) => s + Number(d.value || 0), 0),
       avgProbability:
         active.length > 0
-          ? Math.round(
-              active.reduce((s, d) => s + (d.probability || 0), 0) /
-                active.length,
-            )
+          ? Math.round(active.reduce((s, d) => s + (d.probability || 0), 0) / active.length)
           : 0,
     };
   }, [allDeals]);
 
+  const containerVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : staggerContainer;
+  const itemVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : fadeUp;
+
   if (isLoading) return <DealsLoadingSkeleton />;
+
+  if (isError) {
+    return (
+      <PageWrapper title="Deals Pipeline" subtitle="Manage your deals">
+        <ErrorState
+          title="Failed to load deals"
+          description="We couldn't load your deals. Please try again."
+          onRetry={() => void refetch()}
+          className="flex-1 min-h-[60vh]"
+        />
+      </PageWrapper>
+    );
+  }
+
+  const subtitle = `${allDeals?.length ?? 0} deal${(allDeals?.length ?? 0) !== 1 ? "s" : ""}`;
+
+  const filterBar = (
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
+      <div className="relative min-w-0 flex-1 lg:max-w-[240px]">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Input
+          value={searchInput}
+          onChange={handleSearchChange}
+          placeholder="Search deals..."
+          className="h-8 w-full pl-8 text-xs"
+          aria-label="Search deals"
+        />
+      </div>
+      <div className="hidden sm:flex items-center gap-2">
+        <Select value={stageFromUrl ?? "all"} onValueChange={handleStageFilterChange}>
+          <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectValue placeholder="All stages" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All stages</SelectItem>
+            {DEAL_STAGES.map((s) => (
+              <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {assigneeOptions.length > 0 && (
+          <Select value={assigneeFilter ?? "all"} onValueChange={handleAssigneeFilterChange}>
+            <SelectTrigger className="h-8 w-[140px] text-xs">
+              <SelectValue placeholder="All assignees" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All assignees</SelectItem>
+              {assigneeOptions.map((a) => (
+                <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+      <div className="ml-auto flex items-center gap-px border border-border rounded-md shrink-0">
+        <Button
+          variant={view === "table" ? "secondary" : "ghost"}
+          size="icon"
+          className="h-8 w-8 rounded-r-none border-r border-border"
+          onClick={handleViewTable}
+          aria-label="Table view"
+        >
+          <TableIcon className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant={view === "kanban" ? "secondary" : "ghost"}
+          size="icon"
+          className="h-8 w-8 rounded-l-none"
+          onClick={handleViewKanban}
+          aria-label="Kanban view"
+        >
+          <LayoutGrid className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      <Button variant="outline" size="sm" className="h-8 text-xs shrink-0" onClick={handleExport}>
+        <Download className="h-3.5 w-3.5 mr-1.5" />
+        Export
+      </Button>
+    </div>
+  );
 
   return (
     <>
       {showConfetti && <ConfettiOverlay onDone={handleConfettiDone} />}
       <PageWrapper
         title="Deals Pipeline"
-        subtitle="Track and manage your deals across stages"
+        subtitle={subtitle}
+        filters={filterBar}
         actions={
           <>
-            <div className="flex items-center border border-border rounded-md">
-              <Button
-                variant={view === "table" ? "default" : "ghost"}
-                size="sm"
-                className="rounded-r-none"
-                onClick={handleViewTable}
-              >
-                <TableIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={view === "kanban" ? "default" : "ghost"}
-                size="sm"
-                className="rounded-l-none"
-                onClick={handleViewKanban}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/crm/deals/forecast">
-                <TrendingUp className="h-4 w-4 mr-1.5" />
-                Forecast
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
             <DealsCsvImportDialog />
-            <Button onClick={handleOpenCreate} className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button size="sm" onClick={handleOpenCreate}>
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
               New Deal
             </Button>
             <DealsCreateSheet
@@ -375,48 +390,33 @@ export default function DealsPage() {
       >
         <motion.div
           className="space-y-4"
-          variants={staggerContainer}
+          variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          <motion.div
-            variants={fadeUp}
-            className="sticky top-0 z-10 bg-background pb-2"
-          >
+          <motion.div variants={itemVariants} className="sticky top-0 z-10 bg-background pb-2">
             <DealsStatsBar {...stats} />
           </motion.div>
 
-          <motion.div variants={fadeUp}>
+          <motion.div variants={itemVariants}>
             <DealForecastWidget deals={filteredDeals} />
           </motion.div>
 
           {view === "table" && (
-            <motion.div variants={fadeUp}>
+            <motion.div variants={itemVariants}>
               <DealTableView
-                deals={allDeals || []}
+                deals={filteredDeals}
                 sortColumn={dealSortCol}
                 sortDirection={dealSortDir}
                 onSort={handleDealSort}
                 onStageChange={handleStageChange}
-                isLoading={isLoading}
+                isLoading={false}
               />
             </motion.div>
           )}
 
           {view === "kanban" && (
-            <motion.div variants={fadeUp} className="space-y-3">
-              <KanbanFilterBar
-                assigneeOptions={assigneeOptions}
-                filterAssignee={filterAssignee}
-                filterMinValue={filterMinValue}
-                filterMaxValue={filterMaxValue}
-                hasActiveFilters={hasActiveFilters}
-                onAssigneeChange={setFilterAssignee}
-                onMinValueChange={setFilterMinValue}
-                onMaxValueChange={setFilterMaxValue}
-                onApply={handleApplyFilters}
-                onClear={handleClearFilters}
-              />
+            <motion.div variants={itemVariants}>
               <DragDropContext onDragEnd={handleDragEnd}>
                 <ScrollArea className="w-full" type="auto">
                   <div className="inline-flex gap-3 sm:gap-4 pb-4">

@@ -32,8 +32,9 @@ function buildCsp(nonce: string, apiUrl?: string): string {
     `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com https://www.clarity.ms https://checkout.razorpay.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://lh3.googleusercontent.com https://streamlineos.app https://images.unsplash.com https://www.googletagmanager.com",
-    "font-src 'self' https://fonts.gstatic.com",
+    "font-src 'self' https://fonts.gstatic.com https://esm.sh",
     `connect-src ${connectSrc}`,
+    "worker-src 'self' blob:",
     "frame-src https://www.googletagmanager.com https://checkout.razorpay.com https://api.razorpay.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -79,9 +80,8 @@ const PROTECTED_ROUTES = [
   "/chat",
   "/reports",
   "/notifications",
-  "/ai",
   "/calendar",
-  "/knowledge-base",
+  "/knowledge",
 ];
 
 const AUTH_ROUTES = [
@@ -128,7 +128,7 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/support": ["projects:tickets:view"],
   "/support/inbox": ["projects:tickets:view"],
   "/support/kb": ["support:kb:view"],
-  "/knowledge-base": ["kb:articles:view"],
+  "/knowledge": ["kb:articles:view"],
   "/support/macros": ["support:macros:view"],
   "/support/routing": ["support:macros:view"],
   "/settings/automations": ["settings:automations:view"],
@@ -143,7 +143,6 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/notifications": ["self:attendance"],
   "/ceo": ["reports:view"],
   "/reports": ["reports:view"],
-  "/ai": ["settings:manage"],
   "/blogs/admin": ["settings:manage"],
 };
 

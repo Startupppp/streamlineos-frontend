@@ -38,6 +38,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { OrgCostCenter } from "@/types/org-hierarchy";
+import { RequireModule } from "@/components/auth/require-module";
 
 const formSchema = z.object({
   code: z
@@ -68,7 +69,7 @@ function CostCenterForm({
 
   return (
     <Form {...form}>
-      <form id="cc-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+      <form id="cc-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
@@ -329,6 +330,7 @@ export default function OrgCostCentersPage() {
   );
 
   return (
+    <RequireModule module="HR">
     <PageWrapper
       title="Cost Centers"
       subtitle="Cost centers for expense tracking."
@@ -425,5 +427,6 @@ export default function OrgCostCentersPage() {
         destructive
       />
     </PageWrapper>
+    </RequireModule>
   );
 }

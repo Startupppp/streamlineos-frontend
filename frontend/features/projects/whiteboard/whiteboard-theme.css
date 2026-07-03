@@ -1,0 +1,37 @@
+.wb-canvas .excalidraw {
+  --shadow-island: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --border-radius-lg: 0.75rem;
+}
+
+.wb-canvas .excalidraw:not(.theme--dark) {
+  --island-bg-color: #ffffff;
+  --color-primary: #7c3aed;
+  --color-primary-darker: #6d28d9;
+  --color-primary-darkest: #5b21b6;
+  --color-primary-light: #ede9fe;
+  --color-primary-light-darker: #ddd6fe;
+  --color-primary-hover: #6d28d9;
+  --color-surface-primary-container: #ede9fe;
+  --color-on-primary-container: #7c3aed;
+  --color-brand-hover: #6d28d9;
+  --color-brand-active: #7c3aed;
+  --color-surface-high: #f1f5f9;
+  --color-surface-low: #f1f5f9;
+  --color-surface-mid: #f8fafc;
+  --button-hover-bg: #f1f5f9;
+  --button-active-bg: #f1f5f9;
+  --button-active-border: #7c3aed;
+}
+
+.wb-canvas .excalidraw.theme--dark {
+  --shadow-island: 0 4px 16px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.20);
+}
+
+.wb-canvas .excalidraw .ToolIcon__icon {
+  border-radius: 0.5rem;
+}
+
+.wb-canvas .zoom-actions,
+.wb-canvas .undo-redo-buttons {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.06);
+}

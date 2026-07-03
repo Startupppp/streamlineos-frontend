@@ -178,82 +178,45 @@ export default function BillingPage() {
             onRetry={handleRetryStats}
           />
         ) : (
-          <>
-            <StatCardGrid cols={4}>
-              <StatCard
-                label="Total Invoiced"
-                value={fmt(stats ? stats.totalOutstanding + stats.totalPaid : 0)}
-                icon={FileText}
-                tone="blue"
-                isLoading={statsLoading}
-              />
-              <StatCard
-                label="Received (Paid)"
-                value={fmt(stats?.totalPaid ?? 0)}
-                icon={CheckCircle2}
-                tone="emerald"
-                isLoading={statsLoading}
-              />
-              <StatCard
-                label="Outstanding"
-                value={fmt(stats?.totalOutstanding ?? 0)}
-                icon={Clock}
-                tone="amber"
-                isLoading={statsLoading}
-              />
-              <StatCard
-                label="Failed"
-                value={`${stats?.failed ?? 0} invoices`}
-                icon={AlertCircle}
-                tone="red"
-                isLoading={statsLoading}
-              />
-            </StatCardGrid>
-
-            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-              {statsLoading
-                ? Array.from({ length: 5 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="rounded-lg border border-border bg-card px-3.5 py-2.5 space-y-2"
-                    >
-                      <Skeleton className="h-3 w-12" />
-                      <Skeleton className="h-7 w-8" />
-                    </div>
-                  ))
-                : (
-                    [
-                      "DRAFT",
-                      "ISSUED",
-                      "PAID",
-                      "FAILED",
-                      "VOIDED",
-                    ] as InvoiceStatus[]
-                  ).map((s) => {
-                    const badge = STATUS_BADGE[s];
-                    const statusCountMap: Record<InvoiceStatus, number> = {
-                      DRAFT: stats?.draft ?? 0,
-                      ISSUED: stats?.issued ?? 0,
-                      PAID: stats?.paid ?? 0,
-                      FAILED: stats?.failed ?? 0,
-                      VOIDED: stats?.voided ?? 0,
-                    };
-                    const count = statusCountMap[s];
-                    return (
-                      <Link key={s} href={`/billing/invoices?status=${s}`}>
-                        <div className="rounded-lg border border-border bg-card px-3.5 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-1 truncate">
-                            {badge.label}
-                          </p>
-                          <p className="text-xl font-bold tabular-nums">
-                            {count}
-                          </p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-            </div>
-          </>
+          <StatCardGrid cols={5}>
+            <StatCard
+              label="Total Invoiced"
+              value={fmt(stats ? stats.totalOutstanding + stats.totalPaid : 0)}
+              icon={FileText}
+              tone="blue"
+              isLoading={statsLoading}
+            />
+            <StatCard
+              label="Received (Paid)"
+              value={fmt(stats?.totalPaid ?? 0)}
+              icon={CheckCircle2}
+              tone="emerald"
+              isLoading={statsLoading}
+            />
+            <StatCard
+              label="Outstanding"
+              value={fmt(stats?.totalOutstanding ?? 0)}
+              icon={Clock}
+              tone="amber"
+              isLoading={statsLoading}
+            />
+            <StatCard
+              label="Issued"
+              value={stats?.issued ?? 0}
+              icon={CreditCard}
+              tone="default"
+              href="/billing/invoices?status=ISSUED"
+              isLoading={statsLoading}
+            />
+            <StatCard
+              label="Failed"
+              value={stats?.failed ?? 0}
+              icon={AlertCircle}
+              tone="red"
+              href="/billing/invoices?status=FAILED"
+              isLoading={statsLoading}
+            />
+          </StatCardGrid>
         )}
 
         <div className="rounded-lg border border-border bg-card overflow-hidden">

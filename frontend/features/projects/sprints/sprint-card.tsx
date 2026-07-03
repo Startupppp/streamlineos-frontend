@@ -46,7 +46,7 @@ const STATUS_STYLES: Record<string, StatusStyle> = {
   ACTIVE: {
     label: "Active",
     variant: "secondary",
-    className: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
+    className: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
   },
   PLANNED: {
     label: "Planned",
@@ -83,7 +83,7 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
         : `${daysRemaining}d left`;
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 group">
+    <div className={cn("bg-card border border-border rounded-lg p-4 group", sprint.status === "ACTIVE" && "border-l-2 border-l-emerald-500")}>
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Link
@@ -176,7 +176,7 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
           aria-valuetext={`${Math.round(progress)}% complete`}
         >
           <div
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 h-1.5 rounded-full transition-all duration-300"
+            className="bg-primary h-1.5 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -444,7 +444,7 @@ export function useStockLevels(filters?: StockLevelFilters) {
         limit: res.limit,
       };
     },
-    staleTime: 2 * 60_000,
+    staleTime: 60_000,
   });
 }
 
@@ -509,6 +509,7 @@ export function useTransfer(transferId: number) {
 export function useCreateAdjustment() {
   const qc = useQueryClient();
   return useMutation<void, Error, CreateAdjustmentInput>({
+    mutationKey: ["inventory", "adjustment", "create"],
     mutationFn: (data) =>
       apiClient.post<void>("/inventory/stock/adjustments", {
         reason: data.reason,
@@ -531,6 +532,7 @@ export function useCreateAdjustment() {
 export function useCreateTransfer() {
   const qc = useQueryClient();
   return useMutation<CreatedTransfer, Error, CreateTransferInput>({
+    mutationKey: ["inventory", "transfer", "create"],
     mutationFn: (data) =>
       apiClient.post<CreatedTransfer>("/inventory/stock/transfers", {
         fromLocationId: data.fromLocationId,
@@ -548,6 +550,7 @@ export function useCreateTransfer() {
 export function useCompleteTransfer() {
   const qc = useQueryClient();
   return useMutation<void, Error, CompleteTransferInput>({
+    mutationKey: ["inventory", "transfer", "complete"],
     mutationFn: ({ transferId, lines }) =>
       apiClient.post<void>(`/inventory/stock/transfers/${transferId}/complete`, { lines }),
     onSuccess: (_, vars) => {

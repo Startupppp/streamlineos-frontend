@@ -87,6 +87,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 - Always reuse existing components; never create a new one if an existing (or variant) can serve.
 - Lazy-load heavy client components (dynamic import). `React.memo`/`useMemo` only for **measured** hot paths.
 - **Icons:** Use `@animateicons/react` exclusively. Only use icons available at https://animateicons.in/icons/lucide (248 Lucide) and https://animateicons.in/icons/huge (33 Huge). For any icon not available there, fall back to `lucide-react` static icon — never `@phosphor-icons/react` or any other icon library for new code.
+- **Rich text (living rule, updated 2026-07-03):** simple rich-text fields (ticket descriptions, blog, comments) reuse `components/editor/tiptap-editor.tsx` (TipTap on shadcn styling) — extend it rather than adding another simple editor. **Notion-style document surfaces (KB Wiki pages) use Plate (`platejs`, shadcn-based)** under `components/editor/plate/` — do not build document-editor features on TipTap. Lazy-load editors in dialogs/sheets.
 
 ## 9. File & Folder Structure + Naming (STRICT)
 
@@ -171,6 +172,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 
 - **Loading:** skeletons matching the real layout, not lone spinners.
 - **Empty:** fills available content height (`flex-1`/`h-full`) with icon + message + primary action. Never a small floating block.
+- **Empty-state illustrations (living rule, 2026-07-03):** full-page/main-region empty states use a themed SVG component from `components/illustrations` (extend that set in the `_shared.tsx` tokens/style when nothing fits — compositions may be adapted from unDraw, but always shipped as recolored inline components, never raw downloaded SVG files). Icon-only empty states are for compact/table-cell contexts only.
 - **Error:** friendly message + retry.
 - Long content scrolls **inside the main content area only**; sidebar + shell never scroll with the page (sidebar `h-screen sticky`; main `overflow-y-auto`).
 - No unintended overflow/scrollbars: `min-w-0`, `truncate`, `flex-1`, proper overflow — not fixed heights that burst.
@@ -181,6 +183,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 - Verify the page's feature has everything: list, create, edit, delete, filters, pagination, permissions, all states. ADD what's missing; REMOVE what's not required (including files), then fix folder placement + imports.
 - **Product-specific (HR):** onboarding/profile forms collect only what a real HR platform asks a new joiner — personal (phone, DOB, gender, home address, emergency contact), bank/payroll, ID & document uploads. Exclude recruitment-only data (years of experience, skills).
 - Employee onboarding form is **never** shown to org owners or platform/super admins — gate **server-side** and redirect (owner → setup/dashboard; platform admin → `/owner`).
+- **Module-owned surfaces (living rule, 2026-07-02):** custom fields, automations, integrations, and data-hub import/export are module-scoped features — surface them inside each module's own settings area, never as global `/settings/*` pages. Global settings keeps only org-wide concerns (security, billing, roles, modules, org profile).
 
 ---
 
@@ -270,20 +273,18 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 
 Permissions are resolved from the DB on **every request** via `AccessService`. **CASL is fully removed from the backend.** The frontend keeps `lib/abilities.ts` only as a lightweight (NON-CASL) server-side SSR helper.
 
-> ⚠ **Reconcile-against-repo** — the two prior copies of this guide disagreed on four symbols; confirm the real ones in code, then delete this note:
-> 1. Decorator import — `../access/require-permission.decorator` **vs** `@/modules/access/authorize.decorator`.
-> 2. Default grants location — `ROLE_DEFAULT_PERMISSIONS` in `permissions.constants.ts` **vs** `role-templates.constants.ts`.
-> 3. Scope helper signature — `applyScope(query, scope, userId, "assignedToId")` (`userId: string`) **vs** `applyXScope(query, actor:{userId:number}, scope)`.
-> 4. `bumpPermissionsVersion` shape — standalone `bumpPermissionsVersion(tx, orgId)` **vs** method `this.accessService.bumpPermissionsVersion(orgId, tx)`.
+> **Verified against repo (2026-07-03):** decorator import is `../access/require-permission.decorator`; `ROLE_DEFAULT_PERMISSIONS` lives in `permissions.constants.ts` (not role-templates); scope helper is `applyScope(scope: DataScope, userId: string, cols: ScopeColumns): SQL` in `modules/access/apply-scope.ts`; `bumpPermissionsVersion(tx, orgId)` is a standalone helper in `common/rbac/access-invalidate.ts`; permission resolution is `AccessService.resolveUserPermissions(orgId, userId)`.
+> ⚠ **Known systemic gap:** `PermissionGuard` returns `true` when a method has no `@RequirePermission` (fail-open). Until it is flipped to deny-by-default, every endpoint on a guarded controller MUST carry an explicit `@RequirePermission`.
 
 ### Permission key format
 `"module:resource:action"`, three lowercase colon-separated segments (`"hr:employees:view"`). `action` ∈ {view, create, update, delete, manage, assign, export, approve, reject, import}. Resolved via `GET /me/access` — **never** in JWT claims.
 
 ### Key files (do not delete)
-- `backend/src/modules/rbac/permissions.constants.ts` — permission catalog (source of truth).
-- `backend/src/modules/rbac/role-templates.constants.ts` — `ROLE_DEFAULT_PERMISSIONS`.
+- `backend/src/modules/rbac/permissions.constants.ts` — permission catalog + `ROLE_DEFAULT_PERMISSIONS` (source of truth).
+- `backend/src/modules/rbac/role-templates.constants.ts` — role templates.
+- `backend/src/common/rbac/access-invalidate.ts` — standalone `bumpPermissionsVersion(tx, orgId)`.
 - `backend/src/db/schema/access.ts` — RBAC schema (backend source of truth).
-- `backend/src/modules/access/access.service.ts` — `resolvePermissions`, `bumpPermissionsVersion`; caches per `(userId, orgId)`; degrades pre-migration.
+- `backend/src/modules/access/access.service.ts` — `resolveUserPermissions`; caches per `(userId, orgId)`; degrades pre-migration.
 - `backend/src/modules/access/permission.guard.ts` — `PermissionGuard` (reads `@RequirePermission`, sets `req.rbacScope`).
 - `backend/src/modules/access/apply-scope.ts` — `applyScope` helper.
 - `frontend/lib/api/hooks/access.ts` — `useAccess`, `useCan`, `useModuleEnabled`.
@@ -311,7 +312,7 @@ Permissions are resolved from the DB on **every request** via `AccessService`. *
    ```ts
    await this.db.transaction(async (tx) => {
      await tx.insert(rolePermissionGrants).values(...);
-     await this.accessService.bumpPermissionsVersion(orgId, tx);
+     await bumpPermissionsVersion(tx, orgId);
    });
    ```
 5. Bust the access cache for `(userId, orgId)` in any service that changes role assignments/grants.

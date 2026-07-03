@@ -460,7 +460,6 @@ export function EventCreateDialog({
                 </div>
               </div>
 
-              {/* Linked Work item with icon on left */}
               <div className="flex items-start gap-3 pb-2">
                 <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
                 <div className="flex-1 space-y-1.5">
@@ -569,7 +568,7 @@ function TicketPickerContent({
           value={q}
           onChange={(e) => onQChange(e.target.value)}
           placeholder="Search by ticket key or title…"
-          className="w-full pl-8 pr-3 py-2 text-xs border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+          className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30"
         />
       </div>
       <div className="overflow-y-auto space-y-1 flex-1">
@@ -586,12 +585,12 @@ function TicketPickerContent({
               key={ticket.id}
               type="button"
               onClick={() => onSelect(ticket)}
-              className="w-full flex items-start gap-2.5 px-3 py-2 rounded-lg text-left hover:bg-muted/40 transition-colors"
+              className="w-full flex items-center gap-2 px-3 h-8 rounded-md text-left hover:bg-accent transition-colors focus-visible:outline-none focus-visible:bg-accent"
             >
-              <span className="font-mono text-[10px] text-muted-foreground shrink-0 mt-0.5">
+              <span className="font-mono text-[11px] text-muted-foreground shrink-0 w-16 truncate">
                 {ticket.projectKey}-{ticket.ticketNumber}
               </span>
-              <span className="text-xs flex-1 min-w-0 truncate">{ticket.title}</span>
+              <span className="text-[13px] flex-1 min-w-0 truncate text-foreground">{ticket.title}</span>
             </button>
           ))
         )}

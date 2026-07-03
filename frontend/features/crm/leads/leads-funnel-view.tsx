@@ -41,11 +41,11 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
   if (!board) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 text-center">
-        <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
-          <TrendingDown className="h-7 w-7 text-slate-400" />
+        <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+          <TrendingDown className="h-7 w-7 text-muted-foreground" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-700">No funnel data</p>
+          <p className="text-sm font-semibold text-foreground">No funnel data</p>
           <p className="text-xs text-muted-foreground mt-1">
             Add leads to the pipeline to see the conversion funnel
           </p>
@@ -75,21 +75,21 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-3 gap-4 mb-2">
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm p-4 text-center">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-xs text-muted-foreground">Total Leads</p>
-          <p className="text-2xl font-bold text-slate-800">
+          <p className="text-2xl font-bold tabular-nums text-foreground">
             {STAGE_ORDER.reduce((s, st) => s + (board[st]?.length ?? 0), 0)}
           </p>
         </div>
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm p-4 text-center">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-xs text-muted-foreground">Converted</p>
-          <p className="text-2xl font-bold text-emerald-600">
+          <p className="text-2xl font-bold tabular-nums text-emerald-600">
             {board["CONVERTED"]?.length ?? 0}
           </p>
         </div>
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm p-4 text-center">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-xs text-muted-foreground">Pipeline Value</p>
-          <p className="text-2xl font-bold text-violet-600">
+          <p className="text-2xl font-bold tabular-nums text-blue-600">
             ₹{(totalRevenue / 100000).toFixed(1)}L
           </p>
         </div>
@@ -107,14 +107,14 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
               className="flex items-center gap-4"
             >
               <div className="w-24 text-right shrink-0">
-                <span className="text-xs font-medium text-slate-600">
+                <span className="text-xs font-medium text-muted-foreground">
                   {STAGE_LABELS[stage]}
                 </span>
               </div>
 
               <div className="flex-1 relative h-10">
                 <motion.div
-                  className={`h-full bg-gradient-to-r ${STAGE_COLORS[stage]} rounded-xl flex items-center px-3`}
+                  className={`h-full bg-gradient-to-r ${STAGE_COLORS[stage]} rounded-md flex items-center px-3`}
                   initial={{ width: "0%" }}
                   animate={{ width: `${widthPct}%` }}
                   transition={{ delay: idx * 0.08 + 0.1, duration: 0.5, ease: "easeOut" }}
@@ -128,7 +128,7 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
               <div className="w-24 shrink-0 flex items-center gap-1">
                 {conversionRate !== null && (
                   <>
-                    <ArrowRight className="h-3 w-3 text-slate-400" />
+                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
                     <span
                       className={`text-xs font-medium ${
                         conversionRate >= 50
@@ -155,9 +155,9 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 + idx * 0.05 }}
-            className={`rounded-xl border p-3 text-center ${STAGE_BG[stage]}`}
+            className={`rounded-lg border p-3 text-center ${STAGE_BG[stage]}`}
           >
-            <p className="text-lg font-bold text-slate-800">{count}</p>
+            <p className="text-lg font-bold text-foreground">{count}</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">{STAGE_LABELS[stage]}</p>
           </motion.div>
         ))}

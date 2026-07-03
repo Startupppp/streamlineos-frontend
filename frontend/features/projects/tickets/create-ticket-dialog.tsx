@@ -34,8 +34,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Upload, Link as LinkIcon } from "lucide-react";
+import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { createTicketInputSchema } from "@/lib/validation/projects";
@@ -44,6 +44,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+
+const TiptapEditorDynamic = dynamic(
+  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-md border border-input bg-background animate-pulse min-h-[120px]" />
+    ),
+  },
+);
 
 const formSchema = createTicketInputSchema.omit({ projectId: true }).extend({
   assigneeIds: z.array(z.string()).optional(),
@@ -233,19 +243,19 @@ export function CreateTicketDialog({
             <Plus className="h-6 w-6" />
           </Button>
         ) : (
-          <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+          <Button>
             <Plus className="mr-2 h-4 w-4" /> Create Ticket
           </Button>
         )}
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-y-auto p-0"
+        className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-hidden p-0 flex flex-col"
       >
-        <SheetHeader className="p-6 pb-4 border-b">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle>New Ticket</SheetTitle>
         </SheetHeader>
-        <div className="px-6 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
@@ -331,10 +341,12 @@ export function CreateTicketDialog({
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Describe the issue or task in detail..."
-                        className="min-h-[120px] resize-y"
-                        {...field}
+                      <TiptapEditorDynamic
+                        content={field.value ?? ""}
+                        onChangeHtml={(html) => field.onChange(html)}
+                        output="html"
+                        minHeightClassName="min-h-[120px]"
+                        placeholder="Describe the ticket…"
                       />
                     </FormControl>
                     <FormMessage />
@@ -507,17 +519,20 @@ export function CreateTicketDialog({
                 </FormControl>
               </FormItem>
 
-              <Button
-                type="submit"
-                disabled={createTicketMutation.isPending || isUploading}
-                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-              >
-                {createTicketMutation.isPending || isUploading
-                  ? "Creating..."
-                  : "Create Ticket"}
-              </Button>
             </form>
           </Form>
+        </div>
+        <div className="shrink-0 px-6 py-4 border-t">
+          <Button
+            type="button"
+            disabled={createTicketMutation.isPending || isUploading}
+            className="w-full"
+            onClick={form.handleSubmit(handleSubmit)}
+          >
+            {createTicketMutation.isPending || isUploading
+              ? "Creating..."
+              : "Create Ticket"}
+          </Button>
         </div>
       </SheetContent>
     </Sheet>

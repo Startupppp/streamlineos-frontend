@@ -9,7 +9,7 @@ import {
 } from "@/hooks/api/projects";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyActivityIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { Sprint, SprintBurndownPoint } from "@/types/projects";
 import { ProjectStats } from "@/features/projects/analytics/project-stats";
@@ -159,27 +159,13 @@ export default function AnalyticsPage({
     );
   }, [analytics?.estimateVsActual]);
 
-  const healthScore = (analytics as { healthScore?: number } | undefined)
-    ?.healthScore;
-  const healthStatus = (analytics as { healthStatus?: string } | undefined)
-    ?.healthStatus;
-  const healthBreakdown = (
-    analytics as
-      | {
-          healthBreakdown?: {
-            completionPct: number;
-            onTimePct: number;
-            velocityScore: number;
-            overdueTickets: number;
-            totalTickets: number;
-          };
-        }
-      | undefined
-  )?.healthBreakdown;
+  const healthScore = analytics?.healthScore;
+  const healthStatus = analytics?.healthStatus;
+  const healthBreakdown = analytics?.healthBreakdown;
 
   if (isLoading) {
     return (
-      <PageWrapper title="Analytics">
+      <PageWrapper title="Analytics" eyebrow="Projects" backHref={`/projects/${projectId}`}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-56 w-full" />
@@ -191,20 +177,19 @@ export default function AnalyticsPage({
 
   if (!analytics) {
     return (
-      <PageWrapper title="Analytics">
-        <div className="flex flex-col items-center justify-center flex-1 py-12">
-          <EmptyActivityIllustration className="mx-auto mb-4 w-36 h-36" />
-          <h3 className="text-lg font-semibold mb-1">No data yet</h3>
-          <p className="text-sm text-muted-foreground">
-            Analytics will appear once your project has work items.
-          </p>
-        </div>
+      <PageWrapper title="Analytics" eyebrow="Projects" backHref={`/projects/${projectId}`}>
+        <EmptyState
+          illustration={<BarChart3 className="h-8 w-8 text-muted-foreground/40" />}
+          title="No data yet"
+          description="Analytics will appear once your project has work items."
+          className="flex-1 min-h-[50vh]"
+        />
       </PageWrapper>
     );
   }
 
   return (
-    <PageWrapper title="Analytics">
+    <PageWrapper title="Analytics" eyebrow="Projects" backHref={`/projects/${projectId}`}>
       <ProjectStats
         healthScore={healthScore}
         healthStatus={healthStatus}
@@ -220,10 +205,12 @@ export default function AnalyticsPage({
           </CardHeader>
           <CardContent className="p-4 pt-0">
             {stateData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
-                <BarChart3 className="h-8 w-8 opacity-20" />
-                <p className="text-xs">No data yet</p>
-              </div>
+              <EmptyState
+                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                title="No data yet"
+                compact
+                className="h-40"
+              />
             ) : (
               <div className="h-56">
                 <StateDistributionChart data={stateData} />
@@ -240,10 +227,12 @@ export default function AnalyticsPage({
           </CardHeader>
           <CardContent className="p-4 pt-0">
             {priorityData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
-                <BarChart3 className="h-8 w-8 opacity-20" />
-                <p className="text-xs">No data yet</p>
-              </div>
+              <EmptyState
+                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                title="No data yet"
+                compact
+                className="h-40"
+              />
             ) : (
               <div className="h-56">
                 <PriorityBreakdownChart data={priorityData} />
@@ -260,10 +249,12 @@ export default function AnalyticsPage({
           </CardHeader>
           <CardContent className="p-4 pt-0">
             {volumeData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
-                <BarChart3 className="h-8 w-8 opacity-20" />
-                <p className="text-xs">No data yet</p>
-              </div>
+              <EmptyState
+                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                title="No data yet"
+                compact
+                className="h-40"
+              />
             ) : (
               <div className="h-56">
                 <VolumeOverTimeChart data={volumeData} />
@@ -280,10 +271,12 @@ export default function AnalyticsPage({
           </CardHeader>
           <CardContent className="p-4 pt-0">
             {assigneeData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
-                <BarChart3 className="h-8 w-8 opacity-20" />
-                <p className="text-xs">No data yet</p>
-              </div>
+              <EmptyState
+                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                title="No data yet"
+                compact
+                className="h-40"
+              />
             ) : (
               <div className="h-56">
                 <AssigneeCompletionChart data={assigneeData} />
@@ -300,10 +293,12 @@ export default function AnalyticsPage({
           </CardHeader>
           <CardContent className="p-4 pt-0">
             {velocityData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
-                <BarChart3 className="h-8 w-8 opacity-20" />
-                <p className="text-xs">No data yet</p>
-              </div>
+              <EmptyState
+                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                title="No data yet"
+                compact
+                className="h-40"
+              />
             ) : (
               <div className="h-56">
                 <CycleVelocityChart data={velocityData} />
@@ -327,10 +322,12 @@ export default function AnalyticsPage({
           </CardHeader>
           <CardContent className="p-4 pt-0">
             {estimateData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
-                <BarChart3 className="h-8 w-8 opacity-20" />
-                <p className="text-xs">No data yet</p>
-              </div>
+              <EmptyState
+                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                title="No data yet"
+                compact
+                className="h-40"
+              />
             ) : (
               <div className="h-56">
                 <EstimateVsActualChart data={estimateData} />

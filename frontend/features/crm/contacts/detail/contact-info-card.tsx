@@ -86,10 +86,10 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
     >
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden">
+      <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
         <CardHeader className="px-5 pt-5 pb-4">
           <div className="flex items-start gap-4">
-            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shrink-0 shadow-md shadow-violet-200">
+            <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xl font-bold shrink-0">
               {getInitials(contact.name)}
             </div>
             <div className="flex-1 min-w-0 pt-1">

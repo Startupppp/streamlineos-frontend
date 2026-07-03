@@ -51,11 +51,11 @@ const fieldTypeColors: Record<CustomFieldType, string> = {
   text: "bg-slate-100 text-slate-600",
   number: "bg-blue-100 text-blue-700",
   date: "bg-amber-100 text-amber-700",
-  user: "bg-violet-100 text-violet-700",
+  user: "bg-blue-100 text-blue-700",
   select: "bg-emerald-100 text-emerald-700",
   multi_select: "bg-teal-100 text-teal-700",
   checkbox: "bg-pink-100 text-pink-700",
-  url: "bg-indigo-100 text-indigo-700",
+  url: "bg-blue-50 text-blue-600",
   currency: "bg-green-100 text-green-700",
 };
 
@@ -229,7 +229,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="p-4 rounded-xl border border-violet-200 bg-violet-50/30 space-y-3 overflow-hidden"
+                  className="p-4 rounded-lg border border-border bg-muted/30 space-y-3 overflow-hidden"
                 >
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
@@ -283,7 +283,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                       size="sm"
                       onClick={handleCreate}
                       disabled={!fieldName.trim() || createField.isPending}
-                      className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white h-7 text-xs"
+                      className="h-7 text-xs"
                     >
                       {createField.isPending ? "Creating..." : "Create Field"}
                     </Button>

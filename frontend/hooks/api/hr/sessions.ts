@@ -17,11 +17,13 @@ export const useSessions = () =>
   useQuery<UserSession[]>({
     queryKey: queryKeys.sessions.list(),
     queryFn: () => apiClient.get<UserSession[]>("/hr/sessions"),
+    staleTime: 30 * 1000,
   });
 
 export const useRevokeSession = () => {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["sessions", "revoke"],
     mutationFn: (sessionId: string) => apiClient.delete(`/hr/sessions/${sessionId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.sessions.all }),
   });
@@ -30,6 +32,7 @@ export const useRevokeSession = () => {
 export const useRevokeAllSessions = () => {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["sessions", "revoke-all"],
     mutationFn: () => apiClient.delete("/hr/sessions"),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.sessions.all }),
   });

@@ -27,7 +27,6 @@ export default function robots(): MetadataRoute.Robots {
           "/reports/",
           "/calendar/",
           "/chat/",
-          "/ai/",
           "/account-deactivated/",
           "/setup-password",
           "/reset-password",

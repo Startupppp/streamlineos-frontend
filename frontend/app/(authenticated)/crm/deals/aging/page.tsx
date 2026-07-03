@@ -7,89 +7,151 @@ import {
   AlertTriangle,
   TrendingDown,
   IndianRupee,
-  ArrowLeft,
   ExternalLink,
-  AlertCircle,
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyTargetIllustration } from "@/components/illustrations";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import { useDealAging } from "@/hooks/api/crm";
 import { formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
+import { EmptyDealsIllustration } from "@/components/illustrations";
+
+type AgingDealRow = NonNullable<ReturnType<typeof useDealAging>["data"]>["deals"][number];
 
 const STAGE_BADGE: Record<string, { label: string; className: string }> = {
-  LEAD: {
-    label: "Lead",
-    className: "bg-muted text-muted-foreground border-border",
-  },
-  CONTACTED: {
-    label: "Contacted",
-    className: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  },
-  PROPOSAL: {
-    label: "Proposal",
-    className:
-      "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20",
-  },
-  NEGOTIATION: {
-    label: "Negotiation",
-    className:
-      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  },
+  LEAD: { label: "Lead", className: "bg-slate-100 text-slate-700 border-slate-200" },
+  CONTACTED: { label: "Contacted", className: "bg-blue-50 text-blue-700 border-blue-200" },
+  PROPOSAL: { label: "Proposal", className: "bg-violet-50 text-violet-700 border-violet-200" },
+  NEGOTIATION: { label: "Negotiation", className: "bg-amber-50 text-amber-700 border-amber-200" },
 };
 
-function getStageBadge(stage: string) {
+function StageBadge({ stage }: { stage: string }) {
+  const badge = STAGE_BADGE[stage] ?? { label: stage, className: "bg-slate-100 text-slate-700 border-slate-200" };
   return (
-    STAGE_BADGE[stage] ?? {
-      label: stage,
-      className: "bg-muted text-muted-foreground",
-    }
+    <Badge variant="outline" className={cn("text-[9px] h-4 px-1.5 py-0", badge.className)}>
+      {badge.label}
+    </Badge>
   );
 }
 
-function getDayColor(days: number) {
+function SeverityBadge({ days }: { days: number }) {
+  if (days > 30) {
+    return (
+      <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-red-50 text-red-700 border-red-200">
+        Critical
+      </Badge>
+    );
+  }
+  if (days >= 15) {
+    return (
+      <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200">
+        Warning
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200">
+      Healthy
+    </Badge>
+  );
+}
+
+function getDayClassName(days: number) {
   if (days > 30) return "text-destructive font-semibold";
-  if (days >= 15) return "text-amber-600 dark:text-amber-400 font-medium";
+  if (days >= 15) return "text-amber-600 font-medium";
   return "text-muted-foreground";
 }
 
-function getSeverityChip(days: number) {
-  if (days > 30)
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20">
-        <span className="h-1.5 w-1.5 rounded-full bg-red-500 inline-block" />
-        Critical
-      </span>
-    );
-  if (days >= 15)
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 inline-block" />
-        Warning
-      </span>
-    );
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
-      Healthy
-    </span>
-  );
-}
+const COLUMNS: DataTableColumn<AgingDealRow>[] = [
+  {
+    key: "name",
+    header: "Deal Name",
+    sortable: true,
+    sortValue: (r) => r.name,
+    cell: (r) => (
+      <Link
+        href={`/crm/deals/${r.id}`}
+        className="text-blue-600 hover:underline transition-colors truncate block max-w-[200px]"
+      >
+        {r.name}
+      </Link>
+    ),
+  },
+  {
+    key: "stage",
+    header: "Stage",
+    cell: (r) => <StageBadge stage={r.stage} />,
+  },
+  {
+    key: "assigneeName",
+    header: "Assignee",
+    cell: (r) =>
+      r.assigneeName ?? (
+        <span className="italic text-muted-foreground/60">Unassigned</span>
+      ),
+  },
+  {
+    key: "daysInStage",
+    header: "Days in Stage",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    sortable: true,
+    sortValue: (r) => r.daysInStage,
+    cell: (r) => (
+      <span className={getDayClassName(r.daysInStage)}>{r.daysInStage}d</span>
+    ),
+  },
+  {
+    key: "severity",
+    header: "Severity",
+    cell: (r) => <SeverityBadge days={r.daysInStage} />,
+  },
+  {
+    key: "value",
+    header: "Deal Value",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    sortable: true,
+    sortValue: (r) => Number(r.value ?? 0),
+    cell: (r) =>
+      r.value ? (
+        formatINR(r.value)
+      ) : (
+        <span className="text-muted-foreground/60">—</span>
+      ),
+  },
+  {
+    key: "createdAt",
+    header: "Created",
+    className: "font-mono tabular-nums",
+    cell: (r) =>
+      r.createdAt
+        ? new Date(r.createdAt).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : "—",
+  },
+  {
+    key: "actions",
+    header: "",
+    headerClassName: "w-24",
+    cell: (r) => (
+      <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
+        <Link href={`/crm/deals/${r.id}`}>
+          <ExternalLink className="h-3.5 w-3.5 mr-1" />
+          View
+        </Link>
+      </Button>
+    ),
+  },
+];
 
 export default function DealAgingPage() {
   const { data, isLoading, isError, refetch } = useDealAging();
@@ -100,19 +162,15 @@ export default function DealAgingPage() {
   }, [data?.deals]);
 
   const stats = useMemo(() => {
-    if (!data)
-      return { totalStale: 0, avgDays: 0, oldestDays: 0, totalValue: 0 };
+    if (!data) return { totalStale: 0, avgDays: 0, oldestDays: 0, totalValue: 0 };
     const deals = data.deals;
     const stale = deals.filter((d) => d.daysInStage > 14);
-    const totalValue = deals.reduce((sum, d) => sum + Number(d.value || 0), 0);
+    const totalValue = deals.reduce((sum, d) => sum + Number(d.value ?? 0), 0);
     const avgDays =
       deals.length > 0
-        ? Math.round(
-            deals.reduce((sum, d) => sum + d.daysInStage, 0) / deals.length,
-          )
+        ? Math.round(deals.reduce((sum, d) => sum + d.daysInStage, 0) / deals.length)
         : 0;
-    const oldestDays =
-      deals.length > 0 ? Math.max(...deals.map((d) => d.daysInStage)) : 0;
+    const oldestDays = deals.length > 0 ? Math.max(...deals.map((d) => d.daysInStage)) : 0;
     return { totalStale: stale.length, avgDays, oldestDays, totalValue };
   }, [data]);
 
@@ -120,204 +178,70 @@ export default function DealAgingPage() {
     void refetch();
   }, [refetch]);
 
-  const backAction = (
-    <Button variant="outline" size="sm" asChild>
-      <Link href="/crm/deals">
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Deals
-      </Link>
-    </Button>
-  );
-
-  if (isLoading) {
-    return (
-      <PageWrapper
-        title="Deal Aging Report"
-        subtitle="Deals stuck in pipeline stages"
-        actions={backAction}
-      >
-        <div className="space-y-6">
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
-            ))}
-          </div>
-          <Skeleton className="h-96 rounded-xl" />
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Deal Aging Report"
-        subtitle="Deals stuck in pipeline stages"
-        actions={backAction}
-      >
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-20 text-center">
-          <AlertCircle className="h-10 w-10 text-destructive" />
-          <p className="text-sm text-muted-foreground">
-            Failed to load aging data.
-          </p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            Retry
-          </Button>
-        </div>
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
-      title="Deal Aging Report"
+      title="Deal Aging"
       subtitle="Deals stuck in pipeline stages"
-      actions={backAction}
+      backHref="/crm/deals"
+      eyebrow="CRM / Deals"
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-          <StatCard
-            label="Total Stale Deals"
-            value={stats.totalStale}
-            icon={AlertTriangle}
-            color="red"
-            index={0}
-          />
-          <StatCard
-            label="Avg Days Stuck"
-            value={`${stats.avgDays}d`}
-            icon={Clock}
-            color="amber"
-            index={1}
-          />
-          <StatCard
-            label="Oldest Deal"
-            value={`${stats.oldestDays}d`}
-            icon={TrendingDown}
-            color="purple"
-            index={2}
-          />
-          <StatCard
-            label="Total Value at Risk"
-            value={formatINR(stats.totalValue)}
-            icon={IndianRupee}
-            color="blue"
-            index={3}
+      {isError ? (
+        <ErrorState
+          title="Failed to load aging data"
+          description="An error occurred while loading the deal aging report."
+          onRetry={handleRetry}
+          className="flex-1 min-h-[40vh]"
+        />
+      ) : (
+        <div className="space-y-4">
+          <StatCardGrid cols={4}>
+            <StatCard
+              label="Total Stale Deals"
+              value={stats.totalStale}
+              icon={AlertTriangle}
+              tone="red"
+              isLoading={isLoading}
+            />
+            <StatCard
+              label="Avg Days Stuck"
+              value={`${stats.avgDays}d`}
+              icon={Clock}
+              tone="amber"
+              isLoading={isLoading}
+            />
+            <StatCard
+              label="Oldest Deal"
+              value={`${stats.oldestDays}d`}
+              icon={TrendingDown}
+              tone="violet"
+              isLoading={isLoading}
+            />
+            <StatCard
+              label="Total Value at Risk"
+              value={formatINR(stats.totalValue)}
+              icon={IndianRupee}
+              tone="blue"
+              isLoading={isLoading}
+            />
+          </StatCardGrid>
+
+          <DataTable
+            data={sortedDeals}
+            columns={COLUMNS}
+            getRowKey={(r) => r.id}
+            isLoading={isLoading}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyDealsIllustration />}
+                title="All deals are moving smoothly"
+                description="No deals are currently stuck in any pipeline stage."
+                className="border-0 bg-transparent min-h-[40vh]"
+              />
+            }
+            minWidth="780px"
           />
         </div>
-
-        <Card>
-          <CardContent className="p-0">
-            {sortedDeals.length === 0 ? (
-              <EmptyState
-                illustration={<EmptyTargetIllustration className="h-36 w-36" />}
-                title="All deals are moving smoothly"
-                description="No deals are currently stuck in any pipeline stage. Keep it up!"
-              />
-            ) : (
-              <ScrollArea className="w-full" type="auto">
-                <div className="min-w-[780px]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[220px]">Deal Name</TableHead>
-                        <TableHead>Stage</TableHead>
-                        <TableHead>Assignee</TableHead>
-                        <TableHead>Days in Stage</TableHead>
-                        <TableHead>Severity</TableHead>
-                        <TableHead>Deal Value</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedDeals.map((deal) => {
-                        const badge = getStageBadge(deal.stage);
-                        return (
-                          <TableRow key={deal.id}>
-                            <TableCell className="font-medium">
-                              <Link
-                                href={`/crm/deals/${deal.id}`}
-                                className="hover:underline hover:text-blue-600 transition-colors truncate block max-w-[200px]"
-                              >
-                                {deal.name}
-                              </Link>
-                            </TableCell>
-
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={cn("text-xs", badge.className)}
-                              >
-                                {badge.label}
-                              </Badge>
-                            </TableCell>
-
-                            <TableCell className="text-sm text-muted-foreground">
-                              {deal.assigneeName ?? (
-                                <span className="italic text-muted-foreground/60">
-                                  Unassigned
-                                </span>
-                              )}
-                            </TableCell>
-
-                            <TableCell>
-                              <span
-                                className={cn(
-                                  "text-sm tabular-nums",
-                                  getDayColor(deal.daysInStage),
-                                )}
-                              >
-                                {deal.daysInStage}d
-                              </span>
-                            </TableCell>
-
-                            <TableCell>
-                              {getSeverityChip(deal.daysInStage)}
-                            </TableCell>
-
-                            <TableCell className="text-sm tabular-nums">
-                              {deal.value ? (
-                                formatINR(deal.value)
-                              ) : (
-                                <span className="text-muted-foreground/60">
-                                  —
-                                </span>
-                              )}
-                            </TableCell>
-
-                            <TableCell className="text-sm text-muted-foreground tabular-nums">
-                              {deal.createdAt
-                                ? new Date(deal.createdAt).toLocaleDateString(
-                                    "en-IN",
-                                    {
-                                      day: "2-digit",
-                                      month: "short",
-                                      year: "numeric",
-                                    },
-                                  )
-                                : "—"}
-                            </TableCell>
-
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm" asChild>
-                                <Link href={`/crm/deals/${deal.id}`}>
-                                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                                  View Deal
-                                </Link>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </ScrollArea>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      )}
     </PageWrapper>
   );
 }

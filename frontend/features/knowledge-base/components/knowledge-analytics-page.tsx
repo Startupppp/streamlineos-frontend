@@ -1,0 +1,288 @@
+"use client";
+
+import { BarChart2, Search, ThumbsUp, FileText, Eye, Lock, Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  useKbAnalyticsOverview,
+  useKbNoResults,
+  usePageAnalytics,
+  useKnowledgeGaps,
+  useCreateKbPage,
+} from "@/hooks/api/kb";
+import { useCan } from "@/hooks/api/access";
+import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import type { KbNoResultRow, KbPageAnalyticsRow, KbGapRow } from "@/types/kb";
+
+const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  draft: "outline",
+  in_review: "secondary",
+  published: "default",
+  archived: "secondary",
+};
+
+const TRUST_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  unverified: "outline",
+  verified: "default",
+  verification_expired: "destructive",
+};
+
+function NoResultsRow({ row, rank }: { row: KbNoResultRow; rank: number }) {
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/40 transition-colors">
+      <span className="text-xs text-muted-foreground w-5 shrink-0 tabular-nums">{rank}</span>
+      <span className="flex-1 text-sm truncate">{row.query ?? "(empty)"}</span>
+      <span className="text-xs font-medium tabular-nums text-muted-foreground">{row.count}</span>
+    </div>
+  );
+}
+
+function PageAnalyticsTableRow({ row }: { row: KbPageAnalyticsRow }) {
+  return (
+    <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
+      <Link href={pageHref(row.id)} className="text-sm truncate hover:underline text-foreground">
+        {row.title || "Untitled"}
+      </Link>
+      <span className="text-xs tabular-nums text-muted-foreground text-right">{row.uniqueViewers}</span>
+      <span className="text-xs tabular-nums text-muted-foreground text-right">{row.commentCount}</span>
+      <span className="text-xs tabular-nums text-muted-foreground text-right">{row.versionCount}</span>
+      <Badge variant={STATUS_VARIANT[row.status] ?? "outline"} className="text-xs capitalize">
+        {row.status.replace("_", " ")}
+      </Badge>
+      <Badge variant={TRUST_VARIANT[row.trustState] ?? "outline"} className="text-xs capitalize">
+        {row.trustState.replace("_", " ")}
+      </Badge>
+      <span className="text-xs text-muted-foreground text-right">
+        {new Date(row.updatedAt).toLocaleDateString("en", { month: "short", day: "numeric" })}
+      </span>
+    </div>
+  );
+}
+
+function GapTableRow({
+  row,
+  onCreatePage,
+  isCreating,
+}: {
+  row: KbGapRow;
+  onCreatePage: (q: string) => void;
+  isCreating: boolean;
+}) {
+  function handleClick() {
+    if (row.query) onCreatePage(row.query);
+  }
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
+      <span className="flex-1 text-sm truncate">{row.query ?? "(empty)"}</span>
+      <span className="text-xs tabular-nums text-muted-foreground shrink-0">{row.count}</span>
+      <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
+        {new Date(row.lastOccurredAt).toLocaleDateString("en", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })}
+      </span>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-7 px-2 text-xs gap-1 shrink-0"
+        onClick={handleClick}
+        disabled={isCreating || !row.query}
+      >
+        <Plus className="h-3 w-3" />
+        Create page
+      </Button>
+    </div>
+  );
+}
+
+function AnalyticsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-[56px] rounded-lg" />
+        ))}
+      </div>
+      {Array.from({ length: 3 }).map((_, s) => (
+        <div key={s} className="space-y-2">
+          <Skeleton className="h-4 w-36" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-full rounded-md" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function KnowledgeAnalyticsPage() {
+  const canView = useCan("kb:analytics:view");
+  const { data: overview, isLoading: overviewLoading } = useKbAnalyticsOverview();
+  const { data: noResults = [], isLoading: noResultsLoading } = useKbNoResults();
+  const { data: pageAnalytics = [], isLoading: pagesLoading } = usePageAnalytics();
+  const { data: gaps = [], isLoading: gapsLoading } = useKnowledgeGaps();
+  const createPage = useCreateKbPage();
+  const router = useRouter();
+
+  function handleCreatePageFromGap(query: string) {
+    createPage.mutate(
+      { title: query },
+      {
+        onSuccess(page) {
+          router.push(pageHref(page.id));
+        },
+      },
+    );
+  }
+
+  if (!canView) {
+    return (
+      <PageWrapper title="Analytics">
+        <EmptyState
+          illustration={<Lock className="h-8 w-8 text-muted-foreground/40" />}
+          title="Access restricted"
+          description="You don't have permission to view knowledge base analytics."
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (overviewLoading || noResultsLoading || pagesLoading || gapsLoading) {
+    return (
+      <PageWrapper title="Analytics">
+        <AnalyticsSkeleton />
+      </PageWrapper>
+    );
+  }
+
+  return (
+    <PageWrapper title="Analytics">
+      {overview && (
+        <StatCardGrid cols={5} className="mb-6">
+          <StatCard label="Total pages" value={overview.totalCount} icon={FileText} tone="default" />
+          <StatCard label="Total views" value={overview.totalViews} icon={Eye} tone="blue" />
+          <StatCard label="Searches" value={overview.searches} icon={Search} tone="violet" />
+          <StatCard label="Helpful votes" value={overview.helpfulUp} icon={ThumbsUp} tone="emerald" />
+          <StatCard
+            label="Search success"
+            value={`${Math.round(overview.searchSuccessRate)}%`}
+            icon={BarChart2}
+            tone="amber"
+          />
+        </StatCardGrid>
+      )}
+
+      <div className="space-y-8">
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">No-result searches</h2>
+            {noResults.length > 0 && (
+              <span className="text-xs text-muted-foreground">{noResults.length} queries</span>
+            )}
+          </div>
+          {noResults.length === 0 ? (
+            <EmptyState
+              illustration={<Search className="h-6 w-6 text-muted-foreground/40" />}
+              title="No zero-result searches"
+              description="All recent searches returned at least one result."
+              compact
+            />
+          ) : (
+            <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
+              <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
+                <span className="text-xs font-medium text-muted-foreground w-5">#</span>
+                <span className="flex-1 text-xs font-medium text-muted-foreground">Query</span>
+                <span className="text-xs font-medium text-muted-foreground">Count</span>
+              </div>
+              {noResults.map((row, i) => (
+                <NoResultsRow key={i} row={row} rank={i + 1} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">Top pages</h2>
+            {pageAnalytics.length > 0 && (
+              <span className="text-xs text-muted-foreground">{pageAnalytics.length} pages</span>
+            )}
+          </div>
+          {pageAnalytics.length === 0 ? (
+            <EmptyState
+              illustration={<FileText className="h-6 w-6 text-muted-foreground/40" />}
+              title="No page data yet"
+              description="Page view data will appear here once users start reading pages."
+              compact
+            />
+          ) : (
+            <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
+              <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 border-b border-border">
+                <span className="text-xs font-medium text-muted-foreground">Title</span>
+                <span className="text-xs font-medium text-muted-foreground text-right">Views</span>
+                <span className="text-xs font-medium text-muted-foreground text-right">Cmts</span>
+                <span className="text-xs font-medium text-muted-foreground text-right">Vers</span>
+                <span className="text-xs font-medium text-muted-foreground">Status</span>
+                <span className="text-xs font-medium text-muted-foreground">Trust</span>
+                <span className="text-xs font-medium text-muted-foreground text-right">Updated</span>
+              </div>
+              {pageAnalytics.map((row) => (
+                <PageAnalyticsTableRow key={row.id} row={row} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Knowledge gaps</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Searches that returned no results — write pages to close these gaps.
+              </p>
+            </div>
+            {gaps.length > 0 && (
+              <span className="text-xs text-muted-foreground">{gaps.length} gaps</span>
+            )}
+          </div>
+          {gaps.length === 0 ? (
+            <EmptyState
+              illustration={<Search className="h-6 w-6 text-muted-foreground/40" />}
+              title="No knowledge gaps"
+              description="All searches are finding relevant content."
+              compact
+            />
+          ) : (
+            <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
+              <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
+                <span className="flex-1 text-xs font-medium text-muted-foreground">Query</span>
+                <span className="text-xs font-medium text-muted-foreground shrink-0">Count</span>
+                <span className="text-xs font-medium text-muted-foreground shrink-0 w-28 text-right">
+                  Last searched
+                </span>
+                <span className="text-xs font-medium text-muted-foreground shrink-0 w-24 text-right">
+                  Action
+                </span>
+              </div>
+              {gaps.map((row, i) => (
+                <GapTableRow
+                  key={i}
+                  row={row}
+                  onCreatePage={handleCreatePageFromGap}
+                  isCreating={createPage.isPending}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </PageWrapper>
+  );
+}

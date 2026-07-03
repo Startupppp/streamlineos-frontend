@@ -1,14 +1,24 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, CheckSquare, AlertCircle } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import {
+  Plus,
+  CheckSquare,
+  AlertCircle,
+  Clock,
+  CalendarDays,
+  CheckCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTasksIllustration } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   useTasks,
   useCompleteTask,
@@ -42,14 +52,33 @@ function getTaskBucket(dueDate: string | null): TaskBucket {
 
 const BUCKET_ORDER: TaskBucket[] = ["OVERDUE", "TODAY", "THIS_WEEK", "UPCOMING", "NO_DATE"];
 
-export default function CrmTasksPage() {
+function isTaskType(v: string): v is TaskType {
+  const types: string[] = ["CALL", "EMAIL", "MEETING", "DEMO", "FOLLOW_UP", "REMINDER", "CUSTOM"];
+  return types.includes(v);
+}
+
+function isTaskStatus(v: string): v is TaskStatus {
+  const statuses: string[] = ["pending", "completed", "cancelled"];
+  return statuses.includes(v);
+}
+
+function isTaskEntityType(v: string): v is TaskEntityType {
+  const entityTypes: string[] = ["LEAD", "DEAL", "CONTACT", "PROJECT"];
+  return entityTypes.includes(v);
+}
+
+function CrmTasksContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const typeFilter = searchParams.get("type") ?? "";
-  const statusFilter = searchParams.get("status") ?? "";
-  const entityTypeFilter = searchParams.get("entityType") ?? "";
+  const typeRaw       = searchParams.get("type") ?? "";
+  const statusRaw     = searchParams.get("status") ?? "";
+  const entityTypeRaw = searchParams.get("entityType") ?? "";
   const assigneeFilter = searchParams.get("assigneeId") ?? "";
+
+  const typeFilter       = isTaskType(typeRaw)       ? typeRaw       : "";
+  const statusFilter     = isTaskStatus(statusRaw)   ? statusRaw     : "";
+  const entityTypeFilter = isTaskEntityType(entityTypeRaw) ? entityTypeRaw : "";
 
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -80,9 +109,9 @@ export default function CrmTasksPage() {
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
 
   const tasksFilters: TasksFilters = {
-    type: (typeFilter as TaskType) || undefined,
-    status: (statusFilter as TaskStatus) || undefined,
-    entityType: (entityTypeFilter as TaskEntityType) || undefined,
+    type: typeFilter || undefined,
+    status: statusFilter || undefined,
+    entityType: entityTypeFilter || undefined,
     assigneeId: assigneeFilter || undefined,
     limit: 100,
   };
@@ -172,30 +201,19 @@ export default function CrmTasksPage() {
   const handleCreateOpen = useCallback(() => setCreateOpen(true), []);
   const handleCreateOpenChange = useCallback((open: boolean) => setCreateOpen(open), []);
 
-  const statCards = [
-    { label: "Total", value: stats.total, color: "text-foreground" },
-    { label: "Overdue", value: stats.overdue, color: "text-red-600" },
-    { label: "Due Today", value: stats.today, color: "text-blue-600" },
-    { label: "This Week", value: stats.thisWeek, color: "text-amber-600" },
-    { label: "Completed", value: stats.completed, color: "text-green-600" },
-  ];
-
   const hasAnyTasks = BUCKET_ORDER.some((b) => groupedTasks[b].length > 0);
 
   if (isLoading) {
     return (
-      <PageWrapper
-        title="Tasks"
-        subtitle="Follow-ups and action items across your pipeline"
-      >
+      <PageWrapper title="Tasks" subtitle="Follow-ups and action items">
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-xl" />
+            <Skeleton key={i} className="h-[52px] rounded-lg" />
           ))}
         </div>
         <div className="space-y-3">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-slate-200/60 overflow-hidden">
+            <div key={i} className="rounded-md border border-border overflow-hidden">
               <div className="flex items-center gap-3 px-4 py-3 bg-muted/30">
                 <Skeleton className="h-4 w-4" />
                 <Skeleton className="h-4 w-20" />
@@ -222,18 +240,13 @@ export default function CrmTasksPage() {
   return (
     <PageWrapper
       title="Tasks"
-      subtitle="Follow-ups and action items across your pipeline"
+      subtitle={data ? `${stats.total} tasks` : undefined}
       badge={data ? String(stats.total) : undefined}
       actions={
-        <motion.div whileTap={{ scale: 0.97 }}>
-          <Button
-            onClick={handleCreateOpen}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Task
-          </Button>
-        </motion.div>
+        <Button onClick={handleCreateOpen} size="sm" className="h-8 gap-1.5 text-xs">
+          <Plus className="h-3.5 w-3.5" />
+          New Task
+        </Button>
       }
       filters={
         <TasksToolbar
@@ -252,67 +265,76 @@ export default function CrmTasksPage() {
         />
       }
     >
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
-        {statCards.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-sm p-3"
-          >
-            <p className={cn("text-xl font-bold tabular-nums", stat.color)}>{stat.value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
-          </div>
-        ))}
-      </div>
+      <div className="space-y-4">
+        <StatCardGrid cols={5}>
+          <StatCard label="Total" value={stats.total} icon={CheckSquare} tone="default" />
+          <StatCard label="Overdue" value={stats.overdue} icon={AlertCircle} tone="red" />
+          <StatCard label="Due Today" value={stats.today} icon={Clock} tone="blue" />
+          <StatCard label="This Week" value={stats.thisWeek} icon={CalendarDays} tone="amber" />
+          <StatCard label="Completed" value={stats.completed} icon={CheckCheck} tone="emerald" />
+        </StatCardGrid>
 
-      {isError ? (
-        <div className="flex flex-col items-center justify-center flex-1 py-16 text-center">
-          <AlertCircle className="h-12 w-12 text-muted-foreground/40 mb-3" />
-          <p className="text-sm font-medium text-foreground">Failed to load tasks</p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={handleRetry}>
-            Retry
-          </Button>
-        </div>
-      ) : hasAnyTasks ? (
-        <div className="space-y-3">
-          <AnimatePresence>
-            {BUCKET_ORDER.map((bucket) => {
-              const tasks = groupedTasks[bucket];
-              if (tasks.length === 0) return null;
-              return (
-                <TaskBucketSection
-                  key={bucket}
-                  bucket={bucket}
-                  tasks={tasks}
-                  optimisticCompletedIds={optimisticCompletedIds}
-                  onComplete={handleComplete}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              );
-            })}
-          </AnimatePresence>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[400px] rounded-xl border border-dashed border-border/60 bg-muted/20 py-16">
-          <CheckSquare className="h-16 w-16 text-muted-foreground/30 mb-4" />
-          <h3 className="text-[0.9375rem] font-semibold text-foreground mb-1">No tasks yet</h3>
-          <p className="text-sm text-muted-foreground mb-5 max-w-xs text-center">
-            Create your first task to track follow-ups and action items.
-          </p>
-          <motion.div whileTap={{ scale: 0.97 }}>
-            <Button
-              onClick={handleCreateOpen}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Task
-            </Button>
-          </motion.div>
-        </div>
-      )}
+        {isError ? (
+          <ErrorState
+            title="Failed to load tasks"
+            description="Could not load tasks. Please try again."
+            onRetry={handleRetry}
+            className="flex-1 min-h-[300px]"
+          />
+        ) : hasAnyTasks ? (
+          <div className="space-y-3">
+            <AnimatePresence>
+              {BUCKET_ORDER.map((bucket) => {
+                const tasks = groupedTasks[bucket];
+                if (tasks.length === 0) return null;
+                return (
+                  <TaskBucketSection
+                    key={bucket}
+                    bucket={bucket}
+                    tasks={tasks}
+                    optimisticCompletedIds={optimisticCompletedIds}
+                    onComplete={handleComplete}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        ) : (
+          <EmptyState
+            illustration={<EmptyTasksIllustration />}
+            title="No tasks yet"
+            description="Create your first task to track follow-ups and action items."
+            action={{ label: "Create Task", onClick: handleCreateOpen }}
+            className="flex-1 min-h-[400px] border-0 bg-transparent"
+          />
+        )}
+      </div>
 
       <CreateTaskDialog open={createOpen} onOpenChange={handleCreateOpenChange} />
       <CreateTaskDialog open={!!editTask} onOpenChange={handleEditClose} task={editTask ?? undefined} />
     </PageWrapper>
+  );
+}
+
+export default function CrmTasksPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageWrapper title="Tasks" subtitle="Follow-ups and action items">
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-[52px] rounded-lg" />
+            ))}
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-lg mt-3" />
+            ))}
+          </div>
+        </PageWrapper>
+      }
+    >
+      <CrmTasksContent />
+    </Suspense>
   );
 }

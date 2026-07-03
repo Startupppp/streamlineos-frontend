@@ -1,49 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Plus, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { usePurchaseOrders, useVendors } from "@/hooks/api/inventory";
-import type { PurchaseOrderStatus } from "@/types/inventory";
+import type { PurchaseOrderStatus, PurchaseOrderSummary } from "@/types/inventory";
 
-type StatusFilter = "ALL" | PurchaseOrderStatus;
-
-const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
-  { value: "ALL", label: "All statuses" },
+const STATUS_OPTIONS = [
+  { value: "all", label: "All statuses" },
   { value: "DRAFT", label: "Draft" },
   { value: "SENT", label: "Sent" },
   { value: "PARTIAL", label: "Partially received" },
   { value: "RECEIVED", label: "Received" },
   { value: "CLOSED", label: "Closed" },
   { value: "CANCELLED", label: "Cancelled" },
-];
+] as const;
 
-const STATUS_VARIANT: Record<PurchaseOrderStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  DRAFT: "secondary",
-  SENT: "default",
-  PARTIAL: "outline",
-  RECEIVED: "default",
-  CLOSED: "secondary",
-  CANCELLED: "destructive",
-};
-
-const STATUS_CLASS: Partial<Record<PurchaseOrderStatus, string>> = {
+const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
+  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
   SENT: "bg-blue-50 text-blue-700 border-blue-200",
-  PARTIAL: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950",
+  PARTIAL: "bg-amber-50 text-amber-700 border-amber-200",
   RECEIVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CLOSED: "bg-slate-100 text-slate-700 border-slate-200",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 
-function isStatusFilter(value: string): value is StatusFilter {
-  return STATUS_OPTIONS.some((opt) => opt.value === value);
-}
+const VALID_STATUSES = new Set<string>([
+  "DRAFT", "SENT", "PARTIAL", "RECEIVED", "CLOSED", "CANCELLED",
+]);
 
 function formatDate(value: string | null): string {
   if (!value) return "—";
@@ -52,166 +46,241 @@ function formatDate(value: string | null): string {
 }
 
 function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
-  const extraClass = STATUS_CLASS[status];
   return (
-    <Badge
-      variant={STATUS_VARIANT[status]}
-      className={`text-xs px-1.5 py-0.5 rounded-md${extraClass ? ` ${extraClass}` : ""}`}
-    >
+    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", STATUS_BADGE[status])}>
       {status}
     </Badge>
   );
 }
 
 export default function PurchaseOrdersListPage() {
-  const [status, setStatus] = useState<StatusFilter>("ALL");
-  const [vendorId, setVendorId] = useState<string>("ALL");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+  const [search, setSearch] = useState<string>("");
 
-  const vendorsQuery = useVendors({ isActive: true, limit: 200 });
-  const query = usePurchaseOrders({
-    page: 1,
-    pageSize: 100,
-    status: status === "ALL" ? undefined : status,
-    vendorId: vendorId !== "ALL" ? Number(vendorId) : undefined,
-  });
+  const statusParam = searchParams.get("status") ?? "all";
+  const vendorParam = searchParams.get("vendor") ?? "all";
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
+
+  const resolvedStatus = VALID_STATUSES.has(statusParam)
+    ? (statusParam as PurchaseOrderStatus)
+    : undefined;
+  const resolvedVendorId = vendorParam !== "all" ? Number(vendorParam) : undefined;
+
+  function updateParams(updates: Record<string, string>): void {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === "all" || value === "" || (key === "page" && value === "1")) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    startTransition(() => {
+      router.replace(`?${params.toString()}`, { scroll: false });
+    });
+  }
 
   function handleStatusChange(value: string): void {
-    if (isStatusFilter(value)) setStatus(value);
+    updateParams({ status: value, page: "1" });
   }
 
   function handleVendorChange(value: string): void {
-    setVendorId(value);
+    updateParams({ vendor: value, page: "1" });
   }
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setSearch(e.target.value);
+  }
+
+  function handlePageChange(nextPage: number): void {
+    updateParams({ page: String(nextPage) });
+  }
+
+  function handleClearFilters(): void {
+    setSearch("");
+    updateParams({ status: "all", vendor: "all", page: "1" });
+  }
+
+  const vendorsQuery = useVendors({ isActive: true, limit: 200 });
+  const query = usePurchaseOrders({
+    page,
+    pageSize: 50,
+    status: resolvedStatus,
+    vendorId: resolvedVendorId,
+  });
+
+  const allItems = query.data?.items ?? [];
+  const vendors = vendorsQuery.data?.items ?? [];
+  const total = query.data?.total ?? 0;
+  const totalPages = query.data?.totalPages ?? 1;
+
+  const filteredItems = search.trim()
+    ? allItems.filter(
+        (po) =>
+          po.poNumber.toLowerCase().includes(search.toLowerCase()) ||
+          (po.vendor?.name ?? "").toLowerCase().includes(search.toLowerCase()),
+      )
+    : allItems;
+
+  const hasFilters = statusParam !== "all" || vendorParam !== "all" || search.length > 0;
 
   function handleRetry(): void {
     void query.refetch();
   }
 
-  const items = query.data?.items ?? [];
-  const vendors = vendorsQuery.data?.items ?? [];
+  const columns: DataTableColumn<PurchaseOrderSummary>[] = [
+    {
+      key: "poNumber",
+      header: "PO #",
+      cell: (po) => (
+        <Link
+          href={`/inventory/purchase-orders/${po.id}`}
+          className="font-mono text-[11px] text-blue-600 hover:underline transition-colors"
+        >
+          {po.poNumber}
+        </Link>
+      ),
+      sortable: true,
+      sortValue: (po) => po.poNumber,
+    },
+    {
+      key: "vendor",
+      header: "Vendor",
+      cell: (po) => po.vendor?.name ?? "—",
+    },
+    {
+      key: "orderDate",
+      header: "Order Date",
+      cell: (po) => (
+        <span className="font-mono tabular-nums">{formatDate(po.orderDate)}</span>
+      ),
+    },
+    {
+      key: "expectedDeliveryDate",
+      header: "Expected Delivery",
+      headerClassName: "hidden md:table-cell",
+      className: "hidden md:table-cell",
+      cell: (po) => (
+        <span className="font-mono tabular-nums">{formatDate(po.expectedDeliveryDate)}</span>
+      ),
+    },
+    {
+      key: "total",
+      header: "Total",
+      cell: (po) => (
+        <span className="font-mono tabular-nums">
+          {po.currency} {Number(po.total).toFixed(2)}
+        </span>
+      ),
+      className: "text-right font-mono tabular-nums",
+      headerClassName: "text-right",
+      sortable: true,
+      sortValue: (po) => Number(po.total),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (po) => <StatusBadge status={po.status} />,
+    },
+  ];
+
+  const filterBar = (
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
+      <div className="relative min-w-0 flex-1 lg:max-w-md">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Input
+          value={search}
+          onChange={handleSearchChange}
+          placeholder="Search PO number or vendor…"
+          className="h-8 w-full min-w-0 pl-8 text-xs"
+        />
+      </div>
+      <div className="hidden min-w-0 flex-[2] flex-row flex-nowrap items-center gap-2 sm:flex lg:gap-3">
+        <Select value={statusParam} onValueChange={handleStatusChange}>
+          <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={vendorParam} onValueChange={handleVendorChange}>
+          <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
+            <SelectValue placeholder="All vendors" />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            <SelectItem value="all">All vendors</SelectItem>
+            {vendors.map((v) => (
+              <SelectItem key={v.id} value={String(v.id)}>
+                {v.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
 
   return (
     <PageWrapper
       eyebrow="Inventory"
       title="Purchase Orders"
-      subtitle="Supplier orders and goods receipt tracking."
-      badge={query.data?.total != null && query.data.total > 0 ? String(query.data.total) : undefined}
+      subtitle={query.data ? `${total} ${total === 1 ? "order" : "orders"}` : undefined}
       actions={
         <Button asChild size="sm">
           <Link href="/inventory/purchase-orders/new">
-            <Plus className="size-4 mr-1" />
+            <Plus className="h-3.5 w-3.5 mr-1" />
             New PO
           </Link>
         </Button>
       }
+      filters={filterBar}
     >
-      <div className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center bg-muted/40 rounded-lg p-3">
-          <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 text-sm w-full sm:w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={vendorId} onValueChange={handleVendorChange}>
-            <SelectTrigger className="h-8 text-sm w-full sm:w-52">
-              <SelectValue placeholder="All vendors" />
-            </SelectTrigger>
-            <SelectContent className="max-h-72">
-              <SelectItem value="ALL">All vendors</SelectItem>
-              {vendors.map((v) => (
-                <SelectItem key={v.id} value={String(v.id)}>
-                  {v.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {query.isLoading && <LoadingState variant="table" rows={8} />}
-        {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
-
-        {!query.isLoading && !query.error && items.length === 0 && (
-          <EmptyState
-            illustration={<EmptyExpensesIllustration />}
-            title="No purchase orders"
-            description="Create a PO to start ordering from your suppliers."
-            action={{ label: "New PO", href: "/inventory/purchase-orders/new" }}
-          />
-        )}
-
-      {items.length > 0 && (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <Table className="min-w-[640px]">
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  PO #
-                </TableHead>
-                <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Vendor
-                </TableHead>
-                <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
-                  Order Date
-                </TableHead>
-                <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
-                  Expected Delivery
-                </TableHead>
-                <TableHead className="px-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Total
-                </TableHead>
-                <TableHead className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Status
-                </TableHead>
-                <TableHead className="w-[80px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((po) => (
-                <TableRow
-                  key={po.id}
-                  className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                >
-                  <TableCell className="px-3 py-2 font-mono text-xs">
-                    <Link
-                      href={`/inventory/purchase-orders/${po.id}`}
-                      className="text-foreground hover:text-violet-600 hover:underline"
-                    >
-                      {po.poNumber}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="px-3 py-2 text-sm">{po.vendor?.name ?? "—"}</TableCell>
-                  <TableCell className="px-3 py-2 text-sm hidden md:table-cell">
-                    {formatDate(po.orderDate)}
-                  </TableCell>
-                  <TableCell className="px-3 py-2 text-sm hidden md:table-cell">
-                    {formatDate(po.expectedDeliveryDate)}
-                  </TableCell>
-                  <TableCell className="px-3 py-2 text-right tabular-nums text-sm">
-                    {Number(po.total).toFixed(2)}
-                  </TableCell>
-                  <TableCell className="px-3 py-2">
-                    <StatusBadge status={po.status} />
-                  </TableCell>
-                  <TableCell className="px-3 py-2">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/inventory/purchase-orders/${po.id}`}>View</Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-      </div>
+      <DataTable
+        data={filteredItems}
+        columns={columns}
+        getRowKey={(po) => po.id}
+        isLoading={query.isLoading}
+        emptyState={
+          query.error ? (
+            <ErrorState description={query.error.message} onRetry={handleRetry} compact />
+          ) : (
+            <EmptyState
+              title={hasFilters ? "No orders found" : "No purchase orders"}
+              description={
+                hasFilters
+                  ? "No results match your filters."
+                  : "Create a PO to start ordering from your suppliers."
+              }
+              action={
+                hasFilters
+                  ? { label: "Clear filters", onClick: handleClearFilters }
+                  : { label: "New PO", href: "/inventory/purchase-orders/new" }
+              }
+              compact
+            />
+          )
+        }
+        pagination={
+          totalPages > 1
+            ? {
+                mode: "server",
+                page,
+                pageSize: 50,
+                total,
+                onPageChange: handlePageChange,
+              }
+            : undefined
+        }
+        minWidth="640px"
+        className="min-h-[320px]"
+      />
     </PageWrapper>
   );
 }

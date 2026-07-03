@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getStatusDotClass } from "../shared/status-badge";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -34,12 +35,6 @@ interface CalendarViewProps {
   onTicketClick: (ticketId: number) => void;
 }
 
-const statusColors: Record<string, string> = {
-  TODO: "bg-slate-400",
-  IN_PROGRESS: "bg-blue-500",
-  IN_REVIEW: "bg-purple-500",
-  DONE: "bg-green-500",
-};
 
 export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -152,7 +147,7 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
                     onClick={() => onTicketClick(t.id)}
                     className="flex items-center gap-1 px-1.5 py-0.5 rounded text-left hover:bg-muted transition-colors"
                   >
-                    <div className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", statusColors[t.status] ?? "bg-slate-400")} />
+                    <div className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", getStatusDotClass(t.status))} />
                     <span className="text-[10px] text-foreground truncate">{t.title}</span>
                   </button>
                 ))}

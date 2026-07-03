@@ -110,8 +110,8 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         {trigger ?? (
-          <Button size="sm" className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
-            <Plus className="h-4 w-4" />
+          <Button size="sm" className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
             New Project
           </Button>
         )}
@@ -361,7 +361,7 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
 
             <SheetFooter className="flex-row gap-2 px-6 py-4 mt-auto shrink-0 border-t">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={form.formState.isSubmitting} className="flex-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+              <Button type="submit" disabled={form.formState.isSubmitting} className="flex-1">
                 {form.formState.isSubmitting ? "Creating..." : "Create Project"}
               </Button>
             </SheetFooter>

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
+import { RequireModule } from "@/components/auth/require-module";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -140,116 +141,104 @@ export default function CalendarIntegrationsPage() {
   const isBusy = disconnect.isPending || setPrimary.isPending;
   const hasConnections = connections.length > 0;
 
-  if (isLoading) {
-    return (
-      <PageWrapper
-        title="Calendar Integration"
-        subtitle="Connect your calendars for interview scheduling"
-      >
-        <div className="max-w-2xl space-y-3">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-40 w-full" />
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Calendar Integration"
-        subtitle="Connect your calendars for interview scheduling"
-      >
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
-          <CalendarCheck2 className="h-10 w-10 text-muted-foreground" />
-          <div>
-            <p className="text-sm font-medium">Failed to load calendars</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Unable to fetch your calendar connections.
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            Try again
-          </Button>
-        </div>
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="Calendar Integration"
       subtitle="Connect one or more Google or Microsoft Outlook accounts for real-time availability and automatic event creation"
+      backHref="/settings/integrations"
+      badge="HR module"
     >
-      <div className="max-w-2xl space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Connected calendars</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {hasConnections ? (
-              <div className="space-y-2">
-                {connections.map((connection) => (
-                  <ConnectionRow
-                    key={connection.id}
-                    connection={connection}
-                    onDisconnect={handleDisconnect}
-                    onSetPrimary={handleSetPrimary}
-                    isBusy={isBusy}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                illustration={<EmptyCalendarIllustration />}
-                title="No calendars connected"
-                description="Connect a Google or Microsoft Outlook account below to enable availability checks and automatic interview events."
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">
-              {hasConnections ? "Add another calendar" : "Connect a calendar"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              {CONNECT_OPTIONS.map((option) => (
-                <Button
-                  key={option.provider}
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="sm:flex-1"
-                >
-                  <a href={option.href}>
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
-                    {option.label}
-                  </a>
-                </Button>
-              ))}
+      <RequireModule module="HR">
+        {isLoading ? (
+          <div className="max-w-2xl space-y-3">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+        ) : isError ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
+            <CalendarCheck2 className="h-10 w-10 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium">Failed to load calendars</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Unable to fetch your calendar connections.
+              </p>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              You can connect multiple accounts. The account marked{" "}
-              <span className="font-medium text-foreground">Default</span> is used to create new
-              calendar events; availability is checked across all connected calendars.
-            </p>
-          </CardContent>
-        </Card>
+            <Button variant="outline" size="sm" onClick={handleRetry}>
+              Try again
+            </Button>
+          </div>
+        ) : (
+          <div className="max-w-2xl space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Connected calendars</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {hasConnections ? (
+                  <div className="space-y-2">
+                    {connections.map((connection) => (
+                      <ConnectionRow
+                        key={connection.id}
+                        connection={connection}
+                        onDisconnect={handleDisconnect}
+                        onSetPrimary={handleSetPrimary}
+                        isBusy={isBusy}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    illustration={<EmptyCalendarIllustration />}
+                    title="No calendars connected"
+                    description="Connect a Google or Microsoft Outlook account below to enable availability checks and automatic interview events."
+                  />
+                )}
+              </CardContent>
+            </Card>
 
-        <div className="space-y-1 rounded-lg border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-          <p className="font-medium text-foreground">What this enables</p>
-          <ul className="list-inside list-disc space-y-0.5">
-            <li>Real-time interviewer availability across every connected calendar</li>
-            <li>Automatic event creation on your default calendar with panel members invited</li>
-            <li>Meeting link and location included in calendar invites</li>
-          </ul>
-        </div>
-      </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">
+                  {hasConnections ? "Add another calendar" : "Connect a calendar"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  {CONNECT_OPTIONS.map((option) => (
+                    <Button
+                      key={option.provider}
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="sm:flex-1"
+                    >
+                      <a href={option.href}>
+                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                        {option.label}
+                      </a>
+                    </Button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  You can connect multiple accounts. The account marked{" "}
+                  <span className="font-medium text-foreground">Default</span> is used to create new
+                  calendar events; availability is checked across all connected calendars.
+                </p>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-1 rounded-lg border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">What this enables</p>
+              <ul className="list-inside list-disc space-y-0.5">
+                <li>Real-time interviewer availability across every connected calendar</li>
+                <li>Automatic event creation on your default calendar with panel members invited</li>
+                <li>Meeting link and location included in calendar invites</li>
+              </ul>
+            </div>
+          </div>
+        )}
+      </RequireModule>
     </PageWrapper>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { Users, TrendingUp, BarChart2, IndianRupee, UserX } from "lucide-react";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatINRCompact } from "@/lib/format-utils";
-import { STATUS_CONFIG } from "./leads-constants";
 
 interface LeadsStatsBarProps {
   stats: {
@@ -17,43 +17,37 @@ interface LeadsStatsBarProps {
 
 export function LeadsStatsBar({ stats }: LeadsStatsBarProps) {
   return (
-    <div className="space-y-2">
-
-      <div className="flex items-center gap-3 flex-wrap text-[11px] px-1">
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground">Total</span>
-          <span className="font-bold tabular-nums text-foreground">{stats.total}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground">New/Mo</span>
-          <span className="font-bold tabular-nums text-emerald-400">{stats.thisMonth}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground">Conv%</span>
-          <span className="font-bold tabular-nums text-amber-400">{stats.conversionRate}%</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground">Pipeline</span>
-          <span className="font-bold tabular-nums text-blue-600">{formatINRCompact(stats.totalPotentialValue)}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground">Unassigned</span>
-          <span className={cn("font-bold tabular-nums", stats.unassigned > 0 ? "text-red-400" : "text-muted-foreground")}>{stats.unassigned}</span>
-        </div>
-        <div className="border-l border-border/50 h-3" />
-
-        {Object.entries(stats.byStatus).map(([status, count]) => {
-          const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG];
-          if (!config) return null;
-          return (
-            <div key={status} className="flex items-center gap-1">
-              <div className={cn("w-1.5 h-1.5 rounded-full", config.bg.replace("/10", ""))} />
-              <span className="text-muted-foreground">{config.label}</span>
-              <span className="font-bold tabular-nums">{count}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <StatCardGrid cols={5}>
+      <StatCard
+        label="Total Leads"
+        value={stats.total}
+        icon={Users}
+        tone="default"
+      />
+      <StatCard
+        label="New This Month"
+        value={stats.thisMonth}
+        icon={TrendingUp}
+        tone="emerald"
+      />
+      <StatCard
+        label="Conversion Rate"
+        value={`${stats.conversionRate}%`}
+        icon={BarChart2}
+        tone="amber"
+      />
+      <StatCard
+        label="Pipeline Value"
+        value={formatINRCompact(stats.totalPotentialValue)}
+        icon={IndianRupee}
+        tone="blue"
+      />
+      <StatCard
+        label="Unassigned"
+        value={stats.unassigned}
+        icon={UserX}
+        tone={stats.unassigned > 0 ? "red" : "default"}
+      />
+    </StatCardGrid>
   );
 }

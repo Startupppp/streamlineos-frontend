@@ -24,7 +24,7 @@ export function LeadActivityTab({ activities }: LeadActivityTabProps) {
         {activities.map((activity: LeadActivity) => (
           <div
             key={activity.id}
-            className="flex gap-3 p-3.5 rounded-xl bg-muted/20 border border-border/30"
+            className="flex gap-3 p-3 rounded-lg bg-muted/20 border border-border"
           >
             <div
               className={cn(

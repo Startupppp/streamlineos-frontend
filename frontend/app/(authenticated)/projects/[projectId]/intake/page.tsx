@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInboxIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -20,7 +21,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ExternalLink, Copy, ArrowRight } from "lucide-react";
+import { Plus, ExternalLink, Copy } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm, Controller, useController } from "react-hook-form";
 import { z } from "zod";
@@ -161,6 +162,9 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
   }, [projectId]);
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
+  const handleCloseAccept = useCallback(() => setAcceptOpen(false), []);
+  const handleCloseDecline = useCallback(() => setDeclineOpen(false), []);
 
   const allItems = intakeData?.items ?? [];
   const filteredItems = allItems.filter((item) => activeTab === "all" || item.status === activeTab);
@@ -170,7 +174,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
 
   if (isLoading) {
     return (
-      <PageWrapper title="Intake">
+      <PageWrapper title="Intake" eyebrow="Projects" backHref={`/projects/${projectId}`}>
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full" />
@@ -183,6 +187,8 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
   return (
     <PageWrapper
       title="Intake"
+      eyebrow="Projects"
+      backHref={`/projects/${projectId}`}
       actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleCopyFormUrl}>
@@ -199,7 +205,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                 <SheetTitle>Create Intake Item</SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto px-6 py-5">
-                <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+                <form id="create-intake-form" onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
                   <div>
                     <Label htmlFor="intake-title">Title</Label>
                     <Input id="intake-title" {...createForm.register("title")} />
@@ -211,10 +217,15 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                     <Label htmlFor="intake-desc">Description</Label>
                     <Textarea id="intake-desc" {...createForm.register("description")} />
                   </div>
-                  <Button type="submit" disabled={createMutation.isPending} className="w-full">
-                    {createMutation.isPending ? "Creating..." : "Create Item"}
-                  </Button>
                 </form>
+              </div>
+              <div className="shrink-0 px-6 py-4 border-t">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" size="sm" onClick={handleCloseCreate}>Cancel</Button>
+                  <Button size="sm" type="submit" form="create-intake-form" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Creating…" : "Create Item"}
+                  </Button>
+                </div>
               </div>
             </SheetContent>
           </Sheet>
@@ -245,22 +256,21 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
 
           <TabsContent value={activeTab} className="mt-4">
             {filteredItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center flex-1 py-12 text-center">
-                <EmptyInboxIllustration className="mx-auto mb-4 w-36 h-36" />
-                <h3 className="text-lg font-semibold mb-1">
-                  {activeTab === "pending" ? "No pending items" : `No ${activeTab} items`}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {activeTab === "pending"
+              <EmptyState
+                illustration={<EmptyInboxIllustration />}
+                title={activeTab === "pending" ? "No pending items" : `No ${activeTab} items`}
+                description={
+                  activeTab === "pending"
                     ? "Share the form URL to start receiving submissions."
-                    : "Items will appear here once triaged."}
-                </p>
-                {activeTab === "pending" && (
-                  <Button onClick={handleOpenCreate}>
-                    <Plus className="h-4 w-4 mr-1" /> Create First Item
-                  </Button>
-                )}
-              </div>
+                    : "Items will appear here once triaged."
+                }
+                action={
+                  activeTab === "pending"
+                    ? { label: "Create First Item", onClick: handleOpenCreate }
+                    : undefined
+                }
+                className="min-h-[40vh]"
+              />
             ) : (
               <div className="space-y-3">
                 {filteredItems.map((item) => (
@@ -284,7 +294,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
             <SheetTitle>Accept Intake Item</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-5">
-            <form onSubmit={acceptForm.handleSubmit(onAcceptSubmit)} className="space-y-4">
+            <form id="accept-intake-form" onSubmit={acceptForm.handleSubmit(onAcceptSubmit)} className="space-y-4">
               <div>
                 <Label>State</Label>
                 <Controller
@@ -351,11 +361,15 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" disabled={updateMutation.isPending} className="w-full">
-                {updateMutation.isPending ? "Accepting..." : "Accept & Create Work Item"}
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
             </form>
+          </div>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" size="sm" onClick={handleCloseAccept}>Cancel</Button>
+              <Button size="sm" type="submit" form="accept-intake-form" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Accepting…" : "Accept & Create"}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -366,7 +380,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
             <SheetTitle>Decline Intake Item</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-5">
-            <form onSubmit={declineForm.handleSubmit(onDeclineSubmit)} className="space-y-4">
+            <form id="decline-intake-form" onSubmit={declineForm.handleSubmit(onDeclineSubmit)} className="space-y-4">
               <div>
                 <Label htmlFor="decline-reason">Reason</Label>
                 <Textarea
@@ -378,10 +392,15 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                   <p className="text-xs text-destructive mt-1">{declineForm.formState.errors.reason.message}</p>
                 )}
               </div>
-              <Button type="submit" variant="destructive" disabled={updateMutation.isPending} className="w-full">
-                {updateMutation.isPending ? "Declining..." : "Decline Item"}
-              </Button>
             </form>
+          </div>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" size="sm" onClick={handleCloseDecline}>Cancel</Button>
+              <Button size="sm" variant="destructive" type="submit" form="decline-intake-form" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Declining…" : "Decline Item"}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>

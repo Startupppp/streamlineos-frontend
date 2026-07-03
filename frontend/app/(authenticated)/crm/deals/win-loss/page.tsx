@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Trophy,
   TrendingDown,
@@ -9,30 +9,27 @@ import {
   Target,
   BarChart3,
   IndianRupee,
-  AlertCircle,
-  BarChart2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDealsIllustration } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useWinLossAnalysis } from "@/hooks/api/crm";
 
 const REASON_COLORS = [
-  "bg-red-500/20 text-red-400 border-red-500/30",
-  "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  "bg-rose-500/20 text-rose-400 border-rose-500/30",
-  "bg-pink-500/20 text-pink-400 border-pink-500/30",
-  "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  "bg-slate-500/20 text-slate-400 border-slate-500/30",
+  "bg-red-50 text-red-700 border-red-200",
+  "bg-amber-50 text-amber-700 border-amber-200",
+  "bg-blue-50 text-blue-700 border-blue-200",
+  "bg-violet-50 text-violet-700 border-violet-200",
+  "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "bg-slate-100 text-slate-700 border-slate-200",
 ];
 
 function formatCurrency(val: number) {
@@ -42,6 +39,7 @@ function formatCurrency(val: number) {
 }
 
 export default function WinLossAnalysisPage() {
+  const shouldReduceMotion = useReducedMotion();
   const { data, isLoading, isError, refetch } = useWinLossAnalysis();
 
   const maxReasonCount = useMemo(
@@ -53,21 +51,27 @@ export default function WinLossAnalysisPage() {
     void refetch();
   }, [refetch]);
 
+  const itemVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : fadeUp;
+
   if (isLoading) {
     return (
       <PageWrapper
         title="Win/Loss Analysis"
         subtitle="Deal outcome breakdown and lost reason attribution"
+        eyebrow="CRM / Deals"
       >
         <div className="space-y-6">
-          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-28" />
-            ))}
-          </div>
+          <StatCardGrid cols={4}>
+            <StatCard label="Won Deals" value="" isLoading icon={Trophy} tone="emerald" />
+            <StatCard label="Lost Deals" value="" isLoading icon={TrendingDown} tone="red" />
+            <StatCard label="Win Rate" value="" isLoading icon={Target} tone="amber" />
+            <StatCard label="Won Value" value="" isLoading icon={IndianRupee} tone="blue" />
+          </StatCardGrid>
           <div className="grid gap-6 md:grid-cols-2">
-            <Skeleton className="h-64" />
-            <Skeleton className="h-64" />
+            <Skeleton className="h-64 rounded-lg" />
+            <Skeleton className="h-64 rounded-lg" />
           </div>
         </div>
       </PageWrapper>
@@ -79,16 +83,14 @@ export default function WinLossAnalysisPage() {
       <PageWrapper
         title="Win/Loss Analysis"
         subtitle="Deal outcome breakdown and lost reason attribution"
+        eyebrow="CRM / Deals"
       >
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-20 text-center">
-          <AlertCircle className="h-10 w-10 text-destructive" />
-          <p className="text-sm text-muted-foreground">
-            Failed to load win/loss data.
-          </p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            Retry
-          </Button>
-        </div>
+        <ErrorState
+          title="Failed to load win/loss data"
+          description="An error occurred while loading the analysis."
+          onRetry={handleRetry}
+          className="flex-1 min-h-[40vh]"
+        />
       </PageWrapper>
     );
   }
@@ -107,13 +109,13 @@ export default function WinLossAnalysisPage() {
       <PageWrapper
         title="Win/Loss Analysis"
         subtitle="Deal outcome breakdown and lost reason attribution"
+        eyebrow="CRM / Deals"
       >
         <EmptyState
-          illustration={
-            <BarChart2 className="h-16 w-16 text-muted-foreground/40" />
-          }
+          illustration={<EmptyDealsIllustration />}
           title="No closed deals yet"
           description="Win/loss data will appear once deals are marked as won or lost."
+          className="flex-1 min-h-[50vh]"
         />
       </PageWrapper>
     );
@@ -121,11 +123,13 @@ export default function WinLossAnalysisPage() {
 
   const wonPct = s.total > 0 ? (s.won / s.total) * 100 : 0;
   const lostPct = s.total > 0 ? (s.lost / s.total) * 100 : 0;
+  const totalRevenue = s.wonValue + s.lostValue;
 
   return (
     <PageWrapper
       title="Win/Loss Analysis"
       subtitle="Deal outcome breakdown and lost reason attribution"
+      eyebrow="CRM / Deals"
     >
       <motion.div
         className="space-y-6"
@@ -133,37 +137,16 @@ export default function WinLossAnalysisPage() {
         initial="hidden"
         animate="visible"
       >
-        <motion.div
-          variants={fadeUp}
-          className="grid gap-3 grid-cols-2 md:grid-cols-4"
-        >
-          <StatCard
-            label="Won Deals"
-            value={s.won}
-            color="green"
-            icon={Trophy}
-          />
-          <StatCard
-            label="Lost Deals"
-            value={s.lost}
-            color="red"
-            icon={TrendingDown}
-          />
-          <StatCard
-            label="Win Rate"
-            value={`${s.winRate}%`}
-            color="amber"
-            icon={Target}
-          />
-          <StatCard
-            label="Won Value"
-            value={formatCurrency(s.wonValue)}
-            color="blue"
-            icon={IndianRupee}
-          />
+        <motion.div variants={itemVariants}>
+          <StatCardGrid cols={4}>
+            <StatCard label="Won Deals" value={s.won} tone="emerald" icon={Trophy} />
+            <StatCard label="Lost Deals" value={s.lost} tone="red" icon={TrendingDown} />
+            <StatCard label="Win Rate" value={`${s.winRate}%`} tone="amber" icon={Target} />
+            <StatCard label="Won Value" value={formatCurrency(s.wonValue)} tone="blue" icon={IndianRupee} />
+          </StatCardGrid>
         </motion.div>
 
-        <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2">
+        <motion.div variants={itemVariants} className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
@@ -174,23 +157,15 @@ export default function WinLossAnalysisPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-center gap-8 py-4">
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-emerald-400">
-                    {s.won}
-                  </div>
+                  <div className="text-4xl font-bold text-emerald-600">{s.won}</div>
                   <div className="text-sm text-muted-foreground mt-1">Won</div>
-                  <div className="text-xs text-muted-foreground">
-                    {formatCurrency(s.wonValue)}
-                  </div>
+                  <div className="text-xs text-muted-foreground">{formatCurrency(s.wonValue)}</div>
                 </div>
                 <div className="h-16 w-px bg-border" />
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-red-400">
-                    {s.lost}
-                  </div>
+                  <div className="text-4xl font-bold text-red-600">{s.lost}</div>
                   <div className="text-sm text-muted-foreground mt-1">Lost</div>
-                  <div className="text-xs text-muted-foreground">
-                    {formatCurrency(s.lostValue)}
-                  </div>
+                  <div className="text-xs text-muted-foreground">{formatCurrency(s.lostValue)}</div>
                 </div>
               </div>
               <div>
@@ -199,36 +174,26 @@ export default function WinLossAnalysisPage() {
                   <span>Lost {lostPct.toFixed(0)}%</span>
                 </div>
                 <div className="h-4 w-full rounded-full bg-muted overflow-hidden flex">
-                  <motion.div
+                  <div
                     className="h-full bg-emerald-500 rounded-l-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${wonPct}%` }}
-                    transition={{ duration: 0.8 }}
+                    style={{ width: `${wonPct}%` }}
                   />
-                  <motion.div
+                  <div
                     className="h-full bg-red-500 rounded-r-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${lostPct}%` }}
-                    transition={{ duration: 0.8, delay: 0.1 }}
+                    style={{ width: `${lostPct}%` }}
                   />
                 </div>
               </div>
               <div className="pt-2 border-t">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    Total revenue at stake
-                  </span>
-                  <span className="font-semibold">
-                    {formatCurrency(s.wonValue + s.lostValue)}
-                  </span>
+                  <span className="text-muted-foreground">Total revenue at stake</span>
+                  <span className="font-semibold">{formatCurrency(totalRevenue)}</span>
                 </div>
                 <div className="flex justify-between text-sm mt-1">
-                  <span className="text-muted-foreground">
-                    Revenue captured
-                  </span>
-                  <span className="font-semibold text-emerald-400">
-                    {s.wonValue + s.lostValue > 0
-                      ? `${Math.round((s.wonValue / (s.wonValue + s.lostValue)) * 100)}%`
+                  <span className="text-muted-foreground">Revenue captured</span>
+                  <span className="font-semibold text-emerald-600">
+                    {totalRevenue > 0
+                      ? `${Math.round((s.wonValue / totalRevenue) * 100)}%`
                       : "—"}
                   </span>
                 </div>
@@ -239,7 +204,7 @@ export default function WinLossAnalysisPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-red-400" />
+                <BarChart3 className="h-4 w-4 text-red-600" />
                 Lost Reason Breakdown
               </CardTitle>
             </CardHeader>
@@ -253,34 +218,32 @@ export default function WinLossAnalysisPage() {
                   <div className="space-y-3 pr-2">
                     {data.lostByReason.map((r, i) => {
                       const barPct = (r.count / maxReasonCount) * 100;
-                      const colorClass =
-                        REASON_COLORS[i % REASON_COLORS.length];
+                      const colorClass = REASON_COLORS[i % REASON_COLORS.length];
                       return (
                         <div key={r.reason}>
                           <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant="outline"
-                                className={cn("text-[10px] border", colorClass)}
-                              >
-                                {r.reason}
-                              </Badge>
-                            </div>
+                            <Badge
+                              variant="outline"
+                              className={cn("text-[10px] h-5 px-2 py-0.5", colorClass)}
+                            >
+                              {r.reason}
+                            </Badge>
                             <div className="flex items-center gap-3 text-xs">
-                              <span className="font-semibold tabular-nums">
-                                {r.count}
-                              </span>
-                              <span className="text-muted-foreground w-20 text-right">
+                              <span className="font-semibold tabular-nums">{r.count}</span>
+                              <span className="text-muted-foreground w-20 text-right font-mono tabular-nums">
                                 {formatCurrency(r.totalValue)}
                               </span>
                             </div>
                           </div>
                           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                            <motion.div
-                              className="h-full rounded-full bg-red-500/60"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${barPct}%` }}
-                              transition={{ duration: 0.6, delay: i * 0.05 }}
+                            <div
+                              className="h-full w-full rounded-full bg-red-600 origin-left"
+                              style={{
+                                transform: `scaleX(${barPct / 100})`,
+                                transition: shouldReduceMotion
+                                  ? "none"
+                                  : `transform 0.25s ease-out ${i * 0.04}s`,
+                              }}
                             />
                           </div>
                         </div>

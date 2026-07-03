@@ -173,7 +173,7 @@ export function EditProjectSheet({ open, onOpenChange, project }: EditProjectShe
               <Button
                 type="submit"
                 disabled={updateProject.isPending}
-                className="flex-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
+                className="flex-1"
               >
                 {updateProject.isPending ? (
                   <>

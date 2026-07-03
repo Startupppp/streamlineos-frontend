@@ -31,6 +31,9 @@ export interface BigCalEvent {
     location?: string | null;
     source?: string;
     myRsvpStatus?: string | null;
+    entityType?: string | null;
+    entityId?: string | null;
+    projectId?: number | null;
   };
 }
 

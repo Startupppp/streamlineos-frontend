@@ -8,7 +8,6 @@ import {
   Globe,
   Users,
   Link2,
-  ChevronLeft,
   TrendingUp,
   BarChart2,
   UserCircle,
@@ -20,13 +19,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useCrmOrganizationDetail,
   useCrmOrgHierarchy,
@@ -42,19 +42,21 @@ import { AccountNotes } from "@/features/crm/companies/detail/account-notes";
 import { LinkParentDialog } from "@/features/crm/companies/detail/link-parent-dialog";
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
+import type { RelatedLead } from "@/types/crm";
 
 function LeadStatusBadge({ status }: { status: string }) {
   const upper = status.toUpperCase();
   const colorMap: Record<string, string> = {
-    NEW: "bg-blue-500/10 text-blue-600",
-    CONTACTED: "bg-cyan-500/10 text-cyan-600",
-    QUALIFIED: "bg-emerald-500/10 text-emerald-600",
-    DISQUALIFIED: "bg-red-500/10 text-red-600",
-    CONVERTED: "bg-purple-500/10 text-purple-600",
-    LOST: "bg-muted text-muted-foreground",
+    NEW: "bg-blue-50 text-blue-700 border-blue-200",
+    CONTACTED: "bg-blue-50 text-blue-700 border-blue-200",
+    QUALIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    DISQUALIFIED: "bg-red-50 text-red-700 border-red-200",
+    CONVERTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    LOST: "bg-slate-100 text-slate-700 border-slate-200",
   };
+  const classes = colorMap[upper] ?? "bg-slate-100 text-slate-700 border-slate-200";
   return (
-    <Badge className={cn("text-[10px] border-0 capitalize", colorMap[upper] ?? "bg-muted text-muted-foreground")}>
+    <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 capitalize", classes)}>
       {status.toLowerCase().replace(/_/g, " ")}
     </Badge>
   );
@@ -63,12 +65,13 @@ function LeadStatusBadge({ status }: { status: string }) {
 function LeadPriorityBadge({ priority }: { priority: string }) {
   const upper = priority.toUpperCase();
   const colorMap: Record<string, string> = {
-    HIGH: "bg-red-500/10 text-red-600",
-    MEDIUM: "bg-amber-500/10 text-amber-600",
-    LOW: "bg-muted text-muted-foreground",
+    HIGH: "bg-red-50 text-red-700 border-red-200",
+    MEDIUM: "bg-amber-50 text-amber-700 border-amber-200",
+    LOW: "bg-slate-100 text-slate-700 border-slate-200",
   };
+  const classes = colorMap[upper] ?? "bg-slate-100 text-slate-700 border-slate-200";
   return (
-    <Badge className={cn("text-[10px] border-0 capitalize", colorMap[upper] ?? "bg-muted text-muted-foreground")}>
+    <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 capitalize", classes)}>
       {priority.toLowerCase()}
     </Badge>
   );
@@ -94,31 +97,77 @@ function InfoRow({
   );
 }
 
+const relatedLeadsColumns: DataTableColumn<RelatedLead>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (lead) => (
+      <div className="flex items-center gap-2">
+        <div className="h-5 w-5 rounded-full bg-blue-50 flex items-center justify-center text-[9px] font-semibold text-blue-600 shrink-0">
+          {(lead.name ?? "?")[0]?.toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <p className="font-medium truncate">{lead.name ?? "—"}</p>
+          {lead.email && (
+            <p className="text-[10px] text-muted-foreground truncate">{lead.email}</p>
+          )}
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (lead) => <LeadStatusBadge status={lead.status} />,
+  },
+  {
+    key: "priority",
+    header: "Priority",
+    cell: (lead) => <LeadPriorityBadge priority={lead.priority} />,
+  },
+  {
+    key: "source",
+    header: "Source",
+    cell: (lead) => (
+      <span className="capitalize text-muted-foreground">
+        {lead.source?.toLowerCase().replace(/_/g, " ") ?? "—"}
+      </span>
+    ),
+  },
+];
+
 function DetailPageSkeleton() {
   return (
-    <PageWrapper title="Company" subtitle="Loading...">
+    <PageWrapper title="Company" subtitle="Loading..." backHref="/crm/companies">
       <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-10 rounded-lg" />
-          <div className="space-y-1.5">
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
-        </div>
+        <StatCardGrid cols={4}>
+          <StatCard label="Total Deal Value" value="" icon={DollarSign} tone="emerald" isLoading />
+          <StatCard label="Active Deals" value="" icon={TrendingUp} tone="blue" isLoading />
+          <StatCard label="Open Leads" value="" icon={Inbox} tone="amber" isLoading />
+          <StatCard label="Total Contacts" value="" icon={Users} tone="violet" isLoading />
+        </StatCardGrid>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-4">
-            <Skeleton className="h-48" />
-            <Skeleton className="h-40" />
+            <Card className="shadow-sm">
+              <CardHeader className="px-4 py-3 border-b">
+                <Skeleton className="h-4 w-32" />
+              </CardHeader>
+              <CardContent className="px-4 py-3 space-y-2">
+                {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+              </CardContent>
+            </Card>
           </div>
           <div className="space-y-4">
-            <Skeleton className="h-48" />
-            <Skeleton className="h-40" />
+            <Card className="shadow-sm">
+              <CardHeader className="px-4 py-3 border-b">
+                <Skeleton className="h-4 w-32" />
+              </CardHeader>
+              <CardContent className="px-4 py-3 space-y-3">
+                {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
+              </CardContent>
+            </Card>
           </div>
         </div>
-        <Skeleton className="h-48" />
       </div>
     </PageWrapper>
   );
@@ -162,7 +211,7 @@ export default function CompanyDetailPage({
 
   if (!org) {
     return (
-      <PageWrapper title="Not Found" subtitle="">
+      <PageWrapper title="Not Found" subtitle="" backHref="/crm/companies">
         <EmptyState
           title="Company not found"
           description="This company may have been deleted or you don't have access."
@@ -180,14 +229,15 @@ export default function CompanyDetailPage({
       title={org.name}
       eyebrow="Companies"
       subtitle={org.description ?? org.industry ?? undefined}
+      backHref="/crm/companies"
       actions={
-        <div className="flex items-center gap-2">
+        <>
           <AccountHealthBadge healthScore={displayScore} />
           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleOpenLinkParent}>
             <GitBranch className="h-3.5 w-3.5" />
             {org.parentId ? "Change Parent" : "Link Parent"}
           </Button>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" asChild>
+          <Button variant="default" size="sm" className="gap-1.5 text-xs" asChild>
             <Link href={`/crm/companies/${id}/edit`}>
               <Pencil className="h-3.5 w-3.5" />
               Edit
@@ -198,49 +248,40 @@ export default function CompanyDetailPage({
             size="sm"
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={handleOpenDelete}
+            aria-label="Delete company"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="sm" className="gap-1.5 text-xs" asChild>
-            <Link href="/crm/companies">
-              <ChevronLeft className="h-3.5 w-3.5" />
-              Back
-            </Link>
-          </Button>
-        </div>
+        </>
       }
     >
       <div className="space-y-5">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCardGrid cols={4}>
           <StatCard
             label="Total Deal Value"
             value={rollup ? formatCurrency(rollup.totalDealValue) : "—"}
             icon={DollarSign}
             color="green"
-            index={0}
           />
           <StatCard
             label="Active Deals"
             value={rollup?.openDeals ?? "—"}
             icon={TrendingUp}
             color="blue"
-            index={1}
           />
           <StatCard
             label="Open Leads"
             value={rollup?.totalLeads ?? "—"}
             icon={Inbox}
             color="amber"
-            index={2}
           />
           <StatCard
             label="Total Contacts"
             value={rollup?.totalContacts ?? "—"}
             icon={Users}
             color="violet"
-            index={3}
           />
-        </div>
+        </StatCardGrid>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-4">
@@ -343,56 +384,19 @@ export default function CompanyDetailPage({
         </div>
 
         <PageSection title="Related Leads">
-          {(relatedLeads?.length ?? 0) === 0 ? (
-            <EmptyState
-              title="No related leads"
-              description="Leads linked to this company will appear here."
-              compact
-            />
-          ) : (
-            <Card className="shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/40">
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Name</th>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Status</th>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Priority</th>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Source</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {relatedLeads?.map((lead) => (
-                      <tr key={lead.id} className="border-b border-border/50 last:border-0 hover:bg-accent/40 transition-colors">
-                        <td className="px-4 py-2.5">
-                          <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[10px] font-semibold text-blue-600 shrink-0">
-                              {(lead.name ?? "?")[0]?.toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-medium truncate">{lead.name ?? "—"}</p>
-                              {lead.email && (
-                                <p className="text-[10px] text-muted-foreground truncate">{lead.email}</p>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <LeadStatusBadge status={lead.status} />
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <LeadPriorityBadge priority={lead.priority} />
-                        </td>
-                        <td className="px-4 py-2.5 text-xs text-muted-foreground capitalize">
-                          {lead.source?.toLowerCase().replace(/_/g, " ") ?? "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          )}
+          <DataTable
+            data={relatedLeads ?? []}
+            columns={relatedLeadsColumns}
+            getRowKey={(lead) => lead.id}
+            emptyState={
+              <EmptyState
+                title="No related leads"
+                description="Leads linked to this company will appear here."
+                compact
+              />
+            }
+            minWidth="400px"
+          />
         </PageSection>
       </div>
 

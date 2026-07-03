@@ -13,6 +13,7 @@ interface PageWrapperProps {
   eyebrow?: string;
   badge?: React.ReactNode;
   backHref?: string;
+  leading?: React.ReactNode;
   actions?: React.ReactNode;
   filters?: React.ReactNode;
   filtersCollapseBreakpoint?: "sm" | "md";
@@ -29,6 +30,7 @@ export function PageWrapper({
   eyebrow,
   badge,
   backHref,
+  leading,
   actions,
   filters,
   filtersCollapseBreakpoint = "sm",
@@ -53,7 +55,8 @@ export function PageWrapper({
       <div className="shrink-0 px-4 sm:px-6 pt-4 pb-2">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <div className="min-w-0 flex-1 flex items-start gap-1">
-            {backHref && (
+            {leading}
+            {!leading && backHref && (
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 mt-0.5" aria-label="Back" asChild>
                 <Link href={backHref}>
                   <ArrowLeft className="h-4 w-4" />

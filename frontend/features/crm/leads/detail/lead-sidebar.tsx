@@ -63,7 +63,7 @@ export function LeadSidebar({
   return (
     <div className="space-y-4">
       {lead.assignedTo && (
-        <Card className="shadow-noir">
+        <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">
               Assigned To
@@ -95,7 +95,7 @@ export function LeadSidebar({
       )}
 
       {keyDates.length > 0 && (
-        <Card className="shadow-noir">
+        <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">
               Key Dates

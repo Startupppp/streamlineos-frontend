@@ -31,7 +31,7 @@ function ThreadMessage({ message, currentUserId, isParent }: ThreadMessageProps)
     <div className={cn("flex gap-2.5 px-4", isParent ? "py-3" : "py-1")}>
       <Avatar className="h-7 w-7 shrink-0 mt-0.5 border border-border/30 shadow-sm">
         <AvatarImage src={resolveImageUrl(message.sender?.image)} />
-        <AvatarFallback className="text-[8px] font-bold bg-gradient-to-br from-blue-100 to-indigo-50 text-blue">
+        <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
           {getInitials(message.sender?.name)}
         </AvatarFallback>
       </Avatar>

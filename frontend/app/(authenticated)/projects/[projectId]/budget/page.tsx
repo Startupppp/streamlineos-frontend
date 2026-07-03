@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IndianRupee, Clock, TrendingUp, Pencil } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useProjectBudget, useUpdateProjectBudget } from "@/hooks/api/projects";
 import { toast } from "sonner";
 
@@ -46,7 +47,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
 
   if (isLoading) {
     return (
-      <PageWrapper title="Budget">
+      <PageWrapper title="Budget" eyebrow="Projects" backHref={`/projects/${projectId}`}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
         </div>
@@ -61,7 +62,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
   const overBudget = (budget?.remaining ?? 0) < 0;
 
   return (
-    <PageWrapper title="Budget" subtitle="Planned budget vs actual cost from billable timesheets">
+    <PageWrapper title="Budget" eyebrow="Projects" backHref={`/projects/${projectId}`} subtitle="Planned budget vs actual cost from billable timesheets">
       <div className="bg-muted/40 border border-border rounded-lg px-3 py-2 mb-4 flex items-center gap-2">
         {editMode ? (
           <>
@@ -76,7 +77,6 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
             />
             <Button
               size="sm"
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm"
               onClick={handleSaveBudget}
               disabled={updateBudget.isPending}
             >
@@ -131,11 +131,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
             </div>
             <Progress
               value={Math.min(budget?.utilizationPct ?? 0, 100)}
-              className={
-                overBudget
-                  ? "h-2 [&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-orange-500"
-                  : "h-2 [&>div]:bg-gradient-to-r [&>div]:from-violet-500 [&>div]:to-indigo-500"
-              }
+              className={overBudget ? "h-2 [&>div]:bg-red-500" : "h-2 [&>div]:bg-blue-500"}
             />
           </CardContent>
         </Card>
@@ -147,26 +143,26 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
             <CardTitle className="text-sm">Member Cost Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="rounded-lg border border-border overflow-hidden">
+            <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Member</th>
-                    <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Hours</th>
-                    <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cost</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Member</th>
+                    <th className="px-2 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hours</th>
+                    <th className="px-2 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cost</th>
                   </tr>
                 </thead>
                 <tbody>
                   {budget.memberBreakdown.map((m) => (
-                    <tr key={m.userId} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="px-3 py-2">
+                    <tr key={m.userId} className="border-b border-border/50 hover:bg-muted/30 transition-colors h-8">
+                      <td className="px-2 py-1">
                         <div className="flex items-center gap-2">
                           <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-muted-foreground font-mono text-xs">{m.userId.substring(0, 8)}…</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-sm text-muted-foreground">{m.hours.toFixed(1)} hrs</td>
-                      <td className="px-3 py-2 text-right font-mono text-sm font-medium">{fmt(m.cost)}</td>
+                      <td className="px-2 py-1 text-right font-mono text-sm text-muted-foreground">{m.hours.toFixed(1)} hrs</td>
+                      <td className="px-2 py-1 text-right font-mono text-sm font-medium">{fmt(m.cost)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -177,11 +173,12 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
       )}
 
       {(budget?.memberBreakdown?.length ?? 0) === 0 && !isLoading && (
-        <div className="flex flex-1 flex-col items-center justify-center py-16 gap-2">
-          <Clock className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-base font-semibold">No billable time logged</p>
-          <p className="text-sm text-muted-foreground">Log billable hours to track costs against this project&apos;s budget.</p>
-        </div>
+        <EmptyState
+          illustration={<Clock className="h-8 w-8 text-muted-foreground/40" />}
+          title="No billable time logged"
+          description="Log billable hours to track costs against this project's budget."
+          className="flex-1 min-h-[40vh]"
+        />
       )}
     </PageWrapper>
   );

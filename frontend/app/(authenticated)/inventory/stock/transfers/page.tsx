@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useFieldArray, useWatch, Controller, type Control, type UseFormSetValue } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Plus, ArrowRightLeft, AlertCircle, Trash2 } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
+import { EmptyTransferIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +21,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useTransfers, useCreateTransfer, type TransferStatus } from "@/hooks/api/inventory/stock";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
@@ -50,38 +52,18 @@ const schema = z
 type FormValues = z.infer<typeof schema>;
 
 const STATUS_COLORS: Record<TransferStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200/70",
-  IN_TRANSIT: "bg-blue-50 text-blue-700 border-blue-200/70",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200/70",
+  PENDING: "bg-amber-50 text-amber-700 border-amber-200",
+  IN_TRANSIT: "bg-blue-50 text-blue-700 border-blue-200",
+  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 const STATUS_LABELS: Record<TransferStatus, string> = {
   PENDING: "Pending", IN_TRANSIT: "In Transit", COMPLETED: "Completed", CANCELLED: "Cancelled",
 };
 const ALL_STATUSES: TransferStatus[] = ["PENDING", "IN_TRANSIT", "COMPLETED", "CANCELLED"];
-const TH = "text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2.5";
-const LIMIT = 20;
 
-function TransfersTableSkeleton() {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
-            {Array.from({ length: 7 }).map((_, i) => <TableHead key={i} className={TH}><Skeleton className="h-3 w-16" /></TableHead>)}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <TableRow key={i}>
-              {Array.from({ length: 7 }).map((_, j) => <TableCell key={j} className="px-3 py-2.5"><Skeleton className="h-4 w-full" /></TableCell>)}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
+const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
+const LIMIT = 20;
 
 interface WLPickerProps {
   control: Control<FormValues>;
@@ -100,7 +82,7 @@ function WarehouseLocationPicker({ control, setValue, warehouses, warehouseField
   return (
     <>
       <div className="space-y-1.5">
-        <Label>{labels[0]} <span className="text-destructive">*</span></Label>
+        <Label className="text-[13px] font-medium">{labels[0]} <span className="text-destructive">*</span></Label>
         <Controller name={warehouseField} control={control} render={({ field }) => (
           <Select value={field.value > 0 ? String(field.value) : ""} onValueChange={(v) => { field.onChange(Number(v)); setValue(locationField, 0); }}>
             <SelectTrigger><SelectValue placeholder="Select warehouse" /></SelectTrigger>
@@ -110,7 +92,7 @@ function WarehouseLocationPicker({ control, setValue, warehouses, warehouseField
         {warehouseError && <p className="text-xs text-destructive">{warehouseError}</p>}
       </div>
       <div className="space-y-1.5">
-        <Label>{labels[1]} <span className="text-destructive">*</span></Label>
+        <Label className="text-[13px] font-medium">{labels[1]} <span className="text-destructive">*</span></Label>
         <Controller name={locationField} control={control} render={({ field }) => (
           <Select value={field.value > 0 ? String(field.value) : ""} onValueChange={(v) => field.onChange(Number(v))} disabled={warehouseId === 0}>
             <SelectTrigger>
@@ -165,12 +147,12 @@ function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-xl flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle>New Transfer</SheetTitle>
           <SheetDescription>Move stock between warehouse locations.</SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <WarehouseLocationPicker
                 control={control} setValue={setValue} warehouses={warehouses}
@@ -188,13 +170,13 @@ function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Notes</Label>
+              <Label className="text-[13px] font-medium">Notes</Label>
               <Textarea {...register("notes")} placeholder="Reason or notes for this transfer…" rows={2} />
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Lines <span className="text-destructive">*</span></Label>
-                <Button type="button" variant="outline" size="sm" onClick={handleAddLine}>
+                <Label className="text-[13px] font-medium">Lines <span className="text-destructive">*</span></Label>
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={handleAddLine}>
                   <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add line
                 </Button>
               </div>
@@ -223,7 +205,8 @@ function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
                     )}
                   </div>
                   {fields.length > 1 && (
-                    <Button type="button" variant="ghost" size="icon" className="mt-0.5 shrink-0 text-destructive hover:text-destructive"
+                    <Button type="button" variant="ghost" size="icon" aria-label="Remove line"
+                      className="mt-0.5 h-7 w-7 shrink-0 text-destructive hover:text-destructive"
                       data-line-idx={index} onClick={handleRemoveLine}>
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -232,12 +215,13 @@ function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
               ))}
             </div>
           </div>
-          <SheetFooter className="px-6 py-4 border-t gap-2 flex-row justify-end">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={createMutation.isPending}>Cancel</Button>
-            <Button type="submit" disabled={createMutation.isPending}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
-              {createMutation.isPending ? "Creating…" : "Create Transfer"}
-            </Button>
+          <SheetFooter className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2 w-full">
+              <Button type="button" variant="outline" onClick={handleClose} disabled={createMutation.isPending}>Cancel</Button>
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending ? "Creating…" : "Create Transfer"}
+              </Button>
+            </div>
           </SheetFooter>
         </form>
       </SheetContent>
@@ -247,131 +231,190 @@ function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
 
 export default function TransfersPage() {
   const router = useRouter();
-  const [statusFilter, setStatusFilter] = useState<TransferStatus | "all">("all");
+  const searchParams = useSearchParams();
+
+  const statusParam = searchParams.get("status") ?? "all";
+  const searchQ = searchParams.get("q") ?? "";
+
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  const statusFilter = (statusParam !== "all" && statusParam in STATUS_LABELS)
+    ? (statusParam as TransferStatus)
+    : undefined;
+
   const { data: transfersData, isLoading, isError, refetch } = useTransfers({
-    status: statusFilter === "all" ? undefined : statusFilter,
+    status: statusFilter,
     page,
     limit: LIMIT,
   });
 
-  const transfers = transfersData?.items ?? [];
+  const rawTransfers = transfersData?.items ?? [];
   const totalPages = transfersData?.totalPages ?? 1;
   const total = transfersData?.total ?? 0;
 
+  const transfers = useMemo(() => {
+    if (!searchQ) return rawTransfers;
+    const q = searchQ.toLowerCase();
+    return rawTransfers.filter(
+      (t) =>
+        t.referenceNumber.toLowerCase().includes(q) ||
+        (t.fromLocationName?.toLowerCase().includes(q) ?? false) ||
+        (t.toLocationName?.toLowerCase().includes(q) ?? false),
+    );
+  }, [rawTransfers, searchQ]);
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (e.target.value) params.set("q", e.target.value);
+    else params.delete("q");
+    params.delete("page");
+    setPage(1);
+    router.replace(`?${params.toString()}`);
+  }
+
   const handleStatusChange = useCallback((val: string) => {
-    if (val === "all" || val in STATUS_LABELS) {
-      setStatusFilter(val as TransferStatus | "all");
-      setPage(1);
-    }
-  }, []);
+    const params = new URLSearchParams(searchParams.toString());
+    if (val === "all") params.delete("status");
+    else params.set("status", val);
+    params.delete("page");
+    setPage(1);
+    router.replace(`?${params.toString()}`);
+  }, [router, searchParams]);
+
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
   function handleRetry() { void refetch(); }
   const handlePrevPage = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
   const handleNextPage = useCallback(() => setPage((p) => Math.min(totalPages, p + 1)), [totalPages]);
-  const handleRowClick = useCallback((e: React.MouseEvent<HTMLTableRowElement>) => {
-    const id = e.currentTarget.dataset.transferId;
-    if (id) router.push(`/inventory/stock/transfers/${id}`);
-  }, [router]);
+
+  const hasActiveFilters = searchQ || statusParam !== "all";
+  const subtitle = !isLoading && total > 0 ? `${total} transfer${total !== 1 ? "s" : ""}` : undefined;
 
   return (
     <PageWrapper
       title="Stock Transfers"
-      subtitle="Move inventory between warehouses and locations"
-      badge={isLoading ? undefined : String(total)}
+      eyebrow="Inventory / Stock"
+      subtitle={subtitle}
       filters={
-        <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 text-xs w-36"><SelectValue placeholder="All statuses" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {ALL_STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+          <div className="relative min-w-0 flex-1 lg:max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
+            <Input
+              placeholder="Search transfers…"
+              value={searchQ}
+              onChange={handleSearchChange}
+              className="h-8 w-full pl-8 text-xs"
+            />
+          </div>
+          <Select value={statusParam} onValueChange={handleStatusChange}>
+            <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="All statuses" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              {ALL_STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       }
       actions={
-        <Button size="sm" onClick={handleOpenSheet}
-          className="gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
-          <Plus className="h-4 w-4" aria-hidden="true" />New Transfer
+        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenSheet}>
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />New Transfer
         </Button>
       }
     >
       {isLoading ? (
-        <TransfersTableSkeleton />
+        <SkeletonTable rows={8} columns={7} />
       ) : isError ? (
-        <motion.div variants={fadeUp} initial="hidden" animate="visible">
-          <EmptyState
-            illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
-            title="Failed to load transfers"
-            description="An error occurred while fetching transfer records."
-            action={{ label: "Retry", onClick: handleRetry }}
-          />
-        </motion.div>
+        <ErrorState
+          title="Failed to load transfers"
+          description="An error occurred while fetching transfer records."
+          onRetry={handleRetry}
+          className="flex-1 min-h-[40vh]"
+        />
       ) : transfers.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
-            illustration={<ArrowRightLeft className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
-            title="No transfers found"
-            description={statusFilter !== "all" ? `No ${STATUS_LABELS[statusFilter]} transfers found.` : "Create a transfer to move stock between locations."}
-            action={{ label: "New Transfer", onClick: handleOpenSheet }}
+            illustration={hasActiveFilters ? <EmptySearchIllustration /> : <EmptyTransferIllustration />}
+            title={hasActiveFilters ? "No results" : "No transfers found"}
+            description={
+              hasActiveFilters
+                ? "No transfers match your filters."
+                : "Create a transfer to move stock between locations."
+            }
+            action={
+              hasActiveFilters
+                ? { label: "Clear Filters", href: "?" }
+                : { label: "New Transfer", onClick: handleOpenSheet }
+            }
+            className="flex-1 min-h-[40vh]"
           />
         </motion.div>
       ) : (
         <motion.div variants={staggerContainer} initial="hidden" animate="visible">
           <motion.div variants={fadeUp}>
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="rounded-md border border-border overflow-hidden bg-card">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableRow className="bg-muted/80 hover:bg-muted/80">
                     <TableHead className={TH}>Ref #</TableHead>
-                    <TableHead className={TH}>From Location</TableHead>
-                    <TableHead className={TH}>To Location</TableHead>
+                    <TableHead className={TH}>From</TableHead>
+                    <TableHead className={TH}>To</TableHead>
                     <TableHead className={cn(TH, "text-right")}>Lines</TableHead>
                     <TableHead className={TH}>Status</TableHead>
                     <TableHead className={TH}>Created</TableHead>
-                    <TableHead className={TH}>Actions</TableHead>
+                    <TableHead className={cn(TH, "w-8")} />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transfers.map((transfer) => (
-                    <TableRow key={transfer.id} data-transfer-id={String(transfer.id)} onClick={handleRowClick}
-                      className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer">
-                      <TableCell className="px-3 py-2.5">
-                        <Link href={`/inventory/stock/transfers/${transfer.id}`} onClick={(e) => e.stopPropagation()}
-                          className="font-mono text-xs font-semibold text-primary hover:underline">
+                    <TableRow key={transfer.id} className="h-8 border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => router.push(`/inventory/stock/transfers/${transfer.id}`)}>
+                      <TableCell className="px-2 py-1">
+                        <Link
+                          href={`/inventory/stock/transfers/${transfer.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-mono text-[11px] font-semibold text-blue-600 hover:underline"
+                        >
                           {transfer.referenceNumber}
                         </Link>
                       </TableCell>
-                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">{transfer.fromLocationName ?? "—"}</TableCell>
-                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">{transfer.toLocationName ?? "—"}</TableCell>
-                      <TableCell className="px-3 py-2.5 text-right text-xs tabular-nums font-medium">{transfer.lineCount}</TableCell>
-                      <TableCell className="px-3 py-2.5">
-                        <Badge className={cn("text-xs px-1.5 py-0.5 rounded-md font-medium border", STATUS_COLORS[transfer.status] ?? "bg-muted text-muted-foreground")}>
-                          {STATUS_LABELS[transfer.status] ?? transfer.status}
+                      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">{transfer.fromLocationName ?? "—"}</TableCell>
+                      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">{transfer.toLocationName ?? "—"}</TableCell>
+                      <TableCell className="px-2 py-1 text-right text-[11px] font-mono tabular-nums font-medium">{transfer.lineCount}</TableCell>
+                      <TableCell className="px-2 py-1">
+                        <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", STATUS_COLORS[transfer.status])}>
+                          {STATUS_LABELS[transfer.status]}
                         </Badge>
                       </TableCell>
-                      <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
                         {format(new Date(transfer.createdAt), "dd MMM yyyy")}
                       </TableCell>
-                      <TableCell className="px-3 py-2.5">
-                        <Link href={`/inventory/stock/transfers/${transfer.id}`} onClick={(e) => e.stopPropagation()}
-                          className="text-xs text-primary hover:underline">View</Link>
+                      <TableCell className="px-2 py-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-[11px] text-blue-600 hover:text-blue-700"
+                          onClick={(e) => { e.stopPropagation(); router.push(`/inventory/stock/transfers/${transfer.id}`); }}
+                          aria-label={`View transfer ${transfer.referenceNumber}`}
+                        >
+                          View
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </div>
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-                <span>Page {page} of {totalPages}</span>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handlePrevPage} disabled={page <= 1}>Previous</Button>
-                  <Button variant="outline" size="sm" onClick={handleNextPage} disabled={page >= totalPages}>Next</Button>
+              {totalPages > 1 && (
+                <div className="shrink-0 flex items-center justify-between px-4 py-2 border-t">
+                  <span className="text-xs text-muted-foreground">
+                    Showing {transfers.length > 0 ? (page - 1) * LIMIT + 1 : 0}–{Math.min(page * LIMIT, total)} of {total}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handlePrevPage} disabled={page <= 1}>Previous</Button>
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleNextPage} disabled={page >= totalPages}>Next</Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </motion.div>
         </motion.div>
       )}

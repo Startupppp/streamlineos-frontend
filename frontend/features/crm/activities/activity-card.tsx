@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   CheckCircle2,
   Clock,
@@ -43,7 +43,7 @@ function getStatusConfig(activity: CrmActivity): StatusConfig {
     return { label: "Completed", color: "text-emerald-600", bg: "bg-emerald-500/10", icon: CheckCircle2 };
   }
   if (activity.status === "cancelled") {
-    return { label: "Cancelled", color: "text-slate-500",   bg: "bg-slate-500/10",   icon: XCircle };
+    return { label: "Cancelled", color: "text-slate-500", bg: "bg-slate-500/10", icon: XCircle };
   }
   if (
     activity.dueDate &&
@@ -62,13 +62,14 @@ interface ActivityCardProps {
 
 export function ActivityCard({ activity, index }: ActivityCardProps) {
   const complete = useCompleteCrmActivity();
+  const shouldReduceMotion = useReducedMotion();
   const statusCfg = getStatusConfig(activity);
   const StatusIcon = statusCfg.icon;
 
   const handleComplete = useCallback(() => {
     complete.mutate(activity.id, {
       onSuccess: () => toast.success("Activity marked as complete"),
-      onError:   (err) => toast.error(err.message),
+      onError: (err) => toast.error(err.message),
     });
   }, [activity.id, complete]);
 
@@ -79,11 +80,15 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.22, ease: "easeOut", delay: Math.min(index * 0.05, 0.4) }}
-      className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm shadow-slate-200/60 p-4 hover:shadow-md hover:border-slate-300/80 transition-all duration-200 group"
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+      transition={
+        shouldReduceMotion
+          ? { duration: 0.15 }
+          : { duration: 0.22, ease: "easeOut", delay: Math.min(index * 0.05, 0.4) }
+      }
+      className="bg-card rounded-lg border border-border shadow-sm p-4 hover:shadow-md transition-shadow duration-150 group"
     >
       <div className="flex items-start gap-3 min-w-0">
         <div className="shrink-0 mt-0.5">
@@ -117,7 +122,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
             {entityPath && activity.entityType && (
               <Link
                 href={entityPath}
-                className="inline-flex items-center gap-1 text-[10px] text-violet-600 hover:text-violet-700 font-medium transition-colors"
+                className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-700 font-medium transition-colors"
               >
                 {ENTITY_LABELS[activity.entityType]} #{activity.entityId}
                 <ExternalLink className="h-2.5 w-2.5" />
@@ -146,7 +151,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
 
         {activity.status === "pending" && (
           <motion.div
-            whileTap={{ scale: 0.97 }}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
             className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
           >
             <Button

@@ -40,12 +40,12 @@ export function SlaComplianceChart({ slaReport }: SlaComplianceChartProps) {
                 cy="50"
                 r="42"
                 fill="none"
-                stroke={
+                className={
                   slaReport.complianceRate >= 80
-                    ? "#10B981"
+                    ? "stroke-emerald-500"
                     : slaReport.complianceRate >= 50
-                      ? "#F59E0B"
-                      : "#EF4444"
+                      ? "stroke-amber-500"
+                      : "stroke-red-500"
                 }
                 strokeWidth="8"
                 strokeDasharray={`${slaReport.complianceRate * 2.64} 264`}

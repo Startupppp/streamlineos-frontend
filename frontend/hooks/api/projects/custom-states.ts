@@ -2,15 +2,16 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface CustomState {
   id: number;
   orgId: string;
   projectId: number;
   name: string;
-  color: string;
-  type: "unstarted" | "started" | "completed" | "cancelled";
-  position: number;
+  color: string | null;
+  order: number;
+  type?: "unstarted" | "started" | "completed" | "cancelled";
 }
 
 function stateKeys(projectId: number) {
@@ -32,7 +33,10 @@ export function useCreateCustomState(projectId: number) {
     mutationKey: ["projects", projectId, "custom-states", "create"],
     mutationFn: (data: { name: string; color: string; type?: string }) =>
       apiClient.post<CustomState>(`/projects/${projectId}/custom-states`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: stateKeys(projectId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: stateKeys(projectId) });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+    },
   });
 }
 
@@ -42,7 +46,10 @@ export function useUpdateCustomState(projectId: number) {
     mutationKey: ["projects", projectId, "custom-states", "update"],
     mutationFn: ({ stateId, ...data }: { stateId: number; name?: string; color?: string; type?: string }) =>
       apiClient.patch<CustomState>(`/projects/${projectId}/custom-states/${stateId}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: stateKeys(projectId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: stateKeys(projectId) });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+    },
   });
 }
 
@@ -52,6 +59,9 @@ export function useDeleteCustomState(projectId: number) {
     mutationKey: ["projects", projectId, "custom-states", "delete"],
     mutationFn: (stateId: number) =>
       apiClient.delete(`/projects/${projectId}/custom-states/${stateId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: stateKeys(projectId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: stateKeys(projectId) });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+    },
   });
 }

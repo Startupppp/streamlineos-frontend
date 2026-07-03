@@ -26,10 +26,10 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
 
             return (
               <div key={status} className="min-w-0">
-                <div className={cn("rounded-xl border h-full flex flex-col", config.border, "bg-muted/20")}>
+                <div className={cn("rounded-lg border h-full flex flex-col", config.border, "bg-muted/20")}>
 
                   <div className={cn(
-                    "flex items-center justify-between px-3 py-2.5 rounded-t-xl border-b",
+                    "flex items-center justify-between px-3 py-2.5 rounded-t-lg border-b",
                     config.border,
                     config.bg,
                   )}>

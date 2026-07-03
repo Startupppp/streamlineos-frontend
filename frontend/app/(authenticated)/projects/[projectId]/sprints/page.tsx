@@ -7,9 +7,9 @@ import {
 import { CreateSprintDialog } from "@/features/projects/sprints/create-sprint-dialog";
 import { BurndownChart } from "@/features/projects/sprints/burndown-chart";
 import { VelocityChart } from "@/features/projects/sprints/velocity-chart";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptySprintIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -106,7 +106,7 @@ export default function SprintsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Sprints" actions={<CreateSprintDialog projectId={projectId} />}>
+      <PageWrapper title="Sprints" backHref={`/projects/${projectId}`} actions={<CreateSprintDialog projectId={projectId} />}>
         <div className="space-y-6">
           <div className="space-y-2">
             <Skeleton className="h-3 w-20" />
@@ -150,6 +150,7 @@ export default function SprintsPage({ params }: PageProps) {
     <PageWrapper
       title="Sprints"
       subtitle={subtitle}
+      backHref={`/projects/${projectId}`}
       actions={<CreateSprintDialog projectId={projectId} />}
     >
       {planningSprintId && planningSprint && (
@@ -234,16 +235,12 @@ export default function SprintsPage({ params }: PageProps) {
       )}
 
       {sprints?.length === 0 && (
-        <Card className="border-dashed rounded-lg">
-          <CardContent className="flex flex-col items-center justify-center min-h-[400px] py-12">
-            <EmptySprintIllustration className="mb-4" />
-            <h3 className="text-base font-semibold mb-1">No sprints yet</h3>
-            <p className="text-sm text-muted-foreground text-center mb-4 max-w-xs">
-              Create your first sprint to start organizing your work
-            </p>
-            <CreateSprintDialog projectId={projectId} />
-          </CardContent>
-        </Card>
+        <EmptyState
+          illustration={<EmptySprintIllustration />}
+          title="No sprints yet"
+          description="Create your first sprint to start organizing your work."
+          className="min-h-[40vh]"
+        />
       )}
 
       <CompleteSprintSheet

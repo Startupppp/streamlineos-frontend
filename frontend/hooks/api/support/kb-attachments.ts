@@ -52,6 +52,7 @@ export function useKbAttachments(articleId: number) {
 export function useUploadKbAttachment(articleId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kbAttachments", "upload"],
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
@@ -81,6 +82,7 @@ export function useUploadKbAttachment(articleId: number) {
 export function useDeleteKbAttachment(articleId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["kbAttachments", "delete"],
     mutationFn: (attachmentId: number) =>
       apiClient.delete<{ success: boolean }>(
         `/support/kb/articles/${articleId}/attachments/${attachmentId}`,
@@ -92,6 +94,7 @@ export function useDeleteKbAttachment(articleId: number) {
 
 export function useKbAttachmentDownloadUrl(articleId: number) {
   return useMutation({
+    mutationKey: ["kbAttachments", "download-url"],
     mutationFn: (attachmentId: number) =>
       apiClient.get<AttachmentDownloadResponse>(
         `/support/kb/articles/${articleId}/attachments/${attachmentId}`,

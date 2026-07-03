@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { Suspense, useDeferredValue, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -14,24 +16,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { useSalesOrders, type SalesOrderStatus } from "@/hooks/api/inventory/sales-orders";
+import { ErrorState } from "@/components/shared";
+import {
+  useSalesOrders,
+  type SalesOrderStatus,
+  type SalesOrderListItem,
+} from "@/hooks/api/inventory/sales-orders";
 
-type SoStatus = SalesOrderStatus;
-type StatusFilter = "ALL" | SoStatus;
+type StatusFilter = "all" | SalesOrderStatus;
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
-  { value: "ALL", label: "All statuses" },
+  { value: "all", label: "All statuses" },
   { value: "DRAFT", label: "Draft" },
   { value: "CONFIRMED", label: "Confirmed" },
   { value: "SHIPPED", label: "Shipped" },
@@ -39,27 +36,16 @@ const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const STATUS_VARIANT: Record<
-  SoStatus,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  DRAFT: "secondary",
-  CONFIRMED: "default",
-  SHIPPED: "outline",
-  INVOICED: "default",
-  CANCELLED: "destructive",
+const STATUS_BADGE_CLASS: Record<SalesOrderStatus, string> = {
+  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
+  CONFIRMED: "bg-blue-50 text-blue-700 border-blue-200",
+  SHIPPED: "bg-amber-50 text-amber-700 border-amber-200",
+  INVOICED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 
-const STATUS_CLASS: Record<SoStatus, string> = {
-  DRAFT: "",
-  CONFIRMED: "bg-blue-100 text-blue-800 border-blue-200",
-  SHIPPED: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  INVOICED: "bg-green-100 text-green-800 border-green-200",
-  CANCELLED: "",
-};
-
-function isStatusFilter(value: string): value is StatusFilter {
-  return STATUS_OPTIONS.some((opt) => opt.value === value);
+function isStatusFilter(v: string): v is StatusFilter {
+  return STATUS_OPTIONS.some((o) => o.value === v);
 }
 
 function formatDate(value: string | null): string {
@@ -68,145 +54,261 @@ function formatDate(value: string | null): string {
   return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
-export default function SalesOrdersListPage() {
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
-  const [status, setStatus] = useState<StatusFilter>("ALL");
+const columns: DataTableColumn<SalesOrderListItem>[] = [
+  {
+    key: "soNumber",
+    header: "SO #",
+    cell: (so) => (
+      <Link
+        href={`/inventory/sales-orders/${so.id}`}
+        className="font-mono text-blue-600 hover:underline transition-colors"
+      >
+        {so.soNumber}
+      </Link>
+    ),
+    sortable: true,
+    sortValue: (so) => so.soNumber,
+  },
+  {
+    key: "customer",
+    header: "Customer",
+    cell: (so) => so.customerName ?? "—",
+    sortable: true,
+    sortValue: (so) => so.customerName ?? "",
+  },
+  {
+    key: "orderDate",
+    header: "Order Date",
+    cell: (so) => <span className="tabular-nums">{formatDate(so.orderDate)}</span>,
+    sortable: true,
+    sortValue: (so) => so.orderDate ?? "",
+  },
+  {
+    key: "requiredDate",
+    header: "Required Date",
+    cell: (so) => <span className="tabular-nums">{formatDate(so.expectedShipDate)}</span>,
+    sortable: true,
+    sortValue: (so) => so.expectedShipDate ?? "",
+  },
+  {
+    key: "total",
+    header: "Total",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    cell: (so) => Number(so.total).toFixed(2),
+    sortable: true,
+    sortValue: (so) => Number(so.total),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (so) => (
+      <Badge
+        variant="outline"
+        className={`h-4 text-[9px] px-1.5 py-0 ${STATUS_BADGE_CLASS[so.status]}`}
+      >
+        {so.status}
+      </Badge>
+    ),
+  },
+];
+
+function SalesOrdersListContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const rawStatus = searchParams.get("status") ?? "all";
+  const statusFilter: StatusFilter = isStatusFilter(rawStatus) ? rawStatus : "all";
+  const dateFromParam = searchParams.get("from") ?? "";
+  const dateToParam = searchParams.get("to") ?? "";
+  const [searchInput, setSearchInput] = useState(() => searchParams.get("search") ?? "");
+  const deferredSearch = useDeferredValue(searchInput);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const query = useSalesOrders({
-    status: status === "ALL" ? undefined : status,
-    dateFrom: dateFrom || undefined,
-    dateTo: dateTo || undefined,
+    status: statusFilter === "all" ? undefined : statusFilter,
+    dateFrom: dateFromParam || undefined,
+    dateTo: dateToParam || undefined,
     limit: 100,
   });
 
-  function handleStatusChange(value: string): void {
-    if (isStatusFilter(value)) setStatus(value);
-  }
-
-  function handleDateFromChange(event: ChangeEvent<HTMLInputElement>): void {
-    setDateFrom(event.target.value);
-  }
-
-  function handleDateToChange(event: ChangeEvent<HTMLInputElement>): void {
-    setDateTo(event.target.value);
-  }
-
   const items = query.data?.items ?? [];
 
-  function handleRetry() {
+  const filtered = useMemo(() => {
+    const q = deferredSearch.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(
+      (so) =>
+        so.soNumber.toLowerCase().includes(q) ||
+        (so.customerName?.toLowerCase().includes(q) ?? false),
+    );
+  }, [items, deferredSearch]);
+
+  const isFiltered =
+    statusFilter !== "all" || !!dateFromParam || !!dateToParam || !!deferredSearch.trim();
+  const displayCount = deferredSearch.trim() ? filtered.length : (query.data?.total ?? 0);
+  const subtitle = query.isLoading
+    ? undefined
+    : `${displayCount} order${displayCount !== 1 ? "s" : ""}`;
+
+  function handleSearchChange(e: ChangeEvent<HTMLInputElement>): void {
+    const value = e.target.value;
+    setSearchInput(value);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value.trim()) {
+        params.set("search", value.trim());
+      } else {
+        params.delete("search");
+      }
+      params.delete("page");
+      router.replace(`?${params.toString()}`);
+    }, 300);
+  }
+
+  function handleStatusChange(value: string): void {
+    if (!isStatusFilter(value)) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      params.delete("status");
+    } else {
+      params.set("status", value);
+    }
+    params.delete("page");
+    router.replace(`?${params.toString()}`);
+  }
+
+  function handleDateFromChange(e: ChangeEvent<HTMLInputElement>): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (e.target.value) {
+      params.set("from", e.target.value);
+    } else {
+      params.delete("from");
+    }
+    params.delete("page");
+    router.replace(`?${params.toString()}`);
+  }
+
+  function handleDateToChange(e: ChangeEvent<HTMLInputElement>): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (e.target.value) {
+      params.set("to", e.target.value);
+    } else {
+      params.delete("to");
+    }
+    params.delete("page");
+    router.replace(`?${params.toString()}`);
+  }
+
+  function handleRetry(): void {
     void query.refetch();
   }
+
+  function handleClearFilters(): void {
+    setSearchInput("");
+    router.replace("?");
+  }
+
+  const filterBar = (
+    <>
+      <div className="relative min-w-0 flex-1 lg:max-w-md">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Input
+          value={searchInput}
+          onChange={handleSearchChange}
+          placeholder="Search orders…"
+          className="h-8 w-full min-w-0 pl-8 text-xs"
+          aria-label="Search sales orders"
+        />
+      </div>
+      <Select value={statusFilter} onValueChange={handleStatusChange}>
+        <SelectTrigger className="h-8 w-[140px] min-w-0 text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Input
+        type="date"
+        value={dateFromParam}
+        onChange={handleDateFromChange}
+        className="h-8 w-[130px] text-xs"
+        aria-label="From date"
+      />
+      <Input
+        type="date"
+        value={dateToParam}
+        onChange={handleDateToChange}
+        className="h-8 w-[130px] text-xs"
+        aria-label="To date"
+      />
+    </>
+  );
+
+  const emptyState = isFiltered ? (
+    <EmptyState
+      illustration={<EmptySearchIllustration />}
+      title="No matching orders"
+      description="No sales orders match your current filters."
+      action={{ label: "Clear filters", onClick: handleClearFilters }}
+      className="border-0 bg-transparent min-h-[40vh]"
+    />
+  ) : (
+    <EmptyState
+      illustration={<EmptyOrdersIllustration />}
+      title="No sales orders yet"
+      description="Create a sales order to start fulfilling customer requests."
+      action={{ label: "New SO", href: "/inventory/sales-orders/new" }}
+      className="border-0 bg-transparent min-h-[40vh]"
+    />
+  );
 
   return (
     <PageWrapper
       eyebrow="Inventory"
       title="Sales Orders"
-      subtitle="Manage customer sales orders from creation to invoicing."
+      subtitle={subtitle}
       actions={
-        <Button asChild>
+        <Button size="sm" asChild>
           <Link href="/inventory/sales-orders/new">
-            <Plus className="size-4 mr-1" />
+            <Plus className="h-3.5 w-3.5 mr-1" />
             New SO
           </Link>
         </Button>
       }
+      filters={filterBar}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end mb-4">
-        <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-full sm:max-w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          type="date"
-          value={dateFrom}
-          onChange={handleDateFromChange}
-          className="w-full sm:max-w-[160px]"
-          placeholder="From date"
+      {query.error ? (
+        <ErrorState
+          description={query.error.message}
+          onRetry={handleRetry}
+          className="flex-1"
         />
-        <Input
-          type="date"
-          value={dateTo}
-          onChange={handleDateToChange}
-          className="w-full sm:max-w-[160px]"
-          placeholder="To date"
+      ) : (
+        <DataTable
+          data={filtered}
+          columns={columns}
+          getRowKey={(so) => so.id}
+          isLoading={query.isLoading}
+          emptyState={emptyState}
+          pagination={{ pageSize: 20 }}
+          minWidth="660px"
         />
-      </div>
-
-      {query.isLoading && <LoadingState variant="table" rows={8} />}
-      {query.error && (
-        <ErrorState description={query.error.message} onRetry={handleRetry} />
-      )}
-
-      {!query.isLoading && !query.error && items.length === 0 && (
-        <EmptyState
-          illustration={<EmptyExpensesIllustration />}
-          title="No sales orders yet"
-          description="Create a sales order to start fulfilling customer requests."
-          action={{ label: "New SO", href: "/inventory/sales-orders/new" }}
-        />
-      )}
-
-      {items.length > 0 && (
-        <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
-          <Table className="min-w-[760px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>SO #</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Order Date</TableHead>
-                <TableHead>Required Date</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((so) => (
-                <TableRow key={so.id}>
-                  <TableCell className="font-mono text-xs">
-                    <Link
-                      href={`/inventory/sales-orders/${so.id}`}
-                      className="text-foreground hover:text-blue-600 hover:underline"
-                    >
-                      {so.soNumber}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{so.customerName ?? "—"}</TableCell>
-                  <TableCell>{formatDate(so.orderDate)}</TableCell>
-                  <TableCell>{formatDate(so.expectedShipDate)}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {Number(so.total).toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={STATUS_VARIANT[so.status]}
-                      className={STATUS_CLASS[so.status] || undefined}
-                    >
-                      {so.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/inventory/sales-orders/${so.id}`}>
-                        View
-                      </Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
       )}
     </PageWrapper>
+  );
+}
+
+export default function SalesOrdersListPage() {
+  return (
+    <Suspense>
+      <SalesOrdersListContent />
+    </Suspense>
   );
 }

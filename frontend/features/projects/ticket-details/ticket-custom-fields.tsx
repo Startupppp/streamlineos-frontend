@@ -148,7 +148,7 @@ export function TicketCustomFields({
         <span>No custom fields.</span>
         <Link
           href={`/projects/${projectId}/settings`}
-          className="text-violet-600 hover:underline"
+          className="text-blue-600 hover:underline"
         >
           Configure in Settings
         </Link>
@@ -158,7 +158,7 @@ export function TicketCustomFields({
 
   return (
     <div className="space-y-2">
-      <h4 className="text-xs font-medium text-muted-foreground">
+      <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         Custom Fields
       </h4>
       {fields.map((field) => (

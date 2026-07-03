@@ -42,12 +42,12 @@ const STAGES = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"];
 const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
 const STAGE_COLORS: Record<string, string> = {
-  LEAD: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  CONTACTED: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  PROPOSAL: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  NEGOTIATION: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  WON: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  LOST: "bg-red-500/10 text-red-400 border-red-500/20",
+  LEAD: "bg-blue-50 text-blue-700 border-blue-200",
+  CONTACTED: "bg-sky-50 text-sky-700 border-sky-200",
+  PROPOSAL: "bg-amber-50 text-amber-700 border-amber-200",
+  NEGOTIATION: "bg-violet-50 text-violet-700 border-violet-200",
+  WON: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  LOST: "bg-red-50 text-red-700 border-red-200",
 };
 
 function formatINR(val: string | number | null | undefined): string {
@@ -102,7 +102,7 @@ function SortableHead({ col, sortColumn, sortDirection, onSort }: SortableHeadPr
   return (
     <TableHead
       className={cn(
-        "text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5 whitespace-nowrap",
+        "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 whitespace-nowrap",
         col.sortable && "cursor-pointer select-none hover:text-foreground",
       )}
       onClick={handleClick}
@@ -156,7 +156,7 @@ function StageCell({ deal, isEditing, onStageChange, onStartEdit }: StageCellPro
   return (
     <Badge
       variant="outline"
-      className={cn("text-[9px] px-1.5 py-0 h-5 cursor-pointer border font-medium", STAGE_COLORS[deal.stage])}
+      className={cn("text-[9px] px-1.5 py-0 h-4 cursor-pointer border font-medium", STAGE_COLORS[deal.stage])}
       onDoubleClick={handleDoubleClick}
     >
       {deal.stage}
@@ -199,8 +199,8 @@ export function DealTableView({
       <div className="flex-1 min-h-0 rounded-lg border border-border overflow-hidden overflow-auto">
         <div className="min-w-max">
           <table className="w-full caption-bottom text-[11px]">
-            <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur-sm">
-              <TableRow className="hover:bg-muted/80 border-b-2 border-border">
+            <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+              <TableRow className="border-b-2 border-border hover:bg-transparent">
                 {columns.map(col => (
                   <SortableHead
                     key={col.key}
@@ -223,8 +223,11 @@ export function DealTableView({
                 ))
               ) : deals.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center py-12 text-muted-foreground text-xs">
-                    No deals found
+                  <TableCell colSpan={columns.length} className="p-0 border-0">
+                    <div className="flex flex-col items-center justify-center min-h-[40vh] text-center py-12 px-6">
+                      <p className="text-sm font-semibold text-foreground">No deals found</p>
+                      <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters or create a new deal.</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

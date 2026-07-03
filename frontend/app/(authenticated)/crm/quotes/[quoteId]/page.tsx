@@ -3,21 +3,13 @@
 import { use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import {
-  Send,
-  CheckCircle2,
-  XCircle,
-  Trash2,
-  FileText,
-  Calendar,
-  User,
-  Building2,
-} from "lucide-react";
+import { useReducedMotion, motion } from "framer-motion";
+import { Send, CheckCircle2, XCircle, Trash2, FileText, Calendar, User, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,190 +23,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { useQuoteDetail, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
-import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { QuoteStatus, QuoteLineItem } from "@/types/crm/quotes";
-
-const STATUS_LABELS: Record<QuoteStatus, string> = {
-  DRAFT: "Draft",
-  SENT: "Sent",
-  ACCEPTED: "Accepted",
-  REJECTED: "Rejected",
-  EXPIRED: "Expired",
-};
-
-const STATUS_BADGE_CLASSES: Record<QuoteStatus, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  SENT: "bg-blue-50 text-blue-700 border-blue-200",
-  ACCEPTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  REJECTED: "bg-red-50 text-red-700 border-red-200",
-  EXPIRED: "bg-amber-50 text-amber-700 border-amber-200",
-};
-
-const STATUS_ORDER: QuoteStatus[] = ["DRAFT", "SENT", "ACCEPTED"];
-
-function formatCurrency(amount: string, currency: string) {
-  const num = parseFloat(amount);
-  if (isNaN(num)) return "—";
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: currency || "INR",
-    maximumFractionDigits: 2,
-  }).format(num);
-}
-
-function formatDate(date: string | null | undefined) {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function StatusProgress({ status }: { status: QuoteStatus }) {
-  if (status === "REJECTED" || status === "EXPIRED") {
-    return (
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className="h-2 w-2 rounded-full bg-muted-foreground/30 inline-block" />
-          Draft
-        </div>
-        <div className="flex-1 h-px bg-border" />
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className="h-2 w-2 rounded-full bg-muted-foreground/30 inline-block" />
-          Sent
-        </div>
-        <div className="flex-1 h-px bg-border" />
-        <div
-          className={cn(
-            "flex items-center gap-1.5 text-xs font-medium",
-            status === "REJECTED" ? "text-red-600" : "text-amber-600",
-          )}
-        >
-          <span
-            className={cn(
-              "h-2 w-2 rounded-full inline-block",
-              status === "REJECTED" ? "bg-red-500" : "bg-amber-500",
-            )}
-          />
-          {STATUS_LABELS[status]}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-1">
-      {STATUS_ORDER.map((s, idx) => {
-        const currentIdx = STATUS_ORDER.indexOf(status);
-        const isPast = idx < currentIdx;
-        const isCurrent = s === status;
-        return (
-          <div key={s} className="flex items-center gap-1">
-            <div
-              className={cn(
-                "flex items-center gap-1.5 text-xs",
-                isCurrent
-                  ? "font-semibold text-foreground"
-                  : isPast
-                    ? "text-emerald-600"
-                    : "text-muted-foreground",
-              )}
-            >
-              <span
-                className={cn(
-                  "h-2 w-2 rounded-full inline-block",
-                  isCurrent
-                    ? "bg-primary"
-                    : isPast
-                      ? "bg-emerald-500"
-                      : "bg-muted-foreground/30",
-                )}
-              />
-              {STATUS_LABELS[s]}
-            </div>
-            {idx < STATUS_ORDER.length - 1 && (
-              <div
-                className={cn(
-                  "w-8 h-px mx-1",
-                  isPast ? "bg-emerald-500" : "bg-border",
-                )}
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function LineItemsTable({
-  lineItems,
-  currency,
-}: {
-  lineItems: QuoteLineItem[];
-  currency: string;
-}) {
-  if (!lineItems.length) {
-    return (
-      <p className="text-xs text-muted-foreground py-4 text-center">
-        No line items added.
-      </p>
-    );
-  }
-
-  return (
-    <div className="border border-border rounded-md overflow-hidden">
-      <table className="w-full">
-        <thead className="bg-muted/80">
-          <tr className="border-b border-border">
-            <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-              Description
-            </th>
-            <th className="text-right px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-16">
-              Qty
-            </th>
-            <th className="text-right px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-28">
-              Unit Price
-            </th>
-            <th className="text-right px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-16">
-              Tax %
-            </th>
-            <th className="text-right px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-28">
-              Amount
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {lineItems.map((item) => (
-            <tr
-              key={item.id}
-              className="border-b border-border/50 last:border-0 h-8 hover:bg-muted/20"
-            >
-              <td className="px-3 py-1.5 text-[11px]">{item.description}</td>
-              <td className="px-3 py-1.5 text-[11px] text-right tabular-nums">
-                {parseFloat(item.quantity)}
-              </td>
-              <td className="px-3 py-1.5 text-[11px] text-right tabular-nums">
-                {formatCurrency(item.unitPrice, currency)}
-              </td>
-              <td className="px-3 py-1.5 text-[11px] text-right tabular-nums text-muted-foreground">
-                {parseFloat(item.taxRate)}%
-              </td>
-              <td className="px-3 py-1.5 text-[11px] text-right tabular-nums font-medium">
-                {formatCurrency(item.amount, currency)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+import { QuoteStatusProgress } from "@/features/crm/quotes/components/quote-status-progress";
+import { QuoteLineItemsTable } from "@/features/crm/quotes/components/quote-line-items-table";
+import {
+  STATUS_LABELS,
+  STATUS_BADGE_CLASSES,
+  formatCurrency,
+  formatDate,
+} from "@/features/crm/quotes/lib/quote-utils";
 
 export default function QuoteDetailPage({
   params,
@@ -224,12 +45,17 @@ export default function QuoteDetailPage({
   const { quoteId: quoteIdStr } = use(params);
   const quoteId = Number(quoteIdStr);
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
 
   const { data, isLoading, isError, refetch } = useQuoteDetail(quoteId);
   const updateStatus = useUpdateQuoteStatus();
   const deleteQuote = useDeleteQuote();
 
   const quote = data ?? null;
+
+  const sectionVariants = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : fadeUp;
 
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
@@ -278,17 +104,17 @@ export default function QuoteDetailPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Quote" subtitle="Loading..." backHref="/crm/quotes">
+      <PageWrapper title="Quote" backHref="/crm/quotes">
         <div className="space-y-4">
-          <div className="h-6 w-48 bg-muted rounded animate-pulse" />
+          <Skeleton className="h-6 w-48" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 space-y-4">
-              <div className="h-48 rounded-lg bg-muted animate-pulse" />
-              <div className="h-64 rounded-lg bg-muted animate-pulse" />
+              <Skeleton className="h-48 w-full rounded-lg" />
+              <Skeleton className="h-32 w-full rounded-lg" />
             </div>
             <div className="space-y-4">
-              <div className="h-48 rounded-lg bg-muted animate-pulse" />
-              <div className="h-32 rounded-lg bg-muted animate-pulse" />
+              <Skeleton className="h-48 w-full rounded-lg" />
+              <Skeleton className="h-28 w-full rounded-lg" />
             </div>
           </div>
         </div>
@@ -402,8 +228,7 @@ export default function QuoteDetailPage({
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete quote?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. The quote will be permanently
-                    removed.
+                    This action cannot be undone. The quote will be permanently removed.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -427,12 +252,12 @@ export default function QuoteDetailPage({
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={fadeUp}>
-          <StatusProgress status={quote.status} />
+        <motion.div variants={sectionVariants}>
+          <QuoteStatusProgress status={quote.status} />
         </motion.div>
 
         <motion.div
-          variants={fadeUp}
+          variants={sectionVariants}
           className="grid grid-cols-1 lg:grid-cols-3 gap-4"
         >
           <div className="lg:col-span-2 space-y-4">
@@ -444,8 +269,7 @@ export default function QuoteDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
-                <LineItemsTable lineItems={lineItems} currency={quote.currency} />
-
+                <QuoteLineItemsTable lineItems={lineItems} currency={quote.currency} />
                 <div className="mt-4 space-y-1.5 max-w-xs ml-auto">
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Subtotal</span>

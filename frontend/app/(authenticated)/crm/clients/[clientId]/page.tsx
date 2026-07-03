@@ -2,7 +2,7 @@
 
 import { use, useCallback } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { useReducedMotion, motion } from "framer-motion";
 import {
   ExternalLink,
   CheckSquare,
@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -30,11 +31,11 @@ const STATUS_LABELS: Record<ClientAccountStatus, string> = {
   INVESTED: "Invested",
 };
 
-const STATUS_COLORS: Record<ClientAccountStatus, string> = {
-  ACCOUNT_OPENING: "bg-blue-500/10 text-blue-600 border-0",
-  QUERIES: "bg-amber-500/10 text-amber-600 border-0",
-  PLAN_SELECTED: "bg-muted text-foreground border-0",
-  INVESTED: "bg-emerald-500/10 text-emerald-600 border-0",
+const STATUS_BADGE_CLASSES: Record<ClientAccountStatus, string> = {
+  ACCOUNT_OPENING: "bg-blue-50 text-blue-700 border-blue-200",
+  QUERIES: "bg-amber-50 text-amber-700 border-amber-200",
+  PLAN_SELECTED: "bg-slate-100 text-slate-700 border-slate-200",
+  INVESTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
 export default function ClientDetailPage({
@@ -52,32 +53,33 @@ export default function ClientDetailPage({
     refetch,
   } = useClientAccount(clientId);
 
+  const shouldReduceMotion = useReducedMotion();
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   if (isLoading) {
     return (
-      <PageWrapper title="Client" subtitle="Loading..." backHref="/crm/clients">
+      <PageWrapper title="Client" backHref="/crm/clients">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+            <Skeleton className="h-10 w-10 rounded-full" />
             <div className="space-y-1.5">
-              <div className="h-5 w-48 rounded bg-muted animate-pulse" />
-              <div className="h-4 w-28 rounded bg-muted animate-pulse" />
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-4 w-28" />
             </div>
           </div>
           <div className="flex gap-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-9 w-24 rounded-md bg-muted animate-pulse" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-24 rounded-md" />
             ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-4">
-              <div className="h-52 rounded-lg bg-muted animate-pulse" />
-              <div className="h-44 rounded-lg bg-muted animate-pulse" />
+              <Skeleton className="h-52 rounded-lg" />
+              <Skeleton className="h-44 rounded-lg" />
             </div>
             <div className="space-y-4">
-              <div className="h-52 rounded-lg bg-muted animate-pulse" />
-              <div className="h-44 rounded-lg bg-muted animate-pulse" />
+              <Skeleton className="h-52 rounded-lg" />
+              <Skeleton className="h-44 rounded-lg" />
             </div>
           </div>
         </div>
@@ -117,7 +119,10 @@ export default function ClientDetailPage({
       backHref="/crm/clients"
       subtitle={
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge className={cn("text-[10px]", STATUS_COLORS[client.status])}>
+          <Badge
+            variant="outline"
+            className={cn("h-5 px-2 py-0.5 text-[10px]", STATUS_BADGE_CLASSES[client.status])}
+          >
             {STATUS_LABELS[client.status]}
           </Badge>
           {client.planName && (
@@ -136,11 +141,13 @@ export default function ClientDetailPage({
     >
       <motion.div
         className="space-y-4"
-        variants={staggerContainer}
+        variants={shouldReduceMotion ? { hidden: {}, visible: {} } : staggerContainer}
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={fadeUp}>
+        <motion.div
+          variants={shouldReduceMotion ? { hidden: { opacity: 0 }, visible: { opacity: 1 } } : fadeUp}
+        >
           <Tabs defaultValue="overview">
             <TabsList className="mb-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>

@@ -45,8 +45,8 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <div className="h-7 w-7 rounded-lg bg-violet-50 flex items-center justify-center shrink-0">
-          <RefreshCw className="h-3.5 w-3.5 text-violet-600" />
+        <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+          <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
         <span className="text-sm font-medium flex-1">Recurring</span>
         <Switch checked={enabled} onCheckedChange={handleToggle} aria-label="Toggle recurrence" />
@@ -73,8 +73,8 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
                 <button key={day} type="button" onClick={() => toggleDay(i)}
                   className={cn("h-7 w-7 rounded-lg text-[10px] font-medium transition-all border",
                     (value.daysOfWeek ?? []).includes(i)
-                      ? "bg-violet-600 text-white border-violet-600"
-                      : "bg-white text-slate-500 border-slate-200 hover:border-violet-300")}>
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-primary/30")}>
                   {day[0]}
                 </button>
               ))}

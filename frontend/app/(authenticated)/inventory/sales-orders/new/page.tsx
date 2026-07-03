@@ -145,6 +145,7 @@ export default function NewSalesOrderPage() {
       eyebrow="Inventory · Sales Orders"
       title="New Sales Order"
       subtitle="Create a customer sales order. Confirm it to reserve stock."
+      backHref="/inventory/sales-orders"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Card className="p-4">
@@ -206,13 +207,13 @@ export default function NewSalesOrderPage() {
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <Table className="min-w-[720px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product Variant</TableHead>
-                  <TableHead className="text-right w-[90px]">Qty</TableHead>
-                  <TableHead className="text-right w-[110px]">Unit Price</TableHead>
-                  <TableHead className="text-right w-[90px]">Tax %</TableHead>
-                  <TableHead className="text-right w-[110px]">Line Total</TableHead>
+              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                <TableRow className="border-b-2 border-border hover:bg-transparent">
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Product Variant</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[90px]">Qty</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[110px]">Unit Price</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[90px]">Tax %</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[110px]">Line Total</TableHead>
                   <TableHead className="w-[50px]" />
                 </TableRow>
               </TableHeader>
@@ -276,7 +277,7 @@ export default function NewSalesOrderPage() {
                       />
                     </TableCell>
 
-                    <TableCell className="text-right tabular-nums text-sm">
+                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
                       {(lineTotals[index] ?? 0).toFixed(2)}
                     </TableCell>
 
@@ -287,6 +288,7 @@ export default function NewSalesOrderPage() {
                         size="icon"
                         onClick={() => remove(index)}
                         disabled={fields.length <= 1}
+                        aria-label={`Remove line ${index + 1}`}
                       >
                         <Trash2 className="size-4" />
                       </Button>
@@ -317,16 +319,16 @@ export default function NewSalesOrderPage() {
               </div>
             </div>
 
-            <div className="space-y-1 text-sm tabular-nums">
+            <div className="space-y-1 text-sm">
               {lineTotals.map((total, index) => (
                 <div key={fields[index]?.id ?? index} className="flex justify-between text-muted-foreground">
                   <span>Line {index + 1}</span>
-                  <span>{total.toFixed(2)}</span>
+                  <span className="font-mono tabular-nums">{total.toFixed(2)}</span>
                 </div>
               ))}
               <div className="border-t border-border pt-2 flex justify-between font-medium text-base">
                 <span>Grand Total</span>
-                <span>{grandTotal.toFixed(2)}</span>
+                <span className="font-mono tabular-nums">{grandTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -343,7 +345,7 @@ export default function NewSalesOrderPage() {
           </Button>
           <Button
             type="submit"
-            className="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            className="w-full sm:w-auto"
             disabled={createMutation.isPending}
           >
             {createMutation.isPending ? "Creating…" : "Create Sales Order"}

@@ -190,7 +190,7 @@ export function LeadQuickActions({
   }, [leadName, leadContext, onDraftEmail, generateEmailMutation]);
 
   return (
-    <Card className="shadow-noir">
+    <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="text-base">Quick Actions</CardTitle>
       </CardHeader>

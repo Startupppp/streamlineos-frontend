@@ -58,15 +58,29 @@ export function KanbanBoard({
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const queryClient = useQueryClient();
 
-  const columns: KanbanColumn[] =
-    statuses && statuses.length > 0
-      ? statuses.map((s) => ({
-          id: s.name,
-          name: s.name.replace(/_/g, " "),
-          color: s.color,
-          order: s.order,
-        }))
-      : DEFAULT_COLUMNS;
+  const columns: KanbanColumn[] = (() => {
+    if (!statuses || statuses.length === 0) return DEFAULT_COLUMNS;
+    const configured = statuses.map((s) => ({
+      id: s.name,
+      name: s.name.replace(/_/g, " "),
+      color: s.color,
+      order: s.order,
+    }));
+    const configuredIds = new Set(configured.map((c) => c.id));
+    const orphanStatuses = [...new Set(optimisticTickets.map((t) => t.status))].filter(
+      (s) => !configuredIds.has(s),
+    );
+    if (orphanStatuses.length === 0) return configured;
+    return [
+      ...configured,
+      ...orphanStatuses.map((s, i) => ({
+        id: s,
+        name: s.replace(/_/g, " "),
+        color: null as string | null,
+        order: configured.length + i,
+      })),
+    ];
+  })();
 
   useEffect(() => {
     setOptimisticTickets(tickets);

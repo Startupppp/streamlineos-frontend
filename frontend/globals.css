@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
@@ -51,86 +51,86 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   STREAMLINEOS — DESIGN TOKENS
-   ───────────────────────────────────────────────────────────────────────────
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   STREAMLINEOS â€” DESIGN TOKENS
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    One source of truth. Components MUST read from these variables (or the
-   Tailwind utilities they back) — do not introduce ad-hoc hex codes outside
+   Tailwind utilities they back) â€” do not introduce ad-hoc hex codes outside
    semantic edge cases (status badges, charts).
 
    PALETTE
-   ─ Brand:     Indigo → Cyan gradient.  Deep #1e40af / Core #3b82f6 /
+   â”€ Brand:     Indigo â†’ Cyan gradient.  Deep #1e40af / Core #3b82f6 /
                 Bright #60a5fa / Cyan #06b6d4
-   ─ Ink:       Headlines & primary CTAs use slate-900 (#0b1220) for
+   â”€ Ink:       Headlines & primary CTAs use slate-900 (#0b1220) for
                 gravitas; blue is reserved for highlights, links, accents.
-   ─ Surface:   Pale blue-white canvas (#eef3fb) with white elevated cards.
-   ─ Semantic:  Standard Tailwind palettes (emerald / amber / red / blue)
+   â”€ Surface:   Pale blue-white canvas (#eef3fb) with white elevated cards.
+   â”€ Semantic:  Standard Tailwind palettes (emerald / amber / red / blue)
                 for status. Never repurpose brand colors for status.
 
    USAGE
-   ─ <Button>:                 default = ink CTA (slate-900 bg, white text)
+   â”€ <Button>:                 default = ink CTA (slate-900 bg, white text)
                                outline = white bg, slate text, slate-50 hover
                                ghost   = transparent bg, slate-100 hover
-   ─ Brand gradient text:      <span class="brand-text">
-   ─ Page background:          .surface-soft (auto everywhere via layouts)
-   ─ Cards / panels:           bg-white border-slate-200/80
-   ─ Headings:                 text-slate-900
-   ─ Body:                     text-slate-600
-   ─ Muted/meta:               text-slate-500
-   ─ Captions / labels:        text-slate-400, font-mono uppercase tracking
-   ═══════════════════════════════════════════════════════════════════════════ */
+   â”€ Brand gradient text:      <span class="brand-text">
+   â”€ Page background:          .surface-soft (auto everywhere via layouts)
+   â”€ Cards / panels:           bg-white border-slate-200/80
+   â”€ Headings:                 text-slate-900
+   â”€ Body:                     text-slate-600
+   â”€ Muted/meta:               text-slate-500
+   â”€ Captions / labels:        text-slate-400, font-mono uppercase tracking
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 :root {
   --font-geist: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
 
   --radius: 0.625rem;
 
-  /* ─── Surface ─── */
-  --background: #f8fafc;          /* page canvas — slate-50, near pure white with the barest cool hint for card lift */
+  /* â”€â”€â”€ Surface â”€â”€â”€ */
+  --background: #f8fafc;          /* page canvas â€” slate-50, near pure white with the barest cool hint for card lift */
   --foreground: #0b1220;          /* primary ink */
   --card: #ffffff;
   --card-foreground: #0b1220;
   --popover: #ffffff;
   --popover-foreground: #0b1220;
-  --muted: #f1f5f9;               /* slate-100 — muted surfaces */
+  --muted: #f1f5f9;               /* slate-100 â€” muted surfaces */
   --muted-foreground: #64748b;    /* slate-500 */
   --border: #e2e8f0;              /* slate-200 */
   --input: #e2e8f0;
   --ring: #3b82f6;                /* blue-500 focus ring */
 
-  /* ─── CTA & Action (Ink-style — Linear/Stripe feel) ─── */
-  --primary: #0b1220;             /* slate-900 — primary CTAs */
+  /* â”€â”€â”€ CTA & Action (Ink-style â€” Linear/Stripe feel) â”€â”€â”€ */
+  --primary: #0b1220;             /* slate-900 â€” primary CTAs */
   --primary-foreground: #ffffff;
 
-  /* ─── Accent (neutral hover wash — used by shadcn dropdown/menu/command item hover) ─── */
-  --accent: #f1f5f9;              /* slate-100 — subtle neutral; NOT brand blue */
-  --accent-foreground: #0f172a;   /* slate-900 — readable on neutral wash */
-  --secondary: #f1f5f9;           /* slate-100 — secondary buttons */
+  /* â”€â”€â”€ Accent (neutral hover wash â€” used by shadcn dropdown/menu/command item hover) â”€â”€â”€ */
+  --accent: #f1f5f9;              /* slate-100 â€” subtle neutral; NOT brand blue */
+  --accent-foreground: #0f172a;   /* slate-900 â€” readable on neutral wash */
+  --secondary: #f1f5f9;           /* slate-100 â€” secondary buttons */
   --secondary-foreground: #0b1220;
 
-  /* ─── Status / Semantic ─── */
+  /* â”€â”€â”€ Status / Semantic â”€â”€â”€ */
   --destructive: #dc2626;         /* red-600 */
   --destructive-foreground: #ffffff;
 
-  /* ─── Brand palette (gradient text, badges, decoration) ─── */
+  /* â”€â”€â”€ Brand palette (gradient text, badges, decoration) â”€â”€â”€ */
   --brand-deep: #1e40af;          /* blue-800 */
   --brand-core: #3b82f6;          /* blue-500 */
   --brand-bright: #60a5fa;        /* blue-400 */
   --brand-cyan: #06b6d4;          /* cyan-500 */
   --gradient-signature: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
 
-  /* ─── Glass surfaces (Vision-OS style overlays) ─── */
+  /* â”€â”€â”€ Glass surfaces (Vision-OS style overlays) â”€â”€â”€ */
   --bg-glass: rgba(255, 255, 255, 0.72);
   --border-glass: rgba(30, 64, 175, 0.10);
 
-  /* ─── Charts ─── */
+  /* â”€â”€â”€ Charts â”€â”€â”€ */
   --chart-1: #1d4ed8;
   --chart-2: #06b6d4;
   --chart-3: #60a5fa;
   --chart-4: #8b5cf6;
   --chart-5: #ec4899;
 
-  /* ─── Dashboard sidebar (white panel — matches landing card surfaces) ─── */
+  /* â”€â”€â”€ Dashboard sidebar (white panel â€” matches landing card surfaces) â”€â”€â”€ */
   --sidebar: #ffffff;
   --sidebar-foreground: #0b1220;
   --sidebar-primary: #3b82f6;
@@ -140,47 +140,47 @@
   --sidebar-border: #e2e8f0;
   --sidebar-ring: #60a5fa;
 
-  /* ─── Cinematic dark canvas (only used on auth right-panel and rare dark sections) ─── */
+  /* â”€â”€â”€ Cinematic dark canvas (only used on auth right-panel and rare dark sections) â”€â”€â”€ */
   --bg-deep: #03060f;
   --bg-elevated: #0a1428;
 
-  /* ─── Legacy aliases (existing dashboard utilities reference --gold/--blue) ─── */
+  /* â”€â”€â”€ Legacy aliases (existing dashboard utilities reference --gold/--blue) â”€â”€â”€ */
   --gold: #3b82f6;
   --blue: #1d4ed8;
 }
 
 .dark {
-  /* ─── Surface (deeper blacks for true OLED-feel) ─── */
+  /* â”€â”€â”€ Surface (deeper blacks for true OLED-feel) â”€â”€â”€ */
   --background: #07091a;          /* page canvas */
   --foreground: #f1f4fb;
-  --card: #101428;                /* elevated panel — clearly lifted from bg */
+  --card: #101428;                /* elevated panel â€” clearly lifted from bg */
   --card-foreground: #f1f4fb;
   --popover: #141a32;
   --popover-foreground: #f1f4fb;
   --muted: #161e36;
   --muted-foreground: #94a0c0;
-  --border: rgba(148, 178, 245, 0.12);     /* subtle but visible against card */
+  --border: rgba(148, 178, 245, 0.22);     /* visible against dark surfaces */
   --input: rgba(148, 178, 245, 0.14);
   --ring: #60a5fa;
 
-  /* ─── CTA & Action — invert ink to white for dark ─── */
+  /* â”€â”€â”€ CTA & Action â€” invert ink to white for dark â”€â”€â”€ */
   --primary: #f1f4fb;
   --primary-foreground: #07091a;
   --secondary: #1a2238;
   --secondary-foreground: #f1f4fb;
-  --accent: #1a2238;              /* dark surface wash — neutral for dark mode hover */
+  --accent: #1a2238;              /* dark surface wash â€” neutral for dark mode hover */
   --accent-foreground: #f1f4fb;
   --destructive: #ef4444;
   --destructive-foreground: #f1f4fb;
 
-  /* ─── Charts (slightly punchier in dark for legibility) ─── */
+  /* â”€â”€â”€ Charts (slightly punchier in dark for legibility) â”€â”€â”€ */
   --chart-1: #3b82f6;
   --chart-2: #06b6d4;
   --chart-3: #60a5fa;
   --chart-4: #8b5cf6;
   --chart-5: #ec4899;
 
-  /* ─── Sidebar (deepest layer — same dark-on-dark Linear/Vercel pattern) ─── */
+  /* â”€â”€â”€ Sidebar (deepest layer â€” same dark-on-dark Linear/Vercel pattern) â”€â”€â”€ */
   --sidebar: #0b1024;
   --sidebar-foreground: #c4cbe0;
   --sidebar-primary: #3b82f6;
@@ -194,7 +194,7 @@
   --blue: #1d4ed8;
 }
 
-/* ─── Shadow override for dark mode — light glass-highlight instead of dark drop ─── */
+/* â”€â”€â”€ Shadow override for dark mode â€” light glass-highlight instead of dark drop â”€â”€â”€ */
 .dark .shadow-noir {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
@@ -202,7 +202,7 @@
     0 0 0 1px rgba(148, 178, 245, 0.04);
 }
 
-/* ─── Hide scrollbar utility (top-level, outside @layer so it always wins) ─── */
+/* â”€â”€â”€ Hide scrollbar utility (top-level, outside @layer so it always wins) â”€â”€â”€ */
 .scrollbar-hide,
 .scrollbar-hide * {
   scrollbar-width: none !important;
@@ -247,7 +247,7 @@
   }
 }
 
-/* ─── Glass ─────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Glass â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .glass {
   background: color-mix(in srgb, var(--card) 92%, transparent);
   backdrop-filter: blur(16px) saturate(1.8);
@@ -262,7 +262,7 @@
   border-bottom: 1px solid var(--sidebar-border);
 }
 
-/* ─── Shadows ────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Shadows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .shadow-soft {
   box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
 }
@@ -278,7 +278,7 @@
     0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
-/* ─── Hover effects ──────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Hover effects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .press-scale {
   transition: transform 0.1s ease;
 }
@@ -286,7 +286,7 @@
   transform: scale(0.97);
 }
 
-/* ─── Backgrounds ────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Backgrounds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .noir-mesh {
   background:
     radial-gradient(ellipse at 10% 60%, color-mix(in srgb, var(--primary) 6%, transparent) 0%, transparent 55%),
@@ -316,7 +316,7 @@
     var(--background);
 }
 
-/* ─── Decorative ─────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Decorative â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .deco-line {
   height: 1px;
   background: linear-gradient(to right, transparent, color-mix(in srgb, var(--primary) 25%, transparent), transparent);
@@ -332,7 +332,7 @@
   background: linear-gradient(to right, transparent, color-mix(in srgb, var(--sidebar-primary) 18%, transparent), transparent);
 }
 
-/* ─── Animations ─────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Animations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -385,7 +385,7 @@
 .animate-slide-in-right { animation: slide-in-right 0.3s ease forwards; }
 .animate-badge-pop  { animation: badge-pop 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards; }
 
-/* ─── Scrollbars ─────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Scrollbars â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 * {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--primary) 15%, transparent) transparent;
@@ -411,7 +411,7 @@
 [data-radix-scroll-area-viewport] { overflow-x: auto !important; overflow-y: auto !important; }
 [data-radix-scroll-area-viewport] .sticky { position: sticky !important; z-index: 50 !important; }
 
-/* ─── Gradient utilities ──────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Gradient utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .gradient-gold    { background: linear-gradient(135deg, var(--brand-bright), var(--brand-core)); }
 .gradient-brand   { background: linear-gradient(135deg, var(--brand-deep) 0%, var(--brand-core) 50%, var(--brand-cyan) 100%); }
 .gradient-green   { background: linear-gradient(135deg, #16a34a, #22c55e); }
@@ -419,7 +419,7 @@
 .gradient-dark    { background: linear-gradient(135deg, var(--sidebar) 0%, color-mix(in srgb, var(--sidebar) 85%, black) 100%); }
 .gradient-signature { background: var(--gradient-signature); }
 
-/* ─── Landing cinematic helpers ──────────────────────────────────────────────── */
+/* â”€â”€â”€ Landing cinematic helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .brand-text {
   background: var(--gradient-signature);
   -webkit-background-clip: text;
@@ -530,7 +530,7 @@
 }
 .spin-slow { animation: spin-slow 24s linear infinite; }
 
-/* ─── Compact view mode ──────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Compact view mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .compact table td,
 .compact table th { padding-top: 0.3rem; padding-bottom: 0.3rem; font-size: 0.8125rem; }
 .compact .space-y-4 > * + * { margin-top: 0.5rem; }
@@ -540,7 +540,7 @@
 .compact .gap-4 { gap: 0.5rem; }
 .compact .gap-6 { gap: 0.75rem; }
 
-/* ─── Sidebar nav item ────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Sidebar nav item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .nav-item {
   position: relative;
   display: flex;
@@ -578,12 +578,12 @@
   color: color-mix(in srgb, var(--sidebar-primary) 80%, transparent);
 }
 
-/* ─── Page wrapper transitions ───────────────────────────────────────────────── */
+/* â”€â”€â”€ Page wrapper transitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .page-enter {
   animation: fade-up 0.3s ease forwards;
 }
 
-/* ─── Filter pill ────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Filter pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .filter-chip {
   display: inline-flex;
   align-items: center;
@@ -612,7 +612,7 @@
   color: var(--foreground);
 }
 
-/* ─── React Big Calendar overrides ──────────────────────────────────────────── */
+/* â”€â”€â”€ React Big Calendar overrides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .calendar-container .rbc-calendar {
   height: 100%;
   min-height: 0;
@@ -766,7 +766,7 @@
   background: color-mix(in srgb, var(--primary) 80%, transparent);
 }
 
-/* ── Blog article typography (prose) brand tweaks ─────────────────────── */
+/* â”€â”€ Blog article typography (prose) brand tweaks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .blog-prose {
   --tw-prose-body: var(--foreground);
   --tw-prose-headings: var(--foreground);
@@ -812,3 +812,33 @@
   border: 1px solid var(--border);
   border-radius: 0.75rem;
 }
+
+/* â”€â”€â”€ Plate Document Editor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.plate-editor:empty::before,
+.plate-editor [data-slate-editor] > [data-slate-node="element"]:first-child:last-child > [data-slate-node="text"]:only-child:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
+  position: absolute;
+}
+
+
+/* Code syntax highlight (lowlight / highlight.js tokens) */
+.plate-editor .hljs-comment,
+.plate-editor .hljs-quote { color: var(--muted-foreground); font-style: italic; }
+.plate-editor .hljs-keyword,
+.plate-editor .hljs-selector-tag,
+.plate-editor .hljs-addition { color: #a855f7; }
+.plate-editor .hljs-string,
+.plate-editor .hljs-attr,
+.plate-editor .hljs-template-string { color: #22c55e; }
+.plate-editor .hljs-number,
+.plate-editor .hljs-literal,
+.plate-editor .hljs-template-variable { color: #f59e0b; }
+.plate-editor .hljs-title,
+.plate-editor .hljs-section { color: #3b82f6; }
+.plate-editor .hljs-type,
+.plate-editor .hljs-built_in { color: #06b6d4; }
+.plate-editor .hljs-deletion,
+.plate-editor .hljs-regexp { color: #ef4444; }

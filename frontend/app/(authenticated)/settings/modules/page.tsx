@@ -56,6 +56,7 @@ interface ModuleCardProps {
   moduleKey: string;
   enabled: boolean;
   isPending: boolean;
+  core?: boolean;
   onToggle: (moduleKey: string, enabled: boolean) => void;
 }
 
@@ -63,6 +64,7 @@ function ModuleCard({
   moduleKey,
   enabled,
   isPending,
+  core,
   onToggle,
 }: ModuleCardProps) {
   const handleToggle = useCallback(
@@ -80,13 +82,13 @@ function ModuleCard({
             {getModuleLabel(moduleKey)}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {enabled ? "Enabled" : "Disabled"}
+            {core ? "Always on" : enabled ? "Enabled" : "Disabled"}
           </p>
         </div>
         <Switch
           checked={enabled}
           onCheckedChange={handleToggle}
-          disabled={isPending}
+          disabled={isPending || !!core}
           aria-label={`Toggle ${getModuleLabel(moduleKey)}`}
         />
       </CardContent>
@@ -150,6 +152,7 @@ function ModulesContent() {
               moduleKey={mod.moduleKey}
               enabled={mod.enabled}
               isPending={toggleModule.isPending}
+              core={mod.core}
               onToggle={handleToggle}
             />
           ))}

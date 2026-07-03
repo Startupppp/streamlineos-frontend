@@ -67,14 +67,14 @@ export function ProjectFilterBar({
   );
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full bg-muted/40 rounded-lg p-2">
-      <div className="relative w-full sm:w-64">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+      <div className="relative min-w-0 flex-1 sm:max-w-[240px]">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
         <Input
           placeholder="Search projects..."
           value={search}
           onChange={handleSearchInputChange}
-          className="h-8 pl-8 pr-7 text-sm"
+          className="h-8 pl-8 pr-7 text-xs"
           aria-label="Search projects"
         />
         {search && (
@@ -89,7 +89,7 @@ export function ProjectFilterBar({
       </div>
 
       <Select value={status} onValueChange={handleStatusValueChange}>
-        <SelectTrigger className="h-8 w-full sm:w-[130px] text-sm">
+        <SelectTrigger className="h-8 w-full sm:w-[140px] text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -100,7 +100,7 @@ export function ProjectFilterBar({
         </SelectContent>
       </Select>
 
-      <div className="flex items-center rounded-md border bg-muted/50 p-0.5 sm:ml-auto shrink-0">
+      <div className="flex items-center rounded-md border bg-muted/50 p-0.5 ml-auto shrink-0">
         <button
           onClick={handleGridViewClick}
           className={cn(

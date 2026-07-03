@@ -139,7 +139,7 @@ export function CrmCalendarWeekView({
                       className={[
                         "text-sm font-semibold w-6 h-6 flex items-center justify-center rounded-full leading-none",
                         isToday
-                          ? "bg-violet-600 text-white"
+                          ? "bg-blue-600 text-white"
                           : "text-foreground",
                       ].join(" ")}
                     >

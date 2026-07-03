@@ -33,7 +33,7 @@ export function SourceAttributionCard({
         {isLoading ? (
           <div className="p-4 space-y-2">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <Skeleton key={i} className="h-8 w-full" />
             ))}
           </div>
         ) : !sourceReport?.sources?.length ? (
@@ -46,28 +46,28 @@ export function SourceAttributionCard({
         ) : (
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Source</TableHead>
-                  <TableHead className="text-right">Leads</TableHead>
-                  <TableHead className="text-right">Converted</TableHead>
-                  <TableHead className="text-right">Win Rate</TableHead>
-                  <TableHead className="text-right">Avg Value</TableHead>
+              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                <TableRow className="border-b-2 border-border hover:bg-transparent">
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Source</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Leads</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Converted</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Win Rate</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Avg Value</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sourceReport.sources.map((src) => (
-                  <TableRow key={src.source}>
-                    <TableCell className="font-medium capitalize">
+                  <TableRow key={src.source} className="h-8 hover:bg-muted/30 transition-colors">
+                    <TableCell className="px-2 py-1 text-[11px] font-medium capitalize">
                       {src.source.replace(/_/g, " ")}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
                       {src.count}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums text-emerald-600">
+                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-emerald-600">
                       {src.converted}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
                       <span
                         className={cn(
                           "font-medium",
@@ -81,7 +81,7 @@ export function SourceAttributionCard({
                         {src.conversionRate.toFixed(1)}%
                       </span>
                     </TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-muted-foreground">
                       {src.count > 0
                         ? formatCurrency(Math.round(src.totalValue / src.count))
                         : "—"}

@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useMemo, useCallback, useState, memo } from "react";
-import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useProject, useSprints } from "@/hooks/api";
 import { useBulkUpdateTickets } from "@/hooks/api/projects";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/projects";
@@ -13,6 +12,8 @@ import { PriorityBadge } from "@/features/projects/shared/priority-badge";
 import { StatusBadge } from "@/features/projects/shared/status-badge";
 import { TicketDetailsDialog } from "@/features/projects/ticket-details/ticket-details-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -31,8 +32,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { Layers, X } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 
 interface TicketRowProps {
   ticket: {
@@ -51,6 +53,7 @@ interface TicketRowProps {
       lastName?: string | null;
     } | null;
   };
+  projectKey?: string | null;
   isSelected: boolean;
   onSelect: (id: number) => void;
   onToggleSelect: (id: number) => void;
@@ -58,6 +61,7 @@ interface TicketRowProps {
 
 const TicketRow = memo(function TicketRow({
   ticket,
+  projectKey,
   isSelected,
   onSelect,
   onToggleSelect,
@@ -74,32 +78,32 @@ const TicketRow = memo(function TicketRow({
 
   return (
     <TableRow
-      className={`cursor-pointer hover:bg-muted/50 h-10 border-b border-border/50 ${isSelected ? "bg-primary/5" : ""}`}
+      className={`cursor-pointer hover:bg-muted/50 h-8 border-b border-border/50 ${isSelected ? "bg-primary/5" : ""}`}
       onClick={handleRowClick}
     >
-      <TableCell className="px-3 py-1.5" onClick={handleCheckboxCellClick}>
+      <TableCell className="px-2 py-1" onClick={handleCheckboxCellClick}>
         <Checkbox
           checked={isSelected}
           onCheckedChange={handleCheckedChange}
           aria-label={`Select ticket ${ticket.ticketNumber}`}
         />
       </TableCell>
-      <TableCell className="px-3 py-1.5 font-mono text-xs text-muted-foreground">
+      <TableCell className="px-2 py-1 font-mono text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <TicketTypeIcon type={ticket.type} />
-          #{ticket.ticketNumber}
+          {formatTicketKey(projectKey, ticket.ticketNumber)}
         </span>
       </TableCell>
-      <TableCell className="px-3 py-1.5 max-w-md">
-        <span className="text-sm font-medium line-clamp-1">{ticket.title}</span>
+      <TableCell className="px-2 py-1 max-w-md">
+        <span className="text-[11px] font-medium line-clamp-1">{ticket.title}</span>
       </TableCell>
-      <TableCell className="px-3 py-1.5">
+      <TableCell className="px-2 py-1">
         <StatusBadge status={ticket.status} />
       </TableCell>
-      <TableCell className="px-3 py-1.5 hidden sm:table-cell">
+      <TableCell className="px-2 py-1 hidden sm:table-cell">
         <PriorityBadge priority={ticket.priority} showLabel />
       </TableCell>
-      <TableCell className="px-3 py-1.5 hidden md:table-cell">
+      <TableCell className="px-2 py-1 hidden md:table-cell">
         {ticket.assignee ? (
           <div className="flex items-center gap-1.5">
             <Avatar className="h-6 w-6">
@@ -109,7 +113,7 @@ const TicketRow = memo(function TicketRow({
                 {ticket.assignee.lastName?.[0]}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs truncate">
+            <span className="text-[11px] truncate">
               {ticket.assignee.firstName}
             </span>
           </div>
@@ -117,7 +121,7 @@ const TicketRow = memo(function TicketRow({
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
-      <TableCell className="px-3 py-1.5 text-xs text-muted-foreground hidden lg:table-cell">
+      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground hidden lg:table-cell">
         {ticket.createdAt
           ? format(new Date(ticket.createdAt), "MMM d")
           : "—"}
@@ -270,10 +274,22 @@ export default function BacklogPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Backlog" subtitle="All tickets">
-        <div className="space-y-3 p-4">
+      <PageWrapper title="Backlog" subtitle="Loading..." backHref={`/projects/${projectId}`}>
+        <div className="rounded-lg border border-border overflow-hidden">
+          <div className="h-8 bg-muted/40 border-b flex items-center px-2 gap-2">
+            <Skeleton className="h-4 w-4" />
+            {[80, 200, 100, 80, 120].map((w, i) => (
+              <Skeleton key={i} className="h-3" style={{ width: w }} />
+            ))}
+          </div>
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
+            <div key={i} className="h-8 border-b border-border/50 flex items-center px-2 gap-2">
+              <Skeleton className="h-3 w-3" />
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-3 flex-1" />
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-3 w-12 hidden sm:block" />
+            </div>
           ))}
         </div>
       </PageWrapper>
@@ -286,6 +302,7 @@ export default function BacklogPage({ params }: PageProps) {
     <PageWrapper
       title="Backlog"
       subtitle={`${tickets.length} ticket${tickets.length !== 1 ? "s" : ""}`}
+      backHref={`/projects/${projectId}`}
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={<TicketFilterBar members={members} showSprintFilter={false} />}
     >
@@ -340,35 +357,39 @@ export default function BacklogPage({ params }: PageProps) {
         </div>
       )}
 
-      <div className="rounded-lg border border-border overflow-hidden mx-4 mb-4">
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
         <div className="overflow-x-auto">
         <Table>
           <caption className="sr-only">Backlog tickets</caption>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className="w-10 px-3 py-2" scope="col">
+              <TableHead className="w-10 px-2 py-1.5" scope="col">
                 <Checkbox
                   checked={filteredTickets.length > 0 && selectedIds.size === filteredTickets.length}
                   onCheckedChange={toggleSelectAll}
                   aria-label="Select all tickets"
                 />
               </TableHead>
-              <TableHead className="w-[80px] px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">ID</TableHead>
-              <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Title</TableHead>
-              <TableHead className="w-[120px] px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Status</TableHead>
-              <TableHead className="w-[100px] hidden sm:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Priority</TableHead>
-              <TableHead className="w-[140px] hidden md:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Assignee</TableHead>
-              <TableHead className="w-[110px] hidden lg:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Created</TableHead>
+              <TableHead className="w-[80px] px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">ID</TableHead>
+              <TableHead className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">Title</TableHead>
+              <TableHead className="w-[120px] px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">Status</TableHead>
+              <TableHead className="w-[100px] hidden sm:table-cell px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">Priority</TableHead>
+              <TableHead className="w-[140px] hidden md:table-cell px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">Assignee</TableHead>
+              <TableHead className="w-[110px] hidden lg:table-cell px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">Created</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredTickets.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <EmptyTasksIllustration className="h-36 w-36 opacity-95" />
-                    <p>No tickets found. Create one to get started.</p>
-                  </div>
+                <TableCell colSpan={7} className="p-0">
+                  <EmptyState
+                    illustration={<Layers className="h-8 w-8 text-muted-foreground/40" />}
+                    title="No tickets found"
+                    description={tickets.length === 0 ? "Create a ticket to get started." : "No tickets match the active filters."}
+                    compact
+                    className="min-h-[200px] border-0 bg-transparent"
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -376,6 +397,7 @@ export default function BacklogPage({ params }: PageProps) {
                 <TicketRow
                   key={ticket.id}
                   ticket={ticket}
+                  projectKey={data?.key}
                   isSelected={selectedIds.has(ticket.id)}
                   onSelect={handleTicketSelect}
                   onToggleSelect={toggleSelect}
@@ -385,7 +407,8 @@ export default function BacklogPage({ params }: PageProps) {
           </TableBody>
         </Table>
         </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <TicketDetailsDialog
         ticketId={selectedTicketId}

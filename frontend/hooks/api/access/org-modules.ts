@@ -4,10 +4,35 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAccess } from "@/hooks/api/access";
 
 interface OrgModule {
   moduleKey: string;
   enabled: boolean;
+  core?: boolean;
+}
+
+const BACKEND_MODULE_NAMES: Record<string, string> = {
+  hr: "HR",
+  crm: "CRM",
+  projects: "PROJECTS",
+  accounting: "FINANCE",
+  inventory: "INVENTORY",
+  support: "HELPDESK",
+  kb: "KB",
+};
+
+export function useEnabledModules(): string[] {
+  const { data: session } = useSession();
+  const { data } = useAccess();
+
+  if (!data?.modules) {
+    return session?.enabledModules ?? [];
+  }
+
+  return Object.entries(BACKEND_MODULE_NAMES)
+    .filter(([key]) => data.modules[key])
+    .map(([, name]) => name);
 }
 
 export function useOrgModules() {
