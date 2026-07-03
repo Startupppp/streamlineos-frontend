@@ -1,7 +1,9 @@
 # PRD — Knowledge Base Wiki (Notion-style Pages)
 
-> Product: StreamlineOS · Module: `kb` · Status: v1 in build · Owner: PM/Eng (AI-assisted)
-> Adds a Notion-style collaborative document workspace ("Wiki") to the existing Knowledge Base module.
+> Product: StreamlineOS · Module: `kb` · Status: SHIPPED 2026-07-03 (superseded by `tasks/Knowledge/` spec, which is the authoritative requirements source) · Owner: PM/Eng (AI-assisted)
+> Adds a Notion-style collaborative document workspace ("Knowledge") to the existing Knowledge Base module.
+>
+> **Post-ship deltas vs this document:** routes live at `/knowledge/*` (renamed from `/knowledge-base/*`, redirect shims in place); the document editor is **Plate v53** (`components/editor/plate/`), not TipTap (living rule CLAUDE.md §8); shipped beyond this PRD's v1 scope: sharing levels (private/org/public + public `/wiki/[token]`), page governance (status lifecycle, content types, trust/verification, review scheduling), reviews queue, import/export + 15 starter templates, module record links, right utility panel, dedicated routes (recent/favorites/trash/templates/analytics/spaces/private/shared/reviews/settings/import), full history page with diff-lite, knowledge-gaps analytics, RAG indexing of published pages. Deviations documented in `tasks/Knowledge` coverage report: backend keeps `/kb` prefix + `kb:*` permission keys; `/help/[spaceSlug]` rejected (tenant-unresolvable); legacy `kbArticles` not yet merged into `kbPages`.
 
 ---
 

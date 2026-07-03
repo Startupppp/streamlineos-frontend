@@ -96,7 +96,7 @@ function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelProps) {
         onSuccess: (article) => {
           toast.success("Draft article created");
           window.open(
-            `/knowledge-base/spaces/${article.spaceId}/articles/${article.id}`,
+            `/knowledge/spaces/${article.spaceId}/articles/${article.id}`,
             "_blank",
             "noopener,noreferrer",
           );
@@ -139,7 +139,7 @@ function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelProps) {
                 {articles.map((article) => (
                   <li key={article.id}>
                     <a
-                      href={`/knowledge-base/spaces/${article.spaceId}/articles/${article.id}`}
+                      href={`/knowledge/spaces/${article.spaceId}/articles/${article.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 min-w-0 text-[12px] text-blue-600 hover:underline"

@@ -36,33 +36,32 @@ export type AuditEntityType =
 
 export interface AuditLogEntry {
   id: number;
-  action: AuditAction;
-  entityType: AuditEntityType;
-  entityId: number | null;
-  entityName: string | null;
-  actorId: string;
-  actorName: string;
-  actorEmail: string;
-  changes: Record<string, { from: unknown; to: unknown }> | null;
+  action: string;
+  userId: string;
+  userName: string | null;
+  userEmail: string | null;
+  userImage: string | null;
+  targetId: string | null;
+  targetType: string | null;
   metadata: Record<string, unknown> | null;
   ipAddress: string | null;
   createdAt: string;
 }
 
 export interface AuditLogsResponse {
-  entries: AuditLogEntry[];
+  logs: AuditLogEntry[];
   total: number;
   page: number;
-  limit: number;
+  totalPages: number;
 }
 
 export interface AuditFilters {
-  entityType?: AuditEntityType;
-  action?: AuditAction;
-  from?: string;
-  to?: string;
+  targetType?: string;
+  action?: string;
+  dateFrom?: string;
+  dateTo?: string;
   page?: number;
-  limit?: number;
+  pageSize?: number;
 }
 
 export function useAuditLogs(filters: AuditFilters) {
@@ -72,13 +71,13 @@ export function useAuditLogs(filters: AuditFilters) {
       const params = Object.fromEntries(
         Object.entries(filters).filter(([, v]) => v !== undefined),
       );
-      return apiClient.get<AuditLogsResponse>("/crm/audit-logs", params);
+      return apiClient.get<AuditLogsResponse>("/audit-log", params);
     },
     staleTime: 30_000,
   });
 }
 
-const ACTION_BADGE_COLORS: Record<AuditAction, string> = {
+const ACTION_BADGE_COLORS: Record<string, string> = {
   created: "bg-emerald-50 text-emerald-700 border-emerald-200",
   updated: "bg-blue-50 text-blue-700 border-blue-200",
   deleted: "bg-red-50 text-red-700 border-red-200",
@@ -94,7 +93,7 @@ const ACTION_BADGE_COLORS: Record<AuditAction, string> = {
   imported: "bg-blue-50 text-blue-600 border-blue-200",
 };
 
-export const ENTITY_TYPE_LABELS: Record<AuditEntityType, string> = {
+const ENTITY_TYPE_LABELS: Record<string, string> = {
   lead: "Lead",
   contact: "Contact",
   company: "Company",
@@ -105,7 +104,7 @@ export const ENTITY_TYPE_LABELS: Record<AuditEntityType, string> = {
   settings: "Settings",
 };
 
-export const ACTION_LABELS: Record<AuditAction, string> = {
+const ACTION_LABELS: Record<string, string> = {
   created: "created",
   updated: "updated",
   deleted: "deleted",
@@ -121,39 +120,49 @@ export const ACTION_LABELS: Record<AuditAction, string> = {
   imported: "imported",
 };
 
-export function buildDescription(entry: AuditLogEntry): string {
-  const entityLabel = ENTITY_TYPE_LABELS[entry.entityType];
-  const actionLabel = ACTION_LABELS[entry.action];
-  const entityName = entry.entityName ? `: ${entry.entityName}` : "";
+function isChangeObject(val: unknown): val is { from: unknown; to: unknown } {
+  return typeof val === "object" && val !== null && "from" in val;
+}
 
-  if (entry.action === "status_changed" && entry.changes?.status) {
-    const { from, to } = entry.changes.status;
-    return `${actionLabel} ${entityLabel}${entityName} — ${String(from ?? "—")} → ${String(to ?? "—")}`;
+export function buildDescription(entry: AuditLogEntry): string {
+  const entityLabel = entry.targetType
+    ? (ENTITY_TYPE_LABELS[entry.targetType] ?? entry.targetType)
+    : "entity";
+  const actionLabel = ACTION_LABELS[entry.action] ?? entry.action.replace(/_/g, " ");
+
+  const statusChange = entry.metadata?.status;
+  if (entry.action === "status_changed" && statusChange !== undefined && isChangeObject(statusChange)) {
+    return `${actionLabel} ${entityLabel} — ${String(statusChange.from ?? "—")} → ${String(statusChange.to ?? "—")}`;
   }
-  if (entry.action === "stage_changed" && entry.changes?.stage) {
-    const { from, to } = entry.changes.stage;
-    return `${actionLabel} ${entityLabel}${entityName} — ${String(from ?? "—")} → ${String(to ?? "—")}`;
+  const stageChange = entry.metadata?.stage;
+  if (entry.action === "stage_changed" && stageChange !== undefined && isChangeObject(stageChange)) {
+    return `${actionLabel} ${entityLabel} — ${String(stageChange.from ?? "—")} → ${String(stageChange.to ?? "—")}`;
   }
-  return `${actionLabel} ${entityLabel}${entityName}`;
+  return `${actionLabel} ${entityLabel}`;
 }
 
 interface ChangesDisplayProps {
-  changes: Record<string, { from: unknown; to: unknown }>;
+  metadata: Record<string, unknown>;
 }
 
-function ChangesDisplay({ changes }: ChangesDisplayProps) {
-  const entries = Object.entries(changes).slice(0, 3);
-  const overflow = Object.keys(changes).length - 3;
+function ChangesDisplay({ metadata }: ChangesDisplayProps) {
+  const entries = Object.entries(metadata).slice(0, 3);
+  const overflow = Object.keys(metadata).length - 3;
   return (
     <div className="mt-1 space-y-0.5">
-      {entries.map(([field, { from, to }]) => (
-        <p key={field} className="text-xs text-muted-foreground">
-          <span className="font-medium">{field}</span>:{" "}
-          <span className="text-red-500 line-through">{String(from ?? "—")}</span>
-          {" → "}
-          <span className="text-emerald-600">{String(to ?? "—")}</span>
-        </p>
-      ))}
+      {entries.map(([field, val]) => {
+        const change = isChangeObject(val) ? val : null;
+        const from = change ? String(change.from ?? "—") : "—";
+        const to = change ? String(change.to ?? "—") : String(val ?? "—");
+        return (
+          <p key={field} className="text-xs text-muted-foreground">
+            <span className="font-medium">{field}</span>:{" "}
+            <span className="text-red-500 line-through">{from}</span>
+            {" → "}
+            <span className="text-emerald-600">{to}</span>
+          </p>
+        );
+      })}
       {overflow > 0 && (
         <p className="text-xs text-muted-foreground">+{overflow} more changes</p>
       )}
@@ -175,9 +184,10 @@ export function AuditEntryRow({ entry, isLast }: AuditEntryRowProps) {
   const shouldReduceMotion = useReducedMotion();
   const variants = shouldReduceMotion ? REDUCED_ITEM_VARIANTS : fadeUp;
 
-  const initials = entry.actorName
+  const displayName = entry.userName ?? entry.userEmail ?? "Unknown";
+  const initials = displayName
     .split(" ")
-    .map((n) => n[0])
+    .map((n) => n[0] ?? "")
     .join("")
     .toUpperCase()
     .slice(0, 2);
@@ -198,6 +208,11 @@ export function AuditEntryRow({ entry, isLast }: AuditEntryRowProps) {
     }
   }, [entry.createdAt]);
 
+  const badgeColor = ACTION_BADGE_COLORS[entry.action] ?? "bg-slate-100 text-slate-600 border-slate-200";
+  const entityLabel = entry.targetType
+    ? (ENTITY_TYPE_LABELS[entry.targetType] ?? entry.targetType)
+    : undefined;
+
   return (
     <motion.div variants={variants} className="flex gap-3">
       <div className="flex flex-col items-center">
@@ -211,23 +226,25 @@ export function AuditEntryRow({ entry, isLast }: AuditEntryRowProps) {
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-medium text-foreground">{entry.actorName}</span>
+                <span className="text-sm font-medium text-foreground">{displayName}</span>
                 <Badge
                   variant="outline"
                   className={cn(
                     "text-[9px] px-1.5 py-0 h-4 font-medium",
-                    ACTION_BADGE_COLORS[entry.action],
+                    badgeColor,
                   )}
                 >
                   {entry.action.replace(/_/g, " ")}
                 </Badge>
-                <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">
-                  {ENTITY_TYPE_LABELS[entry.entityType]}
-                </Badge>
+                {entityLabel && (
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">
+                    {entityLabel}
+                  </Badge>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{buildDescription(entry)}</p>
-              {entry.changes && Object.keys(entry.changes).length > 0 && (
-                <ChangesDisplay changes={entry.changes} />
+              {entry.metadata && Object.keys(entry.metadata).length > 0 && (
+                <ChangesDisplay metadata={entry.metadata} />
               )}
               {entry.ipAddress && (
                 <p className="text-[10px] text-muted-foreground/60 mt-1">

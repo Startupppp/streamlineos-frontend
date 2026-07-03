@@ -3,7 +3,6 @@
 import { useCallback, useTransition, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -56,12 +55,12 @@ export default function CrmAuditLogPage() {
 
   const filters = useMemo<AuditFilters>(
     () => ({
-      entityType: entityType !== "all" ? entityType : undefined,
+      targetType: entityType !== "all" ? entityType : undefined,
       action: action !== "all" ? action : undefined,
-      from: fromDate || undefined,
-      to: toDate || undefined,
+      dateFrom: fromDate || undefined,
+      dateTo: toDate || undefined,
       page,
-      limit: 50,
+      pageSize: 50,
     }),
     [entityType, action, fromDate, toDate, page],
   );
@@ -107,22 +106,11 @@ export default function CrmAuditLogPage() {
     [updateParams, page],
   );
 
-  const handleExport = useCallback(() => {
-    const params = new URLSearchParams();
-    if (entityType !== "all") params.set("entityType", entityType);
-    if (action !== "all") params.set("action", action);
-    if (fromDate) params.set("from", fromDate);
-    if (toDate) params.set("to", toDate);
-    const qs = params.toString();
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-    window.open(`${baseUrl}/crm/audit-logs/export${qs ? `?${qs}` : ""}`, "_blank");
-  }, [entityType, action, fromDate, toDate]);
-
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  const entries = data?.entries ?? [];
+  const entries = data?.logs ?? [];
   const total = data?.total ?? 0;
-  const totalPages = data ? Math.ceil(data.total / (data.limit || 50)) : 1;
+  const totalPages = data?.totalPages ?? 1;
 
   const listVariants = shouldReduceMotion ? { hidden: { opacity: 0 }, visible: { opacity: 1 } } : staggerContainer;
   const itemVariants = shouldReduceMotion ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } } : fadeUp;
@@ -131,12 +119,6 @@ export default function CrmAuditLogPage() {
     <PageWrapper
       title="Audit Log"
       subtitle={isLoading ? "Loading..." : `${total.toLocaleString()} entr${total !== 1 ? "ies" : "y"}`}
-      actions={
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-2" />
-          Export CSV
-        </Button>
-      }
       filters={
         <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
           <Select value={entityType} onValueChange={handleEntityTypeChange}>

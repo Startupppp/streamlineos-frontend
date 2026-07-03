@@ -1000,7 +1000,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Wiki",
         icon: NotebookPen,
-        href: "/knowledge-base",
+        href: "/knowledge",
         requiredPermission: "kb:pages:view",
       },
     ],
@@ -1487,7 +1487,7 @@ export function getNavGroupsForProduct(
           {
             label: "Wiki",
             icon: NotebookPen,
-            href: "/knowledge-base",
+            href: "/knowledge",
             requiredPermission: "kb:pages:view",
           },
         ],
@@ -1548,7 +1548,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
     return "analytics";
   if (pathname.startsWith("/support/kb")) return "documents";
   if (pathname.startsWith("/support")) return "helpdesk";
-  if (pathname.startsWith("/knowledge-base")) return "documents";
+  if (pathname.startsWith("/knowledge")) return "documents";
   if (
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||

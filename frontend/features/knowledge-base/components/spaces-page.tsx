@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/form";
 import { useCan } from "@/hooks/api/access";
 import { useKbSpaces, useCreateKbSpace, useUpdateKbSpace, useDeleteKbSpace } from "@/hooks/api/kb/spaces";
+import { useKbPagesTree } from "@/hooks/api/kb/pages";
 import { spaceHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import type { KbSpace, KbAudience } from "@/types/kb";
 import Link from "next/link";
@@ -85,11 +86,12 @@ function SpaceCardSkeleton() {
 interface SpaceCardProps {
   space: KbSpace;
   canManage: boolean;
+  pageCount: number;
   onEdit: (space: KbSpace) => void;
   onDelete: (space: KbSpace) => void;
 }
 
-function SpaceCard({ space, canManage, onEdit, onDelete }: SpaceCardProps) {
+function SpaceCard({ space, canManage, pageCount, onEdit, onDelete }: SpaceCardProps) {
   function handleEdit(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     onEdit(space);
@@ -122,6 +124,7 @@ function SpaceCard({ space, canManage, onEdit, onDelete }: SpaceCardProps) {
       {space.description && (
         <p className="text-sm text-muted-foreground line-clamp-1">{space.description}</p>
       )}
+      <p className="text-xs text-muted-foreground">{pageCount} {pageCount === 1 ? "page" : "pages"}</p>
       {canManage && (
         <div className="flex items-center gap-1 pt-1">
           <Button
@@ -326,6 +329,13 @@ function SpaceSheet({ open, editingSpace, onOpenChange, onSuccess }: SpaceSheetP
 export default function SpacesPage() {
   const canManage = useCan("kb:spaces:manage");
   const { data: spaces = [], isLoading, isError } = useKbSpaces();
+  const { data: treeNodes = [] } = useKbPagesTree();
+  const pageCountBySpaceId = treeNodes.reduce<Record<number, number>>((acc, n) => {
+    if (n.spaceId != null) {
+      acc[n.spaceId] = (acc[n.spaceId] ?? 0) + 1;
+    }
+    return acc;
+  }, {});
   const deleteSpace = useDeleteKbSpace();
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -425,6 +435,7 @@ export default function SpacesPage() {
               key={space.id}
               space={space}
               canManage={canManage}
+              pageCount={pageCountBySpaceId[space.id] ?? 0}
               onEdit={handleEdit}
               onDelete={handleDelete}
             />

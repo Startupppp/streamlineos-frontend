@@ -7,7 +7,6 @@ import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import { TiptapToolbar } from "./tiptap-toolbar";
-import { buildDocumentExtensions } from "./document-extensions";
 import { useEffect, useRef } from "react";
 
 export interface TiptapEditorProps {
@@ -19,15 +18,11 @@ export interface TiptapEditorProps {
   editable?: boolean;
   minHeightClassName?: string;
   contentKey?: string | number;
-  variant?: "basic" | "document";
-  fetchMentionUsers?: (query: string) => Promise<Array<{ id: string; label: string }>>;
-  fetchPageLinks?: (query: string) => Promise<Array<{ id: number; label: string }>>;
-  onNavigateToPage?: (pageId: number) => void;
 }
 
 function normalizeToHtml(raw: unknown): string | Record<string, unknown> | undefined {
   if (raw == null) return undefined;
-  if (typeof raw === "object") return raw as Record<string, unknown>;
+  if (typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, unknown>;
   if (typeof raw !== "string") return undefined;
   if (raw === "" || raw.trimStart().startsWith("<")) return raw;
   return raw
@@ -53,37 +48,16 @@ export function TiptapEditor({
   editable = true,
   minHeightClassName = "min-h-[300px]",
   contentKey,
-  variant = "basic",
-  fetchMentionUsers,
-  fetchPageLinks,
-  onNavigateToPage,
 }: TiptapEditorProps) {
   const lastInitKey = useRef<string | number | boolean>(false);
 
-  const fetchMentionUsersRef = useRef(fetchMentionUsers);
-  fetchMentionUsersRef.current = fetchMentionUsers;
-
-  const fetchPageLinksRef = useRef(fetchPageLinks);
-  fetchPageLinksRef.current = fetchPageLinks;
-
-  const onNavigateToPageRef = useRef(onNavigateToPage);
-  onNavigateToPageRef.current = onNavigateToPage;
-
-  const isDocument = variant === "document";
-
-  const extensions = isDocument
-    ? buildDocumentExtensions({
-        placeholder,
-        fetchMentionUsers: (q) => fetchMentionUsersRef.current?.(q) ?? Promise.resolve([]),
-        fetchPageLinks: (q) => fetchPageLinksRef.current?.(q) ?? Promise.resolve([]),
-      })
-    : [
-        StarterKit,
-        Placeholder.configure({ placeholder }),
-        Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
-        TextAlign.configure({ types: ["heading", "paragraph"] }),
-        Underline,
-      ];
+  const extensions = [
+    StarterKit,
+    Placeholder.configure({ placeholder }),
+    Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
+    TextAlign.configure({ types: ["heading", "paragraph"] }),
+    Underline,
+  ];
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -101,20 +75,6 @@ export function TiptapEditor({
       attributes: {
         class: `prose prose-sm dark:prose-invert max-w-none ${minHeightClassName} p-4 focus:outline-none`,
       },
-      handleClick(_view, _pos, event) {
-        if (!onNavigateToPageRef.current) return false;
-        const target = event.target as Element;
-        const chip = target.closest("[data-type='pageLink']");
-        if (!chip) return false;
-        const rawId = chip.getAttribute("data-id");
-        if (!rawId) return false;
-        const pageId = parseInt(rawId, 10);
-        if (!isNaN(pageId)) {
-          onNavigateToPageRef.current(pageId);
-          return true;
-        }
-        return false;
-      },
     },
   });
 
@@ -128,8 +88,8 @@ export function TiptapEditor({
   }, [editor, content, contentKey]);
 
   return (
-    <div className={`rounded-md border bg-background${isDocument ? " document-editor" : ""}`}>
-      {editable && !isDocument && <TiptapToolbar editor={editor} />}
+    <div className="rounded-md border bg-background">
+      {editable && <TiptapToolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
   );

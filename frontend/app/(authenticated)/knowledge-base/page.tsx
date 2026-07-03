@@ -1,12 +1,5 @@
-import { requireSession } from "@/lib/rbac/require-permission";
-import { RequireModule } from "@/components/auth/require-module";
-import WikiHomePage from "@/features/knowledge-base/components/wiki-home-page";
+import { redirect } from "next/navigation";
 
-export default async function KnowledgeBasePage() {
-  await requireSession();
-  return (
-    <RequireModule module="kb">
-      <WikiHomePage />
-    </RequireModule>
-  );
+export default function KnowledgeBaseLegacyRedirect() {
+  redirect("/knowledge");
 }

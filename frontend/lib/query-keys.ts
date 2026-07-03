@@ -504,6 +504,20 @@ export const queryKeys = {
     translations: (articleId: number) => [...base, "kb", "translations", articleId] as const,
     translation: (articleId: number, locale: string) => [...base, "kb", "translation", articleId, locale] as const,
     comments: (articleId: number) => [...base, "kb", "comments", articleId] as const,
+    pageReviews: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "kb", "pageReviews"] as const)
+        : ([...base, "kb", "pageReviews", params] as const),
+    pageReviewsDue: () => [...base, "kb", "pageReviewsDue"] as const,
+    pageRecordLinks: (pageId: number) => [...base, "kb", "pages", pageId, "record-links"] as const,
+    recordLinksByRecord: (targetType: string, targetId: string) => [...base, "kb", "record-links", "by-record", targetType, targetId] as const,
+    importJobs: () => [...base, "kb", "import-jobs"] as const,
+    exportJobs: () => [...base, "kb", "export-jobs"] as const,
+    pageAnalytics: () => [...base, "kb", "pageAnalytics"] as const,
+    knowledgeGaps: (range?: Record<string, unknown>) =>
+      range === undefined
+        ? ([...base, "kb", "knowledgeGaps"] as const)
+        : ([...base, "kb", "knowledgeGaps", range] as const),
   },
 
   roadmap: {

@@ -1,7 +1,11 @@
-export const KNOWLEDGE_BASE = "/knowledge-base";
+export const KNOWLEDGE_BASE = "/knowledge";
 
 export function pageHref(id: number): string {
   return `${KNOWLEDGE_BASE}/pages/${id}`;
+}
+
+export function pageHistoryHref(id: number): string {
+  return `${KNOWLEDGE_BASE}/pages/${id}/history`;
 }
 
 export const KB_RECENT = `${KNOWLEDGE_BASE}/recent`;
@@ -16,3 +20,7 @@ export const KB_SPACES = `${KNOWLEDGE_BASE}/spaces`;
 export function spaceHref(id: number): string {
   return `${KB_SPACES}/${id}`;
 }
+
+export const KB_REVIEWS = `${KNOWLEDGE_BASE}/reviews`;
+export const KB_SETTINGS = `${KNOWLEDGE_BASE}/settings`;
+export const KB_IMPORT = `${KNOWLEDGE_BASE}/import`;

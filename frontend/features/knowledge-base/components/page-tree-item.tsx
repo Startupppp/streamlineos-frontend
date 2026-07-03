@@ -22,6 +22,7 @@ import {
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
+import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 
 interface PageTreeItemProps {
   node: KbPageTreeNode;
@@ -43,7 +44,7 @@ export default function PageTreeItem({
   const [renaming, setRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
-  const isActive = pathname === `/knowledge-base/pages/${node.id}`;
+  const isActive = pathname === pageHref(node.id);
   const canCreate = useCan("kb:pages:create");
   const canDelete = useCan("kb:pages:delete");
   const createPage = useCreateKbPage();
@@ -60,10 +61,10 @@ export default function PageTreeItem({
 
   const hasActiveDescendant = children.some(
     (c) =>
-      pathname === `/knowledge-base/pages/${c.id}` ||
+      pathname === pageHref(c.id) ||
       allNodes.some(
         (n) =>
-          n.parentPageId === c.id && pathname === `/knowledge-base/pages/${n.id}`
+          n.parentPageId === c.id && pathname === pageHref(n.id)
       )
   );
   const [autoExpandedPath, setAutoExpandedPath] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export default function PageTreeItem({
 
   function handleNavigate() {
     if (renaming) return;
-    router.push(`/knowledge-base/pages/${node.id}`);
+    router.push(pageHref(node.id));
     onCloseMobile?.();
   }
 
@@ -91,7 +92,7 @@ export default function PageTreeItem({
       {
         onSuccess: (page) => {
           setExpanded(true);
-          router.push(`/knowledge-base/pages/${page.id}`);
+          router.push(pageHref(page.id));
         },
         onError: () => toast.error("Failed to create page"),
       }

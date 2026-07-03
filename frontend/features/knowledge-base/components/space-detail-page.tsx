@@ -6,7 +6,10 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbSpace } from "@/hooks/api/kb/spaces";
+import { useKbPagesTree } from "@/hooks/api/kb/pages";
 import { KB_SPACES } from "@/features/knowledge-base/lib/knowledge-routes";
+import { filterTreeWithAncestors } from "@/features/knowledge-base/lib/tree-utils";
+import PageTree from "./page-tree";
 import type { KbAudience } from "@/types/kb";
 
 const AUDIENCE_LABELS: Record<KbAudience, string> = {
@@ -27,6 +30,7 @@ interface SpaceDetailPageProps {
 
 export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const { data: space, isLoading, isError } = useKbSpace(spaceId);
+  const { data: treeNodes = [], isLoading: treeLoading } = useKbPagesTree();
 
   if (isLoading) {
     return (
@@ -51,6 +55,11 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   }
 
   const audience = (space.audience ?? "internal") as KbAudience;
+
+  const spacePageNodes = treeNodes.filter((n) => n.spaceId === spaceId);
+  const filteredNodes = spacePageNodes.length > 0
+    ? filterTreeWithAncestors(treeNodes, (n) => n.spaceId === spaceId)
+    : [];
 
   return (
     <PageWrapper
@@ -77,11 +86,27 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
           </div>
         </div>
 
-        <EmptyState
-          illustration={<LayoutGrid className="h-8 w-8 text-muted-foreground/40" />}
-          title="Assign pages to spaces is coming"
-          description="Space-specific page lists require backend support. Assign pages to spaces via the page metadata sheet."
-        />
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-medium text-foreground">
+              Pages
+              {!treeLoading && (
+                <span className="ml-1.5 text-xs text-muted-foreground">({spacePageNodes.length})</span>
+              )}
+            </p>
+          </div>
+          {spacePageNodes.length === 0 && !treeLoading ? (
+            <EmptyState
+              illustration={<LayoutGrid className="h-8 w-8 text-muted-foreground/40" />}
+              title="No pages in this space yet"
+              description="Assign pages from Page settings"
+            />
+          ) : (
+            <div className="bg-card border border-border rounded-xl p-2">
+              <PageTree nodes={filteredNodes} isLoading={treeLoading} />
+            </div>
+          )}
+        </div>
       </div>
     </PageWrapper>
   );

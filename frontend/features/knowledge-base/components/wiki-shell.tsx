@@ -16,6 +16,9 @@ import {
   Lock,
   Users,
   LayoutGrid,
+  ClipboardCheck,
+  Settings,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -36,6 +39,9 @@ import {
   KB_PRIVATE,
   KB_SHARED,
   KB_SPACES,
+  KB_REVIEWS,
+  KB_SETTINGS,
+  KB_IMPORT,
   pageHref,
 } from "@/features/knowledge-base/lib/knowledge-routes";
 import type { KbPage } from "@/hooks/api/kb/pages";
@@ -47,6 +53,8 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
   const canViewAnalytics = useCan("kb:analytics:view");
+  const canViewReviews = useCan("kb:reviews:view");
+  const canManageSettings = useCan("kb:settings:manage");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(
@@ -163,6 +171,31 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
         <LayoutTemplate className="h-4 w-4 shrink-0" />
         <span>Templates</span>
       </Link>
+      {canViewReviews && (
+        <Link
+          href={KB_REVIEWS}
+          className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <ClipboardCheck className="h-4 w-4 shrink-0" />
+          <span>Reviews</span>
+        </Link>
+      )}
+      <Link
+        href={KB_IMPORT}
+        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      >
+        <Upload className="h-4 w-4 shrink-0" />
+        <span>Import</span>
+      </Link>
+      {canManageSettings && (
+        <Link
+          href={KB_SETTINGS}
+          className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <Settings className="h-4 w-4 shrink-0" />
+          <span>Settings</span>
+        </Link>
+      )}
       <Separator className="my-1" />
     </div>
   );

@@ -34,6 +34,7 @@ function buildCsp(nonce: string, apiUrl?: string): string {
     "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://lh3.googleusercontent.com https://streamlineos.app https://images.unsplash.com https://www.googletagmanager.com",
     "font-src 'self' https://fonts.gstatic.com",
     `connect-src ${connectSrc}`,
+    "worker-src 'self' blob:",
     "frame-src https://www.googletagmanager.com https://checkout.razorpay.com https://api.razorpay.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -80,7 +81,7 @@ const PROTECTED_ROUTES = [
   "/reports",
   "/notifications",
   "/calendar",
-  "/knowledge-base",
+  "/knowledge",
 ];
 
 const AUTH_ROUTES = [
@@ -127,7 +128,7 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/support": ["projects:tickets:view"],
   "/support/inbox": ["projects:tickets:view"],
   "/support/kb": ["support:kb:view"],
-  "/knowledge-base": ["kb:articles:view"],
+  "/knowledge": ["kb:articles:view"],
   "/support/macros": ["support:macros:view"],
   "/support/routing": ["support:macros:view"],
   "/settings/automations": ["settings:automations:view"],

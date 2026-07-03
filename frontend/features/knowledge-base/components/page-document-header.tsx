@@ -65,6 +65,7 @@ import PageHistorySheet from "./page-history-sheet";
 import MovePageDialog from "./move-page-dialog";
 import PageSharePopover from "./page-share-popover";
 import { exportPageToHtml } from "@/features/knowledge-base/lib/export-page";
+import { KNOWLEDGE_BASE, pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 
 interface PageDocumentHeaderProps {
   page: KbPageDetail;
@@ -120,7 +121,7 @@ export default function PageDocumentHeader({
     duplicatePage.mutate(pageId, {
       onSuccess: (dup) => {
         toast.success("Page duplicated");
-        router.push(`/knowledge-base/pages/${dup.id}`);
+        router.push(pageHref(dup.id));
       },
       onError: () => toast.error("Failed to duplicate page"),
     });
@@ -145,7 +146,7 @@ export default function PageDocumentHeader({
     deletePage.mutate(pageId, {
       onSuccess: () => {
         toast.success("Page moved to trash");
-        router.push("/knowledge-base");
+        router.push(KNOWLEDGE_BASE);
       },
       onError: () => toast.error("Failed to delete page"),
     });
@@ -228,7 +229,7 @@ export default function PageDocumentHeader({
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <nav className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap min-w-0">
           <Link
-            href="/knowledge-base"
+            href={KNOWLEDGE_BASE}
             className="hover:text-foreground transition-colors shrink-0"
           >
             Wiki
@@ -237,7 +238,7 @@ export default function PageDocumentHeader({
             <span key={a.id} className="flex items-center gap-1 shrink-0">
               <ChevronRight className="h-3 w-3" />
               <Link
-                href={`/knowledge-base/pages/${a.id}`}
+                href={pageHref(a.id)}
                 className="hover:text-foreground transition-colors truncate max-w-[120px]"
               >
                 {a.title || "Untitled"}

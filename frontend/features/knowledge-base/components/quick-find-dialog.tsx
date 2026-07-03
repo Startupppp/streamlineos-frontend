@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/command";
 import { useKbPagesSearch } from "@/hooks/api/kb";
 import type { KbPageSearchResult } from "@/hooks/api/kb/pages";
+import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 
 interface QuickFindDialogProps {
   open: boolean;
@@ -48,7 +49,7 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
       const id = Number(value.split("-")[0]);
       const result = resultsRef.current.find((r) => r.id === id);
       if (!result) return;
-      router.push(`/knowledge-base/pages/${result.id}`);
+      router.push(pageHref(result.id));
       handleOpenChange(false);
     },
     [router, handleOpenChange]

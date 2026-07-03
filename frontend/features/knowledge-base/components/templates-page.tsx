@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LayoutTemplate, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,10 +18,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useKbPageTemplates, useDeleteKbPageTemplate, useCreateKbPage } from "@/hooks/api/kb";
+import { useKbPageTemplates, useDeleteKbPageTemplate, useCreateKbPage, useUpdateKbPage } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import { STARTER_TEMPLATES, deriveContentText } from "@/features/knowledge-base/lib/starter-templates";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
+import type { StarterTemplate } from "@/features/knowledge-base/lib/starter-templates";
 
 interface TemplateCardProps {
   template: KbPageTemplate;
@@ -117,6 +119,37 @@ function TemplateCard({ template, canDelete, onUse, isCreating }: TemplateCardPr
   );
 }
 
+interface StarterCardProps {
+  template: StarterTemplate;
+  onUse: (template: StarterTemplate) => void;
+  isCreating: boolean;
+}
+
+function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
+  function handleUseClick() {
+    onUse(template);
+  }
+
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors">
+      <span className="text-xl shrink-0 mt-0.5">{template.icon}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-medium truncate">{template.name}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{template.description}</p>
+      </div>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleUseClick}
+        disabled={isCreating}
+        className="h-7 text-xs shrink-0"
+      >
+        {isCreating ? <Loader2 className="h-3 w-3 animate-spin" /> : "Use"}
+      </Button>
+    </div>
+  );
+}
+
 function TemplatesSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -132,6 +165,9 @@ export default function TemplatesPage() {
   const { data: templates = [], isLoading, isError } = useKbPageTemplates();
   const canDelete = useCan("kb:templates:manage");
   const createPage = useCreateKbPage();
+  const updatePage = useUpdateKbPage();
+
+  const isCreating = createPage.isPending || updatePage.isPending;
 
   const handleUseTemplate = useCallback(
     (templateId: number) => {
@@ -150,43 +186,88 @@ export default function TemplatesPage() {
     [createPage, router]
   );
 
+  const handleUseStarter = useCallback(
+    (template: StarterTemplate) => {
+      createPage.mutate(
+        { title: template.name },
+        {
+          onSuccess: (page) => {
+            updatePage.mutate(
+              {
+                pageId: page.id,
+                content: template.content as Record<string, unknown>,
+                contentText: deriveContentText(template.content),
+              },
+              {
+                onSettled: () => {
+                  router.push(pageHref(page.id));
+                },
+              }
+            );
+          },
+          onError: () => {
+            toast.error("Failed to create page from starter template");
+          },
+        }
+      );
+    },
+    [createPage, updatePage, router]
+  );
+
   const subtitle = templates.length > 0
-    ? `${templates.length} template${templates.length === 1 ? "" : "s"}`
+    ? `${templates.length} saved template${templates.length === 1 ? "" : "s"}`
     : undefined;
 
   return (
     <PageWrapper title="Templates" subtitle={subtitle}>
-      {isLoading && <TemplatesSkeleton />}
+      <div className="space-y-8">
+        <PageSection title="Starter templates" description="Built-in skeletons ready to use — creates a new page with content pre-filled.">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {STARTER_TEMPLATES.map((t) => (
+              <StarterCard
+                key={t.key}
+                template={t}
+                onUse={handleUseStarter}
+                isCreating={isCreating}
+              />
+            ))}
+          </div>
+        </PageSection>
 
-      {!isLoading && isError && (
-        <EmptyState
-          illustration={<LayoutTemplate className="h-8 w-8 text-muted-foreground/40" />}
-          title="Could not load templates"
-          description="There was a problem fetching page templates."
-        />
-      )}
+        <PageSection title="Saved templates" description="Templates created from your wiki pages.">
+          {isLoading && <TemplatesSkeleton />}
 
-      {!isLoading && !isError && templates.length === 0 && (
-        <EmptyState
-          illustration={<LayoutTemplate className="h-8 w-8 text-muted-foreground/40" />}
-          title="No templates yet"
-          description="Save a page as a template to reuse its structure across your wiki."
-        />
-      )}
-
-      {!isLoading && !isError && templates.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {templates.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              canDelete={canDelete}
-              onUse={handleUseTemplate}
-              isCreating={createPage.isPending}
+          {!isLoading && isError && (
+            <EmptyState
+              illustration={<LayoutTemplate className="h-8 w-8 text-muted-foreground/40" />}
+              title="Could not load templates"
+              description="There was a problem fetching page templates."
             />
-          ))}
-        </div>
-      )}
+          )}
+
+          {!isLoading && !isError && templates.length === 0 && (
+            <EmptyState
+              illustration={<LayoutTemplate className="h-8 w-8 text-muted-foreground/40" />}
+              title="No saved templates yet"
+              description="Save a page as a template to reuse its structure across your wiki."
+            />
+          )}
+
+          {!isLoading && !isError && templates.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {templates.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  canDelete={canDelete}
+                  onUse={handleUseTemplate}
+                  isCreating={isCreating}
+                />
+              ))}
+            </div>
+          )}
+        </PageSection>
+      </div>
     </PageWrapper>
   );
 }

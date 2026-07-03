@@ -20,6 +20,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
+import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -42,7 +43,7 @@ interface PageCardProps {
 function PageCard({ id, icon, title, updatedAt }: PageCardProps) {
   return (
     <Link
-      href={`/knowledge-base/pages/${id}`}
+      href={pageHref(id)}
       className="block p-3 rounded-lg border border-border bg-card shadow-soft hover:bg-muted/50 transition-colors"
     >
       <div className="flex items-start gap-3">
@@ -81,7 +82,7 @@ export default function WikiHomePage() {
     createPage.mutate(
       {},
       {
-        onSuccess: (page) => router.push(`/knowledge-base/pages/${page.id}`),
+        onSuccess: (page) => router.push(pageHref(page.id)),
         onError: () => toast.error("Failed to create page"),
       }
     );
@@ -174,7 +175,7 @@ export default function WikiHomePage() {
             {rootPages.map((node) => (
               <motion.div key={node.id} variants={itemVariants}>
                 <Link
-                  href={`/knowledge-base/pages/${node.id}`}
+                  href={pageHref(node.id)}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                 >
                   <span className="text-base shrink-0">

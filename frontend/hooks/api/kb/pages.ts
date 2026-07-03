@@ -42,6 +42,7 @@ export type KbPageDetail = KbPage & {
 export type KbPageTreeNode = {
   id: number;
   parentPageId: number | null;
+  spaceId: number | null;
   title: string;
   icon: string | null;
   sortOrder: number;
@@ -77,15 +78,17 @@ export type KbPageVersion = {
 
 export type CreateKbPageInput = {
   parentPageId?: number | null;
+  spaceId?: number | null;
   title?: string;
   templateId?: number | null;
 };
 
 export type UpdateKbPageInput = {
+  spaceId?: number | null;
   title?: string;
   icon?: string | null;
   coverImage?: string | null;
-  content?: Record<string, unknown>;
+  content?: unknown;
   contentText?: string;
   status?: "draft" | "in_review" | "published" | "archived";
   contentType?: string;

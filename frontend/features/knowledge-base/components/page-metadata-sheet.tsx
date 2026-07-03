@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCan } from "@/hooks/api/access";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import {
   useUpdateKbPage,
   usePublishKbPage,
@@ -31,6 +32,7 @@ import {
   useVerifyKbPage,
   useMarkStaleKbPage,
 } from "@/hooks/api/kb/pages";
+import { PageRecordLinks } from "./page-record-links";
 import { apiClient } from "@/lib/api-client";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";
 
@@ -113,6 +115,8 @@ export default function PageMetadataSheet({
     staleTime: 120_000,
   });
 
+  const { data: spaces = [] } = useKbSpaces();
+
   const filteredUsers = ownerSearch.trim()
     ? orgUsers.filter(
         (u) =>
@@ -120,6 +124,13 @@ export default function PageMetadataSheet({
           u.email.toLowerCase().includes(ownerSearch.toLowerCase())
       )
     : orgUsers;
+
+  function handleSpaceChange(value: string) {
+    updatePage.mutate(
+      { pageId, spaceId: value === "none" ? null : Number(value) },
+      { onSuccess: () => toast.success("Space updated"), onError: () => toast.error("Failed to update space") }
+    );
+  }
 
   function handleStatusChange(value: string) {
     updatePage.mutate(
@@ -219,6 +230,26 @@ export default function PageMetadataSheet({
 
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-5 py-4 space-y-5">
+            <div className="space-y-2">
+              <p className="text-[13px] font-medium text-foreground">Space</p>
+              <Select
+                value={page.spaceId != null ? String(page.spaceId) : "none"}
+                onValueChange={handleSpaceChange}
+              >
+                <SelectTrigger className="h-8 text-[13px]">
+                  <SelectValue placeholder="No space" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none" className="text-[13px]">No space</SelectItem>
+                  {spaces.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)} className="text-[13px]">
+                      {s.icon ? `${s.icon} ` : ""}{s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <p className="text-[13px] font-medium text-foreground">Status</p>
               <Select value={status} onValueChange={handleStatusChange}>
@@ -405,6 +436,8 @@ export default function PageMetadataSheet({
                 Next review: {formatDate(page.nextReviewAt)}
               </p>
             )}
+
+            <PageRecordLinks pageId={pageId} />
           </div>
         </ScrollArea>
 

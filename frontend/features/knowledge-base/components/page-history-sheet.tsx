@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { History, RotateCcw, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -21,12 +22,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
 import type { KbPageVersion } from "@/hooks/api/kb/pages";
+import { pageHistoryHref } from "@/features/knowledge-base/lib/knowledge-routes";
 
-const TiptapEditor = dynamic(
-  () =>
-    import("@/components/editor/tiptap-editor").then((m) => ({
-      default: m.TiptapEditor,
-    })),
+const PlateDocumentEditor = dynamic(
+  () => import("@/components/editor/plate/plate-document-editor"),
   { ssr: false, loading: () => <Skeleton className="h-32 w-full" /> }
 );
 
@@ -109,57 +108,66 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
         </SheetHeader>
 
         {!selectedVersion ? (
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="px-6 py-4">
-              {isLoading && (
-                <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-14 w-full rounded-lg" />
+          <>
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="px-6 py-4">
+                {isLoading && (
+                  <div className="space-y-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                    ))}
+                  </div>
+                )}
+                {!isLoading && versions.length === 0 && (
+                  <EmptyState
+                    title="No versions yet"
+                    description="Content changes will be saved as versions automatically."
+                    compact
+                    className="flex-1 min-h-[40vh]"
+                  />
+                )}
+                <div className="space-y-2">
+                  {versions.map((v: KbPageVersion) => (
+                    <button
+                      key={v.versionNumber}
+                      data-version-number={String(v.versionNumber)}
+                      className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted transition-colors group"
+                      onClick={handleVersionButtonClick}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">Version {v.versionNumber}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatRelativeTime(v.createdAt)}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                      </div>
+                    </button>
                   ))}
                 </div>
-              )}
-              {!isLoading && versions.length === 0 && (
-                <EmptyState
-                  title="No versions yet"
-                  description="Content changes will be saved as versions automatically."
-                  compact
-                  className="flex-1 min-h-[40vh]"
-                />
-              )}
-              <div className="space-y-2">
-                {versions.map((v: KbPageVersion) => (
-                  <button
-                    key={v.versionNumber}
-                    data-version-number={String(v.versionNumber)}
-                    className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted transition-colors group"
-                    onClick={handleVersionButtonClick}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">Version {v.versionNumber}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatRelativeTime(v.createdAt)}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
-                    </div>
-                  </button>
-                ))}
               </div>
+            </ScrollArea>
+            <div className="shrink-0 border-t px-6 py-3 flex items-center justify-end">
+              <Link
+                href={pageHistoryHref(pageId)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => onOpenChange(false)}
+              >
+                Open full history →
+              </Link>
             </div>
-          </ScrollArea>
+          </>
         ) : (
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
               {detailLoading ? (
                 <Skeleton className="h-64 w-full" />
               ) : versionDetail?.content ? (
-                <TiptapEditor
-                  content={versionDetail.content}
+                <PlateDocumentEditor
+                  value={versionDetail.content}
                   contentKey={`${pageId}-v${selectedVersion}`}
-                  variant="document"
                   editable={false}
-                  minHeightClassName="min-h-[200px]"
                 />
               ) : (
                 <EmptyState

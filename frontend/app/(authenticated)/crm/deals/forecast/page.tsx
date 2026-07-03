@@ -29,7 +29,7 @@ function ForecastSkeleton() {
 
 export default function DealForecastPage() {
   const shouldReduceMotion = useReducedMotion();
-  const { data: deals, isLoading } = useDeals({ limit: 200 });
+  const { data: deals, isLoading } = useDeals({ limit: 100 });
 
   const allDeals = deals ?? [];
   const openDeals = allDeals.filter((d) => d.stage !== "LOST");
