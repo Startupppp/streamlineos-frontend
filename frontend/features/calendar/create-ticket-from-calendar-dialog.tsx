@@ -138,7 +138,7 @@ export function CreateTicketFromCalendarDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-sm p-0">
+      <DialogContent className="w-full max-w-none p-0 sm:max-w-sm">
         <DialogHeader className="px-5 pt-5 pb-0">
           <DialogTitle className="text-sm font-semibold">Add ticket due date</DialogTitle>
         </DialogHeader>

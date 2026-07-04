@@ -78,6 +78,9 @@ const GLOBAL_ACTIONS: CreateAction[] = [
   { label: "Invite User", href: "/users/invite", icon: UserPlus },
 ]
 
+export { PRODUCT_ACTIONS, PRODUCT_LABELS, GLOBAL_ACTIONS }
+export type { CreateAction }
+
 export function QuickCreateButton() {
   const pathname = usePathname()
   const activeProduct = getProductFromPathname(pathname)

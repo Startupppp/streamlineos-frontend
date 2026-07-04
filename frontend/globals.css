@@ -613,6 +613,15 @@
 }
 
 /* â”€â”€â”€ React Big Calendar overrides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.calendar-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.calendar-container::-webkit-scrollbar {
+  display: none;
+}
+
 .calendar-container .rbc-calendar {
   height: 100%;
   min-height: 0;

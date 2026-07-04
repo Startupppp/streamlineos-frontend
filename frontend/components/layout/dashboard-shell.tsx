@@ -11,6 +11,8 @@ import { NotActivatedPage } from "../auth/not-activated-page"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { usePushSubscription } from "@/hooks/common/use-push-subscription"
 import { TrialBanner } from "@/components/billing/trial-banner"
+import { ProductSwitcherMenu } from "./header/product-switcher-menu"
+import { WorkspaceSwitcher } from "./header/workspace-switcher"
 
 const SuccessChecklist = dynamic(
   () =>
@@ -51,6 +53,8 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(defaultCollapsed)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [productSwitcherOpen, setProductSwitcherOpen] = useState(false)
+  const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false)
   usePushSubscription(userId)
 
   const handleToggleSidebar = useCallback(() => {
@@ -63,6 +67,22 @@ export function DashboardShell({
 
   const handleOpenMobileMenu = useCallback(() => setMobileMenuOpen(true), [])
   const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), [])
+
+  const deferCloseMobileMenu = useCallback(() => {
+    requestAnimationFrame(() => {
+      setMobileMenuOpen(false)
+    })
+  }, [])
+
+  const handleRequestProductSwitcher = useCallback(() => {
+    setProductSwitcherOpen(true)
+    deferCloseMobileMenu()
+  }, [deferCloseMobileMenu])
+
+  const handleRequestWorkspaceSwitcher = useCallback(() => {
+    setWorkspaceSwitcherOpen(true)
+    deferCloseMobileMenu()
+  }, [deferCloseMobileMenu])
 
   const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W
 
@@ -94,7 +114,7 @@ export function DashboardShell({
             </aside>
 
             <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-              <GlobalHeader onOpenMobileMenu={handleOpenMobileMenu} />
+              <GlobalHeader />
 
               <main
                 id="dashboard-content"
@@ -111,11 +131,27 @@ export function DashboardShell({
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
             <SheetContent side="left" className="z-[100] p-0 w-[17rem] border-r-sidebar-border">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <AppSidebar isMobile onNavigate={handleCloseMobileMenu} />
+              <AppSidebar
+                isMobile
+                onNavigate={handleCloseMobileMenu}
+                onRequestProductSwitcher={handleRequestProductSwitcher}
+                onRequestWorkspaceSwitcher={handleRequestWorkspaceSwitcher}
+              />
             </SheetContent>
           </Sheet>
 
-          <MobileBottomNav />
+          <ProductSwitcherMenu
+            sheetOnly
+            open={productSwitcherOpen}
+            onOpenChange={setProductSwitcherOpen}
+          />
+          <WorkspaceSwitcher
+            sheetOnly
+            open={workspaceSwitcherOpen}
+            onOpenChange={setWorkspaceSwitcherOpen}
+          />
+
+          <MobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
         </>
       ) : (
         <NotActivatedPage />

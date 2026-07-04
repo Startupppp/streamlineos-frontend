@@ -22,6 +22,7 @@ import {
 import { SidebarSection } from "./sidebar/sidebar-section"
 import { SidebarHeader } from "./sidebar/sidebar-header"
 import { SidebarWorkspaceRow } from "./sidebar/sidebar-workspace-row"
+import { ProductSwitcherMenu } from "./header/product-switcher-menu"
 import { usePermissions } from "@/lib/rbac/hooks"
 import { useCan } from "@/hooks/api/access"
 import { useEnabledModules } from "@/hooks/api/access/org-modules"
@@ -30,6 +31,8 @@ interface AppSidebarProps {
   isCollapsed?: boolean
   onToggleCollapse?: () => void
   onNavigate?: () => void
+  onRequestProductSwitcher?: () => void
+  onRequestWorkspaceSwitcher?: () => void
   isMobile?: boolean
 }
 
@@ -37,6 +40,8 @@ export function AppSidebar({
   isCollapsed = false,
   onToggleCollapse,
   onNavigate,
+  onRequestProductSwitcher,
+  onRequestWorkspaceSwitcher,
   isMobile = false,
 }: AppSidebarProps) {
   const { data: session, status } = useSession()
@@ -193,7 +198,21 @@ export function AppSidebar({
           productLabel={productLabel}
         />
 
-        <SidebarWorkspaceRow isCollapsed={effectiveCollapsed} />
+        {isMobile && (
+          <div className="shrink-0 px-2.5 py-2 border-b border-sidebar-border">
+            <ProductSwitcherMenu
+              variant="sidebar"
+              triggerOnly
+              onRequestOpen={onRequestProductSwitcher}
+            />
+          </div>
+        )}
+
+        <SidebarWorkspaceRow
+          isCollapsed={effectiveCollapsed}
+          triggerOnly={isMobile}
+          onRequestOpen={onRequestWorkspaceSwitcher}
+        />
 
         <ScrollArea className="flex-1 min-h-0">
           <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
