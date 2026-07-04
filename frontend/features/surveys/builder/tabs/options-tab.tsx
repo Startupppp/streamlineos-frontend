@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { getApiError } from "@/lib/api-client";
 import { usePatchSurvey, type SurveyForm } from "@/hooks/api/surveys/forms";
+import { AssessmentScoringCard } from "./assessment-scoring-card";
 
 const optionsSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
@@ -95,16 +96,21 @@ export function OptionsTab({ survey }: { survey: SurveyForm }) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Time & Scoring</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground">
-            Pass score, attempt limits, and time limits are configured per-question and in the logic/scoring editor.
-          </p>
-        </CardContent>
-      </Card>
+      {survey.mode === "assessment" ? (
+        <AssessmentScoringCard survey={survey} />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Time & Scoring</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">
+              Per-question scoring is set on each question&apos;s options. Switch this survey to Assessment mode for pass
+              score, attempts, and certificates.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

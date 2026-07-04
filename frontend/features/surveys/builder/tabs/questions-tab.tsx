@@ -179,6 +179,8 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
         surveyId={surveyId}
         sectionId={editorSectionId}
         question={editorQuestion}
+        sections={sections}
+        logicRules={builder.logicRules}
         open={editorOpen}
         onOpenChange={setEditorOpen}
       />

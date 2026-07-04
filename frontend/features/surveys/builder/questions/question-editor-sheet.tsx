@@ -19,22 +19,27 @@ import { getApiError } from "@/lib/api-client";
 import { QUESTION_TYPE_LIST, QUESTION_TYPE_META, type SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
 import { ChoicesEditor } from "./choices-editor";
 import { QuestionTypeSettings } from "./question-type-settings";
+import { LogicRulesSection } from "./logic-rules-section";
 import {
   useCreateQuestion,
   usePatchQuestion,
   type ChoiceInput,
   type SurveyBuilderQuestion,
+  type SurveyBuilderSection,
+  type SurveyBuilderLogicRule,
 } from "@/hooks/api/surveys/builder";
 
 interface QuestionEditorSheetProps {
   surveyId: number;
   sectionId: number | null;
   question: SurveyBuilderQuestion | null;
+  sections: SurveyBuilderSection[];
+  logicRules: SurveyBuilderLogicRule[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function QuestionEditorSheet({ surveyId, sectionId, question, open, onOpenChange }: QuestionEditorSheetProps) {
+export function QuestionEditorSheet({ surveyId, sectionId, question, sections, logicRules, open, onOpenChange }: QuestionEditorSheetProps) {
   const createQuestion = useCreateQuestion(surveyId);
   const patchQuestion = usePatchQuestion(surveyId);
 
@@ -134,7 +139,7 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, open, onOpe
           {meta.hasChoices && type !== "matrix" && (
             <div className="space-y-1.5">
               <Label>Options</Label>
-              <ChoicesEditor choices={choices} onChange={setChoices} showCorrectAnswer />
+              <ChoicesEditor choices={choices} onChange={setChoices} showCorrectAnswer showScore />
             </div>
           )}
           {meta.hasChoices && type === "matrix" && (
@@ -155,6 +160,9 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, open, onOpe
                 <Switch id="question-required" checked={required} onCheckedChange={setRequired} />
               </div>
             </>
+          )}
+          {question && (
+            <LogicRulesSection surveyId={surveyId} question={question} sections={sections} rules={logicRules} />
           )}
         </div>
         <SheetFooter className="flex-row justify-end gap-2">
