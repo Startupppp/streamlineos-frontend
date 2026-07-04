@@ -17,6 +17,9 @@ import {
   endOfWeek,
   startOfYear,
   endOfYear,
+  isSameDay,
+  isSameMonth,
+  isWithinInterval,
 } from "date-fns";
 import { ChevronLeft, ChevronRight, Plus, Download, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +54,7 @@ const MONTHS = [
   "December",
 ];
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { useCalendarEvents } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { downloadCalendarExport } from "./calendar-export";
@@ -95,6 +99,33 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const VIEWS: View[] = ["month", "week", "day"];
 
+const toolbarControlClassName =
+  "h-8 bg-card border-border text-xs font-normal shadow-xs hover:border-blue-300 focus-visible:border-blue-500 focus-visible:ring-blue-200 focus-visible:ring-[3px]";
+
+function buildScrollToTime(view: View, currentDate: Date): Date {
+  const now = new Date();
+  const morning = new Date();
+  morning.setHours(8, 0, 0, 0);
+
+  if (view === "day" && isSameDay(currentDate, now)) {
+    const scrollTarget = new Date(now);
+    scrollTarget.setHours(Math.max(0, now.getHours() - 1), now.getMinutes(), 0, 0);
+    return scrollTarget;
+  }
+
+  if (view === "week") {
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+    if (isWithinInterval(now, { start: weekStart, end: weekEnd })) {
+      const scrollTarget = new Date(now);
+      scrollTarget.setHours(Math.max(0, now.getHours() - 1), now.getMinutes(), 0, 0);
+      return scrollTarget;
+    }
+  }
+
+  return morning;
+}
+
 interface ViewButtonProps {
   v: View;
   current: View;
@@ -111,11 +142,12 @@ const ViewButton = memo(function ViewButton({
     <button
       type="button"
       onClick={handleClick}
-      className={`px-3 text-xs capitalize transition-colors ${
+      className={cn(
+        "px-2 sm:px-3 text-[11px] sm:text-xs capitalize transition-colors h-full border-r border-border last:border-r-0",
         current === v
-          ? "bg-primary text-primary-foreground"
-          : "hover:bg-muted text-muted-foreground"
-      }`}
+          ? "bg-primary text-primary-foreground font-semibold"
+          : "bg-card text-foreground hover:bg-muted/50",
+      )}
     >
       {v}
     </button>
@@ -126,9 +158,11 @@ export function CalendarView() {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<View>("month");
+  const [scrollKey, setScrollKey] = useState(0);
 
   const calContainerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(600);
+  const [compactLayout, setCompactLayout] = useState(false);
   useEffect(() => {
     const el = calContainerRef.current;
     if (!el) return;
@@ -138,8 +172,18 @@ export function CalendarView() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setCompactLayout(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
-  const calHeight = Math.max(containerHeight + 200, 900);
+  const calHeight = Math.max(
+    containerHeight + (compactLayout ? 60 : 200),
+    compactLayout ? 480 : 900,
+  );
   const [createSlot, setCreateSlot] = useState<{
     start: Date;
     end: Date;
@@ -287,7 +331,10 @@ export function CalendarView() {
     });
   }, [view]);
 
-  const handleToday = useCallback(() => setCurrentDate(new Date()), []);
+  const handleToday = useCallback(() => {
+    setCurrentDate(new Date());
+    setScrollKey((key) => key + 1);
+  }, []);
 
   const handleExport = useCallback(
     async (range: "month" | "3months" | "year") => {
@@ -333,14 +380,41 @@ export function CalendarView() {
     [calYear],
   );
 
+  const weekStart = useMemo(
+    () => startOfWeek(currentDate, { weekStartsOn: 1 }),
+    [currentDate],
+  );
+  const weekEnd = useMemo(
+    () => endOfWeek(currentDate, { weekStartsOn: 1 }),
+    [currentDate],
+  );
+
+  const scrollToTime = useMemo(
+    () => buildScrollToTime(view, currentDate),
+    [view, currentDate],
+  );
+
+  const enableAutoScroll = view === "week" || view === "day";
+  const calendarRemountKey = `${view}-${format(currentDate, "yyyy-MM-dd")}-${scrollKey}`;
+
+  const showTodayButton = useMemo(() => {
+    const today = new Date();
+    if (view === "month") return !isSameMonth(currentDate, today);
+    if (view === "week") {
+      return !isWithinInterval(today, { start: weekStart, end: weekEnd });
+    }
+    if (view === "day") return !isSameDay(currentDate, today);
+    return true;
+  }, [view, currentDate, weekStart, weekEnd]);
+
   return (
-    <div className="flex flex-col gap-3 h-full">
-      <div className="flex items-center justify-between flex-wrap gap-2 shrink-0">
-        <div className="flex items-center gap-1.5">
+    <div className="flex flex-col gap-2 sm:gap-3 h-full min-w-0">
+      <div className="flex flex-col gap-2 shrink-0 min-w-0 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8"
+            className={cn(toolbarControlClassName, "w-8 shrink-0 px-0 hover:bg-card")}
             aria-label="Previous"
             onClick={handlePrev}
           >
@@ -354,7 +428,7 @@ export function CalendarView() {
                   setCurrentDate(new Date(calYear, parseInt(v), 1))
                 }
               >
-                <SelectTrigger className="h-8 w-[110px] text-xs">
+                <SelectTrigger className={cn(toolbarControlClassName, "w-[96px] sm:w-[120px] shrink-0")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -371,7 +445,7 @@ export function CalendarView() {
                   setCurrentDate(new Date(parseInt(v), calMonth, 1))
                 }
               >
-                <SelectTrigger className="h-8 w-[76px] text-xs">
+                <SelectTrigger className={cn(toolbarControlClassName, "min-w-[4.25rem] w-[76px] sm:min-w-[4.75rem] sm:w-[88px] shrink-0")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -384,46 +458,62 @@ export function CalendarView() {
               </Select>
             </>
           ) : (
-            <span className="text-sm font-semibold min-w-[140px] text-center">
-              {view === "week" &&
-                `${format(startOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d")} – ${format(endOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d, yyyy")}`}
-              {view === "day" && format(currentDate, "EEE, MMM d, yyyy")}
+            <span className="min-w-0 flex-1 text-center text-xs font-semibold sm:text-sm sm:flex-none sm:min-w-[140px]">
+              {view === "week" && (
+                <>
+                  <span className="sm:hidden">
+                    {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d")}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
+                  </span>
+                </>
+              )}
+              {view === "day" && (
+                <>
+                  <span className="sm:hidden">{format(currentDate, "MMM d, yyyy")}</span>
+                  <span className="hidden sm:inline">{format(currentDate, "EEE, MMM d, yyyy")}</span>
+                </>
+              )}
             </span>
           )}
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8"
+            className={cn(toolbarControlClassName, "w-8 shrink-0 px-0 hover:bg-card")}
             aria-label="Next"
             onClick={handleNext}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={handleToday}
-          >
-            Today
-          </Button>
+          {showTodayButton ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(toolbarControlClassName, "hover:bg-card")}
+              onClick={handleToday}
+            >
+              Today
+            </Button>
+          ) : null}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-md border border-border overflow-hidden h-8">
+        <div className="flex items-center justify-between gap-1.5 min-w-0 w-full sm:w-auto sm:justify-end sm:gap-2">
+          <div className="flex shrink-0 rounded-md border border-border overflow-hidden h-8 bg-card">
             {VIEWS.map((v) => (
               <ViewButton key={v} v={v} current={view} onSelect={setView} />
             ))}
           </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs"
+                className={cn(toolbarControlClassName, "hover:bg-card px-2 sm:px-3")}
                 aria-label="Export calendar"
               >
-                <Download className="h-3.5 w-3.5 mr-1" />
-                Export
+                <Download className="h-3.5 w-3.5 sm:mr-1" />
+                <span className="hidden sm:inline">Export</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
@@ -447,9 +537,9 @@ export function CalendarView() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" className="h-8 text-xs gap-1">
+              <Button size="sm" className="h-8 text-xs gap-1 px-2 sm:px-3">
                 <Plus className="h-3.5 w-3.5" />
-                Add
+                <span className="hidden sm:inline">Add</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
@@ -463,18 +553,25 @@ export function CalendarView() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
       </div>
 
       <div
         ref={calContainerRef}
-        className={`flex-1 min-h-0 rounded-lg border border-border bg-card calendar-container ${view === "month" ? "overflow-y-scroll" : "overflow-hidden"}`}
+        className={cn(
+          "flex-1 min-h-0 min-w-0 overflow-x-hidden rounded-lg border border-border bg-white calendar-container",
+          view === "month" ? "overflow-y-auto" : "overflow-hidden",
+        )}
       >
         <BigCalendarWrapper
+          key={calendarRemountKey}
           events={calEvents}
           date={currentDate}
           view={view}
           calHeight={calHeight}
+          scrollToTime={scrollToTime}
+          enableAutoScroll={enableAutoScroll}
           onView={setView}
           onNavigate={setCurrentDate}
           onSelectSlot={handleSelectSlot}

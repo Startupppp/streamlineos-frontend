@@ -17,6 +17,7 @@ interface PageWrapperProps {
   actions?: React.ReactNode;
   filters?: React.ReactNode;
   filtersCollapseBreakpoint?: "sm" | "md";
+  mobileFiltersInline?: boolean;
   children: React.ReactNode;
   className?: string;
   contentClassName?: string;
@@ -34,6 +35,7 @@ export function PageWrapper({
   actions,
   filters,
   filtersCollapseBreakpoint = "sm",
+  mobileFiltersInline = false,
   children,
   className,
   contentClassName,
@@ -97,22 +99,29 @@ export function PageWrapper({
 
       {filters && (
         <div className="shrink-0">
-          <div className={cn("px-4 sm:px-6 pb-2", mobileFiltersClass)}>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="h-8 text-xs gap-1.5">
-                  <SlidersHorizontal className="h-4 w-4" />
-                  Filters
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="max-w-[85vw] p-3" align="start">
-                <div className="flex flex-col gap-2">
-                  {filters}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className={cn("px-4 sm:px-6 pb-2 flex-wrap items-center gap-2 sm:gap-3", desktopFiltersClass)}>
+          {!mobileFiltersInline && (
+            <div className={cn("px-4 sm:px-6 pb-2", mobileFiltersClass)}>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-8 text-xs gap-1.5">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    Filters
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="max-w-[85vw] p-3" align="start">
+                  <div className="flex flex-col gap-2">
+                    {filters}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+          <div
+            className={cn(
+              "px-4 sm:px-6 pb-2 flex-wrap items-center gap-2 sm:gap-3",
+              mobileFiltersInline ? "flex" : desktopFiltersClass,
+            )}
+          >
             {filters}
           </div>
         </div>

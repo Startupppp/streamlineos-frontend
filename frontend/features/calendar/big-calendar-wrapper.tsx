@@ -42,6 +42,8 @@ interface BigCalendarWrapperProps {
   date: Date;
   view: View;
   calHeight?: number;
+  scrollToTime?: Date;
+  enableAutoScroll?: boolean;
   onView: (view: View) => void;
   onNavigate: (date: Date) => void;
   onSelectSlot?: (slotInfo: SlotInfo) => void;
@@ -54,6 +56,8 @@ export function BigCalendarWrapper({
   date,
   view,
   calHeight = 720,
+  scrollToTime,
+  enableAutoScroll = true,
   onView,
   onNavigate,
   onSelectSlot,
@@ -78,6 +82,8 @@ export function BigCalendarWrapper({
       onSelectEvent={onSelectEvent as ((event: object) => void) | undefined}
       eventPropGetter={eventPropGetter as EventPropGetter<object>}
       toolbar={false}
+      scrollToTime={scrollToTime}
+      enableAutoScroll={enableAutoScroll}
       style={calendarStyle}
     />
   );
