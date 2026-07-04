@@ -1,0 +1,231 @@
+"use client";
+
+import { useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useCreateTimesheetPayrollExport } from "@/hooks/api/timesheets/payroll";
+import {
+  applyMapping,
+  downloadPayrollFile,
+  summaryRowToExportRow,
+} from "./lib/build-payroll-file";
+import type { PayrollSummaryRow, PayrollMapping, ExportFormat } from "./types";
+
+const exportSchema = z.object({
+  format: z.enum(["CSV", "XLSX"]),
+  includeExported: z.boolean(),
+  note: z.string().max(500),
+});
+
+type ExportFormValues = z.infer<typeof exportSchema>;
+
+interface PayrollExportDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  start: string;
+  end: string;
+  allRows: PayrollSummaryRow[];
+  selectedUserIds: Set<string>;
+  mapping: PayrollMapping;
+}
+
+export function PayrollExportDialog({
+  open,
+  onOpenChange,
+  start,
+  end,
+  allRows,
+  selectedUserIds,
+  mapping,
+}: PayrollExportDialogProps) {
+  const createExport = useCreateTimesheetPayrollExport();
+
+  const form = useForm<ExportFormValues>({
+    resolver: zodResolver(exportSchema),
+    defaultValues: { format: "CSV", includeExported: false, note: "" },
+  });
+
+  const exportFormat = form.watch("format");
+  const includeExported = form.watch("includeExported");
+
+  const targetRows =
+    selectedUserIds.size > 0
+      ? allRows.filter((r) => selectedUserIds.has(r.userId))
+      : allRows;
+
+  const previewRowCount = Math.min(6, targetRows.length);
+
+  const enabledCols = mapping.columns.filter((c) => c.enabled).slice(0, 6);
+
+  const handleClose = useCallback(() => {
+    form.reset();
+    onOpenChange(false);
+  }, [form, onOpenChange]);
+
+  const handleFormatChange = useCallback(
+    (value: string) => form.setValue("format", value as ExportFormat),
+    [form],
+  );
+
+  const handleIncludeExportedChange = useCallback(
+    (checked: boolean) => form.setValue("includeExported", checked),
+    [form],
+  );
+
+  const handleSubmit = form.handleSubmit(async (values) => {
+    const body = {
+      start,
+      end,
+      format: values.format,
+      includeExported: values.includeExported,
+      note: values.note || undefined,
+      userIds: selectedUserIds.size > 0 ? [...selectedUserIds] : undefined,
+    };
+
+    createExport.mutate(body, {
+      onSuccess: (result) => {
+        const { headers, matrix } = applyMapping(result.rows, mapping);
+        const filename = `payroll-export_${start}_${end}.${values.format.toLowerCase()}`;
+        void downloadPayrollFile(values.format, filename, headers, matrix);
+        toast.success(`Exported ${result.export.entryCount} entries · ${result.export.totalHours.toFixed(1)} h`);
+        handleClose();
+      },
+    });
+  });
+
+  const preview = applyMapping(
+    targetRows.slice(0, previewRowCount).map((row) => summaryRowToExportRow(row, start, end)),
+    { ...mapping, columns: enabledCols },
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Export Payroll</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Format</Label>
+            <RadioGroup
+              value={exportFormat}
+              onValueChange={handleFormatChange}
+              className="flex gap-4"
+            >
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value="CSV" id="fmt-csv" />
+                <Label htmlFor="fmt-csv" className="text-xs cursor-pointer">CSV</Label>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value="XLSX" id="fmt-xlsx" />
+                <Label htmlFor="fmt-xlsx" className="text-xs cursor-pointer">XLSX</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              id="include-exported-exp"
+              checked={includeExported}
+              onCheckedChange={handleIncludeExportedChange}
+            />
+            <Label htmlFor="include-exported-exp" className="text-xs cursor-pointer">
+              Include previously exported entries
+            </Label>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="export-note" className="text-xs font-medium">Note (optional)</Label>
+            <Input
+              id="export-note"
+              className="h-8 text-xs"
+              placeholder="e.g. June 2026 payroll"
+              {...form.register("note")}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              Preview ({targetRows.length} people)
+            </p>
+            <div className="rounded-md border border-border overflow-auto max-h-[160px]">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    {enabledCols.map((col) => (
+                      <TableHead key={col.key} className="text-[10px] py-1 px-2 font-bold uppercase tracking-wider">
+                        {col.header}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {preview.matrix.map((cells, rowIndex) => (
+                    <TableRow
+                      key={targetRows[rowIndex]?.userId ?? rowIndex}
+                      className="h-7 hover:bg-transparent"
+                    >
+                      {cells.map((value, cellIndex) => (
+                        <TableCell
+                          key={enabledCols[cellIndex]?.key ?? cellIndex}
+                          className="text-[11px] py-1 px-2 font-mono"
+                        >
+                          {value}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <DialogFooter className="grid grid-cols-2 gap-2 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={handleClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              className="h-8 text-xs"
+              disabled={createExport.isPending || targetRows.length === 0}
+            >
+              {createExport.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+              Export {targetRows.length} people
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

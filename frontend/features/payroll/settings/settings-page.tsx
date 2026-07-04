@@ -1,0 +1,64 @@
+"use client";
+
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyPayroll } from "@/components/illustrations/empty-payroll";
+import { usePayrollPolicyCurrent } from "@/hooks/api/payroll";
+import { PolicyProfileSection } from "./policy-profile-section";
+import { ToggleSettingsSection } from "./toggle-settings-section";
+import { VersionHistorySection } from "./version-history-section";
+import { CalendarSection } from "./calendar-section";
+
+export function SettingsPageContent() {
+  const { data, isLoading, isError, refetch } = usePayrollPolicyCurrent();
+
+  if (isLoading) {
+    return (
+      <PageWrapper title="Payroll Settings">
+        <div className="space-y-4 max-w-3xl">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+          ))}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Payroll Settings">
+        <EmptyState
+          title="Failed to load settings"
+          action={{ label: "Retry", onClick: () => void refetch() }}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (!data?.policy) {
+    return (
+      <PageWrapper title="Payroll Settings">
+        <EmptyState
+          illustration={<EmptyPayroll />}
+          title="Payroll not set up yet"
+          description="Configure your payroll settings to start running payroll for your team."
+          action={{ label: "Set up Payroll", href: "/payroll/setup" }}
+        />
+      </PageWrapper>
+    );
+  }
+
+  return (
+    <PageWrapper
+      title="Payroll Settings"
+      subtitle={`Policy #${data.policy.id} · ${data.policy.status}`}
+    >
+      <div className="space-y-8 max-w-3xl">
+        <PolicyProfileSection policy={data.policy} />
+        <ToggleSettingsSection policy={data.policy} activeVersion={data.activeVersion} />
+        <VersionHistorySection policyId={data.policy.id} />
+        <CalendarSection />
+      </div>
+    </PageWrapper>
+  );
+}
