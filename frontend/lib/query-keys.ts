@@ -567,6 +567,27 @@ export const queryKeys = {
     publicSurvey: (token: string) => [...base, "nps", "publicSurvey", token] as const,
   },
 
+  surveys: {
+    all: [...base, "surveys"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "surveys", "list", params] as const,
+    detail: (id: number) => [...base, "surveys", "detail", id] as const,
+    templates: () => [...base, "surveys", "templates"] as const,
+    builder: (id: number) => [...base, "surveys", "builder", id] as const,
+    logic: (id: number) => [...base, "surveys", "logic", id] as const,
+    collectors: (id: number) => [...base, "surveys", "collectors", id] as const,
+    participants: (id: number, params?: Record<string, unknown>) => [...base, "surveys", "participants", id, params] as const,
+    publicSurvey: (token: string) => [...base, "surveys", "publicSurvey", token] as const,
+    assessmentAttempts: (id: number, params?: Record<string, unknown>) => [...base, "surveys", "assessmentAttempts", id, params] as const,
+    certificates: (id: number) => [...base, "surveys", "certificates", id] as const,
+    liveSession: (sessionId: number) => [...base, "surveys", "liveSession", sessionId] as const,
+    publicLiveSession: (sessionCode: string) => [...base, "surveys", "publicLiveSession", sessionCode] as const,
+    analyticsOverview: (id: number) => [...base, "surveys", "analyticsOverview", id] as const,
+    analyticsQuestions: (id: number) => [...base, "surveys", "analyticsQuestions", id] as const,
+    responses: (id: number, params?: Record<string, unknown>) => [...base, "surveys", "responses", id, params] as const,
+    response: (id: number, sessionId: number) => [...base, "surveys", "response", id, sessionId] as const,
+    automations: (id: number) => [...base, "surveys", "automations", id] as const,
+  },
+
   supportMacros: {
     all: [...base, "supportMacros"] as const,
     list: (params?: Record<string, unknown>) => [...base, "supportMacros", "list", params] as const,
