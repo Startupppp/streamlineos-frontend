@@ -7,7 +7,9 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSurvey } from "@/hooks/api/surveys/forms";
-import { SurveyStatusBadge } from "@/features/surveys/list/survey-status-badge";
+import { SurveyBuilderHeader } from "@/features/surveys/builder/survey-builder-header";
+import { SurveyBuilderTabs } from "@/features/surveys/builder/survey-builder-tabs";
+import { SurveyActivityPanel } from "@/features/surveys/builder/survey-activity-panel";
 
 export default function SurveyDetailPage() {
   const params = useParams<{ surveyId: string }>();
@@ -21,7 +23,7 @@ export default function SurveyDetailPage() {
           title={survey?.title ?? "Survey"}
           eyebrow="Surveys"
           backHref="/surveys"
-          badge={survey ? <SurveyStatusBadge status={survey.status} /> : undefined}
+          actions={survey ? <SurveyBuilderHeader survey={survey} /> : undefined}
         >
           {isLoading ? (
             <div className="space-y-3">
@@ -31,7 +33,10 @@ export default function SurveyDetailPage() {
           ) : isError || !survey ? (
             <ErrorState description="Survey not found." />
           ) : (
-            <p className="text-sm text-muted-foreground">Builder coming soon.</p>
+            <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+              <SurveyBuilderTabs survey={survey} />
+              <SurveyActivityPanel survey={survey} />
+            </div>
           )}
         </PageWrapper>
       </RequireModule>
