@@ -93,6 +93,7 @@ const MIGRATED_PREFIXES = [
   "/hr/recruitment/scorecard-analytics",
   "/hr/recruitment/scorecard-templates",
   "/hr/recruitment/stats",
+  "/hr/recruitment/talent-pools",
   "/hr/recruitment/vendors",
   "/hr/rich-documents",
   "/hr/salary-structures",

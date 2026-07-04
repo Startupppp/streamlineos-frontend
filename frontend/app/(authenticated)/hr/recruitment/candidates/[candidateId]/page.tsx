@@ -34,6 +34,8 @@ import {
   FileSignature,
   Users,
   MessageSquare,
+  History,
+  Share2,
 } from "lucide-react";
 import type { CandidateStatus, InterviewType } from "@/types/hr";
 import { DocumentsTab } from "@/features/hr/recruitment/candidate-detail/documents-tab";
@@ -41,6 +43,9 @@ import { VaultTab } from "@/features/hr/recruitment/candidate-detail/vault-tab";
 import { ReferenceChecksTab } from "@/features/hr/recruitment/candidate-detail/reference-checks-tab";
 import { OffersTab } from "@/features/hr/recruitment/candidate-detail/offers-tab";
 import { CalibrationTab } from "@/features/hr/recruitment/candidate-detail/calibration-tab";
+import { ResumeTab } from "@/features/hr/recruitment/candidate-detail/resume-tab";
+import { ReferralsTab } from "@/features/hr/recruitment/candidate-detail/referrals-tab";
+import { ActivityTab } from "@/features/hr/recruitment/candidate-detail/activity-tab";
 import { CandidateProfileCard } from "@/features/candidates/candidate-profile-card";
 import { AiScoreCard } from "@/features/candidates/ai-score-card";
 import { CompositeScoreCard } from "@/features/candidates/composite-score-card";
@@ -300,18 +305,34 @@ export default function CandidateDetailPage() {
 
         <div className="lg:col-span-2">
           <Tabs defaultValue="applications">
-            <TabsList className="mb-4">
+            <TabsList className="mb-4 flex-wrap h-auto">
               <TabsTrigger value="applications">
                 <Briefcase className="h-3.5 w-3.5 mr-1.5" />
                 Applications
+              </TabsTrigger>
+              <TabsTrigger value="resume">
+                <FileText className="h-3.5 w-3.5 mr-1.5" />
+                Resume
               </TabsTrigger>
               <TabsTrigger value="interviews">
                 <Calendar className="h-3.5 w-3.5 mr-1.5" />
                 Interviews
               </TabsTrigger>
+              <TabsTrigger value="messages">
+                <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                Messages
+              </TabsTrigger>
               <TabsTrigger value="documents">
                 <FileText className="h-3.5 w-3.5 mr-1.5" />
                 Documents
+              </TabsTrigger>
+              <TabsTrigger value="referrals">
+                <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                Referrals
+              </TabsTrigger>
+              <TabsTrigger value="offers">
+                <FileSignature className="h-3.5 w-3.5 mr-1.5" />
+                Offers
               </TabsTrigger>
               <TabsTrigger value="vault">
                 <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
@@ -321,17 +342,13 @@ export default function CandidateDetailPage() {
                 <ClipboardCheck className="h-3.5 w-3.5 mr-1.5" />
                 References
               </TabsTrigger>
-              <TabsTrigger value="offers">
-                <FileSignature className="h-3.5 w-3.5 mr-1.5" />
-                Offers
-              </TabsTrigger>
               <TabsTrigger value="calibration">
                 <Users className="h-3.5 w-3.5 mr-1.5" />
                 Calibration
               </TabsTrigger>
-              <TabsTrigger value="messages">
-                <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-                Messages
+              <TabsTrigger value="activity">
+                <History className="h-3.5 w-3.5 mr-1.5" />
+                Activity
               </TabsTrigger>
             </TabsList>
 
@@ -340,6 +357,10 @@ export default function CandidateDetailPage() {
                 applications={candidate.applications}
                 onApplyOpen={handleApplyOpen}
               />
+            </TabsContent>
+
+            <TabsContent value="resume">
+              <ResumeTab resumeUrl={candidate.resumeUrl} resumeText={candidate.resumeText} />
             </TabsContent>
 
             <TabsContent value="interviews">
@@ -415,6 +436,14 @@ export default function CandidateDetailPage() {
 
             <TabsContent value="messages">
               <MessagesTab candidateId={id} candidateEmail={candidate.email} />
+            </TabsContent>
+
+            <TabsContent value="referrals">
+              <ReferralsTab candidateId={id} />
+            </TabsContent>
+
+            <TabsContent value="activity">
+              <ActivityTab candidateId={id} />
             </TabsContent>
           </Tabs>
         </div>

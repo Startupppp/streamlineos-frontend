@@ -47,7 +47,7 @@ const NAV_ITEMS: RecruitmentNavItem[] = [
   { label: "Offers", href: "/hr/recruitment/offers", icon: FileSignature, comingSoon: true },
   { label: "Referrals", href: "/hr/recruitment/referrals", icon: ShareIcon },
   { label: "Vendors", href: "/hr/recruitment/vendors", icon: Truck },
-  { label: "Talent Pools", href: "/hr/recruitment/talent-pools", icon: LayersIcon, comingSoon: true },
+  { label: "Talent Pools", href: "/hr/recruitment/talent-pools", icon: LayersIcon },
   { label: "Analytics", href: "/hr/recruitment/analytics", icon: BarChart3 },
   { label: "Settings", href: "/hr/recruitment/settings", icon: SettingsIcon, comingSoon: true },
 ];
