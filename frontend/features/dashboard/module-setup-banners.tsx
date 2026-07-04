@@ -9,10 +9,21 @@ import {
   ChevronUp,
   X,
   LayoutGrid,
+  Users,
+  Package,
+  Landmark,
+  FolderKanban,
+  Headphones,
+  BookOpen,
+  MessageSquare,
+  CreditCard,
+  Target,
+  type LucideIcon,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import {
   useModuleChecklists,
@@ -34,6 +45,32 @@ const MODULE_LABELS: Record<string, string> = {
   PAYMENTS: "Connect payments",
 };
 
+const MODULE_ICONS: Record<string, LucideIcon> = {
+  CRM: Target,
+  HR: Users,
+  INVENTORY: Package,
+  FINANCE: Landmark,
+  PROJECTS: FolderKanban,
+  HELPDESK: Headphones,
+  KNOWLEDGE: BookOpen,
+  CHAT: MessageSquare,
+  PAYMENTS: CreditCard,
+};
+
+const MODULE_TONE: Record<string, { bg: string; text: string }> = {
+  CRM: { bg: "bg-violet-50", text: "text-violet-600" },
+  HR: { bg: "bg-blue-50", text: "text-blue-600" },
+  INVENTORY: { bg: "bg-violet-50", text: "text-violet-600" },
+  FINANCE: { bg: "bg-amber-50", text: "text-amber-600" },
+  PROJECTS: { bg: "bg-violet-50", text: "text-violet-600" },
+  HELPDESK: { bg: "bg-violet-50", text: "text-violet-600" },
+  KNOWLEDGE: { bg: "bg-blue-50", text: "text-blue-600" },
+  CHAT: { bg: "bg-emerald-50", text: "text-emerald-600" },
+  PAYMENTS: { bg: "bg-amber-50", text: "text-amber-600" },
+};
+
+const DEFAULT_TONE = { bg: "bg-slate-100", text: "text-slate-600" };
+
 function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
   const [isOpen, setIsOpen] = useState(false);
   const completeItem = useCompleteChecklistItem();
@@ -41,6 +78,8 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
 
   const sortedItems = [...checklist.items].sort((a, b) => a.sortOrder - b.sortOrder);
   const label = MODULE_LABELS[checklist.moduleKey] ?? `Set up ${checklist.moduleKey}`;
+  const Icon = MODULE_ICONS[checklist.moduleKey] ?? LayoutGrid;
+  const tone = MODULE_TONE[checklist.moduleKey] ?? DEFAULT_TONE;
 
   async function handleDismiss() {
     try {
@@ -61,6 +100,9 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
       className="rounded-xl border border-border bg-card shadow-sm overflow-hidden"
     >
       <div className="px-4 py-3 flex items-center justify-between gap-3">
+        <div className={cn("h-8 w-8 rounded-md flex items-center justify-center shrink-0", tone.bg)}>
+          <Icon className={cn("h-4 w-4", tone.text)} aria-hidden="true" />
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
             <p className="text-sm font-semibold text-foreground">{label}</p>
