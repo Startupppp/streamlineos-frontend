@@ -44,7 +44,7 @@ const NAV_ITEMS: RecruitmentNavItem[] = [
   { label: "Pipeline", href: "/hr/recruitment/pipeline", icon: KanbanSquare },
   { label: "Intake Inbox", href: "/hr/recruitment/candidates/intake", icon: Inbox },
   { label: "Interviews", href: "/hr/recruitment/interviews", icon: Video },
-  { label: "Offers", href: "/hr/recruitment/offers", icon: FileSignature, comingSoon: true },
+  { label: "Offers", href: "/hr/recruitment/offers", icon: FileSignature },
   { label: "Referrals", href: "/hr/recruitment/referrals", icon: ShareIcon },
   { label: "Vendors", href: "/hr/recruitment/vendors", icon: Truck },
   { label: "Talent Pools", href: "/hr/recruitment/talent-pools", icon: LayersIcon },

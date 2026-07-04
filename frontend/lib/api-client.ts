@@ -86,6 +86,7 @@ const MIGRATED_PREFIXES = [
   "/hr/recruitment/messages",
   "/hr/recruitment/offer-letter",
   "/hr/recruitment/offer-templates",
+  "/hr/recruitment/offers",
   "/hr/recruitment/pipeline",
   "/hr/recruitment/portals",
   "/hr/recruitment/recruiters",

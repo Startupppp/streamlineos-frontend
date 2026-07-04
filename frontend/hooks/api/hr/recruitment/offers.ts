@@ -23,8 +23,105 @@ export interface CandidateOffer {
   approvedBy: string | null;
   approvedAt: string | null;
   approvalRemarks: string | null;
+  acceptanceToken: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface OfferListItem {
+  id: number;
+  candidateId: number;
+  candidateFirstName: string;
+  candidateLastName: string;
+  candidateEmail: string;
+  jobPostingId: number | null;
+  jobTitle: string | null;
+  offerStatus: CandidateOffer["offerStatus"];
+  offeredSalary: string | null;
+  offeredDesignation: string | null;
+  joiningDate: string | null;
+  validUntil: string | null;
+  sentAt: string | null;
+  respondedAt: string | null;
+  createdAt: string;
+}
+
+export interface OfferVersion {
+  id: number;
+  offerId: number;
+  versionNumber: number;
+  offeredSalary: string | null;
+  offeredDesignation: string | null;
+  joiningDate: string | null;
+  validUntil: string | null;
+  notes: string | null;
+  changeReason: string | null;
+  changedBy: string | null;
+  createdAt: string;
+}
+
+export interface OfferNegotiation {
+  id: number;
+  offerId: number;
+  direction: "CANDIDATE_COUNTER" | "INTERNAL_RESPONSE";
+  proposedSalary: string | null;
+  proposedJoiningDate: string | null;
+  message: string | null;
+  createdBy: string | null;
+  createdAt: string;
+}
+
+export function useAllOffers() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "allOffers"] as const,
+    queryFn: () => apiClient.get<OfferListItem[]>("/hr/recruitment/offers"),
+    staleTime: 60_000,
+  });
+}
+
+export function useOfferVersions(candidateId: number, offerId: number) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "offerVersions", offerId] as const,
+    queryFn: () =>
+      apiClient.get<OfferVersion[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/versions`),
+    enabled: candidateId > 0 && offerId > 0,
+    staleTime: 60_000,
+  });
+}
+
+export function useOfferNegotiations(candidateId: number, offerId: number) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "offerNegotiations", offerId] as const,
+    queryFn: () =>
+      apiClient.get<OfferNegotiation[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/negotiations`),
+    enabled: candidateId > 0 && offerId > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useRespondToNegotiation(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      offerId,
+      ...data
+    }: {
+      offerId: number;
+      proposedSalary?: number;
+      proposedJoiningDate?: string;
+      message?: string;
+      applyToOffer?: boolean;
+    }) =>
+      apiClient.post<OfferNegotiation>(
+        `/hr/recruitment/candidates/${candidateId}/offers/${offerId}/negotiations`,
+        data,
+      ),
+    onSuccess: (_data, variables) => {
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "offerNegotiations", variables.offerId] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "offerVersions", variables.offerId] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] });
+    },
+  });
 }
 
 export function useGenerateOfferLetter() {
