@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal, Send, Pause, Lock, Archive, Copy, Users } from "lucide-react";
+import { MoreHorizontal, Send, Pause, Lock, Archive, Copy, Users, Radio } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ import {
   useDuplicateSurvey,
   type SurveyForm,
 } from "@/hooks/api/surveys/forms";
+import { useCreateLiveSession } from "@/hooks/api/surveys/live-session";
 
 export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
   const router = useRouter();
@@ -29,6 +30,7 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
   const close = useCloseSurvey();
   const archive = useArchiveSurvey();
   const duplicate = useDuplicateSurvey();
+  const createLiveSession = useCreateLiveSession(survey.id);
 
   const modeMeta = SURVEY_MODE_META[survey.mode];
 
@@ -78,6 +80,15 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
     }
   }, [duplicate, survey.id, router]);
 
+  const handleStartLiveSession = useCallback(async () => {
+    try {
+      const session = await createLiveSession.mutateAsync();
+      router.push(`/surveys/live/${session.id}/host`);
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  }, [createLiveSession, router]);
+
   const isBusy = publish.isPending || pause.isPending || close.isPending || archive.isPending || duplicate.isPending;
 
   return (
@@ -98,6 +109,11 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
         {survey.status === "published" && (
           <Button variant="outline" size="sm" onClick={handlePause} disabled={isBusy}>
             <Pause className="h-3.5 w-3.5" /> Pause
+          </Button>
+        )}
+        {survey.mode === "live_session" && survey.status === "published" && (
+          <Button size="sm" onClick={handleStartLiveSession} disabled={createLiveSession.isPending}>
+            <Radio className="h-3.5 w-3.5" /> Start Live Session
           </Button>
         )}
         <DropdownMenu>
