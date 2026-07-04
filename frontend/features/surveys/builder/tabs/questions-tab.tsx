@@ -1,14 +1,187 @@
-import { ListChecks } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
-import type { SurveyForm } from "@/hooks/api/surveys/forms";
+"use client";
 
-export function QuestionsTab({ survey: _survey }: { survey: SurveyForm }) {
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getApiError } from "@/lib/api-client";
+import type { SurveyForm } from "@/hooks/api/surveys/forms";
+import {
+  useSurveyBuilder,
+  useCreateSection,
+  usePatchSection,
+  useDeleteSection,
+  useDeleteQuestion,
+  useDuplicateQuestion,
+  useReorderBuilder,
+  type SurveyBuilderQuestion,
+} from "@/hooks/api/surveys/builder";
+import { SectionCard } from "../questions/section-card";
+import { QuestionEditorSheet } from "../questions/question-editor-sheet";
+
+export function QuestionsTab({ survey }: { survey: SurveyForm }) {
+  const surveyId = survey.id;
+  const { data: builder, isLoading, isError, refetch } = useSurveyBuilder(surveyId);
+  const createSection = useCreateSection(surveyId);
+  const patchSection = usePatchSection(surveyId);
+  const deleteSection = useDeleteSection(surveyId);
+  const deleteQuestion = useDeleteQuestion(surveyId);
+  const duplicateQuestion = useDuplicateQuestion(surveyId);
+  const reorder = useReorderBuilder(surveyId);
+
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorSectionId, setEditorSectionId] = useState<number | null>(null);
+  const [editorQuestion, setEditorQuestion] = useState<SurveyBuilderQuestion | null>(null);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
+  if (isError || !builder) {
+    return <ErrorState description="Failed to load questions." onRetry={refetch} />;
+  }
+
+  const sections = [...builder.sections].sort((a, b) => a.sortOrder - b.sortOrder);
+
+  async function handleAddSection() {
+    try {
+      await createSection.mutateAsync({ title: `Section ${sections.length + 1}`, sortOrder: sections.length });
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  }
+
+  async function handleRenameSection(sectionId: number, title: string) {
+    try {
+      await patchSection.mutateAsync({ sectionId, input: { title } });
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  }
+
+  async function handleDeleteSection(sectionId: number) {
+    try {
+      await deleteSection.mutateAsync(sectionId);
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  }
+
+  async function handleMoveSection(sectionId: number, direction: -1 | 1) {
+    const index = sections.findIndex((s) => s.id === sectionId);
+    const swapIndex = index + direction;
+    if (index === -1 || swapIndex < 0 || swapIndex >= sections.length) return;
+    const a = sections[index];
+    const b = sections[swapIndex];
+    try {
+      await reorder.mutateAsync({
+        sections: [
+          { id: a.id, sortOrder: b.sortOrder },
+          { id: b.id, sortOrder: a.sortOrder },
+        ],
+      });
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  }
+
+  async function handleMoveQuestion(sectionId: number, questionId: number, direction: -1 | 1) {
+    const section = sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const questions = [...section.questions].sort((a, b) => a.sortOrder - b.sortOrder);
+    const index = questions.findIndex((q) => q.id === questionId);
+    const swapIndex = index + direction;
+    if (index === -1 || swapIndex < 0 || swapIndex >= questions.length) return;
+    const a = questions[index];
+    const b = questions[swapIndex];
+    try {
+      await reorder.mutateAsync({
+        questions: [
+          { id: a.id, sectionId, sortOrder: b.sortOrder },
+          { id: b.id, sectionId, sortOrder: a.sortOrder },
+        ],
+      });
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  }
+
+  function openAddQuestion(sectionId: number) {
+    setEditorSectionId(sectionId);
+    setEditorQuestion(null);
+    setEditorOpen(true);
+  }
+
+  function openEditQuestion(question: SurveyBuilderQuestion) {
+    setEditorSectionId(null);
+    setEditorQuestion(question);
+    setEditorOpen(true);
+  }
+
+  async function handleDuplicateQuestion(questionId: number) {
+    try {
+      await duplicateQuestion.mutateAsync(questionId);
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  }
+
+  async function handleDeleteQuestion(questionId: number) {
+    try {
+      await deleteQuestion.mutateAsync(questionId);
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  }
+
   return (
-    <EmptyState
-      illustration={<ListChecks className="h-10 w-10 text-muted-foreground/40" />}
-      title="Question builder coming soon"
-      description="Add sections and questions to this survey."
-      compact
-    />
+    <div className="space-y-4">
+      {sections.length === 0 ? (
+        <EmptyState
+          title="No sections yet"
+          description="Add a section to start building your questions."
+          action={{ label: "Add section", onClick: handleAddSection }}
+          compact
+        />
+      ) : (
+        sections.map((section, index) => (
+          <SectionCard
+            key={section.id}
+            section={section}
+            isFirst={index === 0}
+            isLast={index === sections.length - 1}
+            onRenameSection={handleRenameSection}
+            onDeleteSection={handleDeleteSection}
+            onMoveSectionUp={(id) => handleMoveSection(id, -1)}
+            onMoveSectionDown={(id) => handleMoveSection(id, 1)}
+            onAddQuestion={openAddQuestion}
+            onEditQuestion={openEditQuestion}
+            onDuplicateQuestion={handleDuplicateQuestion}
+            onDeleteQuestion={handleDeleteQuestion}
+            onMoveQuestionUp={(sectionId, questionId) => handleMoveQuestion(sectionId, questionId, -1)}
+            onMoveQuestionDown={(sectionId, questionId) => handleMoveQuestion(sectionId, questionId, 1)}
+          />
+        ))
+      )}
+      {sections.length > 0 && (
+        <Button variant="outline" size="sm" onClick={handleAddSection}>
+          <Plus className="h-3.5 w-3.5" /> Add section
+        </Button>
+      )}
+      <QuestionEditorSheet
+        surveyId={surveyId}
+        sectionId={editorSectionId}
+        question={editorQuestion}
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+      />
+    </div>
   );
 }
