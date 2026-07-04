@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Download, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { EmptyPayroll } from "@/components/illustrations/empty-payroll";
 import { useEssPayslips } from "@/hooks/api/payroll/ess";
 import { apiClient } from "@/lib/api-client";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
+import { numberToWords } from "@/lib/format-utils";
 import type { EssPayslip } from "@/types/payroll/ess";
 
 function getYear(month: string): string {
@@ -86,6 +87,7 @@ function DownloadButton({ payslip }: DownloadButtonProps) {
 export function EssPayslipsSection() {
   const { data: payslips, isLoading } = useEssPayslips();
   const [yearFilter, setYearFilter] = useState<string>("all");
+  const shouldReduceMotion = useReducedMotion();
 
   const years = payslips
     ? [...new Set(payslips.map((p) => getYear(p.month)))].filter(Boolean).sort((a, b) => Number(b) - Number(a))
@@ -133,8 +135,8 @@ export function EssPayslipsSection() {
             {filtered.map((payslip, idx) => (
               <motion.div
                 key={payslip.publicationId}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                 transition={{ duration: 0.18, delay: idx * 0.04, ease: "easeOut" }}
                 className="flex items-center justify-between py-3 px-4 border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
               >
@@ -148,9 +150,16 @@ export function EssPayslipsSection() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">
-                  <span className="text-sm font-semibold tabular-nums text-foreground hidden sm:block">
-                    {formatMoney(payslip.net)}
-                  </span>
+                  <div className="hidden sm:flex flex-col items-end">
+                    <span className="text-sm font-semibold tabular-nums text-foreground">
+                      {formatMoney(payslip.net)}
+                    </span>
+                    {payslip.net && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {numberToWords(Math.round(parseFloat(payslip.net)))} only
+                      </span>
+                    )}
+                  </div>
                   <DownloadButton payslip={payslip} />
                 </div>
               </motion.div>

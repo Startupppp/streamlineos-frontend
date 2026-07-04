@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, LayoutTemplate, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -28,7 +28,7 @@ import {
   type SalaryStructureTemplate,
   type CreateSalaryTemplateInput,
 } from "@/hooks/api/hr/salary-structures";
-import { SalaryStructureTemplateSheet } from "@/features/hr/payroll/salary-structure-template-sheet";
+import { SalaryStructureTemplateSheet } from "@/features/payroll/salary-structures/salary-structure-template-sheet";
 
 function formatInr(value: string | null | undefined) {
   const n = parseFloat(value ?? "0");
@@ -55,13 +55,14 @@ interface TemplateCardProps {
 }
 
 function TemplateCard({ template, index, onEdit, onDelete }: TemplateCardProps) {
+  const shouldReduceMotion = useReducedMotion();
   function handleEdit() { onEdit(template); }
   function handleDelete() { onDelete(template); }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.08 }}
       className="bg-card border border-border rounded-xl shadow-sm p-5 flex flex-col gap-4"
     >
@@ -130,6 +131,7 @@ function TemplateCard({ template, index, onEdit, onDelete }: TemplateCardProps) 
 }
 
 export function SalaryStructuresPageContent() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: templates, isLoading, isError, refetch } = useSalaryStructureTemplates();
   const createMutation = useCreateSalaryTemplate();
   const updateMutation = useUpdateSalaryTemplate();
@@ -246,8 +248,8 @@ export function SalaryStructuresPageContent() {
         />
       ) : !templates || templates.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+          animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
           className="flex flex-col items-center justify-center flex-1 h-full py-16"
         >

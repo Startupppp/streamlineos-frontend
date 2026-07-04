@@ -23,7 +23,6 @@ import { VarianceTab } from "@/features/payroll/runs/variance-tab";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
 import { usePayrollRun } from "@/hooks/api/payroll/runs";
 import { ErrorState } from "@/components/shared";
-import { cn } from "@/lib/utils";
 
 const LOCKED_STATUSES = new Set(["LOCKED", "PAID", "PAYSLIPS_PUBLISHED", "CLOSED"]);
 

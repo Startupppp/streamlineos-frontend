@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { TemplateCard } from "@/features/payroll/shared";
 import { TemplatePreviewSheet } from "@/features/payroll/setup/components/template-preview-sheet";
 import { TemplateDuplicateDialog } from "@/features/payroll/setup/components/template-duplicate-dialog";
@@ -27,7 +28,7 @@ export function StepTemplate({
   goBack,
   preselectedKey,
 }: StepTemplateProps) {
-  const { data, isLoading, isError } = usePayrollTemplates(
+  const { data, isLoading, isError, refetch } = usePayrollTemplates(
     draft.profile?.country ? { country: draft.profile.country } : undefined,
   );
   const templates = data?.items ?? [];
@@ -52,6 +53,10 @@ export function StepTemplate({
 
   function handleDuplicateSuccess(newTemplate: TemplateRow) {
     setSelectedKey(newTemplate.key);
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   function handleContinue() {
@@ -80,9 +85,11 @@ export function StepTemplate({
   if (isError) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
-          <p className="text-sm text-muted-foreground">Failed to load templates</p>
-        </div>
+        <EmptyState
+          title="Failed to load templates"
+          description="Something went wrong while fetching payroll templates."
+          action={{ label: "Retry", onClick: handleRetry }}
+        />
         <NavButtons onBack={goBack} />
       </div>
     );

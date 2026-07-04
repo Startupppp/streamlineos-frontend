@@ -65,7 +65,10 @@ const schema = z.object({
   payFrequency: z.enum(["MONTHLY", "SEMI_MONTHLY", "BI_WEEKLY", "WEEKLY"]),
   payDay: z.string().min(1, "Pay day is required"),
   startMonth: z.string().min(1, "Start month is required"),
-  employeeCount: z.coerce.number().int().positive().optional(),
+  employeeCount: z.string().optional().refine(
+    (v) => !v || (Number.isFinite(Number(v)) && Number(v) > 0 && Number.isInteger(Number(v))),
+    { message: "Must be a positive whole number" },
+  ),
 });
 
 type ProfileForm = z.infer<typeof schema>;
@@ -90,7 +93,7 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
       payFrequency: draft.profile?.payFrequency ?? "MONTHLY",
       payDay: draft.profile?.payDay ? String(draft.profile.payDay) : "1",
       startMonth: draft.profile?.startMonth ?? "",
-      employeeCount: draft.profile?.employeeCount,
+      employeeCount: draft.profile?.employeeCount != null ? String(draft.profile.employeeCount) : "",
     },
   });
 
@@ -109,6 +112,7 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
       payFrequency: data.payFrequency,
       payDay: parseInt(data.payDay, 10),
       startMonth: data.startMonth,
+      employeeCount: data.employeeCount ? parseInt(data.employeeCount, 10) : undefined,
     };
 
     const profileDraft: SetupDraft["profile"] = {
@@ -119,6 +123,7 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
       payFrequency: data.payFrequency,
       payDay: parseInt(data.payDay, 10),
       startMonth: data.startMonth,
+      employeeCount: data.employeeCount ? parseInt(data.employeeCount, 10) : undefined,
     };
 
     if (draft.policyId) {
@@ -305,6 +310,27 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="employeeCount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Employee Count (optional)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="e.g. 50"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <NavButtons onNext={form.handleSubmit(handleSubmit)} isLoading={isPending} />

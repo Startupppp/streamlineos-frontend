@@ -10,6 +10,7 @@ export type SetupDraft = {
     payFrequency: PayFrequency;
     payDay: number;
     startMonth: string;
+    employeeCount?: number;
   };
   templateKey?: string;
   templateId?: number;
