@@ -11,6 +11,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { getApiError } from "@/lib/api-client";
 import { usePatchSurvey, type SurveyForm } from "@/hooks/api/surveys/forms";
 import { AssessmentScoringCard } from "./assessment-scoring-card";
+import { CollectorsCard } from "./collectors-card";
 
 const optionsSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
@@ -112,13 +113,16 @@ export function OptionsTab({ survey }: { survey: SurveyForm }) {
         </Card>
       )}
 
+      <CollectorsCard surveyId={survey.id} />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-sm">Privacy</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-xs text-muted-foreground">
-            Anonymity and access rules are managed from the Participants tab collectors.
+            Anonymity is inferred per response: identified when a participant access link or email is used, anonymous
+            otherwise. Access rules (one-per-email, expiry) are set per collector above.
           </p>
         </CardContent>
       </Card>

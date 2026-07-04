@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal, Send, Pause, Lock, Archive, Copy, ExternalLink } from "lucide-react";
+import { MoreHorizontal, Send, Pause, Lock, Archive, Copy, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -85,13 +85,11 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
       <SurveyStatusBadge status={survey.status} />
       <span className="text-xs text-muted-foreground">{modeMeta.label}</span>
       <div className="ml-auto flex items-center gap-2">
-        {survey.status === "published" && (
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/surveys/${survey.id}?tab=participants`}>
-              <ExternalLink className="h-3.5 w-3.5" /> Share
-            </a>
-          </Button>
-        )}
+        <Button variant="outline" size="sm" asChild>
+          <a href={`/surveys/${survey.id}/participants`}>
+            <Users className="h-3.5 w-3.5" /> Participants & Share
+          </a>
+        </Button>
         {(survey.status === "draft" || survey.status === "testing" || survey.status === "paused") && (
           <Button size="sm" onClick={handlePublish} disabled={isBusy}>
             <Send className="h-3.5 w-3.5" /> Publish
