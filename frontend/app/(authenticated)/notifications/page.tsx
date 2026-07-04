@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, Loader2, Filter, X, Inbox, Search } from "lucide-react";
+import { CheckCheck, Loader2, X, Inbox } from "lucide-react";
 import {
   useNotifications,
   useUnreadNotificationCount,
@@ -21,27 +21,14 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { NotificationCard } from "@/features/notifications/notification-card";
+import { NotificationFilterBar } from "@/features/notifications/notification-filter-bar";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import {
-  SECTION_TABS,
-  NOTIFICATION_CATEGORIES,
-  NOTIFICATION_PRIORITIES,
-  NOTIFICATION_CATEGORY_CONFIG,
-  NOTIFICATION_PRIORITY_CONFIG,
-  type NotificationSection,
-  type NotificationCategory,
-  type NotificationPriority,
+import type {
+  NotificationSection,
+  NotificationCategory,
+  NotificationPriority,
 } from "@/features/notifications/notification-types";
 import type { Notification } from "@/types/notifications";
 
@@ -51,7 +38,6 @@ export default function NotificationsPage() {
   const [activeCategory, setActiveCategory] = useState<NotificationCategory | undefined>(undefined);
   const [activePriority, setActivePriority] = useState<NotificationPriority | undefined>(undefined);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [showFilters, setShowFilters] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -62,13 +48,13 @@ export default function NotificationsPage() {
     setSearch(value);
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => setDebouncedSearch(value), 300);
-  }, [searchTimeoutRef]);
+  }, []);
 
   const handleClearSearch = useCallback(() => {
     setSearch("");
     setDebouncedSearch("");
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-  }, [searchTimeoutRef]);
+  }, []);
 
   const { data: notifications, isLoading, isError, refetch } = useNotifications({
     section: activeSection,
@@ -92,7 +78,6 @@ export default function NotificationsPage() {
 
   const unreadCount = unreadData?.count ?? 0;
   const items = useMemo(() => notifications ?? [], [notifications]);
-  const hasFilters = !!activeCategory || !!activePriority;
 
   const handleNotificationClick = useCallback(
     (notification: { id: number; isRead: boolean; link: string | null }) => {
@@ -106,21 +91,17 @@ export default function NotificationsPage() {
     markAllRead.mutate(undefined);
   }, [markAllRead]);
 
-  const handleSectionChange = useCallback((value: string) => {
-    setActiveSection(value as NotificationSection);
+  const handleSectionChange = useCallback((section: NotificationSection) => {
+    setActiveSection(section);
     setSelectedIds(new Set());
   }, []);
 
-  const handleCategoryChange = useCallback((value: string) => {
-    setActiveCategory(value === "ALL" ? undefined : (value as NotificationCategory));
+  const handleCategoryChange = useCallback((category: NotificationCategory | undefined) => {
+    setActiveCategory(category);
   }, []);
 
-  const handlePriorityChange = useCallback((value: string) => {
-    setActivePriority(value === "ALL" ? undefined : (value as NotificationPriority));
-  }, []);
-
-  const handleToggleFilters = useCallback(() => {
-    setShowFilters((prev) => !prev);
+  const handlePriorityChange = useCallback((priority: NotificationPriority | undefined) => {
+    setActivePriority(priority);
   }, []);
 
   const handleClearFilters = useCallback(() => {
@@ -220,126 +201,45 @@ export default function NotificationsPage() {
     <PageWrapper
       title="Notifications"
       subtitle="Stay up to date with everything happening in your workspace"
+      mobileFiltersInline
       actions={
-        <div className="flex items-center gap-2">
+        showMarkAllRead ? (
           <Button
-            variant="outline"
             size="sm"
-            onClick={handleToggleFilters}
-            className={showFilters ? "border-blue-400 text-blue-600" : undefined}
+            disabled={unreadCount === 0 || markAllRead.isPending}
+            onClick={handleMarkAllRead}
           >
-            <Filter className="mr-2 h-3.5 w-3.5" />
-            Filters
-            {hasFilters && (
-              <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white">
-                {(activeCategory ? 1 : 0) + (activePriority ? 1 : 0)}
-              </span>
+            {markAllRead.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCheck className="mr-2 h-4 w-4" />
+            )}
+            Mark all read
+            {unreadCount > 0 && (
+              <Badge
+                variant="outline"
+                className="ml-2 border-primary-foreground/25 bg-primary-foreground/15 text-primary-foreground text-xs"
+              >
+                {unreadCount}
+              </Badge>
             )}
           </Button>
-          {showMarkAllRead && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={unreadCount === 0 || markAllRead.isPending}
-              onClick={handleMarkAllRead}
-            >
-              {markAllRead.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCheck className="mr-2 h-4 w-4" />
-              )}
-              Mark all read
-              {unreadCount > 0 && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
-          )}
-        </div>
+        ) : undefined
       }
       filters={
-        <div className="w-full space-y-3">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={handleSearchChange}
-              placeholder="Search notifications…"
-              className="h-8 pl-8 pr-8 text-sm"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-0">
-            <Tabs value={activeSection} onValueChange={handleSectionChange}>
-              <TabsList className="bg-card border border-border">
-                {SECTION_TABS.map((tab) => (
-                  <TabsTrigger key={tab.value} value={tab.value}>
-                    {tab.label}
-                    {tab.value === "UNREAD" && unreadCount > 0 && (
-                      <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-semibold text-white">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-
-            {showFilters && (
-              <div className="flex items-center gap-2 pt-3 flex-wrap">
-                <Select value={activeCategory ?? "ALL"} onValueChange={handleCategoryChange}>
-                  <SelectTrigger className="h-8 w-[140px] text-xs">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All Categories</SelectItem>
-                    {NOTIFICATION_CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {NOTIFICATION_CATEGORY_CONFIG[cat].label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={activePriority ?? "ALL"} onValueChange={handlePriorityChange}>
-                  <SelectTrigger className="h-8 w-[130px] text-xs">
-                    <SelectValue placeholder="Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All Priorities</SelectItem>
-                    {NOTIFICATION_PRIORITIES.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {NOTIFICATION_PRIORITY_CONFIG[p].label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {hasFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-xs text-muted-foreground"
-                    onClick={handleClearFilters}
-                  >
-                    <X className="mr-1 h-3 w-3" />
-                    Clear
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        <NotificationFilterBar
+          search={search}
+          onSearchChange={handleSearchChange}
+          onClearSearch={handleClearSearch}
+          activeSection={activeSection}
+          onSectionChange={handleSectionChange}
+          activeCategory={activeCategory}
+          onCategoryChange={handleCategoryChange}
+          activePriority={activePriority}
+          onPriorityChange={handlePriorityChange}
+          onClearFilters={handleClearFilters}
+          unreadCount={unreadCount}
+        />
       }
     >
       <div className="space-y-2">
