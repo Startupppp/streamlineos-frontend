@@ -190,6 +190,7 @@ const SLA_REPORT_KEY = queryKeys.hr.slaReport();
 export function useInterviews(params?: {
   candidateId?: number;
   upcoming?: boolean;
+  relevant?: boolean;
   limit?: number;
   offset?: number;
 }) {

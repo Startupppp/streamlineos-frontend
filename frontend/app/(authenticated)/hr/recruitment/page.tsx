@@ -113,7 +113,7 @@ export default function RecruitmentCommandCenterPage() {
   const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useRecruitmentStats();
   const { data: analytics } = useRecruitmentAnalytics();
   const { data: openJobs, isLoading: jobsLoading } = useJobPostings({ status: "OPEN" });
-  const { data: allInterviews, isLoading: interviewsLoading } = useInterviews({ limit: 200 });
+  const { data: allInterviews, isLoading: interviewsLoading } = useInterviews({ relevant: true });
   const { data: newCandidates, isLoading: candidatesLoading } = useCandidates({ status: "NEW" });
 
   const interviewsToday = useMemo(
