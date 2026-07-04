@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getApiError } from "@/lib/api-client";
 import { QUESTION_TYPE_LIST, QUESTION_TYPE_META, type SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
 import { ChoicesEditor } from "./choices-editor";
+import { QuestionTypeSettings } from "./question-type-settings";
 import {
   useCreateQuestion,
   usePatchQuestion,
@@ -43,6 +44,7 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, open, onOpe
   const [required, setRequired] = useState(false);
   const [variableName, setVariableName] = useState("");
   const [choices, setChoices] = useState<ChoiceInput[]>([]);
+  const [settings, setSettings] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     if (!open) return;
@@ -51,6 +53,7 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, open, onOpe
     setType(question?.type ?? "short_text");
     setRequired(question?.required ?? false);
     setVariableName(question?.variableName ?? "");
+    setSettings(question?.settings ?? {});
     setChoices(
       question?.choices.map((c) => ({
         choiceKey: c.choiceKey,
@@ -81,6 +84,7 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, open, onOpe
             required,
             variableName: variableName || undefined,
             choices: meta.hasChoices ? choices : undefined,
+            settings,
           },
         });
       } else if (sectionId) {
@@ -92,6 +96,7 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, open, onOpe
           required,
           variableName: variableName || undefined,
           choices: meta.hasChoices ? choices : undefined,
+          settings,
         });
       }
       onOpenChange(false);
@@ -126,12 +131,19 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, open, onOpe
             <Label>Description / help text</Label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
           </div>
-          {meta.hasChoices && (
+          {meta.hasChoices && type !== "matrix" && (
             <div className="space-y-1.5">
               <Label>Options</Label>
               <ChoicesEditor choices={choices} onChange={setChoices} showCorrectAnswer />
             </div>
           )}
+          {meta.hasChoices && type === "matrix" && (
+            <div className="space-y-1.5">
+              <Label>Columns</Label>
+              <ChoicesEditor choices={choices} onChange={setChoices} />
+            </div>
+          )}
+          <QuestionTypeSettings type={type} settings={settings} onChange={setSettings} />
           {!meta.isContentOnly && (
             <>
               <div className="space-y-1.5">
