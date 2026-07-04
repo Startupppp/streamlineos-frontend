@@ -205,7 +205,7 @@ export default function RecruitmentCommandCenterPage() {
                 <QueueSection
                   title="New applicants to review"
                   count={newCandidates?.length ?? 0}
-                  viewAllHref="/hr/recruitment/candidates?status=NEW"
+                  viewAllHref="/hr/recruitment/candidates/intake"
                   isLoading={candidatesLoading}
                   isEmpty={!newCandidates?.length}
                   emptyLabel="No new applicants right now"
@@ -213,7 +213,7 @@ export default function RecruitmentCommandCenterPage() {
                   {newCandidates?.slice(0, 5).map((c) => (
                     <Link
                       key={c.id}
-                      href="/hr/recruitment/candidates"
+                      href="/hr/recruitment/candidates/intake"
                       className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors duration-150 group"
                     >
                       <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">

@@ -153,6 +153,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
         openings: data.openings,
         applicationDeadline: data.applicationDeadline || undefined,
         status,
+        screeningQuestions: data.screeningQuestions,
       };
 
       if (isEdit && job) {

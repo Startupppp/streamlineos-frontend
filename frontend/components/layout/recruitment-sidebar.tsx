@@ -42,7 +42,7 @@ const NAV_ITEMS: RecruitmentNavItem[] = [
   { label: "Jobs", href: "/hr/recruitment/jobs", icon: Briefcase },
   { label: "Candidates", href: "/hr/recruitment/candidates", icon: UsersIcon },
   { label: "Pipeline", href: "/hr/recruitment/pipeline", icon: KanbanSquare },
-  { label: "Intake Inbox", href: "/hr/recruitment/candidates?status=NEW", icon: Inbox },
+  { label: "Intake Inbox", href: "/hr/recruitment/candidates/intake", icon: Inbox },
   { label: "Interviews", href: "/hr/recruitment/interviews", icon: Video },
   { label: "Offers", href: "/hr/recruitment/offers", icon: FileSignature, comingSoon: true },
   { label: "Referrals", href: "/hr/recruitment/referrals", icon: ShareIcon },
