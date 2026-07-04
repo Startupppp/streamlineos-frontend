@@ -155,10 +155,10 @@ export function useCreateVendorSubmission(vendorId: number) {
   });
 }
 
-export function useUpdateVendorSubmission(vendorId: number, submissionId: number) {
+export function useUpdateVendorSubmission(vendorId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: UpdateSubmissionInput) =>
+    mutationFn: ({ submissionId, ...data }: UpdateSubmissionInput & { submissionId: number }) =>
       apiClient.patch<VendorSubmission>(
         `/hr/recruitment/vendors/${vendorId}/submissions?submissionId=${submissionId}`,
         data,

@@ -55,11 +55,11 @@ export default function PublicSurveyPage() {
     try {
       const submitted = await submitSession.mutateAsync(undefined);
       setResult({ score: submitted.score, passed: submitted.passed });
+      setOutcome(finishOutcome);
+      setPhase("done");
     } catch (error) {
       toast.error(getApiError(error));
     }
-    setOutcome(finishOutcome);
-    setPhase("done");
   }
 
   return (

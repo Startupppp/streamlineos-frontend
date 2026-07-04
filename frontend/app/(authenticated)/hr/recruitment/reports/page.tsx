@@ -60,7 +60,7 @@ import {
   type ScheduledReport,
 } from "@/hooks/api";
 
-const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER"];
+const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
 
 const ENTITY_OPTIONS: { value: ReportEntity; label: string }[] = [
   { value: "candidates", label: "Candidates" },

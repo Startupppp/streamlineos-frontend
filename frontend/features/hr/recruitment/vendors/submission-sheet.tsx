@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getTodayString } from "@/lib/date-utils";
 import { Plus } from "lucide-react";
 import {
   useVendorSubmissions,
@@ -126,12 +127,12 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const updateSubmission = useUpdateVendorSubmission(vendor.id, updatingId ?? 0);
+  const updateSubmission = useUpdateVendorSubmission(vendor.id);
 
   const handleMarkPaid = useCallback((sub: VendorSubmission) => {
     setUpdatingId(sub.id);
     updateSubmission.mutate(
-      { invoiceStatus: "PAID", paidAt: new Date().toISOString().split("T")[0] },
+      { submissionId: sub.id, invoiceStatus: "PAID", paidAt: getTodayString() },
       {
         onSuccess: () => { toast.success("Marked as paid"); setUpdatingId(null); },
         onError: (e) => { toast.error(getErrorMessage(e)); setUpdatingId(null); },

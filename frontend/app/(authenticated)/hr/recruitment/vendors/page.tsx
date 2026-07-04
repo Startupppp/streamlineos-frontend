@@ -39,6 +39,11 @@ export default function VendorsPage() {
     setSheetOpen(true);
   }, []);
 
+  const handleEdit = useCallback((v: RecruitmentVendor) => {
+    setEditingVendor(v);
+    setSheetOpen(true);
+  }, []);
+
   const handleCloseSheet = useCallback(() => {
     setSheetOpen(false);
     setEditingVendor(null);
@@ -100,7 +105,7 @@ export default function VendorsPage() {
               key={v.id}
               vendor={v}
               isHr={isHr}
-              onEdit={setEditingVendor}
+              onEdit={handleEdit}
               onViewSubmissions={setViewingVendor}
               onDelete={setDeletingId}
             />

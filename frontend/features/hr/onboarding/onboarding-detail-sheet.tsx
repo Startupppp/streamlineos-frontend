@@ -300,7 +300,11 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
   const approvedCount = checklist.filter((c) => c.submission?.status === "APPROVED").length;
   const progressPct = checklist.length > 0 ? Math.round((approvedCount / checklist.length) * 100) : 0;
   const mandatoryUnsubmitted = checklist.some(
-    (c) => c.docType.isMandatory && (!c.submission || c.submission.status === "RE_UPLOAD_REQUESTED"),
+    (c) =>
+      c.docType.isMandatory &&
+      (!c.submission ||
+        c.submission.status === "RE_UPLOAD_REQUESTED" ||
+        c.submission.status === "REJECTED"),
   );
 
   const handleOpenUpload = useCallback((dt: DocumentType, existing: OnboardingDoc | null) => {

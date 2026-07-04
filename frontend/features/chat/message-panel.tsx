@@ -232,11 +232,6 @@ export function MessagePanel({
   }, [mentionCandidates, mentionQuery]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(`chat:draft:${channelId}`);
-    setMessageInput(saved ?? "");
-  }, [channelId]);
-
-  useEffect(() => {
     if (messageInput) {
       localStorage.setItem(`chat:draft:${channelId}`, messageInput);
     } else {
@@ -340,7 +335,7 @@ export function MessagePanel({
   useEffect(() => {
     setLastPollTime(new Date().toISOString());
     setReplyTo(null);
-    setMessageInput("");
+    setMessageInput(localStorage.getItem(`chat:draft:${channelId}`) ?? "");
     setEditingMessage(null);
     setPendingAttachments([]);
     setShowEmojiPicker(false);

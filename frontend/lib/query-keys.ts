@@ -34,7 +34,10 @@ export const queryKeys = {
     recruitmentStats: () => [...base, "hr", "recruitmentStats"] as const,
     jobPostings: (params?: Record<string, unknown>) => [...base, "hr", "jobPostings", params] as const,
     jobPosting: (id: number) => [...base, "hr", "jobPosting", id] as const,
-    candidates: (params?: Record<string, unknown>) => [...base, "hr", "candidates", params] as const,
+    candidates: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "hr", "candidates"] as const)
+        : ([...base, "hr", "candidates", params] as const),
     candidate: (id: number) => [...base, "hr", "candidate", id] as const,
     interviews: (params?: Record<string, unknown>) => [...base, "hr", "interviews", params] as const,
     recruitmentPipeline: () => [...base, "hr", "recruitmentPipeline"] as const,

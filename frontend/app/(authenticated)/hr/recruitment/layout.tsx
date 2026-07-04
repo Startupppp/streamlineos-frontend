@@ -3,7 +3,16 @@ import { requirePermission } from "@/lib/rbac/require-permission";
 import { RecruitmentSidebar } from "@/components/layout/recruitment-sidebar";
 
 export default async function RecruitmentLayout({ children }: { children: ReactNode }) {
-  await requirePermission("hr:employees:create", { redirectTo: "/hr" });
+  await requirePermission(
+    [
+      "hr:employees:view",
+      "hr:employees:create",
+      "hr:offers:view",
+      "hr:interviews:view",
+      "hr:requisitions:view",
+    ],
+    { redirectTo: "/hr" },
+  );
 
   return (
     <div className="flex flex-col md:flex-row h-full w-full">
