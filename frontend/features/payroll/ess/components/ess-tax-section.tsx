@@ -95,12 +95,15 @@ function TaxDeclarationSheet({ open, onClose, financialYear, currentRegime, curr
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent className="sm:max-w-md overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Tax Declaration — {financialYear}</SheetTitle>
-        </SheetHeader>
+      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-md">
+        <div className="shrink-0 px-6 py-4 border-b">
+          <SheetHeader>
+            <SheetTitle>Tax Declaration — {financialYear}</SheetTitle>
+          </SheetHeader>
+        </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
             <FormField
               control={form.control}
               name="regime"
@@ -151,12 +154,13 @@ function TaxDeclarationSheet({ open, onClose, financialYear, currentRegime, curr
                 />
               ))}
             </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Saving…" : "Save Declaration"}
-              </Button>
-            </div>
+          </div>
+          <div className="shrink-0 px-6 py-4 border-t grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? "Saving…" : "Save Declaration"}
+            </Button>
+          </div>
           </form>
         </Form>
       </SheetContent>
@@ -255,6 +259,12 @@ export function EssTaxSection() {
               <span className="text-sm text-muted-foreground">Status</span>
               <EssStatusBadge status={declaration.status} />
             </div>
+            {declaration.status === "DRAFT" && declaration.reviewNote && (
+              <div className="px-4 py-3 bg-red-50 border-b border-border">
+                <p className="text-[11px] font-semibold text-red-700 mb-0.5">Rejection Reason</p>
+                <p className="text-xs text-red-600">{declaration.reviewNote}</p>
+              </div>
+            )}
             {DECLARATION_FIELDS.map(({ key, label }) => {
               const val = declaration[key as keyof typeof declaration];
               if (!val || val === "0") return null;

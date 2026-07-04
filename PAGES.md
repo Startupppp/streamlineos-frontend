@@ -498,7 +498,7 @@ Full end-to-end: backend NestJS API → TanStack Query hooks → Next.js pages +
 
 ---
 
-## Payroll (PayrollOS module — 18 routes; migrations 0147/0148 applied; 332 tests passing)
+## Payroll (PayrollOS module — 20 routes; migrations 0147/0148 applied; 332 tests passing)
 - [x] `/payroll` — Command Center: live run status, employee exception counts, stat cards, pending actions
 - [x] `/payroll/me` — Employee self-service portal: my payslips, salary breakdown, declarations, bank details, loan requests
 - [x] `/payroll/setup` — Owner setup wizard: template-first onboarding, policy toggles, payroll policy version creation

@@ -201,7 +201,19 @@ export interface ProfileComponent {
   isOverride: boolean;
 }
 
+export interface VarianceSummary {
+  previousMonth: string | null;
+  currentNet: string;
+  previousNet: string;
+  netDelta: string;
+  netDeltaPercent: number;
+  newJoiners: number;
+  exited: number;
+  changedEmployees: number;
+}
+
 export interface CommandCenterHeader {
+  runId: number | null;
   month: string;
   status: PayrollRunStatus | null;
   grossTotal: string;
@@ -218,10 +230,13 @@ export interface CommandCenterData {
   panels: {
     runStatus: PayrollRunStatus | null;
     topExceptions: Pick<PayrollException, "id" | "code" | "severity" | "message" | "status">[];
-    varianceSummary: null;
+    varianceSummary: VarianceSummary | null;
     pendingApprovals: { id: number; stage: number; status: string }[];
     payoutReadiness: boolean;
-    statutoryReadiness: boolean;
+    statutoryReadiness: {
+      taxDeclarationsLocked: boolean;
+      packComplianceChecklist: { key: string; label: string; detail: string }[];
+    };
   };
   upcomingCalendarEvents: { id: number; date: string; eventType: string; label: string }[];
 }

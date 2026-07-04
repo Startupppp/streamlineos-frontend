@@ -59,6 +59,10 @@ export function StatutoryOverviewTab() {
     );
   }
 
+  const country = data.policy?.country ?? "IN";
+  const isNonIN = country !== "IN";
+  const pack = data.statutoryPack;
+
   const toggles = data.activeVersion.toggles;
   const config = data.activeVersion.config;
   const statutory = config.statutory;
@@ -74,32 +78,50 @@ export function StatutoryOverviewTab() {
 
   return (
     <div className="space-y-2">
-      <Card className="overflow-hidden py-0">
-        <CardContent className="p-0">
-          {STATUTORY_ROWS.map((row, idx) => {
-            const enabled = toggles[row.key] ?? false;
-            return (
+      {isNonIN && pack ? (
+        <Card className="overflow-hidden py-0">
+          <CardContent className="p-0">
+            {pack.items.map((item, idx) => (
               <div
-                key={row.key}
+                key={item.key}
                 className={`flex items-center justify-between px-4 py-3 gap-4 ${idx !== 0 ? "border-t border-border" : ""}`}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium leading-snug">{row.label}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{row.description}</p>
-                  {row.key === "pf" && enabled && (pfEmployerRate || pfEmployeeRate) && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {pfEmployerRate && `Employer: ${pfEmployerRate}`}
-                      {pfEmployerRate && pfEmployeeRate && " · "}
-                      {pfEmployeeRate && `Employee: ${pfEmployeeRate}`}
-                    </p>
-                  )}
+                  <p className="text-[13px] font-medium leading-snug">{item.key}</p>
                 </div>
-                <EnabledBadge enabled={enabled} />
+                <EnabledBadge enabled={item.enabled} />
               </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+            ))}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="overflow-hidden py-0">
+          <CardContent className="p-0">
+            {STATUTORY_ROWS.map((row, idx) => {
+              const enabled = toggles[row.key] ?? false;
+              return (
+                <div
+                  key={row.key}
+                  className={`flex items-center justify-between px-4 py-3 gap-4 ${idx !== 0 ? "border-t border-border" : ""}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium leading-snug">{row.label}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{row.description}</p>
+                    {row.key === "pf" && enabled && (pfEmployerRate || pfEmployeeRate) && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {pfEmployerRate && `Employer: ${pfEmployerRate}`}
+                        {pfEmployerRate && pfEmployeeRate && " · "}
+                        {pfEmployeeRate && `Employee: ${pfEmployeeRate}`}
+                      </p>
+                    )}
+                  </div>
+                  <EnabledBadge enabled={enabled} />
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       <p className="text-[11px] text-muted-foreground">
         Edit statutory settings in{" "}

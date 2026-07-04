@@ -83,7 +83,7 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
 
   function handleRejectConfirm() {
     rejectMutation.mutate(
-      { declarationId: declaration.id },
+      { declarationId: declaration.id, note: rejectNote.trim() || undefined },
       {
         onSuccess: () => {
           toast.success("Declaration rejected");
@@ -112,7 +112,7 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
     <>
       <Sheet open onOpenChange={onClose}>
         <SheetContent className="flex flex-col p-0 sm:max-w-md">
-          <SheetHeader className="border-b px-6 py-4">
+          <SheetHeader className="border-b px-6 py-4 shrink-0">
             <div className="flex items-center gap-2">
               <SheetTitle className="flex-1">Tax Declaration</SheetTitle>
               <span
@@ -123,7 +123,7 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
             </div>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-5">
             <div className="space-y-1">
               <p className="text-sm font-medium">{declaration.userName}</p>
               <p className="text-xs text-muted-foreground">{declaration.userEmail}</p>
@@ -161,7 +161,7 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
             </div>
           </div>
 
-          <div className="border-t px-6 py-4 grid grid-cols-2 gap-2">
+          <div className="border-t px-6 py-4 shrink-0 grid grid-cols-2 gap-2">
             {canAct ? (
               <>
                 <Button

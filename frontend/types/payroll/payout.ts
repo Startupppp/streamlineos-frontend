@@ -35,7 +35,21 @@ export type BankBatchStatus =
 
 export type BankItemStatus = "PENDING" | "SENT" | "PAID" | "FAILED" | "HELD";
 
-export type BatchFormat = "NEFT_CSV" | "RTGS_CSV";
+export type BankScheme =
+  | "IFSC"
+  | "ABA_ROUTING"
+  | "SORT_CODE"
+  | "IBAN"
+  | "BSB"
+  | "SWIFT_ACCOUNT"
+  | "GENERIC";
+
+export type BatchFormat =
+  | "NEFT_CSV"
+  | "RTGS_CSV"
+  | "GENERIC_CSV"
+  | "ACH_CSV"
+  | "SEPA_CSV";
 
 export type PayoutBatch = {
   id: number;
@@ -73,6 +87,8 @@ export type ValidationItem = {
   netAmount: string;
   currency: string;
   maskedAccount: string | null;
+  scheme: BankScheme;
+  schemeLabel: string;
   errors: string[];
   warnings: string[];
   onHold: boolean;
@@ -99,6 +115,7 @@ export type EmployeeBankDetails = {
   ifsc: string | null;
   accountHolder: string | null;
   pfUanNumber: string | null;
+  bankCountry?: string;
 };
 
 export type PayslipLayout = "CLASSIC" | "MODERN" | "COMPLIANCE";

@@ -163,9 +163,16 @@ export function BonusesTab() {
       key: "employee",
       header: "Employee",
       cell: (row) => (
-        <span className="text-[10px] font-mono text-muted-foreground truncate max-w-[140px] block">
-          {row.userId}
-        </span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium text-foreground truncate max-w-[140px]">
+            {row.userName ?? row.userId}
+          </p>
+          {row.userEmail && (
+            <p className="text-[10px] text-muted-foreground truncate max-w-[140px]">
+              {row.userEmail}
+            </p>
+          )}
+        </div>
       ),
     },
     {

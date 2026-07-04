@@ -175,8 +175,11 @@ interface UpdateBankBody {
   accountNumber: string;
   bankName?: string;
   branch?: string;
-  ifsc: string;
+  ifsc?: string;
+  code?: string;
   accountHolder: string;
+  bankCountry?: string;
+  pfUanNumber?: string;
 }
 
 export function useUpdateBank() {

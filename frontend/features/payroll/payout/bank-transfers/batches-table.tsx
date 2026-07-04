@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyTransferIllustration } from "@/components/illustrations";
 import { usePayoutBatches } from "@/hooks/api/payroll/payout-batches";
+import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { formatMoney } from "@/features/payroll/shared";
 import { GeneratePayoutDialog } from "./generate-payout-dialog";
 import { MarkBatchSentDialog, MarkBatchPaidDialog } from "./mark-batch-dialogs";
@@ -37,6 +38,8 @@ export function BatchesTable({
   onSelectBatch,
 }: BatchesTableProps) {
   const { data: batches, isLoading } = usePayoutBatches(runId);
+  const { data: policyData } = usePayrollPolicyCurrent();
+  const policyCurrency = policyData?.policy?.currency ?? "INR";
 
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [format, setFormat] = useState<BatchFormat>("NEFT_CSV");
@@ -137,7 +140,7 @@ export function BatchesTable({
       header: "Total",
       cell: (row) => (
         <span className="tabular-nums text-sm font-medium">
-          {formatMoney(row.totalAmount)}
+          {formatMoney(row.totalAmount, policyCurrency)}
         </span>
       ),
     },

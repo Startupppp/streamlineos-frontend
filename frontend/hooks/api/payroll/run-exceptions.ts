@@ -2,20 +2,15 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import type { PayrollException, PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
-
-export const runExceptionsKeys = {
-  all: (runId: number) => ["payroll", "run-exceptions", runId] as const,
-  list: (runId: number, params?: { severity?: string; status?: string }) =>
-    ["payroll", "run-exceptions", runId, "list", params ?? {}] as const,
-};
 
 export function useRunExceptions(
   runId: number,
   params?: { severity?: PayrollExceptionSeverity; status?: PayrollExceptionStatus },
 ) {
   return useQuery({
-    queryKey: runExceptionsKeys.list(runId, params),
+    queryKey: queryKeys.payroll.runExceptions(runId, params as Record<string, unknown> | undefined),
     queryFn: () =>
       apiClient.get<PayrollException[]>(`/payroll/runs/${runId}/exceptions`, params),
     staleTime: 30_000,
@@ -32,8 +27,8 @@ export function useResolveException(runId: number) {
         { note },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: runExceptionsKeys.all(runId) });
-      qc.invalidateQueries({ queryKey: ["payroll", "runs", runId] });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
     },
   });
 }
@@ -48,8 +43,8 @@ export function useOverrideException(runId: number) {
         { reason },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: runExceptionsKeys.all(runId) });
-      qc.invalidateQueries({ queryKey: ["payroll", "runs", runId] });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
     },
   });
 }

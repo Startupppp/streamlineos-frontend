@@ -209,6 +209,7 @@ export interface TaxDeclarationAdmin {
   status: TaxDeclarationStatus;
   verifiedBy: string | null;
   verifiedAt: string | null;
+  reviewNote: string | null;
   createdAt: string;
   userName: string;
   userEmail: string;

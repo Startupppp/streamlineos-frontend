@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,6 +29,15 @@ import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+const COUNTRY_DEFAULT_CURRENCY: Record<string, string> = {
+  IN: "INR",
+  US: "USD",
+  GB: "GBP",
+  AE: "AED",
+  SG: "SGD",
+  AU: "AUD",
+};
+
 const COUNTRIES: ComboboxOption[] = [
   { value: "IN", label: "India" }, { value: "US", label: "United States" },
   { value: "GB", label: "United Kingdom" }, { value: "AE", label: "United Arab Emirates" },
@@ -55,6 +65,7 @@ const schema = z.object({
   payFrequency: z.enum(["MONTHLY", "SEMI_MONTHLY", "BI_WEEKLY", "WEEKLY"]),
   payDay: z.string().min(1, "Pay day is required"),
   startMonth: z.string().min(1, "Start month is required"),
+  employeeCount: z.coerce.number().int().positive().optional(),
 });
 
 type ProfileForm = z.infer<typeof schema>;
@@ -79,6 +90,7 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
       payFrequency: draft.profile?.payFrequency ?? "MONTHLY",
       payDay: draft.profile?.payDay ? String(draft.profile.payDay) : "1",
       startMonth: draft.profile?.startMonth ?? "",
+      employeeCount: draft.profile?.employeeCount,
     },
   });
 
@@ -132,6 +144,14 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
   }
 
   const watchFrequency = form.watch("payFrequency");
+  const watchCountry = form.watch("country");
+
+  useEffect(() => {
+    const defaultCurrency = COUNTRY_DEFAULT_CURRENCY[watchCountry];
+    if (defaultCurrency) {
+      form.setValue("currency", defaultCurrency, { shouldValidate: false });
+    }
+  }, [watchCountry, form]);
 
   return (
     <Form {...form}>

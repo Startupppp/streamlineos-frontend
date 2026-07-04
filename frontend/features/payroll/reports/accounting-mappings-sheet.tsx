@@ -263,12 +263,12 @@ export function AccountingMappingsSheet({ open: externalOpen, onOpenChange: exte
           </Button>
         </SheetTrigger>
       )}
-      <SheetContent className="p-0 w-full sm:max-w-md flex flex-col overflow-y-auto">
+      <SheetContent className="p-0 w-full sm:max-w-md flex flex-col overflow-hidden">
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>Accounting Mappings</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col gap-3 px-6 py-4">
+        <div className="flex flex-col gap-3 px-6 py-4 flex-1 min-h-0 overflow-y-auto">
           {mappings.length > 0 && (
             <div className="flex flex-col gap-1">
               {mappings.map((m) => (

@@ -1,4 +1,4 @@
-import { requirePermission } from "@/lib/rbac/require-permission";
+import { requireSession } from "@/lib/rbac/require-permission";
 import { Suspense } from "react";
 import { BonusesPageContent } from "@/features/payroll/bonuses";
 import { BonusesPageSkeleton } from "./loading";
@@ -6,7 +6,7 @@ import { BonusesPageSkeleton } from "./loading";
 export const metadata = { title: "Bonuses & Incentives — Payroll" };
 
 export default async function PayrollBonusesPage() {
-  await requirePermission("payroll:runs:view");
+  await requireSession();
   return (
     <Suspense fallback={<BonusesPageSkeleton />}>
       <BonusesPageContent />

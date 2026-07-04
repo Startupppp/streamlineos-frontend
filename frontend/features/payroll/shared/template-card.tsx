@@ -5,6 +5,44 @@ import { cn } from "@/lib/utils";
 import type { TemplateRow } from "@/types/payroll/setup";
 import { COMPLEXITY_CONFIG } from "@/features/payroll/setup/lib/constants";
 
+const TOGGLE_CHIP_LABELS: Record<string, string> = {
+  pf: "PF",
+  esi: "ESI",
+  professionalTax: "PT",
+  tds: "TDS",
+  gratuity: "Gratuity",
+  lwf: "LWF",
+  lopFromAttendance: "LOP",
+  overtime: "OT",
+  timesheets: "TS",
+  leaveSync: "Leave",
+  expenseSync: "Exp",
+  salesIncentives: "Sales",
+  manualAdjustments: "Adj",
+  reimbursements: "Reimb",
+  bonuses: "Bonus",
+  incentives: "Incent",
+  loans: "Loans",
+  contractorPayments: "Contract",
+  multiCurrency: "Multi-FX",
+  employeeDeclarations: "Decl",
+  payrollVarianceWarnings: "Var",
+  countryComplianceChecklist: "Checklist",
+  globalPaymentReport: "GloPay",
+  bankPayoutFile: "Bank",
+  payslipPublishing: "Payslip",
+  emailPayslips: "Email",
+  approvalWorkflow: "Approval",
+  managerApproval: "Mgr",
+  financeApproval: "Finance",
+  lockAfterApproval: "Lock",
+  essShowSalaryStructure: "ESS:View",
+  essAllowBankUpdate: "ESS:Bank",
+  essAllowLoanRequests: "ESS:Loan",
+  essAllowTaxDeclarations: "ESS:Tax",
+  essAllowReimbursements: "ESS:Reimb",
+};
+
 type TemplateCardProps = {
   template: TemplateRow;
   selected?: boolean;
@@ -16,6 +54,11 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
   const complexity = COMPLEXITY_CONFIG[template.complexity];
   const shownComponents = template.defaultComponents.slice(0, 4);
   const extraCount = template.defaultComponents.length - shownComponents.length;
+  const enabledToggles = Object.entries(template.defaultToggles)
+    .filter(([, val]) => val)
+    .map(([key]) => key);
+  const shownToggles = enabledToggles.slice(0, 6);
+  const extraToggleCount = enabledToggles.length - shownToggles.length;
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (onSelect && (e.key === "Enter" || e.key === " ")) onSelect();
@@ -79,6 +122,24 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
             </span>
           )}
         </div>
+
+        {shownToggles.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-0.5">
+            {shownToggles.map((key) => (
+              <span
+                key={key}
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 border border-blue-100"
+              >
+                {TOGGLE_CHIP_LABELS[key] ?? key}
+              </span>
+            ))}
+            {extraToggleCount > 0 && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground">
+                +{extraToggleCount}
+              </span>
+            )}
+          </div>
+        )}
 
         {actions && (
           <div

@@ -10,6 +10,7 @@ import type {
 } from "@/types/payroll/setup";
 
 type TemplateListParams = {
+  country?: string;
   category?: string;
   search?: string;
   page?: number;

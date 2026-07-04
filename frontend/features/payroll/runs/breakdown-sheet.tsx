@@ -172,7 +172,7 @@ export function BreakdownSheet({
             </SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {isLoading ? (
               <div className="px-6 py-8 text-center text-sm text-muted-foreground">Loading…</div>
             ) : !snapshot ? (

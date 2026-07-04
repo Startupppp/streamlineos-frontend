@@ -73,7 +73,9 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
                         {item.employeeName}
                       </span>
                       <span className="text-muted-foreground text-xs">
-                        {item.maskedAccount ?? "No account"}
+                        {item.maskedAccount
+                          ? `${item.maskedAccount} · ${item.schemeLabel}`
+                          : `No account · ${item.schemeLabel}`}
                       </span>
                       <div className="flex flex-wrap gap-1 ml-auto">
                         {item.errors.map((err, i) => (

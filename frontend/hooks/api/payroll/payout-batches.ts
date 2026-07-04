@@ -50,7 +50,7 @@ export function useCreatePayoutBatch() {
     mutationFn: ({ runId, format, idempotencyKey }) =>
       apiClient.post<CreateBatchResult>(
         `/payroll/runs/${runId}/payout/batches`,
-        { format: format ?? "NEFT_CSV" },
+        format ? { format } : {},
         idempotencyKey ? { headers: { "idempotency-key": idempotencyKey } } : undefined,
       ),
     onSuccess: (_data, { runId }) => {

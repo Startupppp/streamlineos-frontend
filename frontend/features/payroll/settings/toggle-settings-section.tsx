@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ToggleRow } from "@/features/payroll/shared";
-import { useCreatePolicyVersion, useToggleImpact } from "@/hooks/api/payroll";
+import { useCreatePolicyVersion, useToggleImpact, usePayrollPolicyCurrent } from "@/hooks/api/payroll";
 import {
   TOGGLE_GROUPS,
   TOGGLE_META,
@@ -56,7 +56,10 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
   const [showSheet, setShowSheet] = useState(false);
 
   const createVersion = useCreatePolicyVersion();
-  const impactQuery = useToggleImpact(pending?.key ?? "", showAlert && !!pending);
+  const impactQuery = useToggleImpact(pending?.key ?? "", (showAlert || showSheet) && !!pending);
+  const { data: currentData } = usePayrollPolicyCurrent();
+  const statutoryPack = currentData?.statutoryPack ?? null;
+  const isNonIN = policy.country !== "IN";
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<VersionForm>({
     resolver: zodResolver(versionSchema),
@@ -118,26 +121,87 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
   return (
     <>
       <div className="space-y-6">
-        {TOGGLE_GROUPS.map((group) => (
-          <PageSection key={group.id} title={group.label} description={group.description}>
-            <div className="divide-y divide-border rounded-lg border border-border px-4">
-              {group.keys.map((key) => {
-                const meta = TOGGLE_META[key];
-                return (
-                  <ToggleRow
-                    key={key}
-                    id={`toggle-${key}`}
-                    label={meta?.label ?? key}
-                    description={meta?.description}
-                    checked={toggles?.[key] ?? false}
-                    onCheckedChange={(val) => handleToggleChange(key, val)}
-                    disabled={createVersion.isPending}
-                  />
-                );
-              })}
-            </div>
-          </PageSection>
-        ))}
+        {isNonIN && statutoryPack ? (
+          <>
+            <PageSection
+              title="Statutory Pack"
+              description={`${policy.country} statutory compliance items`}
+            >
+              <div className="divide-y divide-border rounded-lg border border-border">
+                {statutoryPack.items.map((item) => (
+                  <div key={item.key} className="flex items-center justify-between px-4 py-3 gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium leading-snug">{item.key}</p>
+                    </div>
+                    <span
+                      className={
+                        item.enabled
+                          ? "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-slate-100 text-slate-500 border-slate-200"
+                      }
+                    >
+                      {item.enabled ? "Enabled" : "Disabled"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {statutoryPack.complianceChecklist.length > 0 && (
+                <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                  <p className="text-xs font-semibold text-blue-700 mb-1.5">Compliance Checklist</p>
+                  <div className="space-y-1">
+                    {statutoryPack.complianceChecklist.map((cl) => (
+                      <div key={cl.key}>
+                        <p className="text-xs font-medium text-blue-800">{cl.label}</p>
+                        <p className="text-[11px] text-blue-600">{cl.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </PageSection>
+            {TOGGLE_GROUPS.filter((g) => g.id !== "statutory").map((group) => (
+              <PageSection key={group.id} title={group.label} description={group.description}>
+                <div className="divide-y divide-border rounded-lg border border-border px-4">
+                  {group.keys.map((key) => {
+                    const meta = TOGGLE_META[key];
+                    return (
+                      <ToggleRow
+                        key={key}
+                        id={`toggle-${key}`}
+                        label={meta?.label ?? key}
+                        description={meta?.description}
+                        checked={toggles?.[key] ?? false}
+                        onCheckedChange={(val) => handleToggleChange(key, val)}
+                        disabled={createVersion.isPending}
+                      />
+                    );
+                  })}
+                </div>
+              </PageSection>
+            ))}
+          </>
+        ) : (
+          TOGGLE_GROUPS.map((group) => (
+            <PageSection key={group.id} title={group.label} description={group.description}>
+              <div className="divide-y divide-border rounded-lg border border-border px-4">
+                {group.keys.map((key) => {
+                  const meta = TOGGLE_META[key];
+                  return (
+                    <ToggleRow
+                      key={key}
+                      id={`toggle-${key}`}
+                      label={meta?.label ?? key}
+                      description={meta?.description}
+                      checked={toggles?.[key] ?? false}
+                      onCheckedChange={(val) => handleToggleChange(key, val)}
+                      disabled={createVersion.isPending}
+                    />
+                  );
+                })}
+              </div>
+            </PageSection>
+          ))
+        )}
       </div>
 
       <AlertDialog open={showAlert} onOpenChange={(open) => { if (!open) handleAlertCancel(); }}>
@@ -174,7 +238,24 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
             </SheetDescription>
           </SheetHeader>
           <form onSubmit={handleSubmit(onVersionSubmit)} className="flex flex-col flex-1 min-h-0">
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+              {impactData && (
+                <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 space-y-1">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Impact Preview</p>
+                  <p className="text-xs text-foreground">
+                    <span className="font-medium">{impactData.affectedEmployeeCount}</span>
+                    {" "}employee{impactData.affectedEmployeeCount !== 1 ? "s" : ""} affected
+                  </p>
+                  {impactData.affectedStatutoryCodes.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Statutory codes: {impactData.affectedStatutoryCodes.join(", ")}
+                    </p>
+                  )}
+                  {impactData.affectedEmployeeCount === 0 && (
+                    <p className="text-xs text-muted-foreground">No employees currently affected by this toggle.</p>
+                  )}
+                </div>
+              )}
               <div className="space-y-1">
                 <Label className="text-xs">Effective From (YYYY-MM)</Label>
                 <Input

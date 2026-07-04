@@ -2,14 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import type { PayrollRun, PayrollRunListItem, PayrollChecklistItem } from "@/types/payroll/runs";
-
-export const runsKeys = {
-  all: ["payroll", "runs"] as const,
-  list: (params?: Record<string, string | number>) =>
-    ["payroll", "runs", "list", params ?? {}] as const,
-  detail: (runId: number) => ["payroll", "runs", runId] as const,
-};
 
 interface PaginatedRuns {
   data: PayrollRunListItem[];
@@ -25,7 +19,7 @@ interface RunDetail {
 
 export function usePayrollRuns(params?: { page?: number; limit?: number }) {
   return useQuery({
-    queryKey: runsKeys.list(params),
+    queryKey: queryKeys.payroll.runs(params as Record<string, unknown> | undefined),
     queryFn: () =>
       apiClient.get<PaginatedRuns>("/payroll/runs", params as Record<string, string | number> | undefined),
     staleTime: 60_000,
@@ -34,7 +28,7 @@ export function usePayrollRuns(params?: { page?: number; limit?: number }) {
 
 export function usePayrollRun(runId: number) {
   return useQuery({
-    queryKey: runsKeys.detail(runId),
+    queryKey: queryKeys.payroll.run(runId),
     queryFn: () => apiClient.get<RunDetail>(`/payroll/runs/${runId}`),
     staleTime: 30_000,
   });
@@ -47,7 +41,7 @@ export function useCreateRun() {
     mutationFn: (month: string) =>
       apiClient.post<{ runId: number }>("/payroll/runs", { month }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: runsKeys.all });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
     },
   });
 }
@@ -59,8 +53,8 @@ export function useGenerateRun() {
     mutationFn: (runId: number) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/generate`),
     onSuccess: (_data, runId) => {
-      qc.invalidateQueries({ queryKey: runsKeys.detail(runId) });
-      qc.invalidateQueries({ queryKey: runsKeys.list() });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
     },
   });
 }
@@ -72,9 +66,9 @@ export function useRecalculateRun() {
     mutationFn: (runId: number) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/recalculate`),
     onSuccess: (_data, runId) => {
-      qc.invalidateQueries({ queryKey: runsKeys.detail(runId) });
-      qc.invalidateQueries({ queryKey: ["payroll", "run-employees", runId] });
-      qc.invalidateQueries({ queryKey: ["payroll", "run-exceptions", runId] });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
     },
   });
 }

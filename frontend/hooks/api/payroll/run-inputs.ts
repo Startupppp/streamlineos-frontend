@@ -2,13 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import type { RunInput } from "@/types/payroll/runs";
-
-export const runInputsKeys = {
-  all: (runId: number) => ["payroll", "run-inputs", runId] as const,
-  list: (runId: number, params?: Record<string, string>) =>
-    ["payroll", "run-inputs", runId, "list", params ?? {}] as const,
-};
 
 interface PatchInputBody {
   scheduledDays?: string;
@@ -20,7 +15,7 @@ interface PatchInputBody {
 
 export function useRunInputs(runId: number, params?: { userId?: string }) {
   return useQuery({
-    queryKey: runInputsKeys.list(runId, params as Record<string, string> | undefined),
+    queryKey: queryKeys.payroll.runInputs(runId, params as Record<string, unknown> | undefined),
     queryFn: () =>
       apiClient.get<RunInput[]>(`/payroll/runs/${runId}/inputs`, params),
     staleTime: 30_000,
@@ -34,7 +29,7 @@ export function usePatchInput(runId: number) {
     mutationFn: ({ inputId, body }: { inputId: number; body: PatchInputBody }) =>
       apiClient.patch<{ ok: boolean }>(`/payroll/runs/${runId}/inputs/${inputId}`, body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: runInputsKeys.all(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runInputsAll(runId) });
     },
   });
 }
@@ -46,7 +41,7 @@ export function useReimportInputs(runId: number) {
     mutationFn: () =>
       apiClient.post<{ ok: boolean; count: number }>(`/payroll/runs/${runId}/inputs/reimport`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: runInputsKeys.all(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runInputsAll(runId) });
     },
   });
 }

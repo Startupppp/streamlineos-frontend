@@ -27,7 +27,9 @@ export function StepTemplate({
   goBack,
   preselectedKey,
 }: StepTemplateProps) {
-  const { data, isLoading, isError } = usePayrollTemplates();
+  const { data, isLoading, isError } = usePayrollTemplates(
+    draft.profile?.country ? { country: draft.profile.country } : undefined,
+  );
   const templates = data?.items ?? [];
 
   const [selectedKey, setSelectedKey] = useState<string | null>(

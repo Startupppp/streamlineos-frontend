@@ -50,6 +50,7 @@ type PolicyPreviewInput = {
   templateKey?: string;
   templateId?: number;
   toggleOverrides?: Record<string, boolean>;
+  country?: string;
   currency?: string;
   payDay?: number;
   startMonth?: string;

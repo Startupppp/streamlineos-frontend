@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Receipt, Plus, Paperclip } from "lucide-react";
+import { Receipt, Plus, Paperclip, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations/empty-expenses";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssReimbursements, useSubmitReimbursement } from "@/hooks/api/payroll/ess";
+import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 
 const CLAIM_CATEGORIES = ["Travel", "Food", "Internet", "Medical", "Fuel", "Office Supplies", "Client Expenses", "Other"];
@@ -57,10 +58,37 @@ function RowSkeleton() {
 
 function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const mutation = useSubmitReimbursement();
+  const uploadFile = useUploadFile();
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [receiptName, setReceiptName] = useState<string | null>(null);
+
   const form = useForm<ReimbursementFormValues>({
     resolver: zodResolver(reimbursementSchema),
     defaultValues: { category: "", amount: "", description: "" },
   });
+
+  function handleReceiptChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", "reimbursements");
+    uploadFile.mutate(
+      { file, folder: "reimbursements" },
+      {
+        onSuccess: (result) => {
+          setReceiptUrl(result.url);
+          setReceiptName(file.name);
+        },
+        onError: () => toast.error("Failed to upload receipt"),
+      },
+    );
+  }
+
+  function handleRemoveReceipt() {
+    setReceiptUrl(null);
+    setReceiptName(null);
+  }
 
   const handleSubmit = async (values: ReimbursementFormValues) => {
     try {
@@ -68,23 +96,36 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
         category: values.category,
         amount: parseFloat(values.amount),
         description: values.description,
+        receiptUrl: receiptUrl ?? undefined,
       });
       toast.success("Claim submitted for approval");
       form.reset();
+      setReceiptUrl(null);
+      setReceiptName(null);
       onClose();
     } catch {
       toast.error("Failed to submit claim");
     }
   };
 
+  function handleClose() {
+    form.reset();
+    setReceiptUrl(null);
+    setReceiptName(null);
+    onClose();
+  }
+
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent className="sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Submit Reimbursement</SheetTitle>
-        </SheetHeader>
+    <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-md">
+        <div className="shrink-0 px-6 py-4 border-b">
+          <SheetHeader>
+            <SheetTitle>Submit Reimbursement</SheetTitle>
+          </SheetHeader>
+        </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
             <FormField
               control={form.control}
               name="category"
@@ -133,16 +174,44 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
                 </FormItem>
               )}
             />
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <Paperclip className="h-3 w-3" />
-              Receipt upload: share a link in description if needed
-            </p>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Submitting…" : "Submit Claim"}
-              </Button>
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium">Receipt (optional)</p>
+              {receiptUrl ? (
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="text-xs text-foreground truncate flex-1">{receiptName}</span>
+                  <button
+                    type="button"
+                    onClick={handleRemoveReceipt}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Remove receipt"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 cursor-pointer rounded-md border border-dashed border-border bg-muted/20 px-3 py-2 hover:bg-muted/40 transition-colors">
+                  <Upload className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="text-xs text-muted-foreground">
+                    {uploadFile.isPending ? "Uploading…" : "Upload receipt"}
+                  </span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*,.pdf"
+                    disabled={uploadFile.isPending}
+                    onChange={handleReceiptChange}
+                  />
+                </label>
+              )}
             </div>
+          </div>
+          <div className="shrink-0 px-6 py-4 border-t grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
+            <Button type="submit" disabled={mutation.isPending || uploadFile.isPending}>
+              {mutation.isPending ? "Submitting…" : "Submit Claim"}
+            </Button>
+          </div>
           </form>
         </Form>
       </SheetContent>

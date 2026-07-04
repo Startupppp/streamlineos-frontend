@@ -89,7 +89,7 @@ export const MODULE_GROUPS: ModuleGroup[] = [
         icon: CreditCard,
         description:
           "Export payroll records with breakdown, deductions, and net pay.",
-        exportEndpoint: "/hr/payroll/export",
+        exportEndpoint: "/payroll/reports/register?format=csv",
         accent: "text-blue-600 bg-blue-500/10",
         supported: { import: false, export: true },
       },

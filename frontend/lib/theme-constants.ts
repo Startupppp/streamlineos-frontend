@@ -85,51 +85,6 @@ export const payrollStatusColors: Record<PayrollStatus, string> = {
   PAID: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
 };
 
-type PayrollRunStatus =
-  | "PREPARING"
-  | "DRAFT"
-  | "PREVIEW_READY"
-  | "EXCEPTIONS_FOUND"
-  | "PENDING_APPROVAL"
-  | "APPROVED"
-  | "LOCKED"
-  | "PAID"
-  | "PAYSLIPS_PUBLISHED"
-  | "CLOSED"
-  | "REOPENED";
-
-export const payrollRunStatusColors: Record<PayrollRunStatus, string> = {
-  PREPARING: "bg-slate-500/10 text-slate-700 border-slate-200",
-  DRAFT: "bg-slate-500/10 text-slate-700 border-slate-200",
-  PREVIEW_READY: "bg-blue-500/10 text-blue-700 border-blue-200",
-  EXCEPTIONS_FOUND: "bg-amber-500/10 text-amber-700 border-amber-200",
-  PENDING_APPROVAL: "bg-amber-500/10 text-amber-700 border-amber-200",
-  APPROVED: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-  LOCKED: "bg-violet-500/10 text-violet-700 border-violet-200",
-  PAID: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-  PAYSLIPS_PUBLISHED: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-  CLOSED: "bg-slate-500/10 text-slate-700 border-slate-200",
-  REOPENED: "bg-amber-500/10 text-amber-700 border-amber-200",
-};
-
-type PayrollExceptionSeverity = "BLOCKER" | "WARNING" | "INFO";
-
-export const payrollExceptionSeverityColors: Record<PayrollExceptionSeverity, string> = {
-  BLOCKER: "bg-red-500/10 text-red-700 border-red-200",
-  WARNING: "bg-amber-500/10 text-amber-700 border-amber-200",
-  INFO: "bg-blue-500/10 text-blue-700 border-blue-200",
-};
-
-type PayrollBankItemStatus = "PENDING" | "SENT" | "PAID" | "FAILED" | "HELD";
-
-export const payrollBankItemStatusColors: Record<PayrollBankItemStatus, string> = {
-  PENDING: "bg-slate-500/10 text-slate-700 border-slate-200",
-  SENT: "bg-blue-500/10 text-blue-700 border-blue-200",
-  PAID: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-  FAILED: "bg-red-500/10 text-red-700 border-red-200",
-  HELD: "bg-amber-500/10 text-amber-700 border-amber-200",
-};
-
 type WfhStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export const wfhStatusColors: Record<WfhStatus, string> = {

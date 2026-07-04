@@ -20,8 +20,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useCreatePayoutBatch } from "@/hooks/api/payroll/payout-batches";
+import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { BatchFormat } from "@/types/payroll";
+
+function getRecommendedFormat(currency: string | undefined): BatchFormat {
+  if (currency === "INR") return "NEFT_CSV";
+  if (currency === "USD") return "ACH_CSV";
+  if (currency === "EUR") return "SEPA_CSV";
+  return "GENERIC_CSV";
+}
 
 interface GeneratePayoutDialogProps {
   open: boolean;
@@ -47,10 +55,12 @@ export function GeneratePayoutDialog({
   onFileUrl,
 }: GeneratePayoutDialogProps) {
   const createMutation = useCreatePayoutBatch();
+  const { data: policyData } = usePayrollPolicyCurrent();
+  const recommendedFormat = getRecommendedFormat(policyData?.policy?.currency);
 
   function handleGenerate() {
     createMutation.mutate(
-      { runId, format, idempotencyKey },
+      { runId, format: format === recommendedFormat ? undefined : format, idempotencyKey },
       {
         onSuccess: (result) => {
           if (result.replayed) toast.info("Replayed existing batch");
@@ -101,8 +111,14 @@ export function GeneratePayoutDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="NEFT_CSV">NEFT CSV</SelectItem>
-                    <SelectItem value="RTGS_CSV">RTGS CSV</SelectItem>
+                    {(["NEFT_CSV", "RTGS_CSV", "ACH_CSV", "SEPA_CSV", "GENERIC_CSV"] as const).map((f) => (
+                      <SelectItem key={f} value={f}>
+                        {f.replace("_CSV", " CSV").replace("_", " ")}
+                        {f === recommendedFormat && (
+                          <span className="ml-1.5 text-[10px] text-muted-foreground">(recommended)</span>
+                        )}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

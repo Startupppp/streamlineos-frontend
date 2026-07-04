@@ -116,8 +116,7 @@ export default function PayrollCommandCenterPage() {
     });
   }
 
-  const runId = data?.header.status ? undefined : undefined;
-
+  const runId = data?.header.runId ?? undefined;
   const header = data?.header;
   const excCount = header ? header.exceptionCounts.BLOCKER + header.exceptionCounts.WARNING : 0;
 
@@ -144,6 +143,7 @@ export default function PayrollCommandCenterPage() {
           {canManage && (
             <PrimaryAction
               status={header?.status ?? null}
+              runId={runId}
               month={month}
               onCreateRun={handleCreateRun}
               isPending={createRunMutation.isPending}
@@ -232,7 +232,7 @@ export default function PayrollCommandCenterPage() {
               )}
             </div>
             <div className="lg:col-span-2">
-              <CommandCenterPanels data={data} />
+              <CommandCenterPanels data={data} runId={runId} />
             </div>
           </div>
         </div>

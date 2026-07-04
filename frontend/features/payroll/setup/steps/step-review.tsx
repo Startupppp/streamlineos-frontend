@@ -63,6 +63,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
     preview.mutate({
       templateKey: draft.templateKey,
       toggleOverrides: toOverridesRecord(draft.toggleOverrides),
+      country: draft.profile?.country,
       currency: draft.profile?.currency,
       payDay: draft.profile?.payDay,
       startMonth: draft.profile?.startMonth,
@@ -74,6 +75,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
     preview.mutate({
       templateKey: draft.templateKey,
       toggleOverrides: toOverridesRecord(draft.toggleOverrides),
+      country: draft.profile?.country,
       currency: draft.profile?.currency,
       payDay: draft.profile?.payDay,
       startMonth: draft.profile?.startMonth,
@@ -104,7 +106,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
     );
   }
 
-  const { components, approvalChain, essOptions } = preview.data;
+  const { components, approvalChain, essOptions, statutoryPack } = preview.data;
   const grouped = groupComponents(components);
   const currency = draft.profile?.currency ?? "INR";
   const enabledEssOptions = Object.entries(essOptions).filter(([, v]) => !!v).map(([k]) => k);
@@ -171,6 +173,24 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {statutoryPack && draft.profile?.country !== "IN" && (
+          <div className="bg-muted rounded-lg p-4 space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              {statutoryPack.countryName} Statutory Pack
+            </p>
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-foreground">
+                {statutoryPack.items.filter((i) => i.enabled).length} statutory items active
+              </span>
+              {statutoryPack.complianceChecklist.length > 0 && (
+                <span className="text-muted-foreground">
+                  {statutoryPack.complianceChecklist.length} compliance checks
+                </span>
+              )}
+            </div>
           </div>
         )}
       </div>

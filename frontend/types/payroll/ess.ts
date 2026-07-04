@@ -72,6 +72,7 @@ export interface EssTaxDeclaration {
   section80g: string | null;
   homeLoanInterest: string | null;
   status: string;
+  reviewNote: string | null;
 }
 
 export interface EssTaxProof {
@@ -114,6 +115,7 @@ export interface EssBankDetails {
     branch: string | null;
     ifsc: string | null;
     accountHolder: string | null;
+    bankCountry?: string;
   } | null;
 }
 

@@ -34,18 +34,20 @@ export function TemplatePreviewSheet({ template, onOpenChange }: TemplatePreview
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader className="space-y-1 pr-6">
-          <div className="flex items-center gap-2">
-            <SheetTitle className="text-base">{template.name}</SheetTitle>
-            <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium", complexity.className)}>
-              {complexity.label}
-            </span>
-          </div>
-          <SheetDescription className="text-xs">{template.description}</SheetDescription>
-        </SheetHeader>
+      <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-lg">
+        <div className="shrink-0 px-6 py-4 border-b">
+          <SheetHeader className="space-y-1 pr-6">
+            <div className="flex items-center gap-2">
+              <SheetTitle className="text-base">{template.name}</SheetTitle>
+              <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium", complexity.className)}>
+                {complexity.label}
+              </span>
+            </div>
+            <SheetDescription className="text-xs">{template.description}</SheetDescription>
+          </SheetHeader>
+        </div>
 
-        <div className="mt-6 space-y-5">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-5">
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Best For

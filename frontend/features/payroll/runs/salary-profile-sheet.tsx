@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useCreateProfile, usePatchProfile } from "@/hooks/api/payroll/employees";
+import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import type { EmployeeSalaryProfile } from "@/types/payroll/runs";
 
 const profileSchema = z.object({
@@ -62,6 +63,9 @@ export function SalaryProfileSheet({
   const resolvedUserId = employeeUserId ?? pickedUserId;
 
   const isEdit = !!existingProfile;
+  const { data: policyData } = usePayrollPolicyCurrent();
+  const policyCurrency = policyData?.policy?.currency ?? "INR";
+  const taxRegimeApplicable = policyData?.taxRegimeApplicable ?? true;
   const createMutation = useCreateProfile(resolvedUserId);
   const patchMutation = usePatchProfile(resolvedUserId);
 
@@ -86,7 +90,7 @@ export function SalaryProfileSheet({
       effectiveFrom: "",
       annualCtc: "",
       workerType: "EMPLOYEE",
-      currency: "INR",
+      currency: policyCurrency,
       taxRegime: "none",
       costCenter: "",
     },
@@ -99,7 +103,7 @@ export function SalaryProfileSheet({
         effectiveFrom: existingProfile?.effectiveFrom ?? "",
         annualCtc: existingProfile?.annualCtc ?? "",
         workerType: existingProfile?.workerType ?? "EMPLOYEE",
-        currency: existingProfile?.currency ?? "INR",
+        currency: existingProfile?.currency ?? policyCurrency,
         taxRegime: (existingProfile?.taxRegime as "OLD" | "NEW" | undefined) ?? "none",
         costCenter: existingProfile?.costCenter ?? "",
       });
@@ -230,28 +234,30 @@ export function SalaryProfileSheet({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="taxRegime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tax Regime</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Not specified" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">Not specified</SelectItem>
-                        <SelectItem value="NEW">New Regime</SelectItem>
-                        <SelectItem value="OLD">Old Regime</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {taxRegimeApplicable && (
+                <FormField
+                  control={form.control}
+                  name="taxRegime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tax Regime</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Not specified" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Not specified</SelectItem>
+                          <SelectItem value="NEW">New Regime</SelectItem>
+                          <SelectItem value="OLD">Old Regime</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="costCenter"

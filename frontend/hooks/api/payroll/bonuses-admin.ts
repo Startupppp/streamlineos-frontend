@@ -19,6 +19,8 @@ export interface Bonus {
   approvedBy: string | null;
   approvedAt: string | null;
   createdAt: string;
+  userName: string | null;
+  userEmail: string | null;
 }
 
 export interface Incentive {

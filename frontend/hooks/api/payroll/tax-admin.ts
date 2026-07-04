@@ -39,9 +39,10 @@ export function useRejectDeclaration() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["payroll", "tax-declarations", "reject"],
-    mutationFn: ({ declarationId }: { declarationId: number }) =>
+    mutationFn: ({ declarationId, note }: { declarationId: number; note?: string }) =>
       apiClient.patch<TaxDeclarationAdmin>(
         `/payroll/tax/declarations/${declarationId}/reject`,
+        { note },
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: taxAdminKeys.all });

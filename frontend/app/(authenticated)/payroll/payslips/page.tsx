@@ -1,62 +1,9 @@
-"use client";
+import { requirePermission } from "@/lib/rbac/require-permission";
+import { PayslipsContent } from "./payslips-content";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
-import { useCan } from "@/hooks/api/access";
-import { PublicationsTab } from "@/features/payroll/payout/payslips/publications-tab";
-import { TemplatesTab } from "@/features/payroll/payout/payslips/templates-tab";
+export const metadata = { title: "Payslips — Payroll" };
 
-type TabValue = "publications" | "templates";
-
-const VALID_TABS: TabValue[] = ["publications", "templates"];
-
-function resolveTab(raw: string | null): TabValue {
-  if (raw === "publications" || raw === "templates") return raw;
-  return "publications";
-}
-
-export default function PayslipsPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const activeTab = resolveTab(searchParams.get("tab"));
-
-  const canView = useCan("payroll:payslips:view");
-  const canManage = useCan("payroll:payslips:manage");
-
-  function handleTabChange(value: string) {
-    if (!VALID_TABS.includes(value as TabValue)) return;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", value);
-    router.push(`?${params.toString()}`);
-  }
-
-  if (!canView) {
-    return (
-      <PageWrapper title="Payslips" subtitle="Manage payslip templates and publish to employees">
-        <EmptyState
-          title="Access Denied"
-          description="You don't have permission to view payslips."
-        />
-      </PageWrapper>
-    );
-  }
-
-  return (
-    <PageWrapper title="Payslips" subtitle="Manage payslip templates and publish to employees">
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="publications">Publications</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-        </TabsList>
-        <TabsContent value="publications">
-          <PublicationsTab canManage={canManage} />
-        </TabsContent>
-        <TabsContent value="templates">
-          <TemplatesTab canManage={canManage} />
-        </TabsContent>
-      </Tabs>
-    </PageWrapper>
-  );
+export default async function PayslipsPage() {
+  await requirePermission("payroll:payslips:view");
+  return <PayslipsContent />;
 }

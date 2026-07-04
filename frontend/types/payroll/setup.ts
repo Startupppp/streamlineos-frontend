@@ -137,9 +137,47 @@ export type VersionRow = {
   reason: string;
 };
 
+export type ComplianceChecklistItem = {
+  key: string;
+  label: string;
+  detail: string;
+};
+
+export type StatutoryPackItemKind =
+  | "EMPLOYEE_DEDUCTION"
+  | "EMPLOYER_CONTRIBUTION"
+  | "WITHHOLDING";
+
+export type StatutoryPackItem = {
+  key: string;
+  label: string;
+  kind: StatutoryPackItemKind;
+  componentCode: string;
+  enabled: boolean;
+  calc: Record<string, unknown>;
+  note?: string;
+};
+
+export type StatutoryPackPreview = {
+  country: string;
+  countryName: string;
+  currency: string;
+  taxRegimeApplicable: boolean;
+  items: StatutoryPackItem[];
+  complianceChecklist: ComplianceChecklistItem[];
+};
+
+export type StatutoryPackConfig = {
+  country: string;
+  items: { key: string; enabled: boolean; percentOverride?: number }[];
+  complianceChecklist: ComplianceChecklistItem[];
+};
+
 export type PolicyCurrentResult = {
   policy: PolicyRow | null;
   activeVersion: VersionRow | null;
+  taxRegimeApplicable: boolean;
+  statutoryPack: StatutoryPackConfig | null;
 };
 
 export type ToggleImpactResult = {
@@ -160,6 +198,7 @@ export type PolicyPreviewResult = {
   approvalChain: ApprovalStage[];
   calendarPlan: Record<string, unknown>;
   essOptions: Record<string, unknown>;
+  statutoryPack: StatutoryPackPreview;
 };
 
 export type ActivateResult = {
