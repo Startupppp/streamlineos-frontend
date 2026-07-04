@@ -21,10 +21,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ExternalBoardsSheet } from "@/features/hr/recruitment/jobs/external-boards-sheet";
 import { toast } from "sonner";
 import {
   Plus, MoreHorizontal, Trash2, Play, Pause, Share2, Loader2, Copy,
-  ExternalLink, MapPin, Users, Briefcase, Building2, Pencil,
+  ExternalLink, MapPin, Users, Briefcase, Building2, Pencil, ListChecks,
 } from "lucide-react";
 import type { JobPostingStatus } from "@/types/hr";
 import { EmptyPersonIllustration } from "@/components/illustrations";
@@ -152,6 +153,7 @@ export default function JobPostingsPage() {
   const { data: departments } = useHrDepartments();
 
   const [shareJobId, setShareJobId] = useState<number | null>(null);
+  const [boardsJobId, setBoardsJobId] = useState<number | null>(null);
   const [deleteJobId, setDeleteJobId] = useState<number | null>(null);
 
   const setFilter = useCallback(
@@ -322,6 +324,9 @@ export default function JobPostingsPage() {
                               <DropdownMenuItem onClick={() => setShareJobId(job.id)}>
                                 <ExternalLink className="mr-2 h-3.5 w-3.5" /> Share Job Link
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setBoardsJobId(job.id)}>
+                                <ListChecks className="mr-2 h-3.5 w-3.5" /> Track External Postings
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleStatusChange(job.id, "PAUSED")}>
                                 <Pause className="mr-2 h-3.5 w-3.5" /> Pause
                               </DropdownMenuItem>
@@ -396,6 +401,9 @@ export default function JobPostingsPage() {
 
       {shareJobId !== null && (
         <ShareJobDialog jobId={shareJobId} onClose={() => setShareJobId(null)} />
+      )}
+      {boardsJobId !== null && (
+        <ExternalBoardsSheet jobId={boardsJobId} onClose={() => setBoardsJobId(null)} />
       )}
       <ConfirmDialog
         open={deleteJobId !== null}
