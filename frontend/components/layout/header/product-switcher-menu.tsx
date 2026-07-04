@@ -189,18 +189,54 @@ function ProductGrid({ activeProduct, enabledModules, onClose, shouldReduceMotio
 
 interface ProductSwitcherMenuProps {
   mobile?: boolean
+  variant?: "header" | "sidebar"
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  triggerOnly?: boolean
+  onRequestOpen?: () => void
+  sheetOnly?: boolean
 }
 
-export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps) {
-  const [open, setOpen] = useState(false)
+export function ProductSwitcherMenu({
+  mobile = false,
+  variant = "header",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  triggerOnly = false,
+  onRequestOpen,
+  sheetOnly = false,
+}: ProductSwitcherMenuProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
   const pathname = usePathname()
   const shouldReduceMotion = useReducedMotion()
   const isMobile = useIsMobile()
 
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+
   const activeProduct = getProductFromPathname(pathname)
   const enabledModules = useEnabledModules()
 
-  const handleClose = useCallback(() => setOpen(false), [])
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (isControlled) {
+        controlledOnOpenChange?.(next)
+      } else {
+        setInternalOpen(next)
+      }
+    },
+    [isControlled, controlledOnOpenChange],
+  )
+
+  const handleClose = useCallback(() => handleOpenChange(false), [handleOpenChange])
+
+  const handleTriggerClick = useCallback(() => {
+    if (triggerOnly) {
+      onRequestOpen?.()
+      return
+    }
+    handleOpenChange(true)
+  }, [triggerOnly, onRequestOpen, handleOpenChange])
 
   const activeDefinition = PRODUCT_DEFINITIONS.find((p) => p.key === activeProduct)
   const ActiveIcon = activeDefinition?.icon
@@ -228,18 +264,24 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
         },
       }
 
+  const isSidebarVariant = variant === "sidebar"
+  const iconOnlyTrigger = mobile && !isSidebarVariant
+
   const triggerButton = (
     <button
       type="button"
       aria-label="Switch product"
+      onClick={triggerOnly ? handleTriggerClick : undefined}
       className={cn(
         "flex items-center rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        mobile
-          ? "h-11 w-11 justify-center gap-0 shrink-0"
-          : "gap-1.5 h-8 px-2",
+        isSidebarVariant
+          ? "gap-2 h-9 w-full min-w-0 px-2.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          : iconOnlyTrigger
+            ? "h-11 w-11 justify-center gap-0 shrink-0"
+            : "gap-1.5 h-8 px-2",
       )}
     >
-      {mobile ? (
+      {iconOnlyTrigger ? (
         <LayoutGrid className="h-5 w-5 shrink-0" strokeWidth={ICON_STROKE} />
       ) : (
         <>
@@ -254,12 +296,20 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
               <ActiveIcon className="h-3 w-3" strokeWidth={ICON_STROKE} />
             </span>
           )}
-          <span className="hidden lg:inline text-xs font-medium truncate max-w-[5rem]">
+          <span
+            className={cn(
+              "text-xs font-medium truncate",
+              isSidebarVariant
+                ? "min-w-0 flex-1 text-left text-sidebar-foreground"
+                : "hidden lg:inline max-w-[5rem]",
+            )}
+          >
             {activeDefinition?.label}
           </span>
           <ChevronDown
             className={cn(
-              "h-3 w-3 shrink-0 text-muted-foreground",
+              "h-3 w-3 shrink-0",
+              isSidebarVariant ? "text-sidebar-foreground/50" : "text-muted-foreground",
               !shouldReduceMotion && "transition-transform duration-150",
               !shouldReduceMotion && open && "rotate-180",
             )}
@@ -270,26 +320,42 @@ export function ProductSwitcherMenu({ mobile = false }: ProductSwitcherMenuProps
     </button>
   )
 
+  const sheetContent = (
+    <SheetContent side="bottom" className="w-full max-w-none gap-0 p-0 px-4 pb-6 pt-4">
+      <ProductGrid
+        activeProduct={activeProduct}
+        enabledModules={enabledModules}
+        onClose={handleClose}
+        shouldReduceMotion={shouldReduceMotion}
+      />
+    </SheetContent>
+  )
+
+  if (sheetOnly) {
+    return (
+      <Sheet open={open} onOpenChange={handleOpenChange}>
+        {sheetContent}
+      </Sheet>
+    )
+  }
+
+  if (triggerOnly) {
+    return triggerButton
+  }
+
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger asChild>
           {triggerButton}
         </SheetTrigger>
-        <SheetContent side="bottom" className="rounded-t-xl px-4 pb-6 pt-4">
-          <ProductGrid
-            activeProduct={activeProduct}
-            enabledModules={enabledModules}
-            onClose={handleClose}
-            shouldReduceMotion={shouldReduceMotion}
-          />
-        </SheetContent>
+        {sheetContent}
       </Sheet>
     )
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         {triggerButton}
       </PopoverTrigger>

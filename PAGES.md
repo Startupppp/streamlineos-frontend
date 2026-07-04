@@ -24,6 +24,7 @@ Ordered money-path first. Check off each page after fixing.
 
 ## Global Navigation (Platform Shell)
 - [x] `layout` — Activity Bar approach (VS Code/Linear style): thin 48px vertical icon rail (ActivityBar) for product switching using @phosphor-icons/react fill/regular weight + framer-motion spring indicator; full sidebar restored (logo+workspace, context-aware nav via getNavGroupsForProduct, search+bell footer, inline user profile dropdown); MobileBottomNav preserved; home product now shows Overview nav (Dashboard/Calendar/Chat/Notifications/Reports); tooltips z-[200]; deleted TopHeader, ProductSwitcher, orphaned NotificationBell and SidebarUserMenu
+- [x] **Mobile shell (2026-07-04)** — GlobalHeader hidden below `md`; bottom nav = Menu (sidebar sheet: product switcher + workspace + module nav), Search (⌘K), module-aware Quick Create sheet, Alerts, Me (account menu opens upward); desktop header unchanged
 
 ---
 

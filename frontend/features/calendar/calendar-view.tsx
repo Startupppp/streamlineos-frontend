@@ -143,7 +143,7 @@ const ViewButton = memo(function ViewButton({
       type="button"
       onClick={handleClick}
       className={cn(
-        "px-2 sm:px-3 text-[11px] sm:text-xs capitalize transition-colors h-full border-r border-border last:border-r-0",
+        "flex-1 min-w-0 md:flex-none px-2 md:px-3 text-[11px] md:text-xs capitalize transition-colors h-full border-r border-border last:border-r-0",
         current === v
           ? "bg-primary text-primary-foreground font-semibold"
           : "bg-card text-foreground hover:bg-muted/50",
@@ -409,8 +409,8 @@ export function CalendarView() {
 
   return (
     <div className="flex flex-col gap-2 sm:gap-3 h-full min-w-0">
-      <div className="flex flex-col gap-2 shrink-0 min-w-0 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+      <div className="flex flex-col gap-2 shrink-0 min-w-0 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-row items-center gap-1.5 w-full min-w-0 md:flex-1 md:min-w-0">
           <Button
             variant="outline"
             size="icon"
@@ -422,43 +422,47 @@ export function CalendarView() {
           </Button>
           {view === "month" ? (
             <>
-              <Select
-                value={String(calMonth)}
-                onValueChange={(v) =>
-                  setCurrentDate(new Date(calYear, parseInt(v), 1))
-                }
-              >
-                <SelectTrigger className={cn(toolbarControlClassName, "w-[96px] sm:w-[120px] shrink-0")}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((m, i) => (
-                    <SelectItem key={m} value={String(i)} className="text-xs">
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={String(calYear)}
-                onValueChange={(v) =>
-                  setCurrentDate(new Date(parseInt(v), calMonth, 1))
-                }
-              >
-                <SelectTrigger className={cn(toolbarControlClassName, "min-w-[4.25rem] w-[76px] sm:min-w-[4.75rem] sm:w-[88px] shrink-0")}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {yearOptions.map((y) => (
-                    <SelectItem key={y} value={String(y)} className="text-xs">
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="min-w-0 flex-1 md:flex-none md:w-[120px]">
+                <Select
+                  value={String(calMonth)}
+                  onValueChange={(v) =>
+                    setCurrentDate(new Date(calYear, parseInt(v), 1))
+                  }
+                >
+                  <SelectTrigger className={cn(toolbarControlClassName, "w-full min-w-0")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map((m, i) => (
+                      <SelectItem key={m} value={String(i)} className="text-xs">
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="min-w-0 flex-1 md:flex-none md:w-[88px]">
+                <Select
+                  value={String(calYear)}
+                  onValueChange={(v) =>
+                    setCurrentDate(new Date(parseInt(v), calMonth, 1))
+                  }
+                >
+                  <SelectTrigger className={cn(toolbarControlClassName, "w-full min-w-0")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {yearOptions.map((y) => (
+                      <SelectItem key={y} value={String(y)} className="text-xs">
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </>
           ) : (
-            <span className="min-w-0 flex-1 text-center text-xs font-semibold sm:text-sm sm:flex-none sm:min-w-[140px]">
+            <span className="min-w-0 flex-1 text-center text-xs font-semibold sm:text-sm">
               {view === "week" && (
                 <>
                   <span className="sm:hidden">
@@ -490,20 +494,20 @@ export function CalendarView() {
             <Button
               variant="outline"
               size="sm"
-              className={cn(toolbarControlClassName, "hover:bg-card")}
+              className={cn(toolbarControlClassName, "shrink-0 hover:bg-card")}
               onClick={handleToday}
             >
               Today
             </Button>
           ) : null}
         </div>
-        <div className="flex items-center justify-between gap-1.5 min-w-0 w-full sm:w-auto sm:justify-end sm:gap-2">
-          <div className="flex shrink-0 rounded-md border border-border overflow-hidden h-8 bg-card">
+        <div className="flex items-center justify-between gap-1.5 min-w-0 w-full md:flex-1 md:min-w-0 md:justify-end md:gap-2">
+          <div className="flex min-w-0 w-full flex-1 rounded-md border border-border overflow-hidden h-8 bg-card md:w-auto md:flex-none md:shrink-0">
             {VIEWS.map((v) => (
               <ViewButton key={v} v={v} current={view} onSelect={setView} />
             ))}
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 lg:gap-2 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -593,7 +597,7 @@ export function CalendarView() {
       />
 
       <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
-        <DialogContent className="max-w-xs p-4">
+        <DialogContent className="w-full max-w-none p-4 sm:max-w-xs">
           <DialogHeader>
             <DialogTitle className="text-sm font-semibold">What would you like to create?</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">

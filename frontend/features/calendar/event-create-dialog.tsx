@@ -401,7 +401,7 @@ export function EventCreateDialog({
       <Sheet open={open} onOpenChange={handleSheetOpenChange}>
         <SheetContent
           side="right"
-          className={cn("flex flex-col p-0 w-full sm:max-w-[480px]")}
+          className={cn("flex flex-col p-0 w-full max-w-none sm:max-w-[480px]")}
         >
           <SheetHeader className="px-6 border-b shrink-0">
             <SheetTitle className="text-base font-semibold">
@@ -505,7 +505,7 @@ export function EventCreateDialog({
       </Sheet>
 
       <Sheet open={ticketPickerOpen} onOpenChange={setTicketPickerOpen}>
-        <SheetContent side="bottom" className="h-[60vh] p-0 flex flex-col">
+        <SheetContent side="bottom" className="w-full max-w-none h-[60vh] p-0 flex flex-col">
           <SheetHeader className="px-6 py-4 border-b shrink-0">
             <SheetTitle>Link a ticket</SheetTitle>
           </SheetHeader>

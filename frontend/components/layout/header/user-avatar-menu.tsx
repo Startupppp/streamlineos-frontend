@@ -14,9 +14,15 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSignOut } from "@/hooks/common/auth-hooks";
 import { useCan } from "@/hooks/api/access";
-import { resolveImageUrl } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/common/use-mobile";
+import { resolveImageUrl, cn } from "@/lib/utils";
 
-export function UserAvatarMenu() {
+interface UserAvatarMenuProps {
+  variant?: "header" | "bottom-nav";
+}
+
+export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
+  const isMobile = useIsMobile();
   const { data: session } = useSession();
   const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
   const isAdmin = useCan("settings:manage");
@@ -30,23 +36,49 @@ export function UserAvatarMenu() {
     handleSignOut();
   }, [handleSignOut]);
 
+  const isBottomNav = variant === "bottom-nav";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className="h-8 w-8 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 transition-opacity hover:opacity-80"
-          aria-label="Account menu"
-        >
-          <Avatar className="h-8 w-8 ring-2 ring-border/50">
-            <AvatarImage src={image} alt={name} />
-            <AvatarFallback className="text-[11px] font-bold bg-blue-500/15 text-blue-600">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-        </button>
+        {isBottomNav ? (
+          <button
+            type="button"
+            className={cn(
+              "flex flex-col items-center gap-0.5 min-w-[44px] py-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md",
+              "text-muted-foreground hover:text-foreground",
+            )}
+            aria-label="Account menu"
+          >
+            <Avatar className="h-5 w-5 ring-1 ring-border/60">
+              <AvatarImage src={image} alt={name} />
+              <AvatarFallback className="text-[9px] font-bold bg-blue-500/15 text-blue-600">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-[10px] leading-none">Me</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="h-8 w-8 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 transition-opacity hover:opacity-80"
+            aria-label="Account menu"
+          >
+            <Avatar className="h-8 w-8 ring-2 ring-border/50">
+              <AvatarImage src={image} alt={name} />
+              <AvatarFallback className="text-[11px] font-bold bg-blue-500/15 text-blue-600">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
+      <DropdownMenuContent
+        align={isBottomNav ? "center" : "end"}
+        side={isBottomNav || isMobile ? "top" : "bottom"}
+        className="w-56"
+        sideOffset={8}
+      >
         <div className="px-2 py-1.5">
           <p className="text-xs font-semibold text-foreground truncate">
             {name}

@@ -5,9 +5,15 @@ import { cn } from "@/lib/utils"
 
 interface SidebarWorkspaceRowProps {
   isCollapsed?: boolean
+  triggerOnly?: boolean
+  onRequestOpen?: () => void
 }
 
-export function SidebarWorkspaceRow({ isCollapsed = false }: SidebarWorkspaceRowProps) {
+export function SidebarWorkspaceRow({
+  isCollapsed = false,
+  triggerOnly = false,
+  onRequestOpen,
+}: SidebarWorkspaceRowProps) {
   return (
     <div
       className={cn(
@@ -19,6 +25,8 @@ export function SidebarWorkspaceRow({ isCollapsed = false }: SidebarWorkspaceRow
         variant="sidebar"
         iconOnly={isCollapsed}
         className={isCollapsed ? undefined : "w-full"}
+        triggerOnly={triggerOnly}
+        onRequestOpen={onRequestOpen}
       />
     </div>
   )
