@@ -74,6 +74,8 @@ const MIGRATED_PREFIXES = [
   "/hr/recruitment/candidates",
   "/hr/recruitment/diversity-report",
   "/hr/recruitment/email-sequences",
+  "/hr/recruitment/external-referrals",
+  "/hr/recruitment/external-referrers",
   "/hr/recruitment/headcount",
   "/hr/recruitment/hiring-flows",
   "/hr/recruitment/internal-jobs",
