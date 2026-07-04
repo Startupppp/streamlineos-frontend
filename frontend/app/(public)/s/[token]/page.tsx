@@ -31,6 +31,7 @@ export default function PublicSurveyPage() {
 
   const [phase, setPhase] = useState<Phase>("welcome");
   const [outcome, setOutcome] = useState<"completed" | "disqualified">("completed");
+  const [result, setResult] = useState<{ score: number | null; passed: boolean | null } | null>(null);
 
   const data = surveyQuery.data;
   const messages = (data?.survey.settings.messages as SurveyMessages | undefined) ?? {};
@@ -52,7 +53,8 @@ export default function PublicSurveyPage() {
 
   async function handleFinish(finishOutcome: "completed" | "disqualified") {
     try {
-      await submitSession.mutateAsync(undefined);
+      const submitted = await submitSession.mutateAsync(undefined);
+      setResult({ score: submitted.score, passed: submitted.passed });
     } catch (error) {
       toast.error(getApiError(error));
     }
@@ -110,6 +112,9 @@ export default function PublicSurveyPage() {
               outcome={outcome}
               thankYouMessage={messages.thankYouMessage}
               disqualificationMessage={messages.disqualificationMessage}
+              isAssessment={data?.survey.mode === "assessment"}
+              score={result?.score ?? null}
+              passed={result?.passed ?? null}
             />
           )}
         </Card>

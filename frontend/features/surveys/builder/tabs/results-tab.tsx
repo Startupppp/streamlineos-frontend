@@ -7,6 +7,7 @@ import type { SurveyForm } from "@/hooks/api/surveys/forms";
 import { OverviewStats } from "@/features/surveys/results/overview-stats";
 import { QuestionAnalyticsCard } from "@/features/surveys/results/question-analytics-card";
 import { ResponseTable } from "@/features/surveys/results/response-table";
+import { AssessmentResultsCard } from "@/features/surveys/results/assessment-results-card";
 
 export function ResultsTab({ survey }: { survey: SurveyForm }) {
   const { data: overview, isLoading: overviewLoading, isError, refetch } = useAnalyticsOverview(survey.id);
@@ -39,6 +40,13 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
   return (
     <div className="space-y-6">
       <OverviewStats overview={overview} />
+
+      {survey.mode === "assessment" && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Assessment</h3>
+          <AssessmentResultsCard surveyId={survey.id} />
+        </div>
+      )}
 
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-foreground">Question analytics</h3>
