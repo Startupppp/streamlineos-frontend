@@ -118,8 +118,12 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/hr/employees/[employeeId]` — Employee profile: tabs (overview/attendance/edit), avatar, stats, direct reports, skills, social links, full edit form
 - [x] `/hr/attendance` — Attendance
 - [x] `/hr/leaves` — Leave management
-- [x] `/hr/payroll` — Payroll
-- [x] `/hr/my-payslips` — My payslips
+- [x] `/hr/payroll` — redirects to /payroll
+- [x] `/hr/payroll/salary-structures` — redirects to /payroll/salary-structures
+- [x] `/hr/payroll/allowances` — redirects to /payroll/components
+- [x] `/hr/payroll/tax` — redirects to /payroll/taxes
+- [x] `/hr/payroll/bank-transfers` — redirects to /payroll/bank-transfers
+- [x] `/hr/my-payslips` — redirects to /payroll/me
 - [x] `/hr/expenses` — Expenses
 - [x] `/hr/reimbursements` — Reimbursements
 - [x] `/hr/assets` — Assets
@@ -127,6 +131,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/hr/work-logs` — Work logs
 - [x] `/timesheets` — Timesheets (personal)
 - [x] `/timesheets/team` — Team timesheets
+- [x] `/timesheets/payroll` — Timesheets payroll queue & export (summary, overtime, mapping, CSV/XLSX, history)
 
 ---
 
@@ -464,11 +469,11 @@ Full end-to-end: backend NestJS API → TanStack Query hooks → Next.js pages +
 - [x] `/hr/holidays` — Holiday calendar: global + branch holidays, recurring support, import/export, create/edit/delete with date picker
 - [x] `/hr/leaves/analytics` — Leave analytics: status distribution bar, monthly trend chart, stat cards (total/pending/months tracked)
 
-### Payroll
-- [x] `/hr/payroll/salary-structures` — Salary structures admin: list/create/edit/delete structures with grade/CTC bands, component breakdown Sheet
-- [x] `/hr/payroll/allowances` — Allowances & deductions rules engine: rule list with amount/percentage/type, create/edit/delete Sheet
-- [x] `/hr/payroll/tax` — Tax management: investment declarations per employee, proof upload, declaration approval workflow
-- [x] `/hr/payroll/bank-transfers` — Bank transfers: payroll disbursement list, initiate transfer Dialog, transfer status tracking
+### Legacy Payroll (now redirect stubs)
+- [x] `/hr/payroll/salary-structures` — redirects to /payroll/salary-structures
+- [x] `/hr/payroll/allowances` — redirects to /payroll/components
+- [x] `/hr/payroll/tax` — redirects to /payroll/taxes
+- [x] `/hr/payroll/bank-transfers` — redirects to /payroll/bank-transfers
 
 ### Recruitment
 - [x] `/hr/recruitment/requisitions` — Job requisitions pipeline: list with status filters, create/edit requisition Sheet (role/dept/headcount/priority), approval workflow
@@ -490,6 +495,30 @@ Full end-to-end: backend NestJS API → TanStack Query hooks → Next.js pages +
 - [x] `/hr/travel/approvals` — Travel approvals: manager view of pending/approved/rejected requests, approve/reject actions
 - [x] `/hr/announcements` — Announcements broadcast: list with pinned/active/archived tabs, create/edit Sheet, read-count tracking
 - [x] `/hr/signatures` — Digital signatures: document sign requests list, create signature request Dialog, status tracking (pending/signed/expired)
+
+---
+
+## Payroll (PayrollOS module — 20 routes; migrations 0147/0148 applied; 332 tests passing)
+- [x] `/payroll` — Command Center: live run status, employee exception counts, stat cards, pending actions
+- [x] `/payroll/me` — Employee self-service portal: my payslips, salary breakdown, declarations, bank details, loan requests
+- [x] `/payroll/setup` — Owner setup wizard: template-first onboarding, policy toggles, payroll policy version creation
+- [x] `/payroll/templates` — Template library: 5+ preset templates (Startup/SMB/MNC/Contract/Compliance), preview & activate
+- [x] `/payroll/components` — Salary components engine: earnings and deductions CRUD with fixed/percentage formula types
+- [x] `/payroll/settings` — Payroll settings: policy builder toggles, statutory config, notification rules
+- [x] `/payroll/salary-structures` — Salary structure templates: basic/HRA/allowance config, effective date ranges, active/inactive
+- [x] `/payroll/runs` — Payroll runs list: all runs with status filter (DRAFT/APPROVED/LOCKED/PAID/CLOSED), create new run
+- [x] `/payroll/runs/[runId]` — Run detail: generate, approve, lock, reopen, mark paid lifecycle; exception list; employee breakdown
+- [x] `/payroll/inputs` — Attendance inputs: LOP days, half-days, overtime hours per employee per period
+- [x] `/payroll/employees` — Employee salary profiles list: assigned structure, CTC, last run status
+- [x] `/payroll/employees/[employeeUserId]` — Employee salary profile detail: structure assignment, bank details (masked), history
+- [x] `/payroll/reimbursements` — Reimbursements CRUD: claim list with approve/reject, add reimbursement dialog
+- [x] `/payroll/bonuses` — Bonuses & incentives: one-time/recurring bonus CRUD, variable pay config
+- [x] `/payroll/loans` — Loans & advances: loan applications, repayment schedule, EMI deduction config
+- [x] `/payroll/taxes` — Tax & statutory: investment declarations (employee + admin), IT proof upload, regime selection, verification
+- [x] `/payroll/bank-transfers` — Bank transfer batches: NEFT/RTGS disbursement runs, status tracking, NEFT file download
+- [x] `/payroll/payslips` — Payslips: org-wide published payslips list, download, bulk publish
+- [x] `/payroll/fnf` — FNF settlement: full & final calculations for exiting employees, gratuity, leave encashment
+- [x] `/payroll/reports` — Reports: payroll register, bank payout report, journal export, cost center report, variance report
 
 ---
 

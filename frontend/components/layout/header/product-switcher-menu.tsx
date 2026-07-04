@@ -34,6 +34,7 @@ const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   analytics: "Reports & insights",
   surveys: "Surveys & feedback",
   administration: "Settings & access",
+  payroll: "Runs, payslips & compliance",
 }
 
 interface ProductTileProps {

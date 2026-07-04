@@ -58,6 +58,7 @@ const MIGRATED_PREFIXES = [
   "/hr/learning-paths",
   "/hr/leave-calendar",
   "/hr/leaves",
+  "/hr/loans",
   "/hr/my-goals",
   "/hr/notification-preferences",
   "/hr/onboarding-docs",
@@ -149,6 +150,8 @@ const MIGRATED_PREFIXES = [
   "/access",
   "/auth",
   "/users",
+  "/payroll",
+  "/timesheets",
 ] as const;
 
 const PUBLIC_AUTH_PATHS = new Set([

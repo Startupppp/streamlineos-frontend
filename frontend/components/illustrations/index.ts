@@ -31,3 +31,4 @@ export { EmptyLeadsIllustration } from "./empty-leads";
 export { EmptyDealsIllustration } from "./empty-deals";
 export { EmptyCompaniesIllustration } from "./empty-companies";
 export { EmptyClientsIllustration } from "./empty-clients";
+export { EmptyPayroll } from "./empty-payroll";

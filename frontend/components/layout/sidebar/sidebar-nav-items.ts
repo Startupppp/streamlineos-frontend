@@ -78,6 +78,7 @@ import {
   Plug,
   Activity,
   PenTool,
+  Banknote,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -279,50 +280,6 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
-        label: "Payroll",
-        icon: CreditCard,
-        href: "/hr/payroll",
-        requiredPermission: "hr:payroll:view",
-        children: [
-          {
-            label: "Salary Structures",
-            icon: IndianRupee,
-            href: "/hr/payroll/salary-structures",
-            requiredPermission: "hr:salary:manage",
-          },
-          {
-            label: "Allowances & Deductions",
-            icon: SlidersHorizontal,
-            href: "/hr/payroll/allowances",
-            requiredPermission: "hr:salary:manage",
-          },
-          {
-            label: "Tax Management",
-            icon: Calculator,
-            href: "/hr/payroll/tax",
-            requiredPermission: "hr:payroll:view",
-          },
-          {
-            label: "Bank Transfers",
-            icon: Landmark,
-            href: "/hr/payroll/bank-transfers",
-            requiredPermission: "hr:payroll:approve",
-          },
-          {
-            label: "My Payslips",
-            icon: Wallet,
-            href: "/hr/my-payslips",
-            requiredPermission: ["self:payslips", "hr:payroll:view"],
-          },
-          {
-            label: "Full & Final",
-            icon: FileCheck,
-            href: "/hr/fnf",
-            requiredPermission: "hr:payroll:approve",
-          },
-        ],
-      },
-      {
         label: "Expenses",
         icon: Receipt,
         href: "/hr/expenses",
@@ -495,6 +452,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "hr:employees:update",
         children: [
           {
+            label: "Full & Final",
+            icon: FileCheck,
+            href: "/hr/fnf",
+            requiredPermission: "hr:payroll:approve",
+          },
+          {
             label: "Termination",
             icon: UserX,
             href: "/hr/termination",
@@ -526,6 +489,115 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: UserSearch,
         href: "/hr/recruitment",
         requiredPermission: "hr:employees:create",
+      },
+    ],
+  },
+  {
+    label: "Payroll",
+    module: "payroll",
+    requiredPermission: ["payroll:runs:view", "payroll:salaries:view", "self:payroll"],
+    routes: [
+      {
+        label: "My Payroll",
+        icon: Wallet,
+        href: "/payroll/me",
+        requiredPermission: ["self:payroll", "self:payslips"],
+      },
+      {
+        label: "Command Center",
+        icon: LayoutDashboard,
+        href: "/payroll",
+        requiredPermission: "payroll:runs:view",
+      },
+      {
+        label: "Run Payroll",
+        icon: PlayCircle,
+        href: "/payroll/runs",
+        requiredPermission: "payroll:runs:create",
+      },
+      {
+        label: "Employees",
+        icon: Users,
+        href: "/payroll/employees",
+        requiredPermission: "payroll:salaries:view",
+      },
+      {
+        label: "Salary Structures",
+        icon: IndianRupee,
+        href: "/payroll/salary-structures",
+        requiredPermission: "payroll:salaries:view",
+      },
+      {
+        label: "Templates",
+        icon: LayoutTemplate,
+        href: "/payroll/templates",
+        requiredPermission: "payroll:templates:view",
+      },
+      {
+        label: "Components",
+        icon: SlidersHorizontal,
+        href: "/payroll/components",
+        requiredPermission: "payroll:components:view",
+      },
+      {
+        label: "Attendance Inputs",
+        icon: Clock,
+        href: "/payroll/inputs",
+        requiredPermission: "payroll:runs:create",
+      },
+      {
+        label: "Reimbursements",
+        icon: RefreshCcw,
+        href: "/payroll/reimbursements",
+        requiredPermission: "payroll:runs:create",
+      },
+      {
+        label: "Bonuses & Incentives",
+        icon: Award,
+        href: "/payroll/bonuses",
+        requiredPermission: "payroll:runs:create",
+      },
+      {
+        label: "Loans & Advances",
+        icon: Coins,
+        href: "/payroll/loans",
+        requiredPermission: "payroll:runs:create",
+      },
+      {
+        label: "Taxes & Statutory",
+        icon: Calculator,
+        href: "/payroll/taxes",
+        requiredPermission: "payroll:tax:view",
+      },
+      {
+        label: "Bank Transfers",
+        icon: Landmark,
+        href: "/payroll/bank-transfers",
+        requiredPermission: "payroll:bank:view",
+      },
+      {
+        label: "Payslips",
+        icon: FileText,
+        href: "/payroll/payslips",
+        requiredPermission: "payroll:payslips:view",
+      },
+      {
+        label: "FNF Settlement",
+        icon: FileCheck,
+        href: "/payroll/fnf",
+        requiredPermission: "payroll:fnf:view",
+      },
+      {
+        label: "Reports",
+        icon: BarChart3,
+        href: "/payroll/reports",
+        requiredPermission: "payroll:reports:view",
+      },
+      {
+        label: "Settings",
+        icon: SlidersHorizontal,
+        href: "/payroll/settings",
+        requiredPermission: "payroll:settings:manage",
       },
     ],
   },
@@ -917,6 +989,14 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Timer,
         href: "/timesheets/team",
         requiredPermission: "projects:timesheets:view",
+        children: [
+          {
+            label: "Payroll",
+            icon: Banknote,
+            href: "/timesheets/payroll",
+            requiredPermission: "timesheets:payroll:view",
+          },
+        ],
       },
     ],
   },
@@ -1303,7 +1383,8 @@ export type ProductKey =
   | "documents"
   | "analytics"
   | "surveys"
-  | "administration";
+  | "administration"
+  | "payroll";
 
 export interface ProductDefinition {
   key: ProductKey;
@@ -1328,6 +1409,12 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     label: "Settings",
     href: "/organization",
     icon: Building2,
+  },
+  {
+    key: "payroll",
+    label: "Payroll",
+    href: "/payroll",
+    icon: IndianRupee,
   },
 ];
 
@@ -1405,6 +1492,12 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-slate-500 dark:bg-slate-400",
     border: "border-slate-400 dark:border-slate-500",
   },
+  payroll: {
+    text: "!text-teal-600 dark:!text-teal-400",
+    bg: "bg-teal-50 dark:bg-teal-950/40",
+    indicator: "bg-teal-600 dark:bg-teal-500",
+    border: "border-teal-600 dark:border-teal-500",
+  },
 };
 
 const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
@@ -1427,6 +1520,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
     "Security",
     "Developer",
   ],
+  payroll: ["Payroll"],
 };
 
 export function getNavGroupsForProduct(
@@ -1490,6 +1584,7 @@ const MODULE_KEY_MAP: Partial<Record<ProductKey, string>> = {
   finance: "FINANCE",
   helpdesk: "HELPDESK",
   surveys: "SURVEYS",
+  payroll: "PAYROLL",
 };
 
 export function isModuleEnabled(
@@ -1534,6 +1629,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/support")) return "helpdesk";
   if (pathname.startsWith("/knowledge")) return "documents";
   if (pathname.startsWith("/surveys")) return "surveys";
+  if (pathname.startsWith("/payroll")) return "payroll";
   if (
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||
