@@ -477,6 +477,20 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/hr/analytics",
         requiredPermission: "hr:employees:view",
       },
+      {
+        label: "Settings",
+        icon: SlidersHorizontal,
+        href: "/hr/settings/import-export",
+        requiredPermission: "hr:employees:view",
+        children: [
+          {
+            label: "Import / Export",
+            icon: FileText,
+            href: "/hr/settings/import-export",
+            requiredPermission: "hr:employees:view",
+          },
+        ],
+      },
     ],
   },
   {
@@ -598,6 +612,20 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: SlidersHorizontal,
         href: "/payroll/settings",
         requiredPermission: "payroll:settings:manage",
+        children: [
+          {
+            label: "Policy",
+            icon: SlidersHorizontal,
+            href: "/payroll/settings",
+            requiredPermission: "payroll:settings:manage",
+          },
+          {
+            label: "Import / Export",
+            icon: FileText,
+            href: "/payroll/settings/import-export",
+            requiredPermission: "payroll:reports:view",
+          },
+        ],
       },
     ],
   },
@@ -770,6 +798,11 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Audit Log",
             icon: History,
             href: "/crm/settings/audit-log",
+          },
+          {
+            label: "Import / Export",
+            icon: FileText,
+            href: "/crm/settings/import-export",
           },
         ],
       },
@@ -1236,12 +1269,6 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "AI Configuration",
         icon: Brain,
         href: "/settings/ai",
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "Data Hub",
-        icon: FileText,
-        href: "/settings/data-hub",
         requiredPermission: "settings:manage",
       },
     ],

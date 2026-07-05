@@ -68,6 +68,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/crm/settings/custom-fields` — Custom field definitions per entity
 - [x] `/crm/settings/automations` — Automation rules CRUD + toggle + run history
 - [x] `/crm/settings/audit-log` — Audit log with filters + pagination + export
+- [x] `/crm/settings/import-export` — CRM leads/contacts/deals/clients import & export
 
 ---
 
@@ -173,6 +174,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/hr/termination` — Terminations
 - [x] `/hr/asset-returns` — Asset returns
 - [x] `/hr/analytics` — HR analytics; `DashboardGate permission="hr:performance:view"`
+- [x] `/hr/settings/import-export` — HR employees/expenses/assets export
 - [x] `/hr/team-events` — Team events
 - [x] `/hr/employees/find-expert` — Find expert
 - [x] `/hr/employees/skills-matrix` — Skills matrix
@@ -361,7 +363,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/settings/integrations/recruitment` — Recruitment integrations
 - [x] ~~`/settings/integrations/calendar`~~ — REMOVED 2026-07-05: superseded by the in-calendar accounts sheet on `/calendar` (Composio-managed connections; direct-OAuth routes and `calendar-oauth.ts` deleted)
 - [x] `/settings/integrations/git` — Git integration
-- [x] `/settings/data-hub` — Data hub
+- [x] ~~`/settings/data-hub`~~ — DELETED 2026-07-05: module-owned import/export moved to `/crm/settings/import-export`, `/hr/settings/import-export`, `/payroll/settings/import-export`
 - [x] `/settings/ai` — AI settings
 - [x] `/settings/api-tokens` — API tokens
 - [x] `/settings/devices` — Devices management
@@ -506,6 +508,7 @@ Full end-to-end: backend NestJS API → TanStack Query hooks → Next.js pages +
 - [x] `/payroll/templates` — Template library: 5+ preset templates (Startup/SMB/MNC/Contract/Compliance), preview & activate
 - [x] `/payroll/components` — Salary components engine: earnings and deductions CRUD with fixed/percentage formula types
 - [x] `/payroll/settings` — Payroll settings: policy builder toggles, statutory config, notification rules
+- [x] `/payroll/settings/import-export` — Payroll register CSV export
 - [x] `/payroll/salary-structures` — Salary structure templates: basic/HRA/allowance config, effective date ranges, active/inactive
 - [x] `/payroll/runs` — Payroll runs list: all runs with status filter (DRAFT/APPROVED/LOCKED/PAID/CLOSED), create new run
 - [x] `/payroll/runs/[runId]` — Run detail: generate, approve, lock, reopen, mark paid lifecycle; exception list; employee breakdown

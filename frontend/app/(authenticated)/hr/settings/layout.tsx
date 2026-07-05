@@ -5,24 +5,20 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { label: "Scoring Rules", href: "/crm/settings/scoring-rules" },
-  { label: "Assignment Rules", href: "/crm/settings/assignment-rules" },
-  { label: "SLA Policies", href: "/crm/settings/sla" },
-  { label: "Email Templates", href: "/crm/settings/email-templates" },
-  { label: "Custom Fields", href: "/crm/settings/custom-fields" },
-  { label: "Products", href: "/crm/settings/products" },
-  { label: "Automations", href: "/crm/settings/automations" },
-  { label: "Import / Export", href: "/crm/settings/import-export" },
-  { label: "Audit Log", href: "/crm/settings/audit-log" },
+  { label: "Import / Export", href: "/hr/settings/import-export" },
 ] as const;
 
-export default function CrmSettingsLayout({ children }: { children: React.ReactNode }) {
+export default function HrSettingsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
 
   return (
     <div className="flex flex-col h-full">
       <div className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-1">
-        <nav className="flex flex-wrap items-center gap-1" aria-label="CRM Settings">
+        <nav className="flex flex-wrap items-center gap-1" aria-label="HR Settings">
           {TABS.map((tab) => {
             const isActive = pathname === tab.href;
             return (

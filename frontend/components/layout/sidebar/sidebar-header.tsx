@@ -7,12 +7,10 @@ import { cn } from "@/lib/utils"
 
 interface SidebarHeaderProps {
   isCollapsed?: boolean
-  productLabel?: string
 }
 
 export function SidebarHeader({
   isCollapsed = false,
-  productLabel = "StreamlineOS",
 }: SidebarHeaderProps) {
   const logoLink = (
     <Link
@@ -44,14 +42,14 @@ export function SidebarHeader({
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{logoLink}</TooltipTrigger>
           <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
-            {productLabel}
+            StreamlineOS
           </TooltipContent>
         </Tooltip>
       ) : (
         <>
           {logoLink}
           <span className="text-sm font-semibold text-sidebar-foreground truncate min-w-0">
-            {productLabel}
+            StreamlineOS
           </span>
         </>
       )}

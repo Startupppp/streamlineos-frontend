@@ -15,7 +15,6 @@ import {
   getNavGroupsForProduct,
   getProductFromPathname,
   flattenNavRoutes,
-  PRODUCT_DEFINITIONS,
   MODULE_ACCENTS,
   type ModuleAccent,
 } from "./sidebar/sidebar-nav-items"
@@ -58,12 +57,6 @@ export function AppSidebar({
   const pathname = usePathname()
   const activeProduct = getProductFromPathname(pathname)
   const accent: ModuleAccent = MODULE_ACCENTS[activeProduct]
-
-  const productLabel = useMemo(() => {
-    if (activeProduct === "home") return "StreamlineOS"
-    const definition = PRODUCT_DEFINITIONS.find((p) => p.key === activeProduct)
-    return definition?.label ?? "StreamlineOS"
-  }, [activeProduct])
 
   const { permissions } = usePermissions()
   const isAdmin = useCan("settings:manage")
@@ -193,10 +186,7 @@ export function AppSidebar({
           </button>
         )}
 
-        <SidebarHeader
-          isCollapsed={effectiveCollapsed}
-          productLabel={productLabel}
-        />
+        <SidebarHeader isCollapsed={effectiveCollapsed} />
 
         {isMobile && (
           <div className="shrink-0 px-2.5 py-2 border-b border-sidebar-border">
