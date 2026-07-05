@@ -7,4 +7,3 @@ export * from "./reports";
 export * from "./settings";
 export * from "./rates";
 export * from "./audit";
-export * from "./payroll";
