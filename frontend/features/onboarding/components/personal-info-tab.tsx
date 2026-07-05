@@ -22,27 +22,45 @@ import { usePersonalInfoMutation } from "@/lib/api/hooks/onboarding";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 import type { Variants } from "framer-motion";
 
-const personalSchema = z.object({
-  phone: z
-    .string()
-    .min(1, "Phone number is required")
-    .refine((val) => isValidPhoneNumber(val), "Invalid phone number"),
-  gender: z.enum(["MALE", "FEMALE", "OTHER"], {
-    error: "Please select a gender",
-  }),
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
-  addressLine1: z.string().optional(),
-  addressCity: z.string().optional(),
-  addressState: z.string().optional(),
-  addressPostalCode: z.string().optional(),
-  addressCountry: z.string().optional(),
-  emergencyName: z.string().min(2, "Emergency contact name is required"),
-  emergencyRelation: z.string().min(2, "Relationship is required"),
-  emergencyPhone: z
-    .string()
-    .min(1, "Emergency contact phone is required")
-    .refine((val) => isValidPhoneNumber(val), "Invalid phone number"),
-});
+const MIN_AGE_YEARS = 14;
+const MAX_AGE_YEARS = 100;
+
+const dateOfBirthSchema = z
+  .string()
+  .min(1, "Date of birth is required")
+  .refine((val) => !Number.isNaN(Date.parse(val)), "Invalid date of birth")
+  .refine((val) => new Date(val).getTime() <= Date.now(), "Date of birth cannot be in the future")
+  .refine((val) => {
+    const ageYears = (Date.now() - new Date(val).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+    return ageYears >= MIN_AGE_YEARS && ageYears <= MAX_AGE_YEARS;
+  }, `Age must be between ${MIN_AGE_YEARS} and ${MAX_AGE_YEARS} years`);
+
+const personalSchema = z
+  .object({
+    phone: z
+      .string()
+      .min(1, "Phone number is required")
+      .refine((val) => isValidPhoneNumber(val), "Invalid phone number"),
+    gender: z.enum(["MALE", "FEMALE", "OTHER"], {
+      error: "Please select a gender",
+    }),
+    dateOfBirth: dateOfBirthSchema,
+    addressLine1: z.string().optional(),
+    addressCity: z.string().optional(),
+    addressState: z.string().optional(),
+    addressPostalCode: z.string().optional(),
+    addressCountry: z.string().optional(),
+    emergencyName: z.string().min(2, "Emergency contact name is required"),
+    emergencyRelation: z.string().min(2, "Relationship is required"),
+    emergencyPhone: z
+      .string()
+      .min(1, "Emergency contact phone is required")
+      .refine((val) => isValidPhoneNumber(val), "Invalid phone number"),
+  })
+  .refine((val) => val.phone !== val.emergencyPhone, {
+    message: "Emergency contact number must be different from your own phone number",
+    path: ["emergencyPhone"],
+  });
 
 type PersonalFormValues = z.infer<typeof personalSchema>;
 
@@ -62,6 +80,7 @@ export function PersonalInfoTab({
 
   const form = useForm<PersonalFormValues>({
     resolver: zodResolver(personalSchema),
+    mode: "onChange",
     defaultValues: {
       phone: "",
       gender: undefined,
@@ -118,6 +137,7 @@ export function PersonalInfoTab({
                     id="phone"
                     defaultCountry="IN"
                     placeholder="Enter phone number"
+                    maxLength={17}
                     value={field.value}
                     onChange={(v) => field.onChange(v ?? "")}
                     aria-required="true"
@@ -142,6 +162,7 @@ export function PersonalInfoTab({
                     value={field.value}
                     onChange={field.onChange}
                     toDate={new Date()}
+                    disabledDays={(date) => date > new Date()}
                     placeholder="Select date of birth"
                   />
                 )}
@@ -292,6 +313,7 @@ export function PersonalInfoTab({
                     id="emergencyPhone"
                     defaultCountry="IN"
                     placeholder="Enter phone number"
+                    maxLength={17}
                     value={field.value}
                     onChange={(v) => field.onChange(v ?? "")}
                     aria-required="true"
