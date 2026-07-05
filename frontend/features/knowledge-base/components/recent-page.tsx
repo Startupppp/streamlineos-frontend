@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, Clock } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPagesRecent } from "@/hooks/api/kb";
 import { pageHref, KB_FAVORITES } from "@/features/knowledge-base/lib/knowledge-routes";
 import type { KbPage } from "@/hooks/api/kb/pages";
+import { KbClockIcon, KbFileTextIcon } from "@/features/knowledge-base/lib/kb-icons";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -27,11 +27,11 @@ function RecentRow({ page }: { page: KbPage }) {
       className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
     >
       <span className="text-base shrink-0 w-5 text-center">
-        {page.icon ?? <FileText className="h-4 w-4 text-muted-foreground" />}
+        {page.icon ?? <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />}
       </span>
       <span className="flex-1 text-sm truncate font-medium">{page.title || "Untitled"}</span>
       <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
-        <Clock className="h-3 w-3" />
+        <KbClockIcon className="h-3 w-3" />
         {timeAgo(page.updatedAt)}
       </span>
     </Link>
@@ -59,7 +59,7 @@ export default function RecentPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<Clock className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbClockIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="Could not load recent pages"
           description="There was a problem fetching your recently visited pages."
         />
@@ -67,7 +67,7 @@ export default function RecentPage() {
 
       {!isLoading && !isError && pages.length === 0 && (
         <EmptyState
-          illustration={<Clock className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbClockIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="No recent pages"
           description="Pages you visit will appear here."
           action={{ label: "Browse favorites", href: KB_FAVORITES }}

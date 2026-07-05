@@ -1,6 +1,5 @@
 "use client";
 
-import { BarChart2, Search, ThumbsUp, FileText, Eye, Lock, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -18,6 +17,15 @@ import {
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import {
+  KbBarChart2Icon,
+  KbSearchIcon,
+  KbThumbsUpIcon,
+  KbFileTextIcon,
+  KbEyeIcon,
+  KbLockIcon,
+  KbPlusIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import type { KbNoResultRow, KbPageAnalyticsRow, KbGapRow } from "@/types/kb";
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -95,7 +103,7 @@ function GapTableRow({
         onClick={handleClick}
         disabled={isCreating || !row.query}
       >
-        <Plus className="h-3 w-3" />
+        <KbPlusIcon className="h-3 w-3" />
         Create page
       </Button>
     </div>
@@ -146,7 +154,7 @@ export default function KnowledgeAnalyticsPage() {
     return (
       <PageWrapper title="Analytics">
         <EmptyState
-          illustration={<Lock className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbLockIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="Access restricted"
           description="You don't have permission to view knowledge base analytics."
         />
@@ -166,14 +174,14 @@ export default function KnowledgeAnalyticsPage() {
     <PageWrapper title="Analytics">
       {overview && (
         <StatCardGrid cols={5} className="mb-6">
-          <StatCard label="Total pages" value={overview.totalCount} icon={FileText} tone="default" />
-          <StatCard label="Total views" value={overview.totalViews} icon={Eye} tone="blue" />
-          <StatCard label="Searches" value={overview.searches} icon={Search} tone="violet" />
-          <StatCard label="Helpful votes" value={overview.helpfulUp} icon={ThumbsUp} tone="emerald" />
+          <StatCard label="Total pages" value={overview.totalCount} icon={KbFileTextIcon} tone="default" />
+          <StatCard label="Total views" value={overview.totalViews} icon={KbEyeIcon} tone="blue" />
+          <StatCard label="Searches" value={overview.searches} icon={KbSearchIcon} tone="violet" />
+          <StatCard label="Helpful votes" value={overview.helpfulUp} icon={KbThumbsUpIcon} tone="emerald" />
           <StatCard
             label="Search success"
             value={`${Math.round(overview.searchSuccessRate)}%`}
-            icon={BarChart2}
+            icon={KbBarChart2Icon}
             tone="amber"
           />
         </StatCardGrid>
@@ -189,7 +197,7 @@ export default function KnowledgeAnalyticsPage() {
           </div>
           {noResults.length === 0 ? (
             <EmptyState
-              illustration={<Search className="h-6 w-6 text-muted-foreground/40" />}
+              illustration={<KbSearchIcon className="h-6 w-6 text-muted-foreground/40" />}
               title="No zero-result searches"
               description="All recent searches returned at least one result."
               compact
@@ -217,7 +225,7 @@ export default function KnowledgeAnalyticsPage() {
           </div>
           {pageAnalytics.length === 0 ? (
             <EmptyState
-              illustration={<FileText className="h-6 w-6 text-muted-foreground/40" />}
+              illustration={<KbFileTextIcon className="h-6 w-6 text-muted-foreground/40" />}
               title="No page data yet"
               description="Page view data will appear here once users start reading pages."
               compact
@@ -254,7 +262,7 @@ export default function KnowledgeAnalyticsPage() {
           </div>
           {gaps.length === 0 ? (
             <EmptyState
-              illustration={<Search className="h-6 w-6 text-muted-foreground/40" />}
+              illustration={<KbSearchIcon className="h-6 w-6 text-muted-foreground/40" />}
               title="No knowledge gaps"
               description="All searches are finding relevant content."
               compact

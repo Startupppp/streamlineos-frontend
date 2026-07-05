@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Check, Edit2, X, Loader2 } from "lucide-react";
+import {
+  KbCheckIcon,
+  KbEdit2Icon,
+  KbLoader2Icon,
+  KbMessageSquareIcon,
+  KbXIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -141,7 +147,7 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
                   className="text-xs text-muted-foreground hover:text-green-600 transition-colors"
                   onClick={handleResolve}
                 >
-                  <Check className="h-3 w-3 inline mr-0.5" />
+                  <KbCheckIcon className="h-3 w-3 inline mr-0.5" />
                   Resolve
                 </button>
               )}
@@ -149,14 +155,14 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 onClick={handleStartEdit}
               >
-                <Edit2 className="h-3 w-3 inline mr-0.5" />
+                <KbEdit2Icon className="h-3 w-3 inline mr-0.5" />
                 Edit
               </button>
               <button
                 className="text-xs text-muted-foreground hover:text-destructive transition-colors"
                 onClick={handleDelete}
               >
-                <X className="h-3 w-3 inline mr-0.5" />
+                <KbXIcon className="h-3 w-3 inline mr-0.5" />
                 Delete
               </button>
             </div>
@@ -226,7 +232,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
       <SheetContent side="right" className="p-0 flex flex-col gap-0 sm:max-w-md">
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
+            <KbMessageSquareIcon className="h-4 w-4" />
             Comments
           </SheetTitle>
         </SheetHeader>
@@ -288,7 +294,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
               <span>Replying to comment…</span>
               <button onClick={handleClearReply} className="ml-auto hover:text-foreground transition-colors">
-                <X className="h-3 w-3" />
+                <KbXIcon className="h-3 w-3" />
               </button>
             </div>
           )}
@@ -305,7 +311,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
               className="h-8"
             >
               {createComment.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <KbLoader2Icon className="h-4 w-4 animate-spin" />
               ) : (
                 "Post comment"
               )}

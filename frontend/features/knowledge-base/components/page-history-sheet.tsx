@@ -3,7 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { History, RotateCcw, ChevronRight, Loader2 } from "lucide-react";
+import {
+  KbChevronRightIcon,
+  KbHistoryIcon,
+  KbLoader2Icon,
+  KbRotateCcwIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -96,7 +101,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
-              <History className="h-4 w-4" />
+              <KbHistoryIcon className="h-4 w-4" />
               {selectedVersion ? `Version ${selectedVersion}` : "Page history"}
             </SheetTitle>
             {selectedVersion && (
@@ -141,7 +146,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                             {formatRelativeTime(v.createdAt)}
                           </p>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                        <KbChevronRightIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                       </div>
                     </button>
                   ))}
@@ -186,9 +191,9 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                 size="sm"
               >
                 {restoreVersion.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <KbLoader2Icon className="h-4 w-4 animate-spin" />
                 ) : (
-                  <RotateCcw className="h-4 w-4" />
+                  <KbRotateCcwIcon className="h-4 w-4" />
                 )}
                 Restore this version
               </Button>

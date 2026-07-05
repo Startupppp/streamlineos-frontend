@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -9,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPagesTree } from "@/hooks/api/kb";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import { KbUsersIcon } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
 
 const STATUS_BADGE_CLASS: Record<string, string> = {
@@ -81,7 +81,7 @@ export default function SharedPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbUsersIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="Could not load pages"
           description="There was a problem fetching shared pages."
         />
@@ -89,7 +89,7 @@ export default function SharedPage() {
 
       {!isLoading && !isError && sharedNodes.length === 0 && (
         <EmptyState
-          illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbUsersIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="Nothing shared with you"
           description="Pages created by others will appear here."
         />

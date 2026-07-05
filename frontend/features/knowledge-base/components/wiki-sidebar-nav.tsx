@@ -4,20 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  BarChart2,
-  ClipboardCheck,
-  Clock,
-  LayoutGrid,
-  LayoutTemplate,
-  Lock,
-  Search,
-  Settings,
-  Star,
-  Trash2,
-  Upload,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+  KbBarChart2Icon,
+  KbClipboardCheckIcon,
+  KbClockIcon,
+  KbLayoutGridIcon,
+  KbLayoutTemplateIcon,
+  KbLockIcon,
+  KbSearchIcon,
+  KbSettingsIcon,
+  KbStarIcon,
+  KbTrash2Icon,
+  KbUploadIcon,
+  KbUsersIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
+import type { KbIconComponent } from "@/features/knowledge-base/lib/kb-icons";
 import {
   Accordion,
   AccordionContent,
@@ -47,7 +47,7 @@ const WIKI_NAV_GROUPS_KEY = "wiki-nav-groups";
 interface WikiNavItem {
   label: string;
   href: string;
-  icon: LucideIcon;
+  icon: KbIconComponent;
 }
 
 interface WikiNavGroup {
@@ -70,8 +70,8 @@ interface WikiSidebarFooterProps {
 
 function buildPrimaryItems(): WikiNavItem[] {
   return [
-    { label: "Recent", href: KB_RECENT, icon: Clock },
-    { label: "Favorites", href: KB_FAVORITES, icon: Star },
+    { label: "Recent", href: KB_RECENT, icon: KbClockIcon },
+    { label: "Favorites", href: KB_FAVORITES, icon: KbStarIcon },
   ];
 }
 
@@ -84,21 +84,21 @@ function buildNavGroups({
   "canViewAnalytics" | "canViewReviews" | "canManageSettings"
 >): WikiNavGroup[] {
   const manageItems: WikiNavItem[] = [
-    { label: "Templates", href: KB_TEMPLATES, icon: LayoutTemplate },
+    { label: "Templates", href: KB_TEMPLATES, icon: KbLayoutTemplateIcon },
   ];
 
   if (canViewReviews) {
-    manageItems.push({ label: "Reviews", href: KB_REVIEWS, icon: ClipboardCheck });
+    manageItems.push({ label: "Reviews", href: KB_REVIEWS, icon: KbClipboardCheckIcon });
   }
 
-  manageItems.push({ label: "Import", href: KB_IMPORT, icon: Upload });
+  manageItems.push({ label: "Import", href: KB_IMPORT, icon: KbUploadIcon });
 
   if (canViewAnalytics) {
-    manageItems.push({ label: "Analytics", href: KB_ANALYTICS, icon: BarChart2 });
+    manageItems.push({ label: "Analytics", href: KB_ANALYTICS, icon: KbBarChart2Icon });
   }
 
   if (canManageSettings) {
-    manageItems.push({ label: "Settings", href: KB_SETTINGS, icon: Settings });
+    manageItems.push({ label: "Settings", href: KB_SETTINGS, icon: KbSettingsIcon });
   }
 
   return [
@@ -106,9 +106,9 @@ function buildNavGroups({
       id: "library",
       label: "Library",
       items: [
-        { label: "Private", href: KB_PRIVATE, icon: Lock },
-        { label: "Shared", href: KB_SHARED, icon: Users },
-        { label: "Spaces", href: KB_SPACES, icon: LayoutGrid },
+        { label: "Private", href: KB_PRIVATE, icon: KbLockIcon },
+        { label: "Shared", href: KB_SHARED, icon: KbUsersIcon },
+        { label: "Spaces", href: KB_SPACES, icon: KbLayoutGridIcon },
       ],
     },
     {
@@ -206,7 +206,7 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
               onClick={onQuickFind}
               aria-label="Quick find"
             >
-              <Search className="size-4" />
+              <KbSearchIcon className="size-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8} className="text-xs">
@@ -226,7 +226,7 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
-              <Trash2 className="size-4" />
+              <KbTrash2Icon className="size-4" />
             </Link>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8} className="text-xs">
@@ -246,7 +246,7 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
         className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
         onClick={onQuickFind}
       >
-        <Search className="size-4" />
+        <KbSearchIcon className="size-4" />
         <span>Quick find</span>
         <span className="ml-auto text-xs text-muted-foreground">⌘K</span>
       </Button>
@@ -260,7 +260,7 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
             : "text-muted-foreground hover:bg-muted hover:text-foreground",
         )}
       >
-        <Trash2 className="size-4" />
+        <KbTrash2Icon className="size-4" />
         <span>Trash</span>
       </Link>
     </div>

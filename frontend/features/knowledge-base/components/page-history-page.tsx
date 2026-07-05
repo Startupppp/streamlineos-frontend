@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Clock, RotateCcw, Loader2, ArrowRight } from "lucide-react";
+import {
+  KbArrowRightIcon,
+  KbClockIcon,
+  KbLoader2Icon,
+  KbRotateCcwIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -208,7 +213,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                           </p>
                         </div>
                         {selectedVersionNumber === v.versionNumber && (
-                          <ArrowRight className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                          <KbArrowRightIcon className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                         )}
                       </div>
                     </button>
@@ -221,7 +226,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
           <div className="flex-1 min-w-0 flex flex-col min-h-0">
             {!selectedVersionNumber ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[20rem] border border-dashed border-border rounded-xl bg-card gap-3">
-                <Clock className="h-8 w-8 text-muted-foreground/40" />
+                <KbClockIcon className="h-8 w-8 text-muted-foreground/40" />
                 <p className="text-sm text-muted-foreground">Select a version to preview</p>
               </div>
             ) : (
@@ -243,9 +248,9 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                       className="shrink-0 gap-1.5 h-7 text-xs"
                     >
                       {restoreVersion.isPending ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <KbLoader2Icon className="h-3 w-3 animate-spin" />
                       ) : (
-                        <RotateCcw className="h-3 w-3" />
+                        <KbRotateCcwIcon className="h-3 w-3" />
                       )}
                       Restore
                     </Button>

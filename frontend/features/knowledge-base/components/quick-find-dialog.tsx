@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Loader2 } from "lucide-react";
 import {
   CommandDialog,
   CommandInput,
@@ -14,6 +13,7 @@ import {
 import { useKbPagesSearch } from "@/hooks/api/kb";
 import type { KbPageSearchResult } from "@/hooks/api/kb/pages";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import { KbFileTextIcon, KbLoader2Icon } from "@/features/knowledge-base/lib/kb-icons";
 
 interface QuickFindDialogProps {
   open: boolean;
@@ -69,7 +69,7 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
       <CommandList>
         {isFetching && debouncedQ.length > 0 && (
           <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <KbLoader2Icon className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
         )}
         {!isFetching && debouncedQ.length > 0 && results.length === 0 && (
@@ -84,7 +84,7 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
                 onSelect={handleResultSelect}
               >
                 <span className="mr-2 text-base">
-                  {result.icon ?? <FileText className="h-4 w-4" />}
+                  {result.icon ?? <KbFileTextIcon className="h-4 w-4" />}
                 </span>
                 <div className="flex flex-col min-w-0">
                   <span className="font-medium truncate">{result.title || "Untitled"}</span>

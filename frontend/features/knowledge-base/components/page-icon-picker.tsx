@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Smile, X } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { KbSmileIcon, KbXIcon } from "@/features/knowledge-base/lib/kb-icons";
 
 const EMOJI_PRESETS = [
   "📄","📝","📋","📌","📍","🔖","🏷️","📁","📂","🗂️",
@@ -60,7 +60,7 @@ export default function PageIconPicker({
             size="sm"
             className="text-muted-foreground gap-1 text-xs h-7"
           >
-            <Smile className="h-3.5 w-3.5" />
+            <KbSmileIcon className="h-3.5 w-3.5" />
             Add icon
           </Button>
         )}
@@ -76,7 +76,7 @@ export default function PageIconPicker({
               className="h-6 text-xs gap-1 text-muted-foreground"
               onClick={handleRemoveIcon}
             >
-              <X className="h-3 w-3" />
+              <KbXIcon className="h-3 w-3" />
               Remove
             </Button>
           )}

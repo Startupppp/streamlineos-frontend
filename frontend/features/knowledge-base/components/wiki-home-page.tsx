@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, FileText, Clock, Star } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { EmptyKnowledgeIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
@@ -21,6 +20,12 @@ import { useCan } from "@/hooks/api/access";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import {
+  KbClockIcon,
+  KbFileTextIcon,
+  KbPlusIcon,
+  KbStarIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -48,7 +53,7 @@ function PageCard({ id, icon, title, updatedAt }: PageCardProps) {
     >
       <div className="flex items-start gap-3">
         <span className="text-xl shrink-0">
-          {icon ?? <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />}
+          {icon ?? <KbFileTextIcon className="h-5 w-5 text-muted-foreground mt-0.5" />}
         </span>
         <div className="min-w-0 flex-1">
           <p className="font-medium text-sm truncate">{title || "Untitled"}</p>
@@ -90,7 +95,7 @@ export default function WikiHomePage() {
 
   const newPageAction = canCreate ? (
     <Button onClick={handleNewPage} disabled={createPage.isPending} size="sm">
-      <Plus className="h-4 w-4 mr-1" />
+      <KbPlusIcon className="h-4 w-4 mr-1" />
       New page
     </Button>
   ) : undefined;
@@ -126,7 +131,7 @@ export default function WikiHomePage() {
       {recentPages.length > 0 && (
         <section className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <KbClockIcon className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">Recently visited</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -146,7 +151,7 @@ export default function WikiHomePage() {
       {favoritePages.length > 0 && (
         <section className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <Star className="h-4 w-4 text-muted-foreground" />
+            <KbStarIcon className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">Favorites</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -179,7 +184,7 @@ export default function WikiHomePage() {
                   className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                 >
                   <span className="text-base shrink-0">
-                    {node.icon ?? <FileText className="h-4 w-4 text-muted-foreground" />}
+                    {node.icon ?? <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />}
                   </span>
                   <span className="flex-1 text-sm truncate">{node.title || "Untitled"}</span>
                 </Link>

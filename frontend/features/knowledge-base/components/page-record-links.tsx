@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,7 @@ import {
   useRemoveKbPageRecordLink,
   type KbPageRecordLink,
 } from "@/hooks/api/kb/record-links";
+import { KbXIcon } from "@/features/knowledge-base/lib/kb-icons";
 
 const TARGET_TYPE_LABELS: Record<string, string> = {
   crm_lead: "CRM Lead",
@@ -66,7 +66,7 @@ function RecordLinkRow({ link, pageId, canUpdate, isRemoving, onRemove }: Record
           disabled={isRemoving}
           aria-label="Remove link"
         >
-          <X className="h-3 w-3" />
+          <KbXIcon className="h-3 w-3" />
         </Button>
       )}
     </div>

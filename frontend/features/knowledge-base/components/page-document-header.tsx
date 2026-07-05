@@ -5,22 +5,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
-  Star,
-  MessageSquare,
-  History,
-  Link2,
-  MoreHorizontal,
-  Lock,
-  Unlock,
-  Copy,
-  Trash2,
-  MoveRight,
-  FileDown,
-  Loader2,
-  ChevronRight,
-  Save,
-  Info,
-} from "lucide-react";
+  KbChevronRightIcon,
+  KbCopyIcon,
+  KbFileDownIcon,
+  KbHistoryIcon,
+  KbInfoIcon,
+  KbLink2Icon,
+  KbLoader2Icon,
+  KbLockIcon,
+  KbMessageSquareIcon,
+  KbMoreHorizontalIcon,
+  KbMoveRightIcon,
+  KbSaveIcon,
+  KbStarIcon,
+  KbTrash2Icon,
+  KbUnlockIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import { Badge } from "@/components/ui/badge";
 import PageMetadataSheet from "./page-metadata-sheet";
 import { Button } from "@/components/ui/button";
@@ -236,7 +236,7 @@ export default function PageDocumentHeader({
           </Link>
           {ancestors.map((a) => (
             <span key={a.id} className="flex items-center gap-1 shrink-0">
-              <ChevronRight className="h-3 w-3" />
+              <KbChevronRightIcon className="h-3 w-3" />
               <Link
                 href={pageHref(a.id)}
                 className="hover:text-foreground transition-colors truncate max-w-[120px]"
@@ -246,7 +246,7 @@ export default function PageDocumentHeader({
             </span>
           ))}
           <span className="flex items-center gap-1 shrink-0">
-            <ChevronRight className="h-3 w-3" />
+            <KbChevronRightIcon className="h-3 w-3" />
             <span className="text-foreground font-medium truncate max-w-[200px]">
               {page.title || "Untitled"}
             </span>
@@ -283,7 +283,7 @@ export default function PageDocumentHeader({
         <div className="flex items-center gap-1 shrink-0">
           {(saveState === "pending" || saveState === "saving") && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground mr-2">
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <KbLoader2Icon className="h-3 w-3 animate-spin" />
               Saving…
             </span>
           )}
@@ -298,7 +298,7 @@ export default function PageDocumentHeader({
             onClick={handleOpenMetaSheet}
             aria-label="Page settings"
           >
-            <Info className="h-4 w-4" />
+            <KbInfoIcon className="h-4 w-4" />
           </Button>
 
           <Button
@@ -308,7 +308,7 @@ export default function PageDocumentHeader({
             onClick={handleToggleFavorite}
             aria-label={page.isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
-            <Star
+            <KbStarIcon
               className={`h-4 w-4 ${page.isFavorite ? "fill-amber-500" : ""}`}
             />
           </Button>
@@ -320,7 +320,7 @@ export default function PageDocumentHeader({
             onClick={handleOpenComments}
             aria-label="Open comments"
           >
-            <MessageSquare className="h-4 w-4" />
+            <KbMessageSquareIcon className="h-4 w-4" />
           </Button>
 
           <Button
@@ -330,7 +330,7 @@ export default function PageDocumentHeader({
             onClick={handleOpenHistory}
             aria-label="View page history"
           >
-            <History className="h-4 w-4" />
+            <KbHistoryIcon className="h-4 w-4" />
           </Button>
 
           {canUpdate && <PageSharePopover page={page} />}
@@ -338,7 +338,7 @@ export default function PageDocumentHeader({
           <Popover open={backlinksOpen} onOpenChange={setBacklinksOpen}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View backlinks">
-                <Link2 className="h-4 w-4" />
+                <KbLink2Icon className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-64 p-3">
@@ -370,39 +370,39 @@ export default function PageDocumentHeader({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
-                <MoreHorizontal className="h-4 w-4" />
+                <KbMoreHorizontalIcon className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               {canCreate && (
                 <DropdownMenuItem onSelect={handleDuplicate}>
-                  <Copy className="h-4 w-4 mr-2" />
+                  <KbCopyIcon className="h-4 w-4 mr-2" />
                   Duplicate
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onSelect={handleOpenMove}>
-                <MoveRight className="h-4 w-4 mr-2" />
+                <KbMoveRightIcon className="h-4 w-4 mr-2" />
                 Move
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {canManage && (
                 <DropdownMenuItem onSelect={handleToggleLock}>
                   {page.isLocked ? (
-                    <Unlock className="h-4 w-4 mr-2" />
+                    <KbUnlockIcon className="h-4 w-4 mr-2" />
                   ) : (
-                    <Lock className="h-4 w-4 mr-2" />
+                    <KbLockIcon className="h-4 w-4 mr-2" />
                   )}
                   {page.isLocked ? "Unlock page" : "Lock page"}
                 </DropdownMenuItem>
               )}
               {canTemplates && (
                 <DropdownMenuItem onSelect={handleOpenSaveAsTemplate}>
-                  <Save className="h-4 w-4 mr-2" />
+                  <KbSaveIcon className="h-4 w-4 mr-2" />
                   Save as template
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onSelect={handleExportHtml}>
-                <FileDown className="h-4 w-4 mr-2" />
+                <KbFileDownIcon className="h-4 w-4 mr-2" />
                 Export HTML
               </DropdownMenuItem>
               {canDelete && (
@@ -412,7 +412,7 @@ export default function PageDocumentHeader({
                     onSelect={handleDelete}
                     className="text-destructive focus:text-destructive"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <KbTrash2Icon className="h-4 w-4 mr-2" />
                     Delete
                   </DropdownMenuItem>
                 </>

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Image as ImageIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
+import { KbImageIcon, KbXIcon } from "@/features/knowledge-base/lib/kb-icons";
 
 const GRADIENT_PRESETS = [
   { key: "slate", css: "linear-gradient(135deg, #1e293b 0%, #334155 100%)" },
@@ -100,7 +100,7 @@ export default function PageCover({
               size="sm"
               className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-muted-foreground gap-1"
             >
-              <ImageIcon className="h-3 w-3" />
+              <KbImageIcon className="h-3 w-3" />
               Add cover
             </Button>
           </PopoverTrigger>
@@ -159,7 +159,7 @@ export default function PageCover({
             className="text-xs h-7"
             onClick={handleRemoveCover}
           >
-            <X className="h-3 w-3 mr-1" />
+            <KbXIcon className="h-3 w-3 mr-1" />
             Remove
           </Button>
         </div>

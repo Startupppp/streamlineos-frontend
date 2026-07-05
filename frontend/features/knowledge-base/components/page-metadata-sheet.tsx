@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Info } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,7 @@ import {
 } from "@/hooks/api/kb/pages";
 import { PageRecordLinks } from "./page-record-links";
 import { apiClient } from "@/lib/api-client";
+import { KbInfoIcon } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";
 
 type OrgUser = { id: string; name: string; email: string };
@@ -86,7 +86,7 @@ export function PageMetadataSheetTrigger({ onClick }: PageMetadataSheetTriggerPr
       onClick={onClick}
       aria-label="Page settings"
     >
-      <Info className="h-4 w-4" />
+      <KbInfoIcon className="h-4 w-4" />
     </Button>
   );
 }

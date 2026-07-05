@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Lock, CheckCircle, ShieldCheck, Users, ExternalLink, Database } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -22,6 +21,14 @@ import {
   useArticleMigrationPreview,
   useRunArticleMigration,
 } from "@/hooks/api/kb/article-migration";
+import {
+  KbLockIcon,
+  KbCheckCircleIcon,
+  KbShieldCheckIcon,
+  KbUsersIcon,
+  KbExternalLinkIcon,
+  KbDatabaseIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 
 type ReviewIntervalRow = {
   contentType: string;
@@ -64,7 +71,7 @@ function ModuleStatusSection() {
       />
       <div className="px-4 py-3 flex items-center gap-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-50 shrink-0">
-          <CheckCircle className="h-4 w-4 text-emerald-600" />
+          <KbCheckCircleIcon className="h-4 w-4 text-emerald-600" />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">Knowledge (KB)</p>
@@ -118,7 +125,7 @@ function QuickLinksSection() {
           className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
         >
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted shrink-0">
-            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+            <KbUsersIcon className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground">Roles &amp; permissions</p>
@@ -126,14 +133,14 @@ function QuickLinksSection() {
               Configure who can view, create, manage, and review knowledge pages.
             </p>
           </div>
-          <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
+          <KbExternalLinkIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
         </Link>
         <Link
           href="/settings/modules"
           className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
         >
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted shrink-0">
-            <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
+            <KbShieldCheckIcon className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground">Modules</p>
@@ -141,7 +148,7 @@ function QuickLinksSection() {
               Manage which product modules are enabled for your organization.
             </p>
           </div>
-          <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
+          <KbExternalLinkIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
         </Link>
       </div>
     </SectionCard>
@@ -225,7 +232,7 @@ function ArticleMigrationSection() {
 
           <div className="flex items-center gap-2 pt-1">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-50 shrink-0">
-              <Database className="h-3.5 w-3.5 text-blue-600" />
+              <KbDatabaseIcon className="h-3.5 w-3.5 text-blue-600" />
             </div>
             <p className="text-xs text-muted-foreground flex-1">
               Migrated pages land as root-level <span className="font-medium">Support Article</span> pages with{" "}
@@ -281,7 +288,7 @@ export default function KnowledgeSettingsPage() {
     return (
       <PageWrapper title="Settings">
         <EmptyState
-          illustration={<Lock className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbLockIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="Access restricted"
           description="You don't have permission to view knowledge base settings."
         />

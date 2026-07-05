@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { ClipboardCheck, Lock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -34,6 +33,13 @@ import {
 import type { KbPageReview, KbReviewStatus, KbReviewType } from "@/hooks/api/kb/page-reviews";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import { cn } from "@/lib/utils";
+import {
+  KbClipboardCheckIcon,
+  KbLockIcon,
+  KbCheckCircleIcon,
+  KbXCircleIcon,
+  KbAlertCircleIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 
 type StatusFilter = "all" | KbReviewStatus;
 type TypeFilter = "all" | KbReviewType;
@@ -55,7 +61,7 @@ function StatusBadge({ status }: { status: KbReviewStatus }) {
   if (status === "pending") {
     return (
       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200/70">
-        <AlertCircle className="h-3 w-3" />
+        <KbAlertCircleIcon className="h-3 w-3" />
         Pending
       </span>
     );
@@ -63,14 +69,14 @@ function StatusBadge({ status }: { status: KbReviewStatus }) {
   if (status === "approved") {
     return (
       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70">
-        <CheckCircle className="h-3 w-3" />
+        <KbCheckCircleIcon className="h-3 w-3" />
         Approved
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-red-50 text-red-700 border border-red-200/70">
-      <XCircle className="h-3 w-3" />
+      <KbXCircleIcon className="h-3 w-3" />
       Rejected
     </span>
   );
@@ -356,7 +362,7 @@ export default function ReviewsPage() {
     return (
       <PageWrapper title="Reviews">
         <EmptyState
-          illustration={<Lock className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbLockIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="Access restricted"
           description="You don't have permission to view knowledge base reviews."
         />
@@ -400,13 +406,13 @@ export default function ReviewsPage() {
         <TableSkeleton />
       ) : isError ? (
         <EmptyState
-          illustration={<AlertCircle className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbAlertCircleIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="Failed to load reviews"
           description="An error occurred while fetching reviews."
         />
       ) : reviews.length === 0 ? (
         <EmptyState
-          illustration={<ClipboardCheck className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbClipboardCheckIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="No reviews"
           description={
             statusFilter !== "all" || typeFilter !== "all"

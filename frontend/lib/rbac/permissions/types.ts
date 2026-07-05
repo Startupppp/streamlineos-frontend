@@ -210,4 +210,6 @@ export type PermissionKey =
   | "payroll:reports:export"
   | "payroll:settings:manage"
   | "payroll:policies:manage"
-  | "payroll:policies:view";
+  | "payroll:policies:view"
+  | "integrations:connections:view"
+  | "integrations:connections:manage";

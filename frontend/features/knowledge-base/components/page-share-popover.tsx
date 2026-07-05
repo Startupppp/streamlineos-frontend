@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, Lock, Building2, Globe, Check, Copy } from "lucide-react";
+import {
+  KbBuilding2Icon,
+  KbCheckIcon,
+  KbCopyIcon,
+  KbGlobeIcon,
+  KbLockIcon,
+  KbShare2Icon,
+  type KbIconComponent,
+} from "@/features/knowledge-base/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { toast } from "sonner";
@@ -12,13 +20,13 @@ type Visibility = "private" | "org" | "public";
 
 const VISIBILITY_OPTIONS: Array<{
   value: Visibility;
-  icon: typeof Lock;
+  icon: KbIconComponent;
   label: string;
   description: string;
 }> = [
-  { value: "private", icon: Lock, label: "Private", description: "Only you can access" },
-  { value: "org", icon: Building2, label: "Team", description: "Everyone in the workspace" },
-  { value: "public", icon: Globe, label: "Public", description: "Anyone with the link" },
+  { value: "private", icon: KbLockIcon, label: "Private", description: "Only you can access" },
+  { value: "org", icon: KbBuilding2Icon, label: "Team", description: "Everyone in the workspace" },
+  { value: "public", icon: KbGlobeIcon, label: "Public", description: "Anyone with the link" },
 ];
 
 interface PageSharePopoverProps {
@@ -59,7 +67,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Share page">
-          <Share2 className="h-4 w-4" />
+          <KbShare2Icon className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 max-w-[85vw] p-0">
@@ -82,7 +90,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
                 <span className="block text-xs text-muted-foreground">{description}</span>
               </span>
               {currentVisibility === value && (
-                <Check className="h-4 w-4 shrink-0 text-blue-600" />
+                <KbCheckIcon className="h-4 w-4 shrink-0 text-blue-600" />
               )}
             </button>
           ))}
@@ -102,7 +110,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
                   className="h-7 px-2 shrink-0 text-xs"
                   onClick={handleCopyLink}
                 >
-                  <Copy className="h-3 w-3 mr-1" />
+                  <KbCopyIcon className="h-3 w-3 mr-1" />
                   Copy
                 </Button>
               </div>

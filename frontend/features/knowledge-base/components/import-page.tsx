@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Upload, FileText, Clipboard, X, Loader2, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
@@ -16,6 +15,14 @@ import { useCan } from "@/hooks/api/access";
 import { useKbPagesTree } from "@/hooks/api/kb";
 import { useImportKbPages, useKbImportJobs } from "@/hooks/api/kb";
 import { KNOWLEDGE_BASE } from "@/features/knowledge-base/lib/knowledge-routes";
+import {
+  KbUploadIcon,
+  KbFileTextIcon,
+  KbClipboardIcon,
+  KbXIcon,
+  KbLoader2Icon,
+  KbTriangleAlertIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import { ExportJobsCard } from "./export-jobs-card";
 import type { KbImportJob } from "@/hooks/api/kb/import-export";
 
@@ -50,7 +57,7 @@ function ImportJobRow({ job }: { job: KbImportJob }) {
 
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card text-sm">
-      <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       <span className="flex-1 truncate">{sourceLabel} import</span>
       <span className="text-xs text-muted-foreground">
         {job.succeededItems}/{job.totalItems} pages
@@ -177,7 +184,7 @@ export default function ImportPage() {
     return (
       <PageWrapper title="Import & Export">
         <EmptyState
-          illustration={<Upload className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbUploadIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="Access denied"
           description="You don't have permission to import pages. Ask an admin to grant kb:pages:import."
         />
@@ -197,7 +204,7 @@ export default function ImportPage() {
                 onClick={() => handleModeChange("files")}
                 className="h-8 gap-1.5"
               >
-                <Upload className="h-3.5 w-3.5" />
+                <KbUploadIcon className="h-3.5 w-3.5" />
                 Markdown files
               </Button>
               <Button
@@ -206,7 +213,7 @@ export default function ImportPage() {
                 onClick={() => handleModeChange("paste")}
                 className="h-8 gap-1.5"
               >
-                <Clipboard className="h-3.5 w-3.5" />
+                <KbClipboardIcon className="h-3.5 w-3.5" />
                 Paste text
               </Button>
             </div>
@@ -306,7 +313,7 @@ export default function ImportPage() {
                         <span className="w-20">
                           {hasDupe(item.title) && (
                             <span className="flex items-center gap-1 text-xs text-amber-600">
-                              <TriangleAlert className="h-3 w-3" />
+                              <KbTriangleAlertIcon className="h-3 w-3" />
                               Duplicate
                             </span>
                           )}
@@ -318,7 +325,7 @@ export default function ImportPage() {
                           className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                           aria-label="Remove"
                         >
-                          <X className="h-3.5 w-3.5" />
+                          <KbXIcon className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     ))}
@@ -332,9 +339,9 @@ export default function ImportPage() {
                   className="h-8 gap-1.5"
                 >
                   {importMutation.isPending ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <KbLoader2Icon className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Upload className="h-3.5 w-3.5" />
+                    <KbUploadIcon className="h-3.5 w-3.5" />
                   )}
                   Import {items.length} page{items.length === 1 ? "" : "s"}
                 </Button>
@@ -355,7 +362,7 @@ export default function ImportPage() {
           {!jobsLoading && importJobs.length === 0 && (
             <EmptyState
               compact
-              illustration={<FileText className="h-5 w-5 text-muted-foreground/40" />}
+              illustration={<KbFileTextIcon className="h-5 w-5 text-muted-foreground/40" />}
               title="No imports yet"
               description="Import history will appear here after your first import."
             />

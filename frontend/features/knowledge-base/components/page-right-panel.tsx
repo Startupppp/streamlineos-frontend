@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PanelRightOpen, PanelRightClose, FileText } from "lucide-react";
+import {
+  KbFileTextIcon,
+  KbPanelRightCloseIcon,
+  KbPanelRightOpenIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useKbPageBacklinks } from "@/hooks/api/kb";
@@ -79,9 +83,9 @@ export default function PageRightPanel({
           aria-label={collapsed ? "Open details panel" : "Close details panel"}
         >
           {collapsed ? (
-            <PanelRightOpen className="h-4 w-4" />
+            <KbPanelRightOpenIcon className="h-4 w-4" />
           ) : (
-            <PanelRightClose className="h-4 w-4" />
+            <KbPanelRightCloseIcon className="h-4 w-4" />
           )}
         </Button>
       </div>
@@ -147,7 +151,7 @@ export default function PageRightPanel({
                     onClick={() => handleBacklinkClick(bl.id)}
                   >
                     <span className="shrink-0 text-sm">
-                      {bl.icon ?? <FileText className="h-3 w-3 text-muted-foreground" />}
+                      {bl.icon ?? <KbFileTextIcon className="h-3 w-3 text-muted-foreground" />}
                     </span>
                     <span className="truncate">{bl.title || "Untitled"}</span>
                   </button>

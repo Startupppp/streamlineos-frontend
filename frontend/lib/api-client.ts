@@ -110,6 +110,7 @@ const MIGRATED_PREFIXES = [
   "/hr/biometric",
   "/hr/courses",
   "/hr/training",
+  "/integrations",
   "/invoices",
   "/kb",
   "/leads",

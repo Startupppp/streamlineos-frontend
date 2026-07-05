@@ -1,6 +1,5 @@
 "use client";
 
-import { LayoutGrid } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -9,6 +8,7 @@ import { useKbSpace } from "@/hooks/api/kb/spaces";
 import { useKbPagesTree } from "@/hooks/api/kb/pages";
 import { KB_SPACES } from "@/features/knowledge-base/lib/knowledge-routes";
 import { filterTreeWithAncestors } from "@/features/knowledge-base/lib/tree-utils";
+import { KbLayoutGridIcon } from "@/features/knowledge-base/lib/kb-icons";
 import PageTree from "./page-tree";
 import type { KbAudience } from "@/types/kb";
 
@@ -46,7 +46,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     return (
       <PageWrapper title="Space" backHref={KB_SPACES}>
         <EmptyState
-          illustration={<LayoutGrid className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="Could not load space"
           description="There was a problem fetching this space."
         />
@@ -97,7 +97,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
           </div>
           {spacePageNodes.length === 0 && !treeLoading ? (
             <EmptyState
-              illustration={<LayoutGrid className="h-8 w-8 text-muted-foreground/40" />}
+              illustration={<KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />}
               title="No pages in this space yet"
               description="Assign pages from Page settings"
             />

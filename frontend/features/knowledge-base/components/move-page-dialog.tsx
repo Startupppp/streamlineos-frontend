@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { MoveRight, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -13,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useKbPagesTree, useMoveKbPage } from "@/hooks/api/kb";
+import { KbMoveRightIcon, KbFileTextIcon, KbLoader2Icon } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
 
 function getPageDepth(nodes: KbPageTreeNode[], id: number): number {
@@ -83,7 +83,7 @@ export default function MovePageDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <MoveRight className="h-4 w-4" />
+            <KbMoveRightIcon className="h-4 w-4" />
             Move page
           </DialogTitle>
         </DialogHeader>
@@ -119,7 +119,7 @@ export default function MovePageDialog({
                       onClick={handleNodeButtonClick}
                     >
                       <span className="shrink-0 text-base leading-none">
-                        {node.icon ?? <FileText className="h-3.5 w-3.5" />}
+                        {node.icon ?? <KbFileTextIcon className="h-3.5 w-3.5" />}
                       </span>
                       <span className="truncate">{node.title || "Untitled"}</span>
                     </button>
@@ -133,7 +133,7 @@ export default function MovePageDialog({
             Cancel
           </Button>
           <Button size="sm" onClick={handleConfirm} disabled={movePage.isPending}>
-            {movePage.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            {movePage.isPending ? <KbLoader2Icon className="h-4 w-4 animate-spin mr-2" /> : null}
             Move here
           </Button>
         </DialogFooter>

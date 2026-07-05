@@ -592,8 +592,12 @@ export const queryKeys = {
     events: (start: string, end: string) => [...base, "calendar", "events", start, end] as const,
     attendees: (eventId: number) => [...base, "calendar", "attendees", eventId] as const,
     orgMembers: () => [...base, "calendar", "orgMembers"] as const,
-    googleMeetStatus: () => [...base, "calendar", "googleMeetStatus"] as const,
-    connections: () => [...base, "calendar", "connections"] as const,
+    externalEvents: (start: string, end: string) => [...base, "calendar", "externalEvents", start, end] as const,
+  },
+
+  integrations: {
+    all: [...base, "integrations"] as const,
+    connections: () => [...base, "integrations", "connections"] as const,
   },
 
   settings: {

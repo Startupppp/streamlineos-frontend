@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, Plus, Pencil, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -49,6 +48,7 @@ import { useCan } from "@/hooks/api/access";
 import { useKbSpaces, useCreateKbSpace, useUpdateKbSpace, useDeleteKbSpace } from "@/hooks/api/kb/spaces";
 import { useKbPagesTree } from "@/hooks/api/kb/pages";
 import { spaceHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import { KbLayoutGridIcon, KbPlusIcon, KbPencilIcon, KbTrash2Icon } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbSpace, KbAudience } from "@/types/kb";
 import Link from "next/link";
 
@@ -133,7 +133,7 @@ function SpaceCard({ space, canManage, pageCount, onEdit, onDelete }: SpaceCardP
             className="h-7 px-2 text-xs text-muted-foreground"
             onClick={handleEdit}
           >
-            <Pencil className="h-3 w-3 mr-1" />
+            <KbPencilIcon className="h-3 w-3 mr-1" />
             Edit
           </Button>
           <Button
@@ -142,7 +142,7 @@ function SpaceCard({ space, canManage, pageCount, onEdit, onDelete }: SpaceCardP
             className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
             onClick={handleDelete}
           >
-            <Trash2 className="h-3 w-3 mr-1" />
+            <KbTrash2Icon className="h-3 w-3 mr-1" />
             Delete
           </Button>
         </div>
@@ -393,7 +393,7 @@ export default function SpacesPage() {
       actions={
         canManage ? (
           <Button size="sm" onClick={handleCreate}>
-            <Plus className="h-4 w-4 mr-1.5" />
+            <KbPlusIcon className="h-4 w-4 mr-1.5" />
             New space
           </Button>
         ) : undefined
@@ -409,7 +409,7 @@ export default function SpacesPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<LayoutGrid className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="Could not load spaces"
           description="There was a problem fetching spaces."
         />
@@ -417,7 +417,7 @@ export default function SpacesPage() {
 
       {!isLoading && !isError && spaces.length === 0 && (
         <EmptyState
-          illustration={<LayoutGrid className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />}
           title="No spaces yet"
           description="Create a space to organize your wiki pages."
           action={

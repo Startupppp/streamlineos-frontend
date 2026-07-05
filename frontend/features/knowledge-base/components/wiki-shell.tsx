@@ -3,12 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Plus,
-  PanelLeftOpen,
-  PanelLeftClose,
-  Star,
-} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -25,6 +19,12 @@ import {
   pageHref,
 } from "@/features/knowledge-base/lib/knowledge-routes";
 import type { KbPage } from "@/hooks/api/kb/pages";
+import {
+  KbPanelLeftCloseIcon,
+  KbPanelLeftOpenIcon,
+  KbPlusIcon,
+  KbStarIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 
 export default function WikiShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -115,7 +115,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                     href={pageHref(page.id)}
                     className="flex items-center gap-2 px-2 py-1 text-sm rounded-md hover:bg-muted transition-colors"
                   >
-                    <Star className="h-3 w-3 text-amber-500 fill-amber-500 shrink-0" />
+                    <KbStarIcon className="h-3 w-3 text-amber-500 fill-amber-500 shrink-0" />
                     <span className="truncate">
                       {page.icon ? `${page.icon} ` : ""}
                       {page.title || "Untitled"}
@@ -156,7 +156,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
             onClick={handleNewPage}
             disabled={createPage.isPending}
           >
-            <Plus className="h-4 w-4" />
+            <KbPlusIcon className="h-4 w-4" />
           </Button>
         )}
       </div>
@@ -187,7 +187,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                     onClick={handleToggleCollapsed}
                     aria-label="Expand sidebar"
                   >
-                    <PanelLeftOpen className="size-4" />
+                    <KbPanelLeftOpenIcon className="size-4" />
                   </Button>
                   {canCreate && (
                     <Button
@@ -198,7 +198,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                       disabled={createPage.isPending}
                       aria-label="New page"
                     >
-                      <Plus className="size-4" />
+                      <KbPlusIcon className="size-4" />
                     </Button>
                   )}
                 </>
@@ -218,7 +218,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                       onClick={handleToggleCollapsed}
                       aria-label="Collapse sidebar"
                     >
-                      <PanelLeftClose className="size-4" />
+                      <KbPanelLeftCloseIcon className="size-4" />
                     </Button>
                     {canCreate && (
                       <Button
@@ -229,7 +229,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                         disabled={createPage.isPending}
                         aria-label="New page"
                       >
-                        <Plus className="size-4" />
+                        <KbPlusIcon className="size-4" />
                       </Button>
                     )}
                   </div>
@@ -247,7 +247,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
               size="icon"
               className="md:hidden fixed top-[60px] left-3 z-40 h-8 w-8 bg-background shadow-sm border border-border"
             >
-              <PanelLeftOpen className="h-4 w-4" />
+              <KbPanelLeftOpenIcon className="h-4 w-4" />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[260px] p-0 flex flex-col">

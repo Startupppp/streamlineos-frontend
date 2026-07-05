@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutTemplate, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -22,6 +21,7 @@ import { useKbPageTemplates, useDeleteKbPageTemplate, useCreateKbPage, useUpdate
 import { useCan } from "@/hooks/api/access";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import { STARTER_TEMPLATES, deriveContentText } from "@/features/knowledge-base/lib/starter-templates";
+import { KbLayoutTemplateIcon, KbTrash2Icon, KbLoader2Icon } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
 import type { StarterTemplate } from "@/features/knowledge-base/lib/starter-templates";
 
@@ -74,7 +74,7 @@ function TemplateCard({ template, canDelete, onUse, isCreating }: TemplateCardPr
             disabled={isCreating}
             className="h-7 text-xs"
           >
-            {isCreating ? <Loader2 className="h-3 w-3 animate-spin" /> : "Use"}
+            {isCreating ? <KbLoader2Icon className="h-3 w-3 animate-spin" /> : "Use"}
           </Button>
           {canDelete && (
             <Button
@@ -86,9 +86,9 @@ function TemplateCard({ template, canDelete, onUse, isCreating }: TemplateCardPr
               aria-label="Delete template"
             >
               {deleteTemplate.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <KbLoader2Icon className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Trash2 className="h-3.5 w-3.5" />
+                <KbTrash2Icon className="h-3.5 w-3.5" />
               )}
             </Button>
           )}
@@ -144,7 +144,7 @@ function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
         disabled={isCreating}
         className="h-7 text-xs shrink-0"
       >
-        {isCreating ? <Loader2 className="h-3 w-3 animate-spin" /> : "Use"}
+        {isCreating ? <KbLoader2Icon className="h-3 w-3 animate-spin" /> : "Use"}
       </Button>
     </div>
   );
@@ -239,7 +239,7 @@ export default function TemplatesPage() {
 
           {!isLoading && isError && (
             <EmptyState
-              illustration={<LayoutTemplate className="h-8 w-8 text-muted-foreground/40" />}
+              illustration={<KbLayoutTemplateIcon className="h-8 w-8 text-muted-foreground/40" />}
               title="Could not load templates"
               description="There was a problem fetching page templates."
             />
@@ -247,7 +247,7 @@ export default function TemplatesPage() {
 
           {!isLoading && !isError && templates.length === 0 && (
             <EmptyState
-              illustration={<LayoutTemplate className="h-8 w-8 text-muted-foreground/40" />}
+              illustration={<KbLayoutTemplateIcon className="h-8 w-8 text-muted-foreground/40" />}
               title="No saved templates yet"
               description="Save a page as a template to reuse its structure across your wiki."
             />

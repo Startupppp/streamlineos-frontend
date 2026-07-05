@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ChevronRight, ChevronDown, Plus, MoreHorizontal, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -23,6 +22,13 @@ import {
 import { useCan } from "@/hooks/api/access";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import {
+  KbChevronRightIcon,
+  KbChevronDownIcon,
+  KbPlusIcon,
+  KbMoreHorizontalIcon,
+  KbFileTextIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 
 interface PageTreeItemProps {
   node: KbPageTreeNode;
@@ -204,9 +210,9 @@ export default function PageTreeItem({
         >
           {showChevron ? (
             expanded ? (
-              <ChevronDown className="h-3 w-3" />
+              <KbChevronDownIcon className="h-3 w-3" />
             ) : (
-              <ChevronRight className="h-3 w-3" />
+              <KbChevronRightIcon className="h-3 w-3" />
             )
           ) : (
             <span className="h-3 w-3" />
@@ -217,7 +223,7 @@ export default function PageTreeItem({
           {node.icon ? (
             node.icon
           ) : (
-            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground" />
           )}
         </span>
 
@@ -246,7 +252,7 @@ export default function PageTreeItem({
                 tabIndex={-1}
                 aria-label="Add child page"
               >
-                <Plus className="h-3 w-3" />
+                <KbPlusIcon className="h-3 w-3" />
               </button>
             )}
             <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
@@ -257,7 +263,7 @@ export default function PageTreeItem({
                   tabIndex={-1}
                   aria-label="Page options"
                 >
-                  <MoreHorizontal className="h-3 w-3" />
+                  <KbMoreHorizontalIcon className="h-3 w-3" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="right">

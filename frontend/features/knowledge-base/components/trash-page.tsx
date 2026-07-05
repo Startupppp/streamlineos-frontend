@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -18,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useKbPagesTrash, useRestoreKbPage, useHardDeleteKbPage } from "@/hooks/api/kb";
+import { KbRotateCcwIcon, KbTrash2Icon } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPage } from "@/hooks/api/kb/pages";
 
 function formatRelativeTime(dateStr: string): string {
@@ -74,7 +74,7 @@ function TrashRow({ page }: { page: KbPage }) {
             disabled={restore.isPending}
             className="h-7 text-xs gap-1"
           >
-            <RotateCcw className="h-3 w-3" />
+            <KbRotateCcwIcon className="h-3 w-3" />
             Restore
           </Button>
           <Button
@@ -84,7 +84,7 @@ function TrashRow({ page }: { page: KbPage }) {
             disabled={hardDelete.isPending}
             className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
           >
-            <Trash2 className="h-3 w-3" />
+            <KbTrash2Icon className="h-3 w-3" />
             Delete forever
           </Button>
         </div>
@@ -136,7 +136,7 @@ export default function TrashPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<Trash2 className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />}
           title="Could not load trash"
           description="There was a problem fetching deleted pages."
         />
@@ -144,7 +144,7 @@ export default function TrashPage() {
 
       {!isLoading && !isError && pages.length === 0 && (
         <EmptyState
-          illustration={<Trash2 className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={<KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />}
           title="Trash is empty"
           description="Deleted pages will appear here and can be restored or permanently removed."
         />

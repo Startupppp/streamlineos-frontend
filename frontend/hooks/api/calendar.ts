@@ -22,24 +22,6 @@ export function useCalendarOrgMembers() {
   });
 }
 
-export function useGoogleMeetStatus() {
-  return useQuery({
-    queryKey: queryKeys.calendar.googleMeetStatus(),
-    queryFn: () =>
-      apiClient.get<{ connected: boolean; googleEmail: string | null; authUrl: string }>(
-        "/calendar/create-meet"
-      ),
-    staleTime: 60 * 1000,
-  });
-}
-
-export function useCreateMeetLink() {
-  return useMutation({
-    mutationKey: ["calendar", "meet", "create"],
-    mutationFn: () => apiClient.post<{ meetLink: string }>("/calendar/create-meet", {}),
-  });
-}
-
 interface CalendarEvent {
   id: number;
   orgId: string;
@@ -62,6 +44,19 @@ interface CalendarEvent {
   creator?: { name: string | null } | null;
 }
 
+interface OooConflict {
+  userId: string;
+  userName: string | null;
+  leaveStart: string;
+  leaveEnd: string;
+}
+
+interface MutateCalendarEventResponse {
+  event: CalendarEvent;
+  oooConflicts: OooConflict[];
+  meetingUrl?: string | null;
+  syncError?: string | null;
+}
 
 export interface CalendarListItem {
   id: string;
@@ -88,7 +83,6 @@ export interface CalendarListItem {
   myRsvpStatus?: string | null;
 }
 
-
 export function extractEventNumericId(id: string): number | null {
   const match = id.match(/(\d+)$/);
   return match ? parseInt(match[1], 10) : null;
@@ -108,6 +102,8 @@ interface CreateCalendarEventPayload {
   attendeeIds?: string[];
   isRecurring?: boolean;
   recurringRule?: string;
+  syncConnectionId?: number;
+  addConference?: boolean;
 }
 
 interface UpdateCalendarEventPayload
@@ -134,7 +130,7 @@ export function useCreateCalendarEvent() {
   return useMutation({
     mutationKey: ["calendar", "events", "create"],
     mutationFn: (payload: CreateCalendarEventPayload) =>
-      apiClient.post<CalendarEvent>("/calendar/events", payload),
+      apiClient.post<MutateCalendarEventResponse>("/calendar/events", payload),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
   });
@@ -200,45 +196,35 @@ export function useRsvpCalendarEvent() {
   });
 }
 
-export type CalendarConnectionProvider = "GOOGLE" | "MICROSOFT";
-
-export interface CalendarConnection {
-  id: number;
-  provider: CalendarConnectionProvider;
-  providerEmail: string | null;
-  isPrimary: boolean;
-  expiresAt: string | null;
-  updatedAt: string;
+export interface ExternalCalendarEvent {
+  id: string;
+  connectionId: number;
+  toolkit: "googlecalendar" | "outlook";
+  accountEmail: string | null;
+  providerEventId: string;
+  title: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  location: string | null;
+  meetingUrl: string | null;
+  webLink: string | null;
 }
 
-export function useCalendarConnections() {
+export interface ExternalCalendarEventsResponse {
+  events: ExternalCalendarEvent[];
+  errors: Array<{ connectionId: number; accountEmail: string | null; message: string }>;
+}
+
+export function useExternalCalendarEvents(start: Date, end: Date, enabled: boolean) {
   return useQuery({
-    queryKey: queryKeys.calendar.connections(),
-    queryFn: () => apiClient.get<CalendarConnection[]>("/calendar/connections"),
+    queryKey: queryKeys.calendar.externalEvents(start.toISOString(), end.toISOString()),
+    queryFn: () =>
+      apiClient.get<ExternalCalendarEventsResponse>("/calendar/external-events", {
+        start: start.toISOString(),
+        end: end.toISOString(),
+      }),
+    enabled,
     staleTime: 60_000,
-  });
-}
-
-export function useDisconnectCalendar() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["calendar", "connections", "disconnect"],
-    mutationFn: (connectionId: number) =>
-      apiClient.delete<{ success: boolean }>(`/calendar/connections/${connectionId}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.calendar.connections() });
-    },
-  });
-}
-
-export function useSetPrimaryCalendar() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["calendar", "connections", "set-primary"],
-    mutationFn: (connectionId: number) =>
-      apiClient.patch<CalendarConnection>(`/calendar/connections/${connectionId}/primary`, {}),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.calendar.connections() });
-    },
   });
 }

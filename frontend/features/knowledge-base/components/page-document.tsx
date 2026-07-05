@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AlertCircle } from "lucide-react";
+import { KbAlertCircleIcon } from "@/features/knowledge-base/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { apiClient } from "@/lib/api-client";
@@ -209,7 +209,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
 
           {page.isLocked && !canManage && (
             <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
-              <AlertCircle className="h-4 w-4 shrink-0" />
+              <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
               <span>This page is locked and is read-only.</span>
             </div>
           )}
