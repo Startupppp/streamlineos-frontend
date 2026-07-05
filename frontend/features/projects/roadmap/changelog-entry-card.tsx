@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { format } from "date-fns";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ export interface ChangelogEntryCardProps {
   onDelete: (entry: ChangelogEntry) => void;
 }
 
-export function ChangelogEntryCard({
+export const ChangelogEntryCard = memo(function ChangelogEntryCard({
   entry,
   isUpdating,
   onTogglePublish,
@@ -81,4 +82,4 @@ export function ChangelogEntryCard({
       </CardContent>
     </Card>
   );
-}
+});

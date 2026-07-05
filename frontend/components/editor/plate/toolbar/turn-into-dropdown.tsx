@@ -53,7 +53,7 @@ export function TurnIntoDropdown() {
   }, []);
 
   function handleSelect(opt: BlockOption) {
-    const block = editor.api.block();
+    const block = editor.api.block() ?? editor.api.block({ at: [0] });
     if (!block) return;
     const [, path] = block;
     if (opt.listStyleType) {
@@ -68,6 +68,7 @@ export function TurnIntoDropdown() {
         { at: path },
       );
     }
+    editor.tf.focus();
   }
 
   return (

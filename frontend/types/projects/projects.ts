@@ -3,7 +3,6 @@ import type {
   ViewLayoutType,
   IntakeStatus,
   IntakeSource,
-  StateGroup,
   CycleStatus,
   ModuleStatus,
 } from "./shared";
@@ -181,18 +180,6 @@ export interface IntakeRequest {
   updatedAt: string | Date | null;
 }
 
-export interface CustomState {
-  id: number;
-  projectId: number;
-  orgId: string;
-  name: string;
-  color: string;
-  group: StateGroup;
-  sequence: number;
-  isDefault: boolean;
-  createdAt: string | Date | null;
-}
-
 export interface ProjectAnalytics {
   stateDistribution: { status: string; count: number }[];
   priorityBreakdown: { priority: string | null; count: number }[];
@@ -350,15 +337,6 @@ export interface UpdateIntakeRequestInput {
   status?: IntakeStatus;
   declineReason?: string;
   linkedWorkItemId?: number;
-}
-
-export interface CreateCustomStateInput {
-  projectId: number;
-  name: string;
-  color: string;
-  group: StateGroup;
-  sequence: number;
-  isDefault?: boolean;
 }
 
 export interface ProjectFilters {

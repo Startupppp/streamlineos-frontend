@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { ArrowBigUp, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,7 @@ interface RoadmapItemCardProps {
   onDelete: (item: RoadmapItem) => void;
 }
 
-export function RoadmapItemCard({ item, onEdit, onDelete }: RoadmapItemCardProps) {
+export const RoadmapItemCard = memo(function RoadmapItemCard({ item, onEdit, onDelete }: RoadmapItemCardProps) {
   function handleEdit() {
     onEdit(item);
   }
@@ -59,4 +60,4 @@ export function RoadmapItemCard({ item, onEdit, onDelete }: RoadmapItemCardProps
       </div>
     </div>
   );
-}
+});

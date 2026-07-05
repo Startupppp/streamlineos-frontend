@@ -18,24 +18,11 @@ export type ModuleStatus =
   | "paused"
   | "cancelled";
 
-export type StateGroup =
-  | "backlog"
-  | "unstarted"
-  | "started"
-  | "completed"
-  | "cancelled";
-
 export type IntakeStatus = "pending" | "accepted" | "declined" | "duplicate";
 
 export type IntakeSource = "manual" | "web_form" | "email";
 
 export type ViewLayoutType = "board" | "list" | "table" | "calendar" | "gantt";
-
-export type WorkItemRelationType =
-  | "blocks"
-  | "blocked_by"
-  | "duplicate_of"
-  | "relates_to";
 
 export type TimesheetStatus = "PENDING" | "APPROVED" | "REJECTED";
 

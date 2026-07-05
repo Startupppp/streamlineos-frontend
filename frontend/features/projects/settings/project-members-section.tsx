@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -58,7 +58,7 @@ interface MemberItemProps {
   onMemberRemoved: (id: string, name: string, apply: () => void) => void;
 }
 
-function MemberItem({
+const MemberItem = memo(function MemberItem({
   emp,
   isSelected,
   isOriginalMember,
@@ -101,7 +101,7 @@ function MemberItem({
       {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
     </button>
   );
-}
+});
 
 interface MembersSelectorProps {
   form: UseFormReturn<FormValues>;
@@ -221,13 +221,14 @@ export function ReassignDialog({
   onCancel,
 }: ReassignDialogProps) {
   const { data: employeesData } = useHrEmployees();
-  const employees = Array.isArray(employeesData)
-    ? employeesData
-    : (employeesData?.data ?? []);
+  const employees = useMemo(
+    () => (Array.isArray(employeesData) ? employeesData : (employeesData?.data ?? [])),
+    [employeesData],
+  );
 
-  const remainingMembers = employees.filter(
-    (emp) =>
-      currentMemberIds.includes(emp.id) && emp.id !== removedMemberId
+  const remainingMembers = useMemo(
+    () => employees.filter((emp) => currentMemberIds.includes(emp.id) && emp.id !== removedMemberId),
+    [employees, currentMemberIds, removedMemberId],
   );
 
   const handleOpenChange = useCallback(
@@ -294,7 +295,7 @@ interface DangerZoneSectionProps {
   onDeleteConfirm: () => void;
 }
 
-export function DangerZoneSection({
+export const DangerZoneSection = memo(function DangerZoneSection({
   projectName,
   isPending,
   deleteDialogOpen,
@@ -334,4 +335,4 @@ export function DangerZoneSection({
       </CardContent>
     </Card>
   );
-}
+});

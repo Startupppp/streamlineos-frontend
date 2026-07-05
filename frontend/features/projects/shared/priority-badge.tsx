@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { AlertTriangle, ArrowUp, Minus, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -43,7 +44,7 @@ interface PriorityBadgeProps {
   className?: string;
 }
 
-export function PriorityBadge({
+export const PriorityBadge = memo(function PriorityBadge({
   priority,
   showLabel = false,
   size = "sm",
@@ -85,4 +86,4 @@ export function PriorityBadge({
       </Tooltip>
     </TooltipProvider>
   );
-}
+});

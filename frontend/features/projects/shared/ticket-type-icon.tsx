@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import {
   CheckSquare,
   Bug,
@@ -23,7 +24,7 @@ interface TicketTypeIconProps {
   className?: string;
 }
 
-export function TicketTypeIcon({
+export const TicketTypeIcon = memo(function TicketTypeIcon({
   type,
   size = "sm",
   className,
@@ -37,4 +38,4 @@ export function TicketTypeIcon({
     size === "sm" ? "h-3.5 w-3.5" : size === "md" ? "h-4 w-4" : "h-5 w-5";
 
   return <Icon className={cn(sizeClass, config.color, className)} />;
-}
+});

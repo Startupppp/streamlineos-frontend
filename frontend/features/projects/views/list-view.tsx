@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -41,14 +42,18 @@ const priorityColors: Record<string, string> = {
 };
 
 
-export function ListView({ tickets, onTicketClick, groupBy, projectKey }: ListViewProps) {
-  const grouped = groupBy
-    ? tickets.reduce<Record<string, Ticket[]>>((acc, t) => {
-        const key = String(t[groupBy] ?? "None");
-        (acc[key] ??= []).push(t);
-        return acc;
-      }, {})
-    : { "All Items": tickets };
+export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy, projectKey }: ListViewProps) {
+  const grouped = useMemo(
+    () =>
+      groupBy
+        ? tickets.reduce<Record<string, Ticket[]>>((acc, t) => {
+            const key = String(t[groupBy] ?? "None");
+            (acc[key] ??= []).push(t);
+            return acc;
+          }, {})
+        : { "All Items": tickets },
+    [tickets, groupBy],
+  );
 
   const handleTicketClick = (id: number) => () => onTicketClick(id);
 
@@ -105,4 +110,4 @@ export function ListView({ tickets, onTicketClick, groupBy, projectKey }: ListVi
       )}
     </div>
   );
-}
+});

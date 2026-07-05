@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ interface IntakeItemCardProps {
   onDuplicate: (id: number) => void;
 }
 
-export function IntakeItemCard({ item, onAccept, onDecline, onDuplicate }: IntakeItemCardProps) {
+export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onDecline, onDuplicate }: IntakeItemCardProps) {
   const handleAccept = useCallback(() => onAccept(item.id), [item.id, onAccept]);
   const handleDecline = useCallback(() => onDecline(item.id), [item.id, onDecline]);
   const handleDuplicate = useCallback(() => onDuplicate(item.id), [item.id, onDuplicate]);
@@ -87,4 +87,4 @@ export function IntakeItemCard({ item, onAccept, onDecline, onDuplicate }: Intak
       )}
     </div>
   );
-}
+});

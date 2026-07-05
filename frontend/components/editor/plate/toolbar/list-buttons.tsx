@@ -10,13 +10,14 @@ export function ListButtons() {
   const editor = useEditorRef();
 
   function setListType(listStyleType: string) {
-    const block = editor.api.block();
+    const block = editor.api.block() ?? editor.api.block({ at: [0] });
     if (!block) return;
     const [, path] = block;
     editor.tf.setNodes(
       { type: 'p', listStyleType, indent: 1 } as Partial<TElement>,
       { at: path },
     );
+    editor.tf.focus();
   }
 
   function handleBullet() {

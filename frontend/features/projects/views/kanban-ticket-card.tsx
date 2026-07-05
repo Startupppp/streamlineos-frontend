@@ -165,5 +165,3 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
     </motion.div>
   );
 });
-
-export type { KanbanTicket, KanbanColumn } from "../shared/types";

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { LayoutGrid, List, Table2, Calendar, BarChart3, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +20,7 @@ const views: { type: ViewType; icon: typeof LayoutGrid; label: string }[] = [
   { type: "workload", icon: Users, label: "Workload" },
 ];
 
-export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
+export const ViewSwitcher = memo(function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
   return (
     <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
       {views.map(({ type, icon: Icon, label }) => (
@@ -39,4 +40,4 @@ export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
       ))}
     </div>
   );
-}
+});

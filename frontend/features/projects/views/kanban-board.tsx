@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUpdateTicketOrder } from "@/hooks/api";
@@ -58,7 +58,7 @@ export function KanbanBoard({
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const queryClient = useQueryClient();
 
-  const columns: KanbanColumn[] = (() => {
+  const columns = useMemo<KanbanColumn[]>(() => {
     if (!statuses || statuses.length === 0) return DEFAULT_COLUMNS;
     const configured = statuses.map((s) => ({
       id: s.name,
@@ -80,7 +80,7 @@ export function KanbanBoard({
         order: configured.length + i,
       })),
     ];
-  })();
+  }, [statuses, optimisticTickets]);
 
   useEffect(() => {
     setOptimisticTickets(tickets);

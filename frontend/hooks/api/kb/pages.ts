@@ -12,7 +12,7 @@ export type KbPage = {
   title: string;
   icon: string | null;
   coverImage: string | null;
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown> | Record<string, unknown>[] | null;
   contentText: string | null;
   sortOrder: number;
   isLocked: boolean;
@@ -71,7 +71,7 @@ export type KbPageVersion = {
   pageId: number;
   versionNumber: number;
   title: string;
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown> | Record<string, unknown>[] | null;
   authorId: string | null;
   createdAt: string;
 };

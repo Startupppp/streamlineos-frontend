@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +34,7 @@ interface BulkActionBarProps {
   onClear: () => void;
 }
 
-export function BulkActionBar({
+export const BulkActionBar = memo(function BulkActionBar({
   selectedCount,
   members,
   sprints,
@@ -100,4 +101,4 @@ export function BulkActionBar({
       </div>
     </div>
   );
-}
+});

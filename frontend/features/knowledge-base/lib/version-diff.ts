@@ -32,8 +32,17 @@ function extractSlateNodeText(node: unknown): string {
   return "";
 }
 
-function contentToText(content: Record<string, unknown> | null): string {
+function contentToText(
+  content: Record<string, unknown> | Record<string, unknown>[] | null,
+): string {
   if (!content) return "";
+  if (Array.isArray(content)) {
+    return content
+      .map(extractSlateNodeText)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
   if (content.type === "doc" && Array.isArray(content.content)) {
     return extractTipTapText(content.content as TipTapNode[])
       .replace(/\s+/g, " ")
@@ -85,7 +94,7 @@ export interface VersionDiff {
 
 export function computeVersionDiff(
   versionTitle: string,
-  versionContent: Record<string, unknown> | null,
+  versionContent: Record<string, unknown> | Record<string, unknown>[] | null,
   currentTitle: string,
   currentContentText: string | null,
 ): VersionDiff {

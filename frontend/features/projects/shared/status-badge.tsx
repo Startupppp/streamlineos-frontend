@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 
 const STATUS_DOT: Record<string, string> = {
@@ -52,7 +53,7 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export function StatusBadge({ status, customStates, className }: StatusBadgeProps) {
+export const StatusBadge = memo(function StatusBadge({ status, customStates, className }: StatusBadgeProps) {
   const custom = customStates?.find(
     (s) => s.name === status || s.name.toUpperCase().replace(/\s+/g, "_") === status,
   );
@@ -77,4 +78,4 @@ export function StatusBadge({ status, customStates, className }: StatusBadgeProp
       <span className="truncate">{label}</span>
     </span>
   );
-}
+});

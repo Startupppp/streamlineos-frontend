@@ -48,9 +48,10 @@ const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
 
 interface StockLevelsTableProps {
   rows: StockLevelRow[];
+  onShowAvailability?: (variantId: number, variantName: string) => void;
 }
 
-export const StockLevelsTable = memo(function StockLevelsTable({ rows }: StockLevelsTableProps) {
+export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAvailability }: StockLevelsTableProps) {
   const router = useRouter();
 
   const handleAdjust = useCallback((row: StockLevelRow) => {
@@ -66,6 +67,12 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows }: StockLe
     const params = row.variantId ? `?variantId=${row.variantId}` : "";
     router.push(`/inventory/stock/movements${params}`);
   }, [router]);
+
+  const handleAvailability = useCallback((row: StockLevelRow) => {
+    if (row.variantId && onShowAvailability) {
+      onShowAvailability(row.variantId, row.productName);
+    }
+  }, [onShowAvailability]);
 
   return (
     <div className="rounded-md border border-border overflow-hidden bg-card">
@@ -165,6 +172,11 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows }: StockLe
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        {row.variantId && onShowAvailability && (
+                          <DropdownMenuItem onSelect={() => handleAvailability(row)}>
+                            Availability
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           onSelect={() => handleAdjust(row)}
                         >

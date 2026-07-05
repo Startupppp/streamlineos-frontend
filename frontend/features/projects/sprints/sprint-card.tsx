@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { format, differenceInDays } from "date-fns";
 import { Target, Play, Square, MoreHorizontal, Pencil, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,12 +58,23 @@ const STATUS_STYLES: Record<string, StatusStyle> = {
   },
 };
 
-export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating }: SprintCardProps) {
-  const tickets = sprint.tickets || [];
-  const totalPoints = tickets.reduce((sum, t) => sum + (t.points || 0), 0);
-  const completedPoints = tickets.filter((t) => t.status === "DONE").reduce((sum, t) => sum + (t.points || 0), 0);
-  const progress = totalPoints > 0 ? (completedPoints / totalPoints) * 100 : 0;
-  const doneTickets = tickets.filter((t) => t.status === "DONE").length;
+export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating }: SprintCardProps) {
+  const { tickets, totalPoints, completedPoints, progress, doneTickets } = useMemo(() => {
+    const tix = sprint.tickets ?? [];
+    let total = 0, completed = 0, done = 0;
+    for (const t of tix) {
+      const pts = t.points || 0;
+      total += pts;
+      if (t.status === "DONE") { completed += pts; done++; }
+    }
+    return {
+      tickets: tix,
+      totalPoints: total,
+      completedPoints: completed,
+      progress: total > 0 ? (completed / total) * 100 : 0,
+      doneTickets: done,
+    };
+  }, [sprint.tickets]);
 
   const endDate = new Date(sprint.endDate);
   const startDate = new Date(sprint.startDate);
@@ -187,4 +198,4 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
       </div>
     </div>
   );
-}
+});

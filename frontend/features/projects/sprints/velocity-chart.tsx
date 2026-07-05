@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 
@@ -18,13 +19,28 @@ interface VelocityChartProps {
   sprints: Sprint[];
 }
 
-export function VelocityChart({ sprints }: VelocityChartProps) {
-  const completedSprints = sprints
-    .filter(s => s.status === "COMPLETED")
-    .slice(0, 8)
-    .reverse();
+export const VelocityChart = memo(function VelocityChart({ sprints }: VelocityChartProps) {
+  const completedSprints = useMemo(
+    () => sprints.filter(s => s.status === "COMPLETED").slice(0, 8).reverse(),
+    [sprints]
+  );
 
-  if (completedSprints.length === 0) {
+  const chartData = useMemo(() => {
+    if (completedSprints.length === 0) return null;
+    const data = completedSprints.map(sprint => {
+      const tickets = sprint.tickets ?? [];
+      const committed = tickets.reduce((sum, t) => sum + (t.points || 0), 0);
+      const completed = tickets
+        .filter(t => t.status === "DONE")
+        .reduce((sum, t) => sum + (t.points || 0), 0);
+      return { name: sprint.name, committed, completed };
+    });
+    const maxPoints = Math.max(...data.map(d => Math.max(d.committed, d.completed)), 1);
+    const avgVelocity = Math.round(data.reduce((sum, d) => sum + d.completed, 0) / data.length);
+    return { data, maxPoints, avgVelocity };
+  }, [completedSprints]);
+
+  if (!chartData) {
     return (
       <Card>
         <CardHeader>
@@ -42,17 +58,7 @@ export function VelocityChart({ sprints }: VelocityChartProps) {
     );
   }
 
-  const data = completedSprints.map(sprint => {
-    const tickets = sprint.tickets ?? [];
-    const committed = tickets.reduce((sum, t) => sum + (t.points || 0), 0);
-    const completed = tickets
-      .filter(t => t.status === "DONE")
-      .reduce((sum, t) => sum + (t.points || 0), 0);
-    return { name: sprint.name, committed, completed };
-  });
-
-  const maxPoints = Math.max(...data.map(d => Math.max(d.committed, d.completed)), 1);
-  const avgVelocity = Math.round(data.reduce((sum, d) => sum + d.completed, 0) / data.length);
+  const { data, maxPoints, avgVelocity } = chartData;
 
   return (
     <Card>
@@ -102,4 +108,4 @@ export function VelocityChart({ sprints }: VelocityChartProps) {
       </CardContent>
     </Card>
   );
-}
+});

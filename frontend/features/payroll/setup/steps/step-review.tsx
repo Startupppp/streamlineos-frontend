@@ -60,7 +60,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
     if (calledRef.current) return;
     calledRef.current = true;
     preview.mutate({
-      templateKey: draft.templateKey,
+      templateKey: draft.templateKey ?? undefined,
       toggleOverrides: toOverridesRecord(draft.toggleOverrides),
       country: draft.profile?.country,
       currency: draft.profile?.currency,
@@ -72,7 +72,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
   function handleRetry() {
     calledRef.current = false;
     preview.mutate({
-      templateKey: draft.templateKey,
+      templateKey: draft.templateKey ?? undefined,
       toggleOverrides: toOverridesRecord(draft.toggleOverrides),
       country: draft.profile?.country,
       currency: draft.profile?.currency,

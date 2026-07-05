@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { memo, useMemo, useState, useCallback } from "react";
 import {
   useProjectCustomFields,
   useTicketCustomFieldValues,
@@ -35,7 +35,7 @@ interface FieldValueInputProps {
   onSave: (fieldId: number, value: string | null) => void;
 }
 
-function FieldValueInput({ field, currentValue, onSave }: FieldValueInputProps) {
+const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onSave }: FieldValueInputProps) {
   const [localValue, setLocalValue] = useState(currentValue ?? "");
 
   const handleBlurSave = useCallback(() => {
@@ -108,7 +108,7 @@ function FieldValueInput({ field, currentValue, onSave }: FieldValueInputProps) 
       className="h-7 text-xs border-0 bg-slate-50 hover:bg-slate-100 focus:bg-white max-w-[200px]"
     />
   );
-}
+});
 
 export function TicketCustomFields({
   projectId,
@@ -120,7 +120,7 @@ export function TicketCustomFields({
     useTicketCustomFieldValues(projectId, ticketId);
   const upsert = useUpsertTicketCustomFieldValues(projectId, ticketId);
 
-  const valueMap = new Map(values.map((v) => [v.fieldId, v.value]));
+  const valueMap = useMemo(() => new Map(values.map((v) => [v.fieldId, v.value])), [values]);
 
   const handleSave = useCallback(
     (fieldId: number, value: string | null) => {

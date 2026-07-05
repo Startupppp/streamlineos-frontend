@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import type { ApprovalStatus } from "@/types/projects";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ interface ApprovalStatusBadgeProps {
   className?: string;
 }
 
-export function ApprovalStatusBadge({
+export const ApprovalStatusBadge = memo(function ApprovalStatusBadge({
   status,
   className,
 }: ApprovalStatusBadgeProps) {
@@ -58,7 +59,7 @@ export function ApprovalStatusBadge({
       {config.label}
     </Badge>
   );
-}
+});
 
 export function entityTypeLabel(type: string): string {
   const MAP: Record<string, string> = {

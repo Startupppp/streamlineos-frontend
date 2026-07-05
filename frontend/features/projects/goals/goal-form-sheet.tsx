@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState, useCallback } from "react";
 import {
   Sheet,
   SheetContent,
@@ -63,7 +63,7 @@ interface KeyResultRowProps {
   onRemove: (index: number) => void;
 }
 
-function KeyResultRow({ kr, index, onUpdate, onRemove }: KeyResultRowProps) {
+const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove }: KeyResultRowProps) {
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
     onUpdate(index, { title: e.target.value });
   }
@@ -138,7 +138,7 @@ function KeyResultRow({ kr, index, onUpdate, onRemove }: KeyResultRowProps) {
       </div>
     </div>
   );
-}
+});
 
 export function GoalFormSheet({
   open,
@@ -188,15 +188,15 @@ export function GoalFormSheet({
     setKeyResults((prev) => [...prev, { ...EMPTY_KR }]);
   }
 
-  function handleRemoveKeyResult(index: number) {
+  const handleRemoveKeyResult = useCallback((index: number) => {
     setKeyResults((prev) => prev.filter((_, i) => i !== index));
-  }
+  }, []);
 
-  function updateKeyResult(index: number, patch: Partial<DraftKeyResult>) {
+  const updateKeyResult = useCallback((index: number, patch: Partial<DraftKeyResult>) => {
     setKeyResults((prev) =>
       prev.map((kr, i) => (i === index ? { ...kr, ...patch } : kr)),
     );
-  }
+  }, []);
 
   function buildKeyResults(): KeyResultInput[] {
     return keyResults

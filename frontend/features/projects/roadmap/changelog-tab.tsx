@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -40,10 +40,10 @@ export function ChangelogTab() {
   function handleCloseSheet() { setSheetOpen(false); }
   function handleCloseEdit() { setEditTarget(null); }
   function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
-  function handleEditEntry(entry: ChangelogEntry) { setEditTarget(entry); }
-  function handleDeleteEntry(entry: ChangelogEntry) { setDeleteTarget(entry); }
+  const handleEditEntry = useCallback((entry: ChangelogEntry) => { setEditTarget(entry); }, []);
+  const handleDeleteEntry = useCallback((entry: ChangelogEntry) => { setDeleteTarget(entry); }, []);
 
-  function handleTogglePublish(entry: ChangelogEntry) {
+  const handleTogglePublish = useCallback((entry: ChangelogEntry) => {
     update.mutate(
       { id: entry.id, isPublished: !entry.isPublished },
       {
@@ -51,7 +51,7 @@ export function ChangelogTab() {
         onError: () => toast.error("Failed to update entry"),
       },
     );
-  }
+  }, [update]);
 
   function handleDelete() {
     if (!deleteTarget) return;

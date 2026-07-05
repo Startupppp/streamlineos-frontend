@@ -190,11 +190,6 @@ export interface UpdateTicketInput {
   expectedUpdatedAt?: string;
 }
 
-export interface UpdateTicketStatusInput {
-  ticketId: number;
-  status: string;
-}
-
 export interface MoveTicketInput {
   projectId: number;
   items: { id: number; status: string; order: number }[];

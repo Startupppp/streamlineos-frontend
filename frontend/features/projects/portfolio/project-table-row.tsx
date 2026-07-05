@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,7 @@ interface ProjectTableRowProps {
   project: ProjectListItem;
 }
 
-export function ProjectTableRow({ project }: ProjectTableRowProps) {
+export const ProjectTableRow = memo(function ProjectTableRow({ project }: ProjectTableRowProps) {
   const health = getProjectHealth(project);
   const hc = healthConfig[health];
   const sc = project.status ? (statusConfig[project.status] ?? DEFAULT_STATUS_CONFIG) : DEFAULT_STATUS_CONFIG;
@@ -73,4 +74,4 @@ export function ProjectTableRow({ project }: ProjectTableRowProps) {
       </span>
     </div>
   );
-}
+});

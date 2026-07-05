@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import {
   useTicket,
   useUpdateTicket,
@@ -79,7 +79,7 @@ export function TicketDetailsDialog({
   const { data: sprints } = useSprints(projectId);
   const { data: subtasks } = useSubtasks(ticketId || 0, projectId);
 
-  const members: ProjectMember[] = (() => {
+  const members = useMemo<ProjectMember[]>(() => {
     if (!projectData?.members) return [];
     const list = projectData.members
       .filter((m) => !!m.user)
@@ -103,7 +103,7 @@ export function TicketDetailsDialog({
       });
     }
     return list;
-  })();
+  }, [projectData]);
 
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });

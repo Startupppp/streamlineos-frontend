@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { useReducedMotion } from "framer-motion";
 import { Clock, ListChecks } from "lucide-react";
@@ -31,7 +30,6 @@ interface DecideTarget {
 }
 
 export function ApprovalsInboxPage() {
-  const { data: session } = useSession();
   const canDecide = useCan("projects:approvals:decide");
   const prefersReduced = useReducedMotion();
 

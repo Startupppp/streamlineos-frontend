@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ArrowRight, Clock } from "lucide-react";
@@ -27,7 +28,7 @@ interface ProjectHealthCardProps {
   project: ProjectListItem;
 }
 
-export function ProjectHealthCard({ project }: ProjectHealthCardProps) {
+export const ProjectHealthCard = memo(function ProjectHealthCard({ project }: ProjectHealthCardProps) {
   const health = getProjectHealth(project);
   const hc = healthConfig[health];
   const sc = project.status ? (statusConfig[project.status] ?? DEFAULT_STATUS_CONFIG) : DEFAULT_STATUS_CONFIG;
@@ -97,4 +98,4 @@ export function ProjectHealthCard({ project }: ProjectHealthCardProps) {
       </div>
     </div>
   );
-}
+});

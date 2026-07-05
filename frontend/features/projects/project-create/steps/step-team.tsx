@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Search, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,11 +27,15 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
     updateDraft({ memberIds: next });
   }
 
-  const filtered = members.filter((m) => {
-    if (!search.trim()) return true;
-    const q = search.trim().toLowerCase();
-    return (m.name ?? "").toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
-  });
+  const filtered = useMemo(
+    () =>
+      members.filter((m) => {
+        if (!search.trim()) return true;
+        const q = search.trim().toLowerCase();
+        return (m.name ?? "").toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
+      }),
+    [members, search],
+  );
 
   if (!canManage) {
     return (

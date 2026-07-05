@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import type { MouseEvent, KeyboardEvent, ChangeEvent } from "react";
 import {
   Layers,
@@ -73,7 +73,7 @@ export interface LinkStoryItemProps {
   onSelect: (id: number) => void;
 }
 
-export function LinkStoryItem({ story, onSelect }: LinkStoryItemProps) {
+export const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: LinkStoryItemProps) {
   const handleClick = useCallback(() => onSelect(story.id), [onSelect, story.id]);
   return (
     <button
@@ -83,22 +83,32 @@ export function LinkStoryItem({ story, onSelect }: LinkStoryItemProps) {
       {story.title}
     </button>
   );
-}
+});
 
-export function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
+export const EpicCard = memo(function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [newStoryTitle, setNewStoryTitle] = useState("");
   const [linkOpen, setLinkOpen] = useState(false);
   const editTriggerRef = useRef<HTMLButtonElement>(null);
 
-  const totalItems = stories.length;
-  const completedItems = stories.filter(s => s.status === "DONE").length;
-  const inProgressItems = stories.filter(s => s.status === "IN_PROGRESS" || s.status === "IN_REVIEW").length;
-  const todoItems = totalItems - completedItems - inProgressItems;
-
-  const totalPoints = stories.reduce((sum, s) => sum + (s.points || 0), 0);
-  const completedPoints = stories.filter(s => s.status === "DONE").reduce((sum, s) => sum + (s.points || 0), 0);
+  const { totalItems, completedItems, inProgressItems, todoItems, totalPoints, completedPoints } = useMemo(() => {
+    let done = 0, inProgress = 0, totalPts = 0, completedPts = 0;
+    for (const s of stories) {
+      const pts = s.points || 0;
+      totalPts += pts;
+      if (s.status === "DONE") { done++; completedPts += pts; }
+      else if (s.status === "IN_PROGRESS" || s.status === "IN_REVIEW") inProgress++;
+    }
+    return {
+      totalItems: stories.length,
+      completedItems: done,
+      inProgressItems: inProgress,
+      todoItems: stories.length - done - inProgress,
+      totalPoints: totalPts,
+      completedPoints: completedPts,
+    };
+  }, [stories]);
 
   const epicCardId = `epic-stories-${epic.id}`;
 
@@ -343,4 +353,4 @@ export function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEp
       </AlertDialog>
     </>
   );
-}
+});

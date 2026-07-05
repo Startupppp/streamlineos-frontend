@@ -43,7 +43,7 @@ function formatRelativeTime(dateStr: string): string {
 
 interface DiffSummaryProps {
   versionTitle: string;
-  versionContent: Record<string, unknown> | null;
+  versionContent: Record<string, unknown> | Record<string, unknown>[] | null;
   currentTitle: string;
   currentContentText: string | null;
 }

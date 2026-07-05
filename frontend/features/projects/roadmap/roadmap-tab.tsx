@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -53,8 +53,8 @@ export function RoadmapTab({ search }: RoadmapTabProps) {
   function handleCloseSheet() { setSheetOpen(false); }
   function handleCloseEdit() { setEditTarget(null); }
   function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
-  function handleEditItem(item: RoadmapItem) { setEditTarget(item); }
-  function handleDeleteItem(item: RoadmapItem) { setDeleteTarget(item); }
+  const handleEditItem = useCallback((item: RoadmapItem) => { setEditTarget(item); }, []);
+  const handleDeleteItem = useCallback((item: RoadmapItem) => { setDeleteTarget(item); }, []);
 
   function handleDelete() {
     if (!deleteTarget) return;

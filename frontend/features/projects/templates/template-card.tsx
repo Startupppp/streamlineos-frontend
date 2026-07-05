@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ interface TemplateCardProps {
   onDelete: (template: ProjectTemplate) => void;
 }
 
-export function TemplateCard({ template, onApply, onDelete }: TemplateCardProps) {
+export const TemplateCard = memo(function TemplateCard({ template, onApply, onDelete }: TemplateCardProps) {
   const handleApply = useCallback(() => onApply(template), [onApply, template]);
   const handleDelete = useCallback(() => onDelete(template), [onDelete, template]);
 
@@ -79,4 +79,4 @@ export function TemplateCard({ template, onApply, onDelete }: TemplateCardProps)
       </CardContent>
     </Card>
   );
-}
+});

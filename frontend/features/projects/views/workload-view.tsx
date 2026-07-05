@@ -12,8 +12,7 @@ import {
   CheckCircle2,
   TrendingUp,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { resolveImageUrl } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
 
 interface WorkloadMember {

@@ -1,6 +1,6 @@
 "use client";
 
-import { type MouseEvent } from "react";
+import { memo, type MouseEvent } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -39,7 +39,7 @@ function isOverdue(ticket: Ticket): boolean {
   return due < today;
 }
 
-export function TableView({ tickets, onTicketClick, projectKey }: TableViewProps) {
+export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey }: TableViewProps) {
   function handleRowClick(e: MouseEvent<HTMLTableRowElement>) {
     const id = Number(e.currentTarget.dataset.ticketId);
     if (id) onTicketClick(id);
@@ -133,4 +133,4 @@ export function TableView({ tickets, onTicketClick, projectKey }: TableViewProps
       </ScrollArea>
     </div>
   );
-}
+});

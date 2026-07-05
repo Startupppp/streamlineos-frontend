@@ -275,12 +275,16 @@ function renderSlateNode(node: unknown, idx: number): React.ReactNode {
 }
 
 interface PublicPageContentProps {
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown> | Record<string, unknown>[] | null;
 }
 
 export default function PublicPageContent({ content }: PublicPageContentProps) {
   if (!content) {
     return <p className="text-sm text-muted-foreground">No content.</p>;
+  }
+
+  if (Array.isArray(content)) {
+    return <div>{content.map((node, i) => renderSlateNode(node, i))}</div>;
   }
 
   if (isTipTapDoc(content)) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
   Activity,
@@ -44,7 +45,7 @@ interface ActivityItemProps {
   entry: TicketActivityEntry;
 }
 
-function ActivityItem({ entry }: ActivityItemProps) {
+const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
   const Icon = ACTION_ICONS[entry.action] ?? History;
   const actorName = entry.user?.name ?? "Someone";
   const timeAgo = entry.createdAt
@@ -83,7 +84,7 @@ function ActivityItem({ entry }: ActivityItemProps) {
       </div>
     </li>
   );
-}
+});
 
 export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProps) {
   const { data, isLoading, isError } = useTicketActivity(projectId, ticketId);

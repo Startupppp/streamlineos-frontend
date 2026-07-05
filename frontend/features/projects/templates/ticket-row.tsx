@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import type { ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +37,7 @@ interface TicketRowProps {
   onRemove: (idx: number) => void;
 }
 
-export function TicketRow({
+export const TicketRow = memo(function TicketRow({
   ticket,
   index,
   isOnlyTicket,
@@ -125,4 +126,4 @@ export function TicketRow({
       </div>
     </div>
   );
-}
+});

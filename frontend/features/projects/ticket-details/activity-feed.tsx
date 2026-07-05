@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -168,20 +168,22 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
     [handleReplySubmit]
   );
 
-  const topLevel = comments.filter((c) => !c.parentCommentId);
-  const repliesMap = comments
-    .filter((c) => !!c.parentCommentId)
-    .reduce<Record<number, TicketComment[]>>((acc, r) => {
-      const parentId = r.parentCommentId!;
-      if (!acc[parentId]) acc[parentId] = [];
-      acc[parentId].push(r);
-      return acc;
-    }, {});
-
-  const sortedTopLevel = [...topLevel].sort(
-    (a, b) =>
-      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-  );
+  const { repliesMap, sortedTopLevel } = useMemo(() => {
+    const topLevel = comments.filter((c) => !c.parentCommentId);
+    const repliesMap = comments
+      .filter((c) => !!c.parentCommentId)
+      .reduce<Record<number, TicketComment[]>>((acc, r) => {
+        const parentId = r.parentCommentId!;
+        if (!acc[parentId]) acc[parentId] = [];
+        acc[parentId].push(r);
+        return acc;
+      }, {});
+    const sortedTopLevel = [...topLevel].sort(
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+    return { repliesMap, sortedTopLevel };
+  }, [comments]);
 
   const handleCancelReply = useCallback(() => {
     setReplyingTo(null);
