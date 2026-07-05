@@ -34,6 +34,11 @@ export interface BigCalEvent {
     entityType?: string | null;
     entityId?: string | null;
     projectId?: number | null;
+    accountEmail?: string | null;
+    meetingUrl?: string | null;
+    webLink?: string | null;
+    connectionId?: number | null;
+    externalId?: string | null;
   };
 }
 

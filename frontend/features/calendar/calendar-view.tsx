@@ -57,7 +57,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { useCalendarEvents, useCalendarOrgMembers } from "@/hooks/api/calendar";
+import { useCalendarEvents, useCalendarOrgMembers, useExternalCalendarEvents } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
@@ -67,6 +67,9 @@ import { CalendarEventsPanel } from "./calendar-events-panel";
 import { CreateTicketFromCalendarDialog } from "./create-ticket-from-calendar-dialog";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
 import { CalendarAccountsSheet } from "./calendar-accounts-sheet";
+import { ExternalEventDetailSheet } from "./external-event-detail-sheet";
+import { useCalendarAccountFilters } from "./use-calendar-account-filters";
+import { accountColor } from "./calendar-account-colors";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useFinalizeIntegrationConnection, useIntegrationConnections } from "@/hooks/api/integrations";
 import {
@@ -135,6 +138,7 @@ export function CalendarView() {
   const [pendingSlot, setPendingSlot] = useState<{ start: Date; end: Date } | null>(null);
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
   const [createTicketSlot, setCreateTicketSlot] = useState<{ start: Date; end: Date } | null>(null);
+  const [selectedExternal, setSelectedExternal] = useState<BigCalEvent | null>(null);
 
   const rangeStart = useMemo(
     () => startOfMonth(subMonths(currentDate, 1)),
@@ -153,6 +157,8 @@ export function CalendarView() {
   const finalizeRef = useRef(false);
   const [accountsOpen, setAccountsOpen] = useState(false);
   const activeConnectionCount = connections.filter((c) => c.status === "active").length;
+  const { hiddenIds } = useCalendarAccountFilters();
+  const { data: externalData } = useExternalCalendarEvents(rangeStart, rangeEnd, activeConnectionCount > 0);
 
   // Active attendees filters
   const [checkedAttendees, setCheckedAttendees] = useState<Record<string, boolean>>({});
@@ -197,7 +203,39 @@ export function CalendarView() {
     [events],
   );
 
-  // Filter today's activities for sidebar
+  const externalCalEvents = useMemo(
+    () =>
+      (externalData?.events ?? [])
+        .filter((e) => !hiddenIds.includes(e.connectionId))
+        .map((e) => {
+          const index = connections.findIndex((c) => c.id === e.connectionId);
+          return {
+            id: e.id,
+            title: e.title,
+            start: new Date(e.start),
+            end: new Date(e.end),
+            allDay: e.allDay,
+            resource: {
+              source: "external",
+              color: accountColor(index === -1 ? 0 : index),
+              location: e.location,
+              accountEmail: e.accountEmail,
+              meetingUrl: e.meetingUrl,
+              webLink: e.webLink,
+              connectionId: e.connectionId,
+              externalId: e.id,
+            },
+          };
+        }),
+    [externalData, hiddenIds, connections],
+  );
+
+  const allCalEvents = useMemo(
+    () => [...calEvents, ...externalCalEvents],
+    [calEvents, externalCalEvents],
+  );
+
+  // Filter today's activities for sidebar (internal events only)
   const todayActivities = useMemo(() => {
     return calEvents
       .filter((e) => isSameDay(e.start, currentDate))
@@ -233,6 +271,10 @@ export function CalendarView() {
 
   const handleSelectEvent = useCallback(
     (event: BigCalEvent) => {
+      if (event.resource?.source === "external") {
+        setSelectedExternal(event);
+        return;
+      }
       if (
         event.resource?.source === "task" &&
         event.resource.entityType === "ticket" &&
@@ -250,6 +292,19 @@ export function CalendarView() {
   );
 
   const eventPropGetter = useCallback((event: BigCalEvent) => {
+    if (event.resource?.source === "external") {
+      return {
+        style: {
+          backgroundColor: event.resource.color ?? "#3b82f6",
+          opacity: 0.85,
+          border: "none",
+          borderRadius: "4px",
+          color: "#fff",
+          fontSize: "12px",
+          padding: "1px 6px",
+        },
+      };
+    }
     if (event.resource?.source === "task") {
       return {
         style: {
@@ -336,6 +391,7 @@ export function CalendarView() {
   }, [handleExport]);
 
   const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
+  const handleCloseExternal = useCallback(() => setSelectedExternal(null), []);
   const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
   const handleCloseAccounts = useCallback(() => setAccountsOpen(false), []);
 
@@ -557,6 +613,21 @@ export function CalendarView() {
         </div>
       </div>
 
+      {externalData?.errors && externalData.errors.length > 0 && (
+        <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 shrink-0">
+          <span className="text-[11px] text-amber-700 flex-1">
+            {externalData.errors.map((e) => `${e.accountEmail ?? "Account"}: ${e.message}`).join(" · ")}
+          </span>
+          <button
+            type="button"
+            onClick={handleOpenAccounts}
+            className="text-[11px] text-amber-800 font-medium underline underline-offset-2 shrink-0"
+          >
+            Manage accounts
+          </button>
+        </div>
+      )}
+
       {/* Two column grid layout (Main area + Sidebar) */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Left panel: main calendar wrapper */}
@@ -570,7 +641,7 @@ export function CalendarView() {
           >
             {viewMode === "calendar" ? (
               <BigCalendarWrapper
-                events={calEvents}
+                events={allCalEvents}
                 date={currentDate}
                 view={view}
                 calHeight={calHeight}
@@ -748,6 +819,7 @@ export function CalendarView() {
       </Dialog>
 
       <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
+      <ExternalEventDetailSheet event={selectedExternal} onClose={handleCloseExternal} />
       <CalendarAccountsSheet open={accountsOpen} onClose={handleCloseAccounts} />
     </div>
   );

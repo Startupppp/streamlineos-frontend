@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarCheck2, ChevronRight, GitBranch, Linkedin } from "lucide-react";
+import { ChevronRight, GitBranch, Linkedin } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { isModuleEnabled } from "@/components/layout/sidebar/sidebar-nav-items";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
@@ -20,12 +20,6 @@ const HR_INTEGRATIONS: IntegrationCard[] = [
     description: "Connect job boards to automatically ingest applications into the ATS.",
     href: "/settings/integrations/recruitment",
     icon: Linkedin,
-  },
-  {
-    label: "Calendar",
-    description: "Connect Google or Microsoft Outlook for interview scheduling and availability.",
-    href: "/settings/integrations/calendar",
-    icon: CalendarCheck2,
   },
 ];
 
