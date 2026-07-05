@@ -786,6 +786,7 @@ export const queryKeys = {
     taxDeclarations: (params?: Record<string, unknown>) => [...base, "payroll", "tax-declarations", params] as const,
     fnf: (params?: Record<string, unknown>) => [...base, "payroll", "fnf", params] as const,
     loanAdjustments: () => [...base, "payroll", "loan-adjustments"] as const,
+    commandCenterAll: [...base, "payroll", "command-center"] as const,
     commandCenter: (month: string) => [...base, "payroll", "command-center", month] as const,
     employees: (params?: Record<string, unknown>) => [...base, "payroll", "employees", "list", params] as const,
     employee: (employeeUserId: string) => [...base, "payroll", "employees", employeeUserId] as const,

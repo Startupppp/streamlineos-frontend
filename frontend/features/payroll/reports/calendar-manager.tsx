@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import {
@@ -306,7 +307,23 @@ export function CalendarManager({ month }: CalendarManagerProps) {
       )}
 
       {isLoading ? (
-        <div className="text-[12px] text-muted-foreground py-4 text-center">Loading events…</div>
+        <div className="flex flex-col gap-1.5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2"
+            >
+              <div className="flex-1 min-w-0 flex flex-col gap-1">
+                <Skeleton className="h-3 w-2/5 rounded" />
+                <Skeleton className="h-2.5 w-3/5 rounded" />
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <Skeleton className="h-6 w-6 rounded" />
+                <Skeleton className="h-6 w-6 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : events.length === 0 ? (
         <EmptyState
           compact

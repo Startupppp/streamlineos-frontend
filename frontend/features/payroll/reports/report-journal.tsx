@@ -64,8 +64,8 @@ export function ReportJournal({ month }: ReportJournalProps) {
   const lines = data?.lines ?? [];
   const unmappedCodes = data?.unmappedCodes ?? [];
 
-  const totalDebit = lines.reduce((s, l) => s + l.debit, 0);
-  const totalCredit = lines.reduce((s, l) => s + l.credit, 0);
+  const totalDebit = lines.reduce((s, l) => s + Number(l.debit), 0);
+  const totalCredit = lines.reduce((s, l) => s + Number(l.credit), 0);
 
   const footerNode =
     lines.length > 0 ? (

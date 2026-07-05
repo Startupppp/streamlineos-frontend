@@ -70,7 +70,7 @@ export type ComponentDef = {
 export type TemplateRow = {
   id: number;
   orgId: string | null;
-  key: string;
+  key: string | null;
   name: string;
   description: string;
   bestFor: string;
@@ -101,10 +101,10 @@ export type TemplatePreviewResult = {
   monthlyCtc: string;
   components: PreviewLine[];
   totals: {
-    gross: string;
-    deductions: string;
+    grossEarnings: string;
+    totalDeductions: string;
     employerContributions: string;
-    net: string;
+    netTakeHome: string;
   };
 };
 
@@ -192,11 +192,17 @@ export type ApprovalStage = {
   requiredPermission: string;
 };
 
+export type CalendarPlan = {
+  attendanceCutoff: string | null;
+  approvalDeadline: string | null;
+  payDate: string | null;
+};
+
 export type PolicyPreviewResult = {
   toggles: Record<ToggleKey, boolean>;
   components: PreviewLine[];
   approvalChain: ApprovalStage[];
-  calendarPlan: Record<string, unknown>;
+  calendarPlan: CalendarPlan | null;
   essOptions: Record<string, unknown>;
   statutoryPack: StatutoryPackPreview;
 };

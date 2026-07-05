@@ -22,7 +22,7 @@ type ReportFilterParams = {
 
 export const reportKeys = {
   all: ["payroll", "reports"] as const,
-  summary: (month: string) => ["payroll", "reports", "summary", month] as const,
+  summary: (params: ReportFilterParams) => ["payroll", "reports", "summary", params] as const,
   register: (params: ReportFilterParams) => ["payroll", "reports", "register", params] as const,
   deptCost: (params: Omit<ReportFilterParams, "costCenter">) => ["payroll", "reports", "dept-cost", params] as const,
   costCenter: (params: Omit<ReportFilterParams, "department">) => ["payroll", "reports", "cost-center", params] as const,
@@ -35,10 +35,10 @@ export const reportKeys = {
   journal: (month: string) => ["payroll", "reports", "journal", month] as const,
 };
 
-export function usePayrollSummary(month: string) {
+export function usePayrollSummary(params: ReportFilterParams) {
   return useQuery({
-    queryKey: reportKeys.summary(month),
-    queryFn: () => apiClient.get<PayrollSummaryReport>("/payroll/reports/summary", { month }),
+    queryKey: reportKeys.summary(params),
+    queryFn: () => apiClient.get<PayrollSummaryReport>("/payroll/reports/summary", params),
     staleTime: 60_000,
   });
 }

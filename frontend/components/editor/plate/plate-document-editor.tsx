@@ -79,7 +79,6 @@ import { MentionPlugin, MentionInputPlugin } from "@platejs/mention/react";
 import { SlashPlugin, SlashInputPlugin } from "@platejs/slash-command/react";
 import { CaptionPlugin } from "@platejs/caption/react";
 import { EmojiPlugin, EmojiInputPlugin } from "@platejs/emoji/react";
-import emojiData from "@emoji-mart/data";
 import { createLowlight } from "lowlight";
 import { common } from "lowlight";
 import {
@@ -389,15 +388,7 @@ function buildPlugins() {
       options: { trigger: "@", triggerPreviousCharPattern: /^\s?$/ },
     }).withComponent(MentionElement),
     MentionInputPlugin.withComponent(MentionInputElement),
-    EmojiPlugin.configure({
-      options: {
-        data: emojiData as Parameters<
-          typeof EmojiPlugin.configure
-        >[0]["options"] extends { data?: infer D }
-          ? D
-          : unknown,
-      },
-    }),
+    EmojiPlugin,
     EmojiInputPlugin,
     createPlatePlugin({
       key: "page_link",

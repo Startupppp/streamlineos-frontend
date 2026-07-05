@@ -235,6 +235,33 @@ function renderSlateNode(node: unknown, idx: number): React.ReactNode {
           {children}
         </td>
       );
+    case "img": {
+      const src = typeof el.url === "string" ? el.url : undefined;
+      return src ? (
+        <img key={idx} src={src} alt={typeof el.name === "string" ? el.name : ""} className="max-w-full h-auto rounded-md my-3" />
+      ) : null;
+    }
+    case "video": {
+      const src = typeof el.url === "string" ? el.url : undefined;
+      return src ? (
+        <video key={idx} src={src} controls className="max-w-full rounded-lg my-3" />
+      ) : null;
+    }
+    case "audio": {
+      const src = typeof el.url === "string" ? el.url : undefined;
+      return src ? (
+        <audio key={idx} src={src} controls className="w-full my-2" />
+      ) : null;
+    }
+    case "file": {
+      const href = typeof el.url === "string" ? el.url : "#";
+      const name = typeof el.name === "string" ? el.name : "File";
+      return (
+        <a key={idx} href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm hover:bg-muted my-2">
+          {name}
+        </a>
+      );
+    }
     case "mention":
     case "page_link":
       return (

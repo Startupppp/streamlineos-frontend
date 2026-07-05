@@ -31,7 +31,9 @@ export type SalaryComponentType =
   | "EARNING"
   | "DEDUCTION"
   | "EMPLOYER_CONTRIBUTION"
-  | "INFORMATIONAL";
+  | "REIMBURSEMENT"
+  | "TAX"
+  | "ADJUSTMENT";
 
 export type SalaryProfileStatus = "ACTIVE" | "UPCOMING" | "SUPERSEDED";
 
@@ -164,6 +166,7 @@ export interface RunInput {
   lopDays: string;
   halfDays: string;
   overtimeHours: string;
+  billableHours?: string;
   isOverride: boolean;
   overrideReason: string | null;
   updatedAt: string;
@@ -230,7 +233,7 @@ export interface CommandCenterData {
   checklist: PayrollChecklistItem[];
   panels: {
     runStatus: PayrollRunStatus | null;
-    topExceptions: Pick<PayrollException, "id" | "code" | "severity" | "message" | "status">[];
+    topExceptions: Pick<PayrollException, "id" | "code" | "severity" | "message" | "status" | "runEmployeeId">[];
     varianceSummary: VarianceSummary | null;
     pendingApprovals: { id: number; stage: number; status: string }[];
     payoutReadiness: boolean;

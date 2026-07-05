@@ -28,8 +28,8 @@ function SummarySkeletons() {
   );
 }
 
-export function ReportSummary({ month }: ReportSummaryProps) {
-  const { data, isLoading } = usePayrollSummary(month);
+export function ReportSummary({ month, department, costCenter, workerType }: ReportSummaryProps) {
+  const { data, isLoading } = usePayrollSummary({ month, department, costCenter, workerType });
 
   if (isLoading) return <SummarySkeletons />;
 
