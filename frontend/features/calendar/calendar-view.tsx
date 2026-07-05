@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   format,
@@ -37,6 +37,7 @@ import {
   RefreshCw,
   CheckCircle,
   Ticket,
+  Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,9 @@ import { CalendarAiAssistant } from "./calendar-ai-assistant";
 import { CalendarEventsPanel } from "./calendar-events-panel";
 import { CreateTicketFromCalendarDialog } from "./create-ticket-from-calendar-dialog";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
+import { CalendarAccountsSheet } from "./calendar-accounts-sheet";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useFinalizeIntegrationConnection, useIntegrationConnections } from "@/hooks/api/integrations";
 import {
   Dialog,
   DialogContent,
@@ -166,9 +170,15 @@ export function CalendarView() {
     [currentDate],
   );
 
+  const searchParams = useSearchParams();
   const { data: events = [], refetch: refetchEvents } = useCalendarEvents(rangeStart, rangeEnd);
   const { data: members = [] } = useCalendarOrgMembers();
   const { data: meetStatus } = useGoogleMeetStatus();
+  const { data: connections = [] } = useIntegrationConnections();
+  const finalize = useFinalizeIntegrationConnection();
+  const finalizeRef = useRef(false);
+  const [accountsOpen, setAccountsOpen] = useState(false);
+  const activeConnectionCount = connections.filter((c) => c.status === "active").length;
 
   // Active attendees filters
   const [checkedAttendees, setCheckedAttendees] = useState<Record<string, boolean>>({});
@@ -367,6 +377,23 @@ export function CalendarView() {
   }, [handleExport]);
 
   const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
+  const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
+  const handleCloseAccounts = useCallback(() => setAccountsOpen(false), []);
+
+  useEffect(() => {
+    const connectedAccountId = searchParams.get("connected_account_id");
+    if (!connectedAccountId) return;
+    if (finalizeRef.current) return;
+    finalizeRef.current = true;
+    finalize.mutate(connectedAccountId, {
+      onSuccess: (connection) => {
+        toast.success(`${connection.accountEmail ?? "Account"} connected`);
+        setAccountsOpen(true);
+      },
+      onError: (error) => toast.error(getErrorMessage(error)),
+      onSettled: () => router.replace("/calendar"),
+    });
+  }, [searchParams, finalize, router]);
 
   const formattedRange = useMemo(() => {
     if (view === "month") {
@@ -518,6 +545,21 @@ export function CalendarView() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 relative"
+            aria-label="Calendar accounts"
+            onClick={handleOpenAccounts}
+          >
+            <Link2 className="h-3.5 w-3.5" />
+            {activeConnectionCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-3.5 min-w-[14px] rounded-full bg-primary px-0.5 text-[9px] font-semibold leading-[14px] text-primary-foreground text-center">
+                {activeConnectionCount}
+              </span>
+            )}
+          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -773,6 +815,7 @@ export function CalendarView() {
       </Dialog>
 
       <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
+      <CalendarAccountsSheet open={accountsOpen} onClose={handleCloseAccounts} />
     </div>
   );
 }
