@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useMemo, useState } from "react";
-import { BarChart3 } from "lucide-react";
 import {
   useProjectAnalytics,
   useSprints,
@@ -179,7 +178,7 @@ export default function AnalyticsPage({
     return (
       <PageWrapper title="Analytics" eyebrow="Projects" backHref={`/projects/${projectId}`}>
         <EmptyState
-          illustration={<BarChart3 className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="chart"
           title="No data yet"
           description="Analytics will appear once your project has work items."
           className="flex-1 min-h-[50vh]"
@@ -206,7 +205,7 @@ export default function AnalyticsPage({
           <CardContent className="p-4 pt-0">
             {stateData.length === 0 ? (
               <EmptyState
-                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                illustrationPreset="chart"
                 title="No data yet"
                 compact
                 className="h-40"
@@ -228,7 +227,7 @@ export default function AnalyticsPage({
           <CardContent className="p-4 pt-0">
             {priorityData.length === 0 ? (
               <EmptyState
-                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                illustrationPreset="chart"
                 title="No data yet"
                 compact
                 className="h-40"
@@ -250,7 +249,7 @@ export default function AnalyticsPage({
           <CardContent className="p-4 pt-0">
             {volumeData.length === 0 ? (
               <EmptyState
-                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                illustrationPreset="chart"
                 title="No data yet"
                 compact
                 className="h-40"
@@ -272,7 +271,7 @@ export default function AnalyticsPage({
           <CardContent className="p-4 pt-0">
             {assigneeData.length === 0 ? (
               <EmptyState
-                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                illustrationPreset="chart"
                 title="No data yet"
                 compact
                 className="h-40"
@@ -294,7 +293,7 @@ export default function AnalyticsPage({
           <CardContent className="p-4 pt-0">
             {velocityData.length === 0 ? (
               <EmptyState
-                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                illustrationPreset="chart"
                 title="No data yet"
                 compact
                 className="h-40"
@@ -323,7 +322,7 @@ export default function AnalyticsPage({
           <CardContent className="p-4 pt-0">
             {estimateData.length === 0 ? (
               <EmptyState
-                illustration={<BarChart3 className="h-6 w-6 text-muted-foreground/40" />}
+                illustrationPreset="chart"
                 title="No data yet"
                 compact
                 className="h-40"

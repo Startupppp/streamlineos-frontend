@@ -268,7 +268,7 @@ export default function LearningAnalyticsPage() {
         subtitle="Track your learning progress and course completion"
       >
         <EmptyState
-          illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
+          illustrationPreset="alert"
           title="Failed to load analytics"
           description="Something went wrong. Please try again."
           action={{ label: "Retry", onClick: handleRetry }}

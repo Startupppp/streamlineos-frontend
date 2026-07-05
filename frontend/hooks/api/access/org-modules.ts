@@ -20,6 +20,8 @@ const BACKEND_MODULE_NAMES: Record<string, string> = {
   inventory: "INVENTORY",
   support: "HELPDESK",
   kb: "KB",
+  surveys: "SURVEYS",
+  payroll: "PAYROLL",
 };
 
 export function useEnabledModules(): string[] {

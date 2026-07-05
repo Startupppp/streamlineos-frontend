@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { BarChart2, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -246,10 +247,7 @@ export function CompetencyFrameworksTab() {
       </div>
 
       {frameworks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
-          <BarChart2 className="w-12 h-12 text-slate-300" />
-          <p className="text-slate-500 font-medium">No frameworks yet</p>
-        </div>
+        <ChartEmptyState message="No frameworks yet" height={220} />
       ) : (
         <Accordion type="multiple" className="space-y-3">
           {frameworks.map((framework: CompetencyFramework, i: number) => (

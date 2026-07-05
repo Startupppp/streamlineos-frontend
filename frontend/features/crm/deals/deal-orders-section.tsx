@@ -348,7 +348,7 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
           ) : orders.length === 0 ? (
             <EmptyState
               compact
-              illustration={<Package className="h-10 w-10 text-muted-foreground" />}
+              illustrationPreset="inventory"
               title={isWon ? "No orders yet" : "Orders created when deal is won"}
               description={
                 isWon

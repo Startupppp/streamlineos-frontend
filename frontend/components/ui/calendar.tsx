@@ -15,14 +15,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>
+export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
+  compact?: boolean
+}
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ]
 
-function CalendarCaption({ displayMonth }: CaptionProps) {
+function CalendarCaption({ displayMonth, compact = false }: CaptionProps & { compact?: boolean }) {
   const { goToMonth, nextMonth, previousMonth } = useNavigation()
   const { fromYear, toYear, fromDate, toDate } = useDayPicker()
 
@@ -34,26 +36,32 @@ function CalendarCaption({ displayMonth }: CaptionProps) {
   const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i)
 
   return (
-    <div className="flex items-center justify-between w-full px-1">
+    <div className={cn("flex items-center justify-between w-full", compact ? "px-0" : "px-1")}>
       <button
         type="button"
         onClick={() => previousMonth && goToMonth(previousMonth)}
         disabled={!previousMonth}
         className={cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 disabled:opacity-20"
+          compact ? "h-6 w-6" : "h-7 w-7",
+          "bg-transparent p-0 opacity-50 hover:opacity-100 disabled:opacity-20 shrink-0"
         )}
         aria-label="Previous month"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
       </button>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 min-w-0">
         <Select
           value={String(month)}
           onValueChange={(v) => goToMonth(setMonth(displayMonth, parseInt(v)))}
         >
-          <SelectTrigger className="h-7 w-[112px] text-xs border-0 bg-transparent shadow-none focus:ring-0 font-medium">
+          <SelectTrigger
+            className={cn(
+              "border-0 bg-transparent shadow-none focus:ring-0 font-medium",
+              compact ? "h-6 w-[5.5rem] px-1 text-[11px]" : "h-7 w-[112px] text-xs",
+            )}
+          >
             <SelectValue>{MONTH_NAMES[month]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -69,7 +77,12 @@ function CalendarCaption({ displayMonth }: CaptionProps) {
           value={String(year)}
           onValueChange={(v) => goToMonth(setYear(displayMonth, parseInt(v)))}
         >
-          <SelectTrigger className="h-7 w-[4.75rem] shrink-0 gap-1 px-2 text-xs border-0 bg-transparent shadow-none focus:ring-0 font-medium *:data-[slot=select-value]:line-clamp-none">
+          <SelectTrigger
+            className={cn(
+              "shrink-0 gap-1 border-0 bg-transparent shadow-none focus:ring-0 font-medium *:data-[slot=select-value]:line-clamp-none",
+              compact ? "h-6 w-[3.25rem] px-1 text-[11px]" : "h-7 w-[4.75rem] px-2 text-xs",
+            )}
+          >
             <SelectValue>{year}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -88,11 +101,12 @@ function CalendarCaption({ displayMonth }: CaptionProps) {
         disabled={!nextMonth}
         className={cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 disabled:opacity-20"
+          compact ? "h-6 w-6" : "h-7 w-7",
+          "bg-transparent p-0 opacity-50 hover:opacity-100 disabled:opacity-20 shrink-0"
         )}
         aria-label="Next month"
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
       </button>
     </div>
   )
@@ -102,32 +116,44 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  compact = false,
   ...props
 }: CalendarProps) {
+  const daySize = compact ? "h-8 w-8" : "h-9 w-9"
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn(compact ? "p-1.5" : "p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
+        month: compact ? "space-y-2 w-full" : "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "hidden",
         nav: "hidden",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          compact ? "h-6 w-6" : "h-7 w-7",
+          "bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse space-y-1",
-        head_row: "flex",
-        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+        head_row: "flex w-full",
+        head_cell: cn(
+          "text-muted-foreground rounded-md font-normal flex-1 text-center",
+          compact ? "text-[10px]" : "w-9 text-[0.8rem]",
+        ),
+        row: cn("flex w-full", compact ? "mt-1" : "mt-2"),
+        cell: cn(
+          "text-center text-sm p-0 relative flex-1 [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+          compact ? "h-8" : "h-9 w-9",
+        ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
+          daySize,
+          "p-0 font-normal aria-selected:opacity-100",
+          compact && "mx-auto text-xs",
         ),
         day_range_end: "day-range-end",
         day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
@@ -139,7 +165,9 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Caption: CalendarCaption,
+        Caption: (captionProps) => (
+          <CalendarCaption {...captionProps} compact={compact} />
+        ),
       }}
       {...props}
     />

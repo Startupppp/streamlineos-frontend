@@ -335,7 +335,7 @@ function FnfContent() {
     return (
       <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements">
         <EmptyState
-          illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
+          illustrationPreset="alert"
           title="Failed to load settlements"
           description="Something went wrong. Please try again."
           action={{ label: "Retry", onClick: handleRetry }}

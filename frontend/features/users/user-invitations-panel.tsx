@@ -263,7 +263,7 @@ export function UserInvitationsPanel() {
                       <tr>
                         <td colSpan={6} className="p-0">
                           <EmptyState
-                            illustration={<Mail className="h-8 w-8 text-muted-foreground/40" />}
+                            illustrationPreset="mail"
                             title={hasFilters ? "No results" : "No invitations yet"}
                             description={
                               hasFilters

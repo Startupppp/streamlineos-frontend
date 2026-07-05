@@ -281,7 +281,7 @@ export default function KnowledgeSettingsPage() {
     return (
       <PageWrapper title="Settings">
         <EmptyState
-          illustration={<Lock className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="security"
           title="Access restricted"
           description="You don't have permission to view knowledge base settings."
         />

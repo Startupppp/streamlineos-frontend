@@ -4,6 +4,7 @@ import { Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useTrainingAttendance, useMarkAttendance, type TrainingAttendance } from "@/hooks/api/hr/training";
@@ -69,10 +70,13 @@ export function AttendancePanel({ programId, canManage }: Props) {
 
   if (!attendees?.length) {
     return (
-      <div className="flex flex-col items-center justify-center h-40 gap-2 text-center">
-        <p className="text-sm font-medium text-muted-foreground">No attendees yet</p>
-        <p className="text-xs text-muted-foreground/70">Enrolled users will appear here</p>
-      </div>
+      <EmptyState
+        illustrationPreset="person"
+        title="No attendees yet"
+        description="Enrolled users will appear here"
+        className="border-0 bg-transparent shadow-none h-40"
+        compact
+      />
     );
   }
 

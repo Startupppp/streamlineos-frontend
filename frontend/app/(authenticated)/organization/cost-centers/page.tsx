@@ -306,7 +306,7 @@ export default function OrgCostCentersPage() {
 
   const emptyState = search ? (
     <EmptyState
-      illustration={<DollarSign className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="payroll"
       title={`No cost centers matching "${search}"`}
       description="Try a different search term."
       compact
@@ -314,14 +314,14 @@ export default function OrgCostCentersPage() {
     />
   ) : showArchived ? (
     <EmptyState
-      illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="archive"
       title="No archived cost centers"
       compact
       className="min-h-[200px]"
     />
   ) : (
     <EmptyState
-      illustration={<DollarSign className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="payroll"
       title="No cost centers yet"
       description="Create your first cost center to get started."
       action={{ label: "Add Cost Center", onClick: handleOpenCreate }}

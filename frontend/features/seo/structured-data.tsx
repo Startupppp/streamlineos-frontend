@@ -100,7 +100,7 @@ export function SoftwareApplicationJsonLd() {
             name: "Startup",
             price: "399",
             priceCurrency: "INR",
-            description: "Per seat per month, billed annually. 31% cheaper than Odoo Standard.",
+            description: "Per seat per month, billed annually. All apps included.",
           },
           {
             "@type": "Offer",

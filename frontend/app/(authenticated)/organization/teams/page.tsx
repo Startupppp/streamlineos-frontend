@@ -403,7 +403,7 @@ export default function OrgTeamsPage() {
 
   const emptyState = search ? (
     <EmptyState
-      illustration={<UsersRound className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="team"
       title={`No teams matching "${search}"`}
       description="Try a different search term."
       compact
@@ -411,14 +411,14 @@ export default function OrgTeamsPage() {
     />
   ) : showArchived ? (
     <EmptyState
-      illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="archive"
       title="No archived teams"
       compact
       className="min-h-[200px]"
     />
   ) : (
     <EmptyState
-      illustration={<UsersRound className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="team"
       title="No teams yet"
       description="Create your first team to get started."
       action={{ label: "Add Team", onClick: handleOpenCreate }}

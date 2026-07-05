@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { OnboardingWizard } from "@/components/hr/onboarding-wizard";
 import { OnboardingList } from "@/features/hr/onboarding/onboarding-list";
 import { EmployeeDocumentsTab } from "@/features/hr/onboarding/onboarding-detail-sheet";
+import { OnboardingTemplatesTab } from "@/features/hr/onboarding/onboarding-templates-tab";
 import { useCan } from "@/hooks/api/access";
 
 function HrDocumentsTab() {
@@ -95,6 +96,12 @@ export default function OnboardingPage() {
               Workflow
             </TabsTrigger>
             <TabsTrigger
+              value="plans"
+              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Plans
+            </TabsTrigger>
+            <TabsTrigger
               value="wizard"
               className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
@@ -110,6 +117,10 @@ export default function OnboardingPage() {
 
           <TabsContent value="workflow" className="mt-0">
             <OnboardingList />
+          </TabsContent>
+
+          <TabsContent value="plans" className="mt-0">
+            <OnboardingTemplatesTab />
           </TabsContent>
 
           <TabsContent value="wizard" className="mt-0">

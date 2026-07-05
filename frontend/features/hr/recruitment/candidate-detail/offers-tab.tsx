@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { OfferNegotiationSheet } from "./offer-negotiation-sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -132,8 +133,7 @@ interface Props {
 }
 
 export function OffersTab({ candidateId }: Props) {
-  const { data: session } = useSession();
-  const isCEO = session?.user?.role === "CEO";
+  const canApprove = useCan("hr:offers:approve");
 
   const { data: offers, isLoading } = useCandidateOffers(candidateId);
   const createOffer = useCreateCandidateOffer(candidateId);
@@ -150,6 +150,7 @@ export function OffersTab({ candidateId }: Props) {
   const [notes, setNotes] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [approvalAction, setApprovalAction] = useState<{ offer: CandidateOffer; action: "approve" | "reject" } | null>(null);
+  const [historyOffer, setHistoryOffer] = useState<CandidateOffer | null>(null);
 
   const handleCreate = useCallback(() => {
     createOffer.mutate(
@@ -199,6 +200,11 @@ export function OffersTab({ candidateId }: Props) {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [submitForApproval]);
+
+  const handleCopyOfferLink = useCallback(async (token: string) => {
+    await navigator.clipboard.writeText(`${window.location.origin}/offer/${token}`);
+    toast.success("Offer link copied");
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -313,7 +319,7 @@ export function OffersTab({ candidateId }: Props) {
                       </Button>
                     )}
 
-                    {isCEO && offer.offerStatus === "PENDING_APPROVAL" && (
+                    {canApprove && offer.offerStatus === "PENDING_APPROVAL" && (
                       <>
                         <Button
                           size="sm"
@@ -337,6 +343,26 @@ export function OffersTab({ candidateId }: Props) {
                           Reject
                         </Button>
                       </>
+                    )}
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={() => setHistoryOffer(offer)}
+                    >
+                      History
+                    </Button>
+
+                    {offer.acceptanceToken && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs"
+                        onClick={() => handleCopyOfferLink(offer.acceptanceToken!)}
+                      >
+                        Copy Offer Link
+                      </Button>
                     )}
 
                     {UPDATABLE_STATUSES.includes(offer.offerStatus) && (
@@ -434,6 +460,14 @@ export function OffersTab({ candidateId }: Props) {
           action={approvalAction.action}
           candidateId={candidateId}
           onClose={() => setApprovalAction(null)}
+        />
+      )}
+
+      {historyOffer && (
+        <OfferNegotiationSheet
+          candidateId={candidateId}
+          offer={historyOffer}
+          onClose={() => setHistoryOffer(null)}
         />
       )}
     </div>

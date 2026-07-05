@@ -194,7 +194,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
 
       {!checks?.length ? (
         <EmptyState
-          illustration={<Users className="h-8 w-8 text-muted-foreground" />}
+          illustrationPreset="team"
           title="No reference checks yet"
           description="Add professional references to verify this candidate's background."
           compact

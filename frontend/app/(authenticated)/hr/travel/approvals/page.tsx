@@ -283,7 +283,7 @@ export default function TravelApprovalsPage() {
     >
       {isEmpty ? (
         <EmptyState
-          illustration={<Plane className="h-8 w-8 text-muted-foreground" />}
+          illustrationPreset="travel"
           title="No pending approvals"
           description="All travel requests have been reviewed."
         />

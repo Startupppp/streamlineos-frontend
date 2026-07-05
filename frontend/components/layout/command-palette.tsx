@@ -68,9 +68,9 @@ function ItemIcon({
     <span
       className={cn(
         "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
-        "bg-muted text-foreground/50",
+        "bg-muted text-muted-foreground",
         "transition-colors duration-150",
-        "group-data-[selected=true]:bg-white/20 group-data-[selected=true]:text-white",
+        "group-data-[selected=true]:bg-blue-500/15 group-data-[selected=true]:text-blue-600",
       )}
     >
       <span className="flex items-center justify-center [&_svg]:!h-4 [&_svg]:!w-4">
@@ -79,6 +79,12 @@ function ItemIcon({
     </span>
   );
 }
+
+const COMMAND_ITEM_CLASS =
+  "group flex items-center gap-2.5 rounded-lg px-2 py-1.5 data-[selected=true]:bg-blue-500/10 data-[selected=true]:text-foreground";
+
+const COMMAND_ARROW_CLASS =
+  "h-3.5 w-3.5 text-muted-foreground/40 shrink-0 group-data-[selected=true]:text-blue-500 transition-colors";
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -254,14 +260,14 @@ export function CommandPalette() {
                   key={`${item.type}-${item.id}`}
                   value={`${item.title} ${item.subtitle} ${item.type}`}
                   onSelect={() => handleSelect(item.href)}
-                  className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5"
+                  className={COMMAND_ITEM_CLASS}
                 >
                   <ItemIcon icon={Icon} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate leading-tight">
                       {item.title}
                     </p>
-                    <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+                    <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5 group-data-[selected=true]:text-muted-foreground">
                       {item.subtitle}
                     </p>
                   </div>
@@ -273,7 +279,7 @@ export function CommandPalette() {
                       {item.status}
                     </Badge>
                   )}
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 group-data-[selected=true]:text-white/70 transition-colors" />
+                  <ArrowRight className={COMMAND_ARROW_CLASS} />
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -292,14 +298,14 @@ export function CommandPalette() {
                   key={page.href}
                   value={`${page.name} ${page.group}`}
                   onSelect={() => handleSelect(page.href)}
-                  className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5"
+                  className={COMMAND_ITEM_CLASS}
                 >
                   <ItemIcon icon={page.icon} />
                   <span className="flex-1 text-sm truncate">{page.name}</span>
                   <span className="text-[11px] text-muted-foreground/50 shrink-0 hidden sm:block group-data-[selected=true]:text-muted-foreground transition-colors">
                     {page.href}
                   </span>
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 group-data-[selected=true]:text-white/70 transition-colors" />
+                  <ArrowRight className={COMMAND_ARROW_CLASS} />
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -320,11 +326,11 @@ export function CommandPalette() {
                       key={route.href}
                       value={`${route.label} ${group.label}`}
                       onSelect={() => handleSelect(route.href)}
-                      className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5"
+                      className={COMMAND_ITEM_CLASS}
                     >
                       <ItemIcon icon={route.icon} />
                       <span className="flex-1 text-sm">{route.label}</span>
-                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/20 shrink-0 group-data-[selected=true]:text-white/70 transition-colors" />
+                      <ArrowRight className={COMMAND_ARROW_CLASS} />
                     </CommandItem>
                   ))}
                 </CommandGroup>

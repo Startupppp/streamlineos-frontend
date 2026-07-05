@@ -9,6 +9,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { useThreadReplies, useSendThreadReply } from "@/hooks/api";
 import { getInitials, formatMessageTime } from "./chat-helpers";
+import { renderFormattedContent } from "./formatted-message-content";
 import type { Message } from "@/types/chat";
 
 interface ThreadMessageProps {
@@ -47,9 +48,9 @@ function ThreadMessage({ message, currentUserId, isParent }: ThreadMessageProps)
           )}
         </div>
         {message.content && (
-          <p className="text-[13px] leading-[1.55] whitespace-pre-wrap break-words text-foreground">
-            {message.content}
-          </p>
+          <div className="text-[13px] leading-[1.55] whitespace-pre-wrap break-words text-foreground">
+            {renderFormattedContent(message.content, isOwn)}
+          </div>
         )}
         {message.attachments.length > 0 && (
           <p className="text-[12px] text-muted-foreground mt-0.5">

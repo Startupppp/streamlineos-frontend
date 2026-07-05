@@ -72,6 +72,18 @@ export type ApplicationStatus = "APPLIED" | "SHORTLISTED" | "INTERVIEWING" | "OF
 export type BgvStatus = "NOT_INITIATED" | "INITIATED" | "PENDING" | "CLEARED" | "FAILED";
 export type SlaCandidateStatus = "ON_TRACK" | "AT_RISK" | "BREACHED";
 
+export type ScreeningQuestionType = "TEXT" | "YES_NO" | "SINGLE_SELECT" | "NUMBER";
+
+export interface ScreeningQuestion {
+  id: string;
+  question: string;
+  type: ScreeningQuestionType;
+  required: boolean;
+  knockout: boolean;
+  knockoutAnswer?: string;
+  options?: string[];
+}
+
 export interface JobPosting {
   id: number;
   orgId: string;
@@ -92,6 +104,7 @@ export interface JobPosting {
   postedBy: string | null;
   externalPostingIds: Record<string, string> | null;
   isInternal: boolean | null;
+  screeningQuestions: ScreeningQuestion[] | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
   _count?: { applications?: number };
@@ -229,6 +242,7 @@ export interface CreateJobPostingInput {
   openings?: number;
   applicationDeadline?: string;
   status?: JobPostingStatus;
+  screeningQuestions?: ScreeningQuestion[];
 }
 
 export interface UpdateJobPostingInput {
@@ -246,6 +260,7 @@ export interface UpdateJobPostingInput {
   status?: JobPostingStatus;
   openings?: number;
   applicationDeadline?: string;
+  screeningQuestions?: ScreeningQuestion[];
 }
 
 export interface CreateCandidateInput {

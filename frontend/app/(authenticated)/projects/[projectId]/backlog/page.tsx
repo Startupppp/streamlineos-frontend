@@ -384,7 +384,7 @@ export default function BacklogPage({ params }: PageProps) {
               <TableRow>
                 <TableCell colSpan={7} className="p-0">
                   <EmptyState
-                    illustration={<Layers className="h-8 w-8 text-muted-foreground/40" />}
+                    illustrationPreset="projects"
                     title="No tickets found"
                     description={tickets.length === 0 ? "Create a ticket to get started." : "No tickets match the active filters."}
                     compact

@@ -28,7 +28,6 @@ import {
   Target,
   Package,
   Share2,
-  Video,
   Globe,
   Bell,
   PackageMinus,
@@ -490,44 +489,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: UserSearch,
         href: "/hr/recruitment",
         requiredPermission: "hr:employees:create",
-        children: [
-          {
-            label: "Job Requisitions",
-            icon: Briefcase,
-            href: "/hr/recruitment/requisitions",
-            requiredPermission: "hr:employees:create",
-          },
-          {
-            label: "Jobs",
-            icon: Briefcase,
-            href: "/hr/recruitment/jobs",
-            requiredPermission: "hr:employees:create",
-          },
-          {
-            label: "Candidates",
-            icon: Users,
-            href: "/hr/recruitment/candidates",
-            requiredPermission: "hr:employees:create",
-          },
-          {
-            label: "Pipeline",
-            icon: TrendingUp,
-            href: "/hr/recruitment/pipeline",
-            requiredPermission: "hr:employees:create",
-          },
-          {
-            label: "Interviews",
-            icon: Video,
-            href: "/hr/recruitment/interviews",
-            requiredPermission: "hr:employees:create",
-          },
-          {
-            label: "Analytics",
-            icon: BarChart3,
-            href: "/hr/recruitment/analytics",
-            requiredPermission: "hr:employees:view",
-          },
-        ],
       },
     ],
   },
@@ -1086,6 +1047,19 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Surveys",
+    module: "surveys",
+    requiredPermission: "surveys:view",
+    routes: [
+      {
+        label: "Surveys",
+        icon: ClipboardList,
+        href: "/surveys",
+        requiredPermission: "surveys:view",
+      },
+    ],
+  },
+  {
     label: "Organization",
     module: "hrms",
     requiredPermission: ["settings:manage", "settings:view"],
@@ -1408,6 +1382,7 @@ export type ProductKey =
   | "helpdesk"
   | "documents"
   | "analytics"
+  | "surveys"
   | "administration"
   | "payroll";
 
@@ -1428,6 +1403,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "helpdesk", label: "Helpdesk", href: "/support", icon: LifeBuoy },
   { key: "documents", label: "Documents", href: "/support/kb", icon: Library },
   { key: "analytics", label: "Analytics", href: "/reports", icon: BarChart3 },
+  { key: "surveys", label: "Surveys", href: "/surveys", icon: ClipboardList },
   {
     key: "administration",
     label: "Settings",
@@ -1504,6 +1480,12 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-blue-600 dark:bg-blue-500",
     border: "border-blue-600 dark:border-blue-500",
   },
+  surveys: {
+    text: "!text-teal-600 dark:!text-teal-400",
+    bg: "bg-teal-50 dark:bg-teal-950/40",
+    indicator: "bg-teal-600 dark:bg-teal-500",
+    border: "border-teal-600 dark:border-teal-500",
+  },
   administration: {
     text: "!text-slate-600 dark:!text-slate-400",
     bg: "bg-slate-100 dark:bg-slate-800/40",
@@ -1528,6 +1510,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   helpdesk: ["Support"],
   documents: [],
   analytics: [],
+  surveys: ["Surveys"],
   administration: [
     "Organization",
     "People",
@@ -1600,6 +1583,7 @@ const MODULE_KEY_MAP: Partial<Record<ProductKey, string>> = {
   inventory: "INVENTORY",
   finance: "FINANCE",
   helpdesk: "HELPDESK",
+  surveys: "SURVEYS",
   payroll: "PAYROLL",
 };
 
@@ -1644,6 +1628,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/support/kb")) return "documents";
   if (pathname.startsWith("/support")) return "helpdesk";
   if (pathname.startsWith("/knowledge")) return "documents";
+  if (pathname.startsWith("/surveys")) return "surveys";
   if (pathname.startsWith("/payroll")) return "payroll";
   if (
     pathname.startsWith("/organization") ||

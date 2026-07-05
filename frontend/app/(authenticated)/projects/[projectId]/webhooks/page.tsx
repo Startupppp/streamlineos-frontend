@@ -318,7 +318,7 @@ export default function WebhooksPage({ params }: PageProps) {
 
             {webhooks.length === 0 && (
               <EmptyState
-                illustration={<Zap className="h-8 w-8 text-muted-foreground/40" />}
+                illustrationPreset="automations"
                 title="No webhooks configured"
                 description="Get notified in real-time when tickets, sprints, or members change."
                 action={{ label: "Create Webhook", onClick: handleShowForm }}

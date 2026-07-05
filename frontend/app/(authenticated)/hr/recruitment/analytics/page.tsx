@@ -16,6 +16,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { useRecruitmentStats, useRecruitmentAnalytics } from "@/hooks/api/hr/recruitment";
 
 const FUNNEL_STAGES = [
@@ -268,9 +269,7 @@ export default function RecruitmentAnalyticsPage() {
               {isLoading ? (
                 <Skeleton className="h-52 w-full" />
               ) : sourceData.length === 0 ? (
-                <div className="h-52 flex items-center justify-center text-sm text-muted-foreground">
-                  No source data yet
-                </div>
+                <ChartEmptyState message="No source data yet" height={220} />
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>

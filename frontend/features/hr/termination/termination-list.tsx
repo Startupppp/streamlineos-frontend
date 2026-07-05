@@ -335,7 +335,7 @@ export function TerminationList({
 
       {list.length === 0 ? (
         <EmptyState
-          illustration={<User className="h-10 w-10 text-muted-foreground/40" />}
+          illustrationPreset="person"
           title={
             statusFilter === "ALL"
               ? "No termination records found"

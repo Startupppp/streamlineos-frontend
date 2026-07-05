@@ -1,0 +1,101 @@
+"use client";
+
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+import type { AnswerValue } from "@/features/surveys/respondent/answer-value";
+
+export interface PublicSurveyQuestionChoice {
+  id: number;
+  choiceKey: string;
+  label: string;
+  value: string | null;
+  score: number | null;
+  sortOrder: number;
+  isCorrect: boolean;
+}
+
+export interface PublicSurveyQuestion {
+  id: number;
+  questionKey: string;
+  variableName: string | null;
+  type: string;
+  title: string;
+  description: string | null;
+  required: boolean;
+  settings: Record<string, unknown>;
+  sortOrder: number;
+  choices: PublicSurveyQuestionChoice[];
+}
+
+export interface PublicSurveySection {
+  id: number;
+  title: string;
+  description: string | null;
+  sortOrder: number;
+  questions: PublicSurveyQuestion[];
+}
+
+export interface PublicSurveyLogicRule {
+  id: number;
+  sourceQuestionId: number;
+  condition: { op: string; questionId?: number; value?: unknown };
+  action: { type: string };
+  target: Record<string, unknown> | null;
+  sortOrder: number;
+}
+
+export interface PublicSurveyResponse {
+  survey: {
+    id: number;
+    title: string;
+    description: string | null;
+    mode: string;
+    defaultLanguage: string;
+    branding: Record<string, unknown>;
+    settings: Record<string, unknown>;
+  };
+  schema: { sections: PublicSurveySection[]; logicRules: PublicSurveyLogicRule[] } | null;
+}
+
+export interface StartSessionResponse {
+  id: number;
+  status: string;
+}
+
+export function usePublicSurvey(collectorToken: string) {
+  return useQuery({
+    queryKey: queryKeys.surveys.publicSurvey(collectorToken),
+    queryFn: () => apiClient.get<PublicSurveyResponse>(`/public/surveys/${collectorToken}`),
+    enabled: Boolean(collectorToken),
+    retry: false,
+    staleTime: 0,
+  });
+}
+
+export function useStartSurveySession(collectorToken: string) {
+  return useMutation({
+    mutationKey: ["surveys", "public", "start", collectorToken] as const,
+    mutationFn: (input: { accessToken?: string; participantEmail?: string; metadata?: Record<string, unknown> }) =>
+      apiClient.post<StartSessionResponse>(`/public/surveys/${collectorToken}/start`, input),
+  });
+}
+
+export function useSaveSurveyAnswers(collectorToken: string, sessionId: number | undefined) {
+  return useMutation({
+    mutationKey: ["surveys", "public", "save", collectorToken, sessionId] as const,
+    mutationFn: (answers: Array<{ questionId: number } & AnswerValue>) =>
+      apiClient.patch(`/public/surveys/${collectorToken}/session/${sessionId}`, { answers }),
+  });
+}
+
+export function useSubmitSurveySession(collectorToken: string, sessionId: number | undefined) {
+  return useMutation({
+    mutationKey: ["surveys", "public", "submit", collectorToken, sessionId] as const,
+    mutationFn: (answers?: Array<{ questionId: number } & AnswerValue>) =>
+      apiClient.post<{ score: number | null; passed: boolean | null }>(
+        `/public/surveys/${collectorToken}/session/${sessionId}/submit`,
+        { answers },
+      ),
+  });
+}

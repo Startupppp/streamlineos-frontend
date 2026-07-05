@@ -81,7 +81,7 @@ export default function SharedPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="team"
           title="Could not load pages"
           description="There was a problem fetching shared pages."
         />
@@ -89,7 +89,7 @@ export default function SharedPage() {
 
       {!isLoading && !isError && sharedNodes.length === 0 && (
         <EmptyState
-          illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="team"
           title="Nothing shared with you"
           description="Pages created by others will appear here."
         />

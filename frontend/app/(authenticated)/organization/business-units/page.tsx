@@ -304,7 +304,7 @@ export default function BusinessUnitsPage() {
 
   const emptyState = search ? (
     <EmptyState
-      illustration={<Building2 className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="companies"
       title={`No business units matching "${search}"`}
       description="Try a different search term."
       compact
@@ -312,14 +312,14 @@ export default function BusinessUnitsPage() {
     />
   ) : showArchived ? (
     <EmptyState
-      illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="archive"
       title="No archived business units"
       compact
       className="min-h-[200px]"
     />
   ) : (
     <EmptyState
-      illustration={<Building2 className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="companies"
       title="No business units yet"
       description="Create your first business unit to get started."
       action={{ label: "Add Business Unit", onClick: handleOpenCreate }}

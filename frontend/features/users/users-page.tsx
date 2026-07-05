@@ -573,7 +573,7 @@ export function UsersPage() {
             </Card>
           ) : users.length === 0 ? (
             <EmptyState
-              illustration={<Users className="text-muted-foreground/40" />}
+              illustrationPreset="team"
               title="No users found"
               description={
                 q || status !== "all" || role !== "all"

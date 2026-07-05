@@ -10,7 +10,7 @@ import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { formatMonth } from "@/features/payroll/shared/payroll-format";
 import { InputsTab } from "@/features/payroll/runs/inputs-tab";
 import { usePayrollRuns } from "@/hooks/api/payroll/runs";
-import { EmptyPayroll } from "@/components/illustrations/empty-payroll";
+import { EmptyPayroll } from "@/components/illustrations";
 
 function currentYearMonth(): string {
   const now = new Date();

@@ -4,6 +4,8 @@ import { use, useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -39,6 +41,9 @@ export default function OfferAcceptancePage({ params }: Props) {
   const [responding, setResponding] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
+  const [counterOpen, setCounterOpen] = useState(false);
+  const [counterSalary, setCounterSalary] = useState("");
+  const [counterMessage, setCounterMessage] = useState("");
   const [responded, setResponded] = useState(false);
   const [finalStatus, setFinalStatus] = useState("");
 
@@ -55,22 +60,42 @@ export default function OfferAcceptancePage({ params }: Props) {
 
   useEffect(() => { void fetchOffer(); }, [fetchOffer]);
 
-  const handleRespond = useCallback(async (action: "accept" | "decline", reason?: string) => {
+  const handleRespond = useCallback(async (
+    action: "accept" | "decline" | "counter",
+    extra?: { declineReason?: string; counterSalary?: number; counterMessage?: string },
+  ) => {
     setResponding(true);
     try {
       const body = await apiClient.patch<{ success: boolean; status: string }>(
         `/public/offer/${token}/respond`,
-        { action, declineReason: reason },
+        { action, ...extra },
       );
       setFinalStatus(body.status);
       setResponded(true);
       setDeclineOpen(false);
+      setCounterOpen(false);
     } catch (e) {
       toast.error(getApiError(e) || "Failed to respond to offer");
     } finally {
       setResponding(false);
     }
   }, [token]);
+
+  const handleAccept = useCallback(() => { void handleRespond("accept"); }, [handleRespond]);
+  const handleOpenDecline = useCallback(() => setDeclineOpen(true), []);
+  const handleConfirmDecline = useCallback(() => {
+    void handleRespond("decline", { declineReason: declineReason || undefined });
+  }, [handleRespond, declineReason]);
+  const handleOpenCounter = useCallback(() => setCounterOpen(true), []);
+  const handleConfirmCounter = useCallback(() => {
+    void handleRespond("counter", {
+      counterSalary: counterSalary ? Number(counterSalary) : undefined,
+      counterMessage: counterMessage || undefined,
+    });
+  }, [handleRespond, counterSalary, counterMessage]);
+  const handleDeclineReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDeclineReason(e.target.value), []);
+  const handleCounterSalaryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCounterSalary(e.target.value), []);
+  const handleCounterMessageChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setCounterMessage(e.target.value), []);
 
   if (loading) {
     return (
@@ -104,29 +129,34 @@ export default function OfferAcceptancePage({ params }: Props) {
   if (responded || (offer.offerStatus !== "SENT" && offer.offerStatus !== "VIEWED")) {
     const accepted = (responded && finalStatus === "ACCEPTED") || offer.offerStatus === "ACCEPTED";
     const declined = (responded && finalStatus === "DECLINED") || offer.offerStatus === "DECLINED";
+    const countered = (responded && finalStatus === "COUNTERED") || offer.offerStatus === "COUNTERED";
 
     return (
       <main className="min-h-screen bg-background flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center">
           <CardContent className="py-10">
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${accepted ? "bg-green-100 dark:bg-green-900/30" : declined ? "bg-red-100 dark:bg-red-900/30" : "bg-muted"}`}>
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${accepted ? "bg-green-100 dark:bg-green-900/30" : declined ? "bg-red-100 dark:bg-red-900/30" : countered ? "bg-blue-100 dark:bg-blue-900/30" : "bg-muted"}`}>
               {accepted ? (
                 <svg className="h-7 w-7 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
               ) : declined ? (
                 <svg className="h-7 w-7 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              ) : countered ? (
+                <svg className="h-7 w-7 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 23l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
               ) : (
                 <svg className="h-7 w-7 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /></svg>
               )}
             </div>
             <p className="font-semibold text-lg">
-              {accepted ? "Offer Accepted" : declined ? "Offer Declined" : "Offer Already Responded"}
+              {accepted ? "Offer Accepted" : declined ? "Offer Declined" : countered ? "Counter-Offer Sent" : "Offer Already Responded"}
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               {accepted
                 ? "Welcome! Our HR team will reach out with next steps."
                 : declined
                   ? "Thank you for your time. We wish you the best in your career."
-                  : "This offer has already been responded to."}
+                  : countered
+                    ? "We've received your proposed terms and will get back to you shortly."
+                    : "This offer has already been responded to."}
             </p>
           </CardContent>
         </Card>
@@ -186,7 +216,7 @@ export default function OfferAcceptancePage({ params }: Props) {
             <div className="flex gap-3 pt-2">
               <Button
                 className="flex-1"
-                onClick={() => handleRespond("accept")}
+                onClick={handleAccept}
                 disabled={responding}
               >
                 <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -197,12 +227,15 @@ export default function OfferAcceptancePage({ params }: Props) {
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => setDeclineOpen(true)}
+                onClick={handleOpenDecline}
                 disabled={responding}
               >
                 Decline
               </Button>
             </div>
+            <Button variant="ghost" className="w-full text-xs" onClick={handleOpenCounter} disabled={responding}>
+              Propose Different Terms
+            </Button>
 
             <p className="text-xs text-center text-muted-foreground">
               By accepting, you agree to the terms outlined in this offer.
@@ -223,16 +256,43 @@ export default function OfferAcceptancePage({ params }: Props) {
             placeholder="Reason for declining (optional)"
             rows={3}
             value={declineReason}
-            onChange={(e) => setDeclineReason(e.target.value)}
+            onChange={handleDeclineReasonChange}
             className="mx-6 mb-2"
           />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => handleRespond("decline", declineReason || undefined)}
+              onClick={handleConfirmDecline}
             >
               Decline Offer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={counterOpen} onOpenChange={setCounterOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Propose different terms</AlertDialogTitle>
+            <AlertDialogDescription>
+              Let us know what you&apos;re looking for and we&apos;ll get back to you.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="mx-6 mb-2 space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-sm">Proposed Salary (₹/year)</Label>
+              <Input type="number" placeholder="e.g. 1400000" value={counterSalary} onChange={handleCounterSalaryChange} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Message (optional)</Label>
+              <Textarea rows={3} placeholder="Anything else you'd like to share..." value={counterMessage} onChange={handleCounterMessageChange} />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCounter} disabled={!counterSalary}>
+              Send Proposal
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

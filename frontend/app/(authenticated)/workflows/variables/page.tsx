@@ -146,7 +146,7 @@ export default function VariablesManagerPage() {
       ) : list.length === 0 ? (
         <div className="flex flex-1 min-h-[60vh]">
           <EmptyState
-            illustration={<Variable className="h-12 w-12 text-muted-foreground/40" />}
+            illustrationPreset="settings"
             title="No variables defined"
             description="Variables are defined in the workflow builder when creating or editing workflow versions."
             action={{ label: "Go to Workflows", href: "/workflows" }}

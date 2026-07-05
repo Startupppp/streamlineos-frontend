@@ -1,5 +1,6 @@
 "use client";
 
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -153,9 +154,7 @@ export default function PerformanceAnalyticsPage() {
             >
               <h2 className="text-base font-semibold text-slate-800 mb-4">Cycles by Type</h2>
               {typeData.length === 0 ? (
-                <div className="flex items-center justify-center h-52 text-slate-400 text-sm">
-                  No data available
-                </div>
+                <ChartEmptyState height={220} />
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={typeData} barSize={32}>
@@ -180,9 +179,7 @@ export default function PerformanceAnalyticsPage() {
             >
               <h2 className="text-base font-semibold text-slate-800 mb-4">Status Distribution</h2>
               {statusData.length === 0 ? (
-                <div className="flex items-center justify-center h-52 text-slate-400 text-sm">
-                  No data available
-                </div>
+                <ChartEmptyState height={220} />
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
@@ -225,10 +222,7 @@ export default function PerformanceAnalyticsPage() {
               <h2 className="text-base font-semibold text-slate-800">Review Cycles</h2>
             </div>
             {cycles.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-2">
-                <BarChart2 className="w-10 h-10 text-slate-300" />
-                <p className="text-sm">No review cycles found</p>
-              </div>
+              <ChartEmptyState message="No review cycles found" height={220} compact />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">

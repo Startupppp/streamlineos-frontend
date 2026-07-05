@@ -1,12 +1,7 @@
 "use client";
 
-import { BarChart3 } from "lucide-react";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 export function EmptyChart({ message = "No data available" }: { message?: string }) {
-  return (
-    <div className="flex h-[280px] flex-col items-center justify-center text-center">
-      <BarChart3 className="mb-2 h-8 w-8 text-muted-foreground/40" />
-      <p className="text-sm text-muted-foreground">{message}</p>
-    </div>
-  );
+  return <ChartEmptyState message={message} />;
 }

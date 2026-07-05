@@ -374,7 +374,7 @@ export default function OrgDepartmentsPage() {
 
   const emptyState = search ? (
     <EmptyState
-      illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="team"
       title={`No departments matching "${search}"`}
       description="Try a different search term."
       compact
@@ -382,14 +382,14 @@ export default function OrgDepartmentsPage() {
     />
   ) : showArchived ? (
     <EmptyState
-      illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="archive"
       title="No archived departments"
       compact
       className="min-h-[200px]"
     />
   ) : (
     <EmptyState
-      illustration={<Users className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="team"
       title="No departments yet"
       description="Create your first department to get started."
       action={{ label: "Add Department", onClick: handleOpenCreate }}

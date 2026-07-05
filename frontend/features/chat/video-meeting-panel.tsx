@@ -10,6 +10,7 @@ import { useActiveHuddle, useJoinHuddle, useLeaveHuddle, useSetHuddleMute, useRa
 import { useMeetingRealtime } from "./meeting-realtime";
 import { useWebRTCMeeting } from "./webrtc-meeting";
 import { getInitials } from "./chat-helpers";
+import { CallJoinConsentDialog } from "./call-join-consent-dialog";
 import type { HuddleParticipant } from "@/types/chat";
 
 function VideoTile({
@@ -107,6 +108,9 @@ export function VideoMeetingPanel({
   const [handRaised, setHandRaised] = useState(false);
   const [layout, setLayout] = useState<"grid" | "speaker">("grid");
   const [participantStates, setParticipantStates] = useState<Map<string, RTCPeerConnectionState>>(new Map());
+  const [showJoinConsent, setShowJoinConsent] = useState(false);
+  const pendingCameraOffRef = useRef(false);
+  const appliedCameraOffRef = useRef(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -138,19 +142,39 @@ export function VideoMeetingPanel({
 
   useEffect(() => { if (micError) toast.error(`Camera/Mic: ${micError}`); }, [micError]);
 
-  const handleJoin = useCallback(async () => {
-    if (!huddle) return;
-    try {
-      await joinHuddle.mutateAsync({ huddleId: huddle.id, channelId });
-      setInMeeting(true);
-    } catch (err) { toast.error(getErrorMessage(err)); }
-  }, [huddle, joinHuddle, channelId]);
+  useEffect(() => {
+    if (!localStream || !pendingCameraOffRef.current || appliedCameraOffRef.current) return;
+    appliedCameraOffRef.current = true;
+    toggleCamera();
+    if (huddle) {
+      setCameraState.mutate({ huddleId: huddle.id, channelId, isCameraOff: true });
+    }
+  }, [localStream, huddle, channelId, toggleCamera, setCameraState]);
+
+  const handleJoin = useCallback(
+    async (joinWithCameraOff: boolean) => {
+      if (!huddle) return;
+      pendingCameraOffRef.current = joinWithCameraOff;
+      appliedCameraOffRef.current = false;
+      setShowJoinConsent(false);
+      try {
+        await joinHuddle.mutateAsync({ huddleId: huddle.id, channelId });
+        setInMeeting(true);
+      } catch (err) { toast.error(getErrorMessage(err)); }
+    },
+    [huddle, joinHuddle, channelId],
+  );
+
+  const handleOpenJoinConsent = useCallback(() => setShowJoinConsent(true), []);
+  const handleJoinWithCamera = useCallback(() => handleJoin(false), [handleJoin]);
+  const handleJoinAudioOnly = useCallback(() => handleJoin(true), [handleJoin]);
 
   const handleLeave = useCallback(async () => {
     if (!huddle) return;
     try {
       await leaveHuddle.mutateAsync({ huddleId: huddle.id, channelId });
       setInMeeting(false);
+      appliedCameraOffRef.current = false;
       onClose();
     } catch (err) { toast.error(getErrorMessage(err)); }
   }, [huddle, leaveHuddle, channelId, onClose]);
@@ -236,6 +260,12 @@ export function VideoMeetingPanel({
 
   return (
     <div ref={containerRef} className="fixed inset-0 z-50 bg-zinc-950 flex flex-col">
+      <CallJoinConsentDialog
+        open={showJoinConsent}
+        onOpenChange={setShowJoinConsent}
+        onJoinWithCamera={handleJoinWithCamera}
+        onJoinAudioOnly={handleJoinAudioOnly}
+      />
       <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-2">
           <Camera className="h-4 w-4 text-blue-400" />
@@ -320,7 +350,7 @@ export function VideoMeetingPanel({
             <Camera className="h-12 w-12 text-white/20" />
             <p className="text-white/60 text-sm">Meeting in progress with {activeParticipants.length} participant{activeParticipants.length !== 1 ? "s" : ""}</p>
             <button
-              onClick={handleJoin}
+              onClick={handleOpenJoinConsent}
               disabled={joinHuddle.isPending}
               className="h-10 px-6 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
             >

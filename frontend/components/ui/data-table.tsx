@@ -20,6 +20,7 @@ import {
   Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -304,9 +305,7 @@ export function DataTable<T>({
         ) : rows.length === 0 ? (
           <div className="p-2">
             {emptyState ?? (
-              <div className="flex items-center justify-center min-h-[260px] text-sm text-muted-foreground rounded-lg border border-dashed border-border bg-card">
-                No results found.
-              </div>
+              <ChartEmptyState message="No results found." height={260} />
             )}
           </div>
         ) : (

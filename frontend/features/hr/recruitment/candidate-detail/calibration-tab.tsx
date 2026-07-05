@@ -186,7 +186,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
 
       {!sessions?.length ? (
         <EmptyState
-          illustration={<Users className="h-8 w-8 text-muted-foreground" />}
+          illustrationPreset="team"
           title="No calibration sessions yet"
           description="Schedule a calibration session to align your hiring team on a decision."
           action={{ label: "New Session", onClick: handleOpenNew }}

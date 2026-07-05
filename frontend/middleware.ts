@@ -82,6 +82,7 @@ const PROTECTED_ROUTES = [
   "/notifications",
   "/calendar",
   "/knowledge",
+  "/surveys",
 ];
 
 const AUTH_ROUTES = [
@@ -140,9 +141,12 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/organization/branches": ["settings:manage"],
   "/billing": ["settings:manage"],
   "/billing/invoices": ["settings:manage"],
+  "/settings/payments": ["payments:providers:view"],
+  "/onboarding/payments": ["payments:providers:view"],
   "/notifications": ["self:attendance"],
   "/ceo": ["reports:view"],
   "/reports": ["reports:view"],
+  "/surveys": ["surveys:view"],
   "/blogs/admin": ["settings:manage"],
 };
 

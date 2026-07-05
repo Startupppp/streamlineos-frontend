@@ -50,7 +50,7 @@ export function UserDevicesTab({ userId }: UserDevicesTabProps) {
     return (
       <EmptyState
         compact
-        illustration={<Laptop className="h-10 w-10 text-muted-foreground/40" />}
+        illustrationPreset="devices"
         title="No devices"
         description="This user has no registered devices."
       />

@@ -19,6 +19,7 @@ import {
   Scatter,
 } from "recharts";
 import type { Sprint } from "@/types/projects";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { STATE_COLORS, PRIORITY_COLORS, CHART_COLORS } from "./project-stats";
 
 const TOOLTIP_STYLE = {
@@ -33,11 +34,7 @@ interface StateChartProps {
 
 export function StateDistributionChart({ data }: StateChartProps) {
   if (data.length === 0) {
-    return (
-      <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
-        No state data available
-      </div>
-    );
+    return <ChartEmptyState message="No state data available" />;
   }
 
   return (
@@ -67,11 +64,7 @@ interface PriorityChartProps {
 
 export function PriorityBreakdownChart({ data }: PriorityChartProps) {
   if (data.length === 0) {
-    return (
-      <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
-        No priority data available
-      </div>
-    );
+    return <ChartEmptyState message="No priority data available" />;
   }
 
   return (
@@ -103,11 +96,7 @@ interface VolumeChartProps {
 
 export function VolumeOverTimeChart({ data }: VolumeChartProps) {
   if (data.length === 0) {
-    return (
-      <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
-        No volume data available
-      </div>
-    );
+    return <ChartEmptyState message="No volume data available" />;
   }
 
   return (
@@ -146,11 +135,7 @@ interface AssigneeChartProps {
 
 export function AssigneeCompletionChart({ data }: AssigneeChartProps) {
   if (data.length === 0) {
-    return (
-      <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
-        No assignee data available
-      </div>
-    );
+    return <ChartEmptyState message="No assignee data available" />;
   }
 
   return (
@@ -191,11 +176,7 @@ interface VelocityChartProps {
 
 export function CycleVelocityChart({ data }: VelocityChartProps) {
   if (data.length === 0) {
-    return (
-      <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
-        No velocity data available
-      </div>
-    );
+    return <ChartEmptyState message="No velocity data available" />;
   }
 
   return (
@@ -292,11 +273,13 @@ export function SprintBurndownChart({
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
-            {sprints && sprints.length === 0
-              ? "No sprints found for this project"
-              : "No burndown data available for this sprint"}
-          </div>
+          <ChartEmptyState
+            message={
+              sprints && sprints.length === 0
+                ? "No sprints found for this project"
+                : "No burndown data available for this sprint"
+            }
+          />
         )}
       </CardContent>
     </Card>
@@ -309,11 +292,7 @@ interface EstimateChartProps {
 
 export function EstimateVsActualChart({ data }: EstimateChartProps) {
   if (data.length === 0) {
-    return (
-      <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
-        No estimate data available
-      </div>
-    );
+    return <ChartEmptyState message="No estimate data available" />;
   }
 
   return (

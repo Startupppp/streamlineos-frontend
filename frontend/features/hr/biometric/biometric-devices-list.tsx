@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Fingerprint, Wifi, WifiOff, Edit2 } from "lucide-react";
+import { Wifi, WifiOff, Edit2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,11 +28,13 @@ export function BiometricDevicesList({ canManage }: Props) {
 
   if (!devices?.length) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
-        <Fingerprint className="h-10 w-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">No biometric devices</p>
-        <p className="text-xs text-muted-foreground/70">Add your fingerprint or face-recognition devices to start syncing attendance</p>
-      </div>
+      <EmptyState
+        illustrationPreset="devices"
+        title="No biometric devices"
+        description="Add your fingerprint or face-recognition devices to start syncing attendance"
+        className="border-0 bg-transparent shadow-none h-64"
+        compact
+      />
     );
   }
 

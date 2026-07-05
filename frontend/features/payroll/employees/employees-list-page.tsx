@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EmptyPersonIllustration } from "@/components/illustrations/empty-person";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 import { SalaryProfileSheet } from "@/features/payroll/runs/salary-profile-sheet";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { useEmployeeProfiles } from "@/hooks/api/payroll/employees";

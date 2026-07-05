@@ -136,7 +136,7 @@ export default function TrashPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<Trash2 className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="archive"
           title="Could not load trash"
           description="There was a problem fetching deleted pages."
         />
@@ -144,7 +144,7 @@ export default function TrashPage() {
 
       {!isLoading && !isError && pages.length === 0 && (
         <EmptyState
-          illustration={<Trash2 className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="archive"
           title="Trash is empty"
           description="Deleted pages will appear here and can be restored or permanently removed."
         />

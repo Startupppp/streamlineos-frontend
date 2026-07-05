@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyLeaderboardIllustration } from "@/components/illustrations";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { cn } from "@/lib/utils";
 
 export const CHART_COLORS = [
@@ -93,12 +93,7 @@ export function SectionSkeleton({ rows = 4 }: { rows?: number }) {
 }
 
 export function EmptyChart({ label }: { label: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-2 py-10">
-      <EmptyLeaderboardIllustration className="h-24 w-24 opacity-70" />
-      <p className="text-xs text-muted-foreground">{label}</p>
-    </div>
-  );
+  return <ChartEmptyState message={label} compact />;
 }
 
 export function SimpleBar({

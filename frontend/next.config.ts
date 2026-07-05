@@ -32,6 +32,7 @@ function shouldSendStrictTransportSecurity(): boolean {
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   experimental: {
+    optimizePackageImports: ["lucide-react"],
     serverActions: {
       allowedOrigins: [
         ...(process.env.NODE_ENV === "development" ? ["*.devtunnels.ms", "*.vscode.dev"] : []),

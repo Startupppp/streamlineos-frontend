@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import type { RevenueVsGoalEntryResult } from "@/hooks/api/crm";
 import { formatINRCompact } from "@/lib/format-utils";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 interface RevenueVsGoalChartProps {
   data: RevenueVsGoalEntryResult[];
@@ -24,11 +25,7 @@ function formatK(value: number) {
 
 export function RevenueVsGoalChart({ data, height = 280 }: RevenueVsGoalChartProps) {
   if (!data || data.length === 0) {
-    return (
-      <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
-        No data available
-      </div>
-    );
+    return <ChartEmptyState />;
   }
 
   return (

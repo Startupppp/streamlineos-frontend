@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bookmark, Hash, Loader2, X } from "lucide-react";
@@ -78,10 +78,17 @@ export function SavedMessagesPanel({
   onClose: () => void;
   onJumpToChannel: (channelId: number) => void;
 }) {
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useSavedMessages();
+  const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useSavedMessages();
   const unsave = useUnsaveMessage();
 
-  const items = useMemo(() => data?.pages.flatMap(p => p.items) ?? [], [data]);
+  useEffect(() => {
+    void refetch();
+  }, [refetch]);
+
+  const items = useMemo(
+    () => data?.pages.flatMap((p) => p.items).filter((item) => item.message) ?? [],
+    [data],
+  );
 
   const handleUnsave = useCallback(async (messageId: number) => {
     try {
@@ -110,14 +117,25 @@ export function SavedMessagesPanel({
           <div className="flex items-center justify-center py-10">
             <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
           </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4">
+            <h4 className="text-[13px] font-semibold mb-1">Could not load saved messages</h4>
+            <button
+              onClick={() => void refetch()}
+              className="text-[11px] text-blue-600 hover:underline mt-1"
+            >
+              Try again
+            </button>
+          </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
             <div className="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center mb-3">
               <Bookmark className="h-5 w-5 text-amber-500" />
             </div>
             <h4 className="text-[13px] font-semibold mb-1">No saved messages</h4>
-            <p className="text-[11px] text-muted-foreground text-center">
-              Save messages to find them here later.
+            <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+              Use <span className="font-medium text-foreground">Save message</span> from a message&apos;s menu.
+              Pinning keeps a message in the channel only.
             </p>
           </div>
         ) : (

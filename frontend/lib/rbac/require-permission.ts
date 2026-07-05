@@ -15,15 +15,10 @@ interface RequirePermissionResult {
 
 function parsePermission(permission: string): { verb: string; subject: string } {
   const parts = permission.split(":");
-  if (parts.length === 3) {
-    const [domain, resource, action] = parts;
-    return { verb: action, subject: `${domain}:${resource}` };
-  }
-  if (parts.length === 2) {
-    const [subject, verb] = parts;
-    return { verb, subject };
-  }
-  return { verb: "read", subject: permission };
+  if (parts.length < 2) return { verb: "read", subject: permission };
+  const verb = parts[parts.length - 1];
+  const subject = parts.slice(0, -1).join(":");
+  return { verb, subject };
 }
 
 async function getCurrentPath(): Promise<string | null> {

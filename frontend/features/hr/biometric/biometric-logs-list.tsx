@@ -1,7 +1,7 @@
 "use client";
 
-import { ScanFace } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -29,11 +29,13 @@ export function BiometricLogsList() {
 
   if (!logs?.length) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
-        <ScanFace className="h-10 w-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">No punch logs</p>
-        <p className="text-xs text-muted-foreground/70">Biometric punch records will appear here after syncing</p>
-      </div>
+      <EmptyState
+        illustrationPreset="activity"
+        title="No punch logs"
+        description="Biometric punch records will appear here after syncing"
+        className="border-0 bg-transparent shadow-none h-64"
+        compact
+      />
     );
   }
 

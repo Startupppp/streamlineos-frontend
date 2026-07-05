@@ -70,7 +70,7 @@ export default function FavoritesPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<Star className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="knowledge"
           title="Could not load favorites"
           description="There was a problem fetching your favorited pages."
         />
@@ -78,7 +78,7 @@ export default function FavoritesPage() {
 
       {!isLoading && !isError && pages.length === 0 && (
         <EmptyState
-          illustration={<Star className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="knowledge"
           title="No favorites yet"
           description="Star pages to pin them here for quick access."
           action={{ label: "Browse pages", href: KNOWLEDGE_BASE }}

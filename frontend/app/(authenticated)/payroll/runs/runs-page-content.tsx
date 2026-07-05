@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { EmptyPayroll } from "@/components/illustrations/empty-payroll";
+import { EmptyPayroll } from "@/components/illustrations";
 import { RunStatusBadge } from "@/features/payroll/runs/run-status-badge";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";

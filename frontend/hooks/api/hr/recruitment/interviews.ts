@@ -187,7 +187,13 @@ export interface BookingLinkResponse {
 const INTERVIEW_SLAS_KEY = queryKeys.hr.interviewSlas();
 const SLA_REPORT_KEY = queryKeys.hr.slaReport();
 
-export function useInterviews(params?: { candidateId?: number; upcoming?: boolean }) {
+export function useInterviews(params?: {
+  candidateId?: number;
+  upcoming?: boolean;
+  relevant?: boolean;
+  limit?: number;
+  offset?: number;
+}) {
   return useQuery({
     queryKey: queryKeys.hr.interviews(params as Record<string, unknown> | undefined),
     queryFn: () =>

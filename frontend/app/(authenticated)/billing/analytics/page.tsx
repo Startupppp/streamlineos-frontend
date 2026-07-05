@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Tabs,
@@ -88,9 +89,7 @@ function MrrChart({ timeSeries, isLoading, title }: MrrChartProps) {
       {isLoading ? (
         <Skeleton className="h-48 w-full" />
       ) : timeSeries.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">
-          No data for selected period
-        </div>
+        <ChartEmptyState message="No data for selected period" height={192} />
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart

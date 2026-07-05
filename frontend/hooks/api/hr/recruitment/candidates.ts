@@ -81,12 +81,70 @@ export interface RecruitmentAnalytics {
 
 const ATS_KANBAN_KEY = queryKeys.hr.atsKanban();
 
-export function useCandidates(params?: { status?: string; jobId?: number }) {
+export function useCandidates(params?: { status?: string; source?: string; jobId?: number }) {
   return useQuery({
     queryKey: queryKeys.hr.candidates(params as Record<string, unknown> | undefined),
     queryFn: () =>
       apiClient.get<Candidate[]>("/hr/recruitment/candidates", params as Record<string, unknown> | undefined),
     staleTime: 2 * 60_000,
+  });
+}
+
+export interface DuplicateCandidateGroup {
+  key: string;
+  candidates: Array<{
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string | null;
+    phone: string | null;
+    status: CandidateStatus;
+    createdAt: string;
+    duplicateOfId: number | null;
+  }>;
+}
+
+export function useCandidateDuplicates() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "candidateDuplicates"] as const,
+    queryFn: () => apiClient.get<DuplicateCandidateGroup[]>("/hr/recruitment/candidates/duplicates"),
+    staleTime: 60_000,
+  });
+}
+
+export function useLinkDuplicateCandidate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ candidateId, duplicateOfId }: { candidateId: number; duplicateOfId: number }) =>
+      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/link-duplicate`, { duplicateOfId }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateDuplicates"] });
+    },
+  });
+}
+
+export function useUnlinkDuplicateCandidate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (candidateId: number) =>
+      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/unlink-duplicate`, {}),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateDuplicates"] });
+    },
+  });
+}
+
+export function useBulkShortlistCandidates() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (candidateIds: number[]) =>
+      apiClient.post<{ shortlisted: number; skipped: number }>("/hr/recruitment/candidates/bulk-shortlist", { candidateIds }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      void qc.invalidateQueries({ queryKey: ATS_KANBAN_KEY });
+    },
   });
 }
 

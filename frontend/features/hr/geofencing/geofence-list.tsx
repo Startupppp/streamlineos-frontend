@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,11 +37,13 @@ export function GeofenceList({ canManage }: Props) {
 
   if (!fences?.length) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
-        <MapPin className="h-10 w-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">No geofences configured</p>
-        <p className="text-xs text-muted-foreground/70">Add your office locations to enable attendance boundary validation</p>
-      </div>
+      <EmptyState
+        illustrationPreset="settings"
+        title="No geofences configured"
+        description="Add your office locations to enable attendance boundary validation"
+        className="border-0 bg-transparent shadow-none h-64"
+        compact
+      />
     );
   }
 

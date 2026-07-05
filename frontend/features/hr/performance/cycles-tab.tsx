@@ -20,7 +20,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Calendar, MoreHorizontal, Trash2, Pencil } from "lucide-react";
+import { Plus, MoreHorizontal, Trash2, Pencil } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -139,7 +139,7 @@ export function CyclesTab() {
       </div>
 
       {!cycles?.length ? (
-        <EmptyState illustration={<Calendar className="h-10 w-10 text-muted-foreground/40" />} title="No review cycles yet" description="Create a quarterly or annual cycle." compact />
+        <EmptyState illustrationPreset="calendar" title="No review cycles yet" description="Create a quarterly or annual cycle." compact />
       ) : (
         <div className="space-y-2">
           {cycles.map((cycle: ReviewCycle) => {

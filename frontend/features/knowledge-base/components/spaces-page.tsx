@@ -409,7 +409,7 @@ export default function SpacesPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<LayoutGrid className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="knowledge"
           title="Could not load spaces"
           description="There was a problem fetching spaces."
         />
@@ -417,7 +417,7 @@ export default function SpacesPage() {
 
       {!isLoading && !isError && spaces.length === 0 && (
         <EmptyState
-          illustration={<LayoutGrid className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="knowledge"
           title="No spaces yet"
           description="Create a space to organize your wiki pages."
           action={

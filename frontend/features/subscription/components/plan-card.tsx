@@ -2,6 +2,7 @@
 
 import { Check, Loader2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { SubscriptionPlan, BillingCycle } from "@/hooks/api/subscription";
 
 interface PlanConfig {
@@ -9,6 +10,12 @@ interface PlanConfig {
   label: string;
   features: string[];
 }
+
+const PLAN_TONE: Record<SubscriptionPlan, { bg: string; text: string }> = {
+  STARTER: { bg: "bg-blue-50", text: "text-blue-600" },
+  PROFESSIONAL: { bg: "bg-violet-50", text: "text-violet-600" },
+  ENTERPRISE: { bg: "bg-amber-50", text: "text-amber-600" },
+};
 
 interface PlanCardProps {
   plan: SubscriptionPlan;
@@ -38,6 +45,8 @@ export function PlanCard({
   onUpgrade,
 }: PlanCardProps) {
   const isCurrentPlan = currentPlan === plan && currentStatus === "ACTIVE";
+  const isEnterprise = plan === "ENTERPRISE";
+  const tone = PLAN_TONE[plan];
   const isUpgrading = upgradingPlan === plan && isBusy;
   const displayPrice =
     billingCycle === "annual"
@@ -51,11 +60,14 @@ export function PlanCard({
 
   return (
     <div
-      className={`relative flex flex-col rounded-lg border bg-card p-5 transition-shadow ${
+      className={cn(
+        "relative flex flex-col rounded-lg border bg-card p-5 transition-shadow",
         isCurrentPlan
           ? "border-primary ring-1 ring-primary/20"
-          : "border-border hover:shadow-sm"
-      }`}
+          : isEnterprise
+            ? "border-amber-200 hover:shadow-sm"
+            : "border-border hover:shadow-sm",
+      )}
     >
       {isCurrentPlan && (
         <span className="absolute -top-px left-4 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
@@ -63,8 +75,10 @@ export function PlanCard({
         </span>
       )}
       <div className="mb-4">
-        <div className="flex items-center gap-2 mb-1">
-          <Zap className="h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center gap-2 mb-2">
+          <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", tone.bg)}>
+            <Zap className={cn("h-4 w-4", tone.text)} aria-hidden="true" />
+          </div>
           <h3 className="text-sm font-semibold text-foreground">{config.label}</h3>
         </div>
         <p className="text-2xl font-bold text-foreground">
