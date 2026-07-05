@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState, useRef, useCallback } from "react";
 import {
   useTicket,
@@ -20,7 +19,7 @@ import { ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
-import { getSignedFileUrl, viewFile } from "@/hooks/common/use-file-url";
+import { viewFile } from "@/hooks/common/use-file-url";
 import { TicketHeader } from "./ticket-header";
 import { TicketSidebar } from "./ticket-sidebar";
 import { TicketSubtasks } from "./ticket-subtasks";
@@ -31,6 +30,7 @@ import { ActivityFeed } from "./activity-feed";
 import { TicketActivityLog } from "@/features/projects/tickets/ticket-activity-log";
 import { TicketChecklists } from "./ticket-checklists";
 import { TicketCustomFields } from "./ticket-custom-fields";
+import { AttachmentImage } from "./attachment-image";
 import type { TicketDetailsDialogProps, ProjectMember } from "./types";
 
 const TiptapEditorDynamic = dynamic(
@@ -43,11 +43,6 @@ const TiptapEditorDynamic = dynamic(
   },
 );
 
-interface AttachmentImageProps {
-  fileUrl: string;
-  fileName: string;
-}
-
 interface ProjectManager {
   id: string;
   name?: string | null;
@@ -57,51 +52,8 @@ interface ProjectManager {
   email?: string | null;
 }
 
-function isProjectWithManager(
-  data: unknown,
-): data is { manager?: ProjectManager } {
+function isProjectWithManager(data: unknown): data is { manager?: ProjectManager } {
   return typeof data === "object" && data !== null && "manager" in data;
-}
-
-function AttachmentImage({ fileUrl, fileName }: AttachmentImageProps) {
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-    const loadImage = async () => {
-      try {
-        const signedUrl = await getSignedFileUrl(fileUrl);
-        if (mounted) setImageSrc(signedUrl);
-      } catch {
-        if (mounted) setImageSrc(fileUrl);
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    };
-    loadImage();
-    return () => {
-      mounted = false;
-    };
-  }, [fileUrl]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  return (
-    <Image
-      src={imageSrc || fileUrl}
-      alt={fileName}
-      fill
-      unoptimized
-      className="object-cover"
-    />
-  );
 }
 
 export function TicketDetailsDialog({
@@ -133,17 +85,13 @@ export function TicketDetailsDialog({
       .filter((m) => !!m.user)
       .map((m) => ({
         id: m.user!.id,
-        name:
-          m.user!.name ||
-          `${m.user!.firstName || ""} ${m.user!.lastName || ""}`.trim(),
+        name: m.user!.name || `${m.user!.firstName || ""} ${m.user!.lastName || ""}`.trim(),
         firstName: m.user!.firstName || undefined,
         lastName: m.user!.lastName || undefined,
         image: m.user!.image || null,
         email: m.user!.email || "",
       }));
-    const mgr = isProjectWithManager(projectData)
-      ? projectData.manager
-      : undefined;
+    const mgr = isProjectWithManager(projectData) ? projectData.manager : undefined;
     if (mgr && !list.some((m) => m.id === mgr.id)) {
       list.unshift({
         id: mgr.id,
@@ -158,13 +106,9 @@ export function TicketDetailsDialog({
   })();
 
   const invalidateAll = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.projects.detail(projectId),
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
     if (ticketId !== null) {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(ticketId),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
     }
   }, [queryClient, projectId, ticketId]);
 
@@ -224,9 +168,7 @@ export function TicketDetailsDialog({
   );
 
   useEffect(() => {
-    if (ticket) {
-      setLocalTitle(ticket.title);
-    }
+    if (ticket) setLocalTitle(ticket.title);
   }, [ticket]);
 
   useEffect(() => {
@@ -235,15 +177,15 @@ export function TicketDetailsDialog({
     };
   }, []);
 
-  const handleDelete = () => {
+  function handleDelete() {
     if (!ticketId) return;
     deleteTicketMutation.mutate({ ticketId });
-  };
+  }
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setLocalTitle(e.target.value);
     debouncedSave({ title: e.target.value });
-  };
+  }
 
   const handleDescriptionEditorChange = useCallback(
     (html: string) => {
@@ -255,10 +197,7 @@ export function TicketDetailsDialog({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-[50vw] overflow-hidden p-0 flex flex-col"
-      >
+      <SheetContent side="right" className="w-full sm:max-w-[50vw] overflow-hidden p-0 flex flex-col">
         <TicketHeader
           ticketId={ticketId}
           ticketNumber={ticket?.ticketNumber}
@@ -283,9 +222,7 @@ export function TicketDetailsDialog({
               <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="h-6 w-6 text-muted-foreground" />
               </div>
-              <p className="font-medium text-foreground mb-1">
-                Restricted Access
-              </p>
+              <p className="font-medium text-foreground mb-1">Restricted Access</p>
               <p className="text-sm text-muted-foreground">
                 You can only view details of tickets assigned to you.
               </p>
@@ -295,12 +232,8 @@ export function TicketDetailsDialog({
               <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="h-6 w-6 text-muted-foreground" />
               </div>
-              <p className="font-medium text-foreground mb-2">
-                Ticket not found
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">
-                This ticket may have been deleted.
-              </p>
+              <p className="font-medium text-foreground mb-2">Ticket not found</p>
+              <p className="text-sm text-muted-foreground mb-4">This ticket may have been deleted.</p>
               <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
                 Back to board
               </Button>
@@ -336,11 +269,7 @@ export function TicketDetailsDialog({
                   placeholder="Add a description..."
                 />
 
-                <TicketSubtasks
-                  ticketId={ticketId!}
-                  projectId={projectId}
-                  subtasks={subtasks || []}
-                />
+                <TicketSubtasks ticketId={ticketId!} projectId={projectId} subtasks={subtasks || []} />
 
                 {ticket.attachments && ticket.attachments.length > 0 && (
                   <div>
@@ -356,10 +285,7 @@ export function TicketDetailsDialog({
                           className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
                         >
                           {att.mimeType?.startsWith("image/") ? (
-                            <AttachmentImage
-                              fileUrl={att.fileUrl}
-                              fileName={att.fileName}
-                            />
+                            <AttachmentImage fileUrl={att.fileUrl} fileName={att.fileName} />
                           ) : (
                             <div className="flex items-center justify-center h-full text-muted-foreground text-[10px] p-1 text-center">
                               {att.fileName}
@@ -375,23 +301,10 @@ export function TicketDetailsDialog({
                 )}
 
                 <TicketChecklists projectId={projectId} ticketId={ticketId!} />
-
                 <TicketCustomFields projectId={projectId} ticketId={ticketId!} />
-
                 <TicketRelations ticketId={ticketId!} projectId={projectId} />
-
-                <TicketTimeTracker
-                  ticketId={ticketId!}
-                  projectId={projectId}
-                  timeSpent={ticket.timeSpent ?? null}
-                />
-
-                <WatcherList
-                  projectId={projectId}
-                  ticketId={ticketId!}
-                  members={members}
-                />
-
+                <TicketTimeTracker ticketId={ticketId!} projectId={projectId} timeSpent={ticket.timeSpent ?? null} />
+                <WatcherList projectId={projectId} ticketId={ticketId!} members={members} />
                 <ActivityFeed
                   ticketId={ticketId!}
                   projectId={projectId}
@@ -399,13 +312,7 @@ export function TicketDetailsDialog({
                   members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}
                   highlightCommentId={highlightCommentId}
                 />
-
-                {ticketId ? (
-                  <TicketActivityLog
-                    ticketId={ticketId}
-                    projectId={projectId}
-                  />
-                ) : null}
+                {ticketId ? <TicketActivityLog ticketId={ticketId} projectId={projectId} /> : null}
               </div>
             </>
           ) : (

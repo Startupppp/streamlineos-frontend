@@ -16,19 +16,13 @@ import {
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
 import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
 import { TicketDetailsDialog } from "@/features/projects/ticket-details/ticket-details-dialog";
+import { SaveViewDialog } from "@/features/projects/views/save-view-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { CheckCircle2, Download, Bookmark, X } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";
@@ -51,6 +45,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const [hideCompleted, setHideCompleted] = useState(true);
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [saveViewName, setSaveViewName] = useState("");
+
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
   const commentParam = searchParams.get("comment");
@@ -116,47 +111,24 @@ export default function ProjectBoardPage({ params }: PageProps) {
           }
         },
         onError: (err) => toast.error(getErrorMessage(err)),
-      }
+      },
     );
   }, [saveViewName, q, filterStatus, filterPriority, filterType, filterAssigneeId, view, projectId, createView, searchParams, router]);
 
-  const handleSaveViewKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") handleSaveView();
-    },
-    [handleSaveView]
-  );
-
-  const handleOpenSaveView = useCallback(() => {
-    setSaveViewName("");
-    setSaveViewOpen(true);
-  }, []);
-
-  const handleCloseSaveViewDialog = useCallback(() => setSaveViewOpen(false), []);
-
-  const handleSaveViewNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSaveViewName(e.target.value),
-    []
-  );
-
-  const handleCloseSaveView = useCallback((open: boolean) => {
-    setSaveViewOpen(open);
-  }, []);
-
   const handleViewChange = useCallback(
     (v: ViewType) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("view", v);
-      router.replace(`?${params.toString()}`, { scroll: false });
+      const p = new URLSearchParams(searchParams.toString());
+      p.set("view", v);
+      router.replace(`?${p.toString()}`, { scroll: false });
     },
     [router, searchParams],
   );
 
   const handleTicketSelect = useCallback(
     (id: number) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("ticket", String(id));
-      router.replace(`?${params.toString()}`, { scroll: false });
+      const p = new URLSearchParams(searchParams.toString());
+      p.set("ticket", String(id));
+      router.replace(`?${p.toString()}`, { scroll: false });
     },
     [router, searchParams],
   );
@@ -164,13 +136,18 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const handleTicketClose = useCallback(
     (open: boolean) => {
       if (!open) {
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete("ticket");
-        params.delete("comment");
-        router.replace(`?${params.toString()}`, { scroll: false });
+        const p = new URLSearchParams(searchParams.toString());
+        p.delete("ticket");
+        p.delete("comment");
+        router.replace(`?${p.toString()}`, { scroll: false });
       }
     },
     [router, searchParams],
+  );
+
+  const handleSaveViewNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSaveViewName(e.target.value),
+    [],
   );
 
   const allTickets: KanbanTicket[] = useMemo(() => {
@@ -215,29 +192,16 @@ export default function ProjectBoardPage({ params }: PageProps) {
     let tickets = hideCompleted
       ? allTickets.filter((t) => t.status !== "DONE")
       : allTickets;
-
     if (q) {
       const lower = q.toLowerCase();
       tickets = tickets.filter((t) => t.title.toLowerCase().includes(lower));
     }
-    if (filterStatus)
-      tickets = tickets.filter((t) => t.status === filterStatus);
-    if (filterPriority)
-      tickets = tickets.filter((t) => t.priority === filterPriority);
+    if (filterStatus) tickets = tickets.filter((t) => t.status === filterStatus);
+    if (filterPriority) tickets = tickets.filter((t) => t.priority === filterPriority);
     if (filterType) tickets = tickets.filter((t) => t.type === filterType);
-    if (filterAssigneeId)
-      tickets = tickets.filter((t) => t.assigneeId === filterAssigneeId);
-
+    if (filterAssigneeId) tickets = tickets.filter((t) => t.assigneeId === filterAssigneeId);
     return tickets;
-  }, [
-    allTickets,
-    hideCompleted,
-    q,
-    filterStatus,
-    filterPriority,
-    filterType,
-    filterAssigneeId,
-  ]);
+  }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId]);
 
   const members = useMemo(() => {
     if (!data?.members) return [];
@@ -254,12 +218,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const statuses =
     data && "statuses" in data
-      ? (data.statuses as {
-          id: number;
-          name: string;
-          color: string | null;
-          order: number;
-        }[])
+      ? (data.statuses as { id: number; name: string; color: string | null; order: number }[])
       : undefined;
 
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
@@ -301,23 +260,16 @@ export default function ProjectBoardPage({ params }: PageProps) {
         <>
           <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
           <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleExportCsv}
-            className="h-7 text-xs gap-1.5 shrink-0"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Export
+          <Button variant="ghost" size="sm" onClick={handleExportCsv} className="h-7 text-xs gap-1.5 shrink-0">
+            <Download className="h-3.5 w-3.5" /> Export
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleOpenSaveView}
+            onClick={() => { setSaveViewName(""); setSaveViewOpen(true); }}
             className="h-7 text-xs gap-1.5 shrink-0"
           >
-            <Bookmark className="h-3.5 w-3.5" />
-            Save view
+            <Bookmark className="h-3.5 w-3.5" /> Save view
           </Button>
           {activeView && (
             <Badge
@@ -370,53 +322,29 @@ export default function ProjectBoardPage({ params }: PageProps) {
           />
         </div>
       )}
-
       {view === "list" && (
         <div className="h-full overflow-y-auto px-4 py-2">
-          <ListView
-            tickets={filteredTickets}
-            onTicketClick={handleTicketSelect}
-            groupBy="status"
-            projectKey={data.key}
-          />
+          <ListView tickets={filteredTickets} onTicketClick={handleTicketSelect} groupBy="status" projectKey={data.key} />
         </div>
       )}
-
       {view === "table" && (
         <div className="h-full overflow-y-auto px-4 py-2">
-          <TableView
-            tickets={filteredTickets}
-            onTicketClick={handleTicketSelect}
-            projectKey={data.key}
-          />
+          <TableView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectKey={data.key} />
         </div>
       )}
-
       {view === "calendar" && (
         <div className="h-full overflow-y-auto px-4 py-2">
-          <CalendarView
-            tickets={filteredTickets}
-            onTicketClick={handleTicketSelect}
-          />
+          <CalendarView tickets={filteredTickets} onTicketClick={handleTicketSelect} />
         </div>
       )}
-
       {view === "gantt" && (
         <div className="h-full overflow-auto px-4 py-2">
-          <GanttView
-            tickets={filteredTickets}
-            onTicketClick={handleTicketSelect}
-          />
+          <GanttView tickets={filteredTickets} onTicketClick={handleTicketSelect} />
         </div>
       )}
-
       {view === "workload" && (
         <div className="h-full overflow-y-auto">
-          <WorkloadView
-            tickets={filteredTickets}
-            projectId={projectId}
-            members={members}
-          />
+          <WorkloadView tickets={filteredTickets} projectId={projectId} members={members} />
         </div>
       )}
 
@@ -429,47 +357,15 @@ export default function ProjectBoardPage({ params }: PageProps) {
         highlightCommentId={highlightCommentId}
       />
 
-      <Dialog open={saveViewOpen} onOpenChange={handleCloseSaveView}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Save current view</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-1">
-            <div>
-              <Label htmlFor="save-view-name" className="text-sm">View name</Label>
-              <Input
-                id="save-view-name"
-                value={saveViewName}
-                onChange={handleSaveViewNameChange}
-                onKeyDown={handleSaveViewKeyDown}
-                placeholder="My filtered view"
-                className="mt-1.5"
-                autoFocus
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Saves current layout ({view}) and active filters.
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCloseSaveViewDialog}
-                disabled={createView.isPending}
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSaveView}
-                disabled={!saveViewName.trim() || createView.isPending}
-              >
-                {createView.isPending ? "Saving..." : "Save view"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <SaveViewDialog
+        open={saveViewOpen}
+        onOpenChange={setSaveViewOpen}
+        viewName={saveViewName}
+        onViewNameChange={handleSaveViewNameChange}
+        onSave={handleSaveView}
+        isSaving={createView.isPending}
+        activeLayout={view}
+      />
     </PageWrapper>
   );
 }

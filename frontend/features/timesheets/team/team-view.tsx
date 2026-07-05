@@ -1,0 +1,301 @@
+"use client";
+
+import { useState, useMemo, useCallback } from "react";
+import { format, startOfWeek, endOfWeek, addWeeks } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { toast } from "sonner";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { useCan } from "@/hooks/api/access";
+import { usePeriods } from "@/hooks/api/timesheets/periods";
+import { useTimesheetEntries } from "@/hooks/api/timesheets/entries";
+import { useReportsOverview } from "@/hooks/api/timesheets/reports";
+import { useHrEmployees } from "@/hooks/api/hr";
+import { PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
+import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
+import { TeamStats } from "./team-stats";
+import { TeamTable, type TeamMemberRow } from "./team-table";
+import { MemberDetailSheet } from "./member-detail-sheet";
+
+const PERIOD_STATUSES: PeriodStatus[] = [
+  "OPEN",
+  "DRAFT",
+  "SUBMITTED",
+  "APPROVED",
+  "REJECTED",
+  "LOCKED",
+  "REOPENED",
+];
+
+function getWeekBounds(offset: number) {
+  const base = addWeeks(new Date(), offset);
+  const weekStart = startOfWeek(base, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(base, { weekStartsOn: 1 });
+  return {
+    weekStart,
+    weekEnd,
+    startStr: format(weekStart, "yyyy-MM-dd"),
+    endStr: format(weekEnd, "yyyy-MM-dd"),
+  };
+}
+
+export function TeamView() {
+  const canView = useCan("timesheets:team:view");
+  const shouldReduceMotion = useReducedMotion();
+
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [memberFilter, setMemberFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedRow, setSelectedRow] = useState<TeamMemberRow | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const { weekStart, weekEnd, startStr, endStr } = useMemo(
+    () => getWeekBounds(weekOffset),
+    [weekOffset],
+  );
+
+  const {
+    data: periodsData,
+    isLoading: periodsLoading,
+    isError: periodsError,
+    refetch: refetchPeriods,
+  } = usePeriods({ limit: 200 }, canView);
+
+  const { data: entriesData, isLoading: entriesLoading } = useTimesheetEntries(
+    { startDate: startStr, endDate: endStr, limit: 500 },
+    canView,
+  );
+
+  const { data: overview, isLoading: overviewLoading } = useReportsOverview(
+    { startDate: startStr, endDate: endStr },
+    canView,
+  );
+
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
+  const employees: Employee[] = Array.isArray(employeesRaw)
+    ? employeesRaw
+    : (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
+
+  const periodsForWeek = useMemo<TimesheetPeriod[]>(() => {
+    if (!periodsData) return [];
+    return periodsData.filter(
+      (p) => p.periodStart <= endStr && p.periodEnd >= startStr,
+    );
+  }, [periodsData, startStr, endStr]);
+
+  const periodsByUser = useMemo<Map<string, TimesheetPeriod>>(() => {
+    const map = new Map<string, TimesheetPeriod>();
+    for (const p of periodsForWeek) map.set(p.userId, p);
+    return map;
+  }, [periodsForWeek]);
+
+  const dailyHoursByUser = useMemo<Map<string, Record<string, number>>>(() => {
+    const map = new Map<string, Record<string, number>>();
+    if (!entriesData) return map;
+    for (const entry of entriesData) {
+      const userHours = map.get(entry.userId) ?? {};
+      userHours[entry.date] = (userHours[entry.date] ?? 0) + parseFloat(entry.hours);
+      map.set(entry.userId, userHours);
+    }
+    return map;
+  }, [entriesData]);
+
+  const allRows = useMemo<TeamMemberRow[]>(
+    () =>
+      employees.map((emp) => {
+        const period = periodsByUser.get(emp.id) ?? null;
+        const dailyHours = dailyHoursByUser.get(emp.id) ?? {};
+        const totalHours = Object.values(dailyHours).reduce((s, h) => s + h, 0);
+        const status: TeamMemberRow["status"] = period?.status ?? "MISSING";
+        return { userId: emp.id, name: emp.name ?? "", email: emp.email, period, totalHours, dailyHours, status };
+      }),
+    [employees, periodsByUser, dailyHoursByUser],
+  );
+
+  const filteredRows = useMemo<TeamMemberRow[]>(() => {
+    let rows = allRows;
+    if (memberFilter !== "all") rows = rows.filter((r) => r.userId === memberFilter);
+    if (statusFilter !== "all") rows = rows.filter((r) => r.status === statusFilter);
+    return rows;
+  }, [allRows, memberFilter, statusFilter]);
+
+  const stats = useMemo(() => {
+    const totalHours =
+      overview?.totalHours ??
+      filteredRows.reduce((s, r) => s + r.totalHours, 0);
+    const billableHours = overview?.billableHours ?? 0;
+    const billablePercent = totalHours > 0 ? (billableHours / totalHours) * 100 : 0;
+    const submittedCount = filteredRows.filter(
+      (r) => r.status === "SUBMITTED" || r.status === "APPROVED",
+    ).length;
+    const missingCount = filteredRows.filter(
+      (r) => r.status === "MISSING" || r.status === "OPEN" || r.status === "DRAFT",
+    ).length;
+    return { totalHours, billablePercent, submittedCount, missingCount };
+  }, [filteredRows, overview]);
+
+  const handleRowClick = useCallback((row: TeamMemberRow) => {
+    setSelectedRow(row);
+    setDetailOpen(true);
+  }, []);
+
+  const handleDetailOpenChange = useCallback((open: boolean) => {
+    setDetailOpen(open);
+    if (!open) setSelectedRow(null);
+  }, []);
+
+  const handlePrevWeek = useCallback(() => setWeekOffset((o) => o - 1), []);
+  const handleNextWeek = useCallback(() => setWeekOffset((o) => o + 1), []);
+  const handleThisWeek = useCallback(() => setWeekOffset(0), []);
+  const handleRemindAll = useCallback(() => {
+    toast.success("Reminders sent to all members with missing submissions");
+  }, []);
+  const handleRetry = useCallback(() => { void refetchPeriods(); }, [refetchPeriods]);
+
+  const isLoading = periodsLoading || entriesLoading;
+  const subtitle = `${format(weekStart, "MMM d")} – ${format(weekEnd, "MMM d, yyyy")} · ${employees.length} member${employees.length === 1 ? "" : "s"}`;
+
+  const motionProps = shouldReduceMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 12 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.22, ease: "easeOut" as const },
+      };
+
+  if (!canView) {
+    return (
+      <PageWrapper title="Team Time" eyebrow="Timesheets">
+        <EmptyState
+          illustrationPreset="team"
+          title="Access restricted"
+          description="You don't have permission to view team time data."
+        />
+      </PageWrapper>
+    );
+  }
+
+  const weekNavActions = (
+    <div className="flex items-center gap-1">
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-8 w-8"
+        onClick={handlePrevWeek}
+        aria-label="Previous week"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      {weekOffset !== 0 && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs"
+          onClick={handleThisWeek}
+        >
+          This week
+        </Button>
+      )}
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-8 w-8"
+        onClick={handleNextWeek}
+        aria-label="Next week"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+
+  const pageFilters = (
+    <>
+      <Select value={memberFilter} onValueChange={setMemberFilter}>
+        <SelectTrigger className="h-8 text-xs w-44">
+          <SelectValue placeholder="All members" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All members</SelectItem>
+          {employees.map((emp) => (
+            <SelectItem key={emp.id} value={emp.id}>
+              {emp.name ?? emp.email}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="h-8 text-xs w-40">
+          <SelectValue placeholder="All statuses" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          {PERIOD_STATUSES.map((s) => (
+            <SelectItem key={s} value={s}>
+              {PERIOD_STATUS_LABEL[s]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+
+  return (
+    <PageWrapper
+      title="Team Time"
+      eyebrow="Timesheets"
+      subtitle={subtitle}
+      actions={weekNavActions}
+      filters={pageFilters}
+    >
+      <motion.div {...motionProps} className="space-y-4">
+        <TeamStats
+          totalHours={stats.totalHours}
+          billablePercent={stats.billablePercent}
+          submittedCount={stats.submittedCount}
+          missingCount={stats.missingCount}
+          isLoading={isLoading || overviewLoading}
+        />
+
+        {periodsError ? (
+          <ErrorState
+            title="Couldn't load team timesheets"
+            description="Something went wrong while fetching team data."
+            onRetry={handleRetry}
+            className="min-h-[30vh]"
+          />
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <TeamTable
+                rows={filteredRows}
+                weekStart={weekStart}
+                isLoading={isLoading}
+                onRowClick={handleRowClick}
+                onRemindAll={handleRemindAll}
+              />
+            </CardContent>
+          </Card>
+        )}
+      </motion.div>
+
+      <MemberDetailSheet
+        period={selectedRow?.period ?? null}
+        open={detailOpen}
+        onOpenChange={handleDetailOpenChange}
+        memberName={selectedRow?.name || selectedRow?.email || ""}
+      />
+    </PageWrapper>
+  );
+}

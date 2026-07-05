@@ -23,6 +23,8 @@ const PRIORITY_CLASS: Record<string, string> = {
   LOW: "text-slate-600 border-slate-300 bg-slate-100",
 };
 
+const BUCKET_ORDER: DueBucket[] = ["overdue", "today", "upcoming", "none"];
+
 const BUCKET_CONFIG: Record<DueBucket, { label: string; icon: React.ComponentType<{ className?: string }>; iconClass: string }> = {
   overdue: { label: "Overdue", icon: AlertCircle, iconClass: "text-red-600" },
   today: { label: "Due Today", icon: CalendarClock, iconClass: "text-amber-600" },
@@ -127,8 +129,6 @@ export function MyWorkPage() {
     () => data?.filter((i) => i.status !== "DONE" && i.status !== "CANCELLED").length ?? 0,
     [data],
   );
-
-  const BUCKET_ORDER: DueBucket[] = ["overdue", "today", "upcoming", "none"];
 
   return (
     <PageWrapper

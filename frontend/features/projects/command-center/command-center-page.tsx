@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Briefcase, CheckSquare, AlertCircle, Clock, ChevronRight, ArrowRight } from "lucide-react";
+import { Briefcase, CheckSquare, AlertCircle, ChevronRight, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useMyWork } from "@/hooks/api/projects/my-work";
@@ -35,7 +35,7 @@ function isOverdue(item: MyWorkItem): boolean {
   }
 }
 
-function MyWorkItem({ item, index }: { item: MyWorkItem; index: number }) {
+function MyWorkRow({ item, index }: { item: MyWorkItem; index: number }) {
   const shouldReduceMotion = useReducedMotion();
 
   return (
@@ -182,7 +182,7 @@ export function CommandCenterPage() {
           ) : (
             <div className="space-y-0.5 bg-card rounded-lg border border-border overflow-hidden">
               {topWork.map((item, i) => (
-                <MyWorkItem key={item.id} item={item} index={i} />
+                <MyWorkRow key={item.id} item={item} index={i} />
               ))}
             </div>
           )}
@@ -207,9 +207,7 @@ export function CommandCenterPage() {
             />
           ) : (
             <div className="space-y-2">
-              {projects.slice(0, 8).map((project, idx) => {
-                const shouldReduceMotion = false;
-                return (
+              {projects.slice(0, 8).map((project, idx) => (
                   <motion.div
                     key={project.id}
                     initial={{ opacity: 0, y: 4 }}
@@ -220,6 +218,7 @@ export function CommandCenterPage() {
                       href={`/projects/${project.id}`}
                       className="flex items-center gap-3 px-3 py-2.5 bg-card rounded-lg border border-border hover:shadow-sm hover:border-border/80 transition-all group"
                     >
+
                       <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
                         {project.key.substring(0, 2).toUpperCase()}
                       </div>
@@ -258,8 +257,7 @@ export function CommandCenterPage() {
                       </div>
                     </Link>
                   </motion.div>
-                );
-              })}
+              ))}
             </div>
           )}
         </PageSection>

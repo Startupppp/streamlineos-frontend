@@ -66,7 +66,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
   const statusValue = watch("status");
 
   const handleDescriptionChange = useCallback(
-    (html: string) => setValue("description", html || null),
+    (html: string) => setValue("description", html || null, { shouldValidate: false }),
     [setValue],
   );
 
@@ -87,9 +87,9 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
             releaseId: release.id,
             name: values.name,
             version: values.version,
-            description: values.description ?? null,
+            description: values.description || null,
             status: values.status,
-            releaseDate: values.releaseDate ?? null,
+            releaseDate: values.releaseDate || null,
           },
           {
             onSuccess: () => { toast.success("Release updated"); onClose(); },
@@ -101,9 +101,9 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
           {
             name: values.name,
             version: values.version,
-            description: values.description ?? null,
+            description: values.description || null,
             status: values.status,
-            releaseDate: values.releaseDate ?? null,
+            releaseDate: values.releaseDate || null,
           },
           {
             onSuccess: () => { toast.success("Release created"); onClose(); },
@@ -164,7 +164,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
               <div className="rounded-md border border-input min-h-[140px]">
                 <TiptapEditor
                   content={descriptionValue ?? ""}
-                  onChange={handleDescriptionChange}
+                  onChangeHtml={handleDescriptionChange}
                   placeholder="Describe what's in this release…"
                 />
               </div>

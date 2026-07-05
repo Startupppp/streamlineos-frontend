@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  ArrowRight,
   Briefcase,
   CheckCircle2,
   Clock,
@@ -12,12 +10,8 @@ import {
   List,
   TrendingUp,
 } from "lucide-react";
-import { format } from "date-fns";
 import { useProjects } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -31,184 +25,16 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { RequireModule } from "@/components/auth/require-module";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
-import type { ProjectListItem, ProjectStatusValue } from "@/types/projects";
-
-type StatusFilter = "ALL" | ProjectStatusValue;
-type SortKey = "name" | "status" | "progress";
-type ViewMode = "table" | "cards";
-
-function toDate(value: string | Date | null | undefined): Date | null {
-  if (!value) return null;
-  return value instanceof Date ? value : new Date(value);
-}
-
-function getProjectHealth(project: ProjectListItem): "on-track" | "at-risk" | "critical" {
-  if (project.status === "COMPLETED") return "on-track";
-  if (project.status === "ARCHIVED") return "critical";
-  const end = toDate(project.endDate);
-  if (end && end < new Date()) return "critical";
-  return "on-track";
-}
-
-const healthConfig = {
-  "on-track": { label: "On Track", color: "text-emerald-600", bg: "bg-emerald-50", dot: "bg-emerald-500" },
-  "at-risk": { label: "At Risk", color: "text-amber-600", bg: "bg-amber-50", dot: "bg-amber-500" },
-  critical: { label: "Critical", color: "text-red-600", bg: "bg-red-50", dot: "bg-red-500" },
-} as const;
-
-const statusConfig: Record<ProjectStatusValue, { label: string; color: string }> = {
-  ACTIVE: { label: "Active", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  COMPLETED: { label: "Completed", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  ARCHIVED: { label: "Archived", color: "bg-slate-100 text-slate-600 border-slate-200" },
-};
-
-const DEFAULT_STATUS_CONFIG = { label: "Unknown", color: "bg-slate-100 text-slate-600 border-slate-200" };
-
-const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
-  { value: "ALL", label: "All statuses" },
-  { value: "ACTIVE", label: "Active" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "ARCHIVED", label: "Archived" },
-];
-
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "name", label: "Name" },
-  { value: "status", label: "Status" },
-  { value: "progress", label: "Progress" },
-];
-
-function PortfolioSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 rounded-lg" />
-        ))}
-      </div>
-      <Skeleton className="h-64 rounded-lg" />
-    </div>
-  );
-}
-
-function ProjectTableRow({ project }: { project: ProjectListItem }) {
-  const health = getProjectHealth(project);
-  const hc = healthConfig[health];
-  const sc = project.status ? (statusConfig[project.status] ?? DEFAULT_STATUS_CONFIG) : DEFAULT_STATUS_CONFIG;
-  const endDate = toDate(project.endDate);
-  const managerName = project.manager
-    ? [project.manager.firstName, project.manager.lastName].filter(Boolean).join(" ") || null
-    : null;
-
-  return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_minmax(100px,140px)_auto_auto] items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-[10px] font-bold text-slate-400 font-mono shrink-0 w-12 truncate">{project.key}</span>
-        <Link
-          href={`/projects/${project.id}`}
-          className="text-sm font-medium text-foreground hover:text-blue-600 truncate transition-colors"
-        >
-          {project.name}
-        </Link>
-      </div>
-      <Badge variant="outline" className={cn("text-[10px] shrink-0 border", sc.color)}>
-        {sc.label}
-      </Badge>
-      <div className={cn("flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0", hc.bg, hc.color)}>
-        <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", hc.dot)} />
-        {hc.label}
-      </div>
-      <div className="flex items-center gap-2 min-w-0">
-        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-full transition-[width] duration-500 ease-out"
-            style={{ width: `${project.progress.percentage}%` }}
-          />
-        </div>
-        <span className="text-[11px] text-muted-foreground tabular-nums shrink-0 w-8 text-right">
-          {project.progress.percentage}%
-        </span>
-      </div>
-      <span className="text-[11px] text-muted-foreground shrink-0 whitespace-nowrap">
-        {endDate ? format(endDate, "MMM d, yyyy") : "—"}
-      </span>
-      <span className="text-[11px] text-muted-foreground truncate max-w-[100px]">
-        {managerName ?? "—"}
-      </span>
-    </div>
-  );
-}
-
-function ProjectHealthCard({ project }: { project: ProjectListItem }) {
-  const health = getProjectHealth(project);
-  const hc = healthConfig[health];
-  const sc = project.status ? (statusConfig[project.status] ?? DEFAULT_STATUS_CONFIG) : DEFAULT_STATUS_CONFIG;
-  const endDate = toDate(project.endDate);
-  const managerName = project.manager
-    ? [project.manager.firstName, project.manager.lastName].filter(Boolean).join(" ") || null
-    : null;
-
-  return (
-    <div className="rounded-lg border border-border bg-card p-5 flex flex-col gap-3 hover:shadow-md transition-shadow h-full">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[11px] font-bold text-slate-400 font-mono shrink-0">{project.key}</span>
-          <h3 className="font-semibold text-foreground truncate text-sm">{project.name}</h3>
-        </div>
-        <Badge variant="outline" className={cn("text-[10px] shrink-0 border", sc.color)}>
-          {sc.label}
-        </Badge>
-      </div>
-
-      {project.description && (
-        <p className="text-xs text-muted-foreground line-clamp-2">{project.description}</p>
-      )}
-
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className={cn("flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium", hc.bg, hc.color)}>
-          <div className={cn("h-1.5 w-1.5 rounded-full", hc.dot)} />
-          {hc.label}
-        </div>
-        {project.progress.total > 0 && (
-          <span className="text-[11px] text-muted-foreground">{project.progress.percentage}% done</span>
-        )}
-      </div>
-
-      {project.progress.total > 0 && (
-        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-full transition-[width] duration-500 ease-out"
-            style={{ width: `${project.progress.percentage}%` }}
-          />
-        </div>
-      )}
-
-      <div className="flex flex-col gap-1">
-        {endDate && (
-          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-            <Clock className="h-3 w-3 shrink-0" />
-            Due {format(endDate, "MMM d, yyyy")}
-          </p>
-        )}
-        {managerName && (
-          <p className="text-[11px] text-muted-foreground truncate">Manager: {managerName}</p>
-        )}
-      </div>
-
-      <div className="mt-auto pt-2 border-t border-border">
-        <Link href={`/projects/${project.id}`}>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs text-muted-foreground hover:text-foreground -ml-1 active:scale-[0.98]"
-          >
-            View Project
-            <ArrowRight className="h-3 w-3 ml-1" />
-          </Button>
-        </Link>
-      </div>
-    </div>
-  );
-}
+import { PortfolioSkeleton } from "@/features/projects/portfolio/portfolio-skeleton";
+import { ProjectTableRow } from "@/features/projects/portfolio/project-table-row";
+import { ProjectHealthCard } from "@/features/projects/portfolio/project-health-card";
+import {
+  STATUS_FILTER_OPTIONS,
+  SORT_OPTIONS,
+  type StatusFilter,
+  type SortKey,
+  type ViewMode,
+} from "@/features/projects/portfolio/portfolio-config";
 
 export default function PortfolioPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -229,9 +55,7 @@ export default function PortfolioPage() {
 
   const projects = useMemo(() => {
     let list = data?.data ?? [];
-    if (statusFilter !== "ALL") {
-      list = list.filter((p) => p.status === statusFilter);
-    }
+    if (statusFilter !== "ALL") list = list.filter((p) => p.status === statusFilter);
     return [...list].sort((a, b) => {
       if (sort === "name") return a.name.localeCompare(b.name);
       if (sort === "status") return (a.status ?? "").localeCompare(b.status ?? "");
@@ -256,7 +80,7 @@ export default function PortfolioPage() {
             "h-7 px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5",
             viewMode === "table"
               ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <List className="h-3.5 w-3.5" /> Table
@@ -268,33 +92,25 @@ export default function PortfolioPage() {
             "h-7 px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5",
             viewMode === "cards"
               ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <LayoutGrid className="h-3.5 w-3.5" /> Cards
         </button>
       </div>
       <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 w-36 text-xs">
-          <SelectValue />
-        </SelectTrigger>
+        <SelectTrigger className="h-8 w-36 text-xs"><SelectValue /></SelectTrigger>
         <SelectContent>
           {STATUS_FILTER_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value} className="text-xs">
-              {opt.label}
-            </SelectItem>
+            <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
       <Select value={sort} onValueChange={handleSortChange}>
-        <SelectTrigger className="h-8 w-32 text-xs">
-          <SelectValue />
-        </SelectTrigger>
+        <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
         <SelectContent>
           {SORT_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value} className="text-xs">
-              {opt.label}
-            </SelectItem>
+            <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -303,11 +119,7 @@ export default function PortfolioPage() {
 
   return (
     <RequireModule module="PROJECTS">
-      <PageWrapper
-        title="Portfolio"
-        badge={data ? String(stats.total) : undefined}
-        filters={filters}
-      >
+      <PageWrapper title="Portfolio" badge={data ? String(stats.total) : undefined} filters={filters}>
         {isLoading ? (
           <PortfolioSkeleton />
         ) : isError ? (
