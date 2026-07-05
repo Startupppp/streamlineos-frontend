@@ -10,8 +10,6 @@ import {
   Bookmark,
   Mic,
   Paperclip,
-  PanelLeftClose,
-  PanelLeftOpen,
   Users,
   Video,
 } from "lucide-react";
@@ -66,9 +64,6 @@ export function MessagePanel({
   onBack,
   onToggleInfo,
   showInfoPanel,
-  sidebarCollapsed,
-  onExpandSidebar,
-  onCollapseSidebar,
   autoStartCall,
   onAutoStartHandled,
 }: {
@@ -77,9 +72,6 @@ export function MessagePanel({
   onBack: () => void;
   onToggleInfo: () => void;
   showInfoPanel: boolean;
-  sidebarCollapsed?: boolean;
-  onExpandSidebar?: () => void;
-  onCollapseSidebar?: () => void;
   autoStartCall?: "huddle" | "video" | null;
   onAutoStartHandled?: () => void;
 }) {
@@ -833,26 +825,6 @@ export function MessagePanel({
     <div className="flex flex-1 min-w-0 overflow-hidden">
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <div className="h-[56px] px-4 border-b border-border/40 flex items-center gap-3 shrink-0 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
-          {sidebarCollapsed && onExpandSidebar ? (
-            <button
-              type="button"
-              onClick={onExpandSidebar}
-              className="hidden md:flex p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"
-              aria-label="Open conversations"
-            >
-              <PanelLeftOpen className="h-4 w-4" />
-            </button>
-          ) : null}
-          {!sidebarCollapsed && onCollapseSidebar ? (
-            <button
-              type="button"
-              onClick={onCollapseSidebar}
-              className="hidden md:flex p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"
-              aria-label="Collapse conversations"
-            >
-              <PanelLeftClose className="h-4 w-4" />
-            </button>
-          ) : null}
           <button
             onClick={onBack}
             className="md:hidden p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"

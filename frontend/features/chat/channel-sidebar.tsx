@@ -14,6 +14,7 @@ import {
   Archive,
   ArrowLeft,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Compass,
   MessageSquareText,
@@ -250,7 +251,23 @@ export function ChannelSidebar({
 
   return (
     <TooltipProvider>
-      <div className="relative flex flex-col h-full">
+      <div className="relative flex flex-col h-full overflow-visible">
+        {showCollapseToggle && (
+          <button
+            type="button"
+            onClick={handleToggleCollapse}
+            aria-label={isCollapsed ? "Expand channel sidebar" : "Collapse channel sidebar"}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="absolute top-7 -right-3 z-10 hidden md:flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card text-muted-foreground shadow-md transition-colors hover:border-blue-500/40 hover:bg-muted/50 hover:text-blue-600"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronLeft className="h-3.5 w-3.5" />
+            )}
+          </button>
+        )}
+
         <div className={cn("px-4 pt-4 pb-2", isCollapsed && "md:hidden")}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
@@ -329,12 +346,6 @@ export function ChannelSidebar({
           <div className="flex flex-col items-center gap-0.5">
             {renderCompactActionButton("Search", <Search className="h-3.5 w-3.5" />, handleOpenChatSearch)}
             {renderCompactActionButton("Browse Channels", <Compass className="h-3.5 w-3.5" />, handleOpenBrowse)}
-            {showCollapseToggle &&
-              renderCompactActionButton(
-                "Expand channel sidebar",
-                <ChevronRight className="h-3.5 w-3.5" />,
-                handleToggleCollapse,
-              )}
           </div>
           <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
           <NewGroupDialog open={newGroupOpen} onOpenChange={setNewGroupOpen} onCreated={onSelectChannel} />

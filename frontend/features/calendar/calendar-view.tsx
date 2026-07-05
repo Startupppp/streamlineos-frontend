@@ -15,8 +15,6 @@ import {
   subDays,
   startOfWeek,
   endOfWeek,
-  startOfYear,
-  endOfYear,
   startOfDay,
   endOfDay,
   isSameDay,
@@ -25,7 +23,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Download,
   Share2,
   Calendar as CalendarIcon,
   List,
@@ -51,8 +48,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -63,7 +58,6 @@ import {
   useExternalCalendarEvents,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
-import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";
 import { CalendarAiAssistant } from "./calendar-ai-assistant";
@@ -383,41 +377,6 @@ export function CalendarView() {
 
   const handleToday = useCallback(() => setCurrentDate(new Date()), []);
 
-  const handleExport = useCallback(
-    async (range: "month" | "3months" | "year") => {
-      let from: Date;
-      let to: Date;
-      if (range === "month") {
-        from = startOfMonth(currentDate);
-        to = endOfMonth(currentDate);
-      } else if (range === "3months") {
-        from = startOfMonth(currentDate);
-        to = endOfMonth(addMonths(currentDate, 2));
-      } else {
-        from = startOfYear(currentDate);
-        to = endOfYear(currentDate);
-      }
-      const fromStr = format(from, "yyyy-MM-dd");
-      const toStr = format(to, "yyyy-MM-dd");
-      try {
-        await downloadCalendarExport(fromStr, toStr);
-      } catch {
-        toast.error("Failed to export calendar");
-      }
-    },
-    [currentDate],
-  );
-
-  const handleExportMonth = useCallback(() => {
-    void handleExport("month");
-  }, [handleExport]);
-  const handleExport3Months = useCallback(() => {
-    void handleExport("3months");
-  }, [handleExport]);
-  const handleExportYear = useCallback(() => {
-    void handleExport("year");
-  }, [handleExport]);
-
   const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
 
   const handleCloseExternal = useCallback(() => setSelectedExternal(null), []);
@@ -533,7 +492,7 @@ export function CalendarView() {
           </span>
         </div>
 
-        {/* Right header actions: Share, Export, View mode, Add Event */}
+        {/* Right header actions: Share, View mode, Add Event */}
         <div className="flex items-center gap-2">
           {/* Share dropdown */}
           <DropdownMenu>
@@ -554,38 +513,6 @@ export function CalendarView() {
               </DropdownMenuItem>
               <DropdownMenuItem className="text-xs">
                 Embed calendar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Export dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs font-medium gap-1 px-3"
-              >
-                <Download className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Export</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuLabel className="text-xs">
-                Export to CSV
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-xs" onClick={handleExportMonth}>
-                This month
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-xs"
-                onClick={handleExport3Months}
-              >
-                Next 3 months
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs" onClick={handleExportYear}>
-                This year
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

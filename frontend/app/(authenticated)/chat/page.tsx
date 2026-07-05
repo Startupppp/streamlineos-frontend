@@ -107,10 +107,6 @@ export default function ChatPage() {
   }, []);
   const handleBack = useCallback(() => setShowMobileList(true), []);
   const handleToggleInfo = useCallback(() => setShowInfoPanel((p) => !p), []);
-  const handleExpandSidebar = useCallback(() => {
-    setSidebarCollapsed(false);
-    setChatSidebarCookie(false);
-  }, []);
   const handleNewDM = useCallback(() => setEmptyDMOpen(true), []);
   const handleNewChannel = useCallback(() => setEmptyGroupOpen(true), []);
   const handleSearch = useCallback(() => {
@@ -190,9 +186,6 @@ export default function ChatPage() {
               onBack={handleBack}
               onToggleInfo={handleToggleInfo}
               showInfoPanel={showInfoPanel}
-              sidebarCollapsed={sidebarCollapsed}
-              onExpandSidebar={handleExpandSidebar}
-              onCollapseSidebar={handleToggleSidebar}
               autoStartCall={
                 pendingCallAction?.channelId === activeChannelId
                   ? pendingCallAction.type
