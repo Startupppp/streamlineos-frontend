@@ -1,11 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import ReactDOM from 'react-dom';
-import { Plate, PlateContent, usePlateEditor, createPlatePlugin, ParagraphPlugin } from 'platejs/react';
-import type { PlateEditor } from 'platejs/react';
-import { NodeApi } from 'platejs';
-import type { Value, TElement, Path } from 'platejs';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import ReactDOM from "react-dom";
+import {
+  Plate,
+  PlateContent,
+  usePlateEditor,
+  createPlatePlugin,
+  ParagraphPlugin,
+} from "platejs/react";
+import type { PlateEditor } from "platejs/react";
+import { NodeApi } from "platejs";
+import type { Value, TElement, Path } from "platejs";
 import {
   H1Plugin,
   H2Plugin,
@@ -17,33 +29,65 @@ import {
   UnderlinePlugin,
   StrikethroughPlugin,
   CodePlugin,
-} from '@platejs/basic-nodes/react';
+} from "@platejs/basic-nodes/react";
 import {
   HeadingRules,
   BlockquoteRules,
   HorizontalRuleRules,
   BoldRules,
   ItalicRules,
-  UnderlineRules,
   StrikethroughRules,
   CodeRules,
-} from '@platejs/basic-nodes';
-import { ListPlugin } from '@platejs/list/react';
-import { BulletedListRules, OrderedListRules, TaskListRules } from '@platejs/list';
-import { IndentPlugin } from '@platejs/indent/react';
-import { CodeBlockPlugin, CodeLinePlugin, CodeSyntaxPlugin } from '@platejs/code-block/react';
-import { CodeBlockRules } from '@platejs/code-block';
-import { ImagePlugin } from '@platejs/media/react';
-import { LinkPlugin } from '@platejs/link/react';
-import { TablePlugin, TableRowPlugin, TableCellPlugin, TableCellHeaderPlugin } from '@platejs/table/react';
-import { CalloutPlugin } from '@platejs/callout/react';
-import { TogglePlugin } from '@platejs/toggle/react';
-import { MentionPlugin, MentionInputPlugin } from '@platejs/mention/react';
-import { SlashPlugin, SlashInputPlugin } from '@platejs/slash-command/react';
-import { createLowlight } from 'lowlight';
-import { common } from 'lowlight';
-import { EditorPageContext, useEditorPageContext, EditorPageContextValue } from './plate-context';
-import { normalizePlateValue, getPlainText } from './plate-value-convert';
+} from "@platejs/basic-nodes";
+import {
+  FontColorPlugin,
+  FontBackgroundColorPlugin,
+  FontSizePlugin,
+  TextAlignPlugin,
+} from "@platejs/basic-styles/react";
+import { ListPlugin } from "@platejs/list/react";
+import {
+  BulletedListRules,
+  OrderedListRules,
+  TaskListRules,
+} from "@platejs/list";
+import { IndentPlugin } from "@platejs/indent/react";
+import {
+  CodeBlockPlugin,
+  CodeLinePlugin,
+  CodeSyntaxPlugin,
+} from "@platejs/code-block/react";
+import { CodeBlockRules } from "@platejs/code-block";
+import {
+  ImagePlugin,
+  VideoPlugin,
+  AudioPlugin,
+  FilePlugin,
+  PlaceholderPlugin,
+} from "@platejs/media/react";
+import type { UploadConfig } from "@platejs/media/react";
+import { LinkPlugin } from "@platejs/link/react";
+import {
+  TablePlugin,
+  TableRowPlugin,
+  TableCellPlugin,
+  TableCellHeaderPlugin,
+} from "@platejs/table/react";
+import { CalloutPlugin } from "@platejs/callout/react";
+import { TogglePlugin } from "@platejs/toggle/react";
+import { MentionPlugin, MentionInputPlugin } from "@platejs/mention/react";
+import { SlashPlugin, SlashInputPlugin } from "@platejs/slash-command/react";
+import { CaptionPlugin } from "@platejs/caption/react";
+import { EmojiPlugin, EmojiInputPlugin } from "@platejs/emoji/react";
+import emojiData from "@emoji-mart/data";
+import { createLowlight } from "lowlight";
+import { common } from "lowlight";
+import {
+  EditorPageContext,
+  useEditorPageContext,
+  EditorPageContextValue,
+} from "./plate-context";
+import { normalizePlateValue, getPlainText } from "./plate-value-convert";
 import {
   ParagraphElement,
   HeadingElement,
@@ -56,15 +100,32 @@ import {
   TableRowElement,
   TableCellElement,
   TableCellHeaderElement,
-  ImageElement,
   LinkElement,
   CalloutElement,
   ToggleElement,
   MentionElement,
   PageLinkElement,
-} from './plate-elements';
-import { BoldLeaf, ItalicLeaf, UnderlineLeaf, StrikethroughLeaf, CodeLeaf } from './plate-leaves';
-import { MentionInputElement, SlashInputElement } from './plate-combobox-elements';
+} from "./plate-elements";
+import {
+  BoldLeaf,
+  ItalicLeaf,
+  UnderlineLeaf,
+  StrikethroughLeaf,
+  CodeLeaf,
+} from "./plate-leaves";
+import {
+  MentionInputElement,
+  SlashInputElement,
+} from "./plate-combobox-elements";
+import {
+  ImageElementWithCaption,
+  VideoElement,
+  AudioElement,
+  FileElement,
+  PlaceholderElement,
+} from "./plate-media-elements";
+import { FixedToolbar } from "./toolbar/fixed-toolbar";
+import type { UploadedKbMedia } from "@/features/knowledge-base/lib/upload-kb-media";
 
 export { EditorPageContext, useEditorPageContext };
 export type { EditorPageContextValue };
@@ -74,10 +135,13 @@ export interface PlateDocumentEditorProps {
   onChange?: (value: unknown, plainText: string) => void;
   editable?: boolean;
   placeholder?: string;
-  fetchMentionUsers?: (q: string) => Promise<Array<{ id: string; label: string }>>;
+  fetchMentionUsers?: (
+    q: string,
+  ) => Promise<Array<{ id: string; label: string }>>;
   fetchPageLinks?: (q: string) => Promise<Array<{ id: number; label: string }>>;
   onNavigateToPage?: (pageId: number) => void;
   contentKey?: string | number;
+  uploadFile?: (file: File) => Promise<UploadedKbMedia>;
 }
 
 type PageLinkItem = { id: number; label: string };
@@ -92,16 +156,22 @@ type PickerState = {
 
 function usePageLinkPicker(
   editor: PlateEditor,
-  fetchPageLinks?: (q: string) => Promise<PageLinkItem[]>
+  fetchPageLinks?: (q: string) => Promise<PageLinkItem[]>,
 ) {
   const [picker, setPicker] = useState<PickerState | null>(null);
 
   const checkTrigger = useCallback(() => {
     const { selection } = editor;
-    if (!selection) { setPicker(null); return; }
+    if (!selection) {
+      setPicker(null);
+      return;
+    }
 
     const blockEntry = editor.api.block() as [TElement, Path] | undefined;
-    if (!blockEntry) { setPicker(null); return; }
+    if (!blockEntry) {
+      setPicker(null);
+      return;
+    }
 
     const [blockNode] = blockEntry;
     const cursorOffset = selection.focus.offset;
@@ -110,7 +180,7 @@ function usePageLinkPicker(
 
     const match = /\[\[([^\[\]]*)$/.exec(textBefore);
     if (match) {
-      const query = match[1] ?? '';
+      const query = match[1] ?? "";
       const domSel = window.getSelection();
       if (!domSel || domSel.rangeCount === 0) return;
       const range = domSel.getRangeAt(0);
@@ -137,15 +207,15 @@ function usePageLinkPicker(
       editor.tf.select({ anchor, focus });
       editor.tf.delete();
       editor.tf.insertNodes({
-        type: 'page_link',
+        type: "page_link",
         pageId: item.id,
         value: item.label,
-        children: [{ text: '' }],
+        children: [{ text: "" }],
       } as TElement);
-      editor.tf.move({ unit: 'offset' });
+      editor.tf.move({ unit: "offset" });
       setPicker(null);
     },
-    [editor, picker]
+    [editor, picker],
   );
 
   const dismissPicker = useCallback(() => setPicker(null), []);
@@ -160,88 +230,154 @@ interface PageLinkPickerDropdownProps {
   onDismiss: () => void;
 }
 
-function PageLinkPickerDropdown({ picker, fetchPageLinks, onSelect, onDismiss }: PageLinkPickerDropdownProps) {
+function PageLinkPickerDropdown({
+  picker,
+  fetchPageLinks,
+  onSelect,
+  onDismiss,
+}: PageLinkPickerDropdownProps) {
   const [items, setItems] = useState<PageLinkItem[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     fetchPageLinks?.(picker.query)
-      .then((r) => { if (!cancelled) { setItems(r); setActiveIndex(0); } })
+      .then((r) => {
+        if (!cancelled) {
+          setItems(r);
+          setActiveIndex(0);
+        }
+      })
       .catch(() => {});
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [picker.query, fetchPageLinks]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault(); setActiveIndex((i) => Math.min(i + 1, items.length - 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault(); setActiveIndex((i) => Math.max(i - 1, 0));
-      } else if (e.key === 'Enter' && items[activeIndex]) {
-        e.preventDefault(); onSelect(items[activeIndex]!);
-      } else if (e.key === 'Escape') {
-        e.preventDefault(); onDismiss();
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((i) => Math.min(i + 1, items.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((i) => Math.max(i - 1, 0));
+      } else if (e.key === "Enter" && items[activeIndex]) {
+        e.preventDefault();
+        onSelect(items[activeIndex]!);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        onDismiss();
       }
     }
-    window.addEventListener('keydown', onKeyDown, true);
-    return () => window.removeEventListener('keydown', onKeyDown, true);
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [items, activeIndex, onSelect, onDismiss]);
 
   return ReactDOM.createPortal(
     <div
-      style={{ position: 'fixed', top: picker.top, left: picker.left, zIndex: 9999 }}
+      style={{
+        position: "fixed",
+        top: picker.top,
+        left: picker.left,
+        zIndex: 9999,
+      }}
       className="min-w-[200px] max-w-[300px] rounded-md border border-border bg-popover shadow-lg p-1"
     >
       {items.length === 0 ? (
         <div className="px-3 py-2 text-xs text-muted-foreground">
-          {picker.query ? 'No pages found' : 'Search pages...'}
+          {picker.query ? "No pages found" : "Search pages..."}
         </div>
-      ) : items.map((item, idx) => (
-        <button
-          key={item.id}
-          type="button"
-          className={`w-full text-left px-3 py-1.5 text-sm rounded-sm ${idx === activeIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'}`}
-          onMouseDown={(e) => { e.preventDefault(); onSelect(item); }}
-        >
-          📄 {item.label}
-        </button>
-      ))}
+      ) : (
+        items.map((item, idx) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`w-full text-left px-3 py-1.5 text-sm rounded-sm ${idx === activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}`}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onSelect(item);
+            }}
+          >
+            📄 {item.label}
+          </button>
+        ))
+      )}
     </div>,
-    document.body
+    document.body,
   );
 }
 
 const lowlight = createLowlight(common);
 
+const UPLOAD_CONFIG: UploadConfig = {
+  image: { mediaType: "img", maxFileCount: 1, maxFileSize: "16MB" },
+  video: { mediaType: "video", maxFileCount: 1, maxFileSize: "128MB" },
+  audio: { mediaType: "audio", maxFileCount: 1, maxFileSize: "32MB" },
+  pdf: { mediaType: "file", maxFileCount: 1, maxFileSize: "32MB" },
+  text: { mediaType: "file", maxFileCount: 1, maxFileSize: "32MB" },
+  blob: { mediaType: "file", maxFileCount: 1, maxFileSize: "32MB" },
+};
+
 function buildPlugins() {
   return [
     ParagraphPlugin.withComponent(ParagraphElement),
-    H1Plugin.configure({ inputRules: [HeadingRules.markdown()] }).withComponent(HeadingElement),
-    H2Plugin.configure({ inputRules: [HeadingRules.markdown()] }).withComponent(HeadingElement),
-    H3Plugin.configure({ inputRules: [HeadingRules.markdown()] }).withComponent(HeadingElement),
-    BlockquotePlugin.configure({ inputRules: [BlockquoteRules.markdown()] }).withComponent(BlockquoteElement),
-    HorizontalRulePlugin.configure({ inputRules: [HorizontalRuleRules.markdown({ variant: '-' })] }).withComponent(HrElement),
-    BoldPlugin.configure({ inputRules: [BoldRules.markdown({ variant: '*' })] }).withComponent(BoldLeaf),
-    ItalicPlugin.configure({ inputRules: [ItalicRules.markdown({ variant: '*' })] }).withComponent(ItalicLeaf),
+    H1Plugin.configure({ inputRules: [HeadingRules.markdown()] }).withComponent(
+      HeadingElement,
+    ),
+    H2Plugin.configure({ inputRules: [HeadingRules.markdown()] }).withComponent(
+      HeadingElement,
+    ),
+    H3Plugin.configure({ inputRules: [HeadingRules.markdown()] }).withComponent(
+      HeadingElement,
+    ),
+    BlockquotePlugin.configure({
+      inputRules: [BlockquoteRules.markdown()],
+    }).withComponent(BlockquoteElement),
+    HorizontalRulePlugin.configure({
+      inputRules: [HorizontalRuleRules.markdown({ variant: "-" })],
+    }).withComponent(HrElement),
+    BoldPlugin.configure({
+      inputRules: [BoldRules.markdown({ variant: "*" })],
+    }).withComponent(BoldLeaf),
+    ItalicPlugin.configure({
+      inputRules: [ItalicRules.markdown({ variant: "*" })],
+    }).withComponent(ItalicLeaf),
     UnderlinePlugin.withComponent(UnderlineLeaf),
-    StrikethroughPlugin.configure({ inputRules: [StrikethroughRules.markdown()] }).withComponent(StrikethroughLeaf),
-    CodePlugin.configure({ inputRules: [CodeRules.markdown()] }).withComponent(CodeLeaf),
+    StrikethroughPlugin.configure({
+      inputRules: [StrikethroughRules.markdown()],
+    }).withComponent(StrikethroughLeaf),
+    CodePlugin.configure({ inputRules: [CodeRules.markdown()] }).withComponent(
+      CodeLeaf,
+    ),
+    FontColorPlugin,
+    FontBackgroundColorPlugin,
+    FontSizePlugin,
+    TextAlignPlugin,
     IndentPlugin,
     ListPlugin.configure({
       inputRules: [
-        BulletedListRules.markdown({ variant: '-' }),
-        OrderedListRules.markdown({ variant: '.' }),
+        BulletedListRules.markdown({ variant: "-" }),
+        OrderedListRules.markdown({ variant: "." }),
         TaskListRules.markdown({ checked: false }),
       ],
     }),
     CodeBlockPlugin.configure({
       options: { lowlight },
-      inputRules: [CodeBlockRules.markdown({ on: 'match' })],
+      inputRules: [CodeBlockRules.markdown({ on: "match" })],
     }).withComponent(CodeBlockElement),
     CodeLinePlugin.withComponent(CodeLineElement),
     CodeSyntaxPlugin.withComponent(CodeSyntaxLeaf),
-    ImagePlugin.withComponent(ImageElement),
+    CaptionPlugin.configure({
+      options: { query: { allow: ["img", "video"] } },
+    }),
+    ImagePlugin.withComponent(ImageElementWithCaption),
+    VideoPlugin.withComponent(VideoElement),
+    AudioPlugin.withComponent(AudioElement),
+    FilePlugin.withComponent(FileElement),
+    PlaceholderPlugin.configure({
+      options: { uploadConfig: UPLOAD_CONFIG },
+    }).withComponent(PlaceholderElement),
     LinkPlugin.withComponent(LinkElement),
     TablePlugin.withComponent(TableElement),
     TableRowPlugin.withComponent(TableRowElement),
@@ -249,13 +385,27 @@ function buildPlugins() {
     TableCellHeaderPlugin.withComponent(TableCellHeaderElement),
     CalloutPlugin.withComponent(CalloutElement),
     TogglePlugin.withComponent(ToggleElement),
-    MentionPlugin.configure({ options: { trigger: '@', triggerPreviousCharPattern: /^\s?$/ } }).withComponent(MentionElement),
+    MentionPlugin.configure({
+      options: { trigger: "@", triggerPreviousCharPattern: /^\s?$/ },
+    }).withComponent(MentionElement),
     MentionInputPlugin.withComponent(MentionInputElement),
+    EmojiPlugin.configure({
+      options: {
+        data: emojiData as Parameters<
+          typeof EmojiPlugin.configure
+        >[0]["options"] extends { data?: infer D }
+          ? D
+          : unknown,
+      },
+    }),
+    EmojiInputPlugin,
     createPlatePlugin({
-      key: 'page_link',
+      key: "page_link",
       node: { isElement: true, isInline: true, isVoid: true },
     }).withComponent(PageLinkElement),
-    SlashPlugin.configure({ options: { trigger: '/', triggerPreviousCharPattern: /^\s?$/ } }),
+    SlashPlugin.configure({
+      options: { trigger: "/", triggerPreviousCharPattern: /^\s?$/ },
+    }),
     SlashInputPlugin.withComponent(SlashInputElement),
   ];
 }
@@ -264,11 +414,12 @@ export default function PlateDocumentEditor({
   value,
   onChange,
   editable = true,
-  placeholder = 'Start writing...',
+  placeholder = "Start writing...",
   fetchMentionUsers,
   fetchPageLinks,
   onNavigateToPage,
   contentKey,
+  uploadFile,
 }: PlateDocumentEditorProps) {
   const initialValue = useMemo(() => normalizePlateValue(value), []);
 
@@ -288,7 +439,8 @@ export default function PlateDocumentEditor({
     }
   }, [contentKey]);
 
-  const { picker, checkTrigger, selectPageLink, dismissPicker } = usePageLinkPicker(editor, fetchPageLinks);
+  const { picker, checkTrigger, selectPageLink, dismissPicker } =
+    usePageLinkPicker(editor, fetchPageLinks);
 
   function handleChange({ value: v }: { value: Value }) {
     const plainText = getPlainText(v);
@@ -298,12 +450,13 @@ export default function PlateDocumentEditor({
 
   const contextValue = useMemo<EditorPageContextValue>(
     () => ({ fetchMentionUsers, fetchPageLinks, onNavigateToPage }),
-    [fetchMentionUsers, fetchPageLinks, onNavigateToPage]
+    [fetchMentionUsers, fetchPageLinks, onNavigateToPage],
   );
 
   return (
     <EditorPageContext.Provider value={contextValue}>
       <Plate editor={editor} onChange={handleChange}>
+        <FixedToolbar uploadFile={uploadFile} />
         <PlateContent
           placeholder={placeholder}
           readOnly={!editable}

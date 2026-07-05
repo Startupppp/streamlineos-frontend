@@ -1,14 +1,18 @@
 "use client";
+import { useMemo } from "react";
 import {
   Calendar,
   dateFnsLocalizer,
   type View,
   type SlotInfo,
   type EventPropGetter,
+  type Components,
 } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enIN } from "date-fns/locale/en-IN";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { CalendarDayHeader } from "./calendar-day-header";
+import { CalendarWeekDayHeader } from "./calendar-week-day-header";
 
 const localizer = dateFnsLocalizer({
   format,
@@ -74,6 +78,15 @@ export function BigCalendarWrapper({
       ? { height: calHeight }
       : { height: "100%" };
 
+  const components = useMemo<Components>(
+    () => ({
+      week: { header: CalendarWeekDayHeader },
+      day: { header: CalendarDayHeader },
+      work_week: { header: CalendarWeekDayHeader },
+    }),
+    [],
+  );
+
   return (
     <Calendar
       localizer={localizer}
@@ -86,6 +99,7 @@ export function BigCalendarWrapper({
       onSelectSlot={onSelectSlot}
       onSelectEvent={onSelectEvent as ((event: object) => void) | undefined}
       eventPropGetter={eventPropGetter as EventPropGetter<object>}
+      components={components}
       toolbar={false}
       scrollToTime={scrollToTime}
       enableAutoScroll={enableAutoScroll}

@@ -8,6 +8,7 @@ import { KbAlertCircleIcon } from "@/features/knowledge-base/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { apiClient } from "@/lib/api-client";
+import { uploadKbMedia } from "@/features/knowledge-base/lib/upload-kb-media";
 import {
   useKbPage,
   useUpdateKbPage,
@@ -223,6 +224,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
             fetchMentionUsers={fetchMentionUsers}
             fetchPageLinks={fetchPageLinks}
             onNavigateToPage={handleNavigateToPage}
+            uploadFile={isEditable ? uploadKbMedia : undefined}
           />
         </div>
 

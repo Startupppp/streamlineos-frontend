@@ -698,9 +698,9 @@
   display: flex;
   align-items: stretch;
   flex: 0 0 auto;
-  height: 44px;
-  min-height: 44px;
-  max-height: 44px;
+  height: 52px;
+  min-height: 52px;
+  max-height: 52px;
 }
 
 .calendar-container .rbc-time-view .rbc-time-header .rbc-header {
@@ -708,7 +708,7 @@
   min-width: 0;
   align-self: stretch;
   height: 100%;
-  padding: 10px 6px;
+  padding: 8px 6px;
 }
 
 .calendar-container .rbc-time-view .rbc-time-header .rbc-header > .rbc-button-link,
@@ -720,6 +720,27 @@
   height: 100%;
   color: inherit;
   background: transparent;
+}
+
+.calendar-container .rbc-time-view .rbc-time-header .rbc-header .calendar-week-day-header-weekday {
+  color: var(--muted-foreground);
+}
+
+.calendar-container .rbc-time-view .rbc-time-header .rbc-header .calendar-day-header {
+  color: var(--foreground);
+}
+
+.calendar-container .rbc-time-view .rbc-time-header .rbc-header.rbc-today .calendar-day-header {
+  color: inherit;
+}
+
+.calendar-container .rbc-time-view .rbc-time-header .rbc-header.rbc-today .calendar-week-day-header-date,
+.calendar-container .rbc-time-view .rbc-time-header .rbc-header.rbc-today .calendar-week-day-header-weekday {
+  color: inherit;
+}
+
+.calendar-container .rbc-time-view .rbc-time-header .rbc-header.rbc-today .calendar-week-day-header-weekday {
+  opacity: 0.75;
 }
 
 .calendar-container .rbc-month-row {
@@ -909,14 +930,26 @@
   }
 
   .calendar-container .rbc-time-view .rbc-time-header-content > .rbc-row.rbc-time-header-cell {
-    height: 38px;
-    min-height: 38px;
-    max-height: 38px;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
   }
 
   .calendar-container .rbc-time-view .rbc-time-header .rbc-header {
-    padding: 8px 4px;
+    padding: 6px 4px;
     font-size: 10px;
+  }
+
+  .calendar-container .rbc-time-view .rbc-time-header .rbc-header .calendar-week-day-header-date {
+    font-size: 11px;
+  }
+
+  .calendar-container .rbc-time-view .rbc-time-header .rbc-header .calendar-week-day-header-weekday {
+    font-size: 9px;
+  }
+
+  .calendar-container .rbc-time-view .rbc-time-header .rbc-header .calendar-day-header {
+    font-size: 11px;
   }
 
   .calendar-container .rbc-date-cell {
@@ -958,13 +991,25 @@
   }
 
   .calendar-container .rbc-time-view .rbc-time-header-content > .rbc-row.rbc-time-header-cell {
-    height: 42px;
-    min-height: 42px;
-    max-height: 42px;
+    height: 48px;
+    min-height: 48px;
+    max-height: 48px;
   }
 
   .calendar-container .rbc-time-view .rbc-time-header .rbc-header {
-    padding: 9px 5px;
+    padding: 7px 5px;
+  }
+
+  .calendar-container .rbc-time-view .rbc-time-header .rbc-header .calendar-week-day-header-date {
+    font-size: 12px;
+  }
+
+  .calendar-container .rbc-time-view .rbc-time-header .rbc-header .calendar-week-day-header-weekday {
+    font-size: 9px;
+  }
+
+  .calendar-container .rbc-time-view .rbc-time-header .rbc-header .calendar-day-header {
+    font-size: 12px;
   }
 
   .calendar-container .rbc-date-cell {

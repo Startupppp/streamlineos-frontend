@@ -70,13 +70,13 @@ function WorkspaceSwitcherPanel({
     return (
       <>
         <div className="px-2 py-1.5">
-          <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+          <p className="text-[10px] uppercase tracking-wider font-semibold text-foreground/70">
             Workspaces
           </p>
         </div>
-        <DropdownMenuItem className="gap-2" disabled>
+        <DropdownMenuItem className="gap-2 text-foreground data-[disabled]:opacity-100" disabled>
           <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-          <span className="font-medium truncate text-sm">{activeOrg?.name}</span>
+          <span className="font-medium truncate text-sm text-foreground">{activeOrg?.name}</span>
         </DropdownMenuItem>
         {otherOrgs.length > 0 && (
           <>
@@ -84,12 +84,12 @@ function WorkspaceSwitcherPanel({
             {otherOrgs.map((org) => (
               <DropdownMenuItem
                 key={org.id}
-                className="gap-2 cursor-pointer"
+                className="gap-2 cursor-pointer text-foreground"
                 onClick={() => handleSwitch(org.id)}
                 disabled={isPending}
               >
                 <span className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate text-sm">{org.name}</span>
+                <span className="truncate text-sm text-foreground">{org.name}</span>
               </DropdownMenuItem>
             ))}
           </>
@@ -98,10 +98,10 @@ function WorkspaceSwitcherPanel({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="gap-2 cursor-pointer text-muted-foreground"
+              className="gap-2 cursor-pointer text-foreground/80 focus:text-foreground"
               onSelect={handleCreate}
             >
-              <Plus className="h-3.5 w-3.5 shrink-0" />
+              <Plus className="h-3.5 w-3.5 shrink-0 text-foreground/70" />
               <span className="text-sm">Create workspace</span>
             </DropdownMenuItem>
           </>
@@ -113,13 +113,13 @@ function WorkspaceSwitcherPanel({
   return (
     <div className="flex flex-col gap-0.5 pb-2">
       <div className="px-1 py-1.5">
-        <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+        <p className="text-[10px] uppercase tracking-wider font-semibold text-foreground/70">
           Workspaces
         </p>
       </div>
-      <div className="flex items-center gap-2 rounded-md px-2 py-2 text-sm">
+      <div className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-foreground">
         <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-        <span className="font-medium truncate">{activeOrg?.name}</span>
+        <span className="font-medium truncate text-foreground">{activeOrg?.name}</span>
       </div>
       {otherOrgs.map((org) => (
         <button
@@ -127,19 +127,19 @@ function WorkspaceSwitcherPanel({
           type="button"
           disabled={isPending}
           onClick={() => handleSwitch(org.id)}
-          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-muted transition-colors disabled:opacity-50"
+          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-foreground hover:bg-muted transition-colors disabled:opacity-50"
         >
           <span className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">{org.name}</span>
+          <span className="truncate text-foreground">{org.name}</span>
         </button>
       ))}
       {isOrgOwner && (
         <button
           type="button"
           onClick={handleCreate}
-          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-muted-foreground hover:bg-muted transition-colors"
+          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-foreground/80 hover:bg-muted hover:text-foreground transition-colors"
         >
-          <Plus className="h-3.5 w-3.5 shrink-0" />
+          <Plus className="h-3.5 w-3.5 shrink-0 text-foreground/70" />
           <span>Create workspace</span>
         </button>
       )}

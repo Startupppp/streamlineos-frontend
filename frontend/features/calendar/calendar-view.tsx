@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
-  format,
   startOfMonth,
   endOfMonth,
   addMonths,
@@ -13,8 +12,6 @@ import {
   subWeeks,
   addDays,
   subDays,
-  startOfYear,
-  endOfYear,
 } from "date-fns";
 import { Plus, Ticket, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,7 +30,6 @@ import {
   useExternalCalendarEvents,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
-import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";
 import { CalendarAiAssistant } from "./calendar-ai-assistant";
@@ -174,7 +170,7 @@ export function CalendarView() {
     [selectedEventId, events],
   );
 
-  const { allCalEvents, todayActivities, formattedRange, visibleRange } =
+  const { allCalEvents, todayActivities, visibleRange } =
     useCalendarComputed({
       events,
       externalData,
@@ -253,45 +249,6 @@ export function CalendarView() {
 
   const handleToday = useCallback(() => setCurrentDate(new Date()), []);
 
-  const handleExport = useCallback(
-    async (range: "month" | "3months" | "year") => {
-      let from: Date;
-      let to: Date;
-      if (range === "month") {
-        from = startOfMonth(currentDate);
-        to = endOfMonth(currentDate);
-      } else if (range === "3months") {
-        from = startOfMonth(currentDate);
-        to = endOfMonth(addMonths(currentDate, 2));
-      } else {
-        from = startOfYear(currentDate);
-        to = endOfYear(currentDate);
-      }
-      try {
-        await downloadCalendarExport(
-          format(from, "yyyy-MM-dd"),
-          format(to, "yyyy-MM-dd"),
-        );
-      } catch {
-        toast.error("Failed to export calendar");
-      }
-    },
-    [currentDate],
-  );
-
-  const handleExportMonth = useCallback(
-    () => void handleExport("month"),
-    [handleExport],
-  );
-  const handleExport3Months = useCallback(
-    () => void handleExport("3months"),
-    [handleExport],
-  );
-  const handleExportYear = useCallback(
-    () => void handleExport("year"),
-    [handleExport],
-  );
-
   const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
   const handleCloseExternal = useCallback(() => setSelectedExternal(null), []);
   const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
@@ -338,16 +295,14 @@ export function CalendarView() {
       <CalendarToolbar
         view={view}
         viewMode={viewMode}
-        formattedRange={formattedRange}
+        currentDate={currentDate}
         activeConnectionCount={activeConnectionCount}
         onPrev={handlePrev}
         onNext={handleNext}
         onToday={handleToday}
+        onDateChange={setCurrentDate}
         onViewChange={setView}
         onViewModeChange={setViewMode}
-        onExportMonth={handleExportMonth}
-        onExport3Months={handleExport3Months}
-        onExportYear={handleExportYear}
         onOpenAccounts={handleOpenAccounts}
         onOpenCreate={handleOpenCreate}
         onOpenCreateTicket={handleOpenCreateTicket}
@@ -419,12 +374,11 @@ export function CalendarView() {
       <button
         type="button"
         onClick={handleOpenAi}
-        className="fixed bottom-6 right-6 z-40 bg-violet-600 hover:bg-violet-700 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-1.5 group select-none"
+        aria-label="Ask AI"
+        title="Ask AI"
+        className="fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 hover:shadow-xl transition-all duration-200 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 select-none"
       >
-        <Sparkles className="h-5 w-5 animate-pulse" />
-        <span className="text-xs font-semibold pr-1 max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 ease-in-out whitespace-nowrap">
-          Ask AI
-        </span>
+        <Sparkles className="h-5 w-5" />
       </button>
 
       <CalendarAiAssistant

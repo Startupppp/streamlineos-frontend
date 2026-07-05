@@ -1,11 +1,11 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
+import { format } from "date-fns";
 import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Download,
   Share2,
   Calendar as CalendarIcon,
   List,
@@ -13,8 +13,8 @@ import {
   Link2,
   Ticket,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 import {
   Select,
   SelectContent,
@@ -26,25 +26,30 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { View } from "./big-calendar-wrapper";
+import { CalendarMonthYearPicker } from "./calendar-month-year-picker";
+
+type ViewMode = "calendar" | "list" | "history";
+
+const VIEW_MODE_OPTIONS: ViewOption<ViewMode>[] = [
+  { value: "calendar", icon: CalendarIcon, label: "Calendar View" },
+  { value: "list", icon: List, label: "List View" },
+  { value: "history", icon: History, label: "History" },
+];
 
 interface CalendarToolbarProps {
   view: View;
-  viewMode: "calendar" | "list" | "history";
-  formattedRange: string;
+  viewMode: ViewMode;
+  currentDate: Date;
   activeConnectionCount: number;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
+  onDateChange: (date: Date) => void;
   onViewChange: (v: View) => void;
-  onViewModeChange: (v: "calendar" | "list" | "history") => void;
-  onExportMonth: () => void;
-  onExport3Months: () => void;
-  onExportYear: () => void;
+  onViewModeChange: (v: ViewMode) => void;
   onOpenAccounts: () => void;
   onOpenCreate: () => void;
   onOpenCreateTicket: () => void;
@@ -53,16 +58,14 @@ interface CalendarToolbarProps {
 export const CalendarToolbar = memo(function CalendarToolbar({
   view,
   viewMode,
-  formattedRange,
+  currentDate,
   activeConnectionCount,
   onPrev,
   onNext,
   onToday,
+  onDateChange,
   onViewChange,
   onViewModeChange,
-  onExportMonth,
-  onExport3Months,
-  onExportYear,
   onOpenAccounts,
   onOpenCreate,
   onOpenCreateTicket,
@@ -71,27 +74,29 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     (v: string) => onViewChange(v as View),
     [onViewChange],
   );
-  const handleCalendarMode = useCallback(
-    () => onViewModeChange("calendar"),
-    [onViewModeChange],
-  );
-  const handleListMode = useCallback(
-    () => onViewModeChange("list"),
-    [onViewModeChange],
-  );
-  const handleHistoryMode = useCallback(
-    () => onViewModeChange("history"),
-    [onViewModeChange],
-  );
+
+  const navTitle = useMemo(() => {
+    if (view === "day") return format(currentDate, "MMMM d, yyyy");
+    return format(currentDate, "MMMM yyyy");
+  }, [currentDate, view]);
 
   return (
     <div className="flex items-center justify-between flex-wrap gap-2 shrink-0 select-none pb-2 border-b border-border">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2 min-w-0">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs font-medium px-3 shrink-0"
+          onClick={onToday}
+        >
+          Today
+        </Button>
+
+        <div className="flex items-center shrink-0">
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 rounded-r-none border-r-0"
             aria-label="Previous"
             onClick={onPrev}
           >
@@ -100,7 +105,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 rounded-l-none"
             aria-label="Next"
             onClick={onNext}
           >
@@ -108,6 +113,14 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           </Button>
         </div>
 
+        <CalendarMonthYearPicker
+          currentDate={currentDate}
+          title={navTitle}
+          onDateChange={onDateChange}
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
         <Select value={view} onValueChange={handleViewChange}>
           <SelectTrigger className="h-8 w-[95px] text-xs font-medium">
             <SelectValue />
@@ -125,21 +138,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           </SelectContent>
         </Select>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs font-medium px-3"
-          onClick={onToday}
-        >
-          Today
-        </Button>
-
-        <span className="text-sm font-semibold text-foreground ml-1">
-          {formattedRange}
-        </span>
-      </div>
-
-      <div className="flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -158,34 +156,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
             </DropdownMenuItem>
             <DropdownMenuItem className="text-xs">
               Embed calendar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs font-medium gap-1 px-3"
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">Export</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuLabel className="text-xs">
-              Export to CSV
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-xs" onClick={onExportMonth}>
-              This month
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs" onClick={onExport3Months}>
-              Next 3 months
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs" onClick={onExportYear}>
-              This year
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -229,50 +199,12 @@ export const CalendarToolbar = memo(function CalendarToolbar({
 
         <div className="h-4 border-l border-border mx-1" />
 
-        <div className="flex rounded-md border overflow-hidden h-8">
-          <button
-            type="button"
-            onClick={handleCalendarMode}
-            aria-pressed={viewMode === "calendar"}
-            className={cn(
-              "p-1.5 transition-colors",
-              viewMode === "calendar"
-                ? "bg-muted text-foreground"
-                : "hover:bg-muted/40 text-muted-foreground",
-            )}
-            title="Calendar View"
-          >
-            <CalendarIcon className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={handleListMode}
-            aria-pressed={viewMode === "list"}
-            className={cn(
-              "p-1.5 transition-colors border-l",
-              viewMode === "list"
-                ? "bg-muted text-foreground"
-                : "hover:bg-muted/40 text-muted-foreground",
-            )}
-            title="List View"
-          >
-            <List className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={handleHistoryMode}
-            aria-pressed={viewMode === "history"}
-            className={cn(
-              "p-1.5 transition-colors border-l",
-              viewMode === "history"
-                ? "bg-muted text-foreground"
-                : "hover:bg-muted/40 text-muted-foreground",
-            )}
-            title="History"
-          >
-            <History className="h-4 w-4" />
-          </button>
-        </div>
+        <ViewToggle<ViewMode>
+          value={viewMode}
+          options={VIEW_MODE_OPTIONS}
+          onChange={onViewModeChange}
+          size="sm"
+        />
       </div>
     </div>
   );
