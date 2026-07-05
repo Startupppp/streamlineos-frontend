@@ -3,7 +3,7 @@ export interface ClientPortalProject {
   name: string;
   key: string;
   status: string;
-  color: string | null;
+  color?: string | null;
   startDate: string | null;
   targetEndDate: string | null;
 }

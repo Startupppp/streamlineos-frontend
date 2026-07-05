@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -71,7 +71,7 @@ export default function ReturnsPage() {
     setCustomerSheetOpen(true);
   }
 
-  function handlePostVendorReturn(id: number): void {
+  const handlePostVendorReturn = useCallback((id: number): void => {
     postVendorMutation.mutate(
       { returnId: id },
       {
@@ -79,9 +79,9 @@ export default function ReturnsPage() {
         onError: (err) => toast.error(err.message ?? "Failed to post"),
       },
     );
-  }
+  }, [postVendorMutation]);
 
-  function handleCancelVendorReturn(id: number): void {
+  const handleCancelVendorReturn = useCallback((id: number): void => {
     cancelVendorMutation.mutate(
       { returnId: id },
       {
@@ -89,9 +89,9 @@ export default function ReturnsPage() {
         onError: (err) => toast.error(err.message ?? "Failed to cancel"),
       },
     );
-  }
+  }, [cancelVendorMutation]);
 
-  function handlePostCustomerReturn(id: number): void {
+  const handlePostCustomerReturn = useCallback((id: number): void => {
     postCustomerMutation.mutate(
       { returnId: id },
       {
@@ -99,9 +99,9 @@ export default function ReturnsPage() {
         onError: (err) => toast.error(err.message ?? "Failed to post"),
       },
     );
-  }
+  }, [postCustomerMutation]);
 
-  function handleCancelCustomerReturn(id: number): void {
+  const handleCancelCustomerReturn = useCallback((id: number): void => {
     cancelCustomerMutation.mutate(
       { returnId: id },
       {
@@ -109,7 +109,7 @@ export default function ReturnsPage() {
         onError: (err) => toast.error(err.message ?? "Failed to cancel"),
       },
     );
-  }
+  }, [cancelCustomerMutation]);
 
   function handleVendorRetry(): void {
     void vendorQuery.refetch();
@@ -119,7 +119,7 @@ export default function ReturnsPage() {
     void customerQuery.refetch();
   }
 
-  const vendorColumns: DataTableColumn<VendorReturnSummary>[] = [
+  const vendorColumns = useMemo((): DataTableColumn<VendorReturnSummary>[] => [
     {
       key: "returnNumber",
       header: "Return #",
@@ -187,9 +187,9 @@ export default function ReturnsPage() {
           </div>
         ) : null,
     },
-  ];
+  ], [handlePostVendorReturn, handleCancelVendorReturn, postVendorMutation.isPending]);
 
-  const customerColumns: DataTableColumn<CustomerReturnSummary>[] = [
+  const customerColumns = useMemo((): DataTableColumn<CustomerReturnSummary>[] => [
     {
       key: "returnNumber",
       header: "Return #",
@@ -255,7 +255,7 @@ export default function ReturnsPage() {
           </div>
         ) : null,
     },
-  ];
+  ], [handlePostCustomerReturn, handleCancelCustomerReturn, postCustomerMutation.isPending]);
 
   return (
     <PageWrapper

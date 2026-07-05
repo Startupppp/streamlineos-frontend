@@ -35,7 +35,7 @@ interface EntryRowProps {
   onVoid: (entry: TimesheetEntry) => void;
 }
 
-function EntryRow({ entry, onEdit, onVoid }: EntryRowProps) {
+const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps) {
   const isLocked = !!entry.lockedAt || entry.status === "APPROVED";
 
   const handleEdit = useCallback(() => onEdit(entry), [onEdit, entry]);
@@ -80,7 +80,7 @@ function EntryRow({ entry, onEdit, onVoid }: EntryRowProps) {
       )}
     </div>
   );
-}
+});
 
 export function DayTimeline({ entries, days }: DayTimelineProps) {
   const today = format(new Date(), "yyyy-MM-dd");
@@ -162,7 +162,7 @@ export function DayTimeline({ entries, days }: DayTimelineProps) {
                 {format(parseISO(d), "d")}
               </span>
               {dayEntryCount > 0 && (
-                <span className={cn("mt-0.5 h-1 w-1 rounded-full", active ? "bg-background/70" : "bg-accent")} />
+                <span className={cn("mt-0.5 h-1 w-1 rounded-full", active ? "bg-background/70" : "bg-blue-500")} />
               )}
             </button>
           );

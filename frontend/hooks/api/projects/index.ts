@@ -22,3 +22,4 @@ export * from "./qa";
 export * from "./bugs";
 export * from "./change-requests";
 export * from "./client-portal";
+export * from "./approvals";

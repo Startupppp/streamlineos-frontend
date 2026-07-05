@@ -106,60 +106,6 @@ export default function PackingQueuePage() {
     void query.refetch();
   }
 
-  const columns: DataTableColumn<SalesOrderListItem>[] = [
-    {
-      key: "soNumber",
-      header: "SO #",
-      cell: (so) => (
-        <Link
-          href={`/inventory/sales-orders/${so.id}`}
-          className="font-mono text-[11px] text-blue-600 hover:underline transition-colors"
-        >
-          {so.soNumber}
-        </Link>
-      ),
-      sortable: true,
-      sortValue: (so) => so.soNumber,
-    },
-    {
-      key: "customerName",
-      header: "Customer",
-      cell: (so) => so.customerName ?? "—",
-    },
-    {
-      key: "orderDate",
-      header: "Order Date",
-      cell: (so) => (
-        <span className="font-mono tabular-nums">{formatDate(so.orderDate)}</span>
-      ),
-    },
-    {
-      key: "expectedShipDate",
-      header: "Required Date",
-      cell: (so) => (
-        <span className="font-mono tabular-nums">{formatDate(so.expectedShipDate)}</span>
-      ),
-      className: "hidden md:table-cell",
-      headerClassName: "hidden md:table-cell",
-    },
-    {
-      key: "total",
-      header: "Total",
-      cell: (so) => (
-        <span className="font-mono tabular-nums">{Number(so.total).toFixed(2)}</span>
-      ),
-      className: "text-right",
-      headerClassName: "text-right",
-      sortable: true,
-      sortValue: (so) => Number(so.total),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (so) => <SoStatusBadge status={so.status} />,
-    },
-  ];
-
   const filterBar = (
     <div className="relative min-w-0 flex-1 max-w-sm">
       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />

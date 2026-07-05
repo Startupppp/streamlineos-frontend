@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, memo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Sparkles, CheckCheck, X } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
@@ -26,6 +27,65 @@ interface Props {
   insights: AiInsight[];
 }
 
+interface InsightRowProps {
+  insight: AiInsight;
+  onAcknowledge: (id: number) => void;
+  onDismiss: (id: number) => void;
+  isPending: boolean;
+}
+
+const InsightRow = memo(function InsightRow({
+  insight,
+  onAcknowledge,
+  onDismiss,
+  isPending,
+}: InsightRowProps) {
+  function handleAcknowledge(): void {
+    onAcknowledge(insight.id);
+  }
+
+  function handleDismiss(): void {
+    onDismiss(insight.id);
+  }
+
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-3">
+      <Badge
+        variant="outline"
+        className={`text-[9px] h-4 px-1.5 py-0 shrink-0 mt-0.5 ${SEVERITY_CLASS[insight.severity]}`}
+      >
+        {SEVERITY_LABEL[insight.severity]}
+      </Badge>
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-semibold text-foreground">{insight.title}</p>
+        <p className="text-[11px] text-muted-foreground truncate">{insight.description}</p>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          title="Acknowledge"
+          onClick={handleAcknowledge}
+          disabled={isPending}
+        >
+          <CheckCheck className="h-3 w-3 text-emerald-600" aria-hidden="true" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          title="Dismiss"
+          onClick={handleDismiss}
+          disabled={isPending}
+        >
+          <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+        </Button>
+      </div>
+    </div>
+  );
+});
+
 export function DashboardInsightsPanel({ insights }: Props) {
   const qc = useQueryClient();
 
@@ -47,13 +107,19 @@ export function DashboardInsightsPanel({ insights }: Props) {
     },
   });
 
-  function handleAcknowledge(id: number): void {
-    acknowledgeInsight.mutate({ id, status: "ACKNOWLEDGED" });
-  }
+  const handleAcknowledge = useCallback(
+    function handleAcknowledge(id: number): void {
+      acknowledgeInsight.mutate({ id, status: "ACKNOWLEDGED" });
+    },
+    [acknowledgeInsight],
+  );
 
-  function handleDismiss(id: number): void {
-    acknowledgeInsight.mutate({ id, status: "DISMISSED" });
-  }
+  const handleDismiss = useCallback(
+    function handleDismiss(id: number): void {
+      acknowledgeInsight.mutate({ id, status: "DISMISSED" });
+    },
+    [acknowledgeInsight],
+  );
 
   function handleGenerate(): void {
     generateInsights.mutate();
@@ -90,43 +156,13 @@ export function DashboardInsightsPanel({ insights }: Props) {
         ) : (
           <div className="space-y-2">
             {activeInsights.map((insight) => (
-              <div
+              <InsightRow
                 key={insight.id}
-                className="flex items-start gap-3 rounded-lg border border-border bg-card p-3"
-              >
-                <Badge
-                  variant="outline"
-                  className={`text-[9px] h-4 px-1.5 py-0 shrink-0 mt-0.5 ${SEVERITY_CLASS[insight.severity]}`}
-                >
-                  {SEVERITY_LABEL[insight.severity]}
-                </Badge>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold text-foreground">{insight.title}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{insight.description}</p>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Acknowledge"
-                    onClick={() => handleAcknowledge(insight.id)}
-                    disabled={acknowledgeInsight.isPending}
-                  >
-                    <CheckCheck className="h-3 w-3 text-emerald-600" aria-hidden="true" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Dismiss"
-                    onClick={() => handleDismiss(insight.id)}
-                    disabled={acknowledgeInsight.isPending}
-                  >
-                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
-                  </Button>
-                </div>
-              </div>
+                insight={insight}
+                onAcknowledge={handleAcknowledge}
+                onDismiss={handleDismiss}
+                isPending={acknowledgeInsight.isPending}
+              />
             ))}
           </div>
         )}

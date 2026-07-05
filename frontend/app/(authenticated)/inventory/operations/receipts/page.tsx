@@ -18,6 +18,40 @@ function formatDate(value: string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
+const columns: DataTableColumn<GrnSummary>[] = [
+  {
+    key: "grnNumber",
+    header: "GRN #",
+    cell: (g) => <span className="font-mono text-[11px]">{g.grnNumber}</span>,
+    sortable: true,
+    sortValue: (g) => g.grnNumber,
+  },
+  {
+    key: "poNumber",
+    header: "PO #",
+    cell: (g) => <span className="font-mono text-[11px] text-muted-foreground">{g.poNumber ?? "—"}</span>,
+  },
+  {
+    key: "vendorName",
+    header: "Vendor",
+    cell: (g) => g.vendorName ?? "—",
+  },
+  {
+    key: "receivedDate",
+    header: "Received Date",
+    cell: (g) => <span className="font-mono tabular-nums">{formatDate(g.receivedDate)}</span>,
+    sortable: true,
+    sortValue: (g) => g.receivedDate,
+  },
+  {
+    key: "notes",
+    header: "Notes",
+    cell: (g) => <span className="text-muted-foreground truncate max-w-xs block">{g.notes ?? "—"}</span>,
+    className: "hidden md:table-cell",
+    headerClassName: "hidden md:table-cell",
+  },
+];
+
 export default function ReceiptsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -70,40 +104,6 @@ export default function ReceiptsPage() {
   const vendors = vendorsQuery.data?.items ?? [];
   const total = query.data?.total ?? 0;
   const totalPages = query.data?.totalPages ?? 1;
-
-  const columns: DataTableColumn<GrnSummary>[] = [
-    {
-      key: "grnNumber",
-      header: "GRN #",
-      cell: (g) => <span className="font-mono text-[11px]">{g.grnNumber}</span>,
-      sortable: true,
-      sortValue: (g) => g.grnNumber,
-    },
-    {
-      key: "poNumber",
-      header: "PO #",
-      cell: (g) => <span className="font-mono text-[11px] text-muted-foreground">{g.poNumber ?? "—"}</span>,
-    },
-    {
-      key: "vendorName",
-      header: "Vendor",
-      cell: (g) => g.vendorName ?? "—",
-    },
-    {
-      key: "receivedDate",
-      header: "Received Date",
-      cell: (g) => <span className="font-mono tabular-nums">{formatDate(g.receivedDate)}</span>,
-      sortable: true,
-      sortValue: (g) => g.receivedDate,
-    },
-    {
-      key: "notes",
-      header: "Notes",
-      cell: (g) => <span className="text-muted-foreground truncate max-w-xs block">{g.notes ?? "—"}</span>,
-      className: "hidden md:table-cell",
-      headerClassName: "hidden md:table-cell",
-    },
-  ];
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">

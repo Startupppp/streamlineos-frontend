@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { memo, useMemo, useCallback } from "react";
 import { format, addDays } from "date-fns";
 import { Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,7 @@ interface TeamTableProps {
   onRemindAll: () => void;
 }
 
-function DayCell({ hours }: { hours: number }) {
+const DayCell = memo(function DayCell({ hours }: { hours: number }) {
   if (hours === 0) return <span className="text-muted-foreground/30">—</span>;
   return (
     <span
@@ -41,7 +41,7 @@ function DayCell({ hours }: { hours: number }) {
       {hours.toFixed(1)}
     </span>
   );
-}
+});
 
 export function TeamTable({ rows, weekStart, isLoading, onRowClick, onRemindAll }: TeamTableProps) {
   const days = useMemo(

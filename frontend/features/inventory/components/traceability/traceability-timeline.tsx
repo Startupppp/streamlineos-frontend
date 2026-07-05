@@ -1,8 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { TraceabilityResult, TraceabilityEvent, LotStockByLocation } from "@/hooks/api/inventory/traceability";
+import type {
+  TraceabilityResult,
+  TraceabilityEvent,
+  LotStockByLocation,
+} from "@/hooks/api/inventory/traceability";
 
 interface TraceabilityTimelineProps {
   result: TraceabilityResult | undefined;
@@ -32,7 +36,11 @@ function TimelineSection({ dotClass, label, children }: TimelineSectionProps) {
   );
 }
 
-function EventRow({ event }: { event: TraceabilityEvent }) {
+const EventRow = memo(function EventRow({
+  event,
+}: {
+  event: TraceabilityEvent;
+}) {
   return (
     <div className="flex items-start justify-between gap-2 text-[11px] py-0.5">
       <div className="min-w-0 flex-1">
@@ -48,29 +56,37 @@ function EventRow({ event }: { event: TraceabilityEvent }) {
       </div>
       <div className="text-right shrink-0 text-muted-foreground tabular-nums">
         <p>{new Date(event.date).toLocaleDateString()}</p>
-        <p className={`font-semibold ${event.qty >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-          {event.qty >= 0 ? "+" : ""}{event.qty}
+        <p
+          className={`font-semibold ${event.qty >= 0 ? "text-emerald-600" : "text-red-600"}`}
+        >
+          {event.qty >= 0 ? "+" : ""}
+          {event.qty}
         </p>
       </div>
     </div>
   );
-}
+});
 
-function StockRow({ loc }: { loc: LotStockByLocation }) {
+const StockRow = memo(function StockRow({ loc }: { loc: LotStockByLocation }) {
   return (
     <div className="flex items-center justify-between text-[11px] py-0.5">
       <div>
         <span className="font-medium text-foreground">{loc.locationName}</span>
-        <span className="text-muted-foreground ml-1.5">{loc.warehouseName}</span>
+        <span className="text-muted-foreground ml-1.5">
+          {loc.warehouseName}
+        </span>
       </div>
       <span className="font-mono tabular-nums font-semibold text-foreground">
         {loc.qty.toLocaleString()}
       </span>
     </div>
   );
-}
+});
 
-export function TraceabilityTimeline({ result, isLoading }: TraceabilityTimelineProps) {
+export function TraceabilityTimeline({
+  result,
+  isLoading,
+}: TraceabilityTimelineProps) {
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -89,7 +105,9 @@ export function TraceabilityTimeline({ result, isLoading }: TraceabilityTimeline
 
   if (!result) {
     return (
-      <p className="text-[12px] text-muted-foreground">No traceability data available.</p>
+      <p className="text-[12px] text-muted-foreground">
+        No traceability data available.
+      </p>
     );
   }
 
@@ -149,7 +167,8 @@ export function TraceabilityTimeline({ result, isLoading }: TraceabilityTimeline
         </TimelineSection>
       )}
 
-      {(result.vendorReturns.length > 0 || result.customerReturns.length > 0) && (
+      {(result.vendorReturns.length > 0 ||
+        result.customerReturns.length > 0) && (
         <TimelineSection dotClass="bg-orange-400" label="Returns">
           <div className="space-y-0.5">
             {[...result.vendorReturns, ...result.customerReturns].map((e) => (

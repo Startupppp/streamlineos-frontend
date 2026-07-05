@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Trash2 } from "lucide-react";
@@ -38,6 +38,8 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+type VariantOption = { id: number; productName: string; name: string; sku: string };
+
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -50,6 +52,94 @@ function toNum(v: string): number {
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
+
+interface SoLineRowProps {
+  index: number;
+  control: Control<FormValues>;
+  variants: VariantOption[];
+  isOnly: boolean;
+  onRemoveAt: (index: number) => void;
+}
+
+const SoLineRow = memo(function SoLineRow({ index, control, variants, isOnly, onRemoveAt }: SoLineRowProps) {
+  const quantity = useWatch({ control, name: `lines.${index}.quantity` });
+  const unitPrice = useWatch({ control, name: `lines.${index}.unitPrice` });
+  const taxRate = useWatch({ control, name: `lines.${index}.taxRate` });
+
+  const sub = round2(toNum(quantity ?? "") * toNum(unitPrice ?? ""));
+  const lineTotal = round2(sub + round2(sub * (toNum(taxRate ?? "") / 100)));
+
+  function handleRemove(): void {
+    onRemoveAt(index);
+  }
+
+  return (
+    <TableRow>
+      <TableCell>
+        <Controller
+          control={control}
+          name={`lines.${index}.variantId`}
+          render={({ field: f }) => (
+            <Select value={f.value} onValueChange={f.onChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select variant" />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {variants.map((v) => (
+                  <SelectItem key={v.id} value={String(v.id)}>
+                    {v.productName} – {v.name} ({v.sku})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </TableCell>
+      <TableCell>
+        <Controller
+          control={control}
+          name={`lines.${index}.quantity`}
+          render={({ field: f }) => (
+            <Input type="number" min="1" step="1" className="text-right tabular-nums" {...f} />
+          )}
+        />
+      </TableCell>
+      <TableCell>
+        <Controller
+          control={control}
+          name={`lines.${index}.unitPrice`}
+          render={({ field: f }) => (
+            <Input type="number" min="0" step="0.01" className="text-right tabular-nums" {...f} />
+          )}
+        />
+      </TableCell>
+      <TableCell>
+        <Controller
+          control={control}
+          name={`lines.${index}.taxRate`}
+          render={({ field: f }) => (
+            <Input type="number" min="0" max="100" step="0.01" className="text-right tabular-nums" {...f} />
+          )}
+        />
+      </TableCell>
+      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
+        {lineTotal.toFixed(2)}
+      </TableCell>
+      <TableCell>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={handleRemove}
+          disabled={isOnly}
+          aria-label={`Remove line ${index + 1}`}
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+});
 
 export default function NewSalesOrderPage() {
   const router = useRouter();
@@ -64,7 +154,6 @@ export default function NewSalesOrderPage() {
     register,
     control,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -81,23 +170,24 @@ export default function NewSalesOrderPage() {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "lines" });
-  const watchedLines = watch("lines");
+  const watchedLines = useWatch({ control, name: "lines" });
 
-  const lineTotals = useMemo(
-    () =>
-      watchedLines.map((ln) => {
-        const sub = round2(toNum(ln.quantity) * toNum(ln.unitPrice));
-        const taxAmt = round2(sub * (toNum(ln.taxRate) / 100));
-        return round2(sub + taxAmt);
-      }),
-    [watchedLines],
-  );
-
-  const grandTotal = round2(lineTotals.reduce((acc, t) => acc + t, 0));
+  const { lineTotals, grandTotal } = useMemo(() => {
+    const totals = (watchedLines ?? []).map((ln) => {
+      const sub = round2(toNum(ln?.quantity ?? "") * toNum(ln?.unitPrice ?? ""));
+      const taxAmt = round2(sub * (toNum(ln?.taxRate ?? "") / 100));
+      return round2(sub + taxAmt);
+    });
+    return { lineTotals: totals, grandTotal: round2(totals.reduce((acc, t) => acc + t, 0)) };
+  }, [watchedLines]);
 
   function handleAddLine(): void {
     append({ variantId: "", quantity: "1", unitPrice: "0", taxRate: "0" });
   }
+
+  const handleRemoveAt = useCallback((index: number): void => {
+    remove(index);
+  }, [remove]);
 
   function handleCancel(): void {
     router.back();
@@ -219,81 +309,14 @@ export default function NewSalesOrderPage() {
               </TableHeader>
               <TableBody>
                 {fields.map((field, index) => (
-                  <TableRow key={field.id}>
-                    <TableCell>
-                      <Controller
-                        control={control}
-                        name={`lines.${index}.variantId`}
-                        render={({ field: f }) => (
-                          <Select value={f.value} onValueChange={f.onChange}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select variant" />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-72">
-                              {variants.map((v) => (
-                                <SelectItem key={v.id} value={String(v.id)}>
-                                  {v.productName} – {v.name} ({v.sku})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      {errors.lines?.[index]?.variantId && (
-                        <p className="text-xs text-destructive mt-1">
-                          {errors.lines[index].variantId?.message}
-                        </p>
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="1"
-                        step="1"
-                        {...register(`lines.${index}.quantity`)}
-                        className="text-right tabular-nums"
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        {...register(`lines.${index}.unitPrice`)}
-                        className="text-right tabular-nums"
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        {...register(`lines.${index}.taxRate`)}
-                        className="text-right tabular-nums"
-                      />
-                    </TableCell>
-
-                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
-                      {(lineTotals[index] ?? 0).toFixed(2)}
-                    </TableCell>
-
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        disabled={fields.length <= 1}
-                        aria-label={`Remove line ${index + 1}`}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <SoLineRow
+                    key={field.id}
+                    index={index}
+                    control={control}
+                    variants={variants}
+                    isOnly={fields.length === 1}
+                    onRemoveAt={handleRemoveAt}
+                  />
                 ))}
               </TableBody>
             </Table>
