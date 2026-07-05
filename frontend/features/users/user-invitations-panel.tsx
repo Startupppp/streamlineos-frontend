@@ -51,6 +51,8 @@ function InvitationTableRow({ inv, onResend, onCancel, isResending, isCancelling
   isResending: boolean; isCancelling: boolean;
 }) {
   const status = getStatus(inv);
+  const canResend = status === "pending" || status === "expired";
+  const canCancel = status === "pending" || status === "expired";
   const handleResend = useCallback(() => onResend(inv.id), [inv.id, onResend]);
   const handleCancel = useCallback(() => onCancel(inv.id), [inv.id, onCancel]);
 
@@ -72,28 +74,34 @@ function InvitationTableRow({ inv, onResend, onCancel, isResending, isCancelling
         </Badge>
       </td>
       <td className="w-[72px] px-2 py-1">
-        <div className="flex items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={handleResend}
-            disabled={isResending || isCancelling}
-            aria-label="Resend invitation"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
-            onClick={handleCancel}
-            disabled={isResending || isCancelling}
-            aria-label="Cancel invitation"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+        {canResend || canCancel ? (
+          <div className="flex items-center gap-0.5">
+            {canResend ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={handleResend}
+                disabled={isResending || isCancelling}
+                aria-label="Resend invitation"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            ) : null}
+            {canCancel ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:text-destructive"
+                onClick={handleCancel}
+                disabled={isResending || isCancelling}
+                aria-label="Cancel invitation"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </td>
     </tr>
   );
@@ -152,7 +160,14 @@ export function UserInvitationsPanel() {
     (id: string) =>
       resend(id, {
         onSuccess: () => toast.success("Invitation resent"),
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => {
+          const message = getApiError(e);
+          toast.error(
+            message.includes("not found")
+              ? "This invitation can no longer be resent."
+              : message,
+          );
+        },
       }),
     [resend],
   );
@@ -163,7 +178,15 @@ export function UserInvitationsPanel() {
     if (!cancelId) return;
     cancel(cancelId, {
       onSuccess: () => { toast.success("Invitation cancelled"); setCancelId(null); },
-      onError: (e) => { toast.error(getApiError(e)); setCancelId(null); },
+      onError: (e) => {
+        const message = getApiError(e);
+        toast.error(
+          message.includes("not found") || message.includes("already accepted")
+            ? "This invitation can no longer be cancelled."
+            : message,
+        );
+        setCancelId(null);
+      },
     });
   }, [cancel, cancelId]);
 

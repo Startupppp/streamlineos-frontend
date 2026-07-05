@@ -16,7 +16,7 @@ export default function DashboardNotFound() {
       animate="visible"
     >
       <motion.div variants={fadeUp} className="mb-6">
-        <NotFoundIllustration />
+        <NotFoundIllustration className="mx-auto h-44 w-44 sm:h-52 sm:w-52" />
       </motion.div>
 
       <motion.div variants={fadeUp} className="max-w-md space-y-3">
