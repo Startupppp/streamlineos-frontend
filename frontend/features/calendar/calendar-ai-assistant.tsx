@@ -8,6 +8,7 @@ import { format, addHours, addDays, startOfHour } from "date-fns";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/format-utils";
+import { MarkdownContent } from "@/components/markdown/markdown-content";
 
 interface Message {
   id: string;
@@ -317,11 +318,11 @@ export function CalendarAiAssistant({ onEventCreated, isOpen, onClose }: Calenda
                     <div
                       className={`text-xs rounded-lg px-3 py-2 leading-relaxed ${
                         isUser
-                          ? "bg-blue-500 text-white shadow-sm"
+                          ? "bg-blue-500 text-white shadow-sm whitespace-pre-wrap"
                           : "bg-muted/60 text-foreground border border-border"
                       }`}
                     >
-                      {m.content}
+                      {isUser ? m.content : <MarkdownContent content={m.content} />}
                     </div>
 
                     {/* Metadata Card (Structured meeting preview) */}

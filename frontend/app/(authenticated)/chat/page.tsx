@@ -192,6 +192,7 @@ export default function ChatPage() {
               showInfoPanel={showInfoPanel}
               sidebarCollapsed={sidebarCollapsed}
               onExpandSidebar={handleExpandSidebar}
+              onCollapseSidebar={handleToggleSidebar}
               autoStartCall={
                 pendingCallAction?.channelId === activeChannelId
                   ? pendingCallAction.type

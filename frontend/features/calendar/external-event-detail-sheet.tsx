@@ -45,7 +45,7 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
             </p>
           </div>
         )}
-        <div className="px-5 py-3 border-t shrink-0 flex items-center justify-end gap-2">
+        <div className="px-5 py-3 border-t shrink-0 flex flex-wrap items-center justify-end gap-2">
           {event?.resource?.meetingUrl && (
             <Button size="sm" asChild>
               <a href={event.resource.meetingUrl} target="_blank" rel="noopener noreferrer">

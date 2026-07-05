@@ -331,7 +331,7 @@ Ordered money-path first. Check off each page after fixing.
 
 ## Chat & Communication
 - [x] `/chat` — Chat
-- [x] `/calendar` — Calendar: month/week/day views, responsive toolbar (stacked mobile, icon-only Export/Add on xs, compact date labels), adaptive month grid height + mobile/tablet cell typography via calendar-container CSS; icons migrated to @animateicons/react/lucide (Ticket/Video/Calendar/Tag/Pencil/HelpCircle lucide fallbacks only)
+- [x] `/calendar` — Calendar: month/week/day views, responsive toolbar (stacked mobile, icon-only Export/Add on xs, compact date labels), adaptive month grid height + mobile/tablet cell typography via calendar-container CSS; icons migrated to @animateicons/react/lucide (Ticket/Video/Calendar/Tag/Pencil/HelpCircle lucide fallbacks only); Composio external accounts (2026-07-05): connect multiple Google Calendar/Outlook accounts via accounts sheet (connect/disconnect/set-primary, per-account visibility toggles + colors), merged all-accounts grid view (60s Redis-cached backend fetch, external events read-only with detail sheet + join-meeting link), event create sync-to-account select + Meet/Teams conference toggle, finalize-on-return with StrictMode guard; backend `integrations` module (`user_integration_connections`, RBAC `integrations:connections:view/manage`, no ModuleGuard by design — platform-level plumbing); migration PENDING (db:generate held)
 - [x] `/notifications` — Notifications: PRD-aligned sections (ALL/UNREAD/MENTIONS/ASSIGNED_TO_ME/APPROVALS/BROADCASTS/ARCHIVED/SYSTEM), search bar with 300ms debounce, bulk actions (mark-read/archive/delete), section/category/priority filters via desktop Select row + mobile single DropdownMenu (Radix viewport max-height), inline approve/reject for APPROVALS section, compact divide-y list; `/notifications/preferences` — channel toggles + quiet hours + timezone + digest mode; `/notifications/templates` — CRUD with preview dialog; `/notifications/broadcasts` — create/publish/cancel/delete with status tabs; `/notifications/analytics` — metrics + per-category/priority bar charts; `/notifications/queue` — active + failed tabs with retry; `/notifications/audit` — audit log; GlobalHeader added (logo+workspace switcher+product switcher+search+AI/calendar/chat links+bell+quick-create+avatar); approve/reject hooks added; notification bell with popover
 
 ---
@@ -359,7 +359,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/settings/feature-flags` — Feature flags; `DashboardGate permission="settings:manage"`
 - [x] `/settings/automations` — No-code Automation Builder (see Non-HR Features section)
 - [x] `/settings/integrations/recruitment` — Recruitment integrations
-- [x] `/settings/integrations/calendar` — Calendar integration — multi-account connect (multiple Google/Microsoft accounts), default-calendar selection, per-account disconnect; free/busy unioned across all calendars
+- [x] ~~`/settings/integrations/calendar`~~ — REMOVED 2026-07-05: superseded by the in-calendar accounts sheet on `/calendar` (Composio-managed connections; direct-OAuth routes and `calendar-oauth.ts` deleted)
 - [x] `/settings/integrations/git` — Git integration
 - [x] `/settings/data-hub` — Data hub
 - [x] `/settings/ai` — AI settings

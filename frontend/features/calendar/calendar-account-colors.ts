@@ -1,7 +1,7 @@
 export const ACCOUNT_COLORS: readonly string[] = [
   "#a855f7",
   "#22c55e",
-  "#3b82f6",
+  "#0ea5e9",
   "#ef4444",
   "#f59e0b",
   "#3b82f6",

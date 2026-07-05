@@ -14,11 +14,9 @@ import {
   Archive,
   ArrowLeft,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   Compass,
   MessageSquareText,
-  PanelLeftClose,
   Search,
   Star,
   X,
@@ -252,25 +250,7 @@ export function ChannelSidebar({
 
   return (
     <TooltipProvider>
-      <div className="relative flex flex-col h-full overflow-visible">
-        {showCollapseToggle && (
-          <button
-            type="button"
-            onClick={handleToggleCollapse}
-            aria-label={isCollapsed ? "Expand channel sidebar" : "Collapse channel sidebar"}
-            className={cn(
-              "absolute -translate-y-1/2 -right-3 z-10 h-6 w-6 rounded-full border border-border/60 bg-card shadow-md hidden md:flex items-center justify-center text-muted-foreground hover:text-blue-600 hover:border-blue-500/40 hover:bg-muted/50 transition-colors",
-              isCollapsed ? "top-[4.75rem]" : "top-[1.75rem]",
-            )}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronLeft className="h-3.5 w-3.5" />
-            )}
-          </button>
-        )}
-
+      <div className="relative flex flex-col h-full">
         <div className={cn("px-4 pt-4 pb-2", isCollapsed && "md:hidden")}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
@@ -305,16 +285,6 @@ export function ChannelSidebar({
               </button>
               <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
               <NewGroupDialog open={newGroupOpen} onOpenChange={setNewGroupOpen} onCreated={onSelectChannel} />
-              {onToggleCollapse && (
-                <button
-                  type="button"
-                  onClick={handleToggleCollapse}
-                  className="hidden md:flex h-8 w-8 rounded-lg items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                  aria-label="Collapse sidebar"
-                >
-                  <PanelLeftClose className="h-4 w-4" />
-                </button>
-              )}
             </div>
           </div>
 
@@ -359,6 +329,12 @@ export function ChannelSidebar({
           <div className="flex flex-col items-center gap-0.5">
             {renderCompactActionButton("Search", <Search className="h-3.5 w-3.5" />, handleOpenChatSearch)}
             {renderCompactActionButton("Browse Channels", <Compass className="h-3.5 w-3.5" />, handleOpenBrowse)}
+            {showCollapseToggle &&
+              renderCompactActionButton(
+                "Expand channel sidebar",
+                <ChevronRight className="h-3.5 w-3.5" />,
+                handleToggleCollapse,
+              )}
           </div>
           <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
           <NewGroupDialog open={newGroupOpen} onOpenChange={setNewGroupOpen} onCreated={onSelectChannel} />

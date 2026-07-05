@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAskAI, type AskAIMessage } from "@/hooks/api";
+import { MarkdownContent } from "@/components/markdown/markdown-content";
 
 const SUGGESTIONS = [
   "What are my hot leads right now?",
@@ -135,13 +136,19 @@ export function AskAIPanel({ onClose }: { onClose: () => void }) {
                       </AvatarFallback>
                     </Avatar>
                     <div
-                      className={`text-xs rounded-lg px-3 py-2 leading-relaxed whitespace-pre-wrap ${
+                      className={`text-xs rounded-lg px-3 py-2 leading-relaxed ${
                         isUser
-                          ? "bg-blue-500 text-white shadow-sm"
+                          ? "bg-blue-500 text-white shadow-sm whitespace-pre-wrap"
                           : "bg-muted/60 text-foreground border border-border min-h-[2rem]"
                       }`}
                     >
-                      {m.content || (isStreaming && i === messages.length - 1 ? "…" : "")}
+                      {isUser ? (
+                        m.content
+                      ) : (
+                        <MarkdownContent
+                          content={m.content || (isStreaming && i === messages.length - 1 ? "…" : "")}
+                        />
+                      )}
                     </div>
                   </div>
                 );

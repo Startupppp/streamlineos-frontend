@@ -57,7 +57,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { useCalendarEvents, useCalendarOrgMembers, useExternalCalendarEvents } from "@/hooks/api/calendar";
+import {
+  useCalendarEvents,
+  useCalendarOrgMembers,
+  useExternalCalendarEvents,
+} from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
@@ -71,7 +75,10 @@ import { ExternalEventDetailSheet } from "./external-event-detail-sheet";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
 import { accountColor } from "./calendar-account-colors";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useFinalizeIntegrationConnection, useIntegrationConnections } from "@/hooks/api/integrations";
+import {
+  useFinalizeIntegrationConnection,
+  useIntegrationConnections,
+} from "@/hooks/api/integrations";
 import {
   Dialog,
   DialogContent,
@@ -107,12 +114,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   huddle: "#f97316",
 };
 
-
 export function CalendarView() {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<View>("week"); // Default to week view matching screenshot
-  const [viewMode, setViewMode] = useState<"calendar" | "list" | "history">("calendar");
+  const [viewMode, setViewMode] = useState<"calendar" | "list" | "history">(
+    "calendar",
+  );
 
   const calContainerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(600);
@@ -135,10 +143,18 @@ export function CalendarView() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isSlotChoiceOpen, setIsSlotChoiceOpen] = useState(false);
-  const [pendingSlot, setPendingSlot] = useState<{ start: Date; end: Date } | null>(null);
+  const [pendingSlot, setPendingSlot] = useState<{
+    start: Date;
+    end: Date;
+  } | null>(null);
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
-  const [createTicketSlot, setCreateTicketSlot] = useState<{ start: Date; end: Date } | null>(null);
-  const [selectedExternal, setSelectedExternal] = useState<BigCalEvent | null>(null);
+  const [createTicketSlot, setCreateTicketSlot] = useState<{
+    start: Date;
+    end: Date;
+  } | null>(null);
+  const [selectedExternal, setSelectedExternal] = useState<BigCalEvent | null>(
+    null,
+  );
 
   const rangeStart = useMemo(
     () => startOfMonth(subMonths(currentDate, 1)),
@@ -150,18 +166,29 @@ export function CalendarView() {
   );
 
   const searchParams = useSearchParams();
-  const { data: events = [], refetch: refetchEvents } = useCalendarEvents(rangeStart, rangeEnd);
+  const { data: events = [], refetch: refetchEvents } = useCalendarEvents(
+    rangeStart,
+    rangeEnd,
+  );
   const { data: members = [] } = useCalendarOrgMembers();
   const { data: connections = [] } = useIntegrationConnections();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
   const [accountsOpen, setAccountsOpen] = useState(false);
-  const activeConnectionCount = connections.filter((c) => c.status === "active").length;
+  const activeConnectionCount = connections.filter(
+    (c) => c.status === "active",
+  ).length;
   const { hiddenIds } = useCalendarAccountFilters();
-  const { data: externalData } = useExternalCalendarEvents(rangeStart, rangeEnd, activeConnectionCount > 0);
+  const { data: externalData } = useExternalCalendarEvents(
+    rangeStart,
+    rangeEnd,
+    activeConnectionCount > 0,
+  );
 
   // Active attendees filters
-  const [checkedAttendees, setCheckedAttendees] = useState<Record<string, boolean>>({});
+  const [checkedAttendees, setCheckedAttendees] = useState<
+    Record<string, boolean>
+  >({});
   useEffect(() => {
     if (members.length > 0) {
       const initial: Record<string, boolean> = {};
@@ -326,7 +353,8 @@ export function CalendarView() {
       style: {
         backgroundColor:
           categoryColor ??
-          (EVENT_COLORS[event.resource?.color ?? "blue"] ?? EVENT_COLORS.blue),
+          EVENT_COLORS[event.resource?.color ?? "blue"] ??
+          EVENT_COLORS.blue,
         border: "none",
         borderLeft: rsvpBorderColor ? `4px solid ${rsvpBorderColor}` : "none",
         borderRadius: "4px",
@@ -391,16 +419,20 @@ export function CalendarView() {
   }, [handleExport]);
 
   const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
+
   const handleCloseExternal = useCallback(() => setSelectedExternal(null), []);
+
   const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
+
   const handleCloseAccounts = useCallback(() => setAccountsOpen(false), []);
 
+  const finalizeMutate = finalize.mutate;
   useEffect(() => {
     const connectedAccountId = searchParams.get("connected_account_id");
     if (!connectedAccountId) return;
     if (finalizeRef.current) return;
     finalizeRef.current = true;
-    finalize.mutate(connectedAccountId, {
+    finalizeMutate(connectedAccountId, {
       onSuccess: (connection) => {
         toast.success(`${connection.accountEmail ?? "Account"} connected`);
         setAccountsOpen(true);
@@ -408,7 +440,7 @@ export function CalendarView() {
       onError: (error) => toast.error(getErrorMessage(error)),
       onSettled: () => router.replace("/calendar"),
     });
-  }, [searchParams, finalize, router]);
+  }, [searchParams, finalizeMutate, router]);
 
   const formattedRange = useMemo(() => {
     if (view === "month") {
@@ -475,9 +507,15 @@ export function CalendarView() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="day" className="text-xs">Day</SelectItem>
-              <SelectItem value="week" className="text-xs">Week</SelectItem>
-              <SelectItem value="month" className="text-xs">Month</SelectItem>
+              <SelectItem value="day" className="text-xs">
+                Day
+              </SelectItem>
+              <SelectItem value="week" className="text-xs">
+                Week
+              </SelectItem>
+              <SelectItem value="month" className="text-xs">
+                Month
+              </SelectItem>
             </SelectContent>
           </Select>
 
@@ -500,33 +538,50 @@ export function CalendarView() {
           {/* Share dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs font-medium gap-1 px-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-medium gap-1 px-3"
+              >
                 <Share2 className="h-3.5 w-3.5" />
                 <span className="hidden md:inline">Share</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40 text-xs">
               <DropdownMenuItem className="text-xs">Copy link</DropdownMenuItem>
-              <DropdownMenuItem className="text-xs">Email calendar</DropdownMenuItem>
-              <DropdownMenuItem className="text-xs">Embed calendar</DropdownMenuItem>
+              <DropdownMenuItem className="text-xs">
+                Email calendar
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-xs">
+                Embed calendar
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           {/* Export dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs font-medium gap-1 px-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-medium gap-1 px-3"
+              >
                 <Download className="h-3.5 w-3.5" />
                 <span className="hidden md:inline">Export</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuLabel className="text-xs">Export to CSV</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs">
+                Export to CSV
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-xs" onClick={handleExportMonth}>
                 This month
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs" onClick={handleExport3Months}>
+              <DropdownMenuItem
+                className="text-xs"
+                onClick={handleExport3Months}
+              >
                 Next 3 months
               </DropdownMenuItem>
               <DropdownMenuItem className="text-xs" onClick={handleExportYear}>
@@ -552,7 +607,10 @@ export function CalendarView() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" className="h-8 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white gap-1">
+              <Button
+                size="sm"
+                className="h-8 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white gap-1"
+              >
                 <Plus className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Add</span>
               </Button>
@@ -562,7 +620,10 @@ export function CalendarView() {
                 <Plus className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                 Add event
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs" onClick={handleOpenCreateTicket}>
+              <DropdownMenuItem
+                className="text-xs"
+                onClick={handleOpenCreateTicket}
+              >
                 <Ticket className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                 Add ticket due date
               </DropdownMenuItem>
@@ -579,7 +640,9 @@ export function CalendarView() {
               aria-pressed={viewMode === "calendar"}
               className={cn(
                 "p-1.5 transition-colors",
-                viewMode === "calendar" ? "bg-muted text-foreground" : "hover:bg-muted/40 text-muted-foreground"
+                viewMode === "calendar"
+                  ? "bg-muted text-foreground"
+                  : "hover:bg-muted/40 text-muted-foreground",
               )}
               title="Calendar View"
             >
@@ -591,7 +654,9 @@ export function CalendarView() {
               aria-pressed={viewMode === "list"}
               className={cn(
                 "p-1.5 transition-colors border-l",
-                viewMode === "list" ? "bg-muted text-foreground" : "hover:bg-muted/40 text-muted-foreground"
+                viewMode === "list"
+                  ? "bg-muted text-foreground"
+                  : "hover:bg-muted/40 text-muted-foreground",
               )}
               title="List View"
             >
@@ -603,7 +668,9 @@ export function CalendarView() {
               aria-pressed={viewMode === "history"}
               className={cn(
                 "p-1.5 transition-colors border-l",
-                viewMode === "history" ? "bg-muted text-foreground" : "hover:bg-muted/40 text-muted-foreground"
+                viewMode === "history"
+                  ? "bg-muted text-foreground"
+                  : "hover:bg-muted/40 text-muted-foreground",
               )}
               title="History"
             >
@@ -614,14 +681,16 @@ export function CalendarView() {
       </div>
 
       {externalData?.errors && externalData.errors.length > 0 && (
-        <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 shrink-0">
-          <span className="text-[11px] text-amber-700 flex-1">
-            {externalData.errors.map((e) => `${e.accountEmail ?? "Account"}: ${e.message}`).join(" · ")}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 shrink-0">
+          <span className="text-[11px] text-amber-700 flex-1 min-w-0">
+            {externalData.errors
+              .map((e) => `${e.accountEmail ?? "Account"}: ${e.message}`)
+              .join(" · ")}
           </span>
           <button
             type="button"
             onClick={handleOpenAccounts}
-            className="text-[11px] text-amber-800 font-medium underline underline-offset-2 shrink-0"
+            className="text-[11px] text-amber-800 font-medium underline underline-offset-2 shrink-0 self-start sm:self-auto"
           >
             Manage accounts
           </button>
@@ -636,7 +705,9 @@ export function CalendarView() {
             ref={calContainerRef}
             className={cn(
               "flex-1 min-h-0 rounded-lg border border-border bg-card calendar-container flex flex-col",
-              viewMode === "calendar" && view === "month" ? "overflow-y-scroll" : "overflow-hidden",
+              viewMode === "calendar" && view === "month"
+                ? "overflow-y-scroll"
+                : "overflow-hidden",
             )}
           >
             {viewMode === "calendar" ? (
@@ -692,12 +763,14 @@ export function CalendarView() {
             </div>
             <div className="rounded-lg border bg-card p-3 space-y-2.5 max-h-48 overflow-y-auto shadow-sm">
               {members.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground">No members found</p>
+                <p className="text-[11px] text-muted-foreground">
+                  No members found
+                </p>
               ) : (
                 members.map((member) => {
                   const mName = member.firstName
                     ? `${member.firstName} ${member.lastName ?? ""}`.trim()
-                    : member.name ?? member.email;
+                    : (member.name ?? member.email);
                   const isChecked = checkedAttendees[member.id] !== false;
                   return (
                     <div key={member.id} className="flex items-center gap-2">
@@ -738,7 +811,9 @@ export function CalendarView() {
                 </div>
               ) : (
                 todayActivities.map((act) => {
-                  const eventColor = EVENT_COLORS[act.resource?.color ?? "blue"] || EVENT_COLORS.blue;
+                  const eventColor =
+                    EVENT_COLORS[act.resource?.color ?? "blue"] ||
+                    EVENT_COLORS.blue;
                   return (
                     <div
                       key={act.id}
@@ -746,9 +821,13 @@ export function CalendarView() {
                       className="rounded-lg border bg-card p-2.5 hover:bg-muted/40 cursor-pointer transition-all duration-200 shadow-xs border-l-4"
                       style={{ borderLeftColor: eventColor }}
                     >
-                      <h5 className="text-xs font-semibold text-foreground truncate">{act.title}</h5>
+                      <h5 className="text-xs font-semibold text-foreground truncate">
+                        {act.title}
+                      </h5>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {act.allDay ? "All day" : `${format(act.start, "h:mm a")} - ${format(act.end, "h:mm a")}`}
+                        {act.allDay
+                          ? "All day"
+                          : `${format(act.start, "h:mm a")} - ${format(act.end, "h:mm a")}`}
                       </p>
                     </div>
                   );
@@ -792,7 +871,9 @@ export function CalendarView() {
       <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
         <DialogContent className="max-w-xs p-4">
           <DialogHeader>
-            <DialogTitle className="text-sm font-semibold">What would you like to create?</DialogTitle>
+            <DialogTitle className="text-sm font-semibold">
+              What would you like to create?
+            </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Choose the type of item to add for the selected time.
             </DialogDescription>
@@ -819,8 +900,14 @@ export function CalendarView() {
       </Dialog>
 
       <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
-      <ExternalEventDetailSheet event={selectedExternal} onClose={handleCloseExternal} />
-      <CalendarAccountsSheet open={accountsOpen} onClose={handleCloseAccounts} />
+      <ExternalEventDetailSheet
+        event={selectedExternal}
+        onClose={handleCloseExternal}
+      />
+      <CalendarAccountsSheet
+        open={accountsOpen}
+        onClose={handleCloseAccounts}
+      />
     </div>
   );
 }

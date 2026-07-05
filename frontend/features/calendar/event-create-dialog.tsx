@@ -115,7 +115,7 @@ export function EventCreateDialog({
     [isEdit, event],
   );
   const [form, setForm] = useState<FormState>(() =>
-    isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot),
+    isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot),
   );
   const [linkedTicket, setLinkedTicket] = useState<TicketSearchResult | null>(null);
   const [existingEntityId, setExistingEntityId] = useState<string | null>(null);
@@ -131,13 +131,8 @@ export function EventCreateDialog({
 
   useEffect(() => {
     if (open) {
-      const primaryConnection = connections.find((c) => c.isPrimary && c.status === "active") ?? null;
-      const base = isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot);
-      setForm(
-        isEdit
-          ? base
-          : { ...base, syncConnectionId: primaryConnection ? String(primaryConnection.id) : "none" },
-      );
+      const base = isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot);
+      setForm(isEdit ? base : { ...base, syncConnectionId: "none" });
       setLinkedTicket(null);
       setExistingEntityId(
         isEdit && event?.entityType === "ticket" && event.entityId
@@ -145,7 +140,20 @@ export function EventCreateDialog({
           : null,
       );
     }
-  }, [open, defaultSlot, event, isEdit, connections]);
+  }, [open, defaultSlot, event, isEdit]);
+
+  useEffect(() => {
+    if (!open || isEdit) return;
+    const primary = connections.find((c) => c.isPrimary && c.status === "active");
+    const primaryId = primary ? String(primary.id) : "none";
+    setForm((f) => {
+      const currentIsValid =
+        f.syncConnectionId !== "none" &&
+        connections.some((c) => String(c.id) === f.syncConnectionId);
+      if (currentIsValid) return f;
+      return { ...f, syncConnectionId: primaryId };
+    });
+  }, [open, isEdit, connections]);
 
   useEffect(() => {
     if (open && isEdit && existingAttendees && existingAttendees.length > 0) {

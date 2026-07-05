@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Bell, HardDrive, Loader2, ShieldAlert, Users, Video } from "lucide-react";
+import { HardDrive, Loader2, ShieldAlert, Users, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -17,11 +16,14 @@ import type { ChatOrgSettings } from "@/types/chat";
 
 const TABS = [
   { value: "settings", label: "Settings", icon: HardDrive },
-  { value: "notifications", label: "Notifications", icon: Bell },
   { value: "voice-video", label: "Voice & Video", icon: Video },
 ] as const;
 
 type TabValue = (typeof TABS)[number]["value"];
+
+function resolveConfigTab(tab: string | null): TabValue {
+  return tab === "voice-video" ? "voice-video" : "settings";
+}
 
 export function ChatConfigurationPage() {
   const router = useRouter();
@@ -32,10 +34,18 @@ export function ChatConfigurationPage() {
   const { data: settings, isLoading } = useChatOrgSettings();
   const updateSettings = useUpdateChatOrgSettings();
 
-  const initialTab = TABS.some((t) => t.value === searchParams.get("tab"))
-    ? (searchParams.get("tab") as TabValue)
-    : "settings";
-  const [activeTab, setActiveTab] = useState<TabValue>(initialTab);
+  const [activeTab, setActiveTab] = useState<TabValue>(() =>
+    resolveConfigTab(searchParams.get("tab")),
+  );
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "notifications") {
+      router.replace("/chat/configuration?tab=settings");
+      return;
+    }
+    setActiveTab(resolveConfigTab(tab));
+  }, [searchParams, router]);
 
   const [draft, setDraft] = useState<ChatOrgSettings | null>(null);
   const [syncedSettings, setSyncedSettings] = useState<ChatOrgSettings | null>(null);
@@ -134,40 +144,6 @@ export function ChatConfigurationPage() {
                 Files larger than this are rejected when sent in a message.
               </p>
             </div>
-          </div>
-        ) : activeTab === "notifications" ? (
-          <div className="space-y-5">
-            <div>
-              <h2 className="text-[15px] font-bold mb-1">Notifications</h2>
-              <p className="text-[12px] text-muted-foreground">
-                The default notification behavior for members who haven&apos;t overridden it per
-                conversation.
-              </p>
-            </div>
-            <RadioGroup
-              value={draft.defaultNotificationPreference}
-              onValueChange={(value) =>
-                canManage &&
-                setDraft({
-                  ...draft,
-                  defaultNotificationPreference: value as ChatOrgSettings["defaultNotificationPreference"],
-                })
-              }
-              className="gap-2.5"
-            >
-              {[
-                { value: "ALL", label: "All Messages" },
-                { value: "MENTIONS", label: "Mentions Only" },
-                { value: "NOTHING", label: "Nothing" },
-              ].map((opt) => (
-                <div key={opt.value} className="flex items-center gap-2">
-                  <RadioGroupItem value={opt.value} id={`pref-${opt.value}`} disabled={!canManage} />
-                  <Label htmlFor={`pref-${opt.value}`} className="text-[13px] font-normal">
-                    {opt.label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
           </div>
         ) : (
           <div className="space-y-5">
