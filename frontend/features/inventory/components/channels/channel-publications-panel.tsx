@@ -44,10 +44,53 @@ function formatDate(iso: string | null): string {
   });
 }
 
+const PUBLICATION_COLUMNS: DataTableColumn<Publication>[] = [
+  {
+    key: "variant",
+    header: "Variant",
+    cell: (row) => <span className="text-sm font-medium">{row.variantName}</span>,
+    sortable: true,
+    sortValue: (row) => row.variantName,
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => (
+      <Badge
+        variant="outline"
+        className={cn("text-[11px]", PUBLICATION_STATUS_BADGE[row.status])}
+      >
+        {PUBLICATION_STATUS_LABEL[row.status]}
+      </Badge>
+    ),
+  },
+  {
+    key: "synced",
+    header: "Synced at",
+    cell: (row) => (
+      <span className="text-xs text-muted-foreground">{formatDate(row.syncedAt)}</span>
+    ),
+  },
+  {
+    key: "error",
+    header: "Error",
+    cell: (row) =>
+      row.errorMessage ? (
+        <span
+          className="text-xs text-muted-foreground truncate max-w-[200px] block"
+          title={row.errorMessage}
+        >
+          {row.errorMessage}
+        </span>
+      ) : (
+        <span className="text-xs text-muted-foreground">—</span>
+      ),
+  },
+];
+
 interface PublicationsTableProps {
   channelId: number;
   statusFilter?: PublicationStatus;
-  isExternal: boolean;
   showRetry: boolean;
 }
 
@@ -62,50 +105,6 @@ function PublicationsTable({ channelId, statusFilter, showRetry }: PublicationsT
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
-
-  const columns: DataTableColumn<Publication>[] = [
-    {
-      key: "variant",
-      header: "Variant",
-      cell: (row) => <span className="text-sm font-medium">{row.variantName}</span>,
-      sortable: true,
-      sortValue: (row) => row.variantName,
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => (
-        <Badge
-          variant="outline"
-          className={cn("text-[11px]", PUBLICATION_STATUS_BADGE[row.status])}
-        >
-          {PUBLICATION_STATUS_LABEL[row.status]}
-        </Badge>
-      ),
-    },
-    {
-      key: "synced",
-      header: "Synced at",
-      cell: (row) => (
-        <span className="text-xs text-muted-foreground">{formatDate(row.syncedAt)}</span>
-      ),
-    },
-    {
-      key: "error",
-      header: "Error",
-      cell: (row) =>
-        row.errorMessage ? (
-          <span
-            className="text-xs text-muted-foreground truncate max-w-[200px] block"
-            title={row.errorMessage}
-          >
-            {row.errorMessage}
-          </span>
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        ),
-    },
-  ];
 
   if (isLoading) {
     return (
@@ -150,7 +149,7 @@ function PublicationsTable({ channelId, statusFilter, showRetry }: PublicationsT
       )}
       <DataTable<Publication>
         data={publications}
-        columns={columns}
+        columns={PUBLICATION_COLUMNS}
         getRowKey={(row) => row.id}
       />
     </div>
@@ -208,7 +207,6 @@ export function ChannelPublicationsPanel({
             <TabsContent value="all">
               <PublicationsTable
                 channelId={channel.id}
-                isExternal={isExternal}
                 showRetry={false}
               />
             </TabsContent>
@@ -217,7 +215,6 @@ export function ChannelPublicationsPanel({
               <PublicationsTable
                 channelId={channel.id}
                 statusFilter="FAILED"
-                isExternal={isExternal}
                 showRetry={!isExternal}
               />
             </TabsContent>

@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { LotStatus, SerialStatus } from "@/features/inventory/lib";
 
-export interface LotListItem {
+interface LotListItem {
   id: number;
   lotNumber: string;
   variantId: number;
@@ -19,7 +19,7 @@ export interface LotListItem {
   createdAt: string;
 }
 
-export interface LotListResponse {
+interface LotListResponse {
   items: LotListItem[];
   total: number;
   page: number;
@@ -44,7 +44,7 @@ export interface LotMovement {
   performedBy: string | null;
 }
 
-export interface LotDetail {
+interface LotDetail {
   id: number;
   lotNumber: string;
   variantId: number;
@@ -58,7 +58,7 @@ export interface LotDetail {
   createdAt: string;
 }
 
-export interface SerialListItem {
+interface SerialListItem {
   id: number;
   serialNumber: string;
   variantId: number;
@@ -73,14 +73,14 @@ export interface SerialListItem {
   createdAt: string;
 }
 
-export interface SerialListResponse {
+interface SerialListResponse {
   items: SerialListItem[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-export interface SerialDetail extends SerialListItem {
+interface SerialDetail extends SerialListItem {
   movements: LotMovement[];
 }
 

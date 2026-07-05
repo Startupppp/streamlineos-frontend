@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface GrnLine {
+interface GrnLine {
   id: number;
   poLineId: number;
   quantityReceived: string;
@@ -29,7 +29,7 @@ export interface GrnSummary {
   createdAt: string;
 }
 
-export interface GrnDetail extends GrnSummary {
+interface GrnDetail extends GrnSummary {
   lines: GrnLine[];
 }
 
@@ -97,10 +97,10 @@ export function useReverseGrn() {
   });
 }
 
-export type VendorReturnReason = "DAMAGED" | "WRONG_ITEM" | "EXCESS" | "EXPIRED" | "QUALITY_REJECTED";
+type VendorReturnReason = "DAMAGED" | "WRONG_ITEM" | "EXCESS" | "EXPIRED" | "QUALITY_REJECTED";
 export type VendorReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
 
-export interface VendorReturnLine {
+interface VendorReturnLine {
   productVariantId: number;
   locationId: number;
   quantity: number;
@@ -121,7 +121,7 @@ export interface VendorReturnSummary {
   notes: string | null;
 }
 
-export interface CreateVendorReturnInput {
+interface CreateVendorReturnInput {
   vendorId: number;
   poId?: number;
   grnId?: number;
@@ -209,10 +209,10 @@ export function useCancelVendorReturn() {
   });
 }
 
-export type CustomerReturnDisposition = "RESTOCK" | "QUARANTINE" | "SCRAP";
+type CustomerReturnDisposition = "RESTOCK" | "QUARANTINE" | "SCRAP";
 export type CustomerReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
 
-export interface CustomerReturnLine {
+interface CustomerReturnLine {
   productVariantId: number;
   quantity: number;
   reason: string;
@@ -233,7 +233,7 @@ export interface CustomerReturnSummary {
   notes: string | null;
 }
 
-export interface CreateCustomerReturnInput {
+interface CreateCustomerReturnInput {
   soId?: number;
   shipmentId?: number;
   clientId?: number;

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, LayoutTemplate, ArrowRight } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +54,7 @@ interface TemplateCardProps {
   onDelete: (t: SalaryStructureTemplate) => void;
 }
 
-function TemplateCard({ template, index, onEdit, onDelete }: TemplateCardProps) {
+const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDelete }: TemplateCardProps) {
   const shouldReduceMotion = useReducedMotion();
   function handleEdit() { onEdit(template); }
   function handleDelete() { onDelete(template); }
@@ -128,7 +128,7 @@ function TemplateCard({ template, index, onEdit, onDelete }: TemplateCardProps) 
       </div>
     </motion.div>
   );
-}
+});
 
 export function SalaryStructuresPageContent() {
   const shouldReduceMotion = useReducedMotion();
@@ -146,14 +146,14 @@ export function SalaryStructuresPageContent() {
     setSheetOpen(true);
   }
 
-  function handleOpenEdit(template: SalaryStructureTemplate) {
+  const handleOpenEdit = useCallback((template: SalaryStructureTemplate) => {
     setEditingTemplate(template);
     setSheetOpen(true);
-  }
+  }, []);
 
-  function handleOpenDelete(template: SalaryStructureTemplate) {
+  const handleOpenDelete = useCallback((template: SalaryStructureTemplate) => {
     setDeletingTemplate(template);
-  }
+  }, []);
 
   function handleSheetOpenChange(open: boolean) {
     setSheetOpen(open);

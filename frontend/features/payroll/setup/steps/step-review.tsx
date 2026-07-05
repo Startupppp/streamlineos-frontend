@@ -48,7 +48,6 @@ function groupComponents(lines: PreviewLine[]): [ComponentType, PreviewLine[]][]
 
 type StepReviewProps = {
   draft: SetupDraft;
-  updateDraft: (p: Partial<SetupDraft>) => void;
   goNext: () => void;
   goBack: () => void;
 };

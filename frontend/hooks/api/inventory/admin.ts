@@ -34,7 +34,7 @@ export interface NumberSequence {
   nextNumber: number;
 }
 
-export interface SettingsHealth {
+interface SettingsHealth {
   reconciliationSampleResult: string | null;
   expiredReservationsCount: number;
   failedJobsCount: number;
@@ -58,7 +58,7 @@ export interface ImportPreviewResult {
   sample: Record<string, unknown>[];
 }
 
-export interface ImportJobListItem {
+interface ImportJobListItem {
   id: number;
   importType: string;
   status: JobStatus;
@@ -69,28 +69,12 @@ export interface ImportJobListItem {
   completedAt: string | null;
 }
 
-export interface ImportJobDetail extends ImportJobListItem {
+interface ImportJobDetail extends ImportJobListItem {
   errors: { row: number; field: string; message: string }[];
 }
 
 interface ImportJobListResponse {
   items: ImportJobListItem[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-export interface ExportJobListItem {
-  id: number;
-  exportType: string;
-  status: JobStatus;
-  createdAt: string;
-  completedAt: string | null;
-  fileUrl: string | null;
-}
-
-interface ExportJobListResponse {
-  items: ExportJobListItem[];
   total: number;
   page: number;
   totalPages: number;
@@ -216,35 +200,3 @@ export function useImportJob(id: number, refetchInterval?: number | false) {
   });
 }
 
-export function useExportJobs(params?: { page?: number }) {
-  return useQuery<ExportJobListResponse, Error>({
-    queryKey: queryKeys.inventory.exportJobs(params),
-    queryFn: () =>
-      apiClient.get<ExportJobListResponse>("/inventory/export/jobs", {
-        ...(params?.page !== undefined ? { page: String(params.page) } : {}),
-      }),
-    staleTime: 30_000,
-  });
-}
-
-export function useCreateExportJob() {
-  const qc = useQueryClient();
-  return useMutation<
-    ExportJobListItem,
-    Error,
-    { exportType: string; filters?: Record<string, unknown> }
-  >({
-    mutationKey: ["inventory", "export", "job", "create"],
-    mutationFn: (data) => apiClient.post<ExportJobListItem>("/inventory/export/jobs", data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.exportJobs() });
-    },
-  });
-}
-
-export function useDownloadExport(jobId: number) {
-  async function downloadExport(): Promise<Blob> {
-    return apiClient.download(`/inventory/export/jobs/${jobId}/download`);
-  }
-  return downloadExport;
-}

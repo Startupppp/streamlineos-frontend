@@ -77,9 +77,6 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
   function handleReceiptChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("folder", "reimbursements");
     uploadFile.mutate(
       { file, folder: "reimbursements" },
       {

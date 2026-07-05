@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ interface ForecastTableRowProps {
   row: ForecastRow;
 }
 
-function ForecastTableRow({ row }: ForecastTableRowProps) {
+const ForecastTableRow = memo(function ForecastTableRow({ row }: ForecastTableRowProps) {
   const risk = RISK_BADGE[row.stockoutRisk];
   return (
     <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
@@ -51,7 +51,7 @@ function ForecastTableRow({ row }: ForecastTableRowProps) {
       </td>
     </tr>
   );
-}
+});
 
 export function ForecastingClient() {
   const [search, setSearch] = useState("");

@@ -9,9 +9,8 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import type { TemplateRow } from "@/types/payroll/setup";
+import type { TemplateRow, ToggleKey } from "@/types/payroll/setup";
 import { COMPLEXITY_CONFIG, TOGGLE_META } from "@/features/payroll/setup/lib/constants";
-import type { ToggleKey } from "@/types/payroll/setup";
 
 type TemplatePreviewSheetProps = {
   template: TemplateRow | null;

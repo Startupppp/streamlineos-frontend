@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -54,6 +54,92 @@ function buildDefaultLines(lines?: { variantId: number; qty: number; lotId?: num
   }));
 }
 
+interface EditableLineRowProps {
+  index: number;
+  line: EditableLine;
+  onChangeField: (index: number, field: keyof EditableLine, value: string) => void;
+  onRemove: (index: number) => void;
+}
+
+const EditableLineRow = memo(function EditableLineRow({
+  index,
+  line,
+  onChangeField,
+  onRemove,
+}: EditableLineRowProps) {
+  function handleVariantChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    onChangeField(index, "variantId", e.target.value);
+  }
+  function handleQtyChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    onChangeField(index, "qty", e.target.value);
+  }
+  function handleLotChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    onChangeField(index, "lotId", e.target.value);
+  }
+  function handleSerialChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    onChangeField(index, "serialId", e.target.value);
+  }
+  function handleRemove(): void {
+    onRemove(index);
+  }
+
+  return (
+    <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-1.5 items-end">
+      <div className="space-y-0.5">
+        <Label className="text-[10px] text-muted-foreground">Variant ID</Label>
+        <Input
+          type="number"
+          min="1"
+          value={line.variantId}
+          onChange={handleVariantChange}
+          className="h-7 text-xs"
+        />
+      </div>
+      <div className="space-y-0.5">
+        <Label className="text-[10px] text-muted-foreground">Qty</Label>
+        <Input
+          type="number"
+          min="1"
+          value={line.qty}
+          onChange={handleQtyChange}
+          className="h-7 text-xs"
+        />
+      </div>
+      <div className="space-y-0.5">
+        <Label className="text-[10px] text-muted-foreground">Lot ID</Label>
+        <Input
+          type="number"
+          min="1"
+          placeholder="—"
+          value={line.lotId}
+          onChange={handleLotChange}
+          className="h-7 text-xs"
+        />
+      </div>
+      <div className="space-y-0.5">
+        <Label className="text-[10px] text-muted-foreground">Serial ID</Label>
+        <Input
+          type="number"
+          min="1"
+          placeholder="—"
+          value={line.serialId}
+          onChange={handleSerialChange}
+          className="h-7 text-xs"
+        />
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 shrink-0"
+        onClick={handleRemove}
+      >
+        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+      </Button>
+    </div>
+  );
+});
+
 export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDetailSheetProps) {
   const pkgQuery = usePackageDetail(packageId ?? 0);
   const updateLinesMutation = useUpdatePackageLines();
@@ -76,37 +162,15 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
     setEditableLines((prev) => [...prev, { variantId: "", qty: "1", lotId: "", serialId: "" }]);
   }
 
-  function handleRemoveLine(index: number): void {
+  const handleRemoveLine = useCallback((index: number): void => {
     setEditableLines((prev) => prev.filter((_, i) => i !== index));
-  }
+  }, []);
 
-  function handleLineVariantChange(index: number, e: React.ChangeEvent<HTMLInputElement>): void {
-    const value = e.target.value;
+  const handleChangeField = useCallback((index: number, field: keyof EditableLine, value: string): void => {
     setEditableLines((prev) =>
-      prev.map((l, i) => (i === index ? { ...l, variantId: value } : l)),
+      prev.map((l, i) => (i === index ? { ...l, [field]: value } : l)),
     );
-  }
-
-  function handleLineQtyChange(index: number, e: React.ChangeEvent<HTMLInputElement>): void {
-    const value = e.target.value;
-    setEditableLines((prev) =>
-      prev.map((l, i) => (i === index ? { ...l, qty: value } : l)),
-    );
-  }
-
-  function handleLineLotChange(index: number, e: React.ChangeEvent<HTMLInputElement>): void {
-    const value = e.target.value;
-    setEditableLines((prev) =>
-      prev.map((l, i) => (i === index ? { ...l, lotId: value } : l)),
-    );
-  }
-
-  function handleLineSerialChange(index: number, e: React.ChangeEvent<HTMLInputElement>): void {
-    const value = e.target.value;
-    setEditableLines((prev) =>
-      prev.map((l, i) => (i === index ? { ...l, serialId: value } : l)),
-    );
-  }
+  }, []);
 
   function handleSaveLines(): void {
     if (!packageId) return;
@@ -237,59 +301,13 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
                     <p className="text-xs text-muted-foreground">No lines. Click Add to begin.</p>
                   )}
                   {editableLines.map((line, index) => (
-                    <div key={index} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-1.5 items-end">
-                      <div className="space-y-0.5">
-                        <Label className="text-[10px] text-muted-foreground">Variant ID</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={line.variantId}
-                          onChange={(e) => handleLineVariantChange(index, e)}
-                          className="h-7 text-xs"
-                        />
-                      </div>
-                      <div className="space-y-0.5">
-                        <Label className="text-[10px] text-muted-foreground">Qty</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={line.qty}
-                          onChange={(e) => handleLineQtyChange(index, e)}
-                          className="h-7 text-xs"
-                        />
-                      </div>
-                      <div className="space-y-0.5">
-                        <Label className="text-[10px] text-muted-foreground">Lot ID</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          placeholder="—"
-                          value={line.lotId}
-                          onChange={(e) => handleLineLotChange(index, e)}
-                          className="h-7 text-xs"
-                        />
-                      </div>
-                      <div className="space-y-0.5">
-                        <Label className="text-[10px] text-muted-foreground">Serial ID</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          placeholder="—"
-                          value={line.serialId}
-                          onChange={(e) => handleLineSerialChange(index, e)}
-                          className="h-7 text-xs"
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 shrink-0"
-                        onClick={() => handleRemoveLine(index)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                      </Button>
-                    </div>
+                    <EditableLineRow
+                      key={index}
+                      index={index}
+                      line={line}
+                      onChangeField={handleChangeField}
+                      onRemove={handleRemoveLine}
+                    />
                   ))}
                   {editableLines.length > 0 && (
                     <Button

@@ -31,7 +31,7 @@ interface ReplenishmentRuleListResponse {
   totalPages: number;
 }
 
-export interface CreateReplenishmentRuleInput {
+interface CreateReplenishmentRuleInput {
   variantId: number;
   warehouseId: number;
   minQty: number;
@@ -64,7 +64,7 @@ export interface GeneratePOInput {
   suggestions: { variantId: number; warehouseId: number; qty: number }[];
 }
 
-export interface GeneratePOResult {
+interface GeneratePOResult {
   purchaseOrderId: number;
   purchaseOrderNumber: string;
 }

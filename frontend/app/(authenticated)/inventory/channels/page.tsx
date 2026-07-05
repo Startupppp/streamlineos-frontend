@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, Suspense } from "react";
+import { memo, useState, useCallback, useMemo, Suspense } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Plus, Info, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -79,7 +79,7 @@ interface ChannelCardProps {
   onViewPublications: (channel: Channel) => void;
 }
 
-function ChannelCard({ channel, onEdit, onViewPublications }: ChannelCardProps) {
+const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublications }: ChannelCardProps) {
   const syncMutation = useSyncChannelStock();
   const isExternal = EXTERNAL_TYPES.has(channel.channelType);
 
@@ -185,7 +185,7 @@ function ChannelCard({ channel, onEdit, onViewPublications }: ChannelCardProps) 
       </Card>
     </motion.div>
   );
-}
+});
 
 function ChannelsContent() {
   const { data, isLoading, isError, refetch } = useChannels();

@@ -282,41 +282,6 @@ export interface ReceiveGoodsLineInput {
   serialNumbers?: string[];
 }
 
-export interface StockAvailabilityByWarehouse {
-  warehouseId: number;
-  warehouseName: string;
-  onHand: number;
-  committed: number;
-  available: number;
-}
-
-export interface StockAvailability {
-  variantId: number;
-  totalOnHand: number;
-  totalCommitted: number;
-  totalIncoming: number;
-  totalAvailable: number;
-  byWarehouse: StockAvailabilityByWarehouse[];
-}
-
-export interface StockReservation {
-  id: number;
-  reservationRef: string;
-  status: "ACTIVE" | "CONSUMED" | "RELEASED" | "EXPIRED";
-  productVariantId: number;
-  locationId: number | null;
-  quantity: number;
-  sourceType: string | null;
-  sourceId: string | null;
-  expiresAt: string | null;
-  createdAt: string;
-  variantName?: string | null;
-  variantSku?: string | null;
-  productName?: string | null;
-  locationName?: string | null;
-  warehouseName?: string | null;
-}
-
 export interface VendorPerformance {
   vendorId: number;
   onTimeRate: number;
@@ -370,17 +335,6 @@ export interface AdjustmentDetail {
   postedAt?: string | null;
   createdByName?: string | null;
   lines: AdjustmentDetailLine[];
-}
-
-export interface CreateOpeningStockLine {
-  variantId: number;
-  locationId: number;
-  qty: number;
-  unitCost: number;
-}
-
-export interface CreateOpeningStockInput {
-  lines: CreateOpeningStockLine[];
 }
 
 export interface CreateUomInput {

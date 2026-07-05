@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/features/payroll/shared";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -21,7 +22,7 @@ interface BuildColumnsOptions {
   onApproval: (loanId: number, action: "approve" | "reject") => void;
 }
 
-function PendingActions({
+const PendingActions = memo(function PendingActions({
   loanId,
   onApproval,
 }: {
@@ -56,9 +57,9 @@ function PendingActions({
       </Button>
     </div>
   );
-}
+});
 
-function ActiveActions({
+const ActiveActions = memo(function ActiveActions({
   row,
   onAdjust,
 }: {
@@ -105,7 +106,7 @@ function ActiveActions({
       </Button>
     </div>
   );
-}
+});
 
 export function buildLoanColumns({
   canManage,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -58,7 +58,7 @@ interface PoLineRowProps {
   onVariantChangeAt: (index: number, variantId: string, costPrice: string) => void;
 }
 
-function PoLineRow({ index, control, variants, isOnly, onRemoveAt, onVariantChangeAt }: PoLineRowProps) {
+const PoLineRow = memo(function PoLineRow({ index, control, variants, isOnly, onRemoveAt, onVariantChangeAt }: PoLineRowProps) {
   const quantity = useWatch({ control, name: `lines.${index}.quantity` });
   const unitCost = useWatch({ control, name: `lines.${index}.unitCost` });
   const amount = round2(num(quantity ?? "") * num(unitCost ?? ""));
@@ -157,7 +157,7 @@ function PoLineRow({ index, control, variants, isOnly, onRemoveAt, onVariantChan
       </TableCell>
     </TableRow>
   );
-}
+});
 
 export default function NewPurchaseOrderPage() {
   const router = useRouter();
@@ -205,14 +205,14 @@ export default function NewPurchaseOrderPage() {
     append({ productVariantId: "", quantity: "1", unitCost: "0", taxRate: "0" });
   }
 
-  function handleRemoveAt(index: number): void {
+  const handleRemoveAt = useCallback((index: number): void => {
     remove(index);
-  }
+  }, [remove]);
 
-  function handleVariantChangeAt(index: number, variantId: string, costPrice: string): void {
+  const handleVariantChangeAt = useCallback((index: number, variantId: string, costPrice: string): void => {
     form.setValue(`lines.${index}.productVariantId`, variantId, { shouldDirty: true });
     form.setValue(`lines.${index}.unitCost`, costPrice, { shouldDirty: true });
-  }
+  }, [form]);
 
   function handleCancel(): void {
     router.push("/inventory/purchase-orders");

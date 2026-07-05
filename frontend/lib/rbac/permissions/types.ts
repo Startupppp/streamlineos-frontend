@@ -298,4 +298,8 @@ export type PermissionKey =
   | "projects:changerequests:view"
   | "projects:changerequests:create"
   | "projects:changerequests:manage"
-  | "projects:clientvisibility:manage";
+  | "projects:clientvisibility:manage"
+  | "projects:approvals:view"
+  | "projects:approvals:request"
+  | "projects:approvals:decide"
+  | "projects:approvals:manage";

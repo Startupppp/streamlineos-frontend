@@ -27,7 +27,7 @@ const SUBMIT_STATUSES = new Set(["PREVIEW_READY", "EXCEPTIONS_FOUND"]);
 export function SubmitApprovalAction({ runId, status, onChanged }: Props) {
   const canUpdate = useCan("payroll:runs:update");
   const [open, setOpen] = useState(false);
-  const { mutate, isPending, error } = useSubmitApproval();
+  const { mutate, isPending } = useSubmitApproval();
 
   if (!SUBMIT_STATUSES.has(status)) return null;
   if (!canUpdate) return null;
@@ -60,8 +60,6 @@ export function SubmitApprovalAction({ runId, status, onChanged }: Props) {
       },
     );
   }
-
-  void error;
 
   return (
     <>

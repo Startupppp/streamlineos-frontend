@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo, memo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,7 @@ function VarianceCell({ value }: { value: number | null }) {
   return <span className="tabular-nums text-red-600">{value}</span>;
 }
 
-function DebouncedQtyInput({
+const DebouncedQtyInput = memo(function DebouncedQtyInput({
   lineId,
   initial,
   onSave,
@@ -77,7 +77,7 @@ function DebouncedQtyInput({
       className="h-7 w-24 text-xs tabular-nums"
     />
   );
-}
+});
 
 export function CycleCountDetailClient({ countId }: Props) {
   const [postDialogOpen, setPostDialogOpen] = useState(false);
@@ -162,68 +162,71 @@ export function CycleCountDetailClient({ countId }: Props) {
     return null;
   }
 
-  const columns: DataTableColumn<CycleCountLine>[] = [
-    {
-      key: "product",
-      header: "Product",
-      cell: (row) => (
-        <span className="text-sm font-medium text-foreground">{row.productName}</span>
-      ),
-    },
-    {
-      key: "sku",
-      header: "SKU",
-      headerClassName: "w-[130px]",
-      className: "font-mono text-xs text-muted-foreground",
-      cell: (row) => row.variantSku,
-    },
-    {
-      key: "location",
-      header: "Location",
-      headerClassName: "w-[130px]",
-      className: "text-muted-foreground",
-      cell: (row) => row.locationName ?? "—",
-    },
-    {
-      key: "systemQty",
-      header: "System Qty",
-      headerClassName: "w-[100px] text-right",
-      className: "text-right tabular-nums text-muted-foreground",
-      cell: (row) => row.systemQty,
-    },
-    {
-      key: "countedQty",
-      header: "Counted Qty",
-      headerClassName: "w-[130px] text-right",
-      className: "text-right",
-      cell: (row) =>
-        isCounting ? (
-          <div className="flex justify-end">
-            <DebouncedQtyInput
-              lineId={row.id}
-              initial={row.countedQty}
-              onSave={handleSaveLine}
-            />
-          </div>
-        ) : (
-          <span className="tabular-nums">
-            {row.countedQty !== null ? row.countedQty : "—"}
-          </span>
+  const columns = useMemo<DataTableColumn<CycleCountLine>[]>(
+    () => [
+      {
+        key: "product",
+        header: "Product",
+        cell: (row) => (
+          <span className="text-sm font-medium text-foreground">{row.productName}</span>
         ),
-    },
-    {
-      key: "variance",
-      header: "Variance",
-      headerClassName: "w-[100px] text-right",
-      className: "text-right",
-      cell: (row) =>
-        isReview ? (
-          <VarianceCell value={row.variance} />
-        ) : (
-          <span className="text-muted-foreground tabular-nums">—</span>
-        ),
-    },
-  ];
+      },
+      {
+        key: "sku",
+        header: "SKU",
+        headerClassName: "w-[130px]",
+        className: "font-mono text-xs text-muted-foreground",
+        cell: (row) => row.variantSku,
+      },
+      {
+        key: "location",
+        header: "Location",
+        headerClassName: "w-[130px]",
+        className: "text-muted-foreground",
+        cell: (row) => row.locationName ?? "—",
+      },
+      {
+        key: "systemQty",
+        header: "System Qty",
+        headerClassName: "w-[100px] text-right",
+        className: "text-right tabular-nums text-muted-foreground",
+        cell: (row) => row.systemQty,
+      },
+      {
+        key: "countedQty",
+        header: "Counted Qty",
+        headerClassName: "w-[130px] text-right",
+        className: "text-right",
+        cell: (row) =>
+          isCounting ? (
+            <div className="flex justify-end">
+              <DebouncedQtyInput
+                lineId={row.id}
+                initial={row.countedQty}
+                onSave={handleSaveLine}
+              />
+            </div>
+          ) : (
+            <span className="tabular-nums">
+              {row.countedQty !== null ? row.countedQty : "—"}
+            </span>
+          ),
+      },
+      {
+        key: "variance",
+        header: "Variance",
+        headerClassName: "w-[100px] text-right",
+        className: "text-right",
+        cell: (row) =>
+          isReview ? (
+            <VarianceCell value={row.variance} />
+          ) : (
+            <span className="text-muted-foreground tabular-nums">—</span>
+          ),
+      },
+    ],
+    [isCounting, isReview, handleSaveLine],
+  );
 
   if (error) {
     return (

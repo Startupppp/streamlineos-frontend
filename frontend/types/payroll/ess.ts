@@ -79,22 +79,11 @@ export interface EssTaxDeclaration {
   reviewNote: string | null;
 }
 
-export interface EssTaxProof {
-  id: number;
-  declarationId: number;
-  category: string;
-  amount: string;
-  description: string | null;
-  proofUrl: string | null;
-  status: string;
-}
-
 export interface EssTaxDeclarationResponse {
   windowStatus: "OPEN" | null;
   financialYear: string | null;
   closesAt: string | null;
   declaration: EssTaxDeclaration | null;
-  proofs: EssTaxProof[];
 }
 
 export type LoanStatus = "PENDING" | "APPROVED" | "REJECTED" | "ACTIVE" | "CLOSED";

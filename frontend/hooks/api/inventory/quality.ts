@@ -109,7 +109,7 @@ type RecallListResponse = {
   totalPages: number;
 };
 
-export type { Inspection, InspectionDetail, InspectionLine, QualityHold, Recall, RecallLine, AffectedCustomer };
+export type { Inspection, InspectionLine, QualityHold, Recall };
 
 export function useQualityInspections(filters?: InspectionFilters) {
   return useQuery<InspectionListResponse, Error>({

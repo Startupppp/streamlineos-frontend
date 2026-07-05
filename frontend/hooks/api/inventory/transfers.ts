@@ -3,8 +3,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import type { TransferStatus } from "@/features/inventory/lib";
 
-export type TransferStatus = "PENDING" | "RESERVED" | "IN_TRANSIT" | "COMPLETED" | "CANCELLED";
+export type { TransferStatus };
 
 export interface TransferListItem {
   id: number;

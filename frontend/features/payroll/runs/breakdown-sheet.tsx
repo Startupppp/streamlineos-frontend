@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState, memo, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -68,7 +68,7 @@ const CATEGORY_LABELS: Record<SalaryComponentType, string> = {
   ADJUSTMENT: "Adjustments",
 };
 
-function LineItemRow({ line }: { line: CalculationSnapshotLine }) {
+const LineItemRow = memo(function LineItemRow({ line }: { line: CalculationSnapshotLine }) {
   const [expanded, setExpanded] = useState(false);
 
   function handleToggle() {
@@ -111,7 +111,7 @@ function LineItemRow({ line }: { line: CalculationSnapshotLine }) {
       )}
     </div>
   );
-}
+});
 
 interface BreakdownSheetProps {
   runId: number;

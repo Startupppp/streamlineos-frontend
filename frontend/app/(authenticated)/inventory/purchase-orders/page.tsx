@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type ChangeEvent } from "react";
+import { memo, useState, useTransition, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search, MoreHorizontal } from "lucide-react";
@@ -76,7 +76,7 @@ function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
   );
 }
 
-function PoRowActions({ po }: { po: PurchaseOrderSummary }) {
+const PoRowActions = memo(function PoRowActions({ po }: { po: PurchaseOrderSummary }) {
   const [showCancel, setShowCancel] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const approveMutation = useApprovePurchaseOrder(po.id);
@@ -183,7 +183,69 @@ function PoRowActions({ po }: { po: PurchaseOrderSummary }) {
       </AlertDialog>
     </>
   );
-}
+});
+
+const columns: DataTableColumn<PurchaseOrderSummary>[] = [
+  {
+    key: "poNumber",
+    header: "PO #",
+    cell: (po) => (
+      <Link
+        href={`/inventory/purchase-orders/${po.id}`}
+        className="font-mono text-[11px] text-blue-600 hover:underline transition-colors"
+      >
+        {po.poNumber}
+      </Link>
+    ),
+    sortable: true,
+    sortValue: (po) => po.poNumber,
+  },
+  {
+    key: "vendor",
+    header: "Vendor",
+    cell: (po) => po.vendor?.name ?? "—",
+  },
+  {
+    key: "orderDate",
+    header: "Order Date",
+    cell: (po) => (
+      <span className="font-mono tabular-nums">{formatDate(po.orderDate)}</span>
+    ),
+  },
+  {
+    key: "expectedDeliveryDate",
+    header: "Expected Delivery",
+    headerClassName: "hidden md:table-cell",
+    className: "hidden md:table-cell",
+    cell: (po) => (
+      <span className="font-mono tabular-nums">{formatDate(po.expectedDeliveryDate)}</span>
+    ),
+  },
+  {
+    key: "total",
+    header: "Total",
+    cell: (po) => (
+      <span className="font-mono tabular-nums">
+        {po.currency} {Number(po.total).toFixed(2)}
+      </span>
+    ),
+    className: "text-right font-mono tabular-nums",
+    headerClassName: "text-right",
+    sortable: true,
+    sortValue: (po) => Number(po.total),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (po) => <StatusBadge status={po.status} />,
+  },
+  {
+    key: "actions",
+    header: "",
+    cell: (po) => <PoRowActions po={po} />,
+    className: "w-8",
+  },
+];
 
 export default function PurchaseOrdersListPage() {
   const router = useRouter();
@@ -261,68 +323,6 @@ export default function PurchaseOrdersListPage() {
   function handleRetry(): void {
     void query.refetch();
   }
-
-  const columns: DataTableColumn<PurchaseOrderSummary>[] = [
-    {
-      key: "poNumber",
-      header: "PO #",
-      cell: (po) => (
-        <Link
-          href={`/inventory/purchase-orders/${po.id}`}
-          className="font-mono text-[11px] text-blue-600 hover:underline transition-colors"
-        >
-          {po.poNumber}
-        </Link>
-      ),
-      sortable: true,
-      sortValue: (po) => po.poNumber,
-    },
-    {
-      key: "vendor",
-      header: "Vendor",
-      cell: (po) => po.vendor?.name ?? "—",
-    },
-    {
-      key: "orderDate",
-      header: "Order Date",
-      cell: (po) => (
-        <span className="font-mono tabular-nums">{formatDate(po.orderDate)}</span>
-      ),
-    },
-    {
-      key: "expectedDeliveryDate",
-      header: "Expected Delivery",
-      headerClassName: "hidden md:table-cell",
-      className: "hidden md:table-cell",
-      cell: (po) => (
-        <span className="font-mono tabular-nums">{formatDate(po.expectedDeliveryDate)}</span>
-      ),
-    },
-    {
-      key: "total",
-      header: "Total",
-      cell: (po) => (
-        <span className="font-mono tabular-nums">
-          {po.currency} {Number(po.total).toFixed(2)}
-        </span>
-      ),
-      className: "text-right font-mono tabular-nums",
-      headerClassName: "text-right",
-      sortable: true,
-      sortValue: (po) => Number(po.total),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (po) => <StatusBadge status={po.status} />,
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (po) => <PoRowActions po={po} />,
-      className: "w-8",
-    },
-  ];
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">

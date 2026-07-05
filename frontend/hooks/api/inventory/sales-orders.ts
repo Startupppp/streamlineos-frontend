@@ -431,17 +431,6 @@ interface CancelSalesOrderInput {
   reason?: string;
 }
 
-interface UpdateSalesOrderInput {
-  soId: number;
-  clientId?: number;
-  orderDate?: string;
-  requiredDate?: string;
-  shippingAddress?: string;
-  warehouseId?: number;
-  currency?: string;
-  notes?: string;
-}
-
 export function useReserveSalesOrder() {
   const qc = useQueryClient();
   return useMutation<ReserveSalesOrderResult, Error, ReserveSalesOrderInput>({
@@ -510,15 +499,3 @@ export function useCancelSalesOrder() {
   });
 }
 
-export function useUpdateSalesOrder() {
-  const qc = useQueryClient();
-  return useMutation<void, Error, UpdateSalesOrderInput>({
-    mutationKey: ["inventory", "salesOrders", "update"],
-    mutationFn: ({ soId, ...body }) =>
-      apiClient.patch<void>(`/inventory/sales-orders/${soId}`, body),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
-    },
-  });
-}

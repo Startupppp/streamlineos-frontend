@@ -17,7 +17,7 @@ export interface CycleCountLine {
   variance: number | null;
 }
 
-export interface CycleCount {
+interface CycleCount {
   id: number;
   countNumber: string;
   status: CycleCountStatus;
@@ -44,14 +44,14 @@ export interface CycleCountListItem {
   createdAt: string;
 }
 
-export interface CycleCountListResponse {
+interface CycleCountListResponse {
   items: CycleCountListItem[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-export interface CreateCycleCountInput {
+interface CreateCycleCountInput {
   warehouseId: number;
   locationId?: number;
   categoryId?: number;
@@ -61,7 +61,7 @@ interface UpdateLinesPayload {
   lines: { lineId: number; countedQty: number }[];
 }
 
-export interface PhysicalAudit {
+interface PhysicalAudit {
   id: number;
   auditNumber: string;
   status: CycleCountStatus;
@@ -82,18 +82,18 @@ export interface PhysicalAuditListItem {
   createdAt: string;
 }
 
-export interface PhysicalAuditListResponse {
+interface PhysicalAuditListResponse {
   items: PhysicalAuditListItem[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-export interface CreatePhysicalAuditInput {
+interface CreatePhysicalAuditInput {
   warehouseId: number;
 }
 
-export interface CountsParams {
+interface CountsParams {
   status?: string;
   warehouseId?: number;
   page?: number;

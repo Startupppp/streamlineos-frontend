@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
@@ -37,13 +37,20 @@ const DISPOSITION_LABELS: Record<Disposition, string> = {
   SCRAP: "Scrap",
 };
 
+const DISPOSITION_OPTIONS: Disposition[] = [
+  "RELEASE_TO_AVAILABLE",
+  "QUARANTINE",
+  "RETURN_TO_VENDOR",
+  "SCRAP",
+];
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   inspectionId: number | null;
 }
 
-function LineDispositionRow({
+const LineDispositionRow = memo(function LineDispositionRow({
   line,
   value,
   onChange,
@@ -65,7 +72,7 @@ function LineDispositionRow({
           <SelectValue placeholder="Choose..." />
         </SelectTrigger>
         <SelectContent>
-          {(["RELEASE_TO_AVAILABLE", "QUARANTINE", "RETURN_TO_VENDOR", "SCRAP"] as Disposition[]).map((d) => (
+          {DISPOSITION_OPTIONS.map((d) => (
             <SelectItem key={d} value={d} className="text-xs">
               {DISPOSITION_LABELS[d]}
             </SelectItem>
@@ -74,7 +81,7 @@ function LineDispositionRow({
       </Select>
     </div>
   );
-}
+});
 
 export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Props) {
   const [showFailForm, setShowFailForm] = useState(false);
@@ -117,9 +124,9 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
     setFailDispositions(initial);
   }
 
-  function handleDispositionChange(lineId: number, d: string): void {
+  const handleDispositionChange = useCallback((lineId: number, d: string): void => {
     setFailDispositions((prev) => ({ ...prev, [lineId]: d }));
-  }
+  }, []);
 
   function handleSubmitFail(): void {
     if (!inspectionId || !inspection) return;

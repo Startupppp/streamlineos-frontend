@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, TrendingDown, CheckCircle2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ export function getStockStatus(row: StockLevelRow): StockStatus {
 
 export { STOCK_STATUS_ORDER };
 
-function StockStatusIcon({ status }: { status: StockStatus }) {
+const StockStatusIcon = memo(function StockStatusIcon({ status }: { status: StockStatus }) {
   if (status === "critical") {
     return <AlertTriangle className="h-3.5 w-3.5 text-red-500" aria-label="Below reorder point" />;
   }
@@ -41,7 +42,7 @@ function StockStatusIcon({ status }: { status: StockStatus }) {
     return <TrendingDown className="h-3.5 w-3.5 text-amber-500" aria-label="Below minimum stock" />;
   }
   return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-label="Stock OK" />;
-}
+});
 
 const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
 
@@ -49,22 +50,22 @@ interface StockLevelsTableProps {
   rows: StockLevelRow[];
 }
 
-export function StockLevelsTable({ rows }: StockLevelsTableProps) {
+export const StockLevelsTable = memo(function StockLevelsTable({ rows }: StockLevelsTableProps) {
   const router = useRouter();
 
-  function handleAdjust(row: StockLevelRow) {
+  const handleAdjust = useCallback((row: StockLevelRow) => {
     const params = row.variantId ? `?variantId=${row.variantId}` : "";
     router.push(`/inventory/stock/adjustments${params}`);
-  }
+  }, [router]);
 
-  function handleTransfer() {
+  const handleTransfer = useCallback(() => {
     router.push("/inventory/stock/transfers");
-  }
+  }, [router]);
 
-  function handleMovements(row: StockLevelRow) {
+  const handleMovements = useCallback((row: StockLevelRow) => {
     const params = row.variantId ? `?variantId=${row.variantId}` : "";
     router.push(`/inventory/stock/movements${params}`);
-  }
+  }, [router]);
 
   return (
     <div className="rounded-md border border-border overflow-hidden bg-card">
@@ -190,6 +191,6 @@ export function StockLevelsTable({ rows }: StockLevelsTableProps) {
       </div>
     </div>
   );
-}
+});
 
 export type { StockStatus };

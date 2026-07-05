@@ -18,13 +18,13 @@ export interface ValuationRow {
   warehouseName: string | null;
 }
 
-export interface ValuationSummary {
+interface ValuationSummary {
   totalValue: number;
   byMethod: { method: CostingMethod; value: number }[];
   rows: ValuationRow[];
 }
 
-export interface ValuationLayer {
+interface ValuationLayer {
   id: number;
   qty: number;
   unitCost: number;

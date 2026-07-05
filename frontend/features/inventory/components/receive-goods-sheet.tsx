@@ -1,6 +1,7 @@
 "use client";
 
-import { useForm, useFieldArray, type Control } from "react-hook-form";
+import { memo } from "react";
+import { useForm, useFieldArray, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -76,19 +77,12 @@ interface GrnLineRowProps {
   meta: DraftLineMeta;
   index: number;
   control: Control<GrnFormValues>;
-  qualityStatus: "ACCEPTED" | "REJECTED";
-  quantityReceived: number;
-  serialNumbersValue: string | undefined;
 }
 
-function GrnLineRow({
-  meta,
-  index,
-  control,
-  qualityStatus,
-  quantityReceived,
-  serialNumbersValue,
-}: GrnLineRowProps) {
+const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: GrnLineRowProps) {
+  const qualityStatus = useWatch({ control, name: `lines.${index}.qualityStatus` });
+  const quantityReceived = useWatch({ control, name: `lines.${index}.quantityReceived` });
+  const serialNumbersValue = useWatch({ control, name: `lines.${index}.serialNumbers` });
   const serialCount = serialNumbersValue
     ? serialNumbersValue
         .split(/[\n,]/)
@@ -243,7 +237,7 @@ function GrnLineRow({
       )}
     </div>
   );
-}
+});
 
 export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
   const receiveMutation = useReceiveGoods(po.id);
@@ -279,7 +273,6 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
   });
 
   const { fields } = useFieldArray({ control: form.control, name: "lines" });
-  const watchedLines = form.watch("lines");
 
   function handleClose(): void {
     form.reset();
@@ -411,16 +404,12 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
             {fields.map((field, index) => {
               const meta = lineMetas[index];
               if (!meta) return null;
-              const watched = watchedLines[index];
               return (
                 <GrnLineRow
                   key={field.id}
                   meta={meta}
                   index={index}
                   control={form.control}
-                  qualityStatus={watched?.qualityStatus ?? "ACCEPTED"}
-                  quantityReceived={watched?.quantityReceived ?? 0}
-                  serialNumbersValue={watched?.serialNumbers}
                 />
               );
             })}

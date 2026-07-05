@@ -1,9 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { StockAvailability, StockReservation } from "@/types/inventory";
 
 export type TransactionType =
   | "PURCHASE"
@@ -67,7 +66,7 @@ interface StockLevelsResult {
   totalPages?: number;
 }
 
-export interface StockTransactionVariant {
+interface StockTransactionVariant {
   id: number;
   name: string | null;
   sku: string | null;
@@ -226,84 +225,6 @@ export function useStockLevels(filters?: StockLevelFilters) {
       };
     },
     staleTime: 60_000,
-  });
-}
-
-export function useStockAvailability(variantId: number, warehouseId?: number) {
-  return useQuery<StockAvailability, Error>({
-    queryKey: queryKeys.inventory.stockLevels({ availability: variantId, warehouseId }),
-    queryFn: () =>
-      apiClient.get<StockAvailability>("/inventory/stock/availability", {
-        variantId: String(variantId),
-        ...(warehouseId ? { warehouseId: String(warehouseId) } : {}),
-      }),
-    enabled: variantId > 0,
-    staleTime: 30_000,
-  });
-}
-
-interface ReservationFilters {
-  [key: string]: unknown;
-  source?: string;
-  status?: string;
-  page?: number;
-  limit?: number;
-}
-
-export function useReservations(filters?: ReservationFilters) {
-  return useQuery<{ items: StockReservation[]; total: number; page: number; totalPages: number }, Error>({
-    queryKey: queryKeys.inventory.reservations(filters),
-    queryFn: () =>
-      apiClient.get("/inventory/stock/reservations", {
-        source: filters?.source,
-        status: filters?.status,
-        page: filters?.page,
-        limit: filters?.limit,
-      }),
-    staleTime: 30_000,
-  });
-}
-
-export function useReserveStock() {
-  const qc = useQueryClient();
-  return useMutation<StockReservation, Error, { productVariantId: number; locationId: number; quantity: number; sourceType?: string; sourceId?: string }>({
-    mutationKey: ["inventory", "stock", "reserve"],
-    mutationFn: (data) =>
-      apiClient.post("/inventory/stock/reserve", data, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.reservations() });
-    },
-  });
-}
-
-export function useReleaseReservation() {
-  const qc = useQueryClient();
-  return useMutation<void, Error, { reservationId: number }>({
-    mutationKey: ["inventory", "stock", "release-reservation"],
-    mutationFn: ({ reservationId }) =>
-      apiClient.post("/inventory/stock/release-reservation", { reservationId }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.reservations() });
-    },
-  });
-}
-
-export function useOpeningStock() {
-  const qc = useQueryClient();
-  return useMutation<void, Error, { lines: Array<{ variantId: number; locationId: number; qty: number; unitCost: number }> }>({
-    mutationKey: ["inventory", "stock", "opening"],
-    mutationFn: (data) =>
-      apiClient.post("/inventory/stock/opening", data, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
-    },
   });
 }
 

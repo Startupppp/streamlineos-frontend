@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { format, isToday, parseISO } from "date-fns";
 import { Clock, Edit2, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { motion } from "framer-motion";
 import { FileCheck, Download } from "lucide-react";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ import { useEssFnf } from "@/hooks/api/payroll/ess";
 import { downloadFnfStatement } from "@/hooks/api/payroll/fnf";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 
-function FnfRow({ label, value, highlight }: { label: string; value: string | null; highlight?: boolean }) {
+const FnfRow = memo(function FnfRow({ label, value, highlight }: { label: string; value: string | null; highlight?: boolean }) {
   if (!value || parseFloat(value) === 0) return null;
   return (
     <div className={`flex items-center justify-between px-4 py-2.5 text-sm border-b border-border last:border-0 ${highlight ? "bg-muted/40" : ""}`}>
@@ -21,7 +21,7 @@ function FnfRow({ label, value, highlight }: { label: string; value: string | nu
       </span>
     </div>
   );
-}
+});
 
 export function EssFnfSection() {
   const { data: settlement, isLoading } = useEssFnf();

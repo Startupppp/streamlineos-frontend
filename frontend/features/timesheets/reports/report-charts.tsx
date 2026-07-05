@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -29,11 +30,11 @@ interface ByDayChartProps {
   isLoading?: boolean;
 }
 
-export function ByDayChart({ data, isLoading }: ByDayChartProps) {
-  const chartData = data.map((d) => ({
-    date: format(parseISO(d.date), "MMM d"),
-    hours: d.hours,
-  }));
+export const ByDayChart = memo(function ByDayChart({ data, isLoading }: ByDayChartProps) {
+  const chartData = useMemo(
+    () => data.map((d) => ({ date: format(parseISO(d.date), "MMM d"), hours: d.hours })),
+    [data],
+  );
 
   return (
     <Card>
@@ -71,17 +72,18 @@ export function ByDayChart({ data, isLoading }: ByDayChartProps) {
       </CardContent>
     </Card>
   );
-}
+});
 
 interface ByProjectChartProps {
   data: { projectId: number | null; projectName: string; hours: number }[];
   isLoading?: boolean;
 }
 
-export function ByProjectChart({ data, isLoading }: ByProjectChartProps) {
-  const sorted = [...data]
-    .sort((a, b) => b.hours - a.hours)
-    .slice(0, 10);
+export const ByProjectChart = memo(function ByProjectChart({ data, isLoading }: ByProjectChartProps) {
+  const sorted = useMemo(
+    () => [...data].sort((a, b) => b.hours - a.hours).slice(0, 10),
+    [data],
+  );
 
   const chartHeight = Math.max(140, Math.min(sorted.length, 10) * 36);
 
@@ -118,4 +120,4 @@ export function ByProjectChart({ data, isLoading }: ByProjectChartProps) {
       </CardContent>
     </Card>
   );
-}
+});

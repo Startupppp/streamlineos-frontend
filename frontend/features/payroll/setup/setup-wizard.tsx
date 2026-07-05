@@ -124,7 +124,6 @@ export function SetupWizard() {
           {step === 4 && (
             <StepReview
               draft={draft}
-              updateDraft={updateDraft}
               goNext={goNext}
               goBack={goBack}
             />

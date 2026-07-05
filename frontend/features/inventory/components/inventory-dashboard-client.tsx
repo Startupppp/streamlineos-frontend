@@ -30,6 +30,16 @@ import {
 import { RecentMovementsTable } from "./inventory-recent-movements";
 import { DashboardInsightsPanel } from "./dashboard-insights-panel";
 
+const ADD_PRODUCT_ACTION = (
+  <Link
+    href="/inventory/products"
+    className="inline-flex items-center gap-1.5 h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+  >
+    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+    Add Product
+  </Link>
+);
+
 const URGENCY_CONFIG: Record<
   ReorderReportRow["urgency"],
   { label: string; className: string; dotClass: string }
@@ -173,23 +183,13 @@ export function InventoryDashboardClient() {
     void dashRefetch();
   }
 
-  const addProductAction = (
-    <Link
-      href="/inventory/products"
-      className="inline-flex items-center gap-1.5 h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-    >
-      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-      Add Product
-    </Link>
-  );
-
   if (!isKpiLoading && !kpiError && !hasAnyData) {
     return (
       <PageWrapper
         eyebrow="Operations · Inventory"
         title="Inventory Dashboard"
         subtitle="Track stock levels, movements, and reorder alerts."
-        actions={addProductAction}
+        actions={ADD_PRODUCT_ACTION}
       >
         <EmptyState
           illustration={<EmptyProductsIllustration />}
@@ -206,7 +206,7 @@ export function InventoryDashboardClient() {
       eyebrow="Operations · Inventory"
       title="Inventory Dashboard"
       subtitle="Track stock levels, movements, and reorder alerts."
-      actions={addProductAction}
+      actions={ADD_PRODUCT_ACTION}
     >
       <div className="space-y-6">
         {isKpiLoading ? (

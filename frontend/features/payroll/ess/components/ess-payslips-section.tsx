@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Download, FileText } from "lucide-react";
 import { toast } from "sonner";
@@ -46,7 +46,7 @@ interface DownloadButtonProps {
   payslip: EssPayslip;
 }
 
-function DownloadButton({ payslip }: DownloadButtonProps) {
+const DownloadButton = memo(function DownloadButton({ payslip }: DownloadButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const handleDownload = async () => {
@@ -82,7 +82,7 @@ function DownloadButton({ payslip }: DownloadButtonProps) {
       {loading ? "Downloading…" : "Download"}
     </Button>
   );
-}
+});
 
 export function EssPayslipsSection() {
   const { data: payslips, isLoading } = useEssPayslips();

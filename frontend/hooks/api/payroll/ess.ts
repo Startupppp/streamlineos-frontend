@@ -152,26 +152,6 @@ export function useSubmitTaxDeclaration() {
   });
 }
 
-interface AddTaxProofBody {
-  declarationId: number;
-  category: string;
-  amount: number;
-  description?: string;
-  proofUrl?: string;
-}
-
-export function useAddTaxProof() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["payroll", "ess", "tax-declaration", "proofs", "add"],
-    mutationFn: (body: AddTaxProofBody) =>
-      apiClient.post<EssTaxDeclarationResponse>("/payroll/me/tax-declaration/proofs", body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: essKeys.taxDeclaration() });
-    },
-  });
-}
-
 interface UpdateBankBody {
   accountNumber: string;
   bankName?: string;

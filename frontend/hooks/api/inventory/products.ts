@@ -246,33 +246,6 @@ export function useUpdateCategory() {
   });
 }
 
-export function useUpdateUom() {
-  const qc = useQueryClient();
-  return useMutation<
-    unknown,
-    Error,
-    {
-      uomId: number;
-      data: {
-        name?: string;
-        abbreviation?: string;
-        isActive?: boolean;
-        category?: string;
-        ratioToBase?: string;
-        roundingPrecision?: number;
-        isBase?: boolean;
-      };
-    }
-  >({
-    mutationKey: ["inventory", "uom", "update"],
-    mutationFn: ({ uomId, data }) =>
-      apiClient.patch(`/inventory/products/uom/${uomId}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.uom() });
-    },
-  });
-}
-
 export function useUpdateProductVariant(productId: number) {
   const qc = useQueryClient();
   return useMutation<

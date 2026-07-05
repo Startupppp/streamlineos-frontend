@@ -145,24 +145,6 @@ interface CancelPurchaseOrderInput {
   reason?: string;
 }
 
-interface UpdatePurchaseOrderLineInput {
-  productVariantId?: number;
-  quantity?: number;
-  unitCost?: number;
-  taxRate?: number;
-  lineOrder?: number;
-}
-
-interface UpdatePurchaseOrderInput {
-  vendorId?: number;
-  orderDate?: string;
-  expectedDeliveryDate?: string;
-  warehouseId?: number;
-  currency?: string;
-  notes?: string;
-  lines?: UpdatePurchaseOrderLineInput[];
-}
-
 export function useApprovePurchaseOrder(poId: number) {
   const qc = useQueryClient();
   return useMutation<PurchaseOrderSummary, Error, void>({
@@ -214,15 +196,3 @@ export function useCancelPurchaseOrder(poId: number) {
   });
 }
 
-export function useUpdatePurchaseOrder(poId: number) {
-  const qc = useQueryClient();
-  return useMutation<PurchaseOrderSummary, Error, UpdatePurchaseOrderInput>({
-    mutationKey: ["inventory", "purchase-orders", "update", poId],
-    mutationFn: (data) =>
-      apiClient.patch<PurchaseOrderSummary>(`/inventory/purchase-orders/${poId}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
-    },
-  });
-}

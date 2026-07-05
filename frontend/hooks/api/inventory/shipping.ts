@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { PackageStatus, ShipmentStatus, LoadStatus } from "@/features/inventory/lib";
 
-export interface PackageLine {
+interface PackageLine {
   id: number;
   variantId: number;
   variantName: string;
@@ -24,14 +24,14 @@ export interface Package {
   updatedAt: string;
 }
 
-export type PackageListResponse = {
+type PackageListResponse = {
   items: Package[];
   total: number;
   page: number;
   totalPages: number;
 };
 
-export interface ShipmentLine {
+interface ShipmentLine {
   id: number;
   variantId: number;
   variantName: string;
@@ -54,14 +54,14 @@ export interface Shipment {
   updatedAt: string;
 }
 
-export type ShipmentListResponse = {
+type ShipmentListResponse = {
   items: Shipment[];
   total: number;
   page: number;
   totalPages: number;
 };
 
-export interface LoadMember {
+interface LoadMember {
   id: number;
   type: "SHIPMENT" | "TRANSFER";
   referenceId: number;
@@ -78,7 +78,7 @@ export interface Load {
   updatedAt: string;
 }
 
-export type LoadListResponse = {
+type LoadListResponse = {
   items: Load[];
   total: number;
   page: number;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -32,7 +32,7 @@ const KIND_LABELS: Record<string, string> = {
   WITHHOLDING: "Withholding",
 };
 
-function PackItemRow({ item }: { item: StatutoryPackItem }) {
+const PackItemRow = memo(function PackItemRow({ item }: { item: StatutoryPackItem }) {
   return (
     <div className="flex items-start gap-3 px-4 py-3">
       <div className="flex-1 min-w-0">
@@ -59,7 +59,7 @@ function PackItemRow({ item }: { item: StatutoryPackItem }) {
       </span>
     </div>
   );
-}
+});
 
 function PackStatutorySection({ pack }: { pack: StatutoryPackPreview }) {
   const [checklistOpen, setChecklistOpen] = useState(false);

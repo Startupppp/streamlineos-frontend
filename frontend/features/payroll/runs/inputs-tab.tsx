@@ -88,6 +88,84 @@ interface InputsTabProps {
   isLocked?: boolean;
 }
 
+const COLUMNS: DataTableColumn<RunInput>[] = [
+  {
+    key: "employee",
+    header: "Employee",
+    cell: (row) => (
+      <span className="text-[11px] font-medium">{row.userName ?? row.userId.slice(0, 8)}</span>
+    ),
+  },
+  {
+    key: "source",
+    header: "Source",
+    cell: (row) => (
+      <span
+        className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${SOURCE_COLORS[row.source]}`}
+      >
+        {row.source}
+      </span>
+    ),
+  },
+  {
+    key: "scheduledDays",
+    header: "Scheduled",
+    cell: (row) => <span className="tabular-nums">{row.scheduledDays}</span>,
+  },
+  {
+    key: "paidDays",
+    header: "Paid",
+    cell: (row) => <span className="tabular-nums">{row.paidDays}</span>,
+  },
+  {
+    key: "lopDays",
+    header: "LOP",
+    cell: (row) => <span className="tabular-nums">{row.lopDays}</span>,
+  },
+  {
+    key: "halfDays",
+    header: "Half Days",
+    cell: (row) => <span className="tabular-nums">{row.halfDays}</span>,
+  },
+  {
+    key: "overtimeHours",
+    header: "OT Hrs",
+    cell: (row) => <span className="tabular-nums">{row.overtimeHours}</span>,
+  },
+  {
+    key: "billableHours",
+    header: "Billable Hrs",
+    cell: (row) =>
+      row.billableHours !== undefined && row.billableHours !== null ? (
+        <span className="tabular-nums">{row.billableHours}</span>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      ),
+  },
+  {
+    key: "warning",
+    header: "Warning",
+    cell: (row) => {
+      const msg = getWarningMessage(row);
+      if (!msg) return null;
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex items-center">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="max-w-[220px] text-[11px]">
+              {msg}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    },
+  },
+];
+
 export function InputsTab({ runId, isLocked }: InputsTabProps) {
   const [selectedInput, setSelectedInput] = useState<RunInput | null>(null);
   const [showReimport, setShowReimport] = useState(false);
@@ -155,84 +233,6 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
     setShowReimport(false);
   }
 
-  const columns: DataTableColumn<RunInput>[] = [
-    {
-      key: "employee",
-      header: "Employee",
-      cell: (row) => (
-        <span className="text-[11px] font-medium">{row.userName ?? row.userId.slice(0, 8)}</span>
-      ),
-    },
-    {
-      key: "source",
-      header: "Source",
-      cell: (row) => (
-        <span
-          className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${SOURCE_COLORS[row.source]}`}
-        >
-          {row.source}
-        </span>
-      ),
-    },
-    {
-      key: "scheduledDays",
-      header: "Scheduled",
-      cell: (row) => <span className="tabular-nums">{row.scheduledDays}</span>,
-    },
-    {
-      key: "paidDays",
-      header: "Paid",
-      cell: (row) => <span className="tabular-nums">{row.paidDays}</span>,
-    },
-    {
-      key: "lopDays",
-      header: "LOP",
-      cell: (row) => <span className="tabular-nums">{row.lopDays}</span>,
-    },
-    {
-      key: "halfDays",
-      header: "Half Days",
-      cell: (row) => <span className="tabular-nums">{row.halfDays}</span>,
-    },
-    {
-      key: "overtimeHours",
-      header: "OT Hrs",
-      cell: (row) => <span className="tabular-nums">{row.overtimeHours}</span>,
-    },
-    {
-      key: "billableHours",
-      header: "Billable Hrs",
-      cell: (row) =>
-        row.billableHours !== undefined && row.billableHours !== null ? (
-          <span className="tabular-nums">{row.billableHours}</span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        ),
-    },
-    {
-      key: "warning",
-      header: "Warning",
-      cell: (row) => {
-        const msg = getWarningMessage(row);
-        if (!msg) return null;
-        return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex items-center">
-                  <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-[220px] text-[11px]">
-                {msg}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        );
-      },
-    },
-  ];
-
   return (
     <div className="space-y-3">
       {!isLocked && canUpdate && (
@@ -244,7 +244,7 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
       )}
       <DataTable
         data={inputs ?? []}
-        columns={columns}
+        columns={COLUMNS}
         getRowKey={(row) => row.id}
         onRowClick={!isLocked && canUpdate ? handleRowClick : undefined}
         isLoading={isLoading}

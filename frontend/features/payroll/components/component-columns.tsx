@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PayrollStatusBadge, formatMoney } from "@/features/payroll/shared";
@@ -7,7 +8,7 @@ import type { SalaryComponent } from "@/types/payroll/setup";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { ComponentTypeBadge } from "./component-type-badge";
 
-function ValueCell({ row }: { row: SalaryComponent }) {
+const ValueCell = memo(function ValueCell({ row }: { row: SalaryComponent }) {
   if (row.amount) {
     return <span className="font-mono tabular-nums text-xs">{formatMoney(row.amount, "INR")}</span>;
   }
@@ -18,7 +19,7 @@ function ValueCell({ row }: { row: SalaryComponent }) {
     return <span className="text-xs text-muted-foreground italic">Formula</span>;
   }
   return <span className="text-xs text-muted-foreground">—</span>;
-}
+});
 
 export function buildComponentColumns(
   onEdit: (row: SalaryComponent) => void,

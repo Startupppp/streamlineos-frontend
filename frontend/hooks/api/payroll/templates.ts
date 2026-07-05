@@ -42,15 +42,6 @@ export function usePayrollTemplates(params?: TemplateListParams) {
   });
 }
 
-export function usePayrollTemplate(id: number, enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.payroll.template(id),
-    queryFn: () => apiClient.get<TemplateRow>(`/payroll/templates/${id}`),
-    staleTime: 5 * 60_000,
-    enabled,
-  });
-}
-
 export function usePreviewTemplate() {
   return useMutation({
     mutationKey: ["payroll", "templates", "preview"],

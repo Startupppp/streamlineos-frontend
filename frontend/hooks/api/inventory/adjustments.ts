@@ -16,7 +16,7 @@ export type AdjustmentReason =
   | "RECOUNT"
   | "OTHER";
 
-export type AdjustmentType = "IN" | "OUT" | "SET";
+type AdjustmentType = "IN" | "OUT" | "SET";
 
 export interface AdjustmentListItem {
   id: number;

@@ -64,8 +64,9 @@ export function GeneratePayoutDialog({
       {
         onSuccess: (result) => {
           if (result.replayed) toast.info("Replayed existing batch");
-          if (result.fileUrl) {
-            onFileUrl(result.fileUrl);
+          const generatedFileUrl = result.batches.find((b) => b.fileUrl)?.fileUrl ?? null;
+          if (generatedFileUrl) {
+            onFileUrl(generatedFileUrl);
           } else {
             onClose();
           }

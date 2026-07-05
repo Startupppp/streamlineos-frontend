@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,7 +34,7 @@ const loanSchema = z.object({
 
 type LoanFormValues = z.infer<typeof loanSchema>;
 
-function LoanCard({ loan }: { loan: EssLoan }) {
+const LoanCard = memo(function LoanCard({ loan }: { loan: EssLoan }) {
   const total = loan.totalEmis ?? 0;
   const paidPct = total > 0 ? Math.round((loan.paidEmis / total) * 100) : 0;
 
@@ -61,7 +61,7 @@ function LoanCard({ loan }: { loan: EssLoan }) {
       </div>
     </div>
   );
-}
+});
 
 function LoanSkeleton() {
   return (

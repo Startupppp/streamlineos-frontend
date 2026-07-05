@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, type MouseEvent } from "react";
+import { memo, useCallback, type MouseEvent } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Warehouse, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export interface WarehouseCardData {
   _count?: { locations: number };
 }
 
-export function WarehouseCard({ warehouse }: { warehouse: WarehouseCardData }) {
+export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { warehouse: WarehouseCardData }) {
   const shouldReduceMotion = useReducedMotion();
   const setDefault = useSetDefaultWarehouse();
   const locationCount =
@@ -122,4 +122,4 @@ export function WarehouseCard({ warehouse }: { warehouse: WarehouseCardData }) {
       </Link>
     </motion.div>
   );
-}
+});

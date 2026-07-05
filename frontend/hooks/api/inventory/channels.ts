@@ -6,7 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 import type { SyncStatus } from "@/features/inventory/lib";
 
 export type ChannelType = "INTERNAL" | "SHOPIFY" | "WOOCOMMERCE" | "MARKETPLACE" | "B2B" | "THREE_PL";
-export type ChannelStatus = "ACTIVE" | "PAUSED";
+type ChannelStatus = "ACTIVE" | "PAUSED";
 export type PublicationStatus = "PENDING" | "PUBLISHED" | "FAILED" | "SKIPPED";
 
 export interface Channel {
@@ -85,15 +85,6 @@ export function useChannels() {
     queryKey: queryKeys.inventory.channels(),
     queryFn: () => apiClient.get<Channel[]>("/inventory/channels"),
     staleTime: 30_000,
-  });
-}
-
-export function useChannel(channelId: number) {
-  return useQuery<Channel, Error>({
-    queryKey: queryKeys.inventory.channel(channelId),
-    queryFn: () => apiClient.get<Channel>(`/inventory/channels/${channelId}`),
-    enabled: channelId > 0,
-    staleTime: 60_000,
   });
 }
 

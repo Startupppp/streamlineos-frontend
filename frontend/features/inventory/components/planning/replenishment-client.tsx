@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Settings2, ShoppingCart } from "lucide-react";
@@ -32,7 +32,7 @@ interface SuggestionRowProps {
   onToggle: (id: number) => void;
 }
 
-function SuggestionRow({ suggestion: s, selected, onToggle }: SuggestionRowProps) {
+const SuggestionRow = memo(function SuggestionRow({ suggestion: s, selected, onToggle }: SuggestionRowProps) {
   function handleToggle(): void {
     onToggle(s.id);
   }
@@ -63,7 +63,7 @@ function SuggestionRow({ suggestion: s, selected, onToggle }: SuggestionRowProps
       </td>
     </tr>
   );
-}
+});
 
 export function ReplenishmentClient() {
   const { data, isLoading, error, refetch } = useReplenishmentSuggestions();
@@ -75,7 +75,7 @@ export function ReplenishmentClient() {
 
   const suggestions = data ?? [];
 
-  function handleToggle(id: number): void {
+  const handleToggle = useCallback(function handleToggle(id: number): void {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -85,7 +85,7 @@ export function ReplenishmentClient() {
       }
       return next;
     });
-  }
+  }, []);
 
   function handleSelectAll(): void {
     if (selectedIds.size === suggestions.length) {
