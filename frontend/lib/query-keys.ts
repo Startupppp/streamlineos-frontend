@@ -188,6 +188,27 @@ export const queryKeys = {
     budget: (projectId: number) => [...base, "projects", "budget", projectId] as const,
     resourceAllocation: () => [...base, "projects", "resourceAllocation"] as const,
     templates: () => [...base, "projects", "templates"] as const,
+    qa: {
+      suites: (projectId?: number) => [...base, "projects", projectId, "qa", "suites"] as const,
+      cases: (projectId?: number, params?: Record<string, unknown>) => [...base, "projects", projectId, "qa", "cases", params] as const,
+      case: (projectId?: number, id?: number) => [...base, "projects", projectId, "qa", "cases", id] as const,
+      runs: (projectId?: number, status?: string) => [...base, "projects", projectId, "qa", "runs", status] as const,
+      run: (projectId?: number, runId?: number) => [...base, "projects", projectId, "qa", "runs", runId] as const,
+    },
+    bugs: {
+      list: (projectId?: number, params?: Record<string, unknown>) => [...base, "projects", projectId, "bugs", params] as const,
+      detail: (projectId?: number, bugId?: number) => [...base, "projects", projectId, "bugs", bugId] as const,
+    },
+    changeRequests: {
+      list: (projectId: number, params?: Record<string, unknown>) => [...base, "projects", projectId, "change-requests", params] as const,
+      detail: (projectId: number, crId: number) => [...base, "projects", projectId, "change-requests", crId] as const,
+    },
+    clientPortal: {
+      projects: () => [...base, "projects", "portal", "projects"] as const,
+      overview: (projectId: number) => [...base, "projects", "portal", projectId, "overview"] as const,
+      changeRequests: (projectId: number) => [...base, "projects", "portal", projectId, "change-requests"] as const,
+      visibility: (projectId: number) => [...base, "projects", projectId, "client-visibility"] as const,
+    },
   },
 
   chat: {

@@ -36,9 +36,14 @@ interface RatePreviewQuery {
 }
 
 export function useRatePreview(query: RatePreviewQuery, enabled = true) {
+  const params: Record<string, unknown> = {
+    projectId: query.projectId,
+    userId: query.userId,
+    ticketId: query.ticketId,
+  };
   return useQuery({
-    queryKey: queryKeys.timesheets.ratePreview(query),
-    queryFn: () => apiClient.get<RatePreview>("/timesheets/billing/rate-preview", query),
+    queryKey: queryKeys.timesheets.ratePreview(params),
+    queryFn: () => apiClient.get<RatePreview>("/timesheets/billing/rate-preview", params),
     staleTime: 60_000,
     enabled,
   });

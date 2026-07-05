@@ -32,6 +32,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  ADJUSTMENT_STATUS_BADGE,
+  ADJUSTMENT_STATUS_LABEL,
+  type AdjustmentStatus,
+} from "@/features/inventory/lib";
+import { AdjustmentDetailSheet } from "@/features/inventory/components/stock/adjustment-detail-sheet";
 import { cn } from "@/lib/utils";
 
 const schema = z.object({
@@ -59,12 +65,8 @@ const REASON_BADGE: Record<AdjustmentReason, string> = {
   SALE: "bg-emerald-50 text-emerald-700 border-emerald-200",
   OTHER: "bg-slate-100 text-slate-700 border-slate-200",
 };
-const STATUS_COLORS: Record<string, string> = {
-  POSTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  VOIDED: "bg-red-50 text-red-700 border-red-200",
-};
 const REASONS: AdjustmentReason[] = ["PURCHASE", "SALE", "RETURN", "DAMAGE", "EXPIRY", "THEFT", "RECOUNT", "OTHER"];
+const ADJ_STATUSES: AdjustmentStatus[] = ["DRAFT", "PENDING_APPROVAL", "APPROVED", "POSTED", "CANCELLED"];
 
 const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
 
@@ -74,11 +76,18 @@ export default function AdjustmentsPage() {
 
   const searchQ = searchParams.get("q") ?? "";
   const reasonFilter = searchParams.get("reason") ?? "all";
+  const statusFilter = searchParams.get("status") ?? "all";
 
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [detailId, setDetailId] = useState<number | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
-  const { data: adjData, isLoading, isError, refetch } = useAdjustments({ page, limit: 20 });
+  const { data: adjData, isLoading, isError, refetch } = useAdjustments({
+    page,
+    limit: 20,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+  });
   const { data: warehouses = [], isLoading: wLoading } = useWarehouses();
   const createMutation = useCreateAdjustment();
 
@@ -94,10 +103,8 @@ export default function AdjustmentsPage() {
   const { data: locations = [], isLoading: lLoading } = useLocations(warehouseId ?? 0);
   const { data: variants = [], isLoading: vLoading } = useProductVariants({ activeOnly: true });
 
-  const rawAdjustments: AdjustmentListItem[] = adjData?.items ?? [];
-
   const adjustments = useMemo(() => {
-    let result = rawAdjustments;
+    let result: AdjustmentListItem[] = adjData?.items ?? [];
     if (searchQ) {
       const q = searchQ.toLowerCase();
       result = result.filter(
@@ -110,7 +117,7 @@ export default function AdjustmentsPage() {
       result = result.filter((a) => a.reason === reasonFilter);
     }
     return result;
-  }, [rawAdjustments, searchQ, reasonFilter]);
+  }, [adjData?.items, searchQ, reasonFilter]);
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -121,14 +128,29 @@ export default function AdjustmentsPage() {
     router.replace(`?${params.toString()}`);
   }
 
-  const handleReasonChange = useCallback((val: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (val === "all") params.delete("reason");
-    else params.set("reason", val);
-    params.delete("page");
-    setPage(1);
-    router.replace(`?${params.toString()}`);
-  }, [router, searchParams]);
+  const handleReasonChange = useCallback(
+    (val: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (val === "all") params.delete("reason");
+      else params.set("reason", val);
+      params.delete("page");
+      setPage(1);
+      router.replace(`?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
+
+  const handleStatusChange = useCallback(
+    (val: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (val === "all") params.delete("status");
+      else params.set("status", val);
+      params.delete("page");
+      setPage(1);
+      router.replace(`?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
 
   function handleOpenSheet() {
     reset({ adjustmentType: "IN", reason: "RECOUNT" });
@@ -142,6 +164,11 @@ export default function AdjustmentsPage() {
   function handlePrevPage() { setPage((p) => p - 1); }
   function handleNextPage() { setPage((p) => p + 1); }
 
+  function handleRowClick(adj: AdjustmentListItem) {
+    setDetailId(adj.id);
+    setDetailOpen(true);
+  }
+
   function onSubmit(values: FormValues) {
     createMutation.mutate(
       {
@@ -153,7 +180,15 @@ export default function AdjustmentsPage() {
         notes: values.notes?.trim() || undefined,
       },
       {
-        onSuccess: () => { toast.success("Adjustment created"); reset(); setSheetOpen(false); },
+        onSuccess: (result) => {
+          const msg =
+            result.status === "PENDING_APPROVAL"
+              ? "Adjustment created — awaiting approval"
+              : "Adjustment created";
+          toast.success(msg);
+          reset();
+          setSheetOpen(false);
+        },
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
@@ -165,7 +200,7 @@ export default function AdjustmentsPage() {
     ? `${adjData.total} adjustment${adjData.total !== 1 ? "s" : ""}`
     : undefined;
 
-  const hasActiveFilters = searchQ || reasonFilter !== "all";
+  const hasActiveFilters = searchQ || reasonFilter !== "all" || statusFilter !== "all";
 
   return (
     <PageWrapper
@@ -197,6 +232,17 @@ export default function AdjustmentsPage() {
               <SelectItem value="all">All reasons</SelectItem>
               {REASONS.map((r) => (
                 <SelectItem key={r} value={r}>{REASON_LABELS[r]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className="h-8 w-[160px] text-xs">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              {ADJ_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>{ADJUSTMENT_STATUS_LABEL[s]}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -247,16 +293,28 @@ export default function AdjustmentsPage() {
                 </TableHeader>
                 <TableBody>
                   {adjustments.map((adj) => (
-                    <TableRow key={adj.id} className="h-8 border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <TableCell className="px-2 py-1 font-mono text-[11px] font-semibold">{adj.referenceNumber}</TableCell>
+                    <TableRow
+                      key={adj.id}
+                      className="h-8 border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => handleRowClick(adj)}
+                    >
+                      <TableCell className="px-2 py-1 font-mono text-[11px] font-semibold text-blue-600 hover:underline">
+                        {adj.referenceNumber}
+                      </TableCell>
                       <TableCell className="px-2 py-1">
                         <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", REASON_BADGE[adj.reason])}>
                           {REASON_LABELS[adj.reason]}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-2 py-1">
-                        <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", STATUS_COLORS[adj.status] ?? "bg-slate-100 text-slate-700 border-slate-200")}>
-                          {adj.status}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "h-4 text-[9px] px-1.5 py-0 font-medium",
+                            ADJUSTMENT_STATUS_BADGE[adj.status],
+                          )}
+                        >
+                          {ADJUSTMENT_STATUS_LABEL[adj.status]}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-2 py-1 text-right text-[11px] font-mono tabular-nums font-medium">{adj.lineCount}</TableCell>
@@ -448,6 +506,12 @@ export default function AdjustmentsPage() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      <AdjustmentDetailSheet
+        adjustmentId={detailId}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </PageWrapper>
   );
 }

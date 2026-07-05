@@ -153,8 +153,8 @@ export function DayTimeline({ entries, days }: DayTimelineProps) {
                 "flex flex-col items-center px-3 py-1.5 rounded-lg border text-xs transition-colors",
                 active
                   ? "bg-foreground text-background border-foreground"
-                  : "bg-card border-border hover:border-accent/50 hover:bg-muted/40 text-foreground",
-                todayDay && !active && "border-accent/60",
+                  : "bg-card border-border hover:border-blue-500/50 hover:bg-muted/40 text-foreground",
+                todayDay && !active && "border-blue-500/60",
               )}
             >
               <span className="font-medium">{format(parseISO(d), "EEE")}</span>

@@ -286,4 +286,11 @@ export type PermissionKey =
   | "payroll:policies:manage"
   | "payroll:policies:view"
   | "integrations:connections:view"
-  | "integrations:connections:manage";
+  | "integrations:connections:manage"
+  | "projects:qa:view"
+  | "projects:qa:manage"
+  | "projects:qa:execute"
+  | "projects:bugs:view"
+  | "projects:bugs:create"
+  | "projects:bugs:update"
+  | "projects:bugs:delete";

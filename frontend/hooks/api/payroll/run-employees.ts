@@ -62,3 +62,16 @@ export function useAddAdjustment(runId: number, runEmployeeId: number) {
     },
   });
 }
+
+export function useSetEmployeeHold(runId: number, runEmployeeId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["payroll", "run-employees", runId, runEmployeeId, "hold"],
+    mutationFn: (body: { hold: boolean; reason?: string }) =>
+      apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/employees/${runEmployeeId}/hold`, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployee(runId, runEmployeeId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.all });
+    },
+  });
+}

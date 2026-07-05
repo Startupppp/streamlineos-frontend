@@ -1,0 +1,163 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useVendors } from "@/hooks/api/inventory/vendors";
+import { useGoodsReceipts } from "@/hooks/api/inventory/operations";
+import { GrnDetailSheet } from "@/features/inventory/components/procurement/grn-detail-sheet";
+import type { GrnSummary } from "@/hooks/api/inventory/operations";
+
+function formatDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
+}
+
+export default function ReceiptsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+  const [selectedGrnId, setSelectedGrnId] = useState<number | null>(null);
+
+  const vendorParam = searchParams.get("vendor") ?? "all";
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
+
+  const resolvedVendorId = vendorParam !== "all" ? Number(vendorParam) : undefined;
+
+  function updateParams(updates: Record<string, string>): void {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === "all" || value === "" || (key === "page" && value === "1")) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    startTransition(() => {
+      router.replace(`?${params.toString()}`, { scroll: false });
+    });
+  }
+
+  function handleVendorChange(value: string): void {
+    updateParams({ vendor: value, page: "1" });
+  }
+
+  function handlePageChange(nextPage: number): void {
+    updateParams({ page: String(nextPage) });
+  }
+
+  function handleRowClick(grn: GrnSummary): void {
+    setSelectedGrnId(grn.id);
+  }
+
+  function handleSheetClose(open: boolean): void {
+    if (!open) setSelectedGrnId(null);
+  }
+
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
+  const vendorsQuery = useVendors({ isActive: true, limit: 200 });
+  const query = useGoodsReceipts({ vendorId: resolvedVendorId, page, pageSize: 50 });
+
+  const items = query.data?.items ?? [];
+  const vendors = vendorsQuery.data?.items ?? [];
+  const total = query.data?.total ?? 0;
+  const totalPages = query.data?.totalPages ?? 1;
+
+  const columns: DataTableColumn<GrnSummary>[] = [
+    {
+      key: "grnNumber",
+      header: "GRN #",
+      cell: (g) => <span className="font-mono text-[11px]">{g.grnNumber}</span>,
+      sortable: true,
+      sortValue: (g) => g.grnNumber,
+    },
+    {
+      key: "poNumber",
+      header: "PO #",
+      cell: (g) => <span className="font-mono text-[11px] text-muted-foreground">{g.poNumber ?? "—"}</span>,
+    },
+    {
+      key: "vendorName",
+      header: "Vendor",
+      cell: (g) => g.vendorName ?? "—",
+    },
+    {
+      key: "receivedDate",
+      header: "Received Date",
+      cell: (g) => <span className="font-mono tabular-nums">{formatDate(g.receivedDate)}</span>,
+      sortable: true,
+      sortValue: (g) => g.receivedDate,
+    },
+    {
+      key: "notes",
+      header: "Notes",
+      cell: (g) => <span className="text-muted-foreground truncate max-w-xs block">{g.notes ?? "—"}</span>,
+      className: "hidden md:table-cell",
+      headerClassName: "hidden md:table-cell",
+    },
+  ];
+
+  const filterBar = (
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+      <Select value={vendorParam} onValueChange={handleVendorChange}>
+        <SelectTrigger className="h-8 min-w-0 flex-1 max-w-xs text-xs">
+          <SelectValue placeholder="All vendors" />
+        </SelectTrigger>
+        <SelectContent className="max-h-72">
+          <SelectItem value="all">All vendors</SelectItem>
+          {vendors.map((v) => (
+            <SelectItem key={v.id} value={String(v.id)}>{v.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  return (
+    <PageWrapper
+      eyebrow="Inventory / Operations"
+      title="Receipts"
+      subtitle={query.data ? `${total} ${total === 1 ? "receipt" : "receipts"}` : undefined}
+      filters={filterBar}
+    >
+      <DataTable
+        data={items}
+        columns={columns}
+        getRowKey={(g) => g.id}
+        isLoading={query.isLoading}
+        onRowClick={handleRowClick}
+        emptyState={
+          query.error ? (
+            <ErrorState description={query.error.message} onRetry={handleRetry} compact />
+          ) : (
+            <EmptyState
+              title="No receipts found"
+              description="Goods receipt notes will appear here after receiving POs."
+              compact
+            />
+          )
+        }
+        pagination={
+          totalPages > 1
+            ? { mode: "server", page, pageSize: 50, total, onPageChange: handlePageChange }
+            : undefined
+        }
+        minWidth="640px"
+        className="min-h-[320px]"
+      />
+      <GrnDetailSheet
+        grnId={selectedGrnId ?? 0}
+        open={selectedGrnId !== null}
+        onOpenChange={handleSheetClose}
+      />
+    </PageWrapper>
+  );
+}

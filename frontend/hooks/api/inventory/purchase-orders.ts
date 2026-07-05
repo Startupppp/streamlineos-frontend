@@ -140,3 +140,89 @@ export function useReceiveGoods(poId: number) {
     },
   });
 }
+
+interface CancelPurchaseOrderInput {
+  reason?: string;
+}
+
+interface UpdatePurchaseOrderLineInput {
+  productVariantId?: number;
+  quantity?: number;
+  unitCost?: number;
+  taxRate?: number;
+  lineOrder?: number;
+}
+
+interface UpdatePurchaseOrderInput {
+  vendorId?: number;
+  orderDate?: string;
+  expectedDeliveryDate?: string;
+  warehouseId?: number;
+  currency?: string;
+  notes?: string;
+  lines?: UpdatePurchaseOrderLineInput[];
+}
+
+export function useApprovePurchaseOrder(poId: number) {
+  const qc = useQueryClient();
+  return useMutation<PurchaseOrderSummary, Error, void>({
+    mutationKey: ["inventory", "purchase-orders", "approve", poId],
+    mutationFn: () =>
+      apiClient.post<PurchaseOrderSummary>(
+        `/inventory/purchase-orders/${poId}/approve`,
+        {},
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
+    },
+  });
+}
+
+export function useClosePurchaseOrder(poId: number) {
+  const qc = useQueryClient();
+  return useMutation<void, Error, void>({
+    mutationKey: ["inventory", "purchase-orders", "close", poId],
+    mutationFn: () =>
+      apiClient.post<void>(
+        `/inventory/purchase-orders/${poId}/close`,
+        {},
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
+    },
+  });
+}
+
+export function useCancelPurchaseOrder(poId: number) {
+  const qc = useQueryClient();
+  return useMutation<void, Error, CancelPurchaseOrderInput | undefined>({
+    mutationKey: ["inventory", "purchase-orders", "cancel", poId],
+    mutationFn: (vars) =>
+      apiClient.post<void>(
+        `/inventory/purchase-orders/${poId}/cancel`,
+        vars ?? {},
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
+    },
+  });
+}
+
+export function useUpdatePurchaseOrder(poId: number) {
+  const qc = useQueryClient();
+  return useMutation<PurchaseOrderSummary, Error, UpdatePurchaseOrderInput>({
+    mutationKey: ["inventory", "purchase-orders", "update", poId],
+    mutationFn: (data) =>
+      apiClient.patch<PurchaseOrderSummary>(`/inventory/purchase-orders/${poId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
+    },
+  });
+}

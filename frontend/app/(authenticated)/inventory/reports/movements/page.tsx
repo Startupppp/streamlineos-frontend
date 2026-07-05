@@ -2,9 +2,10 @@
 
 import { Suspense, type ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -149,6 +150,26 @@ function MovementsReportContent() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
+  function handleExportClick(): void {
+    const headers = ["Date", "Type", "Product", "SKU", "Warehouse", "Location", "Qty", "Balance After", "Reference", "Performed By"];
+    const csvRows = filtered.map((r) => [
+      r.createdAt, r.type, r.productName, r.sku, r.warehouseName ?? "", r.locationName ?? "",
+      r.quantity, r.balanceAfter ?? "",
+      r.referenceType && r.referenceNumber ? `${r.referenceType} ${r.referenceNumber}` : (r.notes ?? ""),
+      r.performedBy ?? "",
+    ]);
+    const content = [headers, ...csvRows]
+      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `movements-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <PageWrapper
       eyebrow="Inventory · Reports"
@@ -209,6 +230,17 @@ function MovementsReportContent() {
             className="w-[130px] h-8 text-xs shrink-0"
             aria-label="To date"
           />
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs shrink-0"
+            onClick={handleExportClick}
+            disabled={filtered.length === 0}
+            aria-label="Export movements as CSV"
+          >
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            Export CSV
+          </Button>
         </>
       }
     >

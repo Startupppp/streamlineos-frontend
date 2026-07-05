@@ -57,6 +57,7 @@ const MIGRATED_PREFIXES = [
   "/hr/interview-questions",
   "/hr/learning-paths",
   "/hr/leave-calendar",
+  "/hr/leave-policy",
   "/hr/leaves",
   "/hr/loans",
   "/hr/my-goals",

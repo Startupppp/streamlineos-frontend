@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { InventoryVendor, CreateVendorInput, UpdateVendorInput } from "@/types/inventory";
+import type { InventoryVendor, CreateVendorInput, UpdateVendorInput, VendorPerformance } from "@/types/inventory";
 
 type VendorFilters = {
   q?: string;
@@ -71,6 +71,28 @@ export function useUpdateVendor(vendorId?: number) {
       const targetId = vendorId ?? variables.id;
       qc.invalidateQueries({ queryKey: queryKeys.inventory.vendors() });
       if (targetId) qc.invalidateQueries({ queryKey: queryKeys.inventory.vendor(targetId) });
+    },
+  });
+}
+
+export function useVendorPerformance(vendorId: number) {
+  return useQuery<VendorPerformance, Error>({
+    queryKey: [...queryKeys.inventory.vendor(vendorId), "performance"],
+    queryFn: () => apiClient.get<VendorPerformance>(`/inventory/vendors/${vendorId}/performance`),
+    enabled: vendorId > 0,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useToggleVendorActive(vendorId?: number) {
+  const qc = useQueryClient();
+  return useMutation<InventoryVendor, Error, { id: number; isActive: boolean }>({
+    mutationKey: ["inventory", "vendors", "toggle-active", vendorId],
+    mutationFn: ({ id, isActive }) =>
+      apiClient.patch<InventoryVendor>(`/inventory/vendors/${id}`, { isActive }),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.vendors() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.vendor(variables.id) });
     },
   });
 }

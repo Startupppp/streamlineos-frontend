@@ -37,6 +37,16 @@ interface InventoryDashboardMovement {
   performedBy: string | null;
 }
 
+export interface AiInsight {
+  id: number;
+  type: string;
+  severity: "INFO" | "WARNING" | "CRITICAL";
+  title: string;
+  description: string;
+  status: "PENDING" | "ACKNOWLEDGED" | "DISMISSED";
+  createdAt: string;
+}
+
 interface InventoryDashboard {
   totalSkus: number;
   totalOnHand: number;
@@ -46,6 +56,14 @@ interface InventoryDashboard {
   draftPoCount: number;
   openSoCount: number;
   recentMovements: InventoryDashboardMovement[];
+  stockValue: number;
+  expiringLotsCount: number;
+  qualityHoldQty: number;
+  activeReservationsCount: number;
+  openShipmentsCount: number;
+  failedChannelSyncsCount: number;
+  openInspectionsCount: number;
+  recentInsights: AiInsight[];
 }
 
 export interface StockSummaryRow {
@@ -165,6 +183,14 @@ interface RawDashboardResponse {
   draftPoCount: number;
   openSoCount: number;
   recentMovements: RawTransactionRow[];
+  stockValue?: number;
+  expiringLotsCount?: number;
+  qualityHoldQty?: number;
+  activeReservationsCount?: number;
+  openShipmentsCount?: number;
+  failedChannelSyncsCount?: number;
+  openInspectionsCount?: number;
+  recentInsights?: AiInsight[];
 }
 
 function toNumber(value: string | null | undefined): number {
@@ -281,6 +307,14 @@ export function useInventoryDashboard() {
         draftPoCount: data.draftPoCount ?? 0,
         openSoCount: data.openSoCount ?? 0,
         recentMovements: (data.recentMovements ?? []).map(toDashboardMovement),
+        stockValue: data.stockValue ?? 0,
+        expiringLotsCount: data.expiringLotsCount ?? 0,
+        qualityHoldQty: data.qualityHoldQty ?? 0,
+        activeReservationsCount: data.activeReservationsCount ?? 0,
+        openShipmentsCount: data.openShipmentsCount ?? 0,
+        failedChannelSyncsCount: data.failedChannelSyncsCount ?? 0,
+        openInspectionsCount: data.openInspectionsCount ?? 0,
+        recentInsights: data.recentInsights ?? [],
       };
     },
     staleTime: 5 * 60_000,

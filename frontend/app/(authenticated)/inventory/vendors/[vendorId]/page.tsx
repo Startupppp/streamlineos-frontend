@@ -2,17 +2,21 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { Pencil, Package } from "lucide-react";
+import { Pencil, Package, CheckCircle2, RotateCcw, Clock, FileText, DollarSign } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EditVendorSheet } from "@/features/inventory/components/edit-vendor-sheet";
 import { useVendor, useVendorPurchaseOrders } from "@/hooks/api/inventory";
+import { useVendorPerformance, useToggleVendorActive } from "@/hooks/api/inventory/vendors";
 import type { PurchaseOrderStatus } from "@/types/inventory";
 
 interface VendorDetailPageProps {
@@ -49,6 +53,8 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
 
   const vendorQuery = useVendor(id);
   const posQuery = useVendorPurchaseOrders(id);
+  const perfQuery = useVendorPerformance(id);
+  const toggleMutation = useToggleVendorActive(id);
 
   function handleVendorRetry(): void {
     void vendorQuery.refetch();
@@ -69,6 +75,16 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
   const vendor = vendorQuery.data;
   const poItems = posQuery.data?.items ?? [];
 
+  function handleToggleActive(): void {
+    toggleMutation.mutate(
+      { id, isActive: !vendor.isActive },
+      {
+        onSuccess: () => toast.success(`Vendor ${vendor.isActive ? "deactivated" : "activated"}`),
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }
+
   return (
     <>
       <PageWrapper
@@ -77,10 +93,25 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
         subtitle={`${vendor.code} · ${vendor.currency}`}
         backHref="/inventory/vendors"
         actions={
-          <Button size="sm" variant="outline" onClick={handleEditOpen}>
-            <Pencil className="mr-1 h-3.5 w-3.5" />
-            Edit
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleToggleActive}
+              disabled={toggleMutation.isPending}
+              className={
+                vendor.isActive
+                  ? "text-destructive hover:text-destructive"
+                  : "text-emerald-600 hover:text-emerald-700"
+              }
+            >
+              {vendor.isActive ? "Deactivate" : "Activate"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleEditOpen}>
+              <Pencil className="mr-1 h-3.5 w-3.5" />
+              Edit
+            </Button>
+          </div>
         }
       >
         <div className="space-y-4">
@@ -130,6 +161,67 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
           </Card>
 
           <div className="space-y-2">
+            <h2 className="text-sm font-semibold text-foreground">Performance</h2>
+            <StatCardGrid cols={3}>
+              <StatCard
+                label="On-Time Delivery"
+                value={perfQuery.data ? `${(perfQuery.data.onTimeRate * 100).toFixed(1)}%` : "—"}
+                icon={CheckCircle2}
+                tone={
+                  perfQuery.data && perfQuery.data.onTimeRate >= 0.9
+                    ? "emerald"
+                    : perfQuery.data && perfQuery.data.onTimeRate >= 0.7
+                      ? "amber"
+                      : "red"
+                }
+                isLoading={perfQuery.isLoading}
+              />
+              <StatCard
+                label="Fill Rate"
+                value={perfQuery.data ? `${(perfQuery.data.fillRate * 100).toFixed(1)}%` : "—"}
+                icon={Package}
+                tone={perfQuery.data && perfQuery.data.fillRate >= 0.9 ? "emerald" : "amber"}
+                isLoading={perfQuery.isLoading}
+              />
+              <StatCard
+                label="Return Rate"
+                value={perfQuery.data ? `${(perfQuery.data.returnRate * 100).toFixed(1)}%` : "—"}
+                icon={RotateCcw}
+                tone={perfQuery.data && perfQuery.data.returnRate <= 0.05 ? "emerald" : "amber"}
+                isLoading={perfQuery.isLoading}
+              />
+              <StatCard
+                label="Avg Lead Time"
+                value={perfQuery.data ? `${perfQuery.data.avgLeadTimeDays} days` : "—"}
+                icon={Clock}
+                tone="default"
+                isLoading={perfQuery.isLoading}
+              />
+              <StatCard
+                label="Open POs"
+                value={perfQuery.data?.openPoCount ?? 0}
+                icon={FileText}
+                tone="blue"
+                isLoading={perfQuery.isLoading}
+              />
+              <StatCard
+                label="Total Spend"
+                value={
+                  perfQuery.data
+                    ? `$${Number(perfQuery.data.totalSpend).toLocaleString(undefined, {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      })}`
+                    : "—"
+                }
+                icon={DollarSign}
+                tone="default"
+                isLoading={perfQuery.isLoading}
+              />
+            </StatCardGrid>
+          </div>
+
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">Purchase Orders</h2>
               <Button size="sm" asChild>
@@ -140,14 +232,19 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
             </div>
 
             {posQuery.isLoading && <LoadingState variant="table" rows={4} />}
-            {posQuery.error && <ErrorState description={posQuery.error.message} onRetry={handlePosRetry} compact />}
+            {posQuery.error && (
+              <ErrorState description={posQuery.error.message} onRetry={handlePosRetry} compact />
+            )}
 
             {!posQuery.isLoading && !posQuery.error && poItems.length === 0 && (
               <EmptyState
                 illustrationPreset="inventory"
                 title="No purchase orders"
                 description="Create a purchase order for this vendor."
-                action={{ label: "New PO", href: `/inventory/purchase-orders/new?vendorId=${vendor.id}` }}
+                action={{
+                  label: "New PO",
+                  href: `/inventory/purchase-orders/new?vendorId=${vendor.id}`,
+                }}
                 compact
               />
             )}
@@ -157,11 +254,21 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
                 <Table className="min-w-[640px]">
                   <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
                     <TableRow className="border-b-2 border-border">
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">PO #</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Order date</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Expected delivery</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Total</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                        PO #
+                      </TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                        Order date
+                      </TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                        Expected delivery
+                      </TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
+                        Total
+                      </TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                        Status
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -175,8 +282,12 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
                             {po.poNumber}
                           </Link>
                         </TableCell>
-                        <TableCell className="px-2 py-1 font-mono tabular-nums text-[11px]">{formatDate(po.orderDate)}</TableCell>
-                        <TableCell className="px-2 py-1 font-mono tabular-nums text-[11px]">{formatDate(po.expectedDeliveryDate)}</TableCell>
+                        <TableCell className="px-2 py-1 font-mono tabular-nums text-[11px]">
+                          {formatDate(po.orderDate)}
+                        </TableCell>
+                        <TableCell className="px-2 py-1 font-mono tabular-nums text-[11px]">
+                          {formatDate(po.expectedDeliveryDate)}
+                        </TableCell>
                         <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
                           {po.currency} {Number(po.total).toFixed(2)}
                         </TableCell>

@@ -132,9 +132,14 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/hr/assets` — Assets
 - [x] `/hr/devices` — Devices (redirects to /hr/assets — intentional)
 - [x] `/hr/work-logs` — Work logs
-- [x] `/timesheets` — Timesheets (personal)
-- [x] `/timesheets/team` — Team timesheets
+- [x] `/timesheets` — My Time capture hub (timer + weekly grid + day timeline, submit/recall week)
+- [x] `/timesheets/team` — Team time overview (week grid, submission status, drill-down)
+- [x] `/timesheets/approvals` — Approval queue (bulk approve/reject, period detail + audit timeline)
+- [x] `/timesheets/billing` — Billing queue (uninvoiced hours, rate resolution, CSV/XLSX export, invoice draft)
 - [x] `/timesheets/payroll` — Timesheets payroll queue & export (summary, overtime, mapping, CSV/XLSX, history)
+- [x] `/timesheets/reports` — Reports (overview analytics + report catalog)
+- [x] `/timesheets/settings` — Settings (general policy, rates/rate cards, audit trail)
+  - Standalone Timesheets product (MVP loop): backend `/timesheets/{entries,timer,periods,approvals,billing,reports,settings,rates,audit}` (module `TimesheetsCoreModule`); schema `timesheet_periods|timer_sessions|timesheet_audit_events|timesheet_rate_cards|timesheet_rates` + extended `timesheets`; migration `0160_timesheets_standalone.sql` (NOT YET RUN — deferred; renumbered from 0156 after siblings took 0156-0159); RBAC `timesheets:*` catalog. Backend + FE timesheets typecheck clean; pure-logic unit tests green.
 
 ---
 
@@ -247,10 +252,15 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/projects/my-work` — My Work (cross-project assigned tickets via `GET /projects/my-work`, bucketed overdue/today/upcoming/no-due, animated rows)
 - [x] `/projects/[projectId]/releases` — Releases (list + create/edit Sheet w/ TipTap notes, status badges, delete confirm; wired to existing releases API — screen was previously missing)
 - [x] `/projects/[projectId]/workload` — Workload (dedicated route exposing existing `WorkloadView`; was only a hidden view-switcher tab)
+- [x] `/projects/[projectId]/qa` — QA / Test Management (Test Cases tab: suite filter + DataTable + case Sheet w/ repeatable steps builder; Test Runs tab: runs + pass/fail/blocked/skip counts + progress; `projects:qa:*`)
+- [x] `/projects/[projectId]/qa/runs/[runId]` — Test Run execution (per-result status controls gated `projects:qa:execute`, notes, Complete-run, QA-failed→Create-bug prefilled from the case)
+- [x] `/projects/[projectId]/bugs` — Bug tracker (first-class `bugs` table: severity + 9-state workflow + reopenCount; filters status/severity/assignee/search; report/edit Sheet w/ TipTap + affected/fixed release links; `projects:bugs:*`)
 
 **PM module completion pass (2026-07-02, PRD §16/§17 phases A–E):** backend — chat `metadata.entities` persisted; comment lookup + edit/delete endpoints; stable error codes (`PROJECTS_FORBIDDEN_TICKET/PROJECT`, `PROJECTS_TICKET_CONFLICT` 409, `PROJECTS_INVALID_TICKET_STATUS`); access-denied audit events; transactional `createFromDeal`; chat status action hardened (activity + audit + system message); ticket search returns recent tickets on empty query; calendar feed emits project-ticket due dates + `linkedTicket` enrichment; statuses settings re-pointed to `project_statuses` (board columns now follow settings). Frontend — `PROJ-123` identity everywhere; comment edit/delete UI + permalink deep-links; saved views apply + save-from-board; chat ticket/comment pills, internal permalink unfurls, offline-queue metadata; calendar link/unlink + create-ticket-from-calendar; TipTap rich-text ticket descriptions (living rule §8); `mutationKey`/`staleTime` sweep; ink-first UI polish across all PM pages + chat/calendar surfaces (violet/indigo brand chrome removed per UI-UX-SYSTEM). Adversarial review pass (7 finder angles + verifiers) fixed 9 confirmed bugs: realtime messages dropped sender/metadata (pills only appeared after reload); TipTap phantom empty-description PATCH on open + legacy plain-text newline normalization; statuses `type` silently dropped (new column + migration 0009); reorder bypassed status validation; self-inflicted 409 from stale `expectedUpdatedAt` (server now returns `updatedAt`, dialog tracks it call-time); layout rendered "no access" for 5xx/network errors (now rethrows to boundary); chat invalid-status threw an unmapped code; `null-123` in comment previews; burnup/velocity/CFD always showed 0 completed (pre-existing `stateId` gap — canonical-status fallback added). Consolidations: one `formatTicketKey`, one status-color source, shared `ticket-status.util.ts`, per-comment pending state. Migrations `0008_activity_comment_actions.sql` + `0009_project_statuses_type.sql` APPLIED 2026-07-03 (headless SQL run; fixed live 42703 `project_statuses.type` crash on project detail). Open: custom-field columns in table/list views; shared-views RBAC model; `removeMember`/"Hide Done" hardcode canonical terminal statuses (proper fix needs an `isTerminal` column on `project_statuses`).
 
 **PM foundation harden + complete (2026-07-05, tasks/project-management ProjectOS spec — slice 1 of the "harden + complete foundation" scope):** Backend RBAC/BOLA closure — **every mutating PM endpoint now carries `@RequirePermission`** with class-level `PermissionGuard` across all controllers in `modules/projects/` (11) + `modules/projects-execution/` (all), reusing the existing catalog (NO new keys → zero conflict with concurrent payroll session; `permissions.constants.ts` untouched). Fixed phantom `projects:read` → `projects:manage` on report snapshot (was hard-blocking all users). Added `@RequireModule("projects")` to the 6 controllers missing it (advisory — module gating isn't guard-enforced repo-wide, matches KB precedent). New endpoints: `GET /projects/my-work` (cross-project assignee tickets, tenant+user scoped), `DELETE .../sprints/:id`, `PATCH`+`DELETE .../epics/:id` (with ownership/tenant checks). Service split: `projects-ticket-subresources.service.ts` 544→367 + new `projects-ticket-comments.service.ts` (224). Frontend — new screens: Command Center, My Work, Releases UI, Workload route (see above) + sidebar/project-sidebar wiring. **Project Creation Wizard** replaces the single dialog: 7-step Sheet (Basics→Type→Template→Toggles→Workflow→Team→Review), Framer Motion step transitions w/ `useReducedMotion`, per-step Zod (input===output, no coerce), template-apply vs direct-create provisioning w/ `Promise.allSettled` member adds; edge cases handled (409 dup key, template deleted mid-flight, no-invite-permission, start>end, partial member failure). Structural — centralized 8 scattered inline types into `types/projects/**` (hooks re-export for back-compat); **deleted dead `components/projects/`** (legacy dup, 0 external importers); split 6 oversized files (roadmap page 1127→66, board 475→345, backlog 422→244, saved-views 367→145, portfolio 365→168, ticket-details-dialog 421→303) into feature subfolders — nothing over 345. NO migrations (feature toggles ride existing `projects.settings` JSONB; project-type/workflow/extra-toggles are UI-only defaults this slice). Known debt (deferred, not regressions): 3 backend services still >500 (`projects.service` 540, `projects-tickets.service` 566, `projects-reports.service` 501 — shared private helpers make a clean split risky); pre-existing >500 frontend files untouched (`activity-feed` 620, `ticket-sidebar` 559, `git-integration-settings` 557, `create-ticket-dialog` 540, `whiteboard/page` 519); persisting project-type/workflow/toggles into `settings` needs a create-DTO extension. Build NOT run (concurrent payroll session mid-edit); verified by cross-agent import reconciliation. Next engine slices queued: QA/Test + first-class Bugs, Client Portal + Change Requests, Approvals engine, AI Project Manager.
+
+**PM engine slice 1 — QA/Test + first-class Bugs (2026-07-05, ProjectOS spec docs 14/15):** New `projects-qa` engine end-to-end. Schema — 5 tables (`test_suites`, `test_cases`, `test_runs`, `test_run_results`, `bugs`) + 7 pgEnums, tenant+project scoped, FK-linked to `tickets`/`sprints`/`project_releases` (case→ticket traceability, result→bug, bug→affected/fixed release), per-project sequences `caseNumber`/`runNumber`/`bugNumber`. Migration `0159_qa_test_bugs.sql` HAND-WRITTEN, **NOT applied** (renumbered off the 0156 collision with sibling timesheets-standalone + inventory migrations; guarded enum DDL + `CREATE TABLE IF NOT EXISTS` in FK-safe order — apply in TTY). RBAC — 7 keys `projects:qa:view/manage/execute` + `projects:bugs:view/create/update/delete` in catalog + ROLE_DEFAULT_PERMISSIONS (engineering/design/etc get qa:view+execute+bugs:view/create/update; qa:manage+bugs:delete via ALL_PERMISSIONS). Backend — `modules/projects-qa/` (4 controllers, 3 services, Zod DTOs; every endpoint `@RequirePermission`-gated + `@RequireModule("projects")`; tenant/BOLA re-asserted on read+write with 404-not-leak; sequences via `pg_advisory_xact_lock` in txn + unique-constraint backstop; `createBugFromResult` prefills a bug from a failed test case and links `result.linkedBugId`; audit events bug.created/status_changed/created_from_result + test_run.completed; registered in app.module.ts). Frontend — `types/projects/qa.ts`+`bugs.ts`, `hooks/api/projects/qa.ts`+`bugs.ts` (20 hooks), query-keys + 7 PermissionKey-union entries, 3 screens (QA test-management w/ steps-builder Sheet, run-execution w/ per-result pass/fail controls + QA-failed→bug, bug tracker board) all 5 states, sidebar `QA / Tests`+`Bugs` gated by useCan. Reconciled end-to-end (hook URLs ↔ routes, types ↔ response shapes, all imports resolve). Build NOT run (sibling sessions mid-edit); zero file overlap with siblings (distinct module/schema/key namespaces). Next: Client Portal + Change Requests → Approvals → AI PM.
 
 ---
 
@@ -315,6 +325,42 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/inventory/reports/stock-summary` — Stock summary report
 - [x] `/inventory/reports/movements` — Movements report
 - [x] `/inventory/reports/reorder` — Reorder report
+
+> 2026-07-05 — full Inventory module expansion per `tasks/inventory` 25-doc PRD: backend stock engine (idempotency, row locking, valuation layers, reservations, number sequences, audit events; migrations 0156–0158 applied live), 20 backend modules (186 tests green), 43-key RBAC catalog (`:view`→`:read` fix end-to-end), 34 new frontend pages below, hooks split ≤300 lines, barrel completed, lint clean (0 warnings).
+- [x] `/inventory/operations` — Operations hub
+- [x] `/inventory/operations/receipts` — Goods receipts (GRN list + reverse)
+- [x] `/inventory/operations/issues` — Outbound issues ledger
+- [x] `/inventory/operations/picking` — Pick queue
+- [x] `/inventory/operations/packing` — Pack queue
+- [x] `/inventory/operations/shipping` — Ship queue
+- [x] `/inventory/operations/returns` — Vendor + customer returns
+- [x] `/inventory/cycle-counts` — Cycle counts
+- [x] `/inventory/cycle-counts/[countId]` — Cycle count detail (lifecycle + variance post)
+- [x] `/inventory/physical-audits` — Physical audits
+- [x] `/inventory/physical-audits/[auditId]` — Physical audit detail
+- [x] `/inventory/lots` — Lots/batches
+- [x] `/inventory/lots/[lotId]` — Lot detail + traceability chain
+- [x] `/inventory/serials` — Serial numbers
+- [x] `/inventory/serials/[serialId]` — Serial detail + traceability
+- [x] `/inventory/expiry` — Expiry alerts
+- [x] `/inventory/replenishment` — Reorder suggestions + generate PO
+- [x] `/inventory/replenishment/rules` — Reorder rules CRUD
+- [x] `/inventory/forecasting` — Demand forecasting (SMA)
+- [x] `/inventory/valuation` — Stock valuation + layers
+- [x] `/inventory/costing` — Costing methods governance
+- [x] `/inventory/barcode` — Barcode scan + lookup
+- [x] `/inventory/import` — CSV import wizard
+- [x] `/inventory/settings` — Inventory settings + sequences + health
+- [x] `/inventory/quality` — Quality hub
+- [x] `/inventory/quality/inspections` — Inspections (pass/fail/dispose)
+- [x] `/inventory/quality/holds` — Quality holds
+- [x] `/inventory/quality/recalls` — Recalls (OPEN→IN_PROGRESS→CLOSED)
+- [x] `/inventory/packages` — Packages
+- [x] `/inventory/shipments` — Shipments
+- [x] `/inventory/loads` — Loads/containers
+- [x] `/inventory/carriers` — Carriers
+- [x] `/inventory/channels` — Sales channels + stock publications
+- [x] `/inventory/3pl` — 3PL connections
 
 ---
 
@@ -514,6 +560,8 @@ Full end-to-end: backend NestJS API → TanStack Query hooks → Next.js pages +
 ---
 
 ## Payroll (PayrollOS module — 20 routes; migrations 0147-0150 applied; 261 unit + 4 e2e suites; full conformance pass 2026-07-04: 40+ audit findings fixed incl. ESS RBAC, engine calc methods, variance, module gating, snapshot-immutability triggers)
+<!-- Gap-closure pass 2026-07-05 (6-agent audit vs 32-doc PRD → ~24 P0 + ~35 P1/P2 fixed by 10 parallel agents + manual seam reconciliation): calc engine (PERCENT_OF_BASIC base, FY2025-26 TDS + §87A + OLD-regime, half-day proration, reimportInputs, deduction ordering, unary-minus, OT guard, profiles.active); loan EMI recovery wired atomically into both lock paths; multi-currency payout sub-batches; journal double-entry now balances; reports RBAC→AccessService + pagination(100) + N+1; FNF 9-component net + HR/FINANCE review states + statement download; ESS bank-lock + declaration SUBMITTED + lockDate; bonus month/taxable/9-types; reimbursement payrollMonth end-to-end; fxRates persistence; calendar BOLA/atomic/audit; reminder scheduler; setup preview/toggle/category/activation-crash fixes; migration 0155_payroll_gapclosure written (UNRUN, unjournaled — renumber before db:migrate). NOT build/test-verified this pass (concurrent session active — run `pnpm -C backend typecheck` + payroll suites). Deferred: SALARY_ON_HOLD (no data source) + DUPLICATE_BANK_ACCOUNT (needs bank decrypt in run loop) detection wired but unpopulated; US Medicare YTD, IN PT brackets, per-category receipts need schema. -->
+
 - [x] `/payroll` — Command Center: live run status, employee exception counts, stat cards, pending actions
 - [x] `/payroll/me` — Employee self-service portal: my payslips, salary breakdown, declarations, bank details, loan requests
 - [x] `/payroll/setup` — Owner setup wizard: template-first onboarding, policy toggles, payroll policy version creation

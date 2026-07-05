@@ -2,9 +2,10 @@
 
 import { Suspense, type ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Package, AlertTriangle, AlertCircle, Search } from "lucide-react";
+import { Package, AlertTriangle, AlertCircle, Search, Download } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
@@ -90,6 +91,24 @@ function ReorderReportContent() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
+  function handleExportClick(): void {
+    const headers = ["Product", "SKU", "Category", "Warehouse", "Vendor", "Available", "Reorder Pt.", "Suggest Qty", "Urgency"];
+    const csvRows = filtered.map((r) => [
+      r.productName, r.sku, r.categoryName ?? "", r.warehouseName ?? "", r.vendorName ?? "",
+      r.availableQty, r.reorderPoint, r.reorderQty ?? "", r.availableQty <= 0 ? "Out of stock" : r.availableQty / r.reorderPoint <= 0.25 ? "Critical" : "Low",
+    ]);
+    const content = [headers, ...csvRows]
+      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reorder-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <PageWrapper
       eyebrow="Inventory · Reports"
@@ -100,14 +119,27 @@ function ReorderReportContent() {
           : "Products below their reorder points"
       }
       filters={
-        <div className="relative min-w-0 flex-1 lg:max-w-md">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <Input
-            value={search}
-            onChange={handleSearchChange}
-            placeholder="Search products, SKU, category…"
-            className="h-8 w-full min-w-0 pl-8 text-xs"
-          />
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
+          <div className="relative min-w-0 flex-1 lg:max-w-md">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search products, SKU, category…"
+              className="h-8 w-full min-w-0 pl-8 text-xs"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs ml-auto shrink-0"
+            onClick={handleExportClick}
+            disabled={filtered.length === 0}
+            aria-label="Export reorder report as CSV"
+          >
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            Export CSV
+          </Button>
         </div>
       }
     >

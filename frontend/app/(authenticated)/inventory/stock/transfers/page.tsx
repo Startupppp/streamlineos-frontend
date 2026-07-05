@@ -28,6 +28,10 @@ import { useTransfers, useCreateTransfer, type TransferStatus } from "@/hooks/ap
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
 import { useProductVariants } from "@/hooks/api/inventory/products";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  TRANSFER_STATUS_BADGE,
+  TRANSFER_STATUS_LABEL,
+} from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
 
 const schema = z
@@ -51,16 +55,11 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
-const STATUS_COLORS: Record<TransferStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200",
-  IN_TRANSIT: "bg-blue-50 text-blue-700 border-blue-200",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200",
-};
-const STATUS_LABELS: Record<TransferStatus, string> = {
-  PENDING: "Pending", IN_TRANSIT: "In Transit", COMPLETED: "Completed", CANCELLED: "Cancelled",
-};
-const ALL_STATUSES: TransferStatus[] = ["PENDING", "IN_TRANSIT", "COMPLETED", "CANCELLED"];
+const ALL_STATUSES: TransferStatus[] = ["PENDING", "RESERVED", "IN_TRANSIT", "COMPLETED", "CANCELLED"];
+
+function isTransferStatus(s: string): s is TransferStatus {
+  return (ALL_STATUSES as string[]).includes(s);
+}
 
 const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
 const LIMIT = 20;
@@ -239,9 +238,7 @@ export default function TransfersPage() {
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const statusFilter = (statusParam !== "all" && statusParam in STATUS_LABELS)
-    ? (statusParam as TransferStatus)
-    : undefined;
+  const statusFilter = statusParam !== "all" && isTransferStatus(statusParam) ? statusParam : undefined;
 
   const { data: transfersData, isLoading, isError, refetch } = useTransfers({
     status: statusFilter,
@@ -249,11 +246,11 @@ export default function TransfersPage() {
     limit: LIMIT,
   });
 
-  const rawTransfers = transfersData?.items ?? [];
   const totalPages = transfersData?.totalPages ?? 1;
   const total = transfersData?.total ?? 0;
 
   const transfers = useMemo(() => {
+    const rawTransfers = transfersData?.items ?? [];
     if (!searchQ) return rawTransfers;
     const q = searchQ.toLowerCase();
     return rawTransfers.filter(
@@ -262,7 +259,7 @@ export default function TransfersPage() {
         (t.fromLocationName?.toLowerCase().includes(q) ?? false) ||
         (t.toLocationName?.toLowerCase().includes(q) ?? false),
     );
-  }, [rawTransfers, searchQ]);
+  }, [transfersData?.items, searchQ]);
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -310,7 +307,7 @@ export default function TransfersPage() {
             <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="All statuses" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
-              {ALL_STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
+              {ALL_STATUSES.map((s) => <SelectItem key={s} value={s}>{TRANSFER_STATUS_LABEL[s]}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -366,8 +363,11 @@ export default function TransfersPage() {
                 </TableHeader>
                 <TableBody>
                   {transfers.map((transfer) => (
-                    <TableRow key={transfer.id} className="h-8 border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/inventory/stock/transfers/${transfer.id}`)}>
+                    <TableRow
+                      key={transfer.id}
+                      className="h-8 border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => router.push(`/inventory/stock/transfers/${transfer.id}`)}
+                    >
                       <TableCell className="px-2 py-1">
                         <Link
                           href={`/inventory/stock/transfers/${transfer.id}`}
@@ -381,8 +381,14 @@ export default function TransfersPage() {
                       <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">{transfer.toLocationName ?? "—"}</TableCell>
                       <TableCell className="px-2 py-1 text-right text-[11px] font-mono tabular-nums font-medium">{transfer.lineCount}</TableCell>
                       <TableCell className="px-2 py-1">
-                        <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", STATUS_COLORS[transfer.status])}>
-                          {STATUS_LABELS[transfer.status]}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "h-4 text-[9px] px-1.5 py-0 font-medium",
+                            TRANSFER_STATUS_BADGE[transfer.status],
+                          )}
+                        >
+                          {TRANSFER_STATUS_LABEL[transfer.status]}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">

@@ -13,6 +13,17 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -27,34 +38,27 @@ import {
   useTransfer,
   useCompleteTransfer,
   useDispatchTransfer,
+  useReserveTransfer,
+  useCancelTransfer,
   type TransferDetail,
   type TransferStatus,
 } from "@/hooks/api/inventory/stock";
 import { ReceiveTransferSheet } from "@/features/inventory/components/receive-transfer-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  TRANSFER_STATUS_BADGE,
+  TRANSFER_STATUS_LABEL,
+} from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
-
-const STATUS_COLORS: Record<TransferStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200",
-  IN_TRANSIT: "bg-blue-50 text-blue-700 border-blue-200",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200",
-};
-
-const STATUS_LABELS: Record<TransferStatus, string> = {
-  PENDING: "Pending",
-  IN_TRANSIT: "In Transit",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-};
 
 const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
 
 function StatusTimeline({ status }: { status: TransferStatus }) {
   const steps: TransferStatus[] =
     status === "CANCELLED"
-      ? ["PENDING", "IN_TRANSIT", "CANCELLED"]
-      : ["PENDING", "IN_TRANSIT", "COMPLETED"];
+      ? ["PENDING", "RESERVED", "IN_TRANSIT", "CANCELLED"]
+      : ["PENDING", "RESERVED", "IN_TRANSIT", "COMPLETED"];
+
   const currentIdx = steps.indexOf(status);
 
   return (
@@ -84,11 +88,19 @@ function StatusTimeline({ status }: { status: TransferStatus }) {
                   <span className="text-[11px] font-semibold">{i + 1}</span>
                 )}
               </div>
-              <span className={cn(
-                "text-[10px] font-medium",
-                done ? "text-foreground" : active && !cancelled ? "text-blue-600" : cancelled ? "text-red-600" : "text-muted-foreground",
-              )}>
-                {STATUS_LABELS[step]}
+              <span
+                className={cn(
+                  "text-[10px] font-medium",
+                  done
+                    ? "text-foreground"
+                    : active && !cancelled
+                    ? "text-blue-600"
+                    : cancelled
+                    ? "text-red-600"
+                    : "text-muted-foreground",
+                )}
+              >
+                {TRANSFER_STATUS_LABEL[step]}
               </span>
             </div>
           </div>
@@ -134,21 +146,27 @@ function TransferDetailSkeleton() {
   return (
     <PageWrapper title="Transfer" eyebrow="Inventory / Transfers">
       <div className="space-y-4">
-        <Card><CardContent className="p-4 space-y-4">
-          <div className="flex items-center gap-2">
-            {[0, 1, 2].map((i) => <Skeleton key={i} className="h-7 w-7 rounded-full" />)}
-          </div>
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-3 w-20" /><Skeleton className="h-5 w-32" /><Skeleton className="h-4 w-24" />
-              </div>
-            ))}
-          </div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 space-y-2">
-          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
-        </CardContent></Card>
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-7 w-7 rounded-full" />)}
+            </div>
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+          </CardContent>
+        </Card>
       </div>
     </PageWrapper>
   );
@@ -166,11 +184,20 @@ export default function TransferDetailPage({
   const { data: transferData, isLoading, isError, refetch } = useTransfer(transferId);
   const completeMutation = useCompleteTransfer();
   const dispatchMutation = useDispatchTransfer();
+  const reserveMutation = useReserveTransfer();
+  const cancelMutation = useCancelTransfer();
 
   const transfer = transferData ?? undefined;
 
   function handleRetry() {
     void refetch();
+  }
+
+  function handleReserve() {
+    reserveMutation.mutate(transferId, {
+      onSuccess: () => toast.success("Transfer reserved"),
+      onError: (err: unknown) => toast.error(getErrorMessage(err)),
+    });
   }
 
   function handleDispatch() {
@@ -185,6 +212,13 @@ export default function TransferDetailPage({
 
   function handleOpenReceiveSheet() {
     setReceiveOpen(true);
+  }
+
+  function handleCancelTransfer() {
+    cancelMutation.mutate(transferId, {
+      onSuccess: () => toast.success("Transfer cancelled"),
+      onError: (err: unknown) => toast.error(getErrorMessage(err)),
+    });
   }
 
   function handleCompleteReceive(
@@ -204,61 +238,71 @@ export default function TransferDetailPage({
 
   if (isLoading) return <TransferDetailSkeleton />;
 
-  if (isError) return (
-    <PageWrapper
-      title="Transfer"
-      eyebrow="Inventory / Transfers"
-      actions={
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/inventory/stock/transfers">
-            <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-            Back to Transfers
-          </Link>
-        </Button>
-      }
-    >
-      <ErrorState
-        title="Failed to load transfer"
-        description="An error occurred while fetching this transfer. Please try again."
-        onRetry={handleRetry}
-        className="flex-1 min-h-[40vh]"
-      />
-    </PageWrapper>
-  );
+  if (isError)
+    return (
+      <PageWrapper
+        title="Transfer"
+        eyebrow="Inventory / Transfers"
+        actions={
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/inventory/stock/transfers">
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              Back to Transfers
+            </Link>
+          </Button>
+        }
+      >
+        <ErrorState
+          title="Failed to load transfer"
+          description="An error occurred while fetching this transfer. Please try again."
+          onRetry={handleRetry}
+          className="flex-1 min-h-[40vh]"
+        />
+      </PageWrapper>
+    );
 
-  if (!transfer) return (
-    <PageWrapper
-      title="Transfer not found"
-      eyebrow="Inventory / Transfers"
-      actions={
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/inventory/stock/transfers">
-            <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-            Back to Transfers
-          </Link>
-        </Button>
-      }
-    >
-      <EmptyState
-        illustration={<EmptyTransferIllustration />}
+  if (!transfer)
+    return (
+      <PageWrapper
         title="Transfer not found"
-        description="This transfer does not exist or you do not have access."
-        action={{ label: "Back to Transfers", href: "/inventory/stock/transfers" }}
-        className="flex-1 min-h-[40vh]"
-      />
-    </PageWrapper>
-  );
+        eyebrow="Inventory / Transfers"
+        actions={
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/inventory/stock/transfers">
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              Back to Transfers
+            </Link>
+          </Button>
+        }
+      >
+        <EmptyState
+          illustration={<EmptyTransferIllustration />}
+          title="Transfer not found"
+          description="This transfer does not exist or you do not have access."
+          action={{ label: "Back to Transfers", href: "/inventory/stock/transfers" }}
+          className="flex-1 min-h-[40vh]"
+        />
+      </PageWrapper>
+    );
 
   const lines = transfer.lines ?? [];
   const isCompleted = transfer.status === "COMPLETED";
+  const isCancellable = transfer.status === "PENDING" || transfer.status === "RESERVED";
+  const anyMutationPending =
+    reserveMutation.isPending ||
+    dispatchMutation.isPending ||
+    cancelMutation.isPending;
 
   return (
     <PageWrapper
       title={transfer.referenceNumber}
       eyebrow="Inventory / Transfers"
       subtitle={
-        <Badge variant="outline" className={cn("h-5 text-[10px] px-2 py-0.5", STATUS_COLORS[transfer.status])}>
-          {STATUS_LABELS[transfer.status]}
+        <Badge
+          variant="outline"
+          className={cn("h-5 text-[10px] px-2 py-0.5", TRANSFER_STATUS_BADGE[transfer.status])}
+        >
+          {TRANSFER_STATUS_LABEL[transfer.status]}
         </Badge>
       }
       actions={
@@ -272,21 +316,59 @@ export default function TransferDetailPage({
           {transfer.status === "PENDING" && (
             <Button
               size="sm"
+              variant="outline"
+              className="h-8 text-xs"
+              onClick={handleReserve}
+              disabled={anyMutationPending}
+            >
+              {reserveMutation.isPending ? "Reserving…" : "Reserve Transfer"}
+            </Button>
+          )}
+          {transfer.status === "RESERVED" && (
+            <Button
+              size="sm"
               className="h-8 text-xs"
               onClick={handleDispatch}
-              disabled={dispatchMutation.isPending}
+              disabled={anyMutationPending}
             >
               {dispatchMutation.isPending ? "Dispatching…" : "Dispatch Transfer"}
             </Button>
           )}
           {transfer.status === "IN_TRANSIT" && (
-            <Button
-              size="sm"
-              className="h-8 text-xs"
-              onClick={handleOpenReceiveSheet}
-            >
+            <Button size="sm" className="h-8 text-xs" onClick={handleOpenReceiveSheet}>
               Receive Transfer
             </Button>
+          )}
+          {isCancellable && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs text-destructive hover:text-destructive"
+                  disabled={anyMutationPending}
+                >
+                  Cancel Transfer
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancel transfer?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Back</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleCancelTransfer}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Cancel Transfer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       }

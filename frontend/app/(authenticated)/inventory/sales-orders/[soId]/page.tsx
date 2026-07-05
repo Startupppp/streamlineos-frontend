@@ -1,48 +1,92 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, type ChangeEvent } from "react";
 import Link from "next/link";
-import { CheckCircle, Truck, FileText } from "lucide-react";
+import { Check, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
+import { SO_STATUS_BADGE, SO_STATUS_LABEL, type SoStatus } from "@/features/inventory/lib";
+import { PickSheet } from "@/features/inventory/components/sales/pick-sheet";
+import { ShipSheet } from "@/features/inventory/components/sales/ship-sheet";
 import {
   useSalesOrder,
   useSoAtp,
   useConfirmSalesOrder,
-  useShipSalesOrder,
+  useReserveSalesOrder,
+  usePackSalesOrder,
   useInvoiceSalesOrder,
-  type SalesOrderStatus,
+  useCancelSalesOrder,
   type AtpEntry,
 } from "@/hooks/api/inventory/sales-orders";
-
-type SoStatus = SalesOrderStatus;
 
 interface SalesOrderDetailPageProps {
   params: Promise<{ soId: string }>;
 }
 
-const STATUS_BADGE_CLASS: Record<SoStatus, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  CONFIRMED: "bg-blue-50 text-blue-700 border-blue-200",
-  SHIPPED: "bg-amber-50 text-amber-700 border-amber-200",
-  INVOICED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200",
+const STEP_LABELS = ["Draft", "Confirmed", "Reserved", "Picked", "Packed", "Shipped", "Invoiced"];
+
+const STATUS_STEP: Record<SoStatus, number> = {
+  DRAFT: 0, CONFIRMED: 1, PARTIALLY_RESERVED: 2, RESERVED: 2,
+  PICKED: 3, PACKED: 4, PARTIALLY_SHIPPED: 5, SHIPPED: 5,
+  INVOICED: 6, CLOSED: 6, CANCELLED: -1,
 };
 
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
+type StepState = "completed" | "active" | "future";
 
-function formatNum(value: string | number | null | undefined): string {
-  if (value === null || value === undefined) return "—";
-  return Number(value).toFixed(2);
+const STEP_CLS: Record<StepState, string> = {
+  completed: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  active: "bg-amber-100 text-amber-700 border-amber-200 font-medium",
+  future: "bg-slate-100 text-slate-500 border-slate-200",
+};
+
+function FulfillmentStepper({ status }: { status: SoStatus }) {
+  if (status === "CANCELLED") {
+    return (
+      <span className="text-[10px] px-2 py-0.5 rounded border bg-red-50 text-red-700 border-red-200">
+        Cancelled
+      </span>
+    );
+  }
+  const active = STATUS_STEP[status];
+  return (
+    <div className="flex items-center gap-1 flex-wrap">
+      {STEP_LABELS.map((label, idx) => {
+        const state: StepState = idx < active ? "completed" : idx === active ? "active" : "future";
+        return (
+          <span
+            key={label}
+            className={`text-[10px] px-2 py-0.5 rounded border inline-flex items-center gap-1 ${STEP_CLS[state]}`}
+          >
+            {state === "completed" && <Check className="size-2.5" />}
+            {label}
+          </span>
+        );
+      })}
+    </div>
+  );
 }
 
 function AtpIndicator({ available, requested }: { available: number; requested: number }) {
@@ -70,15 +114,39 @@ function AtpIndicator({ available, requested }: { available: number; requested: 
   );
 }
 
+function formatDate(value: string | null): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
+}
+
+function formatNum(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return "—";
+  return Number(value).toFixed(2);
+}
+
 export default function SalesOrderDetailPage({ params }: SalesOrderDetailPageProps) {
   const { soId } = use(params);
   const id = Number(soId);
 
+  const [showPickSheet, setShowPickSheet] = useState(false);
+  const [showShipSheet, setShowShipSheet] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showPackDialog, setShowPackDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+
   const query = useSalesOrder(id);
   const atpQuery = useSoAtp(id);
   const confirmMutation = useConfirmSalesOrder();
-  const shipMutation = useShipSalesOrder();
+  const reserveMutation = useReserveSalesOrder();
+  const packMutation = usePackSalesOrder();
   const invoiceMutation = useInvoiceSalesOrder();
+  const cancelMutation = useCancelSalesOrder();
+
+  const canUpdate = useCan("inventory:sales-orders:update");
+  const canConfirm = useCan("inventory:sales-orders:confirm");
+  const canShip = useCan("inventory:sales-orders:ship");
+  const canInvoice = useCan("inventory:sales-orders:invoice");
 
   const so = query.data;
   const atpData = atpQuery.data ?? [];
@@ -88,98 +156,183 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   }
 
   function handleConfirm(): void {
-    confirmMutation.mutate(
-      { soId: id },
-      {
-        onSuccess: () => toast.success("Order confirmed"),
-        onError: (err: Error) => toast.error(err.message),
-      }
-    );
+    confirmMutation.mutate({ soId: id }, {
+      onSuccess: () => toast.success("Order confirmed"),
+      onError: (err) => toast.error(err.message),
+    });
   }
 
-  function handleShip(): void {
-    if (!so) return;
-    const shippedLines = so.lines.map((ln) => ({
-      productId: ln.productId,
-      shippedQty: Number(ln.quantity),
-    }));
-    shipMutation.mutate(
-      { soId: id, shippedLines },
+  function handleReserve(): void {
+    reserveMutation.mutate({ soId: id }, {
+      onSuccess: (data) => {
+        if (data.shortfalls?.length) {
+          toast.warning(`Partially reserved — ${data.shortfalls.length} lines have insufficient stock`);
+        } else {
+          toast.success("Order reserved");
+        }
+      },
+      onError: (err) => toast.error(err.message),
+    });
+  }
+
+  function handlePackConfirm(): void {
+    packMutation.mutate({ soId: id }, {
+      onSuccess: () => { setShowPackDialog(false); toast.success("Order packed"); },
+      onError: (err) => { toast.error(err.message); },
+    });
+  }
+
+  function handleCancelConfirm(): void {
+    cancelMutation.mutate(
+      { soId: id, reason: cancelReason.trim() || undefined },
       {
-        onSuccess: () => toast.success("Order shipped"),
-        onError: (err: Error) => toast.error(err.message),
-      }
+        onSuccess: () => { setShowCancelDialog(false); toast.success("Order cancelled"); },
+        onError: (err) => { toast.error(err.message); },
+      },
     );
   }
 
   function handleInvoice(): void {
-    invoiceMutation.mutate(
-      { soId: id },
-      {
-        onSuccess: () => toast.success("Invoice generated"),
-        onError: (err: Error) => toast.error(err.message),
-      }
-    );
+    invoiceMutation.mutate({ soId: id }, {
+      onSuccess: () => toast.success("Invoice generated"),
+      onError: (err) => toast.error(err.message),
+    });
   }
 
-  function handleRetry() { void query.refetch(); }
+  function handleRetry(): void { void query.refetch(); }
+  function handleOpenPickSheet(): void { setShowPickSheet(true); }
+  function handleOpenShipSheet(): void { setShowShipSheet(true); }
+  function handleOpenPackDialog(): void { setShowPackDialog(true); }
+  function handleOpenCancelDialog(): void { setShowCancelDialog(true); }
+
+  function handleCancelDialogOpenChange(open: boolean): void {
+    if (!open) setCancelReason("");
+    setShowCancelDialog(open);
+  }
+
+  function handleCancelReasonChange(e: ChangeEvent<HTMLTextAreaElement>): void {
+    setCancelReason(e.target.value);
+  }
 
   if (query.isLoading) return <LoadingState variant="form" />;
   if (query.error) return <ErrorState description={query.error.message} onRetry={handleRetry} />;
   if (!so) return <ErrorState title="Not found" description={`Sales order #${soId} not found`} />;
 
-  const canConfirm = so.status === "DRAFT";
-  const canShip = so.status === "CONFIRMED";
-  const canInvoice = so.status === "SHIPPED";
-  const isMutating = confirmMutation.isPending || shipMutation.isPending || invoiceMutation.isPending;
+  const status: SoStatus = so.status;
+  const isMutating =
+    confirmMutation.isPending || reserveMutation.isPending ||
+    packMutation.isPending || cancelMutation.isPending || invoiceMutation.isPending;
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Sales Orders"
+      eyebrow="Inventory / Sales Orders"
       title={so.soNumber}
       subtitle={`${so.customerName ?? "Unknown customer"} · ${formatDate(so.orderDate)}`}
       backHref="/inventory/sales-orders"
-      actions={
-        <div className="flex items-center gap-2">
-          {canConfirm && (
-            <Button size="sm" onClick={handleConfirm} disabled={isMutating}>
-              <CheckCircle className="mr-1 size-4" />
-              {confirmMutation.isPending ? "Confirming…" : "Confirm Order"}
-            </Button>
-          )}
-          {canShip && (
-            <Button size="sm" onClick={handleShip} disabled={isMutating}>
-              <Truck className="mr-1 size-4" />
-              {shipMutation.isPending ? "Shipping…" : "Ship Order"}
-            </Button>
-          )}
-          {canInvoice && (
-            <Button size="sm" onClick={handleInvoice} disabled={isMutating}>
-              <FileText className="mr-1 size-4" />
-              {invoiceMutation.isPending ? "Generating…" : "Generate Invoice"}
-            </Button>
-          )}
-          {so.invoiceId && (
-            <Button size="sm" variant="outline" asChild>
-              <Link href={`/billing/invoices/${so.invoiceId}`}>
-                <FileText className="mr-1 size-4" />
-                View Invoice {so.invoiceNumber ? `(${so.invoiceNumber})` : ""}
-              </Link>
-            </Button>
-          )}
-        </div>
-      }
     >
       <div className="space-y-4">
+        <Card className="p-4">
+          <FulfillmentStepper status={status} />
+          <div className="mt-3 flex items-center justify-end gap-2 flex-wrap">
+            {status === "DRAFT" && (
+              <>
+                {canUpdate && (
+                  <Button size="sm" variant="outline" asChild>
+                    <Link href={`/inventory/sales-orders/${id}/edit`}>Edit</Link>
+                  </Button>
+                )}
+                {canConfirm && (
+                  <Button size="sm" onClick={handleConfirm} disabled={isMutating}>
+                    {confirmMutation.isPending ? "Confirming…" : "Confirm"}
+                  </Button>
+                )}
+                {canUpdate && (
+                  <Button size="sm" variant="ghost" onClick={handleOpenCancelDialog} disabled={isMutating}>
+                    Cancel Order
+                  </Button>
+                )}
+              </>
+            )}
+            {status === "CONFIRMED" && (
+              <>
+                {canConfirm && (
+                  <Button size="sm" onClick={handleReserve} disabled={isMutating}>
+                    {reserveMutation.isPending ? "Reserving…" : "Reserve"}
+                  </Button>
+                )}
+                {canUpdate && (
+                  <Button size="sm" variant="ghost" onClick={handleOpenCancelDialog} disabled={isMutating}>
+                    Cancel Order
+                  </Button>
+                )}
+              </>
+            )}
+            {status === "PARTIALLY_RESERVED" && (
+              <>
+                {canConfirm && (
+                  <Button size="sm" variant="outline" onClick={handleReserve} disabled={isMutating}>
+                    Reserve Again
+                  </Button>
+                )}
+                {canShip && (
+                  <Button size="sm" onClick={handleOpenPickSheet}>Pick</Button>
+                )}
+              </>
+            )}
+            {status === "RESERVED" && canShip && (
+              <Button size="sm" onClick={handleOpenPickSheet}>Pick</Button>
+            )}
+            {status === "PICKED" && (
+              <>
+                {canShip && (
+                  <Button size="sm" onClick={handleOpenPackDialog} disabled={isMutating}>
+                    {packMutation.isPending ? "Packing…" : "Pack"}
+                  </Button>
+                )}
+                {canUpdate && (
+                  <Button size="sm" variant="ghost" onClick={handleOpenCancelDialog} disabled={isMutating}>
+                    Cancel Order
+                  </Button>
+                )}
+              </>
+            )}
+            {status === "PACKED" && (
+              <>
+                {canShip && (
+                  <Button size="sm" onClick={handleOpenShipSheet}>Ship</Button>
+                )}
+                {canUpdate && (
+                  <Button size="sm" variant="ghost" onClick={handleOpenCancelDialog} disabled={isMutating}>
+                    Cancel Order
+                  </Button>
+                )}
+              </>
+            )}
+            {status === "PARTIALLY_SHIPPED" && canShip && (
+              <Button size="sm" onClick={handleOpenShipSheet}>Ship Remaining</Button>
+            )}
+            {status === "SHIPPED" && canInvoice && (
+              <Button size="sm" onClick={handleInvoice} disabled={isMutating}>
+                {invoiceMutation.isPending ? "Invoicing…" : "Invoice"}
+              </Button>
+            )}
+            {so.invoiceId && (
+              <Button size="sm" variant="outline" asChild>
+                <Link href={`/billing/invoices/${so.invoiceId}`}>
+                  <FileText className="mr-1 size-3.5" />
+                  {so.invoiceNumber ? `Invoice ${so.invoiceNumber}` : "View Invoice"}
+                </Link>
+              </Button>
+            )}
+          </div>
+        </Card>
+
         <Card className="p-4">
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <dt className="text-muted-foreground">Status</dt>
             <dd>
-              <Badge
-                variant="outline"
-                className={`h-5 text-[10px] px-2 py-0.5 ${STATUS_BADGE_CLASS[so.status]}`}
-              >
-                {so.status}
+              <Badge variant="outline" className={`h-5 text-[10px] px-2 py-0.5 ${SO_STATUS_BADGE[status]}`}>
+                {SO_STATUS_LABEL[status]}
               </Badge>
             </dd>
             <dt className="text-muted-foreground">Customer</dt>
@@ -269,6 +422,55 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
           </div>
         </Card>
       </div>
+
+      <AlertDialog open={showCancelDialog} onOpenChange={handleCancelDialogOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel sales order?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <Textarea
+            value={cancelReason}
+            onChange={handleCancelReasonChange}
+            placeholder="Reason (optional)"
+            className="text-sm min-h-[80px] resize-none mt-2"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Back</AlertDialogCancel>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={cancelMutation.isPending}
+              onClick={handleCancelConfirm}
+            >
+              {cancelMutation.isPending ? "Cancelling…" : "Cancel Order"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showPackDialog} onOpenChange={setShowPackDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pack order?</AlertDialogTitle>
+            <AlertDialogDescription>Confirm packing is complete.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Back</AlertDialogCancel>
+            <Button size="sm" disabled={packMutation.isPending} onClick={handlePackConfirm}>
+              {packMutation.isPending ? "Packing…" : "Confirm Pack"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <PickSheet
+        open={showPickSheet}
+        onOpenChange={setShowPickSheet}
+        soId={id}
+        lines={so.lines.map((l) => ({ id: l.id, productName: l.productName, quantity: l.quantity }))}
+      />
+      <ShipSheet open={showShipSheet} onOpenChange={setShowShipSheet} soId={id} />
     </PageWrapper>
   );
 }

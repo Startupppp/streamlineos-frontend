@@ -7,6 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -19,6 +20,7 @@ import { SkeletonTable, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useStockSummary, type StockSummaryRow } from "@/hooks/api/inventory/reports";
+import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 
 function StockLevelBadge({
   available,
@@ -88,19 +90,23 @@ function StockSummaryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const query = useStockSummary();
+  const warehousesQuery = useWarehouses();
   const rows = query.data ?? [];
+  const warehouses = warehousesQuery.data ?? [];
 
   const search = searchParams.get("q") ?? "";
+  const warehouseParam = searchParams.get("warehouse") ?? "all";
 
-  const filtered = search
-    ? rows.filter(
-        (r) =>
-          r.productName.toLowerCase().includes(search.toLowerCase()) ||
-          r.sku.toLowerCase().includes(search.toLowerCase()) ||
-          (r.categoryName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
-          (r.warehouseName?.toLowerCase() ?? "").includes(search.toLowerCase()),
-      )
-    : rows;
+  const filtered = rows.filter((r) => {
+    const matchesSearch = !search || (
+      r.productName.toLowerCase().includes(search.toLowerCase()) ||
+      r.sku.toLowerCase().includes(search.toLowerCase()) ||
+      (r.categoryName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
+      (r.warehouseName?.toLowerCase() ?? "").includes(search.toLowerCase())
+    );
+    const matchesWarehouse = warehouseParam === "all" || r.warehouseName === warehouseParam;
+    return matchesSearch && matchesWarehouse;
+  });
 
   function handleRetry(): void {
     void query.refetch();
@@ -122,6 +128,16 @@ function StockSummaryContent() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
+  function handleWarehouseChange(value: string): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      params.delete("warehouse");
+    } else {
+      params.set("warehouse", value);
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
   function handleExportClick(): void {
     exportToCsv(filtered);
   }
@@ -136,16 +152,29 @@ function StockSummaryContent() {
           : "Current stock levels across all products"
       }
       filters={
-        <>
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
           <div className="relative min-w-0 flex-1 lg:max-w-md">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <Input
               value={search}
               onChange={handleSearchChange}
-              placeholder="Search products, SKU, warehouse…"
+              placeholder="Search products, SKU…"
               className="h-8 w-full min-w-0 pl-8 text-xs"
             />
           </div>
+          <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
+            <SelectTrigger className="h-8 w-[160px] min-w-0 text-xs shrink-0">
+              <SelectValue placeholder="All warehouses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All warehouses</SelectItem>
+              {warehouses.map((w) => (
+                <SelectItem key={w.id} value={w.name}>
+                  {w.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             size="sm"
@@ -157,7 +186,7 @@ function StockSummaryContent() {
             <Download className="h-3.5 w-3.5 mr-1.5" />
             Export CSV
           </Button>
-        </>
+        </div>
       }
     >
       {query.isLoading && <SkeletonTable rows={8} columns={10} />}

@@ -27,19 +27,24 @@ import {
 import { AppSheet } from "@/components/shared/app-sheet";
 import { useReceiveGoods, useLocations } from "@/hooks/api/inventory";
 import type { PurchaseOrder, ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
+import type { TrackingMethod } from "@/types/inventory";
+
+const grnLineSchema = z.object({
+  poLineId: z.number(),
+  quantityReceived: z.number().min(0),
+  qualityStatus: z.enum(["ACCEPTED", "REJECTED"]),
+  rejectionReason: z.string().optional(),
+  lotNumber: z.string().optional(),
+  expiryDate: z.string().optional(),
+  manufactureDate: z.string().optional(),
+  serialNumbers: z.string().optional(),
+});
 
 const grnSchema = z.object({
   locationId: z.number({ error: "Location is required" }).int().positive(),
   notes: z.string().max(500).optional(),
   lines: z
-    .array(
-      z.object({
-        poLineId: z.number(),
-        quantityReceived: z.number().min(0),
-        qualityStatus: z.enum(["ACCEPTED", "REJECTED"]),
-        rejectionReason: z.string().optional(),
-      }),
-    )
+    .array(grnLineSchema)
     .refine(
       (lines) =>
         lines.every(
@@ -58,6 +63,7 @@ interface DraftLineMeta {
   sku: string | null;
   ordered: number;
   alreadyReceived: number;
+  trackingMethod: TrackingMethod;
 }
 
 export interface ReceiveGoodsSheetProps {
@@ -71,9 +77,25 @@ interface GrnLineRowProps {
   index: number;
   control: Control<GrnFormValues>;
   qualityStatus: "ACCEPTED" | "REJECTED";
+  quantityReceived: number;
+  serialNumbersValue: string | undefined;
 }
 
-function GrnLineRow({ meta, index, control, qualityStatus }: GrnLineRowProps) {
+function GrnLineRow({
+  meta,
+  index,
+  control,
+  qualityStatus,
+  quantityReceived,
+  serialNumbersValue,
+}: GrnLineRowProps) {
+  const serialCount = serialNumbersValue
+    ? serialNumbersValue
+        .split(/[\n,]/)
+        .map((s) => s.trim())
+        .filter(Boolean).length
+    : 0;
+
   return (
     <div className="rounded-md border border-border/60 p-3 space-y-2">
       <div>
@@ -113,7 +135,11 @@ function GrnLineRow({ meta, index, control, qualityStatus }: GrnLineRowProps) {
           render={({ field }) => (
             <FormItem className="ml-auto">
               <FormControl>
-                <RadioGroup value={field.value} onValueChange={field.onChange} className="flex gap-3">
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  className="flex gap-3"
+                >
                   <div className="flex items-center gap-1.5">
                     <RadioGroupItem value="ACCEPTED" id={`q-accepted-${index}`} />
                     <Label htmlFor={`q-accepted-${index}`} className="text-xs cursor-pointer">
@@ -147,6 +173,74 @@ function GrnLineRow({ meta, index, control, qualityStatus }: GrnLineRowProps) {
           )}
         />
       )}
+      {meta.trackingMethod === "LOT" && (
+        <div className="grid grid-cols-3 gap-2">
+          <FormField
+            control={control}
+            name={`lines.${index}.lotNumber`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Lot number</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. LOT-001" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name={`lines.${index}.expiryDate`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Expiry date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name={`lines.${index}.manufactureDate`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Manufacture date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
+      {meta.trackingMethod === "SERIAL" && (
+        <FormField
+          control={control}
+          name={`lines.${index}.serialNumbers`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">
+                Serial numbers
+                <span className="ml-2 text-muted-foreground">
+                  {serialCount} / {quantityReceived > 0 ? quantityReceived.toFixed(0) : "?"} entered
+                </span>
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  rows={3}
+                  placeholder={"One serial per line or comma-separated"}
+                  className="resize-none font-mono text-xs"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
     </div>
   );
 }
@@ -164,6 +258,7 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
     sku: l.productVariant?.sku ?? null,
     ordered: Number(l.quantity),
     alreadyReceived: Number(l.quantityReceived),
+    trackingMethod: l.productVariant?.product?.trackingMethod ?? "NONE",
   }));
 
   const form = useForm<GrnFormValues>({
@@ -175,6 +270,10 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
         quantityReceived: Math.max(0, Number(l.quantity) - Number(l.quantityReceived)),
         qualityStatus: "ACCEPTED" as const,
         rejectionReason: "",
+        lotNumber: "",
+        expiryDate: "",
+        manufactureDate: "",
+        serialNumbers: "",
       })),
     },
   });
@@ -193,21 +292,58 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
   }
 
   async function onSubmit(values: GrnFormValues): Promise<void> {
-    const activeLines = values.lines.filter((l) => l.quantityReceived > 0);
-    if (activeLines.length === 0) {
+    const indexedLines = values.lines.map((l, origIdx) => ({ l, meta: lineMetas[origIdx] }));
+    const activeIndexed = indexedLines.filter(({ l }) => l.quantityReceived > 0);
+
+    if (activeIndexed.length === 0) {
       toast.error("Enter quantity for at least one line");
       return;
     }
+
+    for (let i = 0; i < activeIndexed.length; i++) {
+      const { l: line, meta } = activeIndexed[i]!;
+      if (meta?.trackingMethod === "SERIAL") {
+        const serials = (line.serialNumbers ?? "")
+          .split(/[\n,]/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+        if (serials.length !== Math.round(line.quantityReceived)) {
+          toast.error(
+            `Serial count mismatch on line ${i + 1}: ${serials.length} entered, ${Math.round(line.quantityReceived)} expected`,
+          );
+          return;
+        }
+      }
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+
     const payload: ReceiveGoodsInput = {
       locationId: values.locationId,
+      receivedDate: today,
       notes: values.notes?.trim() || undefined,
-      lines: activeLines.map<ReceiveGoodsLineInput>((l) => ({
-        poLineId: l.poLineId,
-        quantityReceived: l.quantityReceived,
-        qualityStatus: l.qualityStatus,
-        rejectionReason: l.qualityStatus === "REJECTED" ? l.rejectionReason : undefined,
-      })),
+      lines: activeIndexed.map<ReceiveGoodsLineInput>(({ l, meta }) => {
+        const serials =
+          meta?.trackingMethod === "SERIAL" && l.serialNumbers
+            ? l.serialNumbers
+                .split(/[\n,]/)
+                .map((s) => s.trim())
+                .filter(Boolean)
+            : undefined;
+        return {
+          poLineId: l.poLineId,
+          quantityReceived: l.quantityReceived,
+          qualityStatus: l.qualityStatus,
+          rejectionReason: l.qualityStatus === "REJECTED" ? l.rejectionReason : undefined,
+          lotNumber: meta?.trackingMethod === "LOT" ? l.lotNumber?.trim() || undefined : undefined,
+          expiryDate: meta?.trackingMethod === "LOT" ? l.expiryDate?.trim() || undefined : undefined,
+          manufactureDate:
+            meta?.trackingMethod === "LOT" ? l.manufactureDate?.trim() || undefined : undefined,
+          serialNumbers: serials,
+        };
+      }),
     };
+
     try {
       const grn = await receiveMutation.mutateAsync(payload);
       toast.success(`GRN ${grn.grnNumber} recorded`);
@@ -275,13 +411,16 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
             {fields.map((field, index) => {
               const meta = lineMetas[index];
               if (!meta) return null;
+              const watched = watchedLines[index];
               return (
                 <GrnLineRow
                   key={field.id}
                   meta={meta}
                   index={index}
                   control={form.control}
-                  qualityStatus={watchedLines[index]?.qualityStatus ?? "ACCEPTED"}
+                  qualityStatus={watched?.qualityStatus ?? "ACCEPTED"}
+                  quantityReceived={watched?.quantityReceived ?? 0}
+                  serialNumbersValue={watched?.serialNumbers}
                 />
               );
             })}

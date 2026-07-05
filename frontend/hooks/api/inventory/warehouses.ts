@@ -3,10 +3,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import type { WarehouseStockResult } from "@/types/inventory";
 
-type LocationType = "ZONE" | "AISLE" | "RACK" | "BIN";
+export type LocationType =
+  | "ZONE"
+  | "AISLE"
+  | "RACK"
+  | "BIN"
+  | "RECEIVING"
+  | "SHIPPING"
+  | "QUARANTINE"
+  | "SCRAP"
+  | "TRANSIT"
+  | "RETURNS";
 
-interface WarehouseLocation {
+export interface WarehouseLocation {
   id: number;
   orgId: string;
   warehouseId: number;
@@ -14,13 +25,18 @@ interface WarehouseLocation {
   name: string;
   code: string;
   locationType: LocationType;
+  isPickable: boolean;
+  isReceivable: boolean;
+  isSellable: boolean;
+  capacity: number | null;
   isActive: boolean;
+  isSpecial?: boolean;
   createdAt: string;
   updatedAt: string;
   children?: WarehouseLocation[];
 }
 
-interface Warehouse {
+export interface Warehouse {
   id: number;
   orgId: string;
   name: string;
@@ -31,6 +47,8 @@ interface Warehouse {
   country: string | null;
   isDefault: boolean;
   isActive: boolean;
+  branchId: number | null;
+  managerUserId: string | null;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -45,6 +63,7 @@ interface CreateWarehouseInput {
   state?: string;
   country?: string;
   isDefault?: boolean;
+  isActive?: boolean;
 }
 
 interface UpdateWarehouseInput extends Partial<CreateWarehouseInput> {
@@ -57,6 +76,10 @@ interface CreateLocationInput {
   code: string;
   locationType: LocationType;
   parentLocationId?: number;
+  isPickable?: boolean;
+  isReceivable?: boolean;
+  isSellable?: boolean;
+  capacity?: number;
 }
 
 export function useWarehouses() {
@@ -130,7 +153,20 @@ export function useUpdateLocation() {
   return useMutation<
     unknown,
     Error,
-    { warehouseId: number; locationId: number; data: { name?: string; code?: string; locationType?: string; isActive?: boolean } }
+    {
+      warehouseId: number;
+      locationId: number;
+      data: {
+        name?: string;
+        code?: string;
+        locationType?: LocationType;
+        isPickable?: boolean;
+        isReceivable?: boolean;
+        isSellable?: boolean;
+        capacity?: number | null;
+        isActive?: boolean;
+      };
+    }
   >({
     mutationKey: ["inventory", "location", "update"],
     mutationFn: ({ warehouseId, locationId, data }) =>
@@ -170,5 +206,21 @@ export function useSetDefaultWarehouse() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
     },
+  });
+}
+
+export function useWarehouseStock(
+  warehouseId: number,
+  filters?: { page?: number; limit?: number },
+) {
+  return useQuery<WarehouseStockResult, Error>({
+    queryKey: [...queryKeys.inventory.warehouse(warehouseId), "stock", filters],
+    queryFn: () =>
+      apiClient.get<WarehouseStockResult>(`/inventory/warehouses/${warehouseId}/stock`, {
+        page: filters?.page,
+        limit: filters?.limit,
+      }),
+    enabled: warehouseId > 0,
+    staleTime: 60_000,
   });
 }

@@ -7,3 +7,7 @@ export * from "./planning";
 export * from "./roadmap";
 export * from "./automations";
 export * from "./webhooks";
+export * from "./qa";
+export * from "./bugs";
+export * from "./change-requests";
+export * from "./client-portal";

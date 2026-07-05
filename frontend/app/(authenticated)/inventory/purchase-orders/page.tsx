@@ -1,19 +1,42 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { usePurchaseOrders, useVendors } from "@/hooks/api/inventory";
+import {
+  useApprovePurchaseOrder,
+  useClosePurchaseOrder,
+  useCancelPurchaseOrder,
+} from "@/hooks/api/inventory/purchase-orders";
 import type { PurchaseOrderStatus, PurchaseOrderSummary } from "@/types/inventory";
 
 const STATUS_OPTIONS = [
@@ -50,6 +73,115 @@ function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
     <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", STATUS_BADGE[status])}>
       {status}
     </Badge>
+  );
+}
+
+function PoRowActions({ po }: { po: PurchaseOrderSummary }) {
+  const [showCancel, setShowCancel] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const approveMutation = useApprovePurchaseOrder(po.id);
+  const closeMutation = useClosePurchaseOrder(po.id);
+  const cancelMutation = useCancelPurchaseOrder(po.id);
+
+  const canApprove = po.status === "DRAFT";
+  const canClose = po.status === "PARTIAL" || po.status === "RECEIVED";
+  const canCancel = po.status === "DRAFT" || po.status === "SENT" || po.status === "PARTIAL";
+
+  if (!canApprove && !canClose && !canCancel) return null;
+
+  function handleApprove(): void {
+    approveMutation.mutate(undefined, {
+      onSuccess: () => toast.success(`PO ${po.poNumber} approved`),
+      onError: (err) => toast.error(err.message),
+    });
+  }
+
+  function handleClose(): void {
+    closeMutation.mutate(undefined, {
+      onSuccess: () => toast.success(`PO ${po.poNumber} closed`),
+      onError: (err) => toast.error(err.message),
+    });
+  }
+
+  function handleCancelConfirm(): void {
+    cancelMutation.mutate(
+      cancelReason.trim() ? { reason: cancelReason.trim() } : undefined,
+      {
+        onSuccess: () => { setShowCancel(false); toast.success(`PO ${po.poNumber} cancelled`); },
+        onError: (err) => toast.error(err.message),
+      },
+    );
+  }
+
+  function handleOpenCancel(): void { setShowCancel(true); }
+
+  function handleCancelDialogChange(open: boolean): void {
+    if (!open) setCancelReason("");
+    setShowCancel(open);
+  }
+
+  function handleReasonChange(e: ChangeEvent<HTMLTextAreaElement>): void {
+    setCancelReason(e.target.value);
+  }
+
+  const isPending = approveMutation.isPending || closeMutation.isPending || cancelMutation.isPending;
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" disabled={isPending}>
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="text-xs">
+          {canApprove && (
+            <DropdownMenuItem onSelect={handleApprove} disabled={approveMutation.isPending}>
+              Approve
+            </DropdownMenuItem>
+          )}
+          {canClose && (
+            <DropdownMenuItem onSelect={handleClose} disabled={closeMutation.isPending}>
+              Close
+            </DropdownMenuItem>
+          )}
+          {(canApprove || canClose) && canCancel && <DropdownMenuSeparator />}
+          {canCancel && (
+            <DropdownMenuItem onSelect={handleOpenCancel} className="text-red-600">
+              Cancel
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={showCancel} onOpenChange={handleCancelDialogChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel {po.poNumber}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Textarea
+            value={cancelReason}
+            onChange={handleReasonChange}
+            placeholder="Reason (optional)"
+            className="text-sm min-h-[72px] resize-none mt-2"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Back</AlertDialogCancel>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={cancelMutation.isPending}
+              onClick={handleCancelConfirm}
+            >
+              {cancelMutation.isPending ? "Cancelling…" : "Cancel PO"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -183,6 +315,12 @@ export default function PurchaseOrdersListPage() {
       key: "status",
       header: "Status",
       cell: (po) => <StatusBadge status={po.status} />,
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (po) => <PoRowActions po={po} />,
+      className: "w-8",
     },
   ];
 

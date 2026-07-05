@@ -3,18 +3,77 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { VendorFormSheet } from "@/features/inventory/components/vendor-form-sheet";
 import { useVendors } from "@/hooks/api/inventory";
+import { useToggleVendorActive } from "@/hooks/api/inventory/vendors";
 import type { InventoryVendor } from "@/types/inventory";
+
+function VendorRowActions({ vendor }: { vendor: InventoryVendor }) {
+  const toggleMutation = useToggleVendorActive();
+
+  function handleToggleActive(): void {
+    toggleMutation.mutate(
+      { id: vendor.id, isActive: !vendor.isActive },
+      {
+        onSuccess: () => toast.success("Vendor status updated"),
+        onError: (err: unknown) => {
+          if (err instanceof Error && err.message.startsWith("409")) {
+            toast.error("Cannot deactivate — vendor has open purchase orders.");
+          } else {
+            toast.error(getErrorMessage(err));
+          }
+        },
+      },
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          aria-label={`Actions for ${vendor.name}`}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuItem asChild>
+          <Link href={`/inventory/vendors/${vendor.id}`}>View</Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={handleToggleActive}
+          disabled={toggleMutation.isPending}
+          className={!vendor.isActive ? "text-emerald-600" : "text-destructive"}
+        >
+          {vendor.isActive ? "Deactivate" : "Activate"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function VendorsListPage() {
   const router = useRouter();
@@ -23,6 +82,7 @@ export default function VendorsListPage() {
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
 
   const search = searchParams.get("search") ?? "";
+  const activeParam = searchParams.get("isActive") ?? "all";
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
     const params = new URLSearchParams(searchParams.toString());
@@ -30,6 +90,18 @@ export default function VendorsListPage() {
       params.set("search", e.target.value);
     } else {
       params.delete("search");
+    }
+    startTransition(() => {
+      router.replace(`?${params.toString()}`, { scroll: false });
+    });
+  }
+
+  function handleActiveChange(value: string): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      params.delete("isActive");
+    } else {
+      params.set("isActive", value);
     }
     startTransition(() => {
       router.replace(`?${params.toString()}`, { scroll: false });
@@ -44,7 +116,15 @@ export default function VendorsListPage() {
     router.replace("?", { scroll: false });
   }
 
-  const query = useVendors({ page: 1, limit: 100, search: search || undefined });
+  const isActiveFilter =
+    activeParam === "active" ? true : activeParam === "inactive" ? false : undefined;
+
+  const query = useVendors({
+    page: 1,
+    limit: 100,
+    search: search || undefined,
+    isActive: isActiveFilter,
+  });
   const items = query.data?.items ?? [];
   const total = query.data?.total ?? 0;
 
@@ -108,6 +188,12 @@ export default function VendorsListPage() {
         </Badge>
       ),
     },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-8",
+      cell: (v) => <VendorRowActions vendor={v} />,
+    },
   ];
 
   const filterBar = (
@@ -121,6 +207,16 @@ export default function VendorsListPage() {
           className="h-8 w-full min-w-0 pl-8 text-xs"
         />
       </div>
+      <Select value={activeParam} onValueChange={handleActiveChange}>
+        <SelectTrigger className="h-8 w-[140px] text-xs">
+          <SelectValue placeholder="All vendors" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All vendors</SelectItem>
+          <SelectItem value="active">Active only</SelectItem>
+          <SelectItem value="inactive">Inactive only</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 
@@ -128,7 +224,11 @@ export default function VendorsListPage() {
     <PageWrapper
       eyebrow="Inventory"
       title="Vendors"
-      subtitle={query.data ? `${total} ${total === 1 ? "vendor" : "vendors"}` : "Suppliers for inventory purchase orders."}
+      subtitle={
+        query.data
+          ? `${total} ${total === 1 ? "vendor" : "vendors"}`
+          : "Suppliers for inventory purchase orders."
+      }
       actions={
         <Button size="sm" onClick={handleNewVendor}>
           <Plus className="h-3.5 w-3.5 mr-1" />
@@ -148,7 +248,11 @@ export default function VendorsListPage() {
           ) : (
             <EmptyState
               title={search ? "No vendors found" : "No vendors yet"}
-              description={search ? "No results match your search." : "Add a supplier to start creating purchase orders."}
+              description={
+                search
+                  ? "No results match your search."
+                  : "Add a supplier to start creating purchase orders."
+              }
               action={
                 search
                   ? { label: "Clear search", onClick: handleClearSearch }

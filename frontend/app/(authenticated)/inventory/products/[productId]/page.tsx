@@ -260,6 +260,28 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                       />
                     }
                   />
+                  <InfoRow label="Product Type" value={
+                    product.productType === "STOCKABLE" ? "Stockable"
+                    : product.productType === "CONSUMABLE" ? "Consumable"
+                    : product.productType === "SERVICE" ? "Service" : "—"
+                  } />
+                  <InfoRow label="Tracking" value={
+                    product.trackingMethod === "NONE" ? "None"
+                    : product.trackingMethod === "LOT" ? "Lot / Batch"
+                    : product.trackingMethod === "SERIAL" ? "Serial" : "—"
+                  } />
+                  <InfoRow label="Costing Method" value={
+                    product.costingMethod === "STANDARD" ? "Standard"
+                    : product.costingMethod === "WEIGHTED_AVERAGE" ? "Weighted Avg"
+                    : product.costingMethod === "FIFO" ? "FIFO" : "—"
+                  } />
+                  <InfoRow
+                    label="Standard Cost"
+                    value={product.standardCost != null
+                      ? <span className="font-mono tabular-nums">{formatPrice(product.standardCost)}</span>
+                      : "—"}
+                  />
+                  <InfoRow label="Reorder Enabled" value={product.reorderEnabled ? "Yes" : "No"} />
                   {product.description && (
                     <div className="sm:col-span-2 lg:col-span-3">
                       <InfoRow

@@ -1,0 +1,203 @@
+"use client";
+
+import { useTransition } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { useStockTransactions } from "@/hooks/api/inventory/stock";
+import type { StockTransaction } from "@/hooks/api/inventory/stock";
+
+const TYPE_BADGE: Record<string, string> = {
+  SALE: "bg-blue-50 text-blue-700 border-blue-200",
+  ADJUSTMENT_OUT: "bg-amber-50 text-amber-700 border-amber-200",
+  TRANSFER_OUT: "bg-violet-50 text-violet-700 border-violet-200",
+  RETURN_OUT: "bg-slate-100 text-slate-700 border-slate-200",
+};
+
+function formatDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
+}
+
+function TypeBadge({ type }: { type: string }) {
+  const cls = TYPE_BADGE[type] ?? "bg-slate-100 text-slate-700 border-slate-200";
+  return (
+    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", cls)}>
+      {type.replace(/_/g, " ")}
+    </Badge>
+  );
+}
+
+export default function IssuesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+
+  const fromDate = searchParams.get("fromDate") ?? "";
+  const toDate = searchParams.get("toDate") ?? "";
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
+
+  function updateParams(updates: Record<string, string>): void {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === "" || (key === "page" && value === "1")) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    startTransition(() => {
+      router.replace(`?${params.toString()}`, { scroll: false });
+    });
+  }
+
+  function handleFromDateChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    updateParams({ fromDate: e.target.value, page: "1" });
+  }
+
+  function handleToDateChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    updateParams({ toDate: e.target.value, page: "1" });
+  }
+
+  function handlePageChange(nextPage: number): void {
+    updateParams({ page: String(nextPage) });
+  }
+
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
+  const query = useStockTransactions({
+    transactionType: "SALE",
+    fromDate: fromDate || undefined,
+    toDate: toDate || undefined,
+    page,
+    limit: 50,
+  });
+
+  const items = query.data?.items ?? [];
+  const total = query.data?.total ?? 0;
+  const totalPages = query.data?.totalPages ?? 1;
+
+  const columns: DataTableColumn<StockTransaction>[] = [
+    {
+      key: "createdAt",
+      header: "Date",
+      cell: (tx) => (
+        <span className="font-mono tabular-nums text-[11px]">{formatDate(tx.createdAt)}</span>
+      ),
+      sortable: true,
+      sortValue: (tx) => tx.createdAt,
+    },
+    {
+      key: "product",
+      header: "Product",
+      cell: (tx) =>
+        tx.productVariant?.product?.name ?? tx.productVariant?.name ?? "—",
+    },
+    {
+      key: "sku",
+      header: "SKU",
+      cell: (tx) => (
+        <span className="font-mono text-[11px] text-muted-foreground">
+          {tx.productVariant?.sku ?? tx.productVariant?.product?.sku ?? "—"}
+        </span>
+      ),
+      className: "hidden md:table-cell",
+      headerClassName: "hidden md:table-cell",
+    },
+    {
+      key: "location",
+      header: "Location",
+      cell: (tx) => tx.location?.name ?? "—",
+      className: "hidden md:table-cell",
+      headerClassName: "hidden md:table-cell",
+    },
+    {
+      key: "quantityChange",
+      header: "Qty",
+      cell: (tx) => (
+        <span className={cn("font-mono tabular-nums", tx.quantityChange < 0 ? "text-red-600" : "text-emerald-600")}>
+          {tx.quantityChange > 0 ? "+" : ""}{tx.quantityChange}
+        </span>
+      ),
+      className: "text-right",
+      headerClassName: "text-right",
+    },
+    {
+      key: "referenceId",
+      header: "Reference",
+      cell: (tx) => (
+        <span className="font-mono text-[11px] text-muted-foreground">
+          {tx.referenceId ? `${tx.referenceType ?? ""} ${tx.referenceId}`.trim() : "—"}
+        </span>
+      ),
+      className: "hidden lg:table-cell",
+      headerClassName: "hidden lg:table-cell",
+    },
+    {
+      key: "transactionType",
+      header: "Type",
+      cell: (tx) => <TypeBadge type={tx.transactionType} />,
+    },
+  ];
+
+  const filterBar = (
+    <div className="flex w-full min-w-0 items-center gap-2">
+      <Input
+        type="date"
+        value={fromDate}
+        onChange={handleFromDateChange}
+        className="h-8 text-xs w-36"
+        placeholder="From"
+      />
+      <Input
+        type="date"
+        value={toDate}
+        onChange={handleToDateChange}
+        className="h-8 text-xs w-36"
+        placeholder="To"
+      />
+    </div>
+  );
+
+  return (
+    <PageWrapper
+      eyebrow="Inventory / Operations"
+      title="Issues"
+      subtitle={query.data ? `${total} ${total === 1 ? "transaction" : "transactions"}` : undefined}
+      filters={filterBar}
+    >
+      <DataTable
+        data={items}
+        columns={columns}
+        getRowKey={(tx) => tx.id}
+        isLoading={query.isLoading}
+        emptyState={
+          query.error ? (
+            <ErrorState description={query.error.message} onRetry={handleRetry} compact />
+          ) : (
+            <EmptyState
+              title="No outbound issues"
+              description="Sale and outbound stock transactions will appear here."
+              compact
+            />
+          )
+        }
+        pagination={
+          totalPages > 1
+            ? { mode: "server", page, pageSize: 50, total, onPageChange: handlePageChange }
+            : undefined
+        }
+        minWidth="640px"
+        className="min-h-[320px]"
+      />
+    </PageWrapper>
+  );
+}

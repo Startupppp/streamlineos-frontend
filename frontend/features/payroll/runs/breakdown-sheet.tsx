@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,7 +37,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCan } from "@/hooks/api/access";
-import { useRunEmployee, useAddAdjustment } from "@/hooks/api/payroll/run-employees";
+import { useRunEmployee, useAddAdjustment, useSetEmployeeHold } from "@/hooks/api/payroll/run-employees";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
 import type { CalculationSnapshotLine, SalaryComponentType } from "@/types/payroll/runs";
@@ -131,6 +131,10 @@ export function BreakdownSheet({
 
   const { data, isLoading } = useRunEmployee(runId, runEmployeeId ?? 0);
   const addAdjustmentMutation = useAddAdjustment(runId, runEmployeeId ?? 0);
+  const canManage = useCan("payroll:runs:manage");
+  const holdMutation = useSetEmployeeHold(runId, runEmployeeId ?? 0);
+  const [showHold, setShowHold] = useState(false);
+  const [holdReason, setHoldReason] = useState("");
 
   const form = useForm<AdjustmentForm>({
     resolver: zodResolver(adjustmentSchema),
@@ -155,6 +159,42 @@ export function BreakdownSheet({
       },
       onError: () => toast.error("Failed to add adjustment"),
     });
+  }
+
+  function handleHoldReasonChange(e: ChangeEvent<HTMLInputElement>) {
+    setHoldReason(e.target.value);
+  }
+
+  function handleHoldOpen() {
+    setHoldReason("");
+    setShowHold(true);
+  }
+
+  function handleHoldClose() {
+    setShowHold(false);
+  }
+
+  function handleHoldSubmit() {
+    holdMutation.mutate(
+      { hold: true, reason: holdReason || undefined },
+      {
+        onSuccess: () => {
+          toast.success("Salary put on hold");
+          setShowHold(false);
+        },
+        onError: () => toast.error("Failed to hold salary"),
+      },
+    );
+  }
+
+  function handleRelease() {
+    holdMutation.mutate(
+      { hold: false },
+      {
+        onSuccess: () => toast.success("Hold released"),
+        onError: () => toast.error("Failed to release hold"),
+      },
+    );
   }
 
   const snapshot = data?.calculationSnapshot;
@@ -253,11 +293,33 @@ export function BreakdownSheet({
             )}
           </div>
 
-          {!isLocked && canUpdate && (
-            <div className="px-6 py-4 border-t shrink-0">
-              <Button size="sm" variant="outline" onClick={handleAdjustmentOpen}>
-                Add Adjustment
-              </Button>
+          {((!isLocked && canUpdate) || canManage) && (
+            <div className="px-6 py-4 border-t shrink-0 flex items-center gap-2 flex-wrap">
+              {!isLocked && canUpdate && (
+                <Button size="sm" variant="outline" onClick={handleAdjustmentOpen}>
+                  Add Adjustment
+                </Button>
+              )}
+              {canManage &&
+                (data?.holdReason ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRelease}
+                    disabled={holdMutation.isPending}
+                  >
+                    Release Hold
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="outline" onClick={handleHoldOpen}>
+                    Hold Salary
+                  </Button>
+                ))}
+              {data?.holdReason && (
+                <span className="text-[10px] text-amber-600 truncate">
+                  On hold: {data.holdReason}
+                </span>
+              )}
             </div>
           )}
         </SheetContent>
@@ -340,6 +402,33 @@ export function BreakdownSheet({
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showHold} onOpenChange={handleHoldClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hold Salary</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <p className="text-[11px] text-muted-foreground">
+              This employee will be excluded from payout for this run until the hold is released.
+            </p>
+            <Input
+              value={holdReason}
+              onChange={handleHoldReasonChange}
+              placeholder="Reason (optional)"
+              maxLength={500}
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" size="sm" onClick={handleHoldClose}>
+              Cancel
+            </Button>
+            <Button type="button" size="sm" onClick={handleHoldSubmit} disabled={holdMutation.isPending}>
+              Hold
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

@@ -12,6 +12,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -45,6 +47,16 @@ const uomSchema = z.object({
     .string()
     .min(1, "Abbreviation is required")
     .max(10, "Abbreviation must be 10 characters or less"),
+  category: z.string().optional(),
+  isBase: z.boolean().default(false),
+  ratioToBase: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || (Number.isFinite(Number(v)) && Number(v) > 0),
+      "Must be a positive number",
+    ),
+  roundingPrecision: z.coerce.number().int().min(0).max(6).default(2),
 });
 
 type UomFormValues = z.infer<typeof uomSchema>;
@@ -57,21 +69,30 @@ function CreateUomForm({ onSuccess }: { onSuccess: () => void }) {
     defaultValues: {
       name: "",
       abbreviation: "",
+      category: "",
+      isBase: false,
+      ratioToBase: "",
+      roundingPrecision: 2,
     },
   });
+
+  const isBase = form.watch("isBase");
 
   async function onSubmit(values: UomFormValues): Promise<void> {
     try {
       await createMutation.mutateAsync({
         name: values.name,
         abbreviation: values.abbreviation,
+        category: values.category || undefined,
+        isBase: values.isBase,
+        ratioToBase: values.ratioToBase || undefined,
+        roundingPrecision: values.roundingPrecision,
       });
       toast.success(`Unit "${values.name}" created`);
       form.reset();
       onSuccess();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to create UOM";
+      const message = error instanceof Error ? error.message : "Failed to create UOM";
       toast.error(message);
     }
   }
@@ -100,16 +121,69 @@ function CreateUomForm({ onSuccess }: { onSuccess: () => void }) {
               <FormItem>
                 <FormLabel>Abbreviation</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="e.g. kg"
-                    className="font-mono uppercase"
-                    {...field}
-                  />
+                  <Input placeholder="e.g. kg" className="font-mono uppercase" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Weight, Volume, Length" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="roundingPrecision"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Rounding Precision</FormLabel>
+                <FormControl>
+                  <Input type="number" min="0" max="6" step="1" placeholder="2" className="tabular-nums" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="isBase"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-md border p-3">
+                <FormLabel className="cursor-pointer">Base Unit</FormLabel>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          {!isBase && (
+            <FormField
+              control={form.control}
+              name="ratioToBase"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ratio to Base</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="any" min="0" placeholder="e.g. 1000" className="tabular-nums" {...field} />
+                  </FormControl>
+                  <p className="text-[10px] text-muted-foreground mt-1">Ratio to base unit: {field.value || "—"}:1</p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {isBase && (
+            <p className="text-[10px] text-muted-foreground self-center">This UOM is the base unit for its category.</p>
+          )}
         </div>
         <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={createMutation.isPending}>
@@ -215,9 +289,7 @@ function UomPageInner() {
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-semibold">
-              Add Unit of Measure
-            </CardTitle>
+            <CardTitle className="text-sm font-semibold">Add Unit of Measure</CardTitle>
           </CardHeader>
           <CardContent>
             <CreateUomForm key={formKey} onSuccess={handleFormSuccess} />
@@ -247,28 +319,49 @@ function UomPageInner() {
           />
         ) : (
           <div className="rounded-md border border-border overflow-x-auto">
-            <Table className="min-w-[360px]">
+            <Table className="min-w-[480px]">
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
                     Name
                   </TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[160px]">
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[120px]">
                     Abbreviation
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[120px]">
+                    Category
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[100px] text-right">
+                    Ratio
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[70px] text-center">
+                    Base?
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUom.map((uom) => (
-                  <TableRow
-                    key={uom.id}
-                    className="h-8 hover:bg-muted/30 transition-colors"
-                  >
+                  <TableRow key={uom.id} className="h-8 hover:bg-muted/30 transition-colors">
                     <TableCell className="px-2 py-1 text-[11px] font-medium text-foreground">
                       {uom.name}
                     </TableCell>
                     <TableCell className="px-2 py-1 text-[11px] font-mono tabular-nums text-muted-foreground">
                       {uom.abbreviation}
+                    </TableCell>
+                    <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
+                      {uom.category ?? "—"}
+                    </TableCell>
+                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-muted-foreground">
+                      {uom.ratioToBase ? `${uom.ratioToBase}:1` : "—"}
+                    </TableCell>
+                    <TableCell className="px-2 py-1 text-center">
+                      {uom.isBase ? (
+                        <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50">
+                          Yes
+                        </Badge>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

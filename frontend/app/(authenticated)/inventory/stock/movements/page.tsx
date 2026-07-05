@@ -110,12 +110,12 @@ export default function MovementsPage() {
 
   const { data: txnData, isLoading, isError, refetch } = useStockTransactions(filters);
 
-  const rawTransactions: StockTransaction[] = txnData?.items ?? [];
   const total = txnData?.total ?? 0;
   const totalPages = txnData?.totalPages ?? 1;
   const currentPage = txnData?.page ?? page;
 
   const transactions = useMemo(() => {
+    const rawTransactions: StockTransaction[] = txnData?.items ?? [];
     if (!searchQ) return rawTransactions;
     const q = searchQ.toLowerCase();
     return rawTransactions.filter(
@@ -125,7 +125,7 @@ export default function MovementsPage() {
         (txn.productVariant?.name?.toLowerCase().includes(q) ?? false) ||
         (txn.location?.name?.toLowerCase().includes(q) ?? false),
     );
-  }, [rawTransactions, searchQ]);
+  }, [txnData?.items, searchQ]);
 
   const rangeStart = total === 0 ? 0 : (currentPage - 1) * LIMIT + 1;
   const rangeEnd = Math.min(currentPage * LIMIT, total);
@@ -168,7 +168,6 @@ export default function MovementsPage() {
   function handlePrevPage() { setPage((p) => Math.max(1, p - 1)); }
   function handleNextPage() { setPage((p) => Math.min(totalPages, p + 1)); }
 
-  const hasActiveFilters = searchQ || typeParam !== "all" || datePreset !== "30d";
   const subtitle = total > 0 ? `${total} movement${total !== 1 ? "s" : ""}` : undefined;
 
   return (

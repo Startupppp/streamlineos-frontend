@@ -83,7 +83,7 @@ export function MyTimeView() {
         </Button>
         <Button
           variant="ghost"
-          className={cn("h-8 px-3 text-xs rounded-none", isCurrentWeek && "text-accent font-medium")}
+          className={cn("h-8 px-3 text-xs rounded-none", isCurrentWeek && "text-blue-600 font-medium")}
           onClick={goToCurrent}
         >
           This week

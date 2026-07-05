@@ -10,17 +10,21 @@ import type {
   InventoryProductVariant,
   ProductVariantFlat,
   ProductStatus,
+  ProductType,
   CreateProductInput,
   UpdateProductInput,
   CreateProductVariantInput,
+  CreateUomInput,
 } from "@/types/inventory";
 
 interface ProductFilters {
+  [key: string]: unknown;
   categoryId?: number;
   search?: string;
   page?: number;
   limit?: number;
   status?: ProductStatus;
+  productType?: ProductType;
 }
 
 interface ProductListResponse {
@@ -38,12 +42,8 @@ interface CreateCategoryInput {
   parentCategoryId?: number;
 }
 
-interface CreateUomInput {
-  name: string;
-  abbreviation: string;
-}
-
 interface ProductVariantFilters {
+  [key: string]: unknown;
   activeOnly?: boolean;
 }
 
@@ -68,7 +68,7 @@ function serializeVariantWrite(data: CreateProductVariantInput) {
 
 export function useProducts(filters?: ProductFilters) {
   return useQuery<ProductListResponse, Error>({
-    queryKey: queryKeys.inventory.products(filters as Record<string, unknown>),
+    queryKey: queryKeys.inventory.products(filters),
     queryFn: () =>
       apiClient.get<ProductListResponse>("/inventory/products", {
         ...(filters?.categoryId ? { categoryId: String(filters.categoryId) } : {}),
@@ -76,6 +76,7 @@ export function useProducts(filters?: ProductFilters) {
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
+        ...(filters?.productType ? { productType: filters.productType } : {}),
       }),
     staleTime: 2 * 60_000,
   });
@@ -152,9 +153,35 @@ export function useDeleteProduct() {
   });
 }
 
+export function useArchiveProduct() {
+  const qc = useQueryClient();
+  return useMutation<InventoryProduct, Error, number>({
+    mutationKey: ["inventory", "product", "archive"],
+    mutationFn: (productId) =>
+      apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}),
+    onSuccess: (_res, productId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
+    },
+  });
+}
+
+export function useRestoreProduct() {
+  const qc = useQueryClient();
+  return useMutation<InventoryProduct, Error, number>({
+    mutationKey: ["inventory", "product", "restore"],
+    mutationFn: (productId) =>
+      apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}),
+    onSuccess: (_res, productId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
+    },
+  });
+}
+
 export function useProductVariants(filters?: ProductVariantFilters) {
   return useQuery<ProductVariantFlat[], Error>({
-    queryKey: queryKeys.inventory.productVariants(filters as Record<string, unknown>),
+    queryKey: queryKeys.inventory.productVariants(filters),
     queryFn: () =>
       apiClient.get<ProductVariantFlat[]>("/inventory/products/variants", {
         ...(filters?.activeOnly ? { activeOnly: "true" } : {}),
@@ -224,7 +251,18 @@ export function useUpdateUom() {
   return useMutation<
     unknown,
     Error,
-    { uomId: number; data: { name?: string; abbreviation?: string; isActive?: boolean } }
+    {
+      uomId: number;
+      data: {
+        name?: string;
+        abbreviation?: string;
+        isActive?: boolean;
+        category?: string;
+        ratioToBase?: string;
+        roundingPrecision?: number;
+        isBase?: boolean;
+      };
+    }
   >({
     mutationKey: ["inventory", "uom", "update"],
     mutationFn: ({ uomId, data }) =>

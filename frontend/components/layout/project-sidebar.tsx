@@ -29,10 +29,13 @@ import {
   PanelLeftOpen,
   Tag,
   Users,
+  FlaskConical,
+  Bug,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCan } from "@/hooks/api/access";
 
 interface ProjectSidebarProps {
   projectId: string;
@@ -49,7 +52,9 @@ interface NavSection {
   }[];
 }
 
-function useSections(baseUrl: string): NavSection[] {
+function useSidebarSections(baseUrl: string): NavSection[] {
+  const canQA = useCan("projects:qa:view");
+  const canBugs = useCan("projects:bugs:view");
   return [
     {
       label: "Planning",
@@ -73,6 +78,13 @@ function useSections(baseUrl: string): NavSection[] {
       ],
     },
     {
+      label: "Quality",
+      items: [
+        ...(canQA ? [{ label: "QA / Tests", icon: FlaskConical, href: `${baseUrl}/qa` }] : []),
+        ...(canBugs ? [{ label: "Bugs", icon: Bug, href: `${baseUrl}/bugs` }] : []),
+      ],
+    },
+    {
       label: "More",
       items: [
         { label: "Wiki", icon: FileText, href: `${baseUrl}/pages` },
@@ -86,7 +98,7 @@ function useSections(baseUrl: string): NavSection[] {
         { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },
       ],
     },
-  ];
+  ].filter((s) => s.items.length > 0);
 }
 
 function useIsActive(baseUrl: string) {
@@ -109,7 +121,7 @@ function DesktopSidebar({
     return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
   });
   const baseUrl = `/projects/${projectId}`;
-  const sections = useSections(baseUrl);
+  const sections = useSidebarSections(baseUrl);
   const isActive = useIsActive(baseUrl);
 
   function handleToggleCollapse() {
@@ -233,7 +245,7 @@ function MobileProjectNav({
 }: ProjectSidebarProps) {
   const [open, setOpen] = useState(false);
   const baseUrl = `/projects/${projectId}`;
-  const sections = useSections(baseUrl);
+  const sections = useSidebarSections(baseUrl);
   const isActive = useIsActive(baseUrl);
   const pathname = usePathname();
 

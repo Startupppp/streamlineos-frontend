@@ -13,7 +13,7 @@ export type SerialStatus = "IN_STOCK" | "RESERVED" | "SHIPPED" | "RETURNED" | "S
 export type JobStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
 export type SyncStatus = "IDLE" | "SYNCING" | "SUCCESS" | "ERROR" | "PAUSED";
 export type QualityHoldStatus = "ACTIVE" | "RELEASED" | "EXPIRED";
-export type RecallStatus = "DRAFT" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+export type RecallStatus = "OPEN" | "IN_PROGRESS" | "CLOSED";
 export type PackageStatus = "OPEN" | "CLOSED" | "SHIPPED";
 
 const INFO = "bg-blue-50 text-blue-700 border-blue-200";
@@ -273,17 +273,15 @@ export const QUALITY_HOLD_STATUS_LABEL: Record<QualityHoldStatus, string> = {
 };
 
 export const RECALL_STATUS_BADGE: Record<RecallStatus, string> = {
-  DRAFT: INFO,
-  ACTIVE: DANGER,
-  COMPLETED: NEUTRAL,
-  CANCELLED: NEUTRAL,
+  OPEN: DANGER,
+  IN_PROGRESS: WARNING,
+  CLOSED: NEUTRAL,
 };
 
 export const RECALL_STATUS_LABEL: Record<RecallStatus, string> = {
-  DRAFT: "Draft",
-  ACTIVE: "Active",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
+  OPEN: "Open",
+  IN_PROGRESS: "In Progress",
+  CLOSED: "Closed",
 };
 
 export const PACKAGE_STATUS_BADGE: Record<PackageStatus, string> = {

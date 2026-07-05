@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Package, Search } from "lucide-react";
+import { Plus, Package, Search, MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -16,11 +17,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useProducts, useCategories } from "@/hooks/api/inventory";
-import type { InventoryProduct } from "@/types/inventory";
+import {
+  useProducts,
+  useCategories,
+  useArchiveProduct,
+  useRestoreProduct,
+  useDeleteProduct,
+} from "@/hooks/api/inventory";
+import { useCan } from "@/hooks/api/access";
+import type { InventoryProduct, TrackingMethod } from "@/types/inventory";
 
 const PAGE_LIMIT = 20;
 
@@ -28,28 +54,19 @@ function formatPrice(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === "") return "—";
   const n = Number(value);
   if (!Number.isFinite(n)) return "—";
-  return n.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "ACTIVE") {
     return (
-      <Badge
-        variant="outline"
-        className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50"
-      >
+      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50">
         Active
       </Badge>
     );
   }
   return (
-    <Badge
-      variant="outline"
-      className="h-4 text-[9px] px-1.5 py-0 border-slate-200 text-slate-600 bg-slate-100"
-    >
+    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-slate-200 text-slate-600 bg-slate-100">
       Inactive
     </Badge>
   );
@@ -58,31 +75,127 @@ function StatusBadge({ status }: { status: string }) {
 function StockBadge({ qty }: { qty: number }) {
   if (qty <= 0) {
     return (
-      <Badge
-        variant="outline"
-        className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-red-200 text-red-700 bg-red-50"
-      >
+      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-red-200 text-red-700 bg-red-50">
         Out
       </Badge>
     );
   }
   if (qty < 10) {
     return (
-      <Badge
-        variant="outline"
-        className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-amber-200 text-amber-700 bg-amber-50"
-      >
+      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-amber-200 text-amber-700 bg-amber-50">
         {qty} low
       </Badge>
     );
   }
   return (
-    <Badge
-      variant="outline"
-      className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-emerald-200 text-emerald-700 bg-emerald-50"
-    >
+    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-emerald-200 text-emerald-700 bg-emerald-50">
       {qty}
     </Badge>
+  );
+}
+
+function TrackingBadge({ method }: { method: TrackingMethod | null | undefined }) {
+  if (!method || method === "NONE") {
+    return <span className="text-muted-foreground text-[10px]">—</span>;
+  }
+  if (method === "LOT") {
+    return (
+      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200">
+        Lot
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
+      Serial
+    </Badge>
+  );
+}
+
+function ProductRowActions({ product }: { product: InventoryProduct }) {
+  const [alertOpen, setAlertOpen] = useState<boolean>(false);
+  const archiveMutation = useArchiveProduct();
+  const restoreMutation = useRestoreProduct();
+  const deleteMutation = useDeleteProduct();
+  const canUpdate = useCan("inventory:products:update");
+
+  function handleArchive(): void {
+    archiveMutation.mutate(product.id, {
+      onSuccess: () => toast.success("Product archived"),
+      onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to archive"),
+    });
+  }
+
+  function handleRestore(): void {
+    restoreMutation.mutate(product.id, {
+      onSuccess: () => toast.success("Product restored"),
+      onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to restore"),
+    });
+  }
+
+  function handleDeleteConfirm(): void {
+    deleteMutation.mutate(product.id, {
+      onSuccess: () => {
+        setAlertOpen(false);
+        toast.success("Product deleted");
+      },
+      onError: (err) => {
+        setAlertOpen(false);
+        const msg = err instanceof Error ? err.message : "Failed to delete";
+        toast.error(msg, { description: "Consider archiving this product instead." });
+      },
+    });
+  }
+
+  function handleAlertOpenChange(open: boolean): void {
+    setAlertOpen(open);
+  }
+
+  return (
+    <AlertDialog open={alertOpen} onOpenChange={handleAlertOpenChange}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-7 w-7">
+            <MoreHorizontal className="h-3.5 w-3.5" />
+            <span className="sr-only">Product actions</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link href={`/inventory/products/${product.id}`}>View</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href={`/inventory/products/${product.id}`}>Edit</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {canUpdate && !product.isArchived && product.status === "ACTIVE" && (
+            <DropdownMenuItem onClick={handleArchive}>Archive</DropdownMenuItem>
+          )}
+          {canUpdate && product.isArchived && (
+            <DropdownMenuItem onClick={handleRestore}>Restore</DropdownMenuItem>
+          )}
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem className="text-destructive focus:text-destructive">
+              Delete
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete product?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. Archiving preserves history without removing the product.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDeleteConfirm} disabled={deleteMutation.isPending}>
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -93,6 +206,7 @@ function ProductsPageInner() {
   const search = searchParams.get("search") ?? "";
   const statusParam = searchParams.get("status") ?? "";
   const categoryIdParam = searchParams.get("categoryId") ?? "";
+  const productTypeParam = searchParams.get("productType") ?? "";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
 
   function updateParams(updates: Record<string, string | null>): void {
@@ -120,6 +234,10 @@ function ProductsPageInner() {
     updateParams({ categoryId: value === "all" ? null : value });
   }
 
+  function handleProductTypeChange(value: string): void {
+    updateParams({ productType: value === "all" ? null : value });
+  }
+
   function handlePageChange(nextPage: number): void {
     const params = new URLSearchParams(searchParams.toString());
     if (nextPage <= 1) {
@@ -140,11 +258,20 @@ function ProductsPageInner() {
         ? ("INACTIVE" as const)
         : undefined;
   const categoryId = categoryIdParam ? Number(categoryIdParam) : undefined;
+  const productTypeFilter =
+    productTypeParam === "STOCKABLE"
+      ? ("STOCKABLE" as const)
+      : productTypeParam === "CONSUMABLE"
+        ? ("CONSUMABLE" as const)
+        : productTypeParam === "SERVICE"
+          ? ("SERVICE" as const)
+          : undefined;
 
   const productsQuery = useProducts({
     search: search || undefined,
     status: statusFilter,
     categoryId,
+    productType: productTypeFilter,
     page,
     limit: PAGE_LIMIT,
   });
@@ -160,7 +287,7 @@ function ProductsPageInner() {
     router.replace("?", { scroll: false });
   }
 
-  const hasFilters = !!(search || statusParam || categoryIdParam);
+  const hasFilters = !!(search || statusParam || categoryIdParam || productTypeParam);
 
   const columns: DataTableColumn<InventoryProduct>[] = [
     {
@@ -197,6 +324,12 @@ function ProductsPageInner() {
       cell: (p) => p.category?.name ?? "—",
     },
     {
+      key: "tracking",
+      header: "Tracking",
+      headerClassName: "w-[90px]",
+      cell: (p) => <TrackingBadge method={p.trackingMethod} />,
+    },
+    {
       key: "uom",
       header: "UOM",
       headerClassName: "w-[80px]",
@@ -230,6 +363,12 @@ function ProductsPageInner() {
       headerClassName: "w-[80px]",
       cell: (p) => <StatusBadge status={p.status} />,
     },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-8",
+      cell: (p) => <ProductRowActions product={p} />,
+    },
   ];
 
   const filtersRow = (
@@ -244,10 +383,7 @@ function ProductsPageInner() {
         />
       </div>
       <div className="hidden min-w-0 flex-[2] flex-row flex-nowrap items-center gap-2 sm:flex">
-        <Select
-          value={statusParam || "all"}
-          onValueChange={handleStatusChange}
-        >
+        <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
           <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
@@ -257,10 +393,7 @@ function ProductsPageInner() {
             <SelectItem value="INACTIVE">Inactive</SelectItem>
           </SelectContent>
         </Select>
-        <Select
-          value={categoryIdParam || "all"}
-          onValueChange={handleCategoryChange}
-        >
+        <Select value={categoryIdParam || "all"} onValueChange={handleCategoryChange}>
           <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
@@ -271,6 +404,17 @@ function ProductsPageInner() {
                 {cat.name}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={productTypeParam || "all"} onValueChange={handleProductTypeChange}>
+          <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
+            <SelectValue placeholder="All types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            <SelectItem value="STOCKABLE">Stockable</SelectItem>
+            <SelectItem value="CONSUMABLE">Consumable</SelectItem>
+            <SelectItem value="SERVICE">Service</SelectItem>
           </SelectContent>
         </Select>
       </div>

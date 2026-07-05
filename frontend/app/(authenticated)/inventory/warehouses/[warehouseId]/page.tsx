@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, use, type ChangeEvent } from "react";
+import { useState, useCallback, useMemo, use } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Plus, MapPin } from "lucide-react";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
@@ -10,72 +10,23 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ErrorState } from "@/components/shared";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
-import Link from "next/link";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useWarehouse, useLocations, useCreateLocation } from "@/hooks/api/inventory/warehouses";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { useWarehouse, useLocations } from "@/hooks/api/inventory/warehouses";
+import type { LocationType, WarehouseLocation } from "@/hooks/api/inventory/warehouses";
 import { cn } from "@/lib/utils";
+import {
+  LOCATION_TYPE_ORDER,
+  LOCATION_TYPE_LABELS,
+  LOCATION_TYPE_COLORS,
+  SPECIAL_LOCATION_TYPES,
+} from "@/features/inventory/components/warehouse/location-type-constants";
+import { AddLocationSheet } from "@/features/inventory/components/warehouse/add-location-sheet";
+import { WarehouseStockTab } from "@/features/inventory/components/warehouse/warehouse-stock-tab";
 
-type LocationType = "ZONE" | "AISLE" | "RACK" | "BIN";
-
-interface Location {
-  id: number;
-  name: string;
-  code: string;
-  locationType: LocationType;
-  parentLocationId?: number | null;
-  isActive: boolean;
-  children?: Location[];
-}
-
-interface AddLocationFormState {
-  name: string;
-  code: string;
-  locationType: LocationType;
-  parentLocationId: string;
-}
-
-const LOCATION_TYPE_ORDER: LocationType[] = ["ZONE", "AISLE", "RACK", "BIN"];
-
-const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
-  ZONE: "Zone",
-  AISLE: "Aisle",
-  RACK: "Rack",
-  BIN: "Bin",
-};
-
-function isLocationType(val: string): val is LocationType {
-  return val in LOCATION_TYPE_LABELS;
-}
-
-const LOCATION_TYPE_COLORS: Record<LocationType, string> = {
-  ZONE: "bg-violet-50 text-violet-700 border-violet-200/70",
-  AISLE: "bg-blue-50 text-blue-700 border-blue-200/70",
-  RACK: "bg-amber-50 text-amber-700 border-amber-200/70",
-  BIN: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
-};
-
-function groupByType(locations: Location[]): Map<LocationType, Location[]> {
-  const map = new Map<LocationType, Location[]>();
+function groupByType(locations: WarehouseLocation[]): Map<LocationType, WarehouseLocation[]> {
+  const map = new Map<LocationType, WarehouseLocation[]>();
   for (const lt of LOCATION_TYPE_ORDER) {
     map.set(lt, []);
   }
@@ -86,7 +37,7 @@ function groupByType(locations: Location[]): Map<LocationType, Location[]> {
   return map;
 }
 
-function LocationRow({ location }: { location: Location }) {
+function LocationRow({ location }: { location: WarehouseLocation }) {
   return (
     <div className="flex items-center justify-between gap-2 py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors">
       <div className="flex items-center gap-2 min-w-0">
@@ -100,16 +51,28 @@ function LocationRow({ location }: { location: Location }) {
           {LOCATION_TYPE_LABELS[location.locationType]}
         </Badge>
         <span className="text-sm font-medium text-foreground truncate">{location.name}</span>
-        <span className="text-[11px] text-muted-foreground font-mono shrink-0">{location.code}</span>
+        <span className="text-[11px] text-muted-foreground font-mono shrink-0">
+          {location.code}
+        </span>
       </div>
-      {!location.isActive && (
-        <Badge
-          variant="outline"
-          className="h-4 text-[9px] px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200 shrink-0"
-        >
-          Inactive
-        </Badge>
-      )}
+      <div className="flex items-center gap-1.5 shrink-0">
+        {SPECIAL_LOCATION_TYPES.includes(location.locationType) && (
+          <Badge
+            variant="outline"
+            className="h-4 text-[9px] px-1.5 py-0 bg-slate-100 text-slate-500 border-slate-200 shrink-0"
+          >
+            Special
+          </Badge>
+        )}
+        {!location.isActive && (
+          <Badge
+            variant="outline"
+            className="h-4 text-[9px] px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200 shrink-0"
+          >
+            Inactive
+          </Badge>
+        )}
+      </div>
     </div>
   );
 }
@@ -135,15 +98,8 @@ export default function WarehouseDetailPage({
     isError: locError,
     refetch: refetchLocations,
   } = useLocations(warehouseId);
-  const createLocation = useCreateLocation();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [form, setForm] = useState<AddLocationFormState>({
-    name: "",
-    code: "",
-    locationType: "ZONE",
-    parentLocationId: "",
-  });
 
   const warehouse = warehouseData;
   const locations = useMemo(
@@ -152,97 +108,12 @@ export default function WarehouseDetailPage({
   );
   const grouped = useMemo(() => groupByType(locations), [locations]);
 
-  const parentOptions = useMemo(
-    () =>
-      locations.filter(
-        (l) =>
-          l.locationType === "ZONE" ||
-          l.locationType === "AISLE" ||
-          l.locationType === "RACK",
-      ),
-    [locations],
-  );
-
-  const setField = useCallback(
-    <K extends keyof AddLocationFormState>(key: K, value: AddLocationFormState[K]) => {
-      setForm((prev) => ({ ...prev, [key]: value }));
-    },
-    [],
-  );
-
-  const handleOpenSheet = useCallback(() => {
-    setForm({ name: "", code: "", locationType: "ZONE", parentLocationId: "" });
-    setSheetOpen(true);
-  }, []);
-
-  const handleSheetOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setSheetOpen(false);
-      setForm({ name: "", code: "", locationType: "ZONE", parentLocationId: "" });
-    }
-  }, []);
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   function handleRetry() {
     void refetchWarehouse();
     void refetchLocations();
   }
-
-  const handleLocationTypeChange = useCallback(
-    (v: string) => {
-      if (isLocationType(v)) setField("locationType", v);
-    },
-    [setField],
-  );
-
-  const handleLocationNameChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setField("name", e.target.value),
-    [setField],
-  );
-
-  const handleLocationCodeChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setField("code", e.target.value),
-    [setField],
-  );
-
-  const handleParentLocationChange = useCallback(
-    (v: string) => setField("parentLocationId", v === "none" ? "" : v),
-    [setField],
-  );
-
-  const handleCancelSheet = useCallback(() => {
-    setSheetOpen(false);
-    setForm({ name: "", code: "", locationType: "ZONE", parentLocationId: "" });
-  }, []);
-
-  const handleSubmit = useCallback(() => {
-    const name = form.name.trim();
-    const code = form.code.trim().toUpperCase();
-    if (!name) {
-      toast.error("Location name is required");
-      return;
-    }
-    if (!code) {
-      toast.error("Location code is required");
-      return;
-    }
-    createLocation.mutate(
-      {
-        warehouseId,
-        name,
-        code,
-        locationType: form.locationType,
-        parentLocationId: form.parentLocationId ? Number(form.parentLocationId) : undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Location added");
-          setSheetOpen(false);
-          setForm({ name: "", code: "", locationType: "ZONE", parentLocationId: "" });
-        },
-        onError: (err: unknown) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [form, warehouseId, createLocation]);
 
   const isLoading = whLoading || locLoading;
   const isError = whError || locError;
@@ -352,143 +223,73 @@ export default function WarehouseDetailPage({
         </Button>
       }
     >
-      {locations.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyWarehouseIllustration />}
-          title="No locations yet"
-          description="Add zones, aisles, racks, and bins to organize stock within this warehouse."
-          action={{ label: "Add Location", onClick: handleOpenSheet }}
-        />
-      ) : (
-        <motion.div
-          className="space-y-4"
-          variants={shouldReduceMotion ? undefined : staggerContainer}
-          initial={shouldReduceMotion ? undefined : "hidden"}
-          animate={shouldReduceMotion ? undefined : "visible"}
-        >
-          {LOCATION_TYPE_ORDER.map((lt) => {
-            const items = grouped.get(lt) ?? [];
-            if (items.length === 0) return null;
-            return (
-              <motion.div
-                key={lt}
-                variants={shouldReduceMotion ? undefined : fadeUp}
-              >
-                <Card>
-                  <CardHeader className="pb-2 pt-4 px-4">
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className={cn("text-[9px] h-4 px-1.5 py-0", LOCATION_TYPE_COLORS[lt])}
-                      >
-                        {LOCATION_TYPE_LABELS[lt]}
-                      </Badge>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {items.length} {items.length === 1 ? "location" : "locations"}
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4">
-                    <div className="divide-y divide-border/50">
-                      {items.map((loc) => (
-                        <LocationRow key={loc.id} location={loc} />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      )}
+      <Tabs defaultValue="locations">
+        <TabsList>
+          <TabsTrigger value="locations">Locations</TabsTrigger>
+          <TabsTrigger value="stock">Stock</TabsTrigger>
+        </TabsList>
 
-      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col gap-0 p-0">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b">
-            <SheetTitle>Add Location</SheetTitle>
-            <SheetDescription>
-              Add a zone, aisle, rack, or bin to {warehouse.name}.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="loc-type">
-                Location Type <span className="text-destructive">*</span>
-              </Label>
-              <Select value={form.locationType} onValueChange={handleLocationTypeChange}>
-                <SelectTrigger id="loc-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LOCATION_TYPE_ORDER.map((lt) => (
-                    <SelectItem key={lt} value={lt}>
-                      {LOCATION_TYPE_LABELS[lt]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="loc-name">
-                Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="loc-name"
-                placeholder="Zone A"
-                value={form.name}
-                onChange={handleLocationNameChange}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="loc-code">
-                Code <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="loc-code"
-                placeholder="ZA"
-                value={form.code}
-                onChange={handleLocationCodeChange}
-                className="font-mono"
-              />
-            </div>
-            {parentOptions.length > 0 && (
-              <div className="space-y-1.5">
-                <Label htmlFor="loc-parent">Parent Location</Label>
-                <Select
-                  value={form.parentLocationId || "none"}
-                  onValueChange={handleParentLocationChange}
-                >
-                  <SelectTrigger id="loc-parent">
-                    <SelectValue placeholder="None" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {parentOptions.map((loc) => (
-                      <SelectItem key={loc.id} value={String(loc.id)}>
-                        {loc.name} ({loc.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-          <SheetFooter className="shrink-0 px-6 py-4 border-t">
-            <div className="grid w-full grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                onClick={handleCancelSheet}
-                disabled={createLocation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSubmit} disabled={createLocation.isPending}>
-                {createLocation.isPending ? "Adding…" : "Add Location"}
-              </Button>
-            </div>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+        <TabsContent value="locations">
+          {locations.length === 0 ? (
+            <EmptyState
+              illustration={<EmptyWarehouseIllustration />}
+              title="No locations yet"
+              description="Add zones, aisles, racks, and bins to organize stock within this warehouse."
+              action={{ label: "Add Location", onClick: handleOpenSheet }}
+            />
+          ) : (
+            <motion.div
+              className="space-y-4"
+              variants={shouldReduceMotion ? undefined : staggerContainer}
+              initial={shouldReduceMotion ? undefined : "hidden"}
+              animate={shouldReduceMotion ? undefined : "visible"}
+            >
+              {LOCATION_TYPE_ORDER.map((lt) => {
+                const items = grouped.get(lt) ?? [];
+                if (items.length === 0) return null;
+                return (
+                  <motion.div key={lt} variants={shouldReduceMotion ? undefined : fadeUp}>
+                    <Card>
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={cn("text-[9px] h-4 px-1.5 py-0", LOCATION_TYPE_COLORS[lt])}
+                          >
+                            {LOCATION_TYPE_LABELS[lt]}
+                          </Badge>
+                          <span className="text-[11px] text-muted-foreground tabular-nums">
+                            {items.length} {items.length === 1 ? "location" : "locations"}
+                          </span>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4">
+                        <div className="divide-y divide-border/50">
+                          {items.map((loc) => (
+                            <LocationRow key={loc.id} location={loc} />
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="stock">
+          <WarehouseStockTab warehouseId={warehouseId} />
+        </TabsContent>
+      </Tabs>
+
+      <AddLocationSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        warehouseId={warehouseId}
+        warehouseName={warehouse.name}
+        locations={locations}
+      />
     </PageWrapper>
   );
 }

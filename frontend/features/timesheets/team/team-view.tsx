@@ -24,7 +24,7 @@ import { useReportsOverview } from "@/hooks/api/timesheets/reports";
 import { useHrEmployees } from "@/hooks/api/hr";
 import { PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
-import type { Employee, PaginatedEmployees } from "@/types/hr";
+import type { Employee } from "@/types/hr";
 import { TeamStats } from "./team-stats";
 import { TeamTable, type TeamMemberRow } from "./team-table";
 import { MemberDetailSheet } from "./member-detail-sheet";
@@ -86,7 +86,7 @@ export function TeamView() {
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const employees: Employee[] = Array.isArray(employeesRaw)
     ? employeesRaw
-    : (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
+    : employeesRaw?.data ?? [];
 
   const periodsForWeek = useMemo<TimesheetPeriod[]>(() => {
     if (!periodsData) return [];

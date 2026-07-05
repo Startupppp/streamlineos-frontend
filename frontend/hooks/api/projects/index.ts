@@ -18,3 +18,7 @@ export * from "./custom-states";
 export * from "./automations";
 export * from "./recurring";
 export * from "./ticket-search";
+export * from "./qa";
+export * from "./bugs";
+export * from "./change-requests";
+export * from "./client-portal";

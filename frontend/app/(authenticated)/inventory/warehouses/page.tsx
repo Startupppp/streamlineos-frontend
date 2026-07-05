@@ -27,6 +27,7 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { ErrorState } from "@/components/shared";
 import { toast } from "sonner";
 import { staggerContainer } from "@/lib/motion-variants";
@@ -41,10 +42,11 @@ interface WarehouseFormState {
   city: string;
   state: string;
   country: string;
+  isActive: boolean;
 }
 
 function blankForm(): WarehouseFormState {
-  return { name: "", code: "", address: "", city: "", state: "", country: "" };
+  return { name: "", code: "", address: "", city: "", state: "", country: "", isActive: true };
 }
 
 function WarehousesLoading() {
@@ -136,9 +138,12 @@ export default function WarehousesPage() {
     router.replace("?", { scroll: false });
   }, [router]);
 
-  const setField = useCallback((key: keyof WarehouseFormState, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const setField = useCallback(
+    <K extends keyof WarehouseFormState>(key: K, value: WarehouseFormState[K]) => {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const handleOpenSheet = useCallback(() => {
     setForm(blankForm());
@@ -181,6 +186,11 @@ export default function WarehousesPage() {
     [setField],
   );
 
+  const handleIsActiveChange = useCallback(
+    (v: boolean) => setField("isActive", v),
+    [setField],
+  );
+
   const handleCancelSheet = useCallback(() => {
     setSheetOpen(false);
     setForm(blankForm());
@@ -205,6 +215,7 @@ export default function WarehousesPage() {
         city: form.city.trim() || undefined,
         state: form.state.trim() || undefined,
         country: form.country.trim() || undefined,
+        isActive: form.isActive,
       },
       {
         onSuccess: () => {
@@ -369,6 +380,15 @@ export default function WarehousesPage() {
                 value={form.country}
                 onChange={handleCountryChange}
               />
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <Label className="text-[13px] font-medium">Active</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Allow stock operations in this warehouse
+                </p>
+              </div>
+              <Switch checked={form.isActive} onCheckedChange={handleIsActiveChange} />
             </div>
           </div>
           <SheetFooter className="shrink-0 px-6 py-4 border-t">

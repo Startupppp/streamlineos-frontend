@@ -1,5 +1,8 @@
 export type PurchaseOrderStatus = "DRAFT" | "SENT" | "PARTIAL" | "RECEIVED" | "CLOSED" | "CANCELLED";
 export type ProductStatus = "ACTIVE" | "INACTIVE" | "DISCONTINUED";
+export type ProductType = "STOCKABLE" | "CONSUMABLE" | "SERVICE";
+export type TrackingMethod = "NONE" | "LOT" | "SERIAL";
+export type CostingMethod = "STANDARD" | "WEIGHTED_AVERAGE" | "FIFO";
 
 export interface InventoryCategory {
   id: number;
@@ -17,6 +20,10 @@ export interface InventoryUom {
   name: string;
   abbreviation: string;
   isActive: boolean;
+  category?: string | null;
+  ratioToBase?: string | null;
+  roundingPrecision?: number | null;
+  isBase?: boolean;
 }
 
 export interface InventoryProductVariant {
@@ -61,6 +68,15 @@ export interface InventoryProduct {
   isActive?: boolean;
   variants?: InventoryProductVariant[];
   totalStock?: number;
+  productType?: ProductType | null;
+  trackingMethod?: TrackingMethod | null;
+  costingMethod?: CostingMethod | null;
+  standardCost?: string | null;
+  purchaseUomId?: number | null;
+  salesUomId?: number | null;
+  defaultVendorId?: number | null;
+  reorderEnabled?: boolean;
+  isArchived?: boolean;
 }
 
 export interface CreateProductInput {
@@ -75,6 +91,14 @@ export interface CreateProductInput {
   sellingPrice?: number;
   reorderPoint?: number;
   hasVariants?: boolean;
+  productType?: ProductType;
+  trackingMethod?: TrackingMethod;
+  costingMethod?: CostingMethod;
+  standardCost?: string;
+  purchaseUomId?: number;
+  salesUomId?: number;
+  defaultVendorId?: number;
+  reorderEnabled?: boolean;
 }
 
 export type UpdateProductInput = Omit<Partial<CreateProductInput>, "categoryId" | "uomId" | "barcode" | "description"> & {
@@ -142,7 +166,7 @@ export interface PurchaseOrderLine {
     id: number;
     name: string;
     sku: string;
-    product?: { id: number; name: string };
+    product?: { id: number; name: string; trackingMethod?: TrackingMethod | null };
   };
 }
 
@@ -153,6 +177,11 @@ export interface GoodsReceiptLine {
   quantityReceived: string;
   qualityStatus: "ACCEPTED" | "REJECTED";
   rejectionReason: string | null;
+  lotNumber: string | null;
+  expiryDate: string | null;
+  manufactureDate: string | null;
+  serialNumbers: string[] | null;
+  productVariant?: { id: number; name: string; sku: string };
 }
 
 export interface GoodsReceiptNote {
@@ -247,10 +276,125 @@ export interface ReceiveGoodsLineInput {
   quantityReceived: number;
   qualityStatus?: "ACCEPTED" | "REJECTED";
   rejectionReason?: string;
+  lotNumber?: string;
+  expiryDate?: string;
+  manufactureDate?: string;
+  serialNumbers?: string[];
+}
+
+export interface StockAvailabilityByWarehouse {
+  warehouseId: number;
+  warehouseName: string;
+  onHand: number;
+  committed: number;
+  available: number;
+}
+
+export interface StockAvailability {
+  variantId: number;
+  totalOnHand: number;
+  totalCommitted: number;
+  totalIncoming: number;
+  totalAvailable: number;
+  byWarehouse: StockAvailabilityByWarehouse[];
+}
+
+export interface StockReservation {
+  id: number;
+  reservationRef: string;
+  status: "ACTIVE" | "CONSUMED" | "RELEASED" | "EXPIRED";
+  productVariantId: number;
+  locationId: number | null;
+  quantity: number;
+  sourceType: string | null;
+  sourceId: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  variantName?: string | null;
+  variantSku?: string | null;
+  productName?: string | null;
+  locationName?: string | null;
+  warehouseName?: string | null;
+}
+
+export interface VendorPerformance {
+  vendorId: number;
+  onTimeRate: number;
+  fillRate: number;
+  returnRate: number;
+  avgLeadTimeDays: number;
+  openPoCount: number;
+  totalSpend: string;
+}
+
+export interface WarehouseStockRow {
+  locationId: number;
+  locationCode: string;
+  locationName: string;
+  productVariantId: number;
+  variantSku: string;
+  variantName: string;
+  productId: number;
+  productName: string;
+  onHand: number;
+  committed: number;
+  onOrder: number;
+}
+
+export interface WarehouseStockResult {
+  items: WarehouseStockRow[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface AdjustmentDetailLine {
+  id: number;
+  productVariantId: number;
+  locationId: number;
+  quantityChange: number;
+  variantName?: string | null;
+  variantSku?: string | null;
+  locationName?: string | null;
+  notes?: string | null;
+}
+
+export interface AdjustmentDetail {
+  id: number;
+  referenceNumber: string;
+  reason: string;
+  status: "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "POSTED" | "CANCELLED";
+  notes: string | null;
+  createdAt: string;
+  approvedAt?: string | null;
+  postedAt?: string | null;
+  createdByName?: string | null;
+  lines: AdjustmentDetailLine[];
+}
+
+export interface CreateOpeningStockLine {
+  variantId: number;
+  locationId: number;
+  qty: number;
+  unitCost: number;
+}
+
+export interface CreateOpeningStockInput {
+  lines: CreateOpeningStockLine[];
+}
+
+export interface CreateUomInput {
+  name: string;
+  abbreviation: string;
+  category?: string;
+  ratioToBase?: string;
+  roundingPrecision?: number;
+  isBase?: boolean;
 }
 
 export interface ReceiveGoodsInput {
   locationId: number;
+  receivedDate: string;
   notes?: string;
   lines: ReceiveGoodsLineInput[];
 }

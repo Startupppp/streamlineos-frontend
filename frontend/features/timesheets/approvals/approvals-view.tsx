@@ -29,7 +29,7 @@ import {
 import { useHrEmployees } from "@/hooks/api/hr";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
-import type { Employee, PaginatedEmployees } from "@/types/hr";
+import type { Employee } from "@/types/hr";
 import { cn } from "@/lib/utils";
 import { BulkRejectDialog } from "./bulk-reject-dialog";
 import { ApprovalDetailSheet } from "./approval-detail-sheet";
@@ -256,7 +256,7 @@ export function ApprovalsView() {
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const employees: Employee[] = Array.isArray(employeesRaw)
     ? employeesRaw
-    : (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
+    : employeesRaw?.data ?? [];
 
   const bulkApproveMutation = useBulkApprove();
   const bulkRejectMutation = useBulkReject();

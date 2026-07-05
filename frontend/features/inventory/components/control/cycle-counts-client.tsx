@@ -1,0 +1,331 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Plus, Eye } from "lucide-react";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState, SkeletonTable } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyWarehouseIllustration } from "@/components/illustrations";
+import {
+  useCycleCounts,
+  useCreateCycleCount,
+  type CycleCountListItem,
+} from "@/hooks/api/inventory/counts";
+import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
+import { useCategories } from "@/hooks/api/inventory/products";
+import {
+  CYCLE_COUNT_STATUS_BADGE,
+  CYCLE_COUNT_STATUS_LABEL,
+  type CycleCountStatus,
+} from "@/features/inventory/lib/inventory-status";
+
+const STATUS_OPTIONS: CycleCountStatus[] = ["PLANNED", "COUNTING", "REVIEW", "POSTED", "CANCELLED"];
+const PAGE_LIMIT = 20;
+
+function StatusBadge({ status }: { status: CycleCountStatus }) {
+  return (
+    <Badge variant="outline" className={`text-[9px] h-4 px-1.5 py-0 ${CYCLE_COUNT_STATUS_BADGE[status]}`}>
+      {CYCLE_COUNT_STATUS_LABEL[status]}
+    </Badge>
+  );
+}
+
+function NewCycleCountSheet({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [warehouseId, setWarehouseId] = useState<string>("");
+  const [locationId, setLocationId] = useState<string>("");
+  const [categoryId, setCategoryId] = useState<string>("");
+
+  const { data: warehouses = [] } = useWarehouses();
+  const { data: locations = [] } = useLocations(warehouseId ? Number(warehouseId) : 0);
+  const { data: categories = [] } = useCategories();
+  const createMutation = useCreateCycleCount();
+
+  function handleWarehouseChange(value: string): void {
+    setWarehouseId(value === "none" ? "" : value);
+    setLocationId("");
+  }
+
+  function handleLocationChange(value: string): void {
+    setLocationId(value === "none" ? "" : value);
+  }
+
+  function handleCategoryChange(value: string): void {
+    setCategoryId(value === "none" ? "" : value);
+  }
+
+  function handleClose(): void {
+    setWarehouseId("");
+    setLocationId("");
+    setCategoryId("");
+    onClose();
+  }
+
+  function handleSubmit(): void {
+    if (!warehouseId) return;
+    createMutation.mutate(
+      {
+        warehouseId: Number(warehouseId),
+        locationId: locationId ? Number(locationId) : undefined,
+        categoryId: categoryId ? Number(categoryId) : undefined,
+      },
+      { onSuccess: handleClose },
+    );
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+      <SheetContent className="w-full sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>New Cycle Count</SheetTitle>
+        </SheetHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="cc-warehouse">Warehouse *</Label>
+            <Select value={warehouseId || "none"} onValueChange={handleWarehouseChange}>
+              <SelectTrigger id="cc-warehouse" className="h-9 text-sm">
+                <SelectValue placeholder="Select warehouse" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Select warehouse…</SelectItem>
+                {warehouses.map((w) => (
+                  <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="cc-location">Location (optional)</Label>
+            <Select
+              value={locationId || "none"}
+              onValueChange={handleLocationChange}
+              disabled={!warehouseId}
+            >
+              <SelectTrigger id="cc-location" className="h-9 text-sm">
+                <SelectValue placeholder="All locations" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">All locations</SelectItem>
+                {locations.map((l) => (
+                  <SelectItem key={l.id} value={String(l.id)}>{l.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="cc-category">Category (optional)</Label>
+            <Select value={categoryId || "none"} onValueChange={handleCategoryChange}>
+              <SelectTrigger id="cc-category" className="h-9 text-sm">
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">All categories</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <SheetFooter>
+          <Button variant="outline" onClick={handleClose} disabled={createMutation.isPending}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!warehouseId || createMutation.isPending}
+          >
+            {createMutation.isPending ? "Creating…" : "Create Count"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export function CycleCountsClient() {
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const { data, isLoading, error, refetch } = useCycleCounts({
+    status: statusFilter === "all" ? undefined : statusFilter,
+    page,
+  });
+
+  const items = data?.items ?? [];
+  const total = data?.total ?? 0;
+
+  function handleStatusChange(value: string): void {
+    setStatusFilter(value);
+    setPage(1);
+  }
+
+  function handlePageChange(nextPage: number): void {
+    setPage(nextPage);
+  }
+
+  function handleRetry(): void {
+    void refetch();
+  }
+
+  function handleOpenSheet(): void {
+    setSheetOpen(true);
+  }
+
+  function handleCloseSheet(): void {
+    setSheetOpen(false);
+  }
+
+  const columns: DataTableColumn<CycleCountListItem>[] = [
+    {
+      key: "countNumber",
+      header: "#",
+      headerClassName: "w-[120px]",
+      className: "font-mono text-xs text-muted-foreground",
+      cell: (row) => row.countNumber,
+    },
+    {
+      key: "warehouse",
+      header: "Warehouse",
+      cell: (row) => row.warehouseName,
+    },
+    {
+      key: "location",
+      header: "Location",
+      className: "text-muted-foreground",
+      cell: (row) => row.locationName ?? "—",
+    },
+    {
+      key: "category",
+      header: "Category",
+      className: "text-muted-foreground",
+      cell: (row) => row.categoryName ?? "—",
+    },
+    {
+      key: "lineCount",
+      header: "Lines",
+      headerClassName: "w-[70px] text-right",
+      className: "text-right tabular-nums text-muted-foreground",
+      cell: (row) => row.lineCount,
+    },
+    {
+      key: "status",
+      header: "Status",
+      headerClassName: "w-[120px]",
+      cell: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      key: "createdAt",
+      header: "Created",
+      headerClassName: "w-[120px]",
+      className: "text-muted-foreground text-xs tabular-nums",
+      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-[60px]",
+      cell: (row) => (
+        <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+          <Link href={`/inventory/cycle-counts/${row.id}`}>
+            <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
+        </Button>
+      ),
+    },
+  ];
+
+  const filtersRow = (
+    <Select value={statusFilter} onValueChange={handleStatusChange}>
+      <SelectTrigger className="h-8 w-[160px] text-xs">
+        <SelectValue placeholder="All statuses" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All statuses</SelectItem>
+        {STATUS_OPTIONS.map((s) => (
+          <SelectItem key={s} value={s}>{CYCLE_COUNT_STATUS_LABEL[s]}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  return (
+    <>
+      <PageWrapper
+        eyebrow="Operations · Inventory"
+        title="Cycle Counts"
+        subtitle="Count inventory by location or category to verify stock accuracy."
+        filters={filtersRow}
+        actions={
+          <Button size="sm" onClick={handleOpenSheet}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            New Cycle Count
+          </Button>
+        }
+      >
+        {error ? (
+          <ErrorState
+            title="Failed to load cycle counts"
+            description={error.message}
+            onRetry={handleRetry}
+            className="min-h-[40vh]"
+          />
+        ) : isLoading ? (
+          <SkeletonTable rows={6} columns={8} />
+        ) : (
+          <DataTable
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyWarehouseIllustration />}
+                title="No cycle counts yet"
+                description="Create a cycle count to verify stock accuracy."
+                action={{ label: "New Cycle Count", onClick: handleOpenSheet }}
+                className="border-0 bg-transparent min-h-[40vh]"
+              />
+            }
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_LIMIT,
+              total,
+              onPageChange: handlePageChange,
+            }}
+            minWidth="640px"
+          />
+        )}
+      </PageWrapper>
+
+      <NewCycleCountSheet open={sheetOpen} onClose={handleCloseSheet} />
+    </>
+  );
+}

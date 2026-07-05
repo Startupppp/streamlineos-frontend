@@ -19,30 +19,24 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
+import { SO_STATUS_BADGE, SO_STATUS_LABEL, type SoStatus } from "@/features/inventory/lib";
 import {
   useSalesOrders,
-  type SalesOrderStatus,
   type SalesOrderListItem,
 } from "@/hooks/api/inventory/sales-orders";
 
-type StatusFilter = "all" | SalesOrderStatus;
+type StatusFilter = "all" | SoStatus;
+
+const SO_STATUSES: ReadonlyArray<SoStatus> = [
+  "DRAFT", "CONFIRMED", "PARTIALLY_RESERVED", "RESERVED",
+  "PICKED", "PACKED", "PARTIALLY_SHIPPED", "SHIPPED",
+  "INVOICED", "CLOSED", "CANCELLED",
+];
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
   { value: "all", label: "All statuses" },
-  { value: "DRAFT", label: "Draft" },
-  { value: "CONFIRMED", label: "Confirmed" },
-  { value: "SHIPPED", label: "Shipped" },
-  { value: "INVOICED", label: "Invoiced" },
-  { value: "CANCELLED", label: "Cancelled" },
+  ...SO_STATUSES.map((s): { value: StatusFilter; label: string } => ({ value: s, label: SO_STATUS_LABEL[s] })),
 ];
-
-const STATUS_BADGE_CLASS: Record<SalesOrderStatus, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  CONFIRMED: "bg-blue-50 text-blue-700 border-blue-200",
-  SHIPPED: "bg-amber-50 text-amber-700 border-amber-200",
-  INVOICED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200",
-};
 
 function isStatusFilter(v: string): v is StatusFilter {
   return STATUS_OPTIONS.some((o) => o.value === v);
@@ -105,9 +99,9 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
     cell: (so) => (
       <Badge
         variant="outline"
-        className={`h-4 text-[9px] px-1.5 py-0 ${STATUS_BADGE_CLASS[so.status]}`}
+        className={`h-4 text-[9px] px-1.5 py-0 ${SO_STATUS_BADGE[so.status]}`}
       >
-        {so.status}
+        {SO_STATUS_LABEL[so.status]}
       </Badge>
     ),
   },
@@ -132,9 +126,8 @@ function SalesOrdersListContent() {
     limit: 100,
   });
 
-  const items = query.data?.items ?? [];
-
   const filtered = useMemo(() => {
+    const items = query.data?.items ?? [];
     const q = deferredSearch.trim().toLowerCase();
     if (!q) return items;
     return items.filter(
@@ -142,7 +135,7 @@ function SalesOrdersListContent() {
         so.soNumber.toLowerCase().includes(q) ||
         (so.customerName?.toLowerCase().includes(q) ?? false),
     );
-  }, [items, deferredSearch]);
+  }, [query.data?.items, deferredSearch]);
 
   const isFiltered =
     statusFilter !== "all" || !!dateFromParam || !!dateToParam || !!deferredSearch.trim();
@@ -223,7 +216,7 @@ function SalesOrdersListContent() {
         />
       </div>
       <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 w-[140px] min-w-0 text-xs">
+        <SelectTrigger className="h-8 w-[160px] min-w-0 text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

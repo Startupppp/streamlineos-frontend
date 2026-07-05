@@ -4,7 +4,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export type SalesOrderStatus = "DRAFT" | "CONFIRMED" | "SHIPPED" | "INVOICED" | "CANCELLED";
+export type SalesOrderStatus =
+  | "DRAFT"
+  | "CONFIRMED"
+  | "PARTIALLY_RESERVED"
+  | "RESERVED"
+  | "PICKED"
+  | "PACKED"
+  | "PARTIALLY_SHIPPED"
+  | "SHIPPED"
+  | "INVOICED"
+  | "CLOSED"
+  | "CANCELLED";
 
 interface SalesOrderFilters {
   clientId?: number;
@@ -104,8 +115,8 @@ interface ConfirmSalesOrderInput {
 
 interface ShipSalesOrderInput {
   soId: number;
-  shippedLines: Array<{ productId: number; shippedQty: number; locationId?: number }>;
   shipDate?: string;
+  carrierId?: number;
   trackingNumber?: string;
   notes?: string;
 }
@@ -344,11 +355,17 @@ export function useShipSalesOrder() {
   const qc = useQueryClient();
   return useMutation<void, Error, ShipSalesOrderInput>({
     mutationKey: ["inventory", "salesOrders", "ship"],
-    mutationFn: ({ soId, shipDate, trackingNumber, notes }) =>
-      apiClient.post<void>(`/inventory/sales-orders/${soId}/ship`, {
-        shipDate: shipDate ?? todayIso(),
-        notes: notes ?? (trackingNumber ? `Tracking: ${trackingNumber}` : undefined),
-      }),
+    mutationFn: ({ soId, shipDate, carrierId, trackingNumber, notes }) =>
+      apiClient.post<void>(
+        `/inventory/sales-orders/${soId}/ship`,
+        {
+          shipDate: shipDate ?? todayIso(),
+          ...(carrierId !== undefined ? { carrierId } : {}),
+          ...(trackingNumber !== undefined ? { trackingNumber } : {}),
+          ...(notes !== undefined ? { notes } : {}),
+        },
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+      ),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
@@ -362,6 +379,143 @@ export function useInvoiceSalesOrder() {
   return useMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>({
     mutationKey: ["inventory", "salesOrders", "invoice"],
     mutationFn: ({ soId }) => apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    },
+  });
+}
+
+interface ReserveAllocation {
+  soLineId: number;
+  locationId: number;
+  lotId?: number;
+  serialId?: number;
+  qty: number;
+}
+
+interface ReserveSalesOrderInput {
+  soId: number;
+  warehouseId?: number;
+  allocations?: ReserveAllocation[];
+}
+
+interface ReserveSalesOrderResult {
+  status: SalesOrderStatus;
+  shortfalls?: Array<{ soLineId: number; requested: number; available: number }>;
+}
+
+interface PickSalesOrderLine {
+  soLineId: number;
+  locationId: number;
+  lotId?: number;
+  serialId?: number;
+  quantityPicked: number;
+}
+
+interface PickSalesOrderInput {
+  soId: number;
+  lines: PickSalesOrderLine[];
+}
+
+interface PackSalesOrderInput {
+  soId: number;
+  weight?: number;
+  dimensionsL?: number;
+  dimensionsW?: number;
+  dimensionsH?: number;
+}
+
+interface CancelSalesOrderInput {
+  soId: number;
+  reason?: string;
+}
+
+interface UpdateSalesOrderInput {
+  soId: number;
+  clientId?: number;
+  orderDate?: string;
+  requiredDate?: string;
+  shippingAddress?: string;
+  warehouseId?: number;
+  currency?: string;
+  notes?: string;
+}
+
+export function useReserveSalesOrder() {
+  const qc = useQueryClient();
+  return useMutation<ReserveSalesOrderResult, Error, ReserveSalesOrderInput>({
+    mutationKey: ["inventory", "salesOrders", "reserve"],
+    mutationFn: ({ soId, warehouseId, allocations }) =>
+      apiClient.post<ReserveSalesOrderResult>(
+        `/inventory/sales-orders/${soId}/reserve`,
+        {
+          ...(warehouseId !== undefined ? { warehouseId } : {}),
+          ...(allocations !== undefined ? { allocations } : {}),
+        },
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+      ),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    },
+  });
+}
+
+export function usePickSalesOrder() {
+  const qc = useQueryClient();
+  return useMutation<void, Error, PickSalesOrderInput>({
+    mutationKey: ["inventory", "salesOrders", "pick"],
+    mutationFn: ({ soId, lines }) =>
+      apiClient.post<void>(`/inventory/sales-orders/${soId}/pick`, { lines }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    },
+  });
+}
+
+export function usePackSalesOrder() {
+  const qc = useQueryClient();
+  return useMutation<void, Error, PackSalesOrderInput>({
+    mutationKey: ["inventory", "salesOrders", "pack"],
+    mutationFn: ({ soId, weight, dimensionsL, dimensionsW, dimensionsH }) =>
+      apiClient.post<void>(`/inventory/sales-orders/${soId}/pack`, {
+        ...(weight !== undefined ? { weight } : {}),
+        ...(dimensionsL !== undefined ? { dimensionsL } : {}),
+        ...(dimensionsW !== undefined ? { dimensionsW } : {}),
+        ...(dimensionsH !== undefined ? { dimensionsH } : {}),
+      }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    },
+  });
+}
+
+export function useCancelSalesOrder() {
+  const qc = useQueryClient();
+  return useMutation<void, Error, CancelSalesOrderInput>({
+    mutationKey: ["inventory", "salesOrders", "cancel"],
+    mutationFn: ({ soId, reason }) =>
+      apiClient.post<void>(
+        `/inventory/sales-orders/${soId}/cancel`,
+        { ...(reason !== undefined ? { reason } : {}) },
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+      ),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    },
+  });
+}
+
+export function useUpdateSalesOrder() {
+  const qc = useQueryClient();
+  return useMutation<void, Error, UpdateSalesOrderInput>({
+    mutationKey: ["inventory", "salesOrders", "update"],
+    mutationFn: ({ soId, ...body }) =>
+      apiClient.patch<void>(`/inventory/sales-orders/${soId}`, body),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
