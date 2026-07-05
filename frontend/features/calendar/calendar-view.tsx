@@ -21,7 +21,13 @@ import {
   isSameMonth,
   isWithinInterval,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus, Download, Ticket } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusIcon,
+  DownloadIcon,
+} from "@animateicons/react/lucide";
+import { Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -336,6 +342,31 @@ export function CalendarView() {
     setScrollKey((key) => key + 1);
   }, []);
 
+  const handleMonthChange = useCallback(
+    (monthStr: string) => {
+      const month = parseInt(monthStr, 10);
+      setCurrentDate((d) => {
+        const year = d.getFullYear();
+        if (view === "month") return new Date(year, month, 1);
+        const maxDay = new Date(year, month + 1, 0).getDate();
+        return new Date(year, month, Math.min(d.getDate(), maxDay));
+      });
+    },
+    [view],
+  );
+
+  const handleYearChange = useCallback(
+    (yearStr: string) => {
+      const year = parseInt(yearStr, 10);
+      setCurrentDate((d) => {
+        if (view === "month") return new Date(year, d.getMonth(), 1);
+        const maxDay = new Date(year, d.getMonth() + 1, 0).getDate();
+        return new Date(year, d.getMonth(), Math.min(d.getDate(), maxDay));
+      });
+    },
+    [view],
+  );
+
   const handleExport = useCallback(
     async (range: "month" | "3months" | "year") => {
       let from: Date;
@@ -418,69 +449,50 @@ export function CalendarView() {
             aria-label="Previous"
             onClick={handlePrev}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeftIcon size={16} />
           </Button>
-          {view === "month" ? (
-            <>
-              <div className="min-w-0 flex-1 md:flex-none md:w-[120px]">
-                <Select
-                  value={String(calMonth)}
-                  onValueChange={(v) =>
-                    setCurrentDate(new Date(calYear, parseInt(v), 1))
-                  }
-                >
-                  <SelectTrigger className={cn(toolbarControlClassName, "w-full min-w-0")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MONTHS.map((m, i) => (
-                      <SelectItem key={m} value={String(i)} className="text-xs">
-                        {m}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="min-w-0 flex-1 md:flex-none md:w-[88px]">
-                <Select
-                  value={String(calYear)}
-                  onValueChange={(v) =>
-                    setCurrentDate(new Date(parseInt(v), calMonth, 1))
-                  }
-                >
-                  <SelectTrigger className={cn(toolbarControlClassName, "w-full min-w-0")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {yearOptions.map((y) => (
-                      <SelectItem key={y} value={String(y)} className="text-xs">
-                        {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          ) : (
-            <span className="min-w-0 flex-1 text-center text-xs font-semibold sm:text-sm">
-              {view === "week" && (
-                <>
-                  <span className="sm:hidden">
-                    {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d")}
-                  </span>
-                  <span className="hidden sm:inline">
-                    {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
-                  </span>
-                </>
-              )}
-              {view === "day" && (
-                <>
-                  <span className="sm:hidden">{format(currentDate, "MMM d, yyyy")}</span>
-                  <span className="hidden sm:inline">{format(currentDate, "EEE, MMM d, yyyy")}</span>
-                </>
-              )}
-            </span>
-          )}
+          <div
+            className={cn(
+              "min-w-0 md:w-[100px] md:shrink-0 md:flex-none",
+              showTodayButton
+                ? "w-[88px] shrink-0 sm:w-[96px]"
+                : "flex-1",
+            )}
+          >
+            <Select value={String(calMonth)} onValueChange={handleMonthChange}>
+              <SelectTrigger className={cn(toolbarControlClassName, "w-full min-w-0 px-2")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTHS.map((m, i) => (
+                  <SelectItem key={m} value={String(i)} className="text-xs">
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div
+            className={cn(
+              "min-w-0 md:w-[88px] md:shrink-0 md:flex-none",
+              showTodayButton
+                ? "w-[76px] shrink-0"
+                : "flex-1",
+            )}
+          >
+            <Select value={String(calYear)} onValueChange={handleYearChange}>
+              <SelectTrigger className={cn(toolbarControlClassName, "w-full min-w-0 px-2")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {yearOptions.map((y) => (
+                  <SelectItem key={y} value={String(y)} className="text-xs">
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             variant="outline"
             size="icon"
@@ -488,13 +500,16 @@ export function CalendarView() {
             aria-label="Next"
             onClick={handleNext}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRightIcon size={16} />
           </Button>
           {showTodayButton ? (
             <Button
               variant="outline"
               size="sm"
-              className={cn(toolbarControlClassName, "shrink-0 hover:bg-card")}
+              className={cn(
+                toolbarControlClassName,
+                "min-w-0 flex-1 md:flex-none md:shrink-0 hover:bg-card",
+              )}
               onClick={handleToday}
             >
               Today
@@ -512,12 +527,11 @@ export function CalendarView() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                size="sm"
-                className={cn(toolbarControlClassName, "hover:bg-card px-2 sm:px-3")}
+                size="icon"
+                className={cn(toolbarControlClassName, "h-8 w-8 shrink-0 hover:bg-card")}
                 aria-label="Export calendar"
               >
-                <Download className="h-3.5 w-3.5 sm:mr-1" />
-                <span className="hidden sm:inline">Export</span>
+                <DownloadIcon size={14} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
@@ -542,13 +556,13 @@ export function CalendarView() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" className="h-8 text-xs gap-1 px-2 sm:px-3">
-                <Plus className="h-3.5 w-3.5" />
+                <PlusIcon size={14} />
                 <span className="hidden sm:inline">Add</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem className="text-xs" onClick={handleOpenCreate}>
-                <Plus className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                <PlusIcon size={14} className="mr-2 text-muted-foreground" />
                 Add event
               </DropdownMenuItem>
               <DropdownMenuItem className="text-xs" onClick={handleOpenCreateTicket}>
@@ -610,7 +624,7 @@ export function CalendarView() {
               className="justify-start h-8 text-xs gap-2"
               onClick={handleSlotChooseEvent}
             >
-              <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+              <PlusIcon size={14} className="text-muted-foreground" />
               Calendar event
             </Button>
             <Button

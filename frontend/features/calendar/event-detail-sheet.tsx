@@ -14,17 +14,19 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
+  MapPinIcon,
+  Trash2Icon,
+  DownloadIcon,
+  UsersIcon,
+  CheckIcon,
+  XIcon,
+  MicIcon,
+} from "@animateicons/react/lucide";
+import {
   CalendarIcon,
-  MapPin,
-  Trash2,
   Tag,
   Pencil,
-  Download,
-  Users,
-  Check,
-  X,
   HelpCircle,
-  Mic,
   Ticket,
 } from "lucide-react";
 import {
@@ -158,7 +160,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                   </div>
                   {event.location && (
                     <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <MapPinIcon size={14} className="shrink-0 mt-0.5" />
                       {event.location.startsWith("http") ? (
                         <a
                           href={event.location}
@@ -234,7 +236,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                                 className="text-xs text-muted-foreground hover:text-destructive transition-colors duration-150 flex items-center gap-1 shrink-0"
                                 aria-label="Unlink ticket"
                               >
-                                <X className="h-3 w-3" />
+                                <XIcon size={12} />
                                 Unlink
                               </button>
                             )}
@@ -251,7 +253,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                                 className="text-xs text-muted-foreground hover:text-destructive transition-colors duration-150 flex items-center gap-1 shrink-0"
                                 aria-label="Unlink ticket"
                               >
-                                <X className="h-3 w-3" />
+                                <XIcon size={12} />
                                 Unlink
                               </button>
                             )}
@@ -279,7 +281,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                             onClick={() => handleRsvp("accepted")}
                             aria-label="Accept event"
                           >
-                            <Check className="h-3 w-3" />
+                            <CheckIcon size={12} />
                             Accept
                           </Button>
                           <Button
@@ -301,7 +303,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                             onClick={() => handleRsvp("declined")}
                             aria-label="Decline event"
                           >
-                            <X className="h-3 w-3" />
+                            <XIcon size={12} />
                             Decline
                           </Button>
                         </div>
@@ -314,7 +316,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                       <Separator />
                       <div className="space-y-2">
                         <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                          <Users className="h-3 w-3" />
+                          <UsersIcon size={12} />
                           Attendees ({attendees.length})
                         </div>
                         <div className="space-y-1.5">
@@ -367,7 +369,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                   size="sm"
                   className="w-full h-8 text-xs gap-1.5 bg-orange-500 hover:bg-orange-600 text-white"
                 >
-                  <Mic className="h-3.5 w-3.5" />
+                  <MicIcon size={14} />
                   Join Huddle
                 </Button>
               </Link>
@@ -381,7 +383,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={() => setConfirmOpen(true)}
               >
-                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                <Trash2Icon size={14} className="mr-1.5" />
                 Delete
               </Button>
             ) : (
@@ -394,7 +396,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                 onClick={handleExportIcs}
                 aria-label="Export as .ics"
               >
-                <Download className="h-3.5 w-3.5 mr-1.5" />
+                <DownloadIcon size={14} className="mr-1.5" />
                 .ics
               </Button>
               {isCalendarEvent && event?.category !== "huddle" && (

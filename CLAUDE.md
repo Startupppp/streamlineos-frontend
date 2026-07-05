@@ -64,6 +64,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 - **Do NOT add `app/api/**` business routes or `lib/services/**` business logic in the frontend.** The only `app/api/**` allowed are NextAuth / auth-bridge routes.
 - **DB schema source-of-truth is the backend:** `backend/src/db/schema/**`. Drizzle config (`backend/drizzle.config.ts`) and migrations (`backend/migrations/`) live in the backend. Run migrations from the backend only: `pnpm -C backend db:generate` · `db:push` · `db:migrate`.
 - Frontend keeps a **minimal auth-only** schema at `frontend/lib/db/schema/` (`enums.ts`, `auth.ts`, `shared.ts`) for NextAuth's DrizzleAdapter only. No business-domain tables there.
+- **External app integrations (living rule, 2026-07-04):** all third-party app connectivity (calendar, mail, chat, files) goes through **Composio** via the backend `integrations` module (`@composio/core`, server-side only) — never direct provider OAuth flows, never provider access/refresh tokens in our DB. Composio custodies tokens; we mirror only connected-account metadata (`user_integration_connections`). The frontend receives redirect URLs and connection state exclusively from backend endpoints.
 - **Retired — do not use:** `pnpm sync:schema`, `pnpm check:schema`.
 
 ---

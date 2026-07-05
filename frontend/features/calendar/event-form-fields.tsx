@@ -13,7 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Video, Loader2 } from "lucide-react";
+import { LoaderCircleIcon } from "@animateicons/react/lucide";
+import { Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const EVENT_COLORS: Record<string, string> = {
@@ -152,7 +153,7 @@ export function EventFormFields({
                 onClick={handleGenerateMeetClick}
               >
                 {isMeetPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <LoaderCircleIcon size={14} className="animate-spin" />
                 ) : (
                   <Video className="h-3.5 w-3.5" />
                 )}

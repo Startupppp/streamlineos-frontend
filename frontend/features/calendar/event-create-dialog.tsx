@@ -27,7 +27,8 @@ import { EventFormFields } from "./event-form-fields";
 import { EventAttendeesPicker } from "./event-attendees-picker";
 import { useTicketSearch } from "@/hooks/api/projects";
 import type { TicketSearchResult } from "@/hooks/api/projects";
-import { Ticket, X, Search, Loader2 } from "lucide-react";
+import { SearchIcon, XIcon, LoaderCircleIcon } from "@animateicons/react/lucide";
+import { Ticket } from "lucide-react";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
 
@@ -461,7 +462,7 @@ export function EventCreateDialog({
                       className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors shrink-0"
                       aria-label="Remove linked ticket"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <XIcon size={14} />
                     </button>
                   </div>
                 ) : (
@@ -535,7 +536,7 @@ function TicketPickerContent({
   return (
     <div className="flex flex-col gap-3 flex-1 min-h-0">
       <div className="relative shrink-0">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <SearchIcon size={16} className="absolute left-2.5 top-2.5 text-muted-foreground" />
         <input
           autoFocus
           value={q}
@@ -547,7 +548,7 @@ function TicketPickerContent({
       <div className="overflow-y-auto space-y-1 flex-1">
         {isLoading ? (
           <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <LoaderCircleIcon size={16} className="animate-spin" />
             Searching…
           </div>
         ) : tickets.length === 0 && q ? (

@@ -331,7 +331,7 @@ Ordered money-path first. Check off each page after fixing.
 
 ## Chat & Communication
 - [x] `/chat` — Chat
-- [x] `/calendar` — Calendar: month/week/day views, responsive toolbar (stacked mobile, icon-only Export/Add on xs, compact date labels), adaptive month grid height + mobile/tablet cell typography via calendar-container CSS
+- [x] `/calendar` — Calendar: month/week/day views, responsive toolbar (stacked mobile, icon-only Export/Add on xs, compact date labels), adaptive month grid height + mobile/tablet cell typography via calendar-container CSS; icons migrated to @animateicons/react/lucide (Ticket/Video/Calendar/Tag/Pencil/HelpCircle lucide fallbacks only)
 - [x] `/notifications` — Notifications: PRD-aligned sections (ALL/UNREAD/MENTIONS/ASSIGNED_TO_ME/APPROVALS/BROADCASTS/ARCHIVED/SYSTEM), search bar with 300ms debounce, bulk actions (mark-read/archive/delete), section/category/priority filters via desktop Select row + mobile single DropdownMenu (Radix viewport max-height), inline approve/reject for APPROVALS section, compact divide-y list; `/notifications/preferences` — channel toggles + quiet hours + timezone + digest mode; `/notifications/templates` — CRUD with preview dialog; `/notifications/broadcasts` — create/publish/cancel/delete with status tabs; `/notifications/analytics` — metrics + per-category/priority bar charts; `/notifications/queue` — active + failed tabs with retry; `/notifications/audit` — audit log; GlobalHeader added (logo+workspace switcher+product switcher+search+AI/calendar/chat links+bell+quick-create+avatar); approve/reject hooks added; notification bell with popover
 
 ---

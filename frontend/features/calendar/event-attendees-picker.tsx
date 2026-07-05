@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Check } from "lucide-react";
+import { CheckIcon } from "@animateicons/react/lucide";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 
@@ -69,7 +69,7 @@ function AttendeeRow({
             : "border-muted-foreground/30",
         )}
       >
-        {selected && <Check className="h-2.5 w-2.5 text-white" />}
+        {selected && <CheckIcon size={10} className="text-white" />}
       </div>
     </button>
   );
