@@ -31,6 +31,8 @@ import {
   Users,
   FlaskConical,
   Bug,
+  FilePen,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -55,6 +57,8 @@ interface NavSection {
 function useSidebarSections(baseUrl: string): NavSection[] {
   const canQA = useCan("projects:qa:view");
   const canBugs = useCan("projects:bugs:view");
+  const canChangerequests = useCan("projects:changerequests:view");
+  const canClientVisibility = useCan("projects:clientvisibility:manage");
   return [
     {
       label: "Planning",
@@ -82,6 +86,13 @@ function useSidebarSections(baseUrl: string): NavSection[] {
       items: [
         ...(canQA ? [{ label: "QA / Tests", icon: FlaskConical, href: `${baseUrl}/qa` }] : []),
         ...(canBugs ? [{ label: "Bugs", icon: Bug, href: `${baseUrl}/bugs` }] : []),
+      ],
+    },
+    {
+      label: "Client",
+      items: [
+        ...(canChangerequests ? [{ label: "Change Requests", icon: FilePen, href: `${baseUrl}/change-requests` }] : []),
+        ...(canClientVisibility ? [{ label: "Client Portal", icon: Globe, href: `${baseUrl}/client-portal` }] : []),
       ],
     },
     {

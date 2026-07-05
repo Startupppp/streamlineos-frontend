@@ -137,10 +137,12 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
             <div className="space-y-1.5">
               <Label className="text-[11px]">Description</Label>
               <TiptapEditor
-                value={form.watch("description")}
-                onChange={(v) => form.setValue("description", v)}
+                content={form.watch("description")}
+                output="html"
+                onChangeHtml={(v) => form.setValue("description", v)}
                 placeholder="What needs to change and why..."
-                minHeight={80}
+                minHeightClassName="min-h-[80px]"
+                contentKey={editCr?.id ?? "new"}
               />
             </div>
             <div className="space-y-1.5">

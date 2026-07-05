@@ -293,4 +293,9 @@ export type PermissionKey =
   | "projects:bugs:view"
   | "projects:bugs:create"
   | "projects:bugs:update"
-  | "projects:bugs:delete";
+  | "projects:bugs:delete"
+  | "projects:portal:view"
+  | "projects:changerequests:view"
+  | "projects:changerequests:create"
+  | "projects:changerequests:manage"
+  | "projects:clientvisibility:manage";

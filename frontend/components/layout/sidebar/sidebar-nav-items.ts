@@ -1092,6 +1092,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "projects:view",
       },
       {
+        label: "Client Portal",
+        icon: Globe,
+        href: "/projects/portal",
+        requiredPermission: "projects:portal:view",
+      },
+      {
         label: "Roadmap",
         icon: Map,
         href: "/projects/roadmap",
