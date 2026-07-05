@@ -8,6 +8,7 @@ import { PolicyProfileSection } from "./policy-profile-section";
 import { ToggleSettingsSection } from "./toggle-settings-section";
 import { VersionHistorySection } from "./version-history-section";
 import { CalendarSection } from "./calendar-section";
+import { FxRatesSection } from "./fx-rates-section";
 
 export function SettingsPageContent() {
   const { data, isLoading, isError, refetch } = usePayrollPolicyCurrent();
@@ -56,6 +57,9 @@ export function SettingsPageContent() {
       <div className="space-y-8 max-w-3xl">
         <PolicyProfileSection policy={data.policy} />
         <ToggleSettingsSection policy={data.policy} activeVersion={data.activeVersion} />
+        {data.activeVersion?.toggles.multiCurrency && (
+          <FxRatesSection policy={data.policy} activeVersion={data.activeVersion} />
+        )}
         <VersionHistorySection policyId={data.policy.id} />
         <CalendarSection />
       </div>

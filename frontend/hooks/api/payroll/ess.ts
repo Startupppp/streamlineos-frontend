@@ -94,6 +94,7 @@ interface SubmitReimbursementBody {
   amount: number;
   description: string;
   receiptUrl?: string;
+  payrollMonth?: string;
 }
 
 export function useSubmitReimbursement() {

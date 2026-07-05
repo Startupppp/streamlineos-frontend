@@ -3,7 +3,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-export type BonusType = "PERFORMANCE" | "FESTIVAL" | "REFERRAL" | "SPOT" | "ANNUAL";
+export type BonusType =
+  | "PERFORMANCE"
+  | "FESTIVAL"
+  | "REFERRAL"
+  | "SPOT"
+  | "ANNUAL"
+  | "JOINING"
+  | "RETENTION"
+  | "COMMISSION"
+  | "ADJUSTMENT";
 export type BonusStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
 export type IncentiveStatus = "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL";
 
@@ -15,6 +24,7 @@ export interface Bonus {
   amount: string;
   reason: string | null;
   month: string | null;
+  taxable: boolean;
   status: string;
   approvedBy: string | null;
   approvedAt: string | null;
@@ -55,6 +65,25 @@ const incentiveKeys = {
   list: (params?: Record<string, string | number>) =>
     ["payroll", "incentives", "list", params ?? {}] as const,
 };
+
+interface CreateBonusBody {
+  userId: string;
+  type: BonusType;
+  amount: number;
+  month: string;
+  reason?: string;
+  taxable?: boolean;
+}
+
+export function useCreateBonus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["payroll", "bonuses", "create"],
+    mutationFn: (body: CreateBonusBody) =>
+      apiClient.post<Bonus>("/hr/bonuses", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: bonusKeys.all }),
+  });
+}
 
 export function useBonuses() {
   return useQuery({

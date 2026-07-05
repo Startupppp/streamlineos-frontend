@@ -33,14 +33,18 @@ const COMPONENT_TYPE_LABELS: Record<SalaryComponentType, string> = {
   EARNING: "Earnings",
   DEDUCTION: "Deductions",
   EMPLOYER_CONTRIBUTION: "Employer Contributions",
-  INFORMATIONAL: "Informational",
+  REIMBURSEMENT: "Reimbursements",
+  TAX: "Tax",
+  ADJUSTMENT: "Adjustments",
 };
 
 const COMPONENT_TYPE_ORDER: SalaryComponentType[] = [
   "EARNING",
   "DEDUCTION",
   "EMPLOYER_CONTRIBUTION",
-  "INFORMATIONAL",
+  "REIMBURSEMENT",
+  "TAX",
+  "ADJUSTMENT",
 ];
 
 function ComponentsBreakdown({ components }: { components: ProfileComponent[] }) {
@@ -49,7 +53,7 @@ function ComponentsBreakdown({ components }: { components: ProfileComponent[] })
       acc[type] = components.filter((c) => c.type === type);
       return acc;
     },
-    { EARNING: [], DEDUCTION: [], EMPLOYER_CONTRIBUTION: [], INFORMATIONAL: [] },
+    { EARNING: [], DEDUCTION: [], EMPLOYER_CONTRIBUTION: [], REIMBURSEMENT: [], TAX: [], ADJUSTMENT: [] },
   );
 
   const hasAny = components.length > 0;
@@ -230,6 +234,33 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
                 value={activeProfile.workerType}
               />
             </StatCardGrid>
+
+            {(() => {
+              const earningSum = components
+                .filter((c) => c.type === "EARNING" && c.amount !== null)
+                .reduce((acc, c) => acc + parseFloat(c.amount ?? "0"), 0);
+              const deductionSum = components
+                .filter((c) => c.type === "DEDUCTION" && c.amount !== null)
+                .reduce((acc, c) => acc + parseFloat(c.amount ?? "0"), 0);
+              const monthlyGross =
+                earningSum > 0 ? earningSum : parseFloat(activeProfile.annualCtc) / 12;
+              const estimatedNet = monthlyGross - deductionSum;
+              return (
+                <StatCardGrid cols={2}>
+                  <StatCard
+                    label="Est. Monthly Gross"
+                    value={formatMoney(monthlyGross.toFixed(2), activeProfile.currency)}
+                    hint={earningSum === 0 ? "Derived from annual CTC" : undefined}
+                  />
+                  <StatCard
+                    label="Est. Monthly Net"
+                    value={formatMoney(estimatedNet.toFixed(2), activeProfile.currency)}
+                    hint={deductionSum > 0 ? `After ${formatMoney(deductionSum.toFixed(2), activeProfile.currency)} deductions` : undefined}
+                    tone="emerald"
+                  />
+                </StatCardGrid>
+              );
+            })()}
 
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
               <h3 className="text-sm font-semibold text-foreground">Profile Details</h3>

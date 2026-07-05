@@ -32,18 +32,6 @@ const KIND_LABELS: Record<string, string> = {
   WITHHOLDING: "Withholding",
 };
 
-const DEFAULT_TOGGLES: Partial<Record<ToggleKey, boolean>> = {
-  pf: true,
-  esi: true,
-  professionalTax: true,
-  tds: true,
-  gratuity: true,
-  bankPayoutFile: true,
-  payslipPublishing: true,
-  emailPayslips: true,
-  approvalWorkflow: true,
-};
-
 function PackItemRow({ item }: { item: StatutoryPackItem }) {
   return (
     <div className="flex items-start gap-3 px-4 py-3">
@@ -149,7 +137,7 @@ export function StepToggles({ draft, updateDraft, goNext, goBack }: StepTogglesP
 
   function getEffectiveValue(key: ToggleKey): boolean {
     if (key in overrides) return overrides[key] ?? false;
-    return DEFAULT_TOGGLES[key] ?? false;
+    return draft.templateDefaultToggles?.[key] ?? false;
   }
 
   function handleToggleChange(key: ToggleKey, newValue: boolean) {

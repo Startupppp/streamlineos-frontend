@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useActivatePolicy } from "@/hooks/api/payroll";
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
-import type { ActivateResult } from "@/types/payroll/setup";
+import type { ActivateResult, ToggleKey } from "@/types/payroll/setup";
 import { toast } from "sonner";
 
 function toOverridesRecord(
@@ -85,12 +85,23 @@ export function StepActivate({ draft, clearAll }: StepActivateProps) {
               Next Steps
             </p>
             <ul className="space-y-1.5">
-              {activated.checklist.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
+              {activated.checklist.map((item) => (
+                <li key={item.key} className="flex items-start gap-2 text-sm text-foreground">
                   <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full border border-border flex items-center justify-center">
                     <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
                   </span>
-                  {item}
+                  <div className="min-w-0">
+                    {item.href ? (
+                      <Link href={item.href} className="underline underline-offset-2">
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <span>{item.label}</span>
+                    )}
+                    {item.detail && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -109,7 +120,11 @@ export function StepActivate({ draft, clearAll }: StepActivateProps) {
     );
   }
 
-  const toggleCount = Object.values(draft.toggleOverrides ?? {}).filter(Boolean).length;
+  const effectiveToggles: Partial<Record<ToggleKey, boolean>> = {
+    ...(draft.templateDefaultToggles ?? {}),
+    ...(draft.toggleOverrides ?? {}),
+  };
+  const toggleCount = Object.values(effectiveToggles).filter(Boolean).length;
 
   return (
     <div className="space-y-5">
@@ -148,7 +163,7 @@ export function StepActivate({ draft, clearAll }: StepActivateProps) {
 
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Features enabled</span>
-          <span className="font-medium text-foreground">{toggleCount} overrides</span>
+          <span className="font-medium text-foreground">{toggleCount}</span>
         </div>
       </div>
 

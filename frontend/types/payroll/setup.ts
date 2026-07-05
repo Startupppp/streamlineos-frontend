@@ -207,10 +207,18 @@ export type PolicyPreviewResult = {
   statutoryPack: StatutoryPackPreview;
 };
 
+export type ActivateChecklistItem = {
+  key: string;
+  label: string;
+  done: boolean;
+  href: string;
+  detail: string | null;
+};
+
 export type ActivateResult = {
   policyVersion: VersionRow;
   componentCount: number;
-  checklist: string[];
+  checklist: ActivateChecklistItem[];
 };
 
 export type SalaryComponent = {

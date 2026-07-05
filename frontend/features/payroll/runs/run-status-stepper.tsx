@@ -14,7 +14,7 @@ const STEPS: { status: PayrollRunStatus; label: string }[] = [
 ];
 
 const STATUS_ORDER: Record<PayrollRunStatus, number> = {
-  PREPARING: 0,
+  PREPARING: 1,
   DRAFT: 1,
   EXCEPTIONS_FOUND: 1,
   PREVIEW_READY: 2,

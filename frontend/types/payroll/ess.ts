@@ -13,6 +13,9 @@ export interface EssPayslip {
   net: string | null;
   publishedAt: string | null;
   downloadHref: string;
+  workerType?: string | null;
+  invoiceNumber?: string | null;
+  paymentAdvice?: string | null;
 }
 
 export interface EssOverview {
@@ -59,6 +62,7 @@ export interface EssReimbursement {
   receiptUrl: string | null;
   status: ReimbursementStatus;
   createdAt: string;
+  payrollMonth?: string | null;
 }
 
 export interface EssTaxDeclaration {

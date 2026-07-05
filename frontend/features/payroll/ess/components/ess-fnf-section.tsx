@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { FileCheck } from "lucide-react";
+import { FileCheck, Download } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssFnf } from "@/hooks/api/payroll/ess";
+import { downloadFnfStatement } from "@/hooks/api/payroll/fnf";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 
 function FnfRow({ label, value, highlight }: { label: string; value: string | null; highlight?: boolean }) {
@@ -21,6 +25,20 @@ function FnfRow({ label, value, highlight }: { label: string; value: string | nu
 
 export function EssFnfSection() {
   const { data: settlement, isLoading } = useEssFnf();
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownloadStatement() {
+    if (!settlement || downloading) return;
+    setDownloading(true);
+    try {
+      await downloadFnfStatement(settlement.id);
+      toast.success("Statement downloaded");
+    } catch {
+      toast.error("Failed to download statement");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -50,7 +68,21 @@ export function EssFnfSection() {
           <FileCheck className="h-4 w-4 text-muted-foreground" />
           Full & Final Settlement
         </h2>
-        <EssStatusBadge status={settlement.status} />
+        <div className="flex items-center gap-2">
+          <EssStatusBadge status={settlement.status} />
+          {settlement.statementPublishedAt && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              onClick={handleDownloadStatement}
+              disabled={downloading}
+            >
+              <Download className="h-3 w-3" />
+              {downloading ? "Downloading…" : "Download statement"}
+            </Button>
+          )}
+        </div>
       </div>
 
       <motion.div
@@ -74,7 +106,7 @@ export function EssFnfSection() {
         <FnfRow label="Asset Recovery" value={settlement.assetRecovery} />
         <FnfRow label="Notice Period Recovery" value={settlement.noticeRecovery} />
         <FnfRow label="Other Deductions" value={settlement.otherDeductions} />
-        <FnfRow label="Other Deductions" value={settlement.deductions} />
+        <FnfRow label="Miscellaneous Deductions" value={settlement.deductions} />
 
         <div className="border-t-2 border-border">
           <FnfRow label="Net Payable" value={settlement.netPayable} highlight />

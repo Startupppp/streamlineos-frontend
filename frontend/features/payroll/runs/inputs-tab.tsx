@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -32,8 +33,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { useCan } from "@/hooks/api/access";
 import { useRunInputs, usePatchInput, useReimportInputs } from "@/hooks/api/payroll/run-inputs";
 import type { RunInput, PayrollInputSource } from "@/types/payroll/runs";
@@ -51,9 +57,31 @@ const overrideSchema = z.object({
   paidDays: z.string().optional(),
   lopDays: z.string().optional(),
   overtimeHours: z.string().optional(),
+  billableHours: z.string().optional(),
   reason: z.string().min(1, "Reason is required").max(500),
 });
 type OverrideForm = z.infer<typeof overrideSchema>;
+
+function getWarningMessage(row: RunInput): string | null {
+  if (row.isOverride) {
+    return row.overrideReason ? `Override: ${row.overrideReason}` : "Manually overridden";
+  }
+  if (
+    row.source === "TIMESHEET" &&
+    (row.billableHours === undefined || row.billableHours === null || row.billableHours === "0")
+  ) {
+    return "No billable hours recorded for timesheet employee";
+  }
+  const paid = parseFloat(row.paidDays);
+  const lop = parseFloat(row.lopDays);
+  const scheduled = parseFloat(row.scheduledDays);
+  if (Number.isFinite(paid) && Number.isFinite(lop) && Number.isFinite(scheduled)) {
+    if (paid + lop > scheduled + 0.01) {
+      return "Paid + LOP days exceed scheduled days";
+    }
+  }
+  return null;
+}
 
 interface InputsTabProps {
   runId: number;
@@ -82,6 +110,7 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
       paidDays: row.paidDays,
       lopDays: row.lopDays,
       overtimeHours: row.overtimeHours,
+      billableHours: row.billableHours ?? "",
       reason: "",
     });
   }
@@ -171,17 +200,36 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
       cell: (row) => <span className="tabular-nums">{row.overtimeHours}</span>,
     },
     {
-      key: "override",
-      header: "Override",
+      key: "billableHours",
+      header: "Billable Hrs",
       cell: (row) =>
-        row.isOverride ? (
-          <span
-            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200"
-            title={row.overrideReason ?? ""}
-          >
-            Manual
-          </span>
-        ) : null,
+        row.billableHours !== undefined && row.billableHours !== null ? (
+          <span className="tabular-nums">{row.billableHours}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
+    {
+      key: "warning",
+      header: "Warning",
+      cell: (row) => {
+        const msg = getWarningMessage(row);
+        if (!msg) return null;
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center">
+                  <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-[220px] text-[11px]">
+                {msg}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
     },
   ];
 
@@ -200,7 +248,7 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
         getRowKey={(row) => row.id}
         onRowClick={!isLocked && canUpdate ? handleRowClick : undefined}
         isLoading={isLoading}
-        minWidth="700px"
+        minWidth="900px"
         emptyState={
           <EmptyState
             compact
@@ -268,6 +316,19 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
                       <FormLabel>Overtime Hours</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="e.g. 0" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="billableHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Billable Hours</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. 160" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

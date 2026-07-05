@@ -101,22 +101,29 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
           <p className="text-[11px] text-emerald-600">No open exceptions</p>
         ) : (
           <div className="space-y-1">
-            {panels.topExceptions.map((ex) => (
-              <Link
-                key={ex.id}
-                href={runId ? `/payroll/runs/${runId}?tab=exceptions` : "#"}
-                className="flex items-center gap-2 py-1 hover:bg-muted/20 -mx-1 px-1 rounded"
-              >
-                <span
-                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0 ${
-                    SEVERITY_COLORS[ex.severity]
-                  }`}
+            {panels.topExceptions.map((ex) => {
+              const href = runId
+                ? ex.runEmployeeId
+                  ? `/payroll/runs/${runId}/employees/${ex.runEmployeeId}?highlight=exceptions`
+                  : `/payroll/runs/${runId}?tab=exceptions`
+                : "#";
+              return (
+                <Link
+                  key={ex.id}
+                  href={href}
+                  className="flex items-center gap-2 py-1 hover:bg-muted/20 -mx-1 px-1 rounded"
                 >
-                  {ex.severity}
-                </span>
-                <span className="text-[11px] text-foreground truncate flex-1">{ex.message}</span>
-              </Link>
-            ))}
+                  <span
+                    className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0 ${
+                      SEVERITY_COLORS[ex.severity]
+                    }`}
+                  >
+                    {ex.severity}
+                  </span>
+                  <span className="text-[11px] text-foreground truncate flex-1">{ex.message}</span>
+                </Link>
+              );
+            })}
           </div>
         )}
       </PanelCard>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { Download } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -18,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
-import { useFnfSettlement, useFnfStatement, useApproveFnf } from "@/hooks/api/payroll/fnf";
+import { useFnfSettlement, useFnfStatement, useApproveFnf, downloadFnfStatement } from "@/hooks/api/payroll/fnf";
 import { FnfStatusBadge } from "./fnf-status-badge";
 import { FnfStatementView } from "./fnf-statement-view";
 import type { FnfStatus } from "@/types/payroll";
@@ -32,6 +33,7 @@ interface FnfDetailSheetInnerProps {
 
 function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps) {
   const [notes, setNotes] = useState("");
+  const [downloading, setDownloading] = useState(false);
 
   const { data: settlement, isLoading: loadingSettlement } = useFnfSettlement(settlementId);
   const { data: statement, isLoading: loadingStatement } = useFnfStatement(settlementId);

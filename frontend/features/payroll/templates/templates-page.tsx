@@ -10,21 +10,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { usePayrollTemplates, usePayrollPolicyCurrent } from "@/hooks/api/payroll";
+import { usePayrollTemplates, usePayrollPolicyCurrent, useDeleteTemplate } from "@/hooks/api/payroll";
 import { TemplateCard } from "@/features/payroll/shared/template-card";
 import { TemplatePreviewSheet } from "@/features/payroll/shared/template-preview-sheet";
 import { DuplicateTemplateDialog } from "@/features/payroll/shared/duplicate-template-dialog";
 import type { TemplateRow } from "@/types/payroll/setup";
 import { Search } from "lucide-react";
+import { toast } from "sonner";
 
 const CATEGORIES = [
   { value: "all", label: "All Categories" },
-  { value: "INDIA", label: "India" },
-  { value: "GLOBAL", label: "Global" },
-  { value: "STARTUP", label: "Startup" },
+  { value: "INDIAN_STANDARD", label: "Indian Standard" },
+  { value: "INDIAN_STARTUP", label: "Indian Startup" },
+  { value: "GLOBAL_REMOTE", label: "Global Remote" },
+  { value: "COUNTRY_STANDARD", label: "Country Standard" },
+  { value: "CONTRACTOR", label: "Contractor" },
+  { value: "SALES_INCENTIVE", label: "Sales Incentive" },
 ];
 
 const COMPLEXITIES = [
@@ -45,6 +59,7 @@ export function TemplatesPageContent() {
   const [searchInput, setSearchInput] = useState(search);
   const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
   const [duplicateTemplate, setDuplicateTemplate] = useState<TemplateRow | null>(null);
+  const [deleteTemplate, setDeleteTemplate] = useState<TemplateRow | null>(null);
 
   const { data: policyData } = usePayrollPolicyCurrent();
   const policyCountry = policyData?.policy?.country;
@@ -52,8 +67,11 @@ export function TemplatesPageContent() {
   const { data, isLoading, isError, refetch } = usePayrollTemplates({
     search: search || undefined,
     category: category === "all" ? undefined : category,
+    complexity: complexity === "all" ? undefined : complexity,
     country: policyCountry,
   });
+
+  const deleteTemplateMutation = useDeleteTemplate();
 
   function updateUrl(updates: Record<string, string | undefined>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -84,8 +102,12 @@ export function TemplatesPageContent() {
   }, []);
 
   const handleUseInSetup = useCallback(
-    (templateKey: string) => {
-      router.push(`/payroll/setup?template=${templateKey}`);
+    (template: TemplateRow) => {
+      if (template.key) {
+        router.push(`/payroll/setup?template=${template.key}`);
+      } else {
+        router.push(`/payroll/setup?templateId=${template.id}`);
+      }
     },
     [router],
   );
@@ -98,6 +120,10 @@ export function TemplatesPageContent() {
     setDuplicateTemplate(t);
   }, []);
 
+  const handleDeleteOpen = useCallback((t: TemplateRow) => {
+    setDeleteTemplate(t);
+  }, []);
+
   const handlePreviewOpenChange = useCallback((open: boolean) => {
     if (!open) setPreviewTemplate(null);
   }, []);
@@ -105,6 +131,21 @@ export function TemplatesPageContent() {
   const handleDuplicateOpenChange = useCallback((open: boolean) => {
     if (!open) setDuplicateTemplate(null);
   }, []);
+
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTemplate(null);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteTemplate) return;
+    deleteTemplateMutation.mutate(deleteTemplate.id, {
+      onSuccess: () => {
+        toast.success("Template deleted");
+        setDeleteTemplate(null);
+      },
+      onError: () => toast.error("Failed to delete template"),
+    });
+  }, [deleteTemplate, deleteTemplateMutation]);
 
   const handleClearFilters = useCallback(() => {
     setSearchInput("");
@@ -115,11 +156,7 @@ export function TemplatesPageContent() {
     void refetch();
   }, [refetch]);
 
-  const filteredByComplexity =
-    complexity === "all"
-      ? (data?.items ?? [])
-      : (data?.items ?? []).filter((t) => t.complexity === complexity);
-
+  const templates = data?.items ?? [];
   const total = data?.total ?? 0;
   const hasActiveFilters = !!(search || category !== "all" || complexity !== "all");
 
@@ -136,7 +173,7 @@ export function TemplatesPageContent() {
         />
       </div>
       <Select value={category} onValueChange={handleCategoryChange}>
-        <SelectTrigger className="h-8 text-sm w-40">
+        <SelectTrigger className="h-8 text-sm w-44">
           <SelectValue placeholder="Category" />
         </SelectTrigger>
         <SelectContent>
@@ -191,7 +228,7 @@ export function TemplatesPageContent() {
               </div>
             ))}
           </div>
-        ) : filteredByComplexity.length === 0 ? (
+        ) : templates.length === 0 ? (
           <EmptyState
             title="No templates found"
             description={
@@ -207,11 +244,11 @@ export function TemplatesPageContent() {
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredByComplexity.map((template) => (
+            {templates.map((template) => (
               <TemplateCard
                 key={template.id}
                 template={template}
-                onSelect={() => handleUseInSetup(template.key)}
+                onSelect={() => handleUseInSetup(template)}
                 actions={
                   <>
                     <Button
@@ -230,10 +267,20 @@ export function TemplatesPageContent() {
                     >
                       Duplicate
                     </Button>
+                    {!template.isSystem && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteOpen(template)}
+                      >
+                        Delete
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       className="h-7 text-xs ml-auto"
-                      onClick={() => handleUseInSetup(template.key)}
+                      onClick={() => handleUseInSetup(template)}
                     >
                       Use in Setup
                     </Button>
@@ -255,6 +302,26 @@ export function TemplatesPageContent() {
         open={!!duplicateTemplate}
         onOpenChange={handleDuplicateOpenChange}
       />
+
+      <AlertDialog open={!!deleteTemplate} onOpenChange={handleDeleteOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete template?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{deleteTemplate?.name}&rdquo; will be permanently removed. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteTemplateMutation.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

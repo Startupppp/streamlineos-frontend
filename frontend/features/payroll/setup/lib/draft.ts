@@ -12,8 +12,9 @@ export type SetupDraft = {
     startMonth: string;
     employeeCount?: number;
   };
-  templateKey?: string;
+  templateKey?: string | null;
   templateId?: number;
+  templateDefaultToggles?: Partial<Record<ToggleKey, boolean>>;
   toggleOverrides?: Partial<Record<ToggleKey, boolean>>;
 };
 

@@ -42,6 +42,7 @@ export function useCreateRun() {
       apiClient.post<{ runId: number }>("/payroll/runs", { month }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
     },
   });
 }
@@ -55,6 +56,7 @@ export function useGenerateRun() {
     onSuccess: (_data, runId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
     },
   });
 }
@@ -69,6 +71,8 @@ export function useRecalculateRun() {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runVariance(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
     },
   });
 }

@@ -38,6 +38,7 @@ const PRODUCT_LABELS: Record<string, string> = {
   finance: "Finance",
   documents: "Documents",
   administration: "Administration",
+  payroll: "Payroll",
 }
 
 const PRODUCT_ACTIONS: Record<string, CreateAction[]> = {
@@ -70,6 +71,12 @@ const PRODUCT_ACTIONS: Record<string, CreateAction[]> = {
   ],
   administration: [
     { label: "Invite User", href: "/users/invite", icon: UserPlus },
+  ],
+  payroll: [
+    { label: "New Payroll Run", href: "/payroll/runs?create=1", icon: FileText },
+    { label: "Add Employee Salary", href: "/payroll/employees?create=1", icon: Users },
+    { label: "Add Salary Template", href: "/payroll/templates", icon: Package },
+    { label: "Add Component", href: "/payroll/components?create=1", icon: Receipt },
   ],
 }
 

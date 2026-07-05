@@ -12,6 +12,7 @@ import type {
 type TemplateListParams = {
   country?: string;
   category?: string;
+  complexity?: string;
   search?: string;
   page?: number;
   pageSize?: number;
@@ -58,6 +59,17 @@ export function usePreviewTemplate() {
         `/payroll/templates/${templateId}/preview`,
         { annualCtc, toggleOverrides },
       ),
+  });
+}
+
+export function useDeleteTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["payroll", "templates", "delete"],
+    mutationFn: (templateId: number) =>
+      apiClient.delete<void>(`/payroll/templates/${templateId}`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.payroll.all }),
   });
 }
 

@@ -129,8 +129,8 @@ export function TemplatePreviewSheet({
 
               <div className="rounded-md bg-muted p-3 space-y-1.5">
                 {[
-                  { label: "Gross Pay", value: previewData.totals.gross },
-                  { label: "Total Deductions", value: previewData.totals.deductions },
+                  { label: "Gross Pay", value: previewData.totals.grossEarnings },
+                  { label: "Total Deductions", value: previewData.totals.totalDeductions },
                   { label: "Employer Contributions", value: previewData.totals.employerContributions },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between text-xs">
@@ -140,7 +140,7 @@ export function TemplatePreviewSheet({
                 ))}
                 <div className="flex items-center justify-between text-sm font-semibold pt-1 border-t border-border/50 mt-1">
                   <span>Net Pay</span>
-                  <span className="font-mono tabular-nums">{formatMoney(previewData.totals.net, currency)}</span>
+                  <span className="font-mono tabular-nums">{formatMoney(previewData.totals.netTakeHome, currency)}</span>
                 </div>
               </div>
             </div>

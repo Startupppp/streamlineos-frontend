@@ -12,6 +12,8 @@ export type PayrollApprovalRow = {
   actedAt: string | null;
   comment: string | null;
   createdAt: string;
+  isCurrentUserApprover?: boolean;
+  approverName?: string | null;
 };
 
 export type SubmitApprovalResult = {

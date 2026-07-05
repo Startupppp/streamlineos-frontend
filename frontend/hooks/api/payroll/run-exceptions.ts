@@ -29,6 +29,7 @@ export function useResolveException(runId: number) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
     },
   });
 }
@@ -45,6 +46,7 @@ export function useOverrideException(runId: number) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
     },
   });
 }

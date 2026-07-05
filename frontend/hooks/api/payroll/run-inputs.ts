@@ -10,6 +10,7 @@ interface PatchInputBody {
   paidDays?: string;
   lopDays?: string;
   overtimeHours?: string;
+  billableHours?: string;
   reason: string;
 }
 

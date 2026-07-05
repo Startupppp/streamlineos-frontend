@@ -106,7 +106,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
     );
   }
 
-  const { components, approvalChain, essOptions, statutoryPack } = preview.data;
+  const { components, approvalChain, essOptions, statutoryPack, calendarPlan } = preview.data;
   const grouped = groupComponents(components);
   const currency = draft.profile?.currency ?? "INR";
   const enabledEssOptions = Object.entries(essOptions).filter(([, v]) => !!v).map(([k]) => k);
@@ -173,6 +173,28 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {calendarPlan && (calendarPlan.attendanceCutoff || calendarPlan.approvalDeadline || calendarPlan.payDate) && (
+          <div className="bg-muted rounded-lg p-4 space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Payroll Calendar
+            </p>
+            <div className="space-y-1.5">
+              {[
+                { label: "Attendance Cutoff", value: calendarPlan.attendanceCutoff },
+                { label: "Approval Deadline", value: calendarPlan.approvalDeadline },
+                { label: "Pay Date", value: calendarPlan.payDate },
+              ]
+                .filter((row) => row.value)
+                .map((row) => (
+                  <div key={row.label} className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{row.label}</span>
+                    <span className="font-mono text-foreground">{row.value}</span>
+                  </div>
+                ))}
+            </div>
           </div>
         )}
 

@@ -54,14 +54,18 @@ const CATEGORY_ORDER: SalaryComponentType[] = [
   "EARNING",
   "DEDUCTION",
   "EMPLOYER_CONTRIBUTION",
-  "INFORMATIONAL",
+  "REIMBURSEMENT",
+  "TAX",
+  "ADJUSTMENT",
 ];
 
 const CATEGORY_LABELS: Record<SalaryComponentType, string> = {
   EARNING: "Earnings",
   DEDUCTION: "Deductions",
   EMPLOYER_CONTRIBUTION: "Employer Contributions",
-  INFORMATIONAL: "Informational",
+  REIMBURSEMENT: "Reimbursements",
+  TAX: "Tax",
+  ADJUSTMENT: "Adjustments",
 };
 
 function LineItemRow({ line }: { line: CalculationSnapshotLine }) {

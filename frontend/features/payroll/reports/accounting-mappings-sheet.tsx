@@ -14,6 +14,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Form,
   FormControl,
@@ -313,12 +314,15 @@ export function AccountingMappingsSheet({ open: externalOpen, onOpenChange: exte
           )}
 
           {!mappings.length && !showForm && (
-            <p className="text-[12px] text-muted-foreground text-center py-6">
-              No mappings yet. Add one below.
-            </p>
+            <EmptyState
+              illustrationPreset="report"
+              title="No accounting mappings"
+              description="Map payroll component codes to ledger accounts for journal generation."
+              action={canManage ? { label: "Add Mapping", onClick: handleAddNew } : undefined}
+            />
           )}
 
-          {canManage && !showForm && (
+          {canManage && !showForm && mappings.length > 0 && (
             <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleAddNew}>
               Add Mapping
             </Button>

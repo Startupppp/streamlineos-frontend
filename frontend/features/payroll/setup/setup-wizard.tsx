@@ -34,6 +34,8 @@ export function SetupWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedTemplate = searchParams.get("template") ?? undefined;
+  const preselectedTemplateIdStr = searchParams.get("templateId");
+  const preselectedTemplateId = preselectedTemplateIdStr ? Number(preselectedTemplateIdStr) : undefined;
 
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
@@ -108,6 +110,7 @@ export function SetupWizard() {
               goNext={goNext}
               goBack={goBack}
               preselectedKey={preselectedTemplate}
+              preselectedId={preselectedTemplateId}
             />
           )}
           {step === 3 && (
