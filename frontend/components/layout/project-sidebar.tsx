@@ -33,6 +33,7 @@ import {
   Bug,
   FilePen,
   Globe,
+  ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -59,6 +60,7 @@ function useSidebarSections(baseUrl: string): NavSection[] {
   const canBugs = useCan("projects:bugs:view");
   const canChangerequests = useCan("projects:changerequests:view");
   const canClientVisibility = useCan("projects:clientvisibility:manage");
+  const canApprovals = useCan("projects:approvals:view");
   return [
     {
       label: "Planning",
@@ -79,6 +81,7 @@ function useSidebarSections(baseUrl: string): NavSection[] {
         { label: "Milestones", icon: Diamond, href: `${baseUrl}/milestones` },
         { label: "Releases", icon: Tag, href: `${baseUrl}/releases` },
         { label: "Workload", icon: Users, href: `${baseUrl}/workload` },
+        ...(canApprovals ? [{ label: "Approvals", icon: ClipboardCheck, href: `${baseUrl}/approvals` }] : []),
       ],
     },
     {

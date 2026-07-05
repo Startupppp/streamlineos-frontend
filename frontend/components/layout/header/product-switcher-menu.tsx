@@ -36,7 +36,6 @@ const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   finance: "Accounts & books",
   helpdesk: "Tickets & support",
   documents: "Knowledge base",
-  analytics: "Reports & insights",
   surveys: "Surveys & feedback",
   administration: "Settings & access",
   payroll: "Runs, payslips & compliance",

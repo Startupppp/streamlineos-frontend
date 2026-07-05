@@ -1053,6 +1053,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "projects:tickets:view",
       },
       {
+        label: "Approvals",
+        icon: ClipboardCheck,
+        href: "/projects/approvals",
+        requiredPermission: "projects:approvals:view",
+      },
+      {
         label: "All Projects",
         icon: Briefcase,
         href: "/projects",
@@ -1534,7 +1540,6 @@ export type ProductKey =
   | "finance"
   | "helpdesk"
   | "documents"
-  | "analytics"
   | "surveys"
   | "administration"
   | "payroll";
@@ -1555,7 +1560,6 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
   { key: "helpdesk", label: "Helpdesk", href: "/support", icon: LifeBuoy },
   { key: "documents", label: "Documents", href: "/support/kb", icon: Library },
-  { key: "analytics", label: "Analytics", href: "/reports", icon: BarChart3 },
   { key: "surveys", label: "Surveys", href: "/surveys", icon: ClipboardList },
   {
     key: "administration",
@@ -1627,12 +1631,6 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-slate-500 dark:bg-slate-400",
     border: "border-slate-400 dark:border-slate-500",
   },
-  analytics: {
-    text: "!text-blue-600 dark:!text-blue-400",
-    bg: "bg-blue-50 dark:bg-blue-950/40",
-    indicator: "bg-blue-600 dark:bg-blue-500",
-    border: "border-blue-600 dark:border-blue-500",
-  },
   surveys: {
     text: "!text-teal-600 dark:!text-teal-400",
     bg: "bg-teal-50 dark:bg-teal-950/40",
@@ -1662,7 +1660,6 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   finance: ["Accounting"],
   helpdesk: ["Support"],
   documents: [],
-  analytics: [],
   surveys: ["Surveys"],
   administration: [
     "Organization",
@@ -1695,14 +1692,6 @@ export function getNavGroupsForProduct(
       },
     ];
   }
-  if (productKey === "analytics")
-    return [
-      {
-        label: "Analytics",
-        routes: [{ label: "Reports", icon: BarChart3, href: "/reports" }],
-      },
-    ];
-
   if (productKey === "documents")
     return [
       {
@@ -1776,8 +1765,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
     return "projects";
   if (pathname.startsWith("/inventory")) return "inventory";
   if (pathname.startsWith("/accounting")) return "finance";
-  if (pathname.startsWith("/analytics") || pathname.startsWith("/reports"))
-    return "analytics";
+  if (pathname.startsWith("/reports")) return "crm";
   if (pathname.startsWith("/support/kb")) return "documents";
   if (pathname.startsWith("/support")) return "helpdesk";
   if (pathname.startsWith("/knowledge")) return "documents";

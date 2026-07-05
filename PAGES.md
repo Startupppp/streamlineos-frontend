@@ -388,7 +388,7 @@ Ordered money-path first. Check off each page after fixing.
 ---
 
 ## Reports
-- [x] `/reports` — Reports
+- [x] ~~`/reports`~~ — REDIRECT 2026-07-05 → `/crm/reports` (global stub page deleted; reports are module-owned: CRM `/crm/reports`, Payroll `/payroll/reports`, Timesheets `/timesheets/reports`, Inventory `/inventory/reports/*`, HR `/hr/analytics`, Recruitment `/hr/recruitment/reports`, Projects `/projects/[projectId]/reports`; Analytics product removed from shell)
 
 ---
 

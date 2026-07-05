@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import type { StockAvailability } from "@/types/inventory";
 
 export type TransactionType =
   | "PURCHASE"
@@ -225,6 +226,19 @@ export function useStockLevels(filters?: StockLevelFilters) {
       };
     },
     staleTime: 60_000,
+  });
+}
+
+export function useStockAvailability(variantId: number, warehouseId?: number) {
+  return useQuery<StockAvailability, Error>({
+    queryKey: queryKeys.inventory.availability(variantId, warehouseId),
+    queryFn: () =>
+      apiClient.get<StockAvailability>("/inventory/stock/availability", {
+        variantId,
+        ...(warehouseId !== undefined ? { warehouseId } : {}),
+      }),
+    enabled: variantId > 0,
+    staleTime: 30_000,
   });
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -57,7 +57,7 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
   });
 
   const { fields } = useFieldArray({ control: form.control, name: "lines" });
-  const watchedWarehouseId = form.watch("warehouseId");
+  const watchedWarehouseId = useWatch({ control: form.control, name: "warehouseId" });
   const locationsQuery = useLocations(watchedWarehouseId);
 
   const warehouses = warehousesQuery.data ?? [];

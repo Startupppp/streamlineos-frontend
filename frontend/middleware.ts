@@ -154,7 +154,6 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/onboarding/payments": ["payments:providers:view"],
   "/notifications": ["self:attendance"],
   "/ceo": ["reports:view"],
-  "/reports": ["reports:view"],
   "/surveys": ["surveys:view"],
   "/blogs/admin": ["settings:manage"],
 };

@@ -34,6 +34,69 @@ function TypeBadge({ type }: { type: string }) {
   );
 }
 
+const columns: DataTableColumn<StockTransaction>[] = [
+  {
+    key: "createdAt",
+    header: "Date",
+    cell: (tx) => (
+      <span className="font-mono tabular-nums text-[11px]">{formatDate(tx.createdAt)}</span>
+    ),
+    sortable: true,
+    sortValue: (tx) => tx.createdAt,
+  },
+  {
+    key: "product",
+    header: "Product",
+    cell: (tx) =>
+      tx.productVariant?.product?.name ?? tx.productVariant?.name ?? "—",
+  },
+  {
+    key: "sku",
+    header: "SKU",
+    cell: (tx) => (
+      <span className="font-mono text-[11px] text-muted-foreground">
+        {tx.productVariant?.sku ?? tx.productVariant?.product?.sku ?? "—"}
+      </span>
+    ),
+    className: "hidden md:table-cell",
+    headerClassName: "hidden md:table-cell",
+  },
+  {
+    key: "location",
+    header: "Location",
+    cell: (tx) => tx.location?.name ?? "—",
+    className: "hidden md:table-cell",
+    headerClassName: "hidden md:table-cell",
+  },
+  {
+    key: "quantityChange",
+    header: "Qty",
+    cell: (tx) => (
+      <span className={cn("font-mono tabular-nums", tx.quantityChange < 0 ? "text-red-600" : "text-emerald-600")}>
+        {tx.quantityChange > 0 ? "+" : ""}{tx.quantityChange}
+      </span>
+    ),
+    className: "text-right",
+    headerClassName: "text-right",
+  },
+  {
+    key: "referenceId",
+    header: "Reference",
+    cell: (tx) => (
+      <span className="font-mono text-[11px] text-muted-foreground">
+        {tx.referenceId ? `${tx.referenceType ?? ""} ${tx.referenceId}`.trim() : "—"}
+      </span>
+    ),
+    className: "hidden lg:table-cell",
+    headerClassName: "hidden lg:table-cell",
+  },
+  {
+    key: "transactionType",
+    header: "Type",
+    cell: (tx) => <TypeBadge type={tx.transactionType} />,
+  },
+];
+
 export default function IssuesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -84,69 +147,6 @@ export default function IssuesPage() {
   const items = query.data?.items ?? [];
   const total = query.data?.total ?? 0;
   const totalPages = query.data?.totalPages ?? 1;
-
-  const columns: DataTableColumn<StockTransaction>[] = [
-    {
-      key: "createdAt",
-      header: "Date",
-      cell: (tx) => (
-        <span className="font-mono tabular-nums text-[11px]">{formatDate(tx.createdAt)}</span>
-      ),
-      sortable: true,
-      sortValue: (tx) => tx.createdAt,
-    },
-    {
-      key: "product",
-      header: "Product",
-      cell: (tx) =>
-        tx.productVariant?.product?.name ?? tx.productVariant?.name ?? "—",
-    },
-    {
-      key: "sku",
-      header: "SKU",
-      cell: (tx) => (
-        <span className="font-mono text-[11px] text-muted-foreground">
-          {tx.productVariant?.sku ?? tx.productVariant?.product?.sku ?? "—"}
-        </span>
-      ),
-      className: "hidden md:table-cell",
-      headerClassName: "hidden md:table-cell",
-    },
-    {
-      key: "location",
-      header: "Location",
-      cell: (tx) => tx.location?.name ?? "—",
-      className: "hidden md:table-cell",
-      headerClassName: "hidden md:table-cell",
-    },
-    {
-      key: "quantityChange",
-      header: "Qty",
-      cell: (tx) => (
-        <span className={cn("font-mono tabular-nums", tx.quantityChange < 0 ? "text-red-600" : "text-emerald-600")}>
-          {tx.quantityChange > 0 ? "+" : ""}{tx.quantityChange}
-        </span>
-      ),
-      className: "text-right",
-      headerClassName: "text-right",
-    },
-    {
-      key: "referenceId",
-      header: "Reference",
-      cell: (tx) => (
-        <span className="font-mono text-[11px] text-muted-foreground">
-          {tx.referenceId ? `${tx.referenceType ?? ""} ${tx.referenceId}`.trim() : "—"}
-        </span>
-      ),
-      className: "hidden lg:table-cell",
-      headerClassName: "hidden lg:table-cell",
-    },
-    {
-      key: "transactionType",
-      header: "Type",
-      cell: (tx) => <TypeBadge type={tx.transactionType} />,
-    },
-  ];
 
   const filterBar = (
     <div className="flex w-full min-w-0 items-center gap-2">
