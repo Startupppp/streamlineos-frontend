@@ -13,44 +13,19 @@ import {
   subWeeks,
   addDays,
   subDays,
-  startOfWeek,
-  endOfWeek,
-  startOfDay,
-  endOfDay,
-  isSameDay,
+  startOfYear,
+  endOfYear,
 } from "date-fns";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Share2,
-  Calendar as CalendarIcon,
-  List,
-  History,
-  Users,
-  Activity,
-  PlusCircle,
-  Sparkles,
-  Ticket,
-  Link2,
-} from "lucide-react";
+import { Plus, Ticket, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   useCalendarEvents,
@@ -58,6 +33,7 @@ import {
   useExternalCalendarEvents,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";
 import { CalendarAiAssistant } from "./calendar-ai-assistant";
@@ -67,19 +43,15 @@ import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
 import { CalendarAccountsSheet } from "./calendar-accounts-sheet";
 import { ExternalEventDetailSheet } from "./external-event-detail-sheet";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
-import { accountColor } from "./calendar-account-colors";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useFinalizeIntegrationConnection,
   useIntegrationConnections,
 } from "@/hooks/api/integrations";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { CalendarToolbar } from "./calendar-toolbar";
+import { CalendarSidebar } from "./calendar-sidebar";
+import { useEventPropGetter } from "./use-event-prop-getter";
+import { useCalendarComputed } from "./use-calendar-computed";
 
 const BigCalendarWrapper = dynamic(
   () =>
@@ -89,35 +61,17 @@ const BigCalendarWrapper = dynamic(
   { ssr: false },
 );
 
-const EVENT_COLORS: Record<string, string> = {
-  blue: "#3b82f6",
-  green: "#22c55e",
-  red: "#ef4444",
-  yellow: "#f59e0b",
-  purple: "#a855f7",
-  gold: "#3b82f6",
-};
-
-const RSVP_BORDER_COLORS: Record<string, string> = {
-  accepted: "#22c55e",
-  declined: "#ef4444",
-  tentative: "#f59e0b",
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  huddle: "#f97316",
-};
 
 export function CalendarView() {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<View>("week"); // Default to week view matching screenshot
+  const [view, setView] = useState<View>("week");
   const [viewMode, setViewMode] = useState<"calendar" | "list" | "history">(
     "calendar",
   );
-
   const calContainerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(600);
+
   useEffect(() => {
     const el = calContainerRef.current;
     if (!el) return;
@@ -128,7 +82,11 @@ export function CalendarView() {
     return () => ro.disconnect();
   }, []);
 
-  const calHeight = Math.max(containerHeight + 200, 720);
+  const calHeight = useMemo(
+    () => Math.max(containerHeight + 200, 720),
+    [containerHeight],
+  );
+
   const [createSlot, setCreateSlot] = useState<{
     start: Date;
     end: Date;
@@ -149,6 +107,10 @@ export function CalendarView() {
   const [selectedExternal, setSelectedExternal] = useState<BigCalEvent | null>(
     null,
   );
+  const [accountsOpen, setAccountsOpen] = useState(false);
+  const [checkedAttendees, setCheckedAttendees] = useState<
+    Record<string, boolean>
+  >({});
 
   const rangeStart = useMemo(
     () => startOfMonth(subMonths(currentDate, 1)),
@@ -168,10 +130,12 @@ export function CalendarView() {
   const { data: connections = [] } = useIntegrationConnections();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
-  const [accountsOpen, setAccountsOpen] = useState(false);
-  const activeConnectionCount = connections.filter(
-    (c) => c.status === "active",
-  ).length;
+
+  const activeConnectionCount = useMemo(
+    () => connections.filter((c) => c.status === "active").length,
+    [connections],
+  );
+
   const { hiddenIds } = useCalendarAccountFilters();
   const { data: externalData } = useExternalCalendarEvents(
     rangeStart,
@@ -179,19 +143,28 @@ export function CalendarView() {
     activeConnectionCount > 0,
   );
 
-  // Active attendees filters
-  const [checkedAttendees, setCheckedAttendees] = useState<
-    Record<string, boolean>
-  >({});
+  const memberIds = useMemo(
+    () =>
+      members
+        .map((m) => m.id)
+        .sort()
+        .join(","),
+    [members],
+  );
+
   useEffect(() => {
-    if (members.length > 0) {
-      const initial: Record<string, boolean> = {};
-      members.forEach((m) => {
-        initial[m.id] = true;
+    if (!memberIds) return;
+    setCheckedAttendees((prev) => {
+      const ids = memberIds.split(",");
+      const prevKeys = Object.keys(prev).sort().join(",");
+      if (prevKeys === memberIds) return prev;
+      const next: Record<string, boolean> = {};
+      ids.forEach((id) => {
+        next[id] = prev[id] !== false;
       });
-      setCheckedAttendees(initial);
-    }
-  }, [members]);
+      return next;
+    });
+  }, [memberIds]);
 
   const selectedEvent = useMemo<CalendarListItem | null>(
     () =>
@@ -201,67 +174,15 @@ export function CalendarView() {
     [selectedEventId, events],
   );
 
-  const calEvents = useMemo(
-    () =>
-      events.map((e) => ({
-        id: e.id,
-        title: e.title,
-        start: new Date(e.start),
-        end: new Date(e.end),
-        allDay: e.allDay ?? false,
-        resource: {
-          color: e.color,
-          category: e.category,
-          description: e.description,
-          location: e.location,
-          source: e.source,
-          myRsvpStatus: e.myRsvpStatus,
-          entityType: e.entityType,
-          entityId: e.entityId,
-          projectId: e.projectId,
-        },
-      })),
-    [events],
-  );
-
-  const externalCalEvents = useMemo(
-    () =>
-      (externalData?.events ?? [])
-        .filter((e) => !hiddenIds.includes(e.connectionId))
-        .map((e) => {
-          const index = connections.findIndex((c) => c.id === e.connectionId);
-          return {
-            id: e.id,
-            title: e.title,
-            start: new Date(e.start),
-            end: new Date(e.end),
-            allDay: e.allDay,
-            resource: {
-              source: "external",
-              color: accountColor(index === -1 ? 0 : index),
-              location: e.location,
-              accountEmail: e.accountEmail,
-              meetingUrl: e.meetingUrl,
-              webLink: e.webLink,
-              connectionId: e.connectionId,
-              externalId: e.id,
-            },
-          };
-        }),
-    [externalData, hiddenIds, connections],
-  );
-
-  const allCalEvents = useMemo(
-    () => [...calEvents, ...externalCalEvents],
-    [calEvents, externalCalEvents],
-  );
-
-  // Filter today's activities for sidebar (internal events only)
-  const todayActivities = useMemo(() => {
-    return calEvents
-      .filter((e) => isSameDay(e.start, currentDate))
-      .sort((a, b) => a.start.getTime() - b.start.getTime());
-  }, [calEvents, currentDate]);
+  const { allCalEvents, todayActivities, formattedRange, visibleRange } =
+    useCalendarComputed({
+      events,
+      externalData,
+      hiddenIds,
+      connections,
+      currentDate,
+      view,
+    });
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
     setPendingSlot({ start: slotInfo.start, end: slotInfo.end });
@@ -312,52 +233,7 @@ export function CalendarView() {
     [router],
   );
 
-  const eventPropGetter = useCallback((event: BigCalEvent) => {
-    if (event.resource?.source === "external") {
-      return {
-        style: {
-          backgroundColor: event.resource.color ?? "#3b82f6",
-          opacity: 0.85,
-          border: "none",
-          borderRadius: "4px",
-          color: "#fff",
-          fontSize: "12px",
-          padding: "1px 6px",
-        },
-      };
-    }
-    if (event.resource?.source === "task") {
-      return {
-        style: {
-          backgroundColor: "transparent",
-          border: "1px solid var(--border)",
-          borderRadius: "4px",
-          color: "var(--foreground)",
-          fontSize: "11px",
-          padding: "1px 6px",
-        },
-      };
-    }
-    const rsvp = event.resource?.myRsvpStatus as string | null | undefined;
-    const rsvpBorderColor = rsvp ? (RSVP_BORDER_COLORS[rsvp] ?? null) : null;
-    const categoryColor = event.resource?.category
-      ? (CATEGORY_COLORS[event.resource.category] ?? null)
-      : null;
-    return {
-      style: {
-        backgroundColor:
-          categoryColor ??
-          EVENT_COLORS[event.resource?.color ?? "blue"] ??
-          EVENT_COLORS.blue,
-        border: "none",
-        borderLeft: rsvpBorderColor ? `4px solid ${rsvpBorderColor}` : "none",
-        borderRadius: "4px",
-        color: "#fff",
-        fontSize: "12px",
-        padding: rsvpBorderColor ? "1px 6px 1px 4px" : "1px 6px",
-      },
-    };
-  }, []);
+  const eventPropGetter = useEventPropGetter();
 
   const handlePrev = useCallback(() => {
     setCurrentDate((d) => {
@@ -377,13 +253,69 @@ export function CalendarView() {
 
   const handleToday = useCallback(() => setCurrentDate(new Date()), []);
 
+  const handleExport = useCallback(
+    async (range: "month" | "3months" | "year") => {
+      let from: Date;
+      let to: Date;
+      if (range === "month") {
+        from = startOfMonth(currentDate);
+        to = endOfMonth(currentDate);
+      } else if (range === "3months") {
+        from = startOfMonth(currentDate);
+        to = endOfMonth(addMonths(currentDate, 2));
+      } else {
+        from = startOfYear(currentDate);
+        to = endOfYear(currentDate);
+      }
+      try {
+        await downloadCalendarExport(
+          format(from, "yyyy-MM-dd"),
+          format(to, "yyyy-MM-dd"),
+        );
+      } catch {
+        toast.error("Failed to export calendar");
+      }
+    },
+    [currentDate],
+  );
+
+  const handleExportMonth = useCallback(
+    () => void handleExport("month"),
+    [handleExport],
+  );
+  const handleExport3Months = useCallback(
+    () => void handleExport("3months"),
+    [handleExport],
+  );
+  const handleExportYear = useCallback(
+    () => void handleExport("year"),
+    [handleExport],
+  );
+
   const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
-
   const handleCloseExternal = useCallback(() => setSelectedExternal(null), []);
-
   const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
-
   const handleCloseAccounts = useCallback(() => setAccountsOpen(false), []);
+  const handleOpenAi = useCallback(() => setIsAiOpen(true), []);
+  const handleCloseAi = useCallback(() => setIsAiOpen(false), []);
+  const handleCloseCreateTicket = useCallback(
+    () => setIsCreateTicketOpen(false),
+    [],
+  );
+  const handleSelectActivity = useCallback(
+    (id: string) => setSelectedEventId(id),
+    [],
+  );
+  const handleSelectEventById = useCallback(
+    (eventId: string) => setSelectedEventId(eventId),
+    [],
+  );
+  const handleAttendeeChange = useCallback(
+    (memberId: string, checked: boolean) => {
+      setCheckedAttendees((prev) => ({ ...prev, [memberId]: checked }));
+    },
+    [],
+  );
 
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
@@ -401,211 +333,25 @@ export function CalendarView() {
     });
   }, [searchParams, finalizeMutate, router]);
 
-  const formattedRange = useMemo(() => {
-    if (view === "month") {
-      return format(currentDate, "MMMM yyyy");
-    }
-    if (view === "week") {
-      const start = startOfWeek(currentDate, { weekStartsOn: 1 });
-      const end = endOfWeek(currentDate, { weekStartsOn: 1 });
-      const weekNumber = format(currentDate, "I"); // ISO Week Number
-      if (start.getMonth() === end.getMonth()) {
-        return `${format(currentDate, "MMMM yyyy")} Week ${weekNumber}`;
-      }
-      return `${format(start, "MMM")} - ${format(end, "MMM yyyy")} Week ${weekNumber}`;
-    }
-    return format(currentDate, "eeee, MMMM d, yyyy");
-  }, [currentDate, view]);
-
-  const visibleRange = useMemo(() => {
-    if (view === "month") {
-      return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
-    }
-    if (view === "week") {
-      return {
-        start: startOfWeek(currentDate, { weekStartsOn: 1 }),
-        end: endOfWeek(currentDate, { weekStartsOn: 1 }),
-      };
-    }
-    return { start: startOfDay(currentDate), end: endOfDay(currentDate) };
-  }, [currentDate, view]);
-
-  const handleSelectEventById = useCallback((eventId: string) => {
-    setSelectedEventId(eventId);
-  }, []);
-
   return (
     <div className="flex flex-col gap-3 h-full">
-      {/* Redesigned calendar header bar */}
-      <div className="flex items-center justify-between flex-wrap gap-2 shrink-0 select-none pb-2 border-b border-border">
-        {/* Left header: Navigation, view selector & range label */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              aria-label="Previous"
-              onClick={handlePrev}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              aria-label="Next"
-              onClick={handleNext}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <Select value={view} onValueChange={(v) => setView(v as View)}>
-            <SelectTrigger className="h-8 w-[95px] text-xs font-medium">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="day" className="text-xs">
-                Day
-              </SelectItem>
-              <SelectItem value="week" className="text-xs">
-                Week
-              </SelectItem>
-              <SelectItem value="month" className="text-xs">
-                Month
-              </SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs font-medium px-3"
-            onClick={handleToday}
-          >
-            Today
-          </Button>
-
-          <span className="text-sm font-semibold text-foreground ml-1">
-            {formattedRange}
-          </span>
-        </div>
-
-        {/* Right header actions: Share, View mode, Add Event */}
-        <div className="flex items-center gap-2">
-          {/* Share dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs font-medium gap-1 px-3"
-              >
-                <Share2 className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Share</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40 text-xs">
-              <DropdownMenuItem className="text-xs">Copy link</DropdownMenuItem>
-              <DropdownMenuItem className="text-xs">
-                Email calendar
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs">
-                Embed calendar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 relative"
-            aria-label="Calendar accounts"
-            onClick={handleOpenAccounts}
-          >
-            <Link2 className="h-3.5 w-3.5" />
-            {activeConnectionCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-3.5 min-w-[14px] rounded-full bg-primary px-0.5 text-[9px] font-semibold leading-[14px] text-primary-foreground text-center">
-                {activeConnectionCount}
-              </span>
-            )}
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="sm"
-                className="h-8 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white gap-1"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Add</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem className="text-xs" onClick={handleOpenCreate}>
-                <Plus className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                Add event
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-xs"
-                onClick={handleOpenCreateTicket}
-              >
-                <Ticket className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                Add ticket due date
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <div className="h-4 border-l border-border mx-1" />
-
-          {/* View mode switcher */}
-          <div className="flex rounded-md border overflow-hidden h-8">
-            <button
-              type="button"
-              onClick={() => setViewMode("calendar")}
-              aria-pressed={viewMode === "calendar"}
-              className={cn(
-                "p-1.5 transition-colors",
-                viewMode === "calendar"
-                  ? "bg-muted text-foreground"
-                  : "hover:bg-muted/40 text-muted-foreground",
-              )}
-              title="Calendar View"
-            >
-              <CalendarIcon className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("list")}
-              aria-pressed={viewMode === "list"}
-              className={cn(
-                "p-1.5 transition-colors border-l",
-                viewMode === "list"
-                  ? "bg-muted text-foreground"
-                  : "hover:bg-muted/40 text-muted-foreground",
-              )}
-              title="List View"
-            >
-              <List className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("history")}
-              aria-pressed={viewMode === "history"}
-              className={cn(
-                "p-1.5 transition-colors border-l",
-                viewMode === "history"
-                  ? "bg-muted text-foreground"
-                  : "hover:bg-muted/40 text-muted-foreground",
-              )}
-              title="History"
-            >
-              <History className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+      <CalendarToolbar
+        view={view}
+        viewMode={viewMode}
+        formattedRange={formattedRange}
+        activeConnectionCount={activeConnectionCount}
+        onPrev={handlePrev}
+        onNext={handleNext}
+        onToday={handleToday}
+        onViewChange={setView}
+        onViewModeChange={setViewMode}
+        onExportMonth={handleExportMonth}
+        onExport3Months={handleExport3Months}
+        onExportYear={handleExportYear}
+        onOpenAccounts={handleOpenAccounts}
+        onOpenCreate={handleOpenCreate}
+        onOpenCreateTicket={handleOpenCreateTicket}
+      />
 
       {externalData?.errors && externalData.errors.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 shrink-0">
@@ -624,9 +370,7 @@ export function CalendarView() {
         </div>
       )}
 
-      {/* Two column grid layout (Main area + Sidebar) */}
       <div className="flex-1 flex gap-4 min-h-0">
-        {/* Left panel: main calendar wrapper */}
         <div className="flex-1 min-w-0 flex flex-col">
           <div
             ref={calContainerRef}
@@ -660,114 +404,21 @@ export function CalendarView() {
           </div>
         </div>
 
-        {/* Right Sidebar panel */}
-        <div className="w-[300px] shrink-0 border-l border-border px-3 space-y-5 hidden xl:block select-none overflow-y-auto">
-          {/* Mini Monthly Picker */}
-          <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
-            <Calendar
-              mode="single"
-              compact
-              selected={currentDate}
-              onSelect={(date) => date && setCurrentDate(date)}
-              className="w-full"
-            />
-          </div>
-
-          {/* Attendees Checklist */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-violet-500" />
-                Attendees
-              </span>
-              <button
-                onClick={handleOpenCreate}
-                className="text-violet-600 hover:text-violet-700 flex items-center gap-1 hover:underline"
-              >
-                <PlusCircle className="h-3 w-3" />
-                Add
-              </button>
-            </div>
-            <div className="rounded-lg border bg-card p-3 space-y-2.5 max-h-48 overflow-y-auto shadow-sm">
-              {members.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground">
-                  No members found
-                </p>
-              ) : (
-                members.map((member) => {
-                  const mName = member.firstName
-                    ? `${member.firstName} ${member.lastName ?? ""}`.trim()
-                    : (member.name ?? member.email);
-                  const isChecked = checkedAttendees[member.id] !== false;
-                  return (
-                    <div key={member.id} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`attendee-check-${member.id}`}
-                        checked={isChecked}
-                        onCheckedChange={(checked) => {
-                          setCheckedAttendees((prev) => ({
-                            ...prev,
-                            [member.id]: !!checked,
-                          }));
-                        }}
-                      />
-                      <label
-                        htmlFor={`attendee-check-${member.id}`}
-                        className="text-xs text-foreground cursor-pointer truncate font-medium flex-1 select-none"
-                      >
-                        {mName}
-                      </label>
-                      <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* Today's Activities */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Activity className="h-3.5 w-3.5 text-violet-500" />
-              My Activities
-            </h4>
-            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-              {todayActivities.length === 0 ? (
-                <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-                  No events scheduled for today
-                </div>
-              ) : (
-                todayActivities.map((act) => {
-                  const eventColor =
-                    EVENT_COLORS[act.resource?.color ?? "blue"] ||
-                    EVENT_COLORS.blue;
-                  return (
-                    <div
-                      key={act.id}
-                      onClick={() => setSelectedEventId(String(act.id))}
-                      className="rounded-lg border bg-card p-2.5 hover:bg-muted/40 cursor-pointer transition-all duration-200 shadow-xs border-l-4"
-                      style={{ borderLeftColor: eventColor }}
-                    >
-                      <h5 className="text-xs font-semibold text-foreground truncate">
-                        {act.title}
-                      </h5>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {act.allDay
-                          ? "All day"
-                          : `${format(act.start, "h:mm a")} - ${format(act.end, "h:mm a")}`}
-                      </p>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </div>
+        <CalendarSidebar
+          currentDate={currentDate}
+          members={members}
+          checkedAttendees={checkedAttendees}
+          todayActivities={todayActivities}
+          onDateSelect={setCurrentDate}
+          onAttendeeChange={handleAttendeeChange}
+          onOpenCreate={handleOpenCreate}
+          onSelectActivity={handleSelectActivity}
+        />
       </div>
 
-      {/* Floating Sparkles launcher button for AI Chat */}
       <button
-        onClick={() => setIsAiOpen(true)}
+        type="button"
+        onClick={handleOpenAi}
         className="fixed bottom-6 right-6 z-40 bg-violet-600 hover:bg-violet-700 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-1.5 group select-none"
       >
         <Sparkles className="h-5 w-5 animate-pulse" />
@@ -776,10 +427,9 @@ export function CalendarView() {
         </span>
       </button>
 
-      {/* Floating AI Assistant Chat panel */}
       <CalendarAiAssistant
         isOpen={isAiOpen}
-        onClose={() => setIsAiOpen(false)}
+        onClose={handleCloseAi}
         onEventCreated={refetchEvents}
       />
 
@@ -791,7 +441,7 @@ export function CalendarView() {
 
       <CreateTicketFromCalendarDialog
         open={isCreateTicketOpen}
-        onClose={() => setIsCreateTicketOpen(false)}
+        onClose={handleCloseCreateTicket}
         defaultSlot={createTicketSlot}
       />
 

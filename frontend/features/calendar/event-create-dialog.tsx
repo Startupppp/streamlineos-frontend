@@ -22,9 +22,9 @@ import { useIntegrationConnections } from "@/hooks/api/integrations";
 import { toast } from "sonner";
 import { EventFormFields } from "./event-form-fields";
 import { EventAttendeesPicker } from "./event-attendees-picker";
-import { useTicketSearch } from "@/hooks/api/projects";
 import type { TicketSearchResult } from "@/hooks/api/projects";
-import { Ticket, X, Search, Loader2, Maximize2, Users, Link as LinkIcon } from "lucide-react";
+import { TicketPickerDialog } from "./ticket-picker-dialog";
+import { Ticket, X, Maximize2, Users, Link as LinkIcon } from "lucide-react";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
 
@@ -120,7 +120,6 @@ export function EventCreateDialog({
   const [linkedTicket, setLinkedTicket] = useState<TicketSearchResult | null>(null);
   const [existingEntityId, setExistingEntityId] = useState<string | null>(null);
   const [ticketPickerOpen, setTicketPickerOpen] = useState(false);
-  const [ticketSearchQ, setTicketSearchQ] = useState("");
   const createEvent = useCreateCalendarEvent();
   const updateEvent = useUpdateCalendarEvent();
   const { data: members = [] } = useCalendarOrgMembers();
@@ -402,7 +401,6 @@ export function EventCreateDialog({
 
   const handleOpenTicketPicker = useCallback(() => {
     setTicketPickerOpen(true);
-    setTicketSearchQ("");
   }, []);
 
   const handleTicketSelect = useCallback((ticket: TicketSearchResult) => {
@@ -570,70 +568,11 @@ export function EventCreateDialog({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={ticketPickerOpen} onOpenChange={setTicketPickerOpen}>
-        <DialogContent className="max-w-md p-0 flex flex-col h-[50vh] overflow-hidden rounded-xl">
-          <DialogHeader className="px-6 py-4 border-b shrink-0">
-            <DialogTitle className="text-base font-semibold">Link a ticket</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 min-h-0 px-6 py-4 flex flex-col">
-            <TicketPickerContent
-              q={ticketSearchQ}
-              onQChange={setTicketSearchQ}
-              onSelect={handleTicketSelect}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      <TicketPickerDialog
+        open={ticketPickerOpen}
+        onOpenChange={setTicketPickerOpen}
+        onSelect={handleTicketSelect}
+      />
     </>
-  );
-}
-
-function TicketPickerContent({
-  q,
-  onQChange,
-  onSelect,
-}: {
-  q: string;
-  onQChange: (v: string) => void;
-  onSelect: (t: TicketSearchResult) => void;
-}) {
-  const { data: tickets = [], isLoading } = useTicketSearch(q);
-  return (
-    <div className="flex flex-col gap-3 flex-1 min-h-0">
-      <div className="relative shrink-0">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <input
-          autoFocus
-          value={q}
-          onChange={(e) => onQChange(e.target.value)}
-          placeholder="Search by ticket key or title…"
-          className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30"
-        />
-      </div>
-      <div className="overflow-y-auto space-y-1 flex-1">
-        {isLoading ? (
-          <div className="flex items-center gap-2 py-4 text-xs text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Searching…
-          </div>
-        ) : tickets.length === 0 && q ? (
-          <div className="py-4 text-xs text-muted-foreground">No tickets found</div>
-        ) : (
-          tickets.map((ticket) => (
-            <button
-              key={ticket.id}
-              type="button"
-              onClick={() => onSelect(ticket)}
-              className="w-full flex items-center gap-2 px-3 h-8 rounded-md text-left hover:bg-accent transition-colors focus-visible:outline-none focus-visible:bg-accent"
-            >
-              <span className="font-mono text-[11px] text-muted-foreground shrink-0 w-16 truncate">
-                {ticket.projectKey}-{ticket.ticketNumber}
-              </span>
-              <span className="text-[13px] flex-1 min-w-0 truncate text-foreground">{ticket.title}</span>
-            </button>
-          ))
-        )}
-      </div>
-    </div>
   );
 }

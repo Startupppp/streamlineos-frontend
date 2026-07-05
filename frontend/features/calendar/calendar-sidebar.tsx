@@ -6,15 +6,7 @@ import { Users, PlusCircle, Activity } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { BigCalEvent } from "./big-calendar-wrapper";
-
-const EVENT_COLORS: Record<string, string> = {
-  blue: "#3b82f6",
-  green: "#22c55e",
-  red: "#ef4444",
-  yellow: "#f59e0b",
-  purple: "#a855f7",
-  gold: "#3b82f6",
-};
+import { EVENT_COLORS } from "./use-event-prop-getter";
 
 interface SidebarMember {
   id: string;

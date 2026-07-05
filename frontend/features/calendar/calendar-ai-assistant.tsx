@@ -139,8 +139,7 @@ export function CalendarAiAssistant({ onEventCreated, isOpen, onClose }: Calenda
 
             toast.success(`Event "${meta.subject}" scheduled successfully!`);
             onEventCreated?.();
-          } catch (err) {
-            console.error(err);
+          } catch {
             toast.error("Failed to schedule the event");
             setMessages((prev) => [
               ...prev,

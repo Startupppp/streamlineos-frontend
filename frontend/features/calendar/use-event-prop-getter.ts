@@ -1,0 +1,72 @@
+"use client";
+
+import { useCallback } from "react";
+import type { BigCalEvent } from "./big-calendar-wrapper";
+
+export const EVENT_COLORS: Record<string, string> = {
+  blue: "#3b82f6",
+  green: "#22c55e",
+  red: "#ef4444",
+  yellow: "#f59e0b",
+  purple: "#a855f7",
+  gold: "#3b82f6",
+};
+
+const RSVP_BORDER_COLORS: Record<string, string> = {
+  accepted: "#22c55e",
+  declined: "#ef4444",
+  tentative: "#f59e0b",
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  huddle: "#f97316",
+};
+
+export function useEventPropGetter() {
+  return useCallback((event: BigCalEvent) => {
+    if (event.resource?.source === "external") {
+      return {
+        style: {
+          backgroundColor: event.resource.color ?? "#3b82f6",
+          opacity: 0.85,
+          border: "none",
+          borderRadius: "4px",
+          color: "#fff",
+          fontSize: "12px",
+          padding: "1px 6px",
+        },
+      };
+    }
+    if (event.resource?.source === "task") {
+      return {
+        style: {
+          backgroundColor: "transparent",
+          border: "1px solid var(--border)",
+          borderRadius: "4px",
+          color: "var(--foreground)",
+          fontSize: "11px",
+          padding: "1px 6px",
+        },
+      };
+    }
+    const rsvp = event.resource?.myRsvpStatus as string | null | undefined;
+    const rsvpBorderColor = rsvp ? (RSVP_BORDER_COLORS[rsvp] ?? null) : null;
+    const categoryColor = event.resource?.category
+      ? (CATEGORY_COLORS[event.resource.category] ?? null)
+      : null;
+    return {
+      style: {
+        backgroundColor:
+          categoryColor ??
+          EVENT_COLORS[event.resource?.color ?? "blue"] ??
+          EVENT_COLORS.blue,
+        border: "none",
+        borderLeft: rsvpBorderColor ? `4px solid ${rsvpBorderColor}` : "none",
+        borderRadius: "4px",
+        color: "#fff",
+        fontSize: "12px",
+        padding: rsvpBorderColor ? "1px 6px 1px 4px" : "1px 6px",
+      },
+    };
+  }, []);
+}
