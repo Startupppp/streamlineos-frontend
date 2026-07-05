@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { usePreviewTemplate } from "@/hooks/api/payroll";
+import { usePreviewTemplate, usePayrollPolicyCurrent } from "@/hooks/api/payroll";
 import { formatMoney } from "./payroll-format";
 import type { TemplateRow, PreviewLine } from "@/types/payroll/setup";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,8 @@ export function TemplatePreviewSheet({
 }: TemplatePreviewSheetProps) {
   const [ctcInput, setCtcInput] = useState("1200000");
   const preview = usePreviewTemplate();
+  const { data: policyData } = usePayrollPolicyCurrent();
+  const currency = policyData?.policy?.currency ?? "INR";
 
   function handleCtcChange(e: React.ChangeEvent<HTMLInputElement>) {
     setCtcInput(e.target.value);
@@ -49,8 +51,6 @@ export function TemplatePreviewSheet({
     if (!template) return;
     preview.mutate({ templateId: template.id, annualCtc: ctcInput, toggleOverrides });
   }
-
-  const currency = "INR";
   const previewData = preview.data;
   const groups = previewData
     ? Object.entries(TYPE_LABELS).reduce<Record<string, PreviewLine[]>>((acc, [type, label]) => {
@@ -75,7 +75,7 @@ export function TemplatePreviewSheet({
         <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
           <div className="flex items-end gap-2">
             <div className="flex-1 space-y-1">
-              <Label htmlFor="preview-ctc" className="text-xs">Annual CTC (₹)</Label>
+              <Label htmlFor="preview-ctc" className="text-xs">Annual CTC ({currency})</Label>
               <Input
                 id="preview-ctc"
                 value={ctcInput}

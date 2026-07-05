@@ -39,6 +39,7 @@ const profileSchema = z.object({
   annualCtc: z.string().regex(/^\d+(\.\d{1,2})?$/, "Positive decimal required"),
   workerType: z.enum(["EMPLOYEE", "CONTRACTOR", "CONSULTANT", "INTERN", "EOR"]),
   currency: z.string().length(3),
+  payoutCurrency: z.string().refine((v) => !v || v.length === 3, "Must be a 3-letter currency code"),
   taxRegime: z.enum(["OLD", "NEW", "none"]),
   costCenter: z.string().max(100),
 });
@@ -66,6 +67,7 @@ export function SalaryProfileSheet({
   const { data: policyData } = usePayrollPolicyCurrent();
   const policyCurrency = policyData?.policy?.currency ?? "INR";
   const taxRegimeApplicable = policyData?.taxRegimeApplicable ?? true;
+  const multiCurrency = policyData?.activeVersion?.toggles?.multiCurrency ?? false;
   const createMutation = useCreateProfile(resolvedUserId);
   const patchMutation = usePatchProfile(resolvedUserId);
 
@@ -91,6 +93,7 @@ export function SalaryProfileSheet({
       annualCtc: "",
       workerType: "EMPLOYEE",
       currency: policyCurrency,
+      payoutCurrency: "",
       taxRegime: "none",
       costCenter: "",
     },
@@ -104,6 +107,7 @@ export function SalaryProfileSheet({
         annualCtc: existingProfile?.annualCtc ?? "",
         workerType: existingProfile?.workerType ?? "EMPLOYEE",
         currency: existingProfile?.currency ?? policyCurrency,
+        payoutCurrency: existingProfile?.payoutCurrency ?? "",
         taxRegime: (existingProfile?.taxRegime as "OLD" | "NEW" | undefined) ?? "none",
         costCenter: existingProfile?.costCenter ?? "",
       });
@@ -121,6 +125,7 @@ export function SalaryProfileSheet({
       annualCtc: values.annualCtc,
       workerType: values.workerType,
       currency: values.currency,
+      payoutCurrency: values.payoutCurrency || undefined,
       taxRegime: values.taxRegime === "none" ? undefined : values.taxRegime,
       costCenter: values.costCenter || undefined,
     };
@@ -234,6 +239,24 @@ export function SalaryProfileSheet({
                   </FormItem>
                 )}
               />
+              {multiCurrency && (
+                <FormField
+                  control={form.control}
+                  name="payoutCurrency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Payout Currency</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. USD" maxLength={3} />
+                      </FormControl>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Override payout currency for FX conversion (leave blank to use salary currency)
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               {taxRegimeApplicable && (
                 <FormField
                   control={form.control}

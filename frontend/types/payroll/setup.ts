@@ -169,7 +169,7 @@ export type StatutoryPackPreview = {
 
 export type StatutoryPackConfig = {
   country: string;
-  items: { key: string; enabled: boolean; percentOverride?: number }[];
+  items: { key: string; enabled: boolean; percentOverride?: number; label?: string; kind?: string | null }[];
   complianceChecklist: ComplianceChecklistItem[];
 };
 

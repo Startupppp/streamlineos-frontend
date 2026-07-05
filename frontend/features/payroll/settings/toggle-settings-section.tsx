@@ -131,7 +131,7 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                 {statutoryPack.items.map((item) => (
                   <div key={item.key} className="flex items-center justify-between px-4 py-3 gap-4">
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium leading-snug">{item.key}</p>
+                      <p className="text-[13px] font-medium leading-snug">{item.label ?? item.key}</p>
                     </div>
                     <span
                       className={

@@ -174,6 +174,7 @@ export interface EmployeeSalaryProfile {
   userId: string;
   workerType: PayrollWorkerType;
   currency: string;
+  payoutCurrency?: string | null;
   annualCtc: string;
   taxRegime: string | null;
   costCenter: string | null;

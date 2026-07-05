@@ -92,13 +92,13 @@ export default function PageCover({
   if (!coverImage) {
     if (!isEditable) return null;
     return (
-      <div className="group relative h-8 flex items-end px-6 max-w-4xl mx-auto w-full">
+      <div className="relative flex h-10 w-full max-w-4xl items-center justify-center px-6 mx-auto">
         <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-muted-foreground gap-1"
+              className="text-xs text-muted-foreground gap-1"
             >
               <KbImageIcon className="h-3 w-3" />
               Add cover

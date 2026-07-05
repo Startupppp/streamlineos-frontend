@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { usePayrollTemplates } from "@/hooks/api/payroll";
+import { usePayrollTemplates, usePayrollPolicyCurrent } from "@/hooks/api/payroll";
 import { TemplateCard } from "@/features/payroll/shared/template-card";
 import { TemplatePreviewSheet } from "@/features/payroll/shared/template-preview-sheet";
 import { DuplicateTemplateDialog } from "@/features/payroll/shared/duplicate-template-dialog";
@@ -46,9 +46,13 @@ export function TemplatesPageContent() {
   const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
   const [duplicateTemplate, setDuplicateTemplate] = useState<TemplateRow | null>(null);
 
+  const { data: policyData } = usePayrollPolicyCurrent();
+  const policyCountry = policyData?.policy?.country;
+
   const { data, isLoading, isError, refetch } = usePayrollTemplates({
     search: search || undefined,
     category: category === "all" ? undefined : category,
+    country: policyCountry,
   });
 
   function updateUrl(updates: Record<string, string | undefined>) {

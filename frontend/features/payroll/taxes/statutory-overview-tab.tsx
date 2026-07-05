@@ -87,7 +87,7 @@ export function StatutoryOverviewTab() {
                 className={`flex items-center justify-between px-4 py-3 gap-4 ${idx !== 0 ? "border-t border-border" : ""}`}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium leading-snug">{item.key}</p>
+                  <p className="text-[13px] font-medium leading-snug">{item.label ?? item.key}</p>
                 </div>
                 <EnabledBadge enabled={item.enabled} />
               </div>
