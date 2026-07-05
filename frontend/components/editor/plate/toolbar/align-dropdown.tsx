@@ -46,7 +46,7 @@ export function AlignDropdown() {
   }, []);
 
   function handleSelect(value: Alignment) {
-    editor.getApi(TextAlignPlugin).textAlign.setNodes(value);
+    editor.getTransforms(TextAlignPlugin).textAlign.setNodes(value);
   }
 
   return (

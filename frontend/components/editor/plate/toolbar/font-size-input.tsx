@@ -3,7 +3,6 @@
 import React from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useEditorRef, useEditorSelector } from 'platejs/react';
-import { FontSizePlugin } from '@platejs/basic-styles/react';
 import { Button } from '@/components/ui/button';
 
 const DEFAULT_SIZE = 16;
@@ -26,7 +25,7 @@ export function FontSizeInput() {
 
   function applySize(size: number) {
     const clamped = Math.min(MAX_SIZE, Math.max(MIN_SIZE, size));
-    editor.getApi(FontSizePlugin).fontSize.addMark(`${clamped}px`);
+    editor.tf.addMarks({ fontSize: `${clamped}px` });
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {

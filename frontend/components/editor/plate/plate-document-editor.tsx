@@ -80,6 +80,7 @@ import { SlashPlugin, SlashInputPlugin } from "@platejs/slash-command/react";
 import { CaptionPlugin } from "@platejs/caption/react";
 import { EmojiPlugin, EmojiInputPlugin } from "@platejs/emoji/react";
 import emojiData from "@emoji-mart/data";
+import type { EmojiMartData } from "@emoji-mart/data";
 import { createLowlight } from "lowlight";
 import { common } from "lowlight";
 import {
@@ -390,13 +391,7 @@ function buildPlugins() {
     }).withComponent(MentionElement),
     MentionInputPlugin.withComponent(MentionInputElement),
     EmojiPlugin.configure({
-      options: {
-        data: emojiData as Parameters<
-          typeof EmojiPlugin.configure
-        >[0]["options"] extends { data?: infer D }
-          ? D
-          : unknown,
-      },
+      options: { data: emojiData as EmojiMartData },
     }),
     EmojiInputPlugin,
     createPlatePlugin({

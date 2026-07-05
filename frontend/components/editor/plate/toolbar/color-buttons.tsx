@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { Baseline, Highlighter } from 'lucide-react';
 import { useEditorRef, useEditorSelector } from 'platejs/react';
-import { FontColorPlugin, FontBackgroundColorPlugin } from '@platejs/basic-styles/react';
 import {
   Popover,
   PopoverTrigger,
@@ -104,19 +103,19 @@ export function ColorButtons() {
   }, []);
 
   function applyTextColor(color: string) {
-    editor.getApi(FontColorPlugin).color.addMark(color);
+    editor.tf.addMarks({ color });
   }
 
   function applyBgColor(color: string) {
-    editor.getApi(FontBackgroundColorPlugin).backgroundColor.addMark(color);
+    editor.tf.addMarks({ backgroundColor: color });
   }
 
   function clearTextColor() {
-    editor.tf.removeMark({ key: 'color' });
+    editor.tf.removeMarks('color');
   }
 
   function clearBgColor() {
-    editor.tf.removeMark({ key: 'backgroundColor' });
+    editor.tf.removeMarks('backgroundColor');
   }
 
   return (
