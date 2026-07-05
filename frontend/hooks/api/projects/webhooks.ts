@@ -2,25 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-
-export interface ProjectWebhook {
-  id: number;
-  projectId: number;
-  url: string;
-  events: string[];
-  isActive: boolean;
-  secret?: string;
-  createdAt: string;
-}
-
-export interface WebhookDelivery {
-  id: number;
-  webhookId: number;
-  event: string;
-  status: "success" | "failed" | "pending";
-  responseCode: number | null;
-  deliveredAt: string;
-}
+import type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
+export type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 
 function webhookKeys(projectId: number) {
   return ["projects", projectId, "webhooks"] as const;

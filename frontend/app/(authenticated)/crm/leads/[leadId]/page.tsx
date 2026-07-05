@@ -343,7 +343,7 @@ export default function LeadDetailPage({
                     Connect your email to view email threads with this lead.
                   </p>
                   <Link
-                    href="/settings/integrations"
+                    href="/settings/connected-accounts"
                     className="text-[11px] font-medium text-amber-700 underline underline-offset-2 hover:text-amber-900 mt-1 inline-block"
                   >
                     Go to Settings →

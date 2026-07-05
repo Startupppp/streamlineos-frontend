@@ -147,7 +147,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-4">
+      <div className="w-full px-3 py-8 space-y-4">
         <Skeleton className="h-8 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
         <Skeleton className="h-64 w-full" />
@@ -181,7 +181,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
       />
 
       <div className="flex flex-1 min-w-0">
-        <div className="flex-1 min-w-0 max-w-4xl mx-auto w-full px-4 sm:px-6 pt-3 pb-16">
+        <div className="flex-1 min-w-0 w-full px-3 pt-3 pb-16">
           <PageDocumentHeader
             page={page}
             pageId={pageId}

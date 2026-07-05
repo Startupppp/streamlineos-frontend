@@ -3,59 +3,28 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-
-export type RoadmapStatus = "planned" | "in_progress" | "completed" | "cancelled";
-export type FeedbackStatus = "open" | "planned" | "in_progress" | "completed" | "declined";
-export type ChangelogType = "feature" | "improvement" | "fix";
-
-export interface RoadmapItem {
-  id: number;
-  orgId: string;
-  title: string;
-  description: string | null;
-  status: RoadmapStatus;
-  category: string | null;
-  isPublic: boolean;
-  projectId: number | null;
-  epicTicketId: number | null;
-  targetQuarter: string | null;
-  sortOrder: number;
-  votes: number;
-  createdBy: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FeedbackPost {
-  id: number;
-  orgId: string;
-  title: string;
-  description: string | null;
-  status: FeedbackStatus;
-  category: string | null;
-  votes: number;
-  submittedByName: string | null;
-  submittedByEmail: string | null;
-  linkedRoadmapItemId: number | null;
-  createdBy: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ChangelogEntry {
-  id: number;
-  orgId: string;
-  title: string;
-  content: string;
-  version: string | null;
-  type: ChangelogType;
-  isPublished: boolean;
-  linkedRoadmapItemId: number | null;
-  publishedAt: string | null;
-  createdBy: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import type {
+  RoadmapStatus,
+  FeedbackStatus,
+  ChangelogType,
+  RoadmapItem,
+  FeedbackPost,
+  ChangelogEntry,
+  PublicRoadmapItem,
+  PublicFeedbackPost,
+  PublicChangelogEntry,
+} from "@/types/projects";
+export type {
+  RoadmapStatus,
+  FeedbackStatus,
+  ChangelogType,
+  RoadmapItem,
+  FeedbackPost,
+  ChangelogEntry,
+  PublicRoadmapItem,
+  PublicFeedbackPost,
+  PublicChangelogEntry,
+} from "@/types/projects";
 
 interface RoadmapItemFilters {
   status?: RoadmapStatus;
@@ -129,34 +98,6 @@ interface UpdateChangelogEntryInput {
   type?: ChangelogType;
   isPublished?: boolean;
   linkedRoadmapItemId?: number | null;
-}
-
-export interface PublicRoadmapItem {
-  id: number;
-  title: string;
-  description: string | null;
-  status: RoadmapStatus;
-  category: string | null;
-  targetQuarter: string | null;
-  votes: number;
-}
-
-export interface PublicFeedbackPost {
-  id: number;
-  title: string;
-  description: string | null;
-  category: string | null;
-  votes: number;
-  createdAt: string;
-}
-
-export interface PublicChangelogEntry {
-  id: number;
-  title: string;
-  content: string;
-  version: string | null;
-  type: ChangelogType;
-  publishedAt: string | null;
 }
 
 interface PublicRoadmapBoard {

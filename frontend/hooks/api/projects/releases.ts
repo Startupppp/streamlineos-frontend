@@ -2,36 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-
-export interface Release {
-  id: number;
-  projectId: number;
-  name: string;
-  version: string;
-  description: string | null;
-  status: "draft" | "released" | "archived";
-  releaseDate: string | null;
-  ticketCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateReleaseInput {
-  name: string;
-  version: string;
-  description?: string | null;
-  status?: "draft" | "released" | "archived";
-  releaseDate?: string | null;
-}
-
-export interface UpdateReleaseInput {
-  releaseId: number;
-  name?: string;
-  version?: string;
-  description?: string | null;
-  status?: "draft" | "released" | "archived";
-  releaseDate?: string | null;
-}
+import type { Release, CreateReleaseInput, UpdateReleaseInput } from "@/types/projects";
+export type { Release, CreateReleaseInput, UpdateReleaseInput } from "@/types/projects";
 
 function releaseKey(projectId: number) {
   return ["streamlineos", "projects", projectId, "releases"] as const;

@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { label: "Import / Export", href: "/hr/settings/import-export" },
+  { label: "Integrations", href: "/hr/settings/integrations" },
+  { label: "Automations", href: "/hr/settings/automations" },
 ] as const;
 
 export default function HrSettingsLayout({

@@ -92,7 +92,7 @@ export default function PageCover({
   if (!coverImage) {
     if (!isEditable) return null;
     return (
-      <div className="relative flex h-10 w-full max-w-4xl items-center justify-center px-6 mx-auto">
+      <div className="relative flex h-10 w-full items-center px-3">
         <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
           <PopoverTrigger asChild>
             <Button

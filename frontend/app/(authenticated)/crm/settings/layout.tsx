@@ -12,6 +12,7 @@ const TABS = [
   { label: "Custom Fields", href: "/crm/settings/custom-fields" },
   { label: "Products", href: "/crm/settings/products" },
   { label: "Automations", href: "/crm/settings/automations" },
+  { label: "AI Settings", href: "/crm/settings/ai" },
   { label: "Import / Export", href: "/crm/settings/import-export" },
   { label: "Audit Log", href: "/crm/settings/audit-log" },
 ] as const;

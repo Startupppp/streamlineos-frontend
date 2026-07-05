@@ -1,6 +1,8 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { AutomationCondition, AutomationAction, ProjectAutomation } from "@/types/projects";
+export type { AutomationCondition, AutomationAction, ProjectAutomation } from "@/types/projects";
 
 export const TRIGGER_EVENTS = [
   { value: "ticket.created", label: "Ticket Created" },
@@ -26,28 +28,6 @@ export const ACTION_TYPES = [
   { value: "add_label", label: "Add Label" },
   { value: "add_comment", label: "Add Comment" },
 ] as const;
-
-export interface AutomationCondition {
-  field: string;
-  operator: "equals" | "not_equals" | "contains" | "is_empty" | "is_not_empty";
-  value?: string;
-}
-
-export interface AutomationAction {
-  type: "set_status" | "set_assignee" | "set_priority" | "add_label" | "add_comment";
-  value: string;
-}
-
-export interface ProjectAutomation {
-  id: number;
-  projectId: number;
-  name: string;
-  isActive: boolean;
-  triggerEvent: string;
-  conditions: AutomationCondition[];
-  actions: AutomationAction[];
-  createdAt: string;
-}
 
 function automationKeys(projectId: number) {
   return ["projects", projectId, "automations"] as const;

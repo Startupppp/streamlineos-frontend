@@ -4,17 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-
-export interface TicketSearchResult {
-  id: number;
-  title: string;
-  status: string;
-  priority: string;
-  ticketNumber: number;
-  projectId: number;
-  projectKey: string;
-  projectName: string;
-}
+import type { TicketSearchResult } from "@/types/projects";
+export type { TicketSearchResult } from "@/types/projects";
 
 export function useTicketSearch(
   q: string,

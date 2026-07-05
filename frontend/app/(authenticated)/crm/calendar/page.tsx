@@ -138,7 +138,7 @@ export default function CrmCalendarPage() {
   );
 
   const handleConnectCalendar = useCallback(() => {
-    router.push("/settings/integrations");
+    router.push("/settings/connected-accounts");
   }, [router]);
 
   const handleNewMeeting = useCallback(() => {

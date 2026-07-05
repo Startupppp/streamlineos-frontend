@@ -3,19 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-
-export interface ProjectMilestone {
-  id: number;
-  projectId: number;
-  orgId: string;
-  name: string;
-  description: string | null;
-  targetDate: string;
-  status: "PENDING" | "ACHIEVED" | "MISSED";
-  createdBy: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-}
+import type { ProjectMilestone, ProjectBudget, ResourceAllocationEntry } from "@/types/projects";
+export type { ProjectMilestone, ProjectBudget, ResourceAllocationEntry } from "@/types/projects";
 
 interface CreateMilestoneInput {
   name: string;
@@ -31,26 +20,9 @@ interface UpdateMilestoneInput {
   status?: "PENDING" | "ACHIEVED" | "MISSED";
 }
 
-interface ProjectBudget {
-  projectId: number;
-  plannedBudget: number;
-  actualCost: number;
-  remaining: number;
-  utilizationPct: number;
-  totalHours: number;
-  memberBreakdown: { userId: string; hours: number; cost: number }[];
-}
-
-interface ResourceAllocationEntry {
-  user: { id: string; name: string | null; email: string; image: string | null };
-  totalOpen: number;
-  byProject: { projectId: number; projectName: string; projectKey: string; open: number }[];
-}
-
 function milestoneKey(projectId: number) {
   return ["streamlineos", "projects", projectId, "milestones"] as const;
 }
-
 
 export function useProjectMilestones(projectId: number) {
   return useQuery({
@@ -91,7 +63,6 @@ export function useDeleteMilestone(projectId: number) {
   });
 }
 
-
 export function useProjectBudget(projectId: number) {
   return useQuery({
     queryKey: queryKeys.projects.budget(projectId),
@@ -110,7 +81,6 @@ export function useUpdateProjectBudget(projectId: number) {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.budget(projectId) }),
   });
 }
-
 
 export function useResourceAllocation() {
   return useQuery({

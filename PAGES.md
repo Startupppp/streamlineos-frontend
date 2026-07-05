@@ -8,7 +8,7 @@ Ordered money-path first. Check off each page after fixing.
 
 > **Settings PM review (2026-07-02)**: `/settings/email-templates` DELETED (preview-only, no user value; CRM has its own full-CRUD editor at `/crm/settings/email-templates`); `/settings/custom-fields` → redirect to existing `/crm/settings/custom-fields` (dead global feature code deleted). Living rule added (CLAUDE.md §16): custom fields/automations/integrations/data-hub are module-owned, never global settings. `/users/import` dead nav link removed — UserImportDialog already on /users (More→Import CSV), backend verified with real 2-row import. `/billing` stats: two rows → one StatCardGrid (5 cards, dupes dropped). `/settings/security`: passwordExpiryDays was DECORATIVE — now enforced at login (baseline passwordChangedAt→createdAt → forceChangePassword → /reset-password); allowedEmailDomains + maxConcurrentSessions were enforced-but-hidden — UI cards added; NIST copy; ipAllowlist = stored-unenforced backlog. `/settings/sessions` e2e: next-auth.d.ts `sessionId` type gap (JWT always randomUUID → isCurrent never true) fixed; JwtAuthGuard now reads `revoked:session:` Redis denylist (revocation actually enforces, PAT skip, Redis-down graceful); page rebuilt on DataTable + canonical filters + ConfirmDialog. `/settings/api-tokens`: 12 violations fixed (viewport-tall empty pit, loose copy block, header action, condensed 32px rows). `/settings/ai` KEPT (real org AI flags + usage). Backend tsc ✓ frontend tsc ✓.
 
-> **Module-owned settings wave (2026-07-03)**: `/settings/automations` restructured module-level — audit revealed 29 triggers (26 HR, 1 Support, 1 Finance, 2 CRM dupes); now HR|Support|Finance tabs gated by module, CRM triggers removed from form (existing rules stay editable via fallback), pointer card → `/crm/settings/automations`; nav label Automation→Automations (kept in Platform — Workflows group is permission-gated). `/settings/integrations` index regrouped by module (HR & Recruitment: job boards+calendar; Projects: git), sections hidden when module off; sub-pages RequireModule-gated + module badge + backHref; OAuth callback URLs frozen (registered externally); connected-accounts KEPT (per-user sign-in providers ≠ org calendar OAuth). `/settings/data-hub` → module tabs (CRM: leads/contacts/deals/clients; HR: employees/payroll/expenses/assets — expenses+assets are HR-owned per endpoints, NOT finance/inventory), `?module=` deep links, 420-line monolith split into features/settings/data-hub/*, screenshot-verified. Duplicate sweep: `/organization/audit` = subset of `/settings/audit-log` + wrongly HR-gated → redirect; devices (device-trust) + login-history (auth events) KEPT distinct but aligned to DataTable + given Security-group nav entries (were unreachable); dead duplicate session hooks in hooks/api/auth.ts deleted. Script cleanup: 9 one-offs deleted (wf-*, parity, sync-schema retired, verify one-offs, duplicate auth helpers) — kept harness, functional/ test suite, package.json-wired scripts. Backend tsc ✓ frontend tsc ✓.
+> **Module-owned settings wave 2 (2026-07-05)**: `/settings/integrations`, `/settings/automations`, `/settings/ai` DELETED as global pages — moved to module settings: HR integrations+automations → `/hr/settings/integrations`, `/hr/settings/automations`; Projects git → `/projects/settings/integrations`; Support automations → `/support/settings/automations`; Finance automations → `/accounting/settings/automations`; CRM AI → `/crm/settings/ai`. Old URLs redirect (integrations→HR, automations→HR, ai→CRM, git→projects). Platform sidebar group entries removed; `/settings/connected-accounts` kept global. Calendar/email connect CTAs → `/settings/connected-accounts`.
 
 > **Projects UI wave + KB extraction + live modules (2026-07-03)**: All 22 eligible Projects pages refined to canon (roadmap/my-tickets/tickets-hooks skipped — user in-flight): PageWrapper eyebrow/backHref everywhere, shared DataTable/StatCardGrid/EmptyState/ErrorState, canonical sheet footers (intake ×3, webhooks inline-form→Sheet, cycles/modules/views body→footer), RequireModule PROJECTS on top-level pages; §9 splits: templates 693→149 (+4 feature files), reports 679→42 (+7 chart sections), epics 514→176 (+epic-card). Module state is LIVE everywhere: new `useEnabledModules()` reads `/me/access` (session fallback for first paint), 7 consumers swapped off JWT claim — toggle → instant unlock, no reload (root cause: NextAuth beta update() unreliable). KB extracted from helpdesk: `/support/kb/**` → `/kb/**` (param-preserving redirects, 7 link sites, features/kb/), Documents product tile → /kb, KB removed from Helpdesk nav group, /kb→documents pathname mapping. Wiki dedup: removed from Home Overview (Documents product is sole sidebar home). Analytics product tile fixed /analytics(404)→/reports (+product mapping). Agent screenshot-login failures root-caused: AUTH_RATE_LIMITED from parallel Playwright logins, not a regression — verified login works post-window. Backend tsc ✓ frontend tsc ✓ (user in-flight: chat-types, tickets hooks, my-tickets, roadmap, features/crm/analytics).
 
@@ -67,6 +67,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/crm/settings/products` — Product catalog CRUD
 - [x] `/crm/settings/custom-fields` — Custom field definitions per entity
 - [x] `/crm/settings/automations` — Automation rules CRUD + toggle + run history
+- [x] `/crm/settings/ai` — CRM AI feature flags + usage dashboard
 - [x] `/crm/settings/audit-log` — Audit log with filters + pagination + export
 - [x] `/crm/settings/import-export` — CRM leads/contacts/deals/clients import & export
 
@@ -175,6 +176,8 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/hr/asset-returns` — Asset returns
 - [x] `/hr/analytics` — HR analytics; `DashboardGate permission="hr:performance:view"`
 - [x] `/hr/settings/import-export` — HR employees/expenses/assets export
+- [x] `/hr/settings/integrations` — Recruitment job board integrations (LinkedIn, Naukri, Indeed)
+- [x] `/hr/settings/automations` — HR automation rules (non-CRM triggers)
 - [x] `/hr/team-events` — Team events
 - [x] `/hr/employees/find-expert` — Find expert
 - [x] `/hr/employees/skills-matrix` — Skills matrix
@@ -359,12 +362,15 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/settings/email-templates` — Email templates
 - [x] `/settings/custom-fields` — Custom fields (E2E fix: empty state fills content height with in-card primary CTA)
 - [x] `/settings/feature-flags` — Feature flags; `DashboardGate permission="settings:manage"`
-- [x] `/settings/automations` — No-code Automation Builder (see Non-HR Features section)
-- [x] `/settings/integrations/recruitment` — Recruitment integrations
-- [x] ~~`/settings/integrations/calendar`~~ — REMOVED 2026-07-05: superseded by the in-calendar accounts sheet on `/calendar` (Composio-managed connections; direct-OAuth routes and `calendar-oauth.ts` deleted)
-- [x] `/settings/integrations/git` — Git integration
+- [x] ~~`/settings/automations`~~ — REDIRECT 2026-07-05 → `/hr/settings/automations` (module-owned)
+- [x] ~~`/settings/integrations/recruitment`~~ — REDIRECT 2026-07-05 → `/hr/settings/integrations`
+- [x] ~~`/settings/integrations/git`~~ — REDIRECT 2026-07-05 → `/projects/settings/integrations`
+- [x] ~~`/settings/integrations/calendar`~~ — REMOVED 2026-07-05: superseded by the in-calendar accounts sheet on `/calendar` (Composio-managed connections)
 - [x] ~~`/settings/data-hub`~~ — DELETED 2026-07-05: module-owned import/export moved to `/crm/settings/import-export`, `/hr/settings/import-export`, `/payroll/settings/import-export`
-- [x] `/settings/ai` — AI settings
+- [x] ~~`/settings/ai`~~ — REDIRECT 2026-07-05 → `/crm/settings/ai`
+- [x] `/projects/settings/integrations` — Git integration (GitHub/GitLab/Bitbucket webhooks)
+- [x] `/support/settings/automations` — Support ticket automation rules
+- [x] `/accounting/settings/automations` — Finance automation rules
 - [x] `/settings/api-tokens` — API tokens
 - [x] `/settings/devices` — Devices management
 - [x] `/settings/login-history` — Login history
@@ -385,7 +391,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/projects/roadmap` — Roadmap manager: roadmap items by status, feedback (by votes), changelog (`roadmap_items`/`roadmap_votes`/`feedback_posts`/`feedback_votes`/`changelog_entries`; subject `projects:roadmap`).
 - [x] `/roadmap/[orgId]` — Public roadmap board (no auth): upvote (localStorage voterKey), submit feedback, changelog feed.
 - [x] `/customer-executive/health` — CS Health Score engine: configurable weights/thresholds (Sheet), recompute-now, per-account scores + breakdown (`health_score_config`/`client_health_scores`; reuses `crm:clients`).
-- [x] `/settings/automations` — No-code Automation Builder: trigger→condition→action rules wired into `lead.created` + deal stage-change; in-app/email/task/webhook actions; run history + test (`automation_rules`/`automation_runs`; subject `settings:automations`).
+- [x] ~~`/settings/automations`~~ — REDIRECT 2026-07-05 → module settings (`/hr/settings/automations`, `/support/settings/automations`, `/accounting/settings/automations`, `/crm/settings/automations`)
 - [x] `/customer-executive/nps` — NPS closed-loop: surveys w/ public token, overall NPS + promoter/passive/detractor split, per-survey responses, activate/close (`nps_surveys`/`nps_responses`; reuses `crm:clients`).
 - [x] `/nps/[token]` — Public NPS response page (no auth): 0–10 score + comment; server-derived category; only when survey is active.
 - [x] `/support/macros` — Canned Responses manager: create/edit/copy macros by category (`support_macros`; subject `support:macros`).

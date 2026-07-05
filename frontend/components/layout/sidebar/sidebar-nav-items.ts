@@ -489,6 +489,18 @@ export const NAV_GROUPS: NavGroup[] = [
             href: "/hr/settings/import-export",
             requiredPermission: "hr:employees:view",
           },
+          {
+            label: "Integrations",
+            icon: Plug,
+            href: "/hr/settings/integrations",
+            requiredPermission: "hr:employees:view",
+          },
+          {
+            label: "Automations",
+            icon: Workflow,
+            href: "/hr/settings/automations",
+            requiredPermission: "settings:automations:view",
+          },
         ],
       },
     ],
@@ -789,6 +801,12 @@ export const NAV_GROUPS: NavGroup[] = [
             href: "/crm/settings/automations",
           },
           {
+            label: "AI Settings",
+            icon: Brain,
+            href: "/crm/settings/ai",
+            requiredPermission: "settings:manage",
+          },
+          {
             label: "Product Catalog",
             icon: Package,
             href: "/crm/settings/products",
@@ -899,6 +917,20 @@ export const NAV_GROUPS: NavGroup[] = [
           },
         ],
       },
+      {
+        label: "Settings",
+        icon: SlidersHorizontal,
+        href: "/accounting/settings/automations",
+        requiredPermission: "settings:automations:view",
+        children: [
+          {
+            label: "Automations",
+            icon: Workflow,
+            href: "/accounting/settings/automations",
+            requiredPermission: "settings:automations:view",
+          },
+        ],
+      },
     ],
   },
   {
@@ -973,6 +1005,18 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
     routes: [
       {
+        label: "Command Center",
+        icon: LayoutDashboard,
+        href: "/projects/command-center",
+        requiredPermission: "projects:view",
+      },
+      {
+        label: "My Work",
+        icon: CheckSquare,
+        href: "/projects/my-work",
+        requiredPermission: "projects:tickets:view",
+      },
+      {
         label: "All Projects",
         icon: Briefcase,
         href: "/projects",
@@ -1031,6 +1075,20 @@ export const NAV_GROUPS: NavGroup[] = [
           },
         ],
       },
+      {
+        label: "Settings",
+        icon: SlidersHorizontal,
+        href: "/projects/settings/integrations",
+        requiredPermission: "settings:manage",
+        children: [
+          {
+            label: "Integrations",
+            icon: Plug,
+            href: "/projects/settings/integrations",
+            requiredPermission: "settings:manage",
+          },
+        ],
+      },
     ],
   },
   {
@@ -1063,6 +1121,20 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Share2,
         href: "/support/routing",
         requiredPermission: "support:macros:view",
+      },
+      {
+        label: "Settings",
+        icon: SlidersHorizontal,
+        href: "/support/settings/automations",
+        requiredPermission: "settings:automations:view",
+        children: [
+          {
+            label: "Automations",
+            icon: Workflow,
+            href: "/support/settings/automations",
+            requiredPermission: "settings:automations:view",
+          },
+        ],
       },
     ],
   },
@@ -1251,24 +1323,6 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Modules",
         icon: LayoutGrid,
         href: "/settings/modules",
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "Automations",
-        icon: Workflow,
-        href: "/settings/automations",
-        requiredPermission: "settings:automations:view",
-      },
-      {
-        label: "Integrations",
-        icon: Plug,
-        href: "/settings/integrations",
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "AI Configuration",
-        icon: Brain,
-        href: "/settings/ai",
         requiredPermission: "settings:manage",
       },
     ],

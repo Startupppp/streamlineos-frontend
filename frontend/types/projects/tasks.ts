@@ -294,3 +294,14 @@ export interface TicketCustomFieldValue {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface TicketSearchResult {
+  id: number;
+  title: string;
+  status: string;
+  priority: string;
+  ticketNumber: number;
+  projectId: number;
+  projectKey: string;
+  projectName: string;
+}
