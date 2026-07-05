@@ -57,11 +57,11 @@ export default function PageIconPicker({
         ) : (
           <Button
             variant="ghost"
-            size="sm"
-            className="text-muted-foreground gap-1 text-xs h-7"
+            size="icon"
+            className="h-9 w-9 text-muted-foreground shrink-0"
+            aria-label="Add icon"
           >
-            <KbSmileIcon className="h-3.5 w-3.5" />
-            Add icon
+            <KbSmileIcon className="h-4 w-4" />
           </Button>
         )}
       </PopoverTrigger>

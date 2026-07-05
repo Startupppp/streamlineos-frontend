@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type LucideIcon } from "lucide-react";
+import { type ComponentType } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +35,7 @@ function resolveTone(tone?: StatTone, color?: StatColor): StatTone {
 export interface StatCardProps {
   label: string;
   value: string | number;
-  icon?: LucideIcon;
+  icon?: ComponentType<{ className?: string }>;
   tone?: StatTone;
   color?: StatColor;
   delta?: { value: string; direction: "up" | "down" };

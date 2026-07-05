@@ -188,7 +188,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
             onNavigate={handleNavigateToPage}
           />
 
-          <div className="flex items-start gap-2 mt-4 mb-4">
+          <div className="flex flex-col items-center mt-4 mb-4 gap-1 overflow-hidden">
             <PageIconPicker
               icon={page.icon}
               isEditable={isEditable}
@@ -200,7 +200,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
               onChange={handleTitleChange}
               onKeyDown={handleTitleKeyDown}
               placeholder="Untitled"
-              className="flex-1 resize-none bg-transparent border-0 outline-none text-3xl font-bold text-foreground placeholder:text-muted-foreground/50 leading-tight"
+              className="w-full resize-none overflow-hidden bg-transparent border-0 outline-none text-3xl font-bold text-center text-foreground placeholder:text-muted-foreground/50 leading-tight"
               rows={1}
               style={{ height: "auto" }}
               readOnly={!isEditable}

@@ -30,6 +30,7 @@ export type Message = {
     id: number;
     fileName: string;
     fileUrl: string;
+    fileKey: string;
     fileSize: number;
     mimeType: string;
   }[];
