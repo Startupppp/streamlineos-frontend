@@ -355,7 +355,7 @@ export default function SlaPage() {
                 ) : (
                   <div className="py-14 px-4">
                     <EmptyState
-                      illustration={<Shield className="h-8 w-8 text-muted-foreground/40" />}
+                      illustrationPreset="security"
                       title="No SLA policies defined"
                       description="Create a policy to track response and resolution time commitments."
                       action={{ label: "New Policy", onClick: handleOpenCreate }}

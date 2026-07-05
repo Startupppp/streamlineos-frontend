@@ -37,7 +37,7 @@ export function PipelineTable({ stages, isLoading }: PipelineTableProps) {
   if (!rows.length) {
     return (
       <EmptyState
-        illustration={<Users className="h-8 w-8 text-muted-foreground" />}
+        illustrationPreset="team"
         title="No candidates in the pipeline"
         description="Candidates will appear here once they enter the hiring flow."
       />

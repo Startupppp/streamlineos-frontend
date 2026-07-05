@@ -123,7 +123,7 @@ export function ReferralsTab({ candidateId }: Props) {
 
       {!referrals?.length ? (
         <EmptyState
-          illustration={<Share2 className="h-8 w-8 text-muted-foreground" />}
+          illustrationPreset="leads"
           title="No referrals recorded"
           description="Record who referred this candidate to track bonus eligibility."
           compact

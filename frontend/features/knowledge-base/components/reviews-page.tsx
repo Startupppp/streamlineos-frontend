@@ -356,7 +356,7 @@ export default function ReviewsPage() {
     return (
       <PageWrapper title="Reviews">
         <EmptyState
-          illustration={<Lock className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="security"
           title="Access restricted"
           description="You don't have permission to view knowledge base reviews."
         />
@@ -400,13 +400,13 @@ export default function ReviewsPage() {
         <TableSkeleton />
       ) : isError ? (
         <EmptyState
-          illustration={<AlertCircle className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="alert"
           title="Failed to load reviews"
           description="An error occurred while fetching reviews."
         />
       ) : reviews.length === 0 ? (
         <EmptyState
-          illustration={<ClipboardCheck className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="approval"
           title="No reviews"
           description={
             statusFilter !== "all" || typeFilter !== "all"

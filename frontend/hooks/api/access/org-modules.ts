@@ -21,6 +21,7 @@ const BACKEND_MODULE_NAMES: Record<string, string> = {
   support: "HELPDESK",
   kb: "KB",
   surveys: "SURVEYS",
+  payroll: "PAYROLL",
 };
 
 export function useEnabledModules(): string[] {

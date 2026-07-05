@@ -313,7 +313,7 @@ export function SuspendedUsersPage() {
           </div>
         ) : users.length === 0 ? (
           <EmptyState
-            illustration={<ShieldOff className="text-muted-foreground/40" />}
+            illustrationPreset="security"
             title="No suspended users"
             description={
               debouncedSearch

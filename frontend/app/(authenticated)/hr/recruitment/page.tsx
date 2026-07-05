@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { PlusIcon, UserSearchIcon } from "@animateicons/react/lucide";
 import {
@@ -314,7 +315,7 @@ export default function RecruitmentCommandCenterPage() {
                   </div>
                   <div className="px-5 py-4">
                     {!stats?.sources?.length ? (
-                      <p className="text-xs text-muted-foreground py-4 text-center">No source data yet</p>
+                      <ChartEmptyState message="No source data yet" height={160} compact />
                     ) : (
                       <div className="space-y-3">
                         {stats.sources.slice(0, 6).map((s) => {

@@ -96,7 +96,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
         </div>
       ) : tokens.length === 0 ? (
         <EmptyState
-          illustration={<Key className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="security"
           title="No organization tokens yet"
           description="Organization tokens provide access to shared resources and are visible to administrators."
           action={{ label: "New Token", onClick: handleOpenCreate }}

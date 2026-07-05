@@ -2,11 +2,17 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getApiError } from "@/lib/api-client";
-import { usePublicSurvey, useStartSurveySession, useSaveSurveyAnswers, useSubmitSurveySession } from "@/hooks/api/surveys/public-runtime";
+import {
+  usePublicSurvey,
+  useStartSurveySession,
+  useSaveSurveyAnswers,
+  useSubmitSurveySession,
+} from "@/hooks/api/surveys/public-runtime";
 import type { AnswerValue } from "@/features/surveys/respondent/answer-value";
+import { PublicSurveyShell } from "@/features/surveys/respondent/public-survey-shell";
 import { WelcomeScreen } from "@/features/surveys/respondent/welcome-screen";
 import { RuntimeFlow } from "@/features/surveys/respondent/runtime-flow";
 import { ThankYouScreen } from "@/features/surveys/respondent/thank-you-screen";
@@ -18,6 +24,19 @@ interface SurveyMessages {
 }
 
 type Phase = "welcome" | "running" | "done";
+
+function SurveyLoadingState() {
+  return (
+    <PublicSurveyShell>
+      <div className="space-y-4">
+        <Skeleton className="mx-auto h-11 w-11 rounded-xl" />
+        <Skeleton className="mx-auto h-4 w-3/4" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-11 w-full rounded-lg" />
+      </div>
+    </PublicSurveyShell>
+  );
+}
 
 export default function PublicSurveyPage() {
   const params = useParams<{ token: string }>();
@@ -31,11 +50,14 @@ export default function PublicSurveyPage() {
 
   const [phase, setPhase] = useState<Phase>("welcome");
   const [outcome, setOutcome] = useState<"completed" | "disqualified">("completed");
-  const [result, setResult] = useState<{ score: number | null; passed: boolean | null } | null>(null);
+  const [result, setResult] = useState<{ score: number | null; passed: boolean | null } | null>(
+    null,
+  );
 
   const data = surveyQuery.data;
   const messages = (data?.survey.settings.messages as SurveyMessages | undefined) ?? {};
-  const questionCount = data?.schema?.sections.reduce((sum, s) => sum + s.questions.length, 0) ?? 0;
+  const questionCount =
+    data?.schema?.sections.reduce((sum, s) => sum + s.questions.length, 0) ?? 0;
 
   async function handleStart() {
     try {
@@ -62,63 +84,62 @@ export default function PublicSurveyPage() {
     }
   }
 
+  if (surveyQuery.isLoading) {
+    return <SurveyLoadingState />;
+  }
+
+  if (surveyQuery.isError) {
+    return (
+      <PublicSurveyShell title="Survey unavailable">
+        <p className="text-center text-sm leading-relaxed text-muted-foreground">
+          This survey is not currently accepting responses, or the link is invalid.
+        </p>
+      </PublicSurveyShell>
+    );
+  }
+
+  if (!data) {
+    return <SurveyLoadingState />;
+  }
+
+  if (phase === "welcome") {
+    return (
+      <PublicSurveyShell title={data.survey.title}>
+        <WelcomeScreen
+          description={data.survey.description}
+          welcomeMessage={messages.welcomeMessage}
+          questionCount={questionCount}
+          onStart={handleStart}
+          isStarting={startSession.isPending}
+        />
+      </PublicSurveyShell>
+    );
+  }
+
+  if (phase === "running" && data.schema) {
+    return (
+      <PublicSurveyShell mode="form">
+        <RuntimeFlow
+          surveyTitle={data.survey.title}
+          sections={data.schema.sections}
+          logicRules={data.schema.logicRules}
+          onSaveAnswer={handleSaveAnswer}
+          onFinish={handleFinish}
+        />
+      </PublicSurveyShell>
+    );
+  }
+
   return (
-    <main className="min-h-screen surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
-      <div className="w-full max-w-lg">
-        <div className="gradient-brand text-white rounded-t-2xl px-6 py-8 text-center shadow-noir">
-          <h1 className="text-2xl font-bold tracking-tight">{data?.survey.title ?? "Survey"}</h1>
-        </div>
-
-        <Card className="rounded-t-none border-t-0 px-6 py-6 shadow-noir">
-          {surveyQuery.isLoading && (
-            <div className="space-y-3">
-              <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
-              <div className="h-10 bg-muted rounded animate-pulse" />
-              <div className="h-24 bg-muted rounded animate-pulse" />
-            </div>
-          )}
-
-          {surveyQuery.isError && (
-            <div className="py-8 text-center">
-              <p className="text-lg font-semibold text-foreground">Survey unavailable</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                This survey is not currently accepting responses, or the link is invalid.
-              </p>
-            </div>
-          )}
-
-          {surveyQuery.isSuccess && data && phase === "welcome" && (
-            <WelcomeScreen
-              title={data.survey.title}
-              description={data.survey.description}
-              welcomeMessage={messages.welcomeMessage}
-              questionCount={questionCount}
-              onStart={handleStart}
-              isStarting={startSession.isPending}
-            />
-          )}
-
-          {phase === "running" && data?.schema && (
-            <RuntimeFlow
-              sections={data.schema.sections}
-              logicRules={data.schema.logicRules}
-              onSaveAnswer={handleSaveAnswer}
-              onFinish={handleFinish}
-            />
-          )}
-
-          {phase === "done" && (
-            <ThankYouScreen
-              outcome={outcome}
-              thankYouMessage={messages.thankYouMessage}
-              disqualificationMessage={messages.disqualificationMessage}
-              isAssessment={data?.survey.mode === "assessment"}
-              score={result?.score ?? null}
-              passed={result?.passed ?? null}
-            />
-          )}
-        </Card>
-      </div>
-    </main>
+    <PublicSurveyShell>
+      <ThankYouScreen
+        outcome={outcome}
+        thankYouMessage={messages.thankYouMessage}
+        disqualificationMessage={messages.disqualificationMessage}
+        isAssessment={data.survey.mode === "assessment"}
+        score={result?.score ?? null}
+        passed={result?.passed ?? null}
+      />
+    </PublicSurveyShell>
   );
 }

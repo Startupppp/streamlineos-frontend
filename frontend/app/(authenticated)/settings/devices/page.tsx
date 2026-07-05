@@ -155,7 +155,7 @@ export default function DevicesPage() {
           isLoading={isLoading}
           emptyState={
             <EmptyState
-              illustration={<Laptop className="h-8 w-8 text-muted-foreground/40" />}
+              illustrationPreset="devices"
               title="No devices found"
               description="No devices have been registered to your account."
               className="min-h-[40vh]"

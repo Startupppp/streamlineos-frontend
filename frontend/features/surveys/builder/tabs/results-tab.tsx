@@ -1,4 +1,4 @@
-import { BarChart3 } from "lucide-react";
+import { EmptyChartIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,7 +29,11 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
   if (overview.totalResponses === 0) {
     return (
       <EmptyState
-        illustration={<BarChart3 className="h-10 w-10 text-muted-foreground/40" />}
+        illustration={
+          <div className="h-28 w-28">
+            <EmptyChartIllustration />
+          </div>
+        }
         title="No responses yet"
         description="Results, question analytics, and exports will appear here once responses come in."
         compact

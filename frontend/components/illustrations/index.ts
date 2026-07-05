@@ -53,4 +53,6 @@ export {
   AiIllustration,
   InvitationIllustration,
   AutomationsIllustration,
+  EmptyChartIllustration,
 } from "./illustration-image";
+export { StateIllustration, type StateIllustrationPreset } from "./state-illustration";

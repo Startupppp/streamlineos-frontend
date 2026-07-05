@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCareerPaths } from "@/hooks/api/hr/career";
 
 interface Props {
@@ -40,15 +41,13 @@ export function CareerPathsList({ canManage: _canManage }: Props) {
 
   if (!paths || paths.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
-        <div className="h-12 w-12 rounded-full bg-violet-50 flex items-center justify-center">
-          <TrendingUp className="h-6 w-6 text-violet-500" />
-        </div>
-        <p className="font-semibold text-sm text-foreground">No career paths yet</p>
-        <p className="text-xs text-muted-foreground max-w-xs">
-          Create structured career paths to help employees grow
-        </p>
-      </div>
+      <EmptyState
+        illustrationPreset="learning"
+        title="No career paths yet"
+        description="Create structured career paths to help employees grow"
+        className="border-0 bg-transparent shadow-none h-64"
+        compact
+      />
     );
   }
 

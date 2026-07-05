@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
@@ -168,7 +169,7 @@ function PoolMembersList({ poolId }: { poolId: number }) {
   }
 
   if (!members?.length) {
-    return <p className="text-xs text-muted-foreground py-6 text-center">No candidates in this pool yet.</p>;
+    return <ChartEmptyState message="No candidates in this pool yet." height={160} compact />;
   }
 
   return (
@@ -227,7 +228,7 @@ export default function TalentPoolsPage() {
           </div>
         ) : isEmpty ? (
           <EmptyState
-            illustration={<Layers className="h-10 w-10 text-muted-foreground" />}
+            illustrationPreset="projects"
             title="No talent pools yet"
             description="Create a pool to group candidates for future roles, campus hiring, or ongoing sourcing."
           />

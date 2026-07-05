@@ -50,7 +50,7 @@ export function UserActivityTab({ userId }: UserActivityTabProps) {
     return (
       <EmptyState
         compact
-        illustration={<Activity className="h-10 w-10 text-muted-foreground/40" />}
+        illustrationPreset="activity"
         title="No activity recorded"
         description="Actions taken by or on this user will appear here."
       />

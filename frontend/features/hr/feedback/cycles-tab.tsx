@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { MessageSquare, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -281,10 +282,11 @@ export function CyclesTab() {
       </div>
 
       {cycles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
-          <MessageSquare className="w-12 h-12 text-slate-300" />
-          <p className="text-slate-500 font-medium">No feedback cycles yet</p>
-        </div>
+        <EmptyState
+          illustrationPreset="survey"
+          title="No feedback cycles yet"
+          className="border-0 bg-transparent shadow-none"
+        />
       ) : (
         <div className="space-y-3">
           {cycles.map((cycle, i) => (

@@ -206,7 +206,7 @@ export function OrgAuditLogPage() {
         </div>
       ) : entries.length === 0 ? (
         <EmptyState
-          illustration={<History className="text-muted-foreground/40" />}
+          illustrationPreset="activity"
           title="No audit events"
           description={
             hasFilters

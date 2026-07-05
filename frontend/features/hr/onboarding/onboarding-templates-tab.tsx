@@ -227,7 +227,7 @@ export function OnboardingTemplatesTab() {
         </div>
       ) : !templates || templates.length === 0 ? (
         <EmptyState
-          illustration={<ClipboardList className="h-8 w-8 text-muted-foreground" />}
+          illustrationPreset="documents"
           title="No onboarding plans yet"
           description="Create a plan to standardize onboarding steps for a department or your whole org."
           action={{ label: "New Plan", onClick: () => setSheetOpen(true) }}

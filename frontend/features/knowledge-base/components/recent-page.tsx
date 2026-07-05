@@ -59,7 +59,7 @@ export default function RecentPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<Clock className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="calendar"
           title="Could not load recent pages"
           description="There was a problem fetching your recently visited pages."
         />
@@ -67,7 +67,7 @@ export default function RecentPage() {
 
       {!isLoading && !isError && pages.length === 0 && (
         <EmptyState
-          illustration={<Clock className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="calendar"
           title="No recent pages"
           description="Pages you visit will appear here."
           action={{ label: "Browse favorites", href: KB_FAVORITES }}

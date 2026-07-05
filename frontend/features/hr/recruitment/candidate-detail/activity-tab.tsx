@@ -44,7 +44,7 @@ export function ActivityTab({ candidateId }: Props) {
   if (!events?.length) {
     return (
       <EmptyState
-        illustration={<History className="h-8 w-8 text-muted-foreground" />}
+        illustrationPreset="activity"
         title="No activity yet"
         description="Stage changes, interviews, messages, and documents will show up here."
         compact

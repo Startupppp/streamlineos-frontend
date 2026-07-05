@@ -389,7 +389,7 @@ export default function ScoringRulesPage() {
                 ) : (
                   <div className="py-14 px-4">
                     <EmptyState
-                      illustration={<Zap className="h-8 w-8 text-muted-foreground/40" />}
+                      illustrationPreset="automations"
                       title="No scoring rules defined"
                       description="Create your first rule to start scoring leads automatically."
                       action={{ label: "New Rule", onClick: handleOpenCreate }}

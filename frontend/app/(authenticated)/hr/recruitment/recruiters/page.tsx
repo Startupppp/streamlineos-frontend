@@ -65,7 +65,12 @@ function ActivitySheet({ recruiter, onClose }: ActivitySheetProps) {
               <Skeleton key={i} className="h-14 w-full rounded-lg" />
             ))
           ) : !activity.length ? (
-            <p className="text-sm text-muted-foreground text-center py-8">No activity recorded yet.</p>
+            <EmptyState
+              illustrationPreset="activity"
+              title="No activity recorded yet"
+              className="border-0 bg-transparent shadow-none"
+              compact
+            />
           ) : (
             activity.map((entry) => <ActivityEntry key={entry.id} entry={entry} />)
           )}

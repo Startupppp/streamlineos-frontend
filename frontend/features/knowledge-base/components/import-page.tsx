@@ -177,7 +177,7 @@ export default function ImportPage() {
     return (
       <PageWrapper title="Import & Export">
         <EmptyState
-          illustration={<Upload className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="upload"
           title="Access denied"
           description="You don't have permission to import pages. Ask an admin to grant kb:pages:import."
         />
@@ -355,7 +355,7 @@ export default function ImportPage() {
           {!jobsLoading && importJobs.length === 0 && (
             <EmptyState
               compact
-              illustration={<FileText className="h-5 w-5 text-muted-foreground/40" />}
+              illustrationPreset="documents"
               title="No imports yet"
               description="Import history will appear here after your first import."
             />

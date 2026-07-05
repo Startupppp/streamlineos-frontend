@@ -51,7 +51,8 @@ export type IllustrationName =
   | "travel"
   | "ai"
   | "invitation"
-  | "automations";
+  | "automations"
+  | "empty-chart";
 
 export interface IllustrationProps {
   className?: string;
@@ -133,3 +134,4 @@ export const TravelIllustration = createIllustration("travel");
 export const AiIllustration = createIllustration("ai");
 export const InvitationIllustration = createIllustration("invitation");
 export const AutomationsIllustration = createIllustration("automations");
+export const EmptyChartIllustration = createIllustration("empty-chart");

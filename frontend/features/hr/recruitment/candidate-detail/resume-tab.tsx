@@ -13,7 +13,7 @@ export function ResumeTab({ resumeUrl, resumeText }: Props) {
   if (!resumeUrl && !resumeText) {
     return (
       <EmptyState
-        illustration={<FileText className="h-8 w-8 text-muted-foreground" />}
+        illustrationPreset="documents"
         title="No resume on file"
         description="This candidate hasn't uploaded a resume yet."
         compact

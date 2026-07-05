@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatINRCompact } from "@/lib/format-utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import type { Deal, DealStage } from "@/types/crm";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 const STAGE_PROBABILITY: Record<string, number> = {
   LEAD: 10,
@@ -91,7 +92,7 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">No active deals.</p>
+          <ChartEmptyState message="No active deals." height={160} compact />
         ) : (
           <motion.div
             className="space-y-4"

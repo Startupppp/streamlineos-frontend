@@ -25,7 +25,7 @@ export default function PrivatePage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<Lock className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="security"
           title="Could not load pages"
           description="There was a problem fetching your pages."
         />
@@ -33,7 +33,7 @@ export default function PrivatePage() {
 
       {!isLoading && !isError && privateNodes.length === 0 && (
         <EmptyState
-          illustration={<Lock className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="security"
           title="No private pages"
           description="Set a page to Private from Share."
         />

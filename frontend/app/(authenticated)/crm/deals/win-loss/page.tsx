@@ -18,6 +18,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDealsIllustration } from "@/components/illustrations";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -210,9 +211,7 @@ export default function WinLossAnalysisPage() {
             </CardHeader>
             <CardContent>
               {!data?.lostByReason || data.lostByReason.length === 0 ? (
-                <div className="flex items-center justify-center h-40 text-sm text-muted-foreground">
-                  No lost deals recorded yet
-                </div>
+                <ChartEmptyState message="No lost deals recorded yet" height={160} compact />
               ) : (
                 <ScrollArea className="max-h-[260px]">
                   <div className="space-y-3 pr-2">

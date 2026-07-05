@@ -1,7 +1,7 @@
 "use client";
 
-import { Timer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -57,11 +57,13 @@ export function OvertimeList({ canManage }: Props) {
 
   if (!requests?.length) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
-        <Timer className="h-10 w-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">No overtime requests</p>
-        <p className="text-xs text-muted-foreground/70">Submit your first overtime request using the button above</p>
-      </div>
+      <EmptyState
+        illustrationPreset="approval"
+        title="No overtime requests"
+        description="Submit your first overtime request using the button above"
+        className="border-0 bg-transparent shadow-none h-64"
+        compact
+      />
     );
   }
 

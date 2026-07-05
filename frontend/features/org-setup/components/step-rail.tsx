@@ -18,7 +18,7 @@ export function StepRail({ sequence, currentIndex, saveState }: StepRailProps) {
   const minutesLeft = ESTIMATED_MINUTES_REMAINING[sequence[currentIndex]] ?? 0;
 
   return (
-    <aside className="hidden lg:flex w-64 shrink-0 flex-col gap-6 py-2">
+    <aside className="hidden lg:flex w-64 shrink-0 self-start sticky top-8 h-[calc(100dvh-5rem)] flex-col gap-6 py-2">
       <div className="flex items-center gap-2.5">
         <AnimatedLogo size={28} className="rounded-lg" />
         <span className="font-display text-sm font-bold tracking-tight text-slate-900">{BRAND_NAME}</span>

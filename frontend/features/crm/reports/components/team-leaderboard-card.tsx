@@ -1,4 +1,5 @@
-import { Trophy, UserCheck } from "lucide-react";
+import { Trophy } from "lucide-react";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -38,12 +39,7 @@ export function TeamLeaderboardCard({
             ))}
           </div>
         ) : !leaderboard?.length ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center px-4">
-            <UserCheck className="h-8 w-8 text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">
-              No team data available
-            </p>
-          </div>
+          <ChartEmptyState message="No team data available" compact className="py-10 px-4" />
         ) : (
           <div className="overflow-x-auto">
             <Table>

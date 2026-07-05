@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { MessageSquare, Star } from "lucide-react";
+import { Star } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -86,11 +87,12 @@ export function MyReviewsTab() {
 
   if (reviews.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
-        <MessageSquare className="w-12 h-12 text-slate-300" />
-        <p className="text-slate-500 font-medium">No pending reviews</p>
-        <p className="text-sm">You&apos;re all caught up!</p>
-      </div>
+      <EmptyState
+        illustrationPreset="approval"
+        title="No pending reviews"
+        description="You're all caught up!"
+        className="border-0 bg-transparent shadow-none"
+      />
     );
   }
 

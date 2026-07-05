@@ -186,7 +186,7 @@ export default function CertificationsPage() {
       {!certs?.length ? (
         <div className="flex-1 rounded-lg border border-border bg-card shadow-sm overflow-hidden">
           <EmptyState
-            illustration={<Award className="h-8 w-8 text-muted-foreground" />}
+            illustrationPreset="learning"
             title="No certifications recorded"
             description="Add professional certifications to track credentials and renewal dates."
           />

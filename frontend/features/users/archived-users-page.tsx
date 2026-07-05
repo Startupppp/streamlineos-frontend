@@ -299,7 +299,7 @@ export function ArchivedUsersPage() {
           </div>
         ) : users.length === 0 ? (
           <EmptyState
-            illustration={<Archive className="text-muted-foreground/40" />}
+            illustrationPreset="archive"
             title="No archived users"
             description={
               debouncedSearch

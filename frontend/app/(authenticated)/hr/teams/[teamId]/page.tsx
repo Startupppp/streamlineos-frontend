@@ -316,7 +316,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
             <Card className="rounded-xl border border-border border-dashed">
               <CardContent className="p-6">
                 <EmptyState
-                  illustration={<Users className="h-10 w-10 text-muted-foreground" />}
+                  illustrationPreset="team"
                   title="Member list coming soon"
                   description="Team membership is managed via the org chart. Visit the org chart to see reporting structure and team assignments."
                   action={{ label: "View Org Chart", href: "/hr/org-chart" }}

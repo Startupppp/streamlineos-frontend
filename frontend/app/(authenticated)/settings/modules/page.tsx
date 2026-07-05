@@ -22,6 +22,7 @@ const MODULE_LABELS: Record<string, string> = {
   blog: "Blog",
   support: "Support",
   surveys: "Surveys",
+  payroll: "Payroll",
 };
 
 function getModuleLabel(moduleKey: string): string {

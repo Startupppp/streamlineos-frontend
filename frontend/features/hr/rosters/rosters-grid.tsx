@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -73,7 +75,7 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
           >
             <div className="border-t border-slate-100 p-4">
               {!entries?.length ? (
-                <p className="text-xs text-muted-foreground text-center py-4">No entries in this roster</p>
+                <ChartEmptyState message="No entries in this roster" height={120} compact />
               ) : (
                 <div className="space-y-1">
                   {entries.map((entry) => (
@@ -113,11 +115,13 @@ export function RostersGrid({ canManage }: Props) {
 
   if (!rosters?.length) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
-        <CalendarDays className="h-10 w-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">No rosters yet</p>
-        <p className="text-xs text-muted-foreground/70">Create your first weekly roster using the button above</p>
-      </div>
+      <EmptyState
+        illustrationPreset="calendar"
+        title="No rosters yet"
+        description="Create your first weekly roster using the button above"
+        className="border-0 bg-transparent shadow-none h-64"
+        compact
+      />
     );
   }
 

@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 import { Button } from "./button";
 import Link from "next/link";
+import { StateIllustration, type StateIllustrationPreset } from "@/components/illustrations/state-illustration";
 
 interface ActionProps {
   label: string;
@@ -13,6 +14,7 @@ interface ActionProps {
 
 interface EmptyStateProps {
   illustration?: React.ReactNode;
+  illustrationPreset?: StateIllustrationPreset;
   title: string;
   description?: string;
   action?: ActionProps;
@@ -53,6 +55,7 @@ function ActionButton({
 
 export function EmptyState({
   illustration,
+  illustrationPreset,
   title,
   description,
   action,
@@ -60,6 +63,12 @@ export function EmptyState({
   className,
   compact = false,
 }: EmptyStateProps) {
+  const visual = illustration ?? (
+    illustrationPreset ? (
+      <StateIllustration preset={illustrationPreset} className={compact ? "h-20 w-20" : "h-28 w-28"} />
+    ) : null
+  );
+
   return (
     <div
       className={cn(
@@ -70,15 +79,15 @@ export function EmptyState({
         className
       )}
     >
-      {illustration ? (
+      {visual ? (
         <div
           className={cn(
             compact
-              ? "mb-2 [&>svg]:h-10 [&>svg]:w-10 [&>img]:h-10 [&>img]:w-10"
-              : "mb-5 [&>svg]:h-32 [&>svg]:w-32 [&>img]:h-32 [&>img]:w-32"
+              ? "mb-2 [&_img]:max-h-20 [&_img]:max-w-20"
+              : "mb-5 [&_img]:max-h-32 [&_img]:max-w-32"
           )}
         >
-          {illustration}
+          {visual}
         </div>
       ) : null}
 

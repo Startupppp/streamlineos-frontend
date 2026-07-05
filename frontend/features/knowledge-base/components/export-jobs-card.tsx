@@ -48,7 +48,7 @@ export function ExportJobsCard() {
       {!isLoading && jobs.length === 0 && (
         <EmptyState
           compact
-          illustration={<Download className="h-5 w-5 text-muted-foreground/40" />}
+          illustrationPreset="upload"
           title="No exports yet"
           description="Use the ⋯ menu on a page to export it as Markdown or HTML."
         />

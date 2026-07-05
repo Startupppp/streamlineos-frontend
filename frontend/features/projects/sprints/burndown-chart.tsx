@@ -6,6 +6,7 @@ import { useSprintBurndown } from "@/hooks/api/projects";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { TrendingDown } from "lucide-react";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 interface BurndownChartProps {
   sprintId: number;
@@ -34,7 +35,9 @@ export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
   if (!data) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">No data available</CardContent>
+        <CardContent>
+          <ChartEmptyState />
+        </CardContent>
       </Card>
     );
   }

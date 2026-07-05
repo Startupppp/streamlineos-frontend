@@ -1,7 +1,7 @@
 "use client";
 
-import { UserCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -32,11 +32,13 @@ export function ShiftAssignmentsTab({ canManage: _canManage }: Props) {
 
   if (!assignments?.length) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
-        <UserCheck className="h-10 w-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">No assignments yet</p>
-        <p className="text-xs text-muted-foreground/70">Assign shifts to employees to see them here</p>
-      </div>
+      <EmptyState
+        illustrationPreset="calendar"
+        title="No assignments yet"
+        description="Assign shifts to employees to see them here"
+        className="border-0 bg-transparent shadow-none h-64"
+        compact
+      />
     );
   }
 

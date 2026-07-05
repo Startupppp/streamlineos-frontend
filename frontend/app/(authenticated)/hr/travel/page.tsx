@@ -269,7 +269,7 @@ export default function TravelPage() {
     >
       {!requests?.length ? (
         <EmptyState
-          illustration={<Plane className="h-8 w-8 text-muted-foreground" />}
+          illustrationPreset="travel"
           title="No travel requests yet"
           description="Submit a travel request to get started."
           action={{ label: "Request Travel", onClick: handleOpenSheet }}
