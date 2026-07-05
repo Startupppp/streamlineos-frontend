@@ -21,8 +21,9 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useRecordPayment } from "@/hooks/api/invoice";
+import { useManualMethods } from "@/hooks/api/payments";
 import type { PaymentMethod } from "@/types/invoice";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
   { value: "bank_transfer", label: "Bank Transfer" },
@@ -54,6 +55,7 @@ export function RecordPaymentDialog({
   onOpenChange,
 }: RecordPaymentDialogProps) {
   const recordPayment = useRecordPayment();
+  const { data: manualMethods } = useManualMethods();
 
   const [form, setForm] = useState({
     amount: "",
@@ -62,6 +64,18 @@ export function RecordPaymentDialog({
     referenceNumber: "",
     notes: "",
   });
+
+  // Configured methods (real bank/UPI instructions saved in Settings > Payments) surface first.
+  const orderedMethods = useMemo(() => {
+    const configuredTypes = new Set<string>(
+      (manualMethods ?? []).filter((m) => m.status === "enabled").map((m) => m.methodType),
+    );
+    return [...PAYMENT_METHODS].sort(
+      (a, b) => Number(configuredTypes.has(b.value)) - Number(configuredTypes.has(a.value)),
+    );
+  }, [manualMethods]);
+
+  const selectedMethodConfig = manualMethods?.find((m) => m.methodType === form.paymentMethod && m.status === "enabled");
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((p) => ({ ...p, amount: e.target.value }));
@@ -165,13 +179,21 @@ export function RecordPaymentDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PAYMENT_METHODS.map((m) => (
+                {orderedMethods.map((m) => (
                   <SelectItem key={m.value} value={m.value}>
                     {m.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {selectedMethodConfig && (
+              <p className="text-[11px] text-muted-foreground bg-muted/40 rounded px-2 py-1.5 mt-1">
+                {selectedMethodConfig.instructions ||
+                  (selectedMethodConfig.upiId && `UPI: ${selectedMethodConfig.upiId}`) ||
+                  (selectedMethodConfig.bankName &&
+                    `${selectedMethodConfig.bankName} — ${selectedMethodConfig.accountHolder} (${selectedMethodConfig.maskedAccountNumber})`)}
+              </p>
+            )}
           </div>
           <div className="space-y-1">
             <Label htmlFor="pay-ref" className="text-xs">

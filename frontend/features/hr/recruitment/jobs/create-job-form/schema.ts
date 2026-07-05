@@ -2,6 +2,19 @@ import { z } from "zod";
 
 export const NO_HIRING_FLOW = "none";
 
+export const SCREENING_QUESTION_TYPES = ["TEXT", "YES_NO", "SINGLE_SELECT", "NUMBER"] as const;
+
+export const screeningQuestionSchema = z.object({
+  id: z.string(),
+  question: z.string().min(1, "Question text is required").max(500),
+  type: z.enum(SCREENING_QUESTION_TYPES),
+  required: z.boolean(),
+  knockout: z.boolean(),
+  knockoutAnswer: z.string().optional(),
+  options: z.array(z.string()).optional(),
+});
+export type ScreeningQuestionValues = z.infer<typeof screeningQuestionSchema>;
+
 export const INTERVIEW_ROUND_OPTIONS = [
   { value: "HR_ROUND", label: "HR Round" },
   { value: "TECHNICAL_ROUND", label: "Technical Round" },
@@ -85,6 +98,7 @@ export const createJobFormSchema = z
     resumeRequired: z.boolean(),
     coverLetterRequired: z.boolean(),
     customFields: z.string().max(500).optional(),
+    screeningQuestions: z.array(screeningQuestionSchema).max(20).optional(),
 
     status: z.enum(STATUSES, { error: "Status is required" }),
     visibility: z.enum(VISIBILITIES, { error: "Visibility is required" }),

@@ -4,19 +4,20 @@ import { useState, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Archive,
+  ArchiveRestore,
   BellOff,
   BellRing,
   Bookmark,
   Camera,
-  Hash,
   ImageIcon,
   Loader2,
   Pencil,
+  UserPlus,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -32,22 +33,33 @@ import {
   useUnarchiveChannel,
   useMuteChannel,
   useUnmuteChannel,
+  useRemoveChannelMember,
+  useActiveHuddle,
 } from "@/hooks/api";
+import type { ChannelMember } from "@/types/chat";
 import { resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
+import { AddChannelMembersDialog } from "./add-channel-members-dialog";
+import { ChannelAvatar } from "./channel-avatar";
+import { ChannelMemberRow } from "./channel-member-row";
 
 export function ChannelInfoPanel({
   channelId,
   currentUserId,
   onClose,
+  onLeftChannel,
+  onArchived,
 }: {
   channelId: number;
   currentUserId: string;
   onClose: () => void;
+  onLeftChannel?: () => void;
+  onArchived?: () => void;
 }) {
   const { data: channel } = useChatChannel(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
+  const { data: activeHuddle } = useActiveHuddle(channelId);
   const updateChannel = useUpdateChannel();
   const { data: pins } = useChatPins(channelId);
   const unpinMessage = useUnpinMessage();
@@ -55,15 +67,90 @@ export function ChannelInfoPanel({
   const unarchiveChannel = useUnarchiveChannel();
   const muteChannel = useMuteChannel();
   const unmuteChannel = useUnmuteChannel();
+  const removeMember = useRemoveChannelMember();
+  const [showAddMembers, setShowAddMembers] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers],
   );
 
+  const mutedInCallUserIds = useMemo(
+    () =>
+      new Set(
+        (activeHuddle?.participants ?? [])
+          .filter((p) => !p.leftAt && p.isMuted)
+          .map((p) => p.userId),
+      ),
+    [activeHuddle],
+  );
+
+  const { onlineMembers, offlineMembers } = useMemo(() => {
+    const members = channel?.members ?? [];
+    const byName = (a: ChannelMember, b: ChannelMember) =>
+      (a.user?.name ?? "").localeCompare(b.user?.name ?? "");
+    const online = members
+      .filter((m) => onlineUserIds.has(m.user?.id ?? ""))
+      .sort(byName);
+    const offline = members
+      .filter((m) => !onlineUserIds.has(m.user?.id ?? ""))
+      .sort(byName);
+    return { onlineMembers: online, offlineMembers: offline };
+  }, [channel?.members, onlineUserIds]);
+
+  const myMember = channel?.members?.find((m) => m.user?.id === currentUserId);
+  const isArchivedForMe = Boolean(myMember?.archivedAt);
+
+  const handleArchive = useCallback(async () => {
+    try {
+      await archiveChannel.mutateAsync(channelId);
+      toast.success("Chat archived");
+      onArchived?.();
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [archiveChannel, channelId, onArchived]);
+
+  const handleUnarchive = useCallback(async () => {
+    try {
+      await unarchiveChannel.mutateAsync(channelId);
+      toast.success("Chat unarchived");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [unarchiveChannel, channelId]);
+
   const isAdmin = channel?.members?.some(
     (m) => m.user?.id === currentUserId && m.role === "ADMIN",
   );
-  const isGroup = channel?.type === "GROUP";
+  const isMultiMemberChannel = channel?.type !== "DIRECT";
+
+  const existingMemberIds = useMemo(
+    () => new Set(channel?.members?.map((m) => m.user?.id).filter(Boolean) as string[]),
+    [channel?.members],
+  );
+
+  const handleRemoveMember = useCallback(
+    async (userId: string, userName: string | null | undefined, isYou: boolean) => {
+      const label = isYou ? "leave this channel" : `remove ${userName ?? "this member"}`;
+      if (!window.confirm(`Are you sure you want to ${label}?`)) return;
+
+      setRemovingUserId(userId);
+      try {
+        await removeMember.mutateAsync({ channelId, userId });
+        toast.success(isYou ? "You left the channel" : "Member removed");
+        if (isYou) {
+          onLeftChannel?.();
+          onClose();
+        }
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      } finally {
+        setRemovingUserId(null);
+      }
+    },
+    [channelId, removeMember, onLeftChannel, onClose],
+  );
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -71,9 +158,13 @@ export function ChannelInfoPanel({
   const [editAvatar, setEditAvatar] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const editAvatarRef = useRef<HTMLInputElement>(null);
+  const quickAvatarRef = useRef<HTMLInputElement>(null);
 
   const handleOpenAvatarInput = useCallback(() => {
     editAvatarRef.current?.click();
+  }, []);
+  const handleOpenQuickAvatarInput = useCallback(() => {
+    quickAvatarRef.current?.click();
   }, []);
   const handleCancelEdit = useCallback(() => setEditing(false), []);
   const handleEditNameChange = useCallback(
@@ -94,6 +185,7 @@ export function ChannelInfoPanel({
 
   const handleEditAvatarUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
+    saveImmediately = false,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -110,13 +202,22 @@ export function ChannelInfoPanel({
         "/storage/upload",
         formData,
       );
-      if (data.url) setEditAvatar(data.url);
-      else toast.error("Upload failed");
+      if (!data.url) {
+        toast.error("Upload failed");
+        return;
+      }
+      if (saveImmediately) {
+        await updateChannel.mutateAsync({ channelId, avatarUrl: data.url });
+        toast.success("Channel photo updated");
+      } else {
+        setEditAvatar(data.url);
+      }
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
       setUploadingAvatar(false);
       if (editAvatarRef.current) editAvatarRef.current.value = "";
+      if (quickAvatarRef.current) quickAvatarRef.current.value = "";
     }
   };
 
@@ -149,7 +250,7 @@ export function ChannelInfoPanel({
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
         <h3 className="text-[14px] font-bold">Details</h3>
         <div className="flex items-center gap-1">
-          {isGroup && isAdmin && !editing && (
+          {isAdmin && isMultiMemberChannel && !editing && (
             <button
               onClick={startEditing}
               className="p-1.5 hover:bg-muted rounded-lg"
@@ -178,7 +279,7 @@ export function ChannelInfoPanel({
                   ref={editAvatarRef}
                   type="file"
                   accept="image/*"
-                  onChange={handleEditAvatarUpload}
+                  onChange={(e) => handleEditAvatarUpload(e, false)}
                   className="hidden"
                   aria-label="Upload channel avatar"
                 />
@@ -258,27 +359,50 @@ export function ChannelInfoPanel({
             </div>
           ) : (
             <div className="flex flex-col items-center text-center mb-6">
+              <input
+                ref={quickAvatarRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleEditAvatarUpload(e, true)}
+                className="hidden"
+                aria-label="Upload channel photo"
+              />
               {channel?.type === "DIRECT" ? (
-                <Avatar className="h-20 w-20 mb-3 border-2 border-border/30 shadow-md">
-                  <AvatarImage src={resolveImageUrl(otherMember?.image)} />
-                  <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
-                    {getInitials(otherMember?.name)}
-                  </AvatarFallback>
-                </Avatar>
-              ) : channel?.avatarUrl ? (
-                <div className="relative h-20 w-20 rounded-2xl overflow-hidden mb-3 border-2 border-border/30 shadow-md">
-                  <Image
-                    src={resolveImageUrl(channel.avatarUrl) ?? ""}
-                    alt={channel.name}
-                    fill
-                    unoptimized
-                    className="object-cover"
+                <div className="mb-3">
+                  <ChannelAvatar
+                    type={channel.type}
+                    otherMember={otherMember}
+                    className="h-20 w-20"
+                    rounded="2xl"
                   />
                 </div>
               ) : (
-                <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center mb-3 border border-blue/10">
-                  <Hash className="h-8 w-8 text-blue" />
-                </div>
+                <button
+                  type="button"
+                  onClick={isAdmin ? handleOpenQuickAvatarInput : undefined}
+                  disabled={!isAdmin || uploadingAvatar}
+                  className="relative group mb-3 disabled:cursor-default"
+                  title={isAdmin ? "Change channel photo" : undefined}
+                  aria-label={isAdmin ? "Change channel photo" : undefined}
+                >
+                  <ChannelAvatar
+                    type={channel?.type}
+                    name={channel?.name}
+                    avatarUrl={channel?.avatarUrl}
+                    className="h-20 w-20"
+                    rounded="2xl"
+                    iconClassName="h-8 w-8"
+                  />
+                  {isAdmin && (
+                    <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      {uploadingAvatar ? (
+                        <Loader2 className="h-5 w-5 text-white animate-spin" />
+                      ) : (
+                        <Camera className="h-5 w-5 text-white" />
+                      )}
+                    </div>
+                  )}
+                </button>
               )}
               <h4 className="text-[17px] font-bold">{displayName}</h4>
               {channel?.type === "DIRECT" ? (
@@ -350,55 +474,67 @@ export function ChannelInfoPanel({
           )}
 
           <div>
-            <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
-              Members ({channel?.members?.length ?? 0})
-            </h5>
-            <div className="space-y-0.5">
-              {channel?.members?.map((m) => {
-                const isOnline = onlineUserIds.has(m.user?.id ?? "");
-                const isYou = m.user?.id === currentUserId;
-                return (
-                  <div
-                    key={m.user?.id}
-                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="relative shrink-0">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={resolveImageUrl(m.user?.image)} />
-                        <AvatarFallback className="text-[10px] font-medium">
-                          {getInitials(m.user?.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      {isOnline && (
-                        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium truncate">
-                        {m.user?.name}
-                        {isYou && (
-                          <span className="text-muted-foreground font-normal">
-                            {" "}
-                            (you)
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {m.user?.email}
-                      </p>
-                    </div>
-                    {m.role === "ADMIN" && (
-                      <Badge
-                        variant="outline"
-                        className="text-[9px] px-1.5 py-0 h-4 border-blue-500/30 text-blue-600"
-                      >
-                        Admin
-                      </Badge>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="flex items-center justify-between mb-3 px-1">
+              <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                Members ({channel?.members?.length ?? 0})
+              </h5>
+              {isAdmin && isMultiMemberChannel && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddMembers(true)}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Add
+                </button>
+              )}
             </div>
+
+            {onlineMembers.length > 0 && (
+              <div className="mb-3">
+                <p className="text-[10px] font-bold text-emerald-600/80 uppercase tracking-wider px-2 mb-1">
+                  Online — {onlineMembers.length}
+                </p>
+                <div className="space-y-0.5">
+                  {onlineMembers.map((m) => (
+                    <ChannelMemberRow
+                      key={m.user?.id}
+                      member={m}
+                      isOnline
+                      isMutedInCall={mutedInCallUserIds.has(m.user?.id ?? "")}
+                      currentUserId={currentUserId}
+                      isAdmin={isAdmin}
+                      isMultiMemberChannel={isMultiMemberChannel}
+                      isRemoving={removingUserId === m.user?.id}
+                      onRemove={handleRemoveMember}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {offlineMembers.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider px-2 mb-1">
+                  Offline — {offlineMembers.length}
+                </p>
+                <div className="space-y-0.5">
+                  {offlineMembers.map((m) => (
+                    <ChannelMemberRow
+                      key={m.user?.id}
+                      member={m}
+                      isOnline={false}
+                      isMutedInCall={mutedInCallUserIds.has(m.user?.id ?? "")}
+                      currentUserId={currentUserId}
+                      isAdmin={isAdmin}
+                      isMultiMemberChannel={isMultiMemberChannel}
+                      isRemoving={removingUserId === m.user?.id}
+                      onRemove={handleRemoveMember}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {channel?.type !== "DIRECT" &&
@@ -485,39 +621,49 @@ export function ChannelInfoPanel({
             </div>
           )}
 
-          {isAdmin && channel?.type !== "DIRECT" && (
-            <div className="mt-4 pt-4 border-t border-border/30">
-              {channel?.isArchived ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full h-8 text-[12px]"
-                  onClick={() => unarchiveChannel.mutate(channelId)}
-                  disabled={unarchiveChannel.isPending}
-                >
-                  {unarchiveChannel.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
-                  ) : null}
-                  Unarchive Channel
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full h-8 text-[12px] border-destructive/40 text-destructive hover:bg-destructive/10"
-                  onClick={() => archiveChannel.mutate(channelId)}
-                  disabled={archiveChannel.isPending}
-                >
-                  {archiveChannel.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
-                  ) : null}
-                  Archive Channel
-                </Button>
-              )}
-            </div>
-          )}
+          <div className="mt-4 pt-4 border-t border-border/30">
+            {isArchivedForMe ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-8 text-[12px]"
+                onClick={handleUnarchive}
+                disabled={unarchiveChannel.isPending}
+              >
+                {unarchiveChannel.isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                ) : (
+                  <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                Unarchive chat
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-8 text-[12px]"
+                onClick={handleArchive}
+                disabled={archiveChannel.isPending}
+              >
+                {archiveChannel.isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                ) : (
+                  <Archive className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                Archive chat
+              </Button>
+            )}
+          </div>
         </div>
       </ScrollArea>
+
+      <AddChannelMembersDialog
+        open={showAddMembers}
+        onOpenChange={setShowAddMembers}
+        channelId={channelId}
+        existingMemberIds={existingMemberIds}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 }

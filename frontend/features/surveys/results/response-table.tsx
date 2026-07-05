@@ -1,0 +1,65 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { getApiError } from "@/lib/api-client";
+import { useSurveyResponses, useExportResponses, type SurveyResponseSession } from "@/hooks/api/surveys/analytics";
+import { ResponseDetailSheet } from "./response-detail-sheet";
+
+export function ResponseTable({ surveyId }: { surveyId: number }) {
+  const { data: responses, isLoading } = useSurveyResponses(surveyId, { pageSize: 100 });
+  const exportResponses = useExportResponses(surveyId);
+  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+
+  const columns: DataTableColumn<SurveyResponseSession>[] = useMemo(
+    () => [
+      { key: "id", header: "Respondent", cell: (row) => (row.anonymous ? "Anonymous" : `Participant ${row.participantId ?? row.id}`) },
+      { key: "status", header: "Status", cell: (row) => <Badge variant={row.status === "submitted" ? "default" : "secondary"}>{row.status}</Badge> },
+      { key: "submittedAt", header: "Submitted at", cell: (row) => (row.submittedAt ? new Date(row.submittedAt).toLocaleString() : "—") },
+      { key: "score", header: "Score", cell: (row) => row.score ?? "—" },
+      { key: "segment", header: "Segment", cell: (row) => row.segment ?? "—" },
+    ],
+    [],
+  );
+
+  async function handleExport() {
+    try {
+      const blob = await exportResponses.mutateAsync(undefined);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `survey-${surveyId}-responses.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={exportResponses.isPending}>
+          <Download className="h-3.5 w-3.5" /> Export CSV
+        </Button>
+      </div>
+      <DataTable
+        data={responses ?? []}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        onRowClick={(row) => setSelectedSessionId(row.id)}
+      />
+      <ResponseDetailSheet
+        surveyId={surveyId}
+        sessionId={selectedSessionId}
+        open={selectedSessionId !== null}
+        onOpenChange={(open) => !open && setSelectedSessionId(null)}
+      />
+    </div>
+  );
+}

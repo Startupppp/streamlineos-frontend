@@ -16,13 +16,13 @@ import {
 
 export const metadata: Metadata = {
   title: `Pricing — ${BRAND_NAME}`,
-  description: `From ${cheapestAnnualLabel()}/seat/month annual — 31% cheaper than Odoo. Free forever for 3 seats. All apps in one plan.`,
+  description: `From ${cheapestAnnualLabel()}/seat/month annual. Free forever for 3 seats. All apps in one plan.`,
   alternates: { canonical: "/pricing" },
   openGraph: {
     type: "website",
     url: `${BRAND_URL}/pricing`,
     title: `Pricing — ${BRAND_NAME}`,
-    description: `From ${cheapestAnnualLabel()}/seat/month. 31% cheaper than Odoo Standard. Free tier, no per-module fees.`,
+    description: `From ${cheapestAnnualLabel()}/seat/month on annual billing. Free tier, no per-module fees.`,
   },
 };
 
@@ -62,8 +62,8 @@ const pricingFaqs = [
       "Yes. Paid plans include HR, Recruitment, Projects, CRM, Sales, Chat, Calendar, Accounting, Billing, Helpdesk, Customer Success, and more — no per-module fees and no feature upselling.",
   },
   {
-    question: "How are you cheaper than Odoo?",
-    answer: `Odoo Standard is ₹${COMPETITOR_PRICES.odooStandard} per seat per month for the all-apps cloud plan. Our Startup plan is ${cheapestAnnualLabel()} per seat per month on annual billing — 31% cheaper for the same bundle.`,
+    question: "How does pricing compare to other all-in-one platforms?",
+    answer: `Many all-in-one business platforms charge around ₹${COMPETITOR_PRICES.allInOneErp} per seat per month for a full app bundle. Our Startup plan is ${cheapestAnnualLabel()} per seat per month on annual billing — every app included, no per-module fees.`,
   },
   {
     question: "Is there really a free plan with no time limit?",
@@ -103,8 +103,8 @@ const highlights = [
   },
   {
     icon: BadgeCheck,
-    label: "31% cheaper",
-    detail: `vs Odoo Standard (₹${COMPETITOR_PRICES.odooStandard})`,
+    label: "Every app included",
+    detail: "no per-module fees",
   },
   {
     icon: Layers,
@@ -164,7 +164,7 @@ export default function PricingPage() {
                 See what you&apos;d save
               </h2>
               <p className="mt-2 text-sm text-slate-600 max-w-md mx-auto">
-                Compare StreamlineOS against Odoo Standard and a typical per-tool stack.
+                Compare StreamlineOS against typical all-in-one platforms and a per-tool stack.
               </p>
             </div>
             <SavingsCalculator />

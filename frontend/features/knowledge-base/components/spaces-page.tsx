@@ -45,10 +45,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useCan } from "@/hooks/api/access";
-import { useKbSpaces, useCreateKbSpace, useUpdateKbSpace, useDeleteKbSpace } from "@/hooks/api/kb/spaces";
+import {
+  useKbSpaces,
+  useCreateKbSpace,
+  useUpdateKbSpace,
+  useDeleteKbSpace,
+} from "@/hooks/api/kb/spaces";
 import { useKbPagesTree } from "@/hooks/api/kb/pages";
 import { spaceHref } from "@/features/knowledge-base/lib/knowledge-routes";
-import { KbLayoutGridIcon, KbPlusIcon, KbPencilIcon, KbTrash2Icon } from "@/features/knowledge-base/lib/kb-icons";
+import {
+  KbLayoutGridIcon,
+  KbPlusIcon,
+  KbPencilIcon,
+  KbTrash2Icon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import type { KbSpace, KbAudience } from "@/types/kb";
 import Link from "next/link";
 
@@ -91,7 +101,13 @@ interface SpaceCardProps {
   onDelete: (space: KbSpace) => void;
 }
 
-function SpaceCard({ space, canManage, pageCount, onEdit, onDelete }: SpaceCardProps) {
+function SpaceCard({
+  space,
+  canManage,
+  pageCount,
+  onEdit,
+  onDelete,
+}: SpaceCardProps) {
   function handleEdit(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     onEdit(space);
@@ -112,7 +128,9 @@ function SpaceCard({ space, canManage, pageCount, onEdit, onDelete }: SpaceCardP
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-lg shrink-0">{space.icon ?? "📚"}</span>
-          <span className="text-sm font-semibold text-foreground truncate">{space.name}</span>
+          <span className="text-sm font-semibold text-foreground truncate">
+            {space.name}
+          </span>
         </div>
         <Badge
           variant="outline"
@@ -122,9 +140,13 @@ function SpaceCard({ space, canManage, pageCount, onEdit, onDelete }: SpaceCardP
         </Badge>
       </div>
       {space.description && (
-        <p className="text-sm text-muted-foreground line-clamp-1">{space.description}</p>
+        <p className="text-sm text-muted-foreground line-clamp-1">
+          {space.description}
+        </p>
       )}
-      <p className="text-xs text-muted-foreground">{pageCount} {pageCount === 1 ? "page" : "pages"}</p>
+      <p className="text-xs text-muted-foreground">
+        {pageCount} {pageCount === 1 ? "page" : "pages"}
+      </p>
       {canManage && (
         <div className="flex items-center gap-1 pt-1">
           <Button
@@ -158,7 +180,12 @@ interface SpaceSheetProps {
   onSuccess: () => void;
 }
 
-function SpaceSheet({ open, editingSpace, onOpenChange, onSuccess }: SpaceSheetProps) {
+function SpaceSheet({
+  open,
+  editingSpace,
+  onOpenChange,
+  onSuccess,
+}: SpaceSheetProps) {
   const createSpace = useCreateKbSpace();
   const updateSpace = useUpdateKbSpace();
 
@@ -196,7 +223,7 @@ function SpaceSheet({ open, editingSpace, onOpenChange, onSuccess }: SpaceSheetP
             onSuccess();
           },
           onError: () => toast.error("Failed to update space"),
-        }
+        },
       );
     } else {
       createSpace.mutate(
@@ -213,7 +240,7 @@ function SpaceSheet({ open, editingSpace, onOpenChange, onSuccess }: SpaceSheetP
             onSuccess();
           },
           onError: () => toast.error("Failed to create space"),
-        }
+        },
       );
     }
   }
@@ -229,10 +256,15 @@ function SpaceSheet({ open, editingSpace, onOpenChange, onSuccess }: SpaceSheetP
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col">
         <SheetHeader className="px-6 py-4 border-b shrink-0">
-          <SheetTitle>{editingSpace ? "Edit space" : "Create space"}</SheetTitle>
+          <SheetTitle>
+            {editingSpace ? "Edit space" : "Create space"}
+          </SheetTitle>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex flex-col flex-1 min-h-0"
+          >
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               <FormField
                 control={form.control}
@@ -290,7 +322,10 @@ function SpaceSheet({ open, editingSpace, onOpenChange, onSuccess }: SpaceSheetP
                   <FormItem>
                     <FormLabel>Audience</FormLabel>
                     <FormControl>
-                      <Select value={field.value ?? "internal"} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value ?? "internal"}
+                        onValueChange={field.onChange}
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -330,12 +365,15 @@ export default function SpacesPage() {
   const canManage = useCan("kb:spaces:manage");
   const { data: spaces = [], isLoading, isError } = useKbSpaces();
   const { data: treeNodes = [] } = useKbPagesTree();
-  const pageCountBySpaceId = treeNodes.reduce<Record<number, number>>((acc, n) => {
-    if (n.spaceId != null) {
-      acc[n.spaceId] = (acc[n.spaceId] ?? 0) + 1;
-    }
-    return acc;
-  }, {});
+  const pageCountBySpaceId = treeNodes.reduce<Record<number, number>>(
+    (acc, n) => {
+      if (n.spaceId != null) {
+        acc[n.spaceId] = (acc[n.spaceId] ?? 0) + 1;
+      }
+      return acc;
+    },
+    {},
+  );
   const deleteSpace = useDeleteKbSpace();
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -409,7 +447,9 @@ export default function SpacesPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Could not load spaces"
           description="There was a problem fetching spaces."
         />
@@ -417,7 +457,9 @@ export default function SpacesPage() {
 
       {!isLoading && !isError && spaces.length === 0 && (
         <EmptyState
-          illustration={<KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="No spaces yet"
           description="Create a space to organize your wiki pages."
           action={

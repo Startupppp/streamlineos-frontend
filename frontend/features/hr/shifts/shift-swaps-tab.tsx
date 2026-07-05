@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowLeftRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -56,11 +56,13 @@ export function ShiftSwapsTab({ canManage }: Props) {
 
   if (!swaps?.length) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
-        <ArrowLeftRight className="h-10 w-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">No swap requests</p>
-        <p className="text-xs text-muted-foreground/70">Shift swap requests from employees will appear here</p>
-      </div>
+      <EmptyState
+        illustrationPreset="calendar"
+        title="No swap requests"
+        description="Shift swap requests from employees will appear here"
+        className="border-0 bg-transparent shadow-none h-64"
+        compact
+      />
     );
   }
 

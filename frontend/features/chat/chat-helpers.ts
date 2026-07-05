@@ -85,3 +85,36 @@ export function getDateLabel(date: Date | string | null) {
   if (isYesterday(d)) return "Yesterday";
   return format(d, "EEEE, MMMM d");
 }
+
+export function getForwardLabel(forwardCount: number | undefined): string | null {
+  if (!forwardCount || forwardCount < 1) return null;
+  return forwardCount > 3 ? "Forwarded multiple times" : "Forwarded";
+}
+
+/** Normalize legacy `> quoted` forwards and metadata-based forwards for display. */
+export function getForwardedDisplay(content: string | null, forwardCount?: number) {
+  if (forwardCount && forwardCount > 0) {
+    return {
+      label: getForwardLabel(forwardCount),
+      content,
+    };
+  }
+
+  if (!content) return { label: null, content };
+
+  const legacyMatch = content.match(/^(.*?)(?:\n\n)?> (.+)$/s);
+  if (legacyMatch) {
+    const prefix = legacyMatch[1]?.trim();
+    const body = legacyMatch[2] ?? "";
+    return {
+      label: "Forwarded" as const,
+      content: prefix ? `${prefix}\n\n${body}` : body,
+    };
+  }
+
+  if (content.startsWith("> ")) {
+    return { label: "Forwarded" as const, content: content.slice(2) };
+  }
+
+  return { label: null, content };
+}

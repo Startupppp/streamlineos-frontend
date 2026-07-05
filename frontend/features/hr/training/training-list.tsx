@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -140,13 +141,13 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
-          <BookOpen className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm font-medium text-muted-foreground">No training programs</p>
-          <p className="text-xs text-muted-foreground/70">
-            {canManage ? "Create a program to get started" : "No programs available for your filters"}
-          </p>
-        </div>
+        <EmptyState
+          illustrationPreset="learning"
+          title="No training programs"
+          description={canManage ? "Create a program to get started" : "No programs available for your filters"}
+          className="border-0 bg-transparent shadow-none h-64"
+          compact
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((program, idx) => (

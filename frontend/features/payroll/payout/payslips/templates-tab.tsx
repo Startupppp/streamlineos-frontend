@@ -153,7 +153,7 @@ export function TemplatesTab({ canManage }: TemplatesTabProps) {
 
       {!isLoading && (!templates || templates.length === 0) && (
         <EmptyState
-          illustration={<FileText className="h-10 w-10 text-muted-foreground" />}
+          illustrationPreset="documents"
           title="No templates found"
           description="Create a payslip template to get started."
         />

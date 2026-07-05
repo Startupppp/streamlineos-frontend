@@ -19,16 +19,14 @@ import { PasswordStrengthIndicator } from "@/components/auth/password-strength-i
 import { PasswordConfirmField } from "@/components/auth/password-confirm-field";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { InvitationIllustration } from "@/components/illustrations";
 import {
-  Users,
   Mail,
   Lock,
   Loader2,
   Eye,
   EyeOff,
   ArrowRight,
-  X,
-  Shield,
 } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -52,6 +50,71 @@ const invitationSchema = z
   });
 
 type InvitationFormValues = z.infer<typeof invitationSchema>;
+
+function InvitationCard({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Card
+      className={`overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm ${className ?? ""}`}
+    >
+      {children}
+    </Card>
+  );
+}
+
+function InvitationHero({
+  title,
+  description,
+}: {
+  title: string;
+  description: React.ReactNode;
+}) {
+  return (
+    <div className="border-b border-border/60 bg-muted/25 px-6 py-7 text-center">
+      <InvitationIllustration className="mx-auto mb-4 h-32 w-32" />
+      <h1 className="text-xl font-semibold tracking-tight text-foreground">{title}</h1>
+      <p className="mx-auto mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+function InvitationDetails({
+  organizationName,
+  role,
+  accountEmail,
+}: {
+  organizationName: string;
+  role: string;
+  accountEmail?: string | null;
+}) {
+  return (
+    <div className="space-y-2.5 rounded-xl border border-border/70 bg-muted/30 px-4 py-3.5">
+      <div className="flex items-center justify-between gap-4">
+        <span className="text-xs font-medium text-muted-foreground">Organization</span>
+        <span className="truncate text-sm font-semibold text-foreground">{organizationName}</span>
+      </div>
+      <div className="flex items-center justify-between gap-4">
+        <span className="text-xs font-medium text-muted-foreground">Role</span>
+        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-blue-700">
+          {role}
+        </span>
+      </div>
+      {accountEmail ? (
+        <div className="flex items-center justify-between gap-4 border-t border-border/60 pt-2.5">
+          <span className="text-xs font-medium text-muted-foreground">Signed in as</span>
+          <span className="truncate text-sm text-foreground">{accountEmail}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function InvitationPage() {
   const router = useRouter();
@@ -192,50 +255,26 @@ export default function InvitationPage() {
   if (invitation.userExists) {
     return (
       <motion.div
-        className="w-full max-w-lg"
+        className="w-full max-w-md"
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
       >
         <motion.div variants={fadeUp}>
-          <Card className="shadow-2xl border-border overflow-hidden">
-            <div className="relative h-40 flex items-center justify-center overflow-hidden gradient-brand">
-              <div className="relative flex items-end gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
-                <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
-                <div className="w-16 h-16 rounded-full bg-white/25 border-2 border-white/45 flex items-center justify-center">
-                  <Users className="w-7 h-7 text-white/80" />
-                </div>
-                <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
-                <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
-              </div>
-            </div>
-            <CardContent className="px-6 md:px-8 pt-6 pb-8">
-              <div className="text-center mb-6">
-                <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-3">
-                  <Shield className="w-6 h-6 text-blue-600" />
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  Join Organization
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1.5">
-                  You already have a StreamlineOS account.
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Sign in to join{" "}
-                  <span className="font-semibold text-foreground">
-                    {invitation.organizationName}
-                  </span>{" "}
-                  as{" "}
-                  <span className="font-semibold text-foreground">
-                    {invitation.role}
-                  </span>
-                  .
-                </p>
-              </div>
-              <div className="space-y-3">
+          <InvitationCard>
+            <InvitationHero
+              title="Join organization"
+              description="Use your existing StreamlineOS account to accept this invite."
+            />
+            <CardContent className="space-y-5 px-6 pb-6 pt-5">
+              <InvitationDetails
+                organizationName={invitation.organizationName}
+                role={invitation.role}
+                accountEmail={session?.user?.email}
+              />
+              <div className="space-y-2">
                 <Button
-                  className="w-full gap-2 text-white font-medium h-11 bg-slate-900 hover:bg-slate-800"
+                  className="h-11 w-full gap-2 font-medium"
                   onClick={handleExistingUserAccept}
                   disabled={acceptInvitation.isPending}
                 >
@@ -243,24 +282,23 @@ export default function InvitationPage() {
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      {session ? "Accept & Join" : "Sign in & Join"}
+                      {session ? "Accept & join" : "Sign in & join"}
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
-                  className="w-full gap-2 h-10"
+                  variant="ghost"
+                  className="h-10 w-full text-muted-foreground hover:text-foreground"
                   onClick={handleDecline}
                   disabled={acceptInvitation.isPending}
                 >
-                  <X className="h-4 w-4" />
-                  Decline
+                  Decline invitation
                 </Button>
               </div>
             </CardContent>
-          </Card>
+          </InvitationCard>
         </motion.div>
       </motion.div>
     );
@@ -268,72 +306,31 @@ export default function InvitationPage() {
 
   return (
     <motion.div
-      className="w-full max-w-lg"
+      className="w-full max-w-md"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
       <motion.div variants={fadeUp}>
-        <Card className="shadow-2xl border-border overflow-hidden">
-          <div className="relative h-40 flex items-center justify-center overflow-hidden gradient-brand">
-            <div className="relative flex items-end gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
-              <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
-              <div className="w-16 h-16 rounded-full bg-white/25 border-2 border-white/45 flex items-center justify-center">
-                <Users className="w-7 h-7 text-white/80" />
-              </div>
-              <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
-              <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
-            </div>
-
-            <div className="absolute top-4 left-6 w-2 h-2 rounded-full bg-white/20" />
-            <div className="absolute top-8 right-10 w-3 h-3 rounded-full bg-white/15" />
-            <div className="absolute bottom-6 left-12 w-2.5 h-2.5 rounded-full bg-white/15" />
-            <div className="absolute top-12 left-20 w-1.5 h-1.5 rounded-full bg-white/25" />
-            <div className="absolute bottom-4 right-16 w-2 h-2 rounded-full bg-white/20" />
-          </div>
-
-          <CardContent className="px-6 md:px-8 pt-6 pb-8">
-            <div className="text-center mb-6">
-              <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-3">
-                <Mail className="w-6 h-6 text-blue-600" />
-              </div>
-              <h1 className="text-2xl font-bold text-foreground">
-                Join Organization
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1.5">
+        <InvitationCard>
+          <InvitationHero
+            title="Join organization"
+            description={
+              <>
                 You&apos;ve been invited to join{" "}
-                <span className="font-semibold text-foreground">
-                  {invitation.organizationName}
-                </span>
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Invited By
-                </p>
-                <p className="text-sm font-medium text-foreground truncate">
-                  {invitation.organizationName}
-                </p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Shield className="w-3 h-3 text-muted-foreground" />
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Assigned Role
-                  </p>
-                </div>
-                <p className="text-sm font-medium text-foreground">
-                  {invitation.role}
-                </p>
-              </div>
-            </div>
+                <span className="font-medium text-foreground">{invitation.organizationName}</span>.
+              </>
+            }
+          />
+          <CardContent className="px-6 pb-6 pt-5">
+            <InvitationDetails
+              organizationName={invitation.organizationName}
+              role={invitation.role}
+            />
 
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
+              className="mt-5 space-y-4"
               aria-busy={acceptInvitation.isPending}
             >
               <div className="space-y-2">
@@ -448,20 +445,20 @@ export default function InvitationPage() {
                 showIcon
               />
 
-              <div className="pt-2 space-y-3">
+              <div className="space-y-2 pt-1">
                 <Button
                   type="submit"
-                  className="w-full gap-2 text-white font-medium h-11 bg-slate-900 hover:bg-slate-800"
+                  className="h-11 w-full gap-2 font-medium"
                   disabled={acceptInvitation.isPending}
                 >
                   {acceptInvitation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Creating Account...
+                      Creating account…
                     </>
                   ) : (
                     <>
-                      Accept Invitation
+                      Accept invitation
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
@@ -469,24 +466,22 @@ export default function InvitationPage() {
 
                 <Button
                   type="button"
-                  variant="outline"
-                  className="w-full gap-2 h-10"
+                  variant="ghost"
+                  className="h-10 w-full text-muted-foreground hover:text-foreground"
                   onClick={handleDecline}
                   disabled={acceptInvitation.isPending}
                 >
-                  <X className="h-4 w-4" />
-                  Decline
+                  Decline invitation
                 </Button>
               </div>
 
-              <p className="text-[11px] text-center text-muted-foreground pt-2">
-                By accepting this invitation, you will have access to shared
-                leads, deal pipelines, and team analytics within this
-                organization.
+              <p className="pt-1 text-center text-[11px] leading-relaxed text-muted-foreground">
+                By accepting, you&apos;ll get access to this organization&apos;s workspace,
+                pipelines, and team tools.
               </p>
             </form>
           </CardContent>
-        </Card>
+        </InvitationCard>
       </motion.div>
     </motion.div>
   );

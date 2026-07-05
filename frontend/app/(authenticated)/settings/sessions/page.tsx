@@ -154,7 +154,7 @@ export default function SessionsPage() {
     />
   ) : (
     <EmptyState
-      illustration={<Monitor className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="devices"
       title="No active sessions"
       description="No other sessions are currently active."
       className="min-h-[40vh]"

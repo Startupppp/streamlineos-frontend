@@ -20,6 +20,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { AutomationsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   useAutomations,
@@ -314,7 +315,7 @@ export default function AutomationsPage({ params }: PageProps) {
 
             {automations.length === 0 && (
               <EmptyState
-                illustration={<Zap className="h-8 w-8 text-muted-foreground/40" />}
+                illustration={<AutomationsIllustration className="h-32 w-32" />}
                 title="No automations yet"
                 description="Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
                 action={{ label: "Create Automation", onClick: handleOpenNew }}

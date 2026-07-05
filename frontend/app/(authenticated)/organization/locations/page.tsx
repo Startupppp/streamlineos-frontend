@@ -326,7 +326,7 @@ export default function OrgLocationsPage() {
 
   const emptyState = search ? (
     <EmptyState
-      illustration={<MapPin className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="companies"
       title={`No locations matching "${search}"`}
       description="Try a different search term."
       compact
@@ -334,14 +334,14 @@ export default function OrgLocationsPage() {
     />
   ) : showArchived ? (
     <EmptyState
-      illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="archive"
       title="No archived locations"
       compact
       className="min-h-[200px]"
     />
   ) : (
     <EmptyState
-      illustration={<MapPin className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="companies"
       title="No locations yet"
       description="Create your first location to get started."
       action={{ label: "Add Location", onClick: handleOpenCreate }}

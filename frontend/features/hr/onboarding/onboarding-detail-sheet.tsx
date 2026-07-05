@@ -12,6 +12,8 @@ import {
   ExternalLink,
   Upload,
   Circle,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -270,7 +272,12 @@ function UploadSheet({
   );
 }
 
-export function EmployeeDocumentsTab() {
+interface EmployeeDocumentsTabProps {
+  onBack?: () => void;
+  onContinue?: () => void;
+}
+
+export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTabProps = {}) {
   const { data: myDocs, isLoading: docsLoading } = useMyOnboardingDocs();
   const { data: docTypes, isLoading: typesLoading } = useDocumentTypes();
   const submitDoc = useSubmitOnboardingDoc();
@@ -292,6 +299,13 @@ export function EmployeeDocumentsTab() {
 
   const approvedCount = checklist.filter((c) => c.submission?.status === "APPROVED").length;
   const progressPct = checklist.length > 0 ? Math.round((approvedCount / checklist.length) * 100) : 0;
+  const mandatoryUnsubmitted = checklist.some(
+    (c) =>
+      c.docType.isMandatory &&
+      (!c.submission ||
+        c.submission.status === "RE_UPLOAD_REQUESTED" ||
+        c.submission.status === "REJECTED"),
+  );
 
   const handleOpenUpload = useCallback((dt: DocumentType, existing: OnboardingDoc | null) => {
     setUploadTarget(dt);
@@ -331,12 +345,17 @@ export function EmployeeDocumentsTab() {
 
   if (checklist.length === 0) {
     return (
-      <EmptyState
-        illustration={<EmptyUploadIllustration className="h-24 w-24" />}
-        title="No documents required"
-        description="Your HR team hasn't configured any required documents yet."
-        compact
-      />
+      <div className="space-y-4">
+        <EmptyState
+          illustration={<EmptyUploadIllustration className="h-24 w-24" />}
+          title="No documents required"
+          description="Your HR team hasn't configured any required documents yet."
+          compact
+        />
+        {(onBack || onContinue) && (
+          <DocumentsTabNav onBack={onBack} onContinue={onContinue} />
+        )}
+      </div>
     );
   }
 
@@ -471,6 +490,12 @@ export function EmployeeDocumentsTab() {
         })}
       </div>
 
+      {(onBack || onContinue) && (
+        <div className="mt-4">
+          <DocumentsTabNav onBack={onBack} onContinue={onContinue} continueDisabled={mandatoryUnsubmitted} />
+        </div>
+      )}
+
       <UploadSheet
         open={uploadSheetOpen}
         onOpenChange={setUploadSheetOpen}
@@ -480,5 +505,32 @@ export function EmployeeDocumentsTab() {
         isPending={submitDoc.isPending}
       />
     </>
+  );
+}
+
+function DocumentsTabNav({
+  onBack,
+  onContinue,
+  continueDisabled,
+}: {
+  onBack?: () => void;
+  onContinue?: () => void;
+  continueDisabled?: boolean;
+}) {
+  return (
+    <div className={onBack ? "flex justify-between" : "flex justify-end"}>
+      {onBack && (
+        <Button type="button" variant="outline" onClick={onBack}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+      )}
+      {onContinue && (
+        <Button type="button" onClick={onContinue} disabled={continueDisabled}>
+          Save & Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      )}
+    </div>
   );
 }

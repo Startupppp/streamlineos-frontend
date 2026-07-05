@@ -30,7 +30,11 @@ import {
   useApprovePageReview,
   useRejectPageReview,
 } from "@/hooks/api/kb/page-reviews";
-import type { KbPageReview, KbReviewStatus, KbReviewType } from "@/hooks/api/kb/page-reviews";
+import type {
+  KbPageReview,
+  KbReviewStatus,
+  KbReviewType,
+} from "@/hooks/api/kb/page-reviews";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import { cn } from "@/lib/utils";
 import {
@@ -125,7 +129,7 @@ function ApproveDialog({ review, onClose }: ApproveDialogProps) {
           onClose();
         },
         onError: () => toast.error("Failed to approve review"),
-      }
+      },
     );
   }
 
@@ -191,7 +195,7 @@ function RejectDialog({ review, onClose }: RejectDialogProps) {
           onClose();
         },
         onError: () => toast.error("Failed to reject review"),
-      }
+      },
     );
   }
 
@@ -278,7 +282,7 @@ function ReviewRow({ review, canManage }: ReviewRowProps) {
           <span
             className={cn(
               "text-sm tabular-nums",
-              overdue ? "text-red-600 font-medium" : "text-muted-foreground"
+              overdue ? "text-red-600 font-medium" : "text-muted-foreground",
             )}
           >
             {review.dueAt ? formatDate(review.dueAt) : "—"}
@@ -313,8 +317,12 @@ function ReviewRow({ review, canManage }: ReviewRowProps) {
           )}
         </td>
       </tr>
-      {approveOpen && <ApproveDialog review={review} onClose={handleCloseApprove} />}
-      {rejectOpen && <RejectDialog review={review} onClose={handleCloseReject} />}
+      {approveOpen && (
+        <ApproveDialog review={review} onClose={handleCloseApprove} />
+      )}
+      {rejectOpen && (
+        <RejectDialog review={review} onClose={handleCloseReject} />
+      )}
     </>
   );
 }
@@ -362,7 +370,9 @@ export default function ReviewsPage() {
     return (
       <PageWrapper title="Reviews">
         <EmptyState
-          illustration={<KbLockIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbLockIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Access restricted"
           description="You don't have permission to view knowledge base reviews."
         />
@@ -406,13 +416,17 @@ export default function ReviewsPage() {
         <TableSkeleton />
       ) : isError ? (
         <EmptyState
-          illustration={<KbAlertCircleIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbAlertCircleIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Failed to load reviews"
           description="An error occurred while fetching reviews."
         />
       ) : reviews.length === 0 ? (
         <EmptyState
-          illustration={<KbClipboardCheckIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbClipboardCheckIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="No reviews"
           description={
             statusFilter !== "all" || typeFilter !== "all"
@@ -451,7 +465,11 @@ export default function ReviewsPage() {
               </thead>
               <tbody>
                 {reviews.map((review) => (
-                  <ReviewRow key={review.id} review={review} canManage={canManage} />
+                  <ReviewRow
+                    key={review.id}
+                    review={review}
+                    canManage={canManage}
+                  />
                 ))}
               </tbody>
             </table>

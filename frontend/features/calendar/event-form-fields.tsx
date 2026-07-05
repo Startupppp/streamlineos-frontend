@@ -12,9 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { LoaderCircleIcon } from "@animateicons/react/lucide";
-import { Video } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Video, Loader2, Tag, Clock, MapPin, Lock, Circle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const EVENT_COLORS: Record<string, string> = {
@@ -102,190 +101,169 @@ export function EventFormFields({
   }, [onGenerateMeet]);
 
   return (
-    <>
-      <div className="space-y-1.5">
-        <Label htmlFor="ev-title" className="text-xs font-medium">
-          Title <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          id="ev-title"
-          value={title}
-          onChange={onTitleChange}
-          placeholder="Event title"
-          className="h-9"
-          autoFocus
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="ev-desc" className="text-xs font-medium">
-          Description
-        </Label>
-        <Input
-          id="ev-desc"
-          value={description}
-          onChange={onDescriptionChange}
-          placeholder="Optional description"
-          className="h-9"
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="ev-location" className="text-xs font-medium">
-          Location / Meet Link
-        </Label>
-        <div className="flex gap-2">
+    <div className="space-y-4">
+      {/* Title Row */}
+      <div className="flex items-center gap-3">
+        <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
+        <div className="flex-1">
           <Input
-            id="ev-location"
-            value={location}
-            onChange={onLocationChange}
-            placeholder="Room A, Zoom link, https://meet.google.com/..."
-            className={cn("h-9 flex-1", locationError && "border-destructive")}
+            id="ev-title"
+            value={title}
+            onChange={onTitleChange}
+            placeholder="Add Title"
+            className="h-10 text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 font-medium"
+            autoFocus
           />
-          {meetStatus &&
-            (meetStatus.connected ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-9 shrink-0 gap-1.5"
-                disabled={isMeetPending}
-                onClick={handleGenerateMeetClick}
-              >
-                {isMeetPending ? (
-                  <LoaderCircleIcon size={14} className="animate-spin" />
-                ) : (
-                  <Video className="h-3.5 w-3.5" />
-                )}
-                Meet
-              </Button>
-            ) : meetStatus.authUrl ? (
-              <a
-                href={location.trim() ? meetStatus.authUrl : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "shrink-0",
-                  !location.trim() && "pointer-events-none",
-                )}
-                aria-disabled={!location.trim()}
-              >
+        </div>
+      </div>
+
+      {/* Date Time Row */}
+      <div className="flex items-start gap-3">
+        <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
+        <div className="flex-1 min-w-0 space-y-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <DatePicker
+              value={startDate}
+              onChange={onStartDateChange}
+              placeholder="Start date"
+              dateFormat="MMM d, yyyy"
+              className="h-8 text-xs"
+            />
+            {!allDay && (
+              <Input
+                type="time"
+                className="h-8 text-xs w-[7.5rem] shrink-0"
+                value={startTime}
+                onChange={onStartTimeChange}
+              />
+            )}
+          </div>
+
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <DatePicker
+              value={endDate}
+              onChange={onEndDateChange}
+              fromDate={startDate ? new Date(startDate) : undefined}
+              placeholder="End date"
+              dateFormat="MMM d, yyyy"
+              className="h-8 text-xs"
+            />
+            {!allDay && (
+              <Input
+                type="time"
+                className="h-8 text-xs w-[7.5rem] shrink-0"
+                value={endTime}
+                onChange={onEndTimeChange}
+              />
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 pt-0.5">
+            <Checkbox
+              id="ev-allday"
+              checked={allDay}
+              onCheckedChange={(checked) => onAllDayChange(!!checked)}
+            />
+            <Label htmlFor="ev-allday" className="text-xs text-muted-foreground cursor-pointer font-normal select-none">
+              All day
+            </Label>
+          </div>
+        </div>
+      </div>
+
+      {/* Location / Video conference Row */}
+      <div className="flex items-start gap-3">
+        <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              id="ev-location"
+              value={location}
+              onChange={onLocationChange}
+              placeholder="Room or Location"
+              className={cn("h-9 text-xs flex-1 min-w-0", locationError && "border-destructive")}
+            />
+            {meetStatus &&
+              (meetStatus.connected ? (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="h-9 gap-1.5"
-                  disabled={!location.trim()}
+                  className="h-9 shrink-0 gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs font-semibold px-2 w-full sm:w-auto justify-center"
+                  disabled={isMeetPending}
+                  onClick={handleGenerateMeetClick}
                 >
-                  <Video className="h-3.5 w-3.5" />
-                  Connect
+                  {isMeetPending ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Video className="h-3.5 w-3.5" />
+                  )}
+                  + Video conference
                 </Button>
-              </a>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-9 gap-1.5"
-                disabled
-                title="Google Meet not configured"
-              >
-                <Video className="h-3.5 w-3.5" />
-                Connect
-              </Button>
-            ))}
-        </div>
-        {locationError && (
-          <p className="text-[11px] text-destructive">{locationError}</p>
-        )}
-        {!locationError && meetStatus?.connected && meetStatus.googleEmail && (
-          <p className="text-[11px] text-muted-foreground">
-            Google: {meetStatus.googleEmail}
-          </p>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2.5">
-        <Switch
-          id="ev-allday"
-          checked={allDay}
-          onCheckedChange={onAllDayChange}
-        />
-        <Label htmlFor="ev-allday" className="text-sm cursor-pointer">
-          All day event
-        </Label>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Start Date</Label>
-          <DatePicker
-            value={startDate}
-            onChange={onStartDateChange}
-            placeholder="Start date"
-          />
-        </div>
-        {!allDay && (
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Start Time</Label>
-            <Input
-              type="time"
-              className="h-9"
-              value={startTime}
-              onChange={onStartTimeChange}
-            />
+              ) : (
+                <a
+                  href={meetStatus.authUrl || undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn("shrink-0", !meetStatus.authUrl && "pointer-events-none")}
+                >
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs font-semibold px-2 w-full sm:w-auto justify-center"
+                    disabled={!meetStatus.authUrl}
+                  >
+                    <Video className="h-3.5 w-3.5" />
+                    + Video conference
+                  </Button>
+                </a>
+              ))}
           </div>
-        )}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium">End Date</Label>
-          <DatePicker
-            value={endDate}
-            onChange={onEndDateChange}
-            fromDate={startDate ? new Date(startDate) : undefined}
-            placeholder="End date"
-          />
+          {locationError && (
+            <p className="text-[10px] text-destructive">{locationError}</p>
+          )}
+          {!locationError && meetStatus?.connected && meetStatus.googleEmail && (
+            <p className="text-[10px] text-muted-foreground px-1">
+              Google Calendar linked: {meetStatus.googleEmail}
+            </p>
+          )}
         </div>
-        {!allDay && (
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium">End Time</Label>
-            <Input
-              type="time"
-              className="h-9"
-              value={endTime}
-              onChange={onEndTimeChange}
-            />
-          </div>
-        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Category</Label>
+      {/* Visibility / Privacy Select */}
+      <div className="flex items-center gap-3">
+        <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
+        <div className="flex-1">
           <Select value={category} onValueChange={onCategoryChange}>
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue />
+            <SelectTrigger className="h-9 text-xs w-full max-w-[200px]">
+              <SelectValue placeholder="Select privacy / category" />
             </SelectTrigger>
             <SelectContent>
               {EVENT_CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  <span className="capitalize">{cat}</span>
+                <SelectItem key={cat} value={cat} className="text-xs capitalize">
+                  {cat}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Color</Label>
+      </div>
+
+      {/* Busy / Free Select */}
+      <div className="flex items-center gap-3">
+        <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
+        <div className="flex-1">
           <Select value={color} onValueChange={onColorChange}>
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue />
+            <SelectTrigger className="h-9 text-xs w-full max-w-[200px]">
+              <SelectValue placeholder="Select busy status" />
             </SelectTrigger>
             <SelectContent>
               {Object.entries(EVENT_COLORS).map(([key, hex]) => (
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key} className="text-xs">
                   <span className="flex items-center gap-2">
                     <span
-                      className="h-3 w-3 rounded-full shrink-0"
+                      className="h-2.5 w-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: hex }}
                     />
                     <span className="capitalize">{key}</span>
@@ -296,6 +274,20 @@ export function EventFormFields({
           </Select>
         </div>
       </div>
-    </>
+
+      {/* Notes / Description Row */}
+      <div className="flex items-start gap-3">
+        <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
+        <div className="flex-1">
+          <Input
+            id="ev-desc"
+            value={description}
+            onChange={onDescriptionChange}
+            placeholder="Notes"
+            className="h-9 text-xs"
+          />
+        </div>
+      </div>
+    </div>
   );
 }

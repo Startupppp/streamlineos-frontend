@@ -387,7 +387,7 @@ export default function OrgBranchesPage() {
 
   const emptyState = search ? (
     <EmptyState
-      illustration={<GitBranch className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="companies"
       title={`No branches matching "${search}"`}
       description="Try a different search term."
       compact
@@ -395,14 +395,14 @@ export default function OrgBranchesPage() {
     />
   ) : showArchived ? (
     <EmptyState
-      illustration={<Archive className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="archive"
       title="No archived branches"
       compact
       className="min-h-[200px]"
     />
   ) : (
     <EmptyState
-      illustration={<GitBranch className="h-8 w-8 text-muted-foreground/40" />}
+      illustrationPreset="companies"
       title="No branches yet"
       description="Create your first branch to get started."
       action={{ label: "Add Branch", onClick: handleOpenCreate }}

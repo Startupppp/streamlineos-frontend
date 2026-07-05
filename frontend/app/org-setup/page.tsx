@@ -2,16 +2,22 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { clearBackendTokenCache } from "@/lib/api-client";
-import { useOrgSetupMutation } from "@/lib/api/hooks/org";
 import {
-  TOTAL_STEPS,
+  useSkipOrgSetupMutation,
+  usePatchOrgSetupSessionMutation,
+  useOrgSetupSessionQuery,
+  useModuleRecommendationsMutation,
+} from "@/lib/api/hooks/org";
+import {
   STEP_TITLES,
   DEFAULT_DATA,
   deriveAppsFromGoals,
+  getStepSequence,
+  type StepId,
 } from "@/features/org-setup/lib/constants";
 import {
   loadDraft,
@@ -21,22 +27,32 @@ import {
   saveStep,
 } from "@/features/org-setup/lib/draft";
 import type { WizardData } from "@/features/org-setup/lib/types";
-import { WizardShell } from "@/features/org-setup/components/wizard-shell";
+import { OrgSetupShell } from "@/features/org-setup/components/org-setup-shell";
 import { StepWelcome } from "@/features/org-setup/components/step-welcome";
-import { StepGoals } from "@/features/org-setup/components/step-goals";
-import { StepIndustry } from "@/features/org-setup/components/step-industry";
-import { StepCompany } from "@/features/org-setup/components/step-company";
-import { StepGeneration } from "@/features/org-setup/components/step-generation";
+import { StepBasics } from "@/features/org-setup/components/step-basics";
+import { StepSetup } from "@/features/org-setup/components/step-setup";
+import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
 
 export default function OrgSetupPage() {
   const { data: session } = useSession();
-  const { mutateAsync: setupOrg } = useOrgSetupMutation();
+  const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
+  const { mutate: patchSession, isPending: isSaving } = usePatchOrgSetupSessionMutation();
+  const { data: serverSession } = useOrgSetupSessionQuery();
+  const moduleRecommendations = useModuleRecommendationsMutation();
 
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
+  const [recommendedReasons, setRecommendedReasons] = useState<Record<string, string>>({});
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const hydratedFromServerRef = useRef(false);
+  const recommendationsFetchedRef = useRef(false);
+
+  const sequence = useMemo(() => getStepSequence(data.goals), [data.goals]);
+  const totalSteps = sequence.length;
+  const currentStepId: StepId = sequence[step - 1] ?? "welcome";
 
   const firstName =
     session?.user?.name?.split(" ")[0] ??
@@ -51,10 +67,26 @@ export default function OrgSetupPage() {
     });
   }, []);
 
+  const persistStep = useCallback(
+    (stepId: StepId, snapshot: WizardData) => {
+      setSaveState("saving");
+      patchSession(
+        { currentStep: stepId, data: snapshot },
+        { onSuccess: () => setSaveState("saved"), onError: () => setSaveState("idle") },
+      );
+    },
+    [patchSession],
+  );
+
   const goNext = useCallback(() => {
     setDirection(1);
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
-  }, []);
+    setStep((s) => {
+      const nextIndex = Math.min(s + 1, totalSteps);
+      const nextStepId = sequence[nextIndex - 1] ?? "welcome";
+      persistStep(nextStepId, data);
+      return nextIndex;
+    });
+  }, [totalSteps, sequence, data, persistStep]);
 
   const goBack = useCallback(() => {
     setDirection(-1);
@@ -67,31 +99,27 @@ export default function OrgSetupPage() {
       const newGoals = has
         ? prev.goals.filter((g) => g !== id)
         : [...prev.goals, id];
-      const next = {
-        ...prev,
-        goals: newGoals,
-        installedApps: deriveAppsFromGoals(newGoals),
-      };
+      const derived = deriveAppsFromGoals(newGoals);
+      const next = { ...prev, goals: newGoals, installedApps: derived, modules: derived };
       saveDraft(next);
       return next;
     });
   }, []);
 
-  const handleSelectIndustry = useCallback(
-    (industry: string) => {
-      patch({ industry });
-    },
-    [patch],
-  );
+  const handleToggleModule = useCallback((moduleKey: string) => {
+    setData((prev) => {
+      const has = prev.modules.includes(moduleKey);
+      const modules = has ? prev.modules.filter((m) => m !== moduleKey) : [...prev.modules, moduleKey];
+      const next = { ...prev, modules };
+      saveDraft(next);
+      return next;
+    });
+  }, []);
 
   const handleSkipToDashboard = useCallback(async () => {
     setIsSkipping(true);
     try {
-      const res = await setupOrg({
-        industry: "IT Services",
-        companySize: "1-10",
-        enabledModules: ["HR", "CRM", "PROJECTS"],
-      });
+      const res = await skipOrgSetup({});
       clearBackendTokenCache();
       document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
       if (res?.autoLoginToken) {
@@ -105,20 +133,45 @@ export default function OrgSetupPage() {
     } catch {
       setIsSkipping(false);
     }
-  }, [setupOrg]);
+  }, [skipOrgSetup]);
 
   useEffect(() => {
     const savedStep = loadStep();
-    if (savedStep >= TOTAL_STEPS) {
+    const savedDraft = loadDraft();
+    const savedSequence = getStepSequence(savedDraft.goals);
+    if (savedStep >= savedSequence.length) {
       clearAll();
       setStep(1);
       setData({ ...DEFAULT_DATA });
     } else {
       setStep(savedStep);
-      setData(loadDraft());
+      setData(savedDraft);
     }
     setMounted(true);
   }, []);
+
+  // Server session is the source of truth for cross-device resume; localStorage above
+  // is only the instant-paint cache (per 02_Odoo_Research §"Resume Without Fear").
+  useEffect(() => {
+    if (!mounted || hydratedFromServerRef.current || !serverSession) return;
+    hydratedFromServerRef.current = true;
+    if (serverSession.status !== "in_progress" || !serverSession.data) return;
+    const serverData = serverSession.data as Partial<WizardData>;
+    if (!serverData.goals && !serverData.companyName) return;
+
+    const merged: WizardData = { ...DEFAULT_DATA, ...serverData };
+    const mergedSequence = getStepSequence(merged.goals);
+    const stepIndex = serverSession.currentStep
+      ? Math.max(1, mergedSequence.indexOf(serverSession.currentStep as StepId) + 1)
+      : 1;
+
+    setData(merged);
+    saveDraft(merged);
+    if (stepIndex > 1 && stepIndex <= mergedSequence.length) {
+      setStep(stepIndex);
+      saveStep(stepIndex);
+    }
+  }, [mounted, serverSession]);
 
   useEffect(() => {
     if (session?.orgOnboardingCompletedAt) {
@@ -132,6 +185,29 @@ export default function OrgSetupPage() {
     saveStep(step);
   }, [step, mounted]);
 
+  // Fetch real "why recommended" copy once goals+industry are known, for the Modules step.
+  useEffect(() => {
+    if (currentStepId !== "setup" || recommendationsFetchedRef.current || data.goals.length === 0) return;
+    recommendationsFetchedRef.current = true;
+    moduleRecommendations.mutate(
+      { goals: data.goals, industry: data.industry || undefined },
+      {
+        onSuccess: (res) => {
+          const reasons: Record<string, string> = {};
+          for (const rec of res.recommendedModules) reasons[rec.moduleKey] = rec.reason;
+          setRecommendedReasons(reasons);
+        },
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepId]);
+
+  useEffect(() => {
+    if (saveState !== "saved") return;
+    const timeout = setTimeout(() => setSaveState("idle"), 4000);
+    return () => clearTimeout(timeout);
+  }, [saveState]);
+
   if (!mounted) {
     return (
       <div className="w-full max-w-sm flex items-center justify-center py-16">
@@ -141,47 +217,48 @@ export default function OrgSetupPage() {
   }
 
   const stepTitle =
-    step === 1
-      ? `Welcome${firstName ? `, ${firstName}` : ""}!`
-      : (STEP_TITLES[step - 1] ?? "");
+    currentStepId === "welcome"
+      ? `Welcome${firstName ? `, ${firstName}` : ""}`
+      : STEP_TITLES[currentStepId];
 
   return (
-    <div className="w-full max-w-sm relative">
-      <WizardShell
-        step={step}
-        totalSteps={TOTAL_STEPS}
-        title={stepTitle}
-        direction={direction}
-      >
-        {step === 1 && (
-          <StepWelcome onNext={goNext} onSkip={handleSkipToDashboard} isSkipping={isSkipping} />
-        )}
-        {step === 2 && (
-          <StepGoals
-            goals={data.goals}
-            onToggle={handleToggleGoal}
-            onBack={goBack}
-            onNext={goNext}
-          />
-        )}
-        {step === 3 && (
-          <StepIndustry
-            industry={data.industry}
-            onSelect={handleSelectIndustry}
-            onBack={goBack}
-            onNext={goNext}
-          />
-        )}
-        {step === 4 && (
-          <StepCompany
-            data={data}
-            patch={patch}
-            onBack={goBack}
-            onNext={goNext}
-          />
-        )}
-        {step === 5 && <StepGeneration data={data} />}
-      </WizardShell>
-    </div>
+    <OrgSetupShell
+      sequence={sequence}
+      currentIndex={step - 1}
+      title={stepTitle}
+      direction={direction}
+      saveState={isSaving ? "saving" : saveState}
+      data={data}
+    >
+      {currentStepId === "welcome" && (
+        <StepWelcome onNext={goNext} onSkip={handleSkipToDashboard} isSkipping={isSkipping} />
+      )}
+      {currentStepId === "basics" && (
+        <StepBasics
+          data={data}
+          patch={patch}
+          onToggleGoal={handleToggleGoal}
+          onBack={goBack}
+          onNext={goNext}
+        />
+      )}
+      {currentStepId === "setup" && (
+        <StepSetup
+          data={data}
+          recommendedReasons={recommendedReasons}
+          onToggleModule={handleToggleModule}
+          patch={patch}
+          onBack={goBack}
+          onNext={goNext}
+        />
+      )}
+      {currentStepId === "invite" && (
+        <StepInviteLaunch
+          data={data}
+          onChangeInvitees={(invitees) => patch({ invitees })}
+          onBack={goBack}
+        />
+      )}
+    </OrgSetupShell>
   );
 }

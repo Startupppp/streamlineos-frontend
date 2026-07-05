@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import {
   useNotificationAnalytics,
   useNotificationAnalyticsByCategory,
@@ -253,7 +254,7 @@ export default function NotificationAnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <ChartCard title="By Category" isLoading={catLoading}>
               {!byCategory?.length ? (
-                <p className="text-sm text-muted-foreground text-center py-6">No data</p>
+                <ChartEmptyState height={180} compact />
               ) : (
                 <div className="divide-y divide-border">
                   {byCategory.map((item) => {
@@ -275,7 +276,7 @@ export default function NotificationAnalyticsPage() {
 
             <ChartCard title="By Priority" isLoading={prioLoading}>
               {!byPriority?.length ? (
-                <p className="text-sm text-muted-foreground text-center py-6">No data</p>
+                <ChartEmptyState height={180} compact />
               ) : (
                 <div className="divide-y divide-border">
                   {byPriority.map((item) => {
@@ -298,10 +299,7 @@ export default function NotificationAnalyticsPage() {
 
           <ChartCard title="Channel Usage" isLoading={chanLoading}>
             {!byChannel?.length ? (
-              <div className="flex items-center justify-center py-8 gap-2">
-                <Layers className="h-5 w-5 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">No channel data yet</p>
-              </div>
+              <ChartEmptyState message="No channel data yet" height={180} compact />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border">
                 {byChannel.map((item) => (

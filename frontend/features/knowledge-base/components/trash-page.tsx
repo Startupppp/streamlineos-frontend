@@ -16,8 +16,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useKbPagesTrash, useRestoreKbPage, useHardDeleteKbPage } from "@/hooks/api/kb";
-import { KbRotateCcwIcon, KbTrash2Icon } from "@/features/knowledge-base/lib/kb-icons";
+import {
+  useKbPagesTrash,
+  useRestoreKbPage,
+  useHardDeleteKbPage,
+} from "@/hooks/api/kb";
+import {
+  KbRotateCcwIcon,
+  KbTrash2Icon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPage } from "@/hooks/api/kb/pages";
 
 function formatRelativeTime(dateStr: string): string {
@@ -59,9 +66,13 @@ function TrashRow({ page }: { page: KbPage }) {
   return (
     <>
       <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors">
-        <span className="text-base shrink-0 w-5 text-center">{page.icon ?? "📄"}</span>
+        <span className="text-base shrink-0 w-5 text-center">
+          {page.icon ?? "📄"}
+        </span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{page.title || "Untitled"}</p>
+          <p className="text-sm font-medium truncate">
+            {page.title || "Untitled"}
+          </p>
           <p className="text-xs text-muted-foreground">
             Deleted {page.deletedAt ? formatRelativeTime(page.deletedAt) : ""}
           </p>
@@ -95,8 +106,8 @@ function TrashRow({ page }: { page: KbPage }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Permanently delete this page?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. &ldquo;{page.title || "Untitled"}&rdquo; will be
-              permanently removed.
+              This action cannot be undone. &ldquo;{page.title || "Untitled"}
+              &rdquo; will be permanently removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -128,28 +139,33 @@ function TrashSkeleton() {
 export default function TrashPage() {
   const { data: pages = [], isLoading, isError } = useKbPagesTrash();
 
-  const subtitle = pages.length > 0 ? `${pages.length} page${pages.length === 1 ? "" : "s"}` : undefined;
+  const subtitle =
+    pages.length > 0
+      ? `${pages.length} page${pages.length === 1 ? "" : "s"}`
+      : undefined;
 
   return (
     <PageWrapper title="Trash" subtitle={subtitle}>
       {isLoading && <TrashSkeleton />}
-
       {!isLoading && isError && (
         <EmptyState
-          illustration={<KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Could not load trash"
           description="There was a problem fetching deleted pages."
         />
       )}
-
+      s
       {!isLoading && !isError && pages.length === 0 && (
         <EmptyState
-          illustration={<KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Trash is empty"
           description="Deleted pages will appear here and can be restored or permanently removed."
         />
       )}
-
       {!isLoading && !isError && pages.length > 0 && (
         <div className="space-y-1.5">
           {pages.map((page) => (

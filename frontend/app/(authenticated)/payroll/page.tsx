@@ -9,13 +9,14 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, DollarSign, Users, TrendingDown, BarChart3 } from "lucide-react";
+import { AlertTriangle, DollarSign, Users, TrendingDown } from "lucide-react";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
 import { RunStatusBadge } from "@/features/payroll/runs/run-status-badge";
 import { ChecklistCard } from "@/features/payroll/runs/checklist-card";
 import { CommandCenterPanels } from "@/features/payroll/runs/command-center-panels";
-import { EmptyPayroll } from "@/components/illustrations/empty-payroll";
+import { EmptyPayroll } from "@/components/illustrations";
 import { useCommandCenter } from "@/hooks/api/payroll/command-center";
 import { useCreateRun } from "@/hooks/api/payroll/runs";
 import { useCan } from "@/hooks/api/access";
@@ -223,11 +224,12 @@ export default function PayrollCommandCenterPage() {
               {data.checklist.length > 0 ? (
                 <ChecklistCard items={data.checklist} />
               ) : (
-                <div className="rounded-xl border border-dashed border-border bg-card p-4 flex flex-col items-center justify-center min-h-[200px] text-center gap-2">
-                  <BarChart3 className="h-8 w-8 text-muted-foreground" />
-                  <p className="text-[13px] font-medium text-muted-foreground">
-                    Start a payroll run to see the checklist
-                  </p>
+                <div className="rounded-xl border border-dashed border-border bg-card p-4 min-h-[200px]">
+                  <ChartEmptyState
+                    message="Start a payroll run to see the checklist"
+                    height={200}
+                    compact
+                  />
                 </div>
               )}
             </div>

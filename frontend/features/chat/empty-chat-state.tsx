@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Hash, Search } from "lucide-react";
-import { EmptyMailIllustration } from "@/components/illustrations";
+import { ChatIllustration } from "@/components/illustrations";
 
 export function EmptyChatState({
   onNewDM,
@@ -14,7 +14,7 @@ export function EmptyChatState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <EmptyMailIllustration className="mb-6 w-44 h-44" />
+      <ChatIllustration className="mb-6 h-44 w-44" />
       <h3 className="text-lg font-bold mb-1">Welcome to Chat</h3>
       <p className="text-[13px] text-muted-foreground max-w-xs leading-relaxed">
         Select a conversation or start a new one.

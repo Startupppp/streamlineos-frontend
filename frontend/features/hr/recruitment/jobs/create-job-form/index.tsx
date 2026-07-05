@@ -18,6 +18,8 @@ import { Section7, Section8 } from "./hiring-pipeline-sections";
 import { Section9, Section10 } from "./publishing-settings-sections";
 import { createJobFormSchema, SECTION_KEYS, NO_HIRING_FLOW, type CreateJobFormValues } from "./schema";
 import { parseJobToFormValues } from "./parse-job";
+import { JobPostingPreview } from "./job-posting-preview";
+import { PublishReadiness } from "./publish-readiness";
 import type { JobPosting } from "@/types/hr/recruitment";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Save, Send } from "lucide-react";
@@ -151,6 +153,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
         openings: data.openings,
         applicationDeadline: data.applicationDeadline || undefined,
         status,
+        screeningQuestions: data.screeningQuestions,
       };
 
       if (isEdit && job) {
@@ -229,6 +232,11 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <PublishReadiness
+              steps={steps.map((s) => ({ title: s.title, completed: s.completed, hasError: s.hasError }))}
+              onStepClick={setActiveStep}
+            />
+            <div className="w-px h-5 bg-border/60 shrink-0" />
             {isEdit ? (
               <Button size="sm" onClick={handleSaveDraft} disabled={isPending} className="h-8 gap-1.5">
                 <Save className="h-3.5 w-3.5" />
@@ -249,11 +257,21 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
           </div>
         </div>
 
-        <ScrollArea className="flex-1">
-          <div className="px-6 py-6 max-w-2xl">
-            <ActiveSection form={form} departments={departments} />
+        <div className="flex-1 min-h-0 flex">
+          <ScrollArea className="flex-1 min-w-0">
+            <div className="px-6 py-6 max-w-2xl">
+              <ActiveSection form={form} departments={departments} />
+            </div>
+          </ScrollArea>
+
+          <div className="hidden xl:block w-[380px] shrink-0 border-l bg-muted/20">
+            <ScrollArea className="h-full">
+              <div className="p-4">
+                <JobPostingPreview control={form.control} departments={departments} />
+              </div>
+            </ScrollArea>
           </div>
-        </ScrollArea>
+        </div>
 
         <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t bg-card gap-3">
           <Button

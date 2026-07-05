@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable } from "@/components/ui/data-table";
-import { EmptyPayroll } from "@/components/illustrations/empty-payroll";
+import { EmptyPayroll } from "@/components/illustrations";
 import { usePayrollComponents, useDeletePayrollComponent } from "@/hooks/api/payroll";
 import type { SalaryComponent, ComponentType } from "@/types/payroll/setup";
 import { buildComponentColumns } from "./component-columns";

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyPayroll } from "@/components/illustrations/empty-payroll";
+import { EmptyPayroll } from "@/components/illustrations";
 import { useEssPayslips } from "@/hooks/api/payroll/ess";
 import { apiClient } from "@/lib/api-client";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";

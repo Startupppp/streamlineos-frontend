@@ -46,7 +46,9 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     return (
       <PageWrapper title="Space" backHref={KB_SPACES}>
         <EmptyState
-          illustration={<KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Could not load space"
           description="There was a problem fetching this space."
         />
@@ -57,9 +59,10 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const audience = (space.audience ?? "internal") as KbAudience;
 
   const spacePageNodes = treeNodes.filter((n) => n.spaceId === spaceId);
-  const filteredNodes = spacePageNodes.length > 0
-    ? filterTreeWithAncestors(treeNodes, (n) => n.spaceId === spaceId)
-    : [];
+  const filteredNodes =
+    spacePageNodes.length > 0
+      ? filterTreeWithAncestors(treeNodes, (n) => n.spaceId === spaceId)
+      : [];
 
   return (
     <PageWrapper
@@ -72,7 +75,9 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
           <span className="text-3xl shrink-0">{space.icon ?? "📚"}</span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-base font-semibold text-foreground">{space.name}</span>
+              <span className="text-base font-semibold text-foreground">
+                {space.name}
+              </span>
               <Badge
                 variant="outline"
                 className={`text-[10px] h-4 px-1.5 ${AUDIENCE_BADGE_CLASS[audience]}`}
@@ -81,7 +86,9 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
               </Badge>
             </div>
             {space.description && (
-              <p className="mt-1 text-sm text-muted-foreground">{space.description}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {space.description}
+              </p>
             )}
           </div>
         </div>
@@ -91,13 +98,17 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
             <p className="text-sm font-medium text-foreground">
               Pages
               {!treeLoading && (
-                <span className="ml-1.5 text-xs text-muted-foreground">({spacePageNodes.length})</span>
+                <span className="ml-1.5 text-xs text-muted-foreground">
+                  ({spacePageNodes.length})
+                </span>
               )}
             </p>
           </div>
           {spacePageNodes.length === 0 && !treeLoading ? (
             <EmptyState
-              illustration={<KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />}
+              illustration={
+                <KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />
+              }
               title="No pages in this space yet"
               description="Assign pages from Page settings"
             />

@@ -13,3 +13,6 @@ export * from "./recruiters";
 export * from "./messages";
 export * from "./vendors";
 export * from "./reports";
+export * from "./job-board-postings";
+export * from "./talent-pools";
+export * from "./external-referrals";

@@ -5,6 +5,7 @@ const MIGRATED_PREFIXES = [
   "/contacts",
   "/targets",
   "/csat",
+  "/surveys",
   "/inventory",
   "/accounting",
   "/ai",
@@ -71,29 +72,32 @@ const MIGRATED_PREFIXES = [
   "/hr/recruitment/automations",
   "/hr/recruitment/bgv-compliance",
   "/hr/recruitment/booking-links",
-  "/hr/recruitment/candidates/bulk-import",
-  "/hr/recruitment/candidates/import",
+  "/hr/recruitment/candidates",
   "/hr/recruitment/diversity-report",
   "/hr/recruitment/email-sequences",
+  "/hr/recruitment/external-referrals",
+  "/hr/recruitment/external-referrers",
   "/hr/recruitment/headcount",
   "/hr/recruitment/hiring-flows",
   "/hr/recruitment/internal-jobs",
   "/hr/recruitment/interviewer-performance",
   "/hr/recruitment/interviewers",
-  "/hr/recruitment/interviews/sla-report",
-  "/hr/recruitment/interviews/slas",
+  "/hr/recruitment/interviews",
   "/hr/recruitment/jobs",
-  "/hr/recruitment/messages/threads",
+  "/hr/recruitment/messages",
   "/hr/recruitment/offer-letter",
   "/hr/recruitment/offer-templates",
+  "/hr/recruitment/offers",
   "/hr/recruitment/pipeline",
   "/hr/recruitment/portals",
   "/hr/recruitment/recruiters",
   "/hr/recruitment/referrals",
   "/hr/recruitment/reports",
+  "/hr/recruitment/requisitions",
   "/hr/recruitment/scorecard-analytics",
   "/hr/recruitment/scorecard-templates",
   "/hr/recruitment/stats",
+  "/hr/recruitment/talent-pools",
   "/hr/recruitment/vendors",
   "/hr/rich-documents",
   "/hr/salary-structures",
@@ -201,7 +205,7 @@ async function getBackendToken(): Promise<string | null> {
   return fetchingTokenPromise;
 }
 
-async function authedFetch(url: string, init: RequestInit, useBackend: boolean, path: string): Promise<Response> {
+export async function authedFetch(url: string, init: RequestInit, useBackend: boolean, path: string): Promise<Response> {
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
 
@@ -229,7 +233,7 @@ async function authedFetch(url: string, init: RequestInit, useBackend: boolean, 
   return res;
 }
 
-function buildUrl(path: string, params?: Record<string, unknown>): string {
+export function buildUrl(path: string, params?: Record<string, unknown>): string {
   const base = isMigrated(path) ? BACKEND_API_URL : SAME_ORIGIN;
   const url = `${base}${path}`;
   if (!params || Object.keys(params).length === 0) return url;

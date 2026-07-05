@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFeedbackResults } from "@/hooks/api/hr";
@@ -41,11 +42,12 @@ export function ResultsTab() {
       </div>
 
       {!searched && (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
-          <Search className="w-12 h-12 text-slate-300" />
-          <p className="text-slate-500 font-medium">Select an employee to view 360° feedback results</p>
-          <p className="text-sm">Enter an employee ID above</p>
-        </div>
+        <EmptyState
+          illustrationPreset="search"
+          title="Select an employee to view 360° feedback results"
+          description="Enter an employee ID above"
+          className="border-0 bg-transparent shadow-none"
+        />
       )}
 
       {searched && isLoading && (

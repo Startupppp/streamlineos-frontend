@@ -28,14 +28,20 @@ import {
 } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbNoResultRow, KbPageAnalyticsRow, KbGapRow } from "@/types/kb";
 
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+const STATUS_VARIANT: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   draft: "outline",
   in_review: "secondary",
   published: "default",
   archived: "secondary",
 };
 
-const TRUST_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+const TRUST_VARIANT: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   unverified: "outline",
   verified: "default",
   verification_expired: "destructive",
@@ -44,9 +50,13 @@ const TRUST_VARIANT: Record<string, "default" | "secondary" | "destructive" | "o
 function NoResultsRow({ row, rank }: { row: KbNoResultRow; rank: number }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/40 transition-colors">
-      <span className="text-xs text-muted-foreground w-5 shrink-0 tabular-nums">{rank}</span>
+      <span className="text-xs text-muted-foreground w-5 shrink-0 tabular-nums">
+        {rank}
+      </span>
       <span className="flex-1 text-sm truncate">{row.query ?? "(empty)"}</span>
-      <span className="text-xs font-medium tabular-nums text-muted-foreground">{row.count}</span>
+      <span className="text-xs font-medium tabular-nums text-muted-foreground">
+        {row.count}
+      </span>
     </div>
   );
 }
@@ -54,20 +64,38 @@ function NoResultsRow({ row, rank }: { row: KbNoResultRow; rank: number }) {
 function PageAnalyticsTableRow({ row }: { row: KbPageAnalyticsRow }) {
   return (
     <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
-      <Link href={pageHref(row.id)} className="text-sm truncate hover:underline text-foreground">
+      <Link
+        href={pageHref(row.id)}
+        className="text-sm truncate hover:underline text-foreground"
+      >
         {row.title || "Untitled"}
       </Link>
-      <span className="text-xs tabular-nums text-muted-foreground text-right">{row.uniqueViewers}</span>
-      <span className="text-xs tabular-nums text-muted-foreground text-right">{row.commentCount}</span>
-      <span className="text-xs tabular-nums text-muted-foreground text-right">{row.versionCount}</span>
-      <Badge variant={STATUS_VARIANT[row.status] ?? "outline"} className="text-xs capitalize">
+      <span className="text-xs tabular-nums text-muted-foreground text-right">
+        {row.uniqueViewers}
+      </span>
+      <span className="text-xs tabular-nums text-muted-foreground text-right">
+        {row.commentCount}
+      </span>
+      <span className="text-xs tabular-nums text-muted-foreground text-right">
+        {row.versionCount}
+      </span>
+      <Badge
+        variant={STATUS_VARIANT[row.status] ?? "outline"}
+        className="text-xs capitalize"
+      >
         {row.status.replace("_", " ")}
       </Badge>
-      <Badge variant={TRUST_VARIANT[row.trustState] ?? "outline"} className="text-xs capitalize">
+      <Badge
+        variant={TRUST_VARIANT[row.trustState] ?? "outline"}
+        className="text-xs capitalize"
+      >
         {row.trustState.replace("_", " ")}
       </Badge>
       <span className="text-xs text-muted-foreground text-right">
-        {new Date(row.updatedAt).toLocaleDateString("en", { month: "short", day: "numeric" })}
+        {new Date(row.updatedAt).toLocaleDateString("en", {
+          month: "short",
+          day: "numeric",
+        })}
       </span>
     </div>
   );
@@ -88,7 +116,9 @@ function GapTableRow({
   return (
     <div className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
       <span className="flex-1 text-sm truncate">{row.query ?? "(empty)"}</span>
-      <span className="text-xs tabular-nums text-muted-foreground shrink-0">{row.count}</span>
+      <span className="text-xs tabular-nums text-muted-foreground shrink-0">
+        {row.count}
+      </span>
       <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
         {new Date(row.lastOccurredAt).toLocaleDateString("en", {
           month: "short",
@@ -132,9 +162,12 @@ function AnalyticsSkeleton() {
 
 export default function KnowledgeAnalyticsPage() {
   const canView = useCan("kb:analytics:view");
-  const { data: overview, isLoading: overviewLoading } = useKbAnalyticsOverview();
-  const { data: noResults = [], isLoading: noResultsLoading } = useKbNoResults();
-  const { data: pageAnalytics = [], isLoading: pagesLoading } = usePageAnalytics();
+  const { data: overview, isLoading: overviewLoading } =
+    useKbAnalyticsOverview();
+  const { data: noResults = [], isLoading: noResultsLoading } =
+    useKbNoResults();
+  const { data: pageAnalytics = [], isLoading: pagesLoading } =
+    usePageAnalytics();
   const { data: gaps = [], isLoading: gapsLoading } = useKnowledgeGaps();
   const createPage = useCreateKbPage();
   const router = useRouter();
@@ -154,7 +187,9 @@ export default function KnowledgeAnalyticsPage() {
     return (
       <PageWrapper title="Analytics">
         <EmptyState
-          illustration={<KbLockIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbLockIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Access restricted"
           description="You don't have permission to view knowledge base analytics."
         />
@@ -174,10 +209,30 @@ export default function KnowledgeAnalyticsPage() {
     <PageWrapper title="Analytics">
       {overview && (
         <StatCardGrid cols={5} className="mb-6">
-          <StatCard label="Total pages" value={overview.totalCount} icon={KbFileTextIcon} tone="default" />
-          <StatCard label="Total views" value={overview.totalViews} icon={KbEyeIcon} tone="blue" />
-          <StatCard label="Searches" value={overview.searches} icon={KbSearchIcon} tone="violet" />
-          <StatCard label="Helpful votes" value={overview.helpfulUp} icon={KbThumbsUpIcon} tone="emerald" />
+          <StatCard
+            label="Total pages"
+            value={overview.totalCount}
+            icon={KbFileTextIcon}
+            tone="default"
+          />
+          <StatCard
+            label="Total views"
+            value={overview.totalViews}
+            icon={KbEyeIcon}
+            tone="blue"
+          />
+          <StatCard
+            label="Searches"
+            value={overview.searches}
+            icon={KbSearchIcon}
+            tone="violet"
+          />
+          <StatCard
+            label="Helpful votes"
+            value={overview.helpfulUp}
+            icon={KbThumbsUpIcon}
+            tone="emerald"
+          />
           <StatCard
             label="Search success"
             value={`${Math.round(overview.searchSuccessRate)}%`}
@@ -190,14 +245,20 @@ export default function KnowledgeAnalyticsPage() {
       <div className="space-y-8">
         <section className="space-y-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground">No-result searches</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              No-result searches
+            </h2>
             {noResults.length > 0 && (
-              <span className="text-xs text-muted-foreground">{noResults.length} queries</span>
+              <span className="text-xs text-muted-foreground">
+                {noResults.length} queries
+              </span>
             )}
           </div>
           {noResults.length === 0 ? (
             <EmptyState
-              illustration={<KbSearchIcon className="h-6 w-6 text-muted-foreground/40" />}
+              illustration={
+                <KbSearchIcon className="h-6 w-6 text-muted-foreground/40" />
+              }
               title="No zero-result searches"
               description="All recent searches returned at least one result."
               compact
@@ -205,9 +266,15 @@ export default function KnowledgeAnalyticsPage() {
           ) : (
             <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
               <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
-                <span className="text-xs font-medium text-muted-foreground w-5">#</span>
-                <span className="flex-1 text-xs font-medium text-muted-foreground">Query</span>
-                <span className="text-xs font-medium text-muted-foreground">Count</span>
+                <span className="text-xs font-medium text-muted-foreground w-5">
+                  #
+                </span>
+                <span className="flex-1 text-xs font-medium text-muted-foreground">
+                  Query
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Count
+                </span>
               </div>
               {noResults.map((row, i) => (
                 <NoResultsRow key={i} row={row} rank={i + 1} />
@@ -220,12 +287,16 @@ export default function KnowledgeAnalyticsPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">Top pages</h2>
             {pageAnalytics.length > 0 && (
-              <span className="text-xs text-muted-foreground">{pageAnalytics.length} pages</span>
+              <span className="text-xs text-muted-foreground">
+                {pageAnalytics.length} pages
+              </span>
             )}
           </div>
           {pageAnalytics.length === 0 ? (
             <EmptyState
-              illustration={<KbFileTextIcon className="h-6 w-6 text-muted-foreground/40" />}
+              illustration={
+                <KbFileTextIcon className="h-6 w-6 text-muted-foreground/40" />
+              }
               title="No page data yet"
               description="Page view data will appear here once users start reading pages."
               compact
@@ -233,13 +304,27 @@ export default function KnowledgeAnalyticsPage() {
           ) : (
             <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
               <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 border-b border-border">
-                <span className="text-xs font-medium text-muted-foreground">Title</span>
-                <span className="text-xs font-medium text-muted-foreground text-right">Views</span>
-                <span className="text-xs font-medium text-muted-foreground text-right">Cmts</span>
-                <span className="text-xs font-medium text-muted-foreground text-right">Vers</span>
-                <span className="text-xs font-medium text-muted-foreground">Status</span>
-                <span className="text-xs font-medium text-muted-foreground">Trust</span>
-                <span className="text-xs font-medium text-muted-foreground text-right">Updated</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Title
+                </span>
+                <span className="text-xs font-medium text-muted-foreground text-right">
+                  Views
+                </span>
+                <span className="text-xs font-medium text-muted-foreground text-right">
+                  Cmts
+                </span>
+                <span className="text-xs font-medium text-muted-foreground text-right">
+                  Vers
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Status
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Trust
+                </span>
+                <span className="text-xs font-medium text-muted-foreground text-right">
+                  Updated
+                </span>
               </div>
               {pageAnalytics.map((row) => (
                 <PageAnalyticsTableRow key={row.id} row={row} />
@@ -251,18 +336,25 @@ export default function KnowledgeAnalyticsPage() {
         <section className="space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Knowledge gaps</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                Knowledge gaps
+              </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Searches that returned no results — write pages to close these gaps.
+                Searches that returned no results — write pages to close these
+                gaps.
               </p>
             </div>
             {gaps.length > 0 && (
-              <span className="text-xs text-muted-foreground">{gaps.length} gaps</span>
+              <span className="text-xs text-muted-foreground">
+                {gaps.length} gaps
+              </span>
             )}
           </div>
           {gaps.length === 0 ? (
             <EmptyState
-              illustration={<KbSearchIcon className="h-6 w-6 text-muted-foreground/40" />}
+              illustration={
+                <KbSearchIcon className="h-6 w-6 text-muted-foreground/40" />
+              }
               title="No knowledge gaps"
               description="All searches are finding relevant content."
               compact
@@ -270,8 +362,12 @@ export default function KnowledgeAnalyticsPage() {
           ) : (
             <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
               <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
-                <span className="flex-1 text-xs font-medium text-muted-foreground">Query</span>
-                <span className="text-xs font-medium text-muted-foreground shrink-0">Count</span>
+                <span className="flex-1 text-xs font-medium text-muted-foreground">
+                  Query
+                </span>
+                <span className="text-xs font-medium text-muted-foreground shrink-0">
+                  Count
+                </span>
                 <span className="text-xs font-medium text-muted-foreground shrink-0 w-28 text-right">
                   Last searched
                 </span>

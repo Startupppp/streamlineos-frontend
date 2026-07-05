@@ -17,11 +17,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useKbPageTemplates, useDeleteKbPageTemplate, useCreateKbPage, useUpdateKbPage } from "@/hooks/api/kb";
+import {
+  useKbPageTemplates,
+  useDeleteKbPageTemplate,
+  useCreateKbPage,
+  useUpdateKbPage,
+} from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
-import { STARTER_TEMPLATES, deriveContentText } from "@/features/knowledge-base/lib/starter-templates";
-import { KbLayoutTemplateIcon, KbTrash2Icon, KbLoader2Icon } from "@/features/knowledge-base/lib/kb-icons";
+import {
+  STARTER_TEMPLATES,
+  deriveContentText,
+} from "@/features/knowledge-base/lib/starter-templates";
+import {
+  KbLayoutTemplateIcon,
+  KbTrash2Icon,
+  KbLoader2Icon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
 import type { StarterTemplate } from "@/features/knowledge-base/lib/starter-templates";
 
@@ -32,7 +44,12 @@ interface TemplateCardProps {
   isCreating: boolean;
 }
 
-function TemplateCard({ template, canDelete, onUse, isCreating }: TemplateCardProps) {
+function TemplateCard({
+  template,
+  canDelete,
+  onUse,
+  isCreating,
+}: TemplateCardProps) {
   const deleteTemplate = useDeleteKbPageTemplate();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -74,7 +91,11 @@ function TemplateCard({ template, canDelete, onUse, isCreating }: TemplateCardPr
             disabled={isCreating}
             className="h-7 text-xs"
           >
-            {isCreating ? <KbLoader2Icon className="h-3 w-3 animate-spin" /> : "Use"}
+            {isCreating ? (
+              <KbLoader2Icon className="h-3 w-3 animate-spin" />
+            ) : (
+              "Use"
+            )}
           </Button>
           {canDelete && (
             <Button
@@ -100,7 +121,8 @@ function TemplateCard({ template, canDelete, onUse, isCreating }: TemplateCardPr
           <AlertDialogHeader>
             <AlertDialogTitle>Delete template?</AlertDialogTitle>
             <AlertDialogDescription>
-              &ldquo;{template.name}&rdquo; will be permanently deleted and cannot be recovered.
+              &ldquo;{template.name}&rdquo; will be permanently deleted and
+              cannot be recovered.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -135,7 +157,9 @@ function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
       <span className="text-xl shrink-0 mt-0.5">{template.icon}</span>
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-medium truncate">{template.name}</p>
-        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{template.description}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+          {template.description}
+        </p>
       </div>
       <Button
         size="sm"
@@ -144,7 +168,11 @@ function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
         disabled={isCreating}
         className="h-7 text-xs shrink-0"
       >
-        {isCreating ? <KbLoader2Icon className="h-3 w-3 animate-spin" /> : "Use"}
+        {isCreating ? (
+          <KbLoader2Icon className="h-3 w-3 animate-spin" />
+        ) : (
+          "Use"
+        )}
       </Button>
     </div>
   );
@@ -180,10 +208,10 @@ export default function TemplatesPage() {
           onError: () => {
             toast.error("Failed to create page from template");
           },
-        }
+        },
       );
     },
-    [createPage, router]
+    [createPage, router],
   );
 
   const handleUseStarter = useCallback(
@@ -202,26 +230,30 @@ export default function TemplatesPage() {
                 onSettled: () => {
                   router.push(pageHref(page.id));
                 },
-              }
+              },
             );
           },
           onError: () => {
             toast.error("Failed to create page from starter template");
           },
-        }
+        },
       );
     },
-    [createPage, updatePage, router]
+    [createPage, updatePage, router],
   );
 
-  const subtitle = templates.length > 0
-    ? `${templates.length} saved template${templates.length === 1 ? "" : "s"}`
-    : undefined;
+  const subtitle =
+    templates.length > 0
+      ? `${templates.length} saved template${templates.length === 1 ? "" : "s"}`
+      : undefined;
 
   return (
     <PageWrapper title="Templates" subtitle={subtitle}>
       <div className="space-y-8">
-        <PageSection title="Starter templates" description="Built-in skeletons ready to use — creates a new page with content pre-filled.">
+        <PageSection
+          title="Starter templates"
+          description="Built-in skeletons ready to use — creates a new page with content pre-filled."
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {STARTER_TEMPLATES.map((t) => (
               <StarterCard
@@ -234,12 +266,17 @@ export default function TemplatesPage() {
           </div>
         </PageSection>
 
-        <PageSection title="Saved templates" description="Templates created from your wiki pages.">
+        <PageSection
+          title="Saved templates"
+          description="Templates created from your wiki pages."
+        >
           {isLoading && <TemplatesSkeleton />}
 
           {!isLoading && isError && (
             <EmptyState
-              illustration={<KbLayoutTemplateIcon className="h-8 w-8 text-muted-foreground/40" />}
+              illustration={
+                <KbLayoutTemplateIcon className="h-8 w-8 text-muted-foreground/40" />
+              }
               title="Could not load templates"
               description="There was a problem fetching page templates."
             />
@@ -247,7 +284,9 @@ export default function TemplatesPage() {
 
           {!isLoading && !isError && templates.length === 0 && (
             <EmptyState
-              illustration={<KbLayoutTemplateIcon className="h-8 w-8 text-muted-foreground/40" />}
+              illustration={
+                <KbLayoutTemplateIcon className="h-8 w-8 text-muted-foreground/40" />
+              }
               title="No saved templates yet"
               description="Save a page as a template to reuse its structure across your wiki."
             />

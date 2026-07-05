@@ -7,6 +7,7 @@ import { queryKeys } from "@/lib/query-keys";
 export type VendorStatus = "ACTIVE" | "INACTIVE";
 export type VendorPlacementStatus = "SUBMITTED" | "INTERVIEWING" | "PLACED" | "REJECTED";
 export type VendorInvoiceStatus = "NOT_INVOICED" | "INVOICED" | "PAID";
+export type VendorContractType = "CONTINGENCY" | "CONTRACT_STAFFING" | "BOTH";
 
 export interface RecruitmentVendor {
   id: number;
@@ -17,6 +18,9 @@ export interface RecruitmentVendor {
   website: string | null;
   feePercent: string | null;
   status: VendorStatus;
+  contractType: VendorContractType;
+  slaDays: number | null;
+  replacementGuaranteeDays: number | null;
   createdAt: string;
   submissionCount: number;
   placements: number;
@@ -33,6 +37,11 @@ export interface VendorSubmission {
   invoiceAmount: string | null;
   invoiceDate: string | null;
   paidAt: string | null;
+  billRate: string | null;
+  payRate: string | null;
+  margin: string | null;
+  contractStartDate: string | null;
+  contractEndDate: string | null;
   candidateFirstName: string | null;
   candidateLastName: string | null;
   candidateEmail: string | null;
@@ -47,6 +56,9 @@ export interface CreateVendorInput {
   website?: string;
   feePercent?: number;
   status?: VendorStatus;
+  contractType?: VendorContractType;
+  slaDays?: number;
+  replacementGuaranteeDays?: number;
 }
 
 export interface UpdateVendorInput {
@@ -57,11 +69,18 @@ export interface UpdateVendorInput {
   website?: string;
   feePercent?: number;
   status?: VendorStatus;
+  contractType?: VendorContractType;
+  slaDays?: number;
+  replacementGuaranteeDays?: number;
 }
 
 export interface CreateSubmissionInput {
   candidateId: number;
   jobPostingId?: number;
+  billRate?: number;
+  payRate?: number;
+  contractStartDate?: string;
+  contractEndDate?: string;
 }
 
 export interface UpdateSubmissionInput {
@@ -70,6 +89,10 @@ export interface UpdateSubmissionInput {
   invoiceAmount?: number;
   invoiceDate?: string;
   paidAt?: string;
+  billRate?: number;
+  payRate?: number;
+  contractStartDate?: string;
+  contractEndDate?: string;
 }
 
 export function useRecruitmentVendors() {
@@ -132,10 +155,10 @@ export function useCreateVendorSubmission(vendorId: number) {
   });
 }
 
-export function useUpdateVendorSubmission(vendorId: number, submissionId: number) {
+export function useUpdateVendorSubmission(vendorId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: UpdateSubmissionInput) =>
+    mutationFn: ({ submissionId, ...data }: UpdateSubmissionInput & { submissionId: number }) =>
       apiClient.patch<VendorSubmission>(
         `/hr/recruitment/vendors/${vendorId}/submissions?submissionId=${submissionId}`,
         data,
@@ -144,5 +167,14 @@ export function useUpdateVendorSubmission(vendorId: number, submissionId: number
       void qc.invalidateQueries({ queryKey: queryKeys.hr.vendorSubmissions(vendorId) });
       void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentVendors() });
     },
+  });
+}
+
+export function useGenerateVendorPortalLink(vendorId: number) {
+  return useMutation({
+    mutationFn: () =>
+      apiClient.post<{ portalToken: string; portalTokenExpiresAt: string }>(
+        `/hr/recruitment/vendors/${vendorId}/portal-link`,
+      ),
   });
 }

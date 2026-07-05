@@ -73,4 +73,56 @@ export function useInitiateOnboarding() {
   });
 }
 
+export interface OnboardingTemplateStep {
+  title: string;
+  description?: string;
+  ownerRole: string;
+  dueOffsetDays: number;
+  isRequired: boolean;
+  isComplianceItem: boolean;
+}
+
+export interface OnboardingTemplate {
+  id: number;
+  orgId: string;
+  name: string;
+  departmentId: number | null;
+  description: string | null;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  steps: (OnboardingTemplateStep & { id: number; sortOrder: number })[];
+}
+
+export interface CreateOnboardingTemplateInput {
+  name: string;
+  departmentId?: number;
+  description?: string;
+  steps: OnboardingTemplateStep[];
+}
+
+// Named Hr* to avoid collision with hooks/api/crm/clients.ts's client-onboarding
+// useOnboardingTemplates/useCreateOnboardingTemplate (a different feature: CRM client
+// onboarding, /clients/onboarding/templates — unrelated to employee onboarding plans).
+export function useHrOnboardingTemplates() {
+  return useQuery<OnboardingTemplate[]>({
+    queryKey: queryKeys.hr.onboardingTemplates(),
+    queryFn: () => apiClient.get<OnboardingTemplate[]>("/onboarding/templates"),
+    staleTime: 2 * 60_000,
+  });
+}
+
+export function useCreateHrOnboardingTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["onboarding", "templates", "create"],
+    mutationFn: (data: CreateOnboardingTemplateInput) =>
+      apiClient.post<OnboardingTemplate>("/onboarding/templates", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingTemplates() });
+    },
+  });
+}
+
 

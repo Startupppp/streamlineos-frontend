@@ -152,7 +152,7 @@ export default function LoginHistoryPage() {
           }}
           emptyState={
             <EmptyState
-              illustration={<History className="h-8 w-8 text-muted-foreground/40" />}
+              illustrationPreset="activity"
               title="No login history found"
               description="No sign-in events have been recorded for your account."
               className="min-h-[200px]"

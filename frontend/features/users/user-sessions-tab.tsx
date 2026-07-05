@@ -79,7 +79,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
     return (
       <EmptyState
         compact
-        illustration={<Monitor className="h-10 w-10 text-muted-foreground/40" />}
+        illustrationPreset="devices"
         title="No sessions"
         description="This user has no recorded sessions."
       />

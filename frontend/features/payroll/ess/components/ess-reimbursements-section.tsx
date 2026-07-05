@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyExpensesIllustration } from "@/components/illustrations/empty-expenses";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssReimbursements, useSubmitReimbursement } from "@/hooks/api/payroll/ess";
 import { useUploadFile } from "@/hooks/api/use-upload-file";

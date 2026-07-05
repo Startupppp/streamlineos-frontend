@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type NavButtonsProps = {
   onBack: () => void;
@@ -11,6 +12,7 @@ type NavButtonsProps = {
   nextDisabled?: boolean;
 };
 
+// Sticky bottom action bar on mobile (<lg); inline within the main panel on desktop.
 export function NavButtons({
   onBack,
   onNext,
@@ -19,7 +21,13 @@ export function NavButtons({
   nextDisabled,
 }: NavButtonsProps) {
   return (
-    <div className="flex gap-2 pt-1">
+    <div
+      className={cn(
+        "flex gap-2 pt-1",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background px-4 py-3",
+        "lg:static lg:border-0 lg:bg-transparent lg:px-0 lg:py-0",
+      )}
+    >
       <Button
         type="button"
         variant="outline"

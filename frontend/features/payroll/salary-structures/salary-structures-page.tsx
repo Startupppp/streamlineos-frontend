@@ -254,7 +254,7 @@ export function SalaryStructuresPageContent() {
           className="flex flex-col items-center justify-center flex-1 h-full py-16"
         >
           <EmptyState
-            illustration={<LayoutTemplate className="h-16 w-16 text-muted-foreground/40" />}
+            illustrationPreset="documents"
             title="No salary structure templates yet"
             description="Create your first template to standardise employee compensation structures."
             action={{ label: "Add Template", onClick: handleOpenCreate }}

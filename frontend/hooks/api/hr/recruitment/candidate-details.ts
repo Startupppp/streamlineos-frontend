@@ -131,6 +131,24 @@ interface CreateReferenceCheckInput {
   notes?: string;
 }
 
+export interface CandidateActivityEvent {
+  type: "AUDIT" | "INTERVIEW" | "MESSAGE" | "DOCUMENT";
+  id: string;
+  label: string;
+  detail: Record<string, unknown> | null;
+  actor: string | null;
+  at: string;
+}
+
+export function useCandidateActivity(candidateId: number) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.candidate(candidateId), "activity"],
+    queryFn: () => apiClient.get<CandidateActivityEvent[]>(`/hr/recruitment/candidates/${candidateId}/activity`),
+    staleTime: 60_000,
+    enabled: !!candidateId,
+  });
+}
+
 export function useCandidateVault(candidateId: number) {
   return useQuery({
     queryKey: queryKeys.hr.candidateVault(candidateId),

@@ -8,10 +8,19 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useChatChannels, useSendMessage } from "@/hooks/api";
-import type { Channel } from "@/types/chat";
+import type { Channel, MessageMetadata } from "@/types/chat";
+import { getForwardedDisplay } from "./chat-helpers";
 
 interface ForwardableMessage {
   content: string | null;
+  metadata?: MessageMetadata | null;
+  attachments?: {
+    fileName: string;
+    fileUrl: string;
+    fileKey: string;
+    fileSize: number;
+    mimeType: string;
+  }[];
 }
 
 interface ForwardMessageDialogProps {
@@ -28,6 +37,15 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
   const { data: channels } = useChatChannels(open);
   const sendMessage = useSendMessage();
 
+  const previewText = useMemo(() => {
+    if (!message) return "";
+    const { content } = getForwardedDisplay(
+      message.content,
+      message.metadata?.forwardCount,
+    );
+    return content ?? (message.attachments?.length ? "[attachment]" : "");
+  }, [message]);
+
   const filteredChannels = useMemo(() => {
     if (!channels) return [];
     const q = query.toLowerCase();
@@ -38,11 +56,32 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
 
   const handleForward = useCallback(async () => {
     if (!message || !selectedChannelId) return;
+
+    const { label, content: body } = getForwardedDisplay(
+      message.content,
+      message.metadata?.forwardCount,
+    );
+    const sourceCount = message.metadata?.forwardCount ?? (label ? 1 : 0);
+    const forwardCount = sourceCount > 0 ? sourceCount + 1 : 1;
+    const forwardedBody = body ?? (message.attachments?.length ? "[attachment]" : "");
+
     const content = comment.trim()
-      ? `${comment.trim()}\n\n> ${message.content ?? "[attachment]"}`
-      : `> ${message.content ?? "[attachment]"}`;
+      ? `${comment.trim()}\n\n${forwardedBody}`
+      : forwardedBody;
+
     try {
-      await sendMessage.mutateAsync({ channelId: selectedChannelId, content });
+      await sendMessage.mutateAsync({
+        channelId: selectedChannelId,
+        content: content || undefined,
+        metadata: { forwardCount },
+        attachments: message.attachments?.map((a) => ({
+          fileName: a.fileName,
+          fileUrl: a.fileUrl,
+          fileKey: a.fileKey,
+          fileSize: a.fileSize,
+          mimeType: a.mimeType,
+        })),
+      });
       toast.success("Message forwarded");
       onOpenChange(false);
       setQuery("");
@@ -76,9 +115,9 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
           <DialogTitle className="text-[15px] font-bold">Forward Message</DialogTitle>
         </DialogHeader>
 
-        {message?.content && (
+        {previewText && (
           <div className="rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground line-clamp-2">
-            {message.content}
+            {previewText}
           </div>
         )}
 

@@ -5,6 +5,7 @@ export * from "./crm-settings";
 export * from "./projects";
 export * from "./chat";
 export * from "./chat-huddles";
+export * from "./chat-ai-assistant";
 export * from "./dashboard";
 export * from "./notifications";
 export * from "./organization";

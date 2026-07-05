@@ -118,7 +118,7 @@ export default function EpicsPage({ params }: PageProps) {
         <div className="space-y-3">
           {epics.length === 0 ? (
             <EmptyState
-              illustration={<Layers className="h-8 w-8 text-muted-foreground/40" />}
+              illustrationPreset="projects"
               title="No epics yet"
               description="Create your first epic to organize related stories and tasks."
               className="min-h-[40vh]"

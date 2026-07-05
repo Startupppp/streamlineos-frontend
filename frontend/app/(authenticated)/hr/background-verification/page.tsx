@@ -109,7 +109,7 @@ function ComplianceDashboard() {
     return (
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <EmptyState
-          illustration={<BarChart2 className="h-8 w-8 text-muted-foreground" />}
+          illustrationPreset="chart"
           title="No candidate BgV data yet"
           description="Candidate background verification data will appear here."
         />
@@ -425,7 +425,7 @@ function BGVContent() {
         subtitle="Initiate, track employee background checks, and view candidate compliance"
       >
         <EmptyState
-          illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
+          illustrationPreset="alert"
           title="Failed to load verifications"
           description="Something went wrong. Please try again."
           action={{ label: "Retry", onClick: handleRetry }}
@@ -481,7 +481,7 @@ function BGVContent() {
           {!items?.length ? (
             <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
               <EmptyState
-                illustration={<ShieldCheck className="h-8 w-8 text-muted-foreground" />}
+                illustrationPreset="security"
                 title="No background verifications initiated"
                 description="Initiate background checks for employees to track their verification status."
               />

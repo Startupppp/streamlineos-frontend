@@ -4,6 +4,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { AnalyticsChartCard } from "./analytics-chart-card";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 interface RepPerformanceTableProps {
   leaderboard: Array<{
@@ -23,6 +24,9 @@ export function RepPerformanceTable({ leaderboard }: RepPerformanceTableProps) {
 
   return (
     <AnalyticsChartCard title="Rep Performance" data={data} filename="rep-performance">
+      {(!leaderboard || leaderboard.length === 0) ? (
+        <ChartEmptyState height={220} compact />
+      ) : (
       <div className="max-h-[280px] overflow-y-auto">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
@@ -47,14 +51,10 @@ export function RepPerformanceTable({ leaderboard }: RepPerformanceTableProps) {
                 <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums font-semibold">{rep.score}</TableCell>
               </TableRow>
             ))}
-            {(!leaderboard || leaderboard.length === 0) && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-[11px] text-muted-foreground py-6">No data</TableCell>
-              </TableRow>
-            )}
           </TableBody>
         </Table>
       </div>
+      )}
     </AnalyticsChartCard>
   );
 }

@@ -174,7 +174,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
 
       {(budget?.memberBreakdown?.length ?? 0) === 0 && !isLoading && (
         <EmptyState
-          illustration={<Clock className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="calendar"
           title="No billable time logged"
           description="Log billable hours to track costs against this project's budget."
           className="flex-1 min-h-[40vh]"

@@ -1,7 +1,7 @@
 "use client";
 
-import { Gift } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCompOffBalance } from "@/hooks/api/hr/overtime";
 
 export function CompOffPanel() {
@@ -19,11 +19,13 @@ export function CompOffPanel() {
 
   if (!balances?.length) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 h-64 gap-3 text-center">
-        <Gift className="h-10 w-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">No comp-off balance</p>
-        <p className="text-xs text-muted-foreground/70">Earn comp-off days by converting approved overtime</p>
-      </div>
+      <EmptyState
+        illustrationPreset="calendar"
+        title="No comp-off balance"
+        description="Earn comp-off days by converting approved overtime"
+        className="border-0 bg-transparent shadow-none h-64"
+        compact
+      />
     );
   }
 

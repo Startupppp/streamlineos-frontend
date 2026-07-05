@@ -243,7 +243,7 @@ function AnalyticsContent() {
         subtitle="Workforce insights and operational metrics"
       >
         <EmptyState
-          illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
+          illustrationPreset="alert"
           title="Failed to load analytics"
           description="Something went wrong. Please try again."
           action={{ label: "Retry", onClick: handleRetry }}

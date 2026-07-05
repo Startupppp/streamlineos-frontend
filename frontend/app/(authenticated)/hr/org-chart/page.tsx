@@ -330,7 +330,7 @@ export default function OrgChartPage() {
                   </div>
                 )) : (
                   <EmptyState
-                    illustration={<Network className="h-8 w-8 text-muted-foreground" />}
+                    illustrationPreset="companies"
                     title="No results"
                     description={search ? "Try a different search term." : "No reporting structure found."}
                     compact
@@ -345,7 +345,7 @@ export default function OrgChartPage() {
       {view === "departments" && (
         deptGroups.length === 0 ? (
           <EmptyState
-            illustration={<Building2 className="h-8 w-8 text-muted-foreground" />}
+            illustrationPreset="companies"
             title="No departments found"
             description={search ? "Try a different search term." : undefined}
           />

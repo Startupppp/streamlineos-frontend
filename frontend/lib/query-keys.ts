@@ -34,7 +34,10 @@ export const queryKeys = {
     recruitmentStats: () => [...base, "hr", "recruitmentStats"] as const,
     jobPostings: (params?: Record<string, unknown>) => [...base, "hr", "jobPostings", params] as const,
     jobPosting: (id: number) => [...base, "hr", "jobPosting", id] as const,
-    candidates: (params?: Record<string, unknown>) => [...base, "hr", "candidates", params] as const,
+    candidates: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "hr", "candidates"] as const)
+        : ([...base, "hr", "candidates", params] as const),
     candidate: (id: number) => [...base, "hr", "candidate", id] as const,
     interviews: (params?: Record<string, unknown>) => [...base, "hr", "interviews", params] as const,
     recruitmentPipeline: () => [...base, "hr", "recruitmentPipeline"] as const,
@@ -94,6 +97,8 @@ export const queryKeys = {
     headcountRequests: (params?: Record<string, unknown>) => [...base, "hr", "headcountRequests", params] as const,
     recruitmentVendors: () => [...base, "hr", "recruitmentVendors"] as const,
     vendorSubmissions: (vendorId: number) => [...base, "hr", "vendorSubmissions", vendorId] as const,
+    externalReferrals: () => [...base, "hr", "externalReferrals"] as const,
+    externalReferrers: () => [...base, "hr", "externalReferrers"] as const,
     candidateMessages: (candidateId?: number) => [...base, "hr", "candidateMessages", candidateId] as const,
     messageThreads: () => [...base, "hr", "messageThreads"] as const,
     recruiters: () => [...base, "hr", "recruiters"] as const,
@@ -188,6 +193,7 @@ export const queryKeys = {
   chat: {
     all: [...base, "chat"] as const,
     myChannels: () => [...base, "chat", "myChannels"] as const,
+    archivedChannels: () => [...base, "chat", "archivedChannels"] as const,
     publicChannels: () => [...base, "chat", "publicChannels"] as const,
     channel: (id: number) => [...base, "chat", "channel", id] as const,
     messages: (channelId: number, cursor?: number) => [...base, "chat", "messages", channelId, cursor] as const,
@@ -201,6 +207,8 @@ export const queryKeys = {
     thread: (channelId: number, messageId: number) => [...base, "chat", "thread", channelId, messageId] as const,
     huddle: (channelId: number) => [...base, "chat", "huddle", channelId] as const,
     savedMessages: () => [...base, "chat", "savedMessages"] as const,
+    inviteLink: (channelId: number) => [...base, "chat", "inviteLink", channelId] as const,
+    orgSettings: () => [...base, "chat", "orgSettings"] as const,
   },
 
   dashboard: {
@@ -260,6 +268,29 @@ export const queryKeys = {
     members: () => [...base, "organization", "members"] as const,
     invitations: () => [...base, "organization", "invitations"] as const,
     settings: () => [...base, "organization", "settings"] as const,
+  },
+
+  orgSetup: {
+    all: [...base, "org-setup"] as const,
+    session: () => [...base, "org-setup", "session"] as const,
+  },
+
+  onboardingFlow: {
+    all: [...base, "onboarding-flow"] as const,
+    session: () => [...base, "onboarding-flow", "session"] as const,
+    moduleChecklists: () => [...base, "onboarding-flow", "module-checklists"] as const,
+    tours: () => [...base, "onboarding-flow", "tours"] as const,
+  },
+
+  payments: {
+    all: [...base, "payments"] as const,
+    catalog: () => [...base, "payments", "catalog"] as const,
+    providers: () => [...base, "payments", "providers"] as const,
+    provider: (providerKey: string) => [...base, "payments", "providers", providerKey] as const,
+    testTransactions: (providerKey: string) => [...base, "payments", "providers", providerKey, "test-transactions"] as const,
+    webhookEvents: (providerKey: string) => [...base, "payments", "providers", providerKey, "webhook-events"] as const,
+    readiness: (providerKey: string) => [...base, "payments", "providers", providerKey, "readiness"] as const,
+    audit: (providerKey?: string) => [...base, "payments", "audit", providerKey ?? "all"] as const,
   },
 
   access: {
@@ -539,6 +570,27 @@ export const queryKeys = {
 
   nps: {
     publicSurvey: (token: string) => [...base, "nps", "publicSurvey", token] as const,
+  },
+
+  surveys: {
+    all: [...base, "surveys"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "surveys", "list", params] as const,
+    detail: (id: number) => [...base, "surveys", "detail", id] as const,
+    templates: () => [...base, "surveys", "templates"] as const,
+    builder: (id: number) => [...base, "surveys", "builder", id] as const,
+    logic: (id: number) => [...base, "surveys", "logic", id] as const,
+    collectors: (id: number) => [...base, "surveys", "collectors", id] as const,
+    participants: (id: number, params?: Record<string, unknown>) => [...base, "surveys", "participants", id, params] as const,
+    publicSurvey: (token: string) => [...base, "surveys", "publicSurvey", token] as const,
+    assessmentAttempts: (id: number, params?: Record<string, unknown>) => [...base, "surveys", "assessmentAttempts", id, params] as const,
+    certificates: (id: number) => [...base, "surveys", "certificates", id] as const,
+    liveSession: (sessionId: number) => [...base, "surveys", "liveSession", sessionId] as const,
+    publicLiveSession: (sessionCode: string) => [...base, "surveys", "publicLiveSession", sessionCode] as const,
+    analyticsOverview: (id: number) => [...base, "surveys", "analyticsOverview", id] as const,
+    analyticsQuestions: (id: number) => [...base, "surveys", "analyticsQuestions", id] as const,
+    responses: (id: number, params?: Record<string, unknown>) => [...base, "surveys", "responses", id, params] as const,
+    response: (id: number, sessionId: number) => [...base, "surveys", "response", id, sessionId] as const,
+    automations: (id: number) => [...base, "surveys", "automations", id] as const,
   },
 
   supportMacros: {

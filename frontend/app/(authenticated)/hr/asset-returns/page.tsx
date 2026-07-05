@@ -260,7 +260,7 @@ export default function AssetReturnsPage() {
     >
       {!items?.length ? (
         <EmptyState
-          illustration={<Laptop className="h-8 w-8 text-muted-foreground" />}
+          illustrationPreset="devices"
           title="No asset returns tracked"
           description="Log an asset return when an employee returns company equipment."
           action={isAdmin ? { label: "Log Return", onClick: handleOpenSheet } : undefined}

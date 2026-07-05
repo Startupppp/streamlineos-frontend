@@ -40,7 +40,7 @@ export function UserAuditTab({ userId }: UserAuditTabProps) {
     return (
       <EmptyState
         compact
-        illustration={<ShieldAlert className="h-10 w-10 text-muted-foreground/40" />}
+        illustrationPreset="security"
         title="No audit events"
         description="No activity has been logged for this user yet."
       />

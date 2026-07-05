@@ -39,7 +39,11 @@ type ReviewIntervalRow = {
 const REVIEW_INTERVALS: ReviewIntervalRow[] = [
   { contentType: "Policy", intervalDays: 180, label: "Every 6 months" },
   { contentType: "SOP", intervalDays: 90, label: "Every 3 months" },
-  { contentType: "Support article", intervalDays: 120, label: "Every 4 months" },
+  {
+    contentType: "Support article",
+    intervalDays: 120,
+    label: "Every 4 months",
+  },
   { contentType: "Other", intervalDays: 365, label: "Yearly" },
 ];
 
@@ -51,7 +55,13 @@ function SectionCard({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SectionHeader({ title, description }: { title: string; description?: string }) {
+function SectionHeader({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
   return (
     <div className="px-4 py-3 border-b border-border bg-muted/20">
       <p className="text-sm font-medium text-foreground">{title}</p>
@@ -75,7 +85,9 @@ function ModuleStatusSection() {
         </div>
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">Knowledge (KB)</p>
-          <p className="text-xs text-muted-foreground">Core module · Always on</p>
+          <p className="text-xs text-muted-foreground">
+            Core module · Always on
+          </p>
         </div>
         <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 shrink-0">
           Active
@@ -94,14 +106,27 @@ function ReviewIntervalsSection() {
       />
       <div className="divide-y divide-border/60">
         <div className="flex items-center gap-3 px-4 py-2 bg-muted/20">
-          <span className="text-xs font-medium text-muted-foreground w-40 shrink-0">Content type</span>
-          <span className="text-xs font-medium text-muted-foreground flex-1">Default interval</span>
-          <span className="text-xs font-medium text-muted-foreground w-24 text-right">Days</span>
+          <span className="text-xs font-medium text-muted-foreground w-40 shrink-0">
+            Content type
+          </span>
+          <span className="text-xs font-medium text-muted-foreground flex-1">
+            Default interval
+          </span>
+          <span className="text-xs font-medium text-muted-foreground w-24 text-right">
+            Days
+          </span>
         </div>
         {REVIEW_INTERVALS.map((row) => (
-          <div key={row.contentType} className="flex items-center gap-3 px-4 py-2.5">
-            <span className="text-sm text-foreground w-40 shrink-0">{row.contentType}</span>
-            <span className="text-sm text-muted-foreground flex-1">{row.label}</span>
+          <div
+            key={row.contentType}
+            className="flex items-center gap-3 px-4 py-2.5"
+          >
+            <span className="text-sm text-foreground w-40 shrink-0">
+              {row.contentType}
+            </span>
+            <span className="text-sm text-muted-foreground flex-1">
+              {row.label}
+            </span>
             <span className="text-sm tabular-nums text-muted-foreground w-24 text-right">
               {row.intervalDays}d
             </span>
@@ -128,9 +153,12 @@ function QuickLinksSection() {
             <KbUsersIcon className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-foreground">Roles &amp; permissions</p>
+            <p className="text-sm font-medium text-foreground">
+              Roles &amp; permissions
+            </p>
             <p className="text-xs text-muted-foreground">
-              Configure who can view, create, manage, and review knowledge pages.
+              Configure who can view, create, manage, and review knowledge
+              pages.
             </p>
           </div>
           <KbExternalLinkIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
@@ -205,11 +233,21 @@ function ArticleMigrationSection() {
                 { label: "Total articles", value: preview.total },
                 { label: "Already migrated", value: preview.alreadyMigrated },
                 { label: "Will migrate", value: preview.willMigrate },
-                { label: "Published", value: preview.byStatus["published"] ?? 0 },
+                {
+                  label: "Published",
+                  value: preview.byStatus["published"] ?? 0,
+                },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-md border border-border bg-muted/20 px-3 py-2">
-                  <p className="text-[11px] text-muted-foreground">{stat.label}</p>
-                  <p className="text-lg font-semibold tabular-nums text-foreground">{stat.value}</p>
+                <div
+                  key={stat.label}
+                  className="rounded-md border border-border bg-muted/20 px-3 py-2"
+                >
+                  <p className="text-[11px] text-muted-foreground">
+                    {stat.label}
+                  </p>
+                  <p className="text-lg font-semibold tabular-nums text-foreground">
+                    {stat.value}
+                  </p>
                 </div>
               ))}
             </div>
@@ -218,7 +256,8 @@ function ArticleMigrationSection() {
           {preview && preview.sample.length > 0 && (
             <div className="rounded-md border border-border bg-muted/10 px-3 py-2 space-y-1">
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                Sample ({Math.min(preview.sample.length, 10)} of {preview.willMigrate})
+                Sample ({Math.min(preview.sample.length, 10)} of{" "}
+                {preview.willMigrate})
               </p>
               <ul className="space-y-0.5">
                 {preview.sample.slice(0, 10).map((a) => (
@@ -235,8 +274,10 @@ function ArticleMigrationSection() {
               <KbDatabaseIcon className="h-3.5 w-3.5 text-blue-600" />
             </div>
             <p className="text-xs text-muted-foreground flex-1">
-              Migrated pages land as root-level <span className="font-medium">Support Article</span> pages with{" "}
-              <span className="font-medium">org</span> visibility. Public web exposure remains with the help center.
+              Migrated pages land as root-level{" "}
+              <span className="font-medium">Support Article</span> pages with{" "}
+              <span className="font-medium">org</span> visibility. Public web
+              exposure remains with the help center.
             </p>
           </div>
 
@@ -252,7 +293,9 @@ function ArticleMigrationSection() {
             <Button
               size="sm"
               onClick={() => setConfirmOpen(true)}
-              disabled={runMigration.isPending || !preview || preview.willMigrate === 0}
+              disabled={
+                runMigration.isPending || !preview || preview.willMigrate === 0
+              }
             >
               Migrate now
             </Button>
@@ -266,14 +309,17 @@ function ArticleMigrationSection() {
             <AlertDialogTitle>Migrate Support KB articles?</AlertDialogTitle>
             <AlertDialogDescription>
               {preview?.willMigrate ?? 0} published article
-              {(preview?.willMigrate ?? 0) === 1 ? "" : "s"} will be copied into Knowledge pages.
-              Support KB articles are not modified or deleted — the help center continues working.
-              Already-migrated articles are skipped automatically.
+              {(preview?.willMigrate ?? 0) === 1 ? "" : "s"} will be copied into
+              Knowledge pages. Support KB articles are not modified or deleted —
+              the help center continues working. Already-migrated articles are
+              skipped automatically.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRunConfirmed}>Migrate</AlertDialogAction>
+            <AlertDialogAction onClick={handleRunConfirmed}>
+              Migrate
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -288,7 +334,9 @@ export default function KnowledgeSettingsPage() {
     return (
       <PageWrapper title="Settings">
         <EmptyState
-          illustration={<KbLockIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbLockIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Access restricted"
           description="You don't have permission to view knowledge base settings."
         />

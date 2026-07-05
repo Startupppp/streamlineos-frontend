@@ -100,7 +100,7 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
         </div>
       ) : tokens.length === 0 ? (
         <EmptyState
-          illustration={<Key className="h-8 w-8 text-muted-foreground/40" />}
+          illustrationPreset="security"
           title="No personal access tokens yet"
           description="Personal tokens act on your behalf and are only visible to you."
           action={{ label: "New Token", onClick: handleOpenCreate }}

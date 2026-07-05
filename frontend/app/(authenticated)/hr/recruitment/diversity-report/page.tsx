@@ -16,7 +16,8 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, AlertCircle, BarChart2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ChevronDown, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Department } from "@/types/hr";
 
@@ -254,15 +255,12 @@ export default function DiversityReportPage() {
           </Button>
         </div>
       ) : !data || data.total === 0 ? (
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
-          <BarChart2 className="h-10 w-10 text-muted-foreground/30" />
-          <p className="text-sm font-medium text-muted-foreground">
-            No applicant data found.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Adjust the filters or wait for candidates to apply.
-          </p>
-        </div>
+        <EmptyState
+          illustrationPreset="chart"
+          title="No applicant data found"
+          description="Adjust the filters or wait for candidates to apply."
+          className="flex-1 border-0 bg-transparent shadow-none"
+        />
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-4 mb-6">

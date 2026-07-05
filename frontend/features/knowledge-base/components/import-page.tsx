@@ -53,7 +53,11 @@ function timeAgo(dateStr: string): string {
 
 function ImportJobRow({ job }: { job: KbImportJob }) {
   const sourceLabel =
-    job.sourceType === "markdown" ? "Markdown" : job.sourceType === "html" ? "HTML" : "ZIP";
+    job.sourceType === "markdown"
+      ? "Markdown"
+      : job.sourceType === "html"
+        ? "HTML"
+        : "ZIP";
 
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card text-sm">
@@ -63,12 +67,20 @@ function ImportJobRow({ job }: { job: KbImportJob }) {
         {job.succeededItems}/{job.totalItems} pages
       </span>
       <Badge
-        variant={job.status === "completed" ? "secondary" : job.status === "failed" ? "destructive" : "outline"}
+        variant={
+          job.status === "completed"
+            ? "secondary"
+            : job.status === "failed"
+              ? "destructive"
+              : "outline"
+        }
         className="text-[10px] h-4 px-1.5"
       >
         {job.status}
       </Badge>
-      <span className="text-xs text-muted-foreground shrink-0">{timeAgo(job.createdAt)}</span>
+      <span className="text-xs text-muted-foreground shrink-0">
+        {timeAgo(job.createdAt)}
+      </span>
     </div>
   );
 }
@@ -92,32 +104,35 @@ export default function ImportPage() {
     return existingTitles.has(title.toLowerCase());
   }
 
-  const handleFilesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length === 0) return;
+  const handleFilesChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files ?? []);
+      if (files.length === 0) return;
 
-    const remaining = 100 - items.length;
-    const toProcess = files.slice(0, remaining);
+      const remaining = 100 - items.length;
+      const toProcess = files.slice(0, remaining);
 
-    let completed = 0;
-    const newItems: ParsedItem[] = [];
+      let completed = 0;
+      const newItems: ParsedItem[] = [];
 
-    toProcess.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const text = (ev.target?.result as string) ?? "";
-        const title = file.name.replace(/\.(md|markdown|txt)$/i, "");
-        newItems.push({ title, contentText: text, sizeBytes: file.size });
-        completed++;
-        if (completed === toProcess.length) {
-          setItems((prev) => [...prev, ...newItems].slice(0, 100));
-        }
-      };
-      reader.readAsText(file);
-    });
+      toProcess.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const text = (ev.target?.result as string) ?? "";
+          const title = file.name.replace(/\.(md|markdown|txt)$/i, "");
+          newItems.push({ title, contentText: text, sizeBytes: file.size });
+          completed++;
+          if (completed === toProcess.length) {
+            setItems((prev) => [...prev, ...newItems].slice(0, 100));
+          }
+        };
+        reader.readAsText(file);
+      });
 
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }, [items.length]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    [items.length],
+  );
 
   function handleChooseFiles() {
     fileInputRef.current?.click();
@@ -135,7 +150,11 @@ export default function ImportPage() {
     }
     setItems((prev) => [
       ...prev,
-      { title, contentText: pasteText, sizeBytes: new TextEncoder().encode(pasteText).length },
+      {
+        title,
+        contentText: pasteText,
+        sizeBytes: new TextEncoder().encode(pasteText).length,
+      },
     ]);
     setPasteTitle("");
     setPasteText("");
@@ -161,7 +180,10 @@ export default function ImportPage() {
           toast.success(
             `Imported ${result.succeeded} page${result.succeeded === 1 ? "" : "s"}${result.failed > 0 ? ` (${result.failed} failed)` : ""}`,
             {
-              action: { label: "View wiki", onClick: () => window.location.assign(KNOWLEDGE_BASE) },
+              action: {
+                label: "View wiki",
+                onClick: () => window.location.assign(KNOWLEDGE_BASE),
+              },
             },
           );
           setItems([]);
@@ -184,7 +206,9 @@ export default function ImportPage() {
     return (
       <PageWrapper title="Import & Export">
         <EmptyState
-          illustration={<KbUploadIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbUploadIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Access denied"
           description="You don't have permission to import pages. Ask an admin to grant kb:pages:import."
         />
@@ -306,7 +330,9 @@ export default function ImportPage() {
                         key={idx}
                         className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 items-center px-3 py-2 text-sm"
                       >
-                        <span className="truncate font-medium">{item.title || "Untitled"}</span>
+                        <span className="truncate font-medium">
+                          {item.title || "Untitled"}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {sizeLabel(item.sizeBytes)}
                         </span>
@@ -362,7 +388,9 @@ export default function ImportPage() {
           {!jobsLoading && importJobs.length === 0 && (
             <EmptyState
               compact
-              illustration={<KbFileTextIcon className="h-5 w-5 text-muted-foreground/40" />}
+              illustration={
+                <KbFileTextIcon className="h-5 w-5 text-muted-foreground/40" />
+              }
               title="No imports yet"
               description="Import history will appear here after your first import."
             />
@@ -375,7 +403,10 @@ export default function ImportPage() {
               ))}
               <p className="text-xs text-muted-foreground pt-1">
                 Imported pages appear in the{" "}
-                <Link href={KNOWLEDGE_BASE} className="underline underline-offset-2">
+                <Link
+                  href={KNOWLEDGE_BASE}
+                  className="underline underline-offset-2"
+                >
                   wiki
                 </Link>
                 .

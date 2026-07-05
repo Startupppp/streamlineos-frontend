@@ -4,6 +4,7 @@ import { Fragment, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Loader2, Send } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Message } from "./chat-types";
 import { ChatBubble } from "./chat-bubble";
 
@@ -175,51 +176,57 @@ export function MessageList({
   const handleFetchNextPage = useCallback(() => fetchNextPage(), [fetchNextPage]);
 
   return (
-    <div
-      className="flex-1 overflow-y-auto relative"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle at 50% 50%, hsl(var(--muted) / 0.3) 0%, transparent 70%)",
-      }}
-      ref={scrollContainerRef}
-      onScroll={onScroll}
-    >
-      {isLoading ? (
-        <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto space-y-5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className={`flex items-start gap-3 ${i % 3 === 2 ? "flex-row-reverse" : ""}`}>
-              <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
-              <div className="space-y-1.5 max-w-[60%]">
-                <div className="h-3 w-20 rounded bg-muted animate-pulse" />
-                <div className={`h-10 rounded-xl bg-muted animate-pulse ${i % 3 === 2 ? "w-40" : "w-56"}`} />
+    <div className="flex-1 min-h-0 relative flex flex-col">
+      <div
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 50% 50%, hsl(var(--muted) / 0.3) 0%, transparent 70%)",
+        }}
+        ref={scrollContainerRef}
+        onScroll={onScroll}
+      >
+        {isLoading ? (
+          <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto space-y-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className={`flex items-start gap-3 ${i % 3 === 2 ? "flex-row-reverse" : ""}`}>
+                <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
+                <div className="space-y-1.5 max-w-[60%]">
+                  <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+                  <div className={`h-10 rounded-xl bg-muted animate-pulse ${i % 3 === 2 ? "w-40" : "w-56"}`} />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="py-2 px-3 sm:px-5 max-w-[900px] mx-auto">
-          {hasNextPage && (
-            <div className="flex justify-center pb-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleFetchNextPage}
-                disabled={isFetchingNextPage}
-                className="h-7 text-[12px] rounded-full px-4"
-              >
-                {isFetchingNextPage ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
-                    Loading...
-                  </>
-                ) : (
-                  "Load older messages"
-                )}
-              </Button>
-            </div>
-          )}
+            ))}
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "min-h-full flex flex-col py-2 px-3 sm:px-5 max-w-[900px] mx-auto",
+              messages.length > 0 ? "justify-end" : "justify-center",
+            )}
+          >
+            {hasNextPage && (
+              <div className="flex justify-center pb-3 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleFetchNextPage}
+                  disabled={isFetchingNextPage}
+                  className="h-7 text-[12px] rounded-full px-4"
+                >
+                  {isFetchingNextPage ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load older messages"
+                  )}
+                </Button>
+              </div>
+            )}
 
-          {groupedMessages.map((group) => (
+            {groupedMessages.map((group) => (
             <Fragment key={group.date}>
               <div className="flex items-center gap-3 my-3">
                 <div className="flex-1 h-px bg-border/40" />
@@ -297,20 +304,22 @@ export function MessageList({
             </div>
           )}
 
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-px shrink-0" aria-hidden="true" />
         </div>
       )}
+      </div>
 
       <AnimatePresence>
         {showScrollBtn && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="sticky top-2 z-10 flex justify-center pointer-events-none"
+            exit={{ opacity: 0, y: 8 }}
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none"
           >
             <button
-              onClick={scrollToBottom}
+              type="button"
+              onClick={() => scrollToBottom()}
               className="pointer-events-auto h-8 rounded-full bg-background border border-border/60 shadow-lg flex items-center gap-1.5 px-3 hover:bg-muted transition-colors"
             >
               <ArrowDown className="h-3.5 w-3.5" />

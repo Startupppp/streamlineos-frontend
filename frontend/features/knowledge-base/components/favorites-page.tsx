@@ -7,9 +7,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPagesFavorites, useToggleFavoriteKbPage } from "@/hooks/api/kb";
-import { pageHref, KNOWLEDGE_BASE } from "@/features/knowledge-base/lib/knowledge-routes";
+import {
+  pageHref,
+  KNOWLEDGE_BASE,
+} from "@/features/knowledge-base/lib/knowledge-routes";
 import type { KbPage } from "@/hooks/api/kb/pages";
-import { KbFileTextIcon, KbStarIcon } from "@/features/knowledge-base/lib/kb-icons";
+import {
+  KbFileTextIcon,
+  KbStarIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 
 function FavoriteRow({ page }: { page: KbPage }) {
   const toggleFavorite = useToggleFavoriteKbPage();
@@ -22,7 +28,7 @@ function FavoriteRow({ page }: { page: KbPage }) {
       {
         onSuccess: () => toast.success("Removed from favorites"),
         onError: () => toast.error("Failed to update favorites"),
-      }
+      },
     );
   }
 
@@ -32,9 +38,13 @@ function FavoriteRow({ page }: { page: KbPage }) {
       className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors group"
     >
       <span className="text-base shrink-0 w-5 text-center">
-        {page.icon ?? <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />}
+        {page.icon ?? (
+          <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />
+        )}
       </span>
-      <span className="flex-1 text-sm truncate font-medium">{page.title || "Untitled"}</span>
+      <span className="flex-1 text-sm truncate font-medium">
+        {page.title || "Untitled"}
+      </span>
       <Button
         variant="ghost"
         size="icon"
@@ -62,7 +72,10 @@ function FavoritesSkeleton() {
 export default function FavoritesPage() {
   const { data: pages = [], isLoading, isError } = useKbPagesFavorites();
 
-  const subtitle = pages.length > 0 ? `${pages.length} page${pages.length === 1 ? "" : "s"}` : undefined;
+  const subtitle =
+    pages.length > 0
+      ? `${pages.length} page${pages.length === 1 ? "" : "s"}`
+      : undefined;
 
   return (
     <PageWrapper title="Favorites" subtitle={subtitle}>
@@ -70,7 +83,9 @@ export default function FavoritesPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<KbStarIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbStarIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Could not load favorites"
           description="There was a problem fetching your favorited pages."
         />
@@ -78,7 +93,9 @@ export default function FavoritesPage() {
 
       {!isLoading && !isError && pages.length === 0 && (
         <EmptyState
-          illustration={<KbStarIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbStarIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="No favorites yet"
           description="Star pages to pin them here for quick access."
           action={{ label: "Browse pages", href: KNOWLEDGE_BASE }}

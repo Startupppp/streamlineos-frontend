@@ -59,6 +59,8 @@ export function parseJobToFormValues(job: JobPosting): Partial<CreateJobFormValu
 
   if (job.benefits) values.benefits = job.benefits;
 
+  if (job.screeningQuestions) values.screeningQuestions = job.screeningQuestions;
+
   if (job.description) {
     const desc = job.description;
     const overview = extractSection(desc, "OVERVIEW");

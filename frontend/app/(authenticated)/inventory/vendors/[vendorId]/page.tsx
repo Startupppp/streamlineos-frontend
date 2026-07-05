@@ -144,7 +144,7 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
 
             {!posQuery.isLoading && !posQuery.error && poItems.length === 0 && (
               <EmptyState
-                illustration={<Package className="h-8 w-8 text-muted-foreground/40" />}
+                illustrationPreset="inventory"
                 title="No purchase orders"
                 description="Create a purchase order for this vendor."
                 action={{ label: "New PO", href: `/inventory/purchase-orders/new?vendorId=${vendor.id}` }}

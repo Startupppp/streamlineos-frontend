@@ -295,7 +295,7 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
           </div>
         ) : (
           <EmptyState
-            illustration={<Diamond className="h-8 w-8 text-muted-foreground/40" fill="currentColor" />}
+            illustrationPreset="projects"
             title="No milestones yet"
             description="Add milestones to track key checkpoints and target dates."
             action={{ label: "Add Milestone", onClick: handleOpenCreate }}

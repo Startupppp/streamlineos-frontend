@@ -26,7 +26,9 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function SharedRow({ node }: { node: KbPageTreeNode }) {
-  const badgeClass = STATUS_BADGE_CLASS[node.status] ?? "bg-slate-100 text-slate-600 border-slate-200";
+  const badgeClass =
+    STATUS_BADGE_CLASS[node.status] ??
+    "bg-slate-100 text-slate-600 border-slate-200";
   return (
     <Link
       href={pageHref(node.id)}
@@ -81,7 +83,9 @@ export default function SharedPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={<KbUsersIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbUsersIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
           title="Could not load pages"
           description="There was a problem fetching shared pages."
         />
@@ -89,9 +93,11 @@ export default function SharedPage() {
 
       {!isLoading && !isError && sharedNodes.length === 0 && (
         <EmptyState
-          illustration={<KbUsersIcon className="h-8 w-8 text-muted-foreground/40" />}
+          illustration={
+            <KbUsersIcon className="h-8 w-8 text-muted-foreground/40" />
+          }
+          illustrationPreset="team"
           title="Nothing shared with you"
-          description="Pages created by others will appear here."
         />
       )}
 

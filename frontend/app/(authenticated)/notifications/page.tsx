@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, Loader2, X, Inbox } from "lucide-react";
+import { CheckCheck, Loader2, X } from "lucide-react";
 import {
   useNotifications,
   useUnreadNotificationCount,
@@ -19,6 +19,7 @@ import {
   useRejectNotification,
 } from "@/hooks/api/notifications";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NotificationCard } from "@/features/notifications/notification-card";
@@ -295,11 +296,13 @@ export default function NotificationsPage() {
             onRetry={handleRetry}
           />
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Inbox className="h-10 w-10 text-muted-foreground/25 mb-3" />
-            <p className="text-sm font-medium text-foreground">{emptyTitle}</p>
-            <p className="text-xs text-muted-foreground mt-1 max-w-xs">{emptyDescription}</p>
-          </div>
+          <EmptyState
+            illustrationPreset="mail"
+            title={emptyTitle}
+            description={emptyDescription}
+            className="border-0 bg-transparent shadow-none py-16"
+            compact
+          />
         ) : (
           <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
             {items.map((n: Notification) => (

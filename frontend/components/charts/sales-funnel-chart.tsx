@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { formatCurrency, formatNumber } from "@/lib/format-utils";
 import type { SalesFunnelStageResult } from "@/hooks/api/crm";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 interface SalesFunnelChartProps {
   data: SalesFunnelStageResult[];
@@ -10,11 +11,7 @@ interface SalesFunnelChartProps {
 
 export function SalesFunnelChart({ data }: SalesFunnelChartProps) {
   if (!data || data.length === 0) {
-    return (
-      <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
-        No funnel data available
-      </div>
-    );
+    return <ChartEmptyState message="No funnel data available" height={192} />;
   }
 
   const maxCount = Math.max(...data.map((d) => d.count), 1);

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { BarChart2, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -203,10 +204,7 @@ export function KpiLibraryTab() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
-          <BarChart2 className="w-12 h-12 text-slate-300" />
-          <p className="text-slate-500 font-medium">No KPIs found</p>
-        </div>
+        <ChartEmptyState message="No KPIs found" height={220} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((kpi, i) => (

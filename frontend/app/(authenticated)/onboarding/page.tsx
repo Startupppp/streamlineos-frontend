@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -8,9 +8,13 @@ import { fadeUp } from "@/lib/motion-variants";
 import { User, Landmark, FileText, ClipboardCheck, Check } from "lucide-react";
 import { PersonalInfoTab } from "@/features/onboarding/components/personal-info-tab";
 import { BankDetailsTab } from "@/features/onboarding/components/bank-details-tab";
-import { DocumentsTab } from "@/features/onboarding/components/documents-tab";
+import { EmployeeDocumentsTab } from "@/features/hr/onboarding/onboarding-detail-sheet";
 import { ReviewTab } from "@/features/onboarding/components/review-tab";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  useOnboardingSessionQuery,
+  usePatchOnboardingSessionMutation,
+} from "@/hooks/api/onboarding-flow";
 
 import type { Variants } from "framer-motion";
 
@@ -53,6 +57,23 @@ export default function OnboardingPage() {
   const [savedFormData, setSavedFormData] = useState<
     Record<string, FormValues>
   >({});
+  const hydratedFromSessionRef = useRef(false);
+
+  const { data: session } = useOnboardingSessionQuery();
+  const { mutate: patchSession } = usePatchOnboardingSessionMutation();
+
+  // Server session is the resume source of truth (survives refresh/device switch);
+  // per-tab data itself is already saved server-side by each tab's own mutation.
+  useEffect(() => {
+    if (hydratedFromSessionRef.current || !session) return;
+    hydratedFromSessionRef.current = true;
+    if (session.completedSteps?.length) {
+      setCompletedSteps(new Set(session.completedSteps));
+    }
+    if (session.currentStep && isStepId(session.currentStep)) {
+      setActiveTab(session.currentStep);
+    }
+  }, [session]);
 
   const currentStepIndex = Math.max(
     0,
@@ -65,21 +86,36 @@ export default function OnboardingPage() {
 
   const handlePersonalComplete = useCallback((values?: FormValues) => {
     if (values) setSavedFormData((prev) => ({ ...prev, [STEP_IDS.PERSONAL]: values }));
-    setCompletedSteps((prev) => { const next = new Set(prev); next.add(STEP_IDS.PERSONAL); return next; });
+    setCompletedSteps((prev) => {
+      const next = new Set(prev);
+      next.add(STEP_IDS.PERSONAL);
+      patchSession({ currentStep: STEP_IDS.BANK, completedSteps: Array.from(next) });
+      return next;
+    });
     setActiveTab(STEP_IDS.BANK);
-  }, []);
+  }, [patchSession]);
 
   const handleBankComplete = useCallback((values?: FormValues) => {
     if (values) setSavedFormData((prev) => ({ ...prev, [STEP_IDS.BANK]: values }));
-    setCompletedSteps((prev) => { const next = new Set(prev); next.add(STEP_IDS.BANK); return next; });
+    setCompletedSteps((prev) => {
+      const next = new Set(prev);
+      next.add(STEP_IDS.BANK);
+      patchSession({ currentStep: STEP_IDS.DOCS, completedSteps: Array.from(next) });
+      return next;
+    });
     setActiveTab(STEP_IDS.DOCS);
-  }, []);
+  }, [patchSession]);
 
   const handleDocsComplete = useCallback((values?: FormValues) => {
     if (values) setSavedFormData((prev) => ({ ...prev, [STEP_IDS.DOCS]: values }));
-    setCompletedSteps((prev) => { const next = new Set(prev); next.add(STEP_IDS.DOCS); return next; });
+    setCompletedSteps((prev) => {
+      const next = new Set(prev);
+      next.add(STEP_IDS.DOCS);
+      patchSession({ currentStep: STEP_IDS.REVIEW, completedSteps: Array.from(next) });
+      return next;
+    });
     setActiveTab(STEP_IDS.REVIEW);
-  }, []);
+  }, [patchSession]);
 
   const handleGoToPersonal = useCallback(() => setActiveTab(STEP_IDS.PERSONAL), []);
   const handleGoToBank = useCallback(() => setActiveTab(STEP_IDS.BANK), []);
@@ -211,10 +247,9 @@ export default function OnboardingPage() {
                   />
                 </TabsContent>
                 <TabsContent value={STEP_IDS.DOCS}>
-                  <DocumentsTab
-                    onComplete={handleDocsComplete}
+                  <EmployeeDocumentsTab
+                    onContinue={handleDocsComplete}
                     onBack={handleGoToBank}
-                    savedUploads={savedFormData[STEP_IDS.DOCS]}
                   />
                 </TabsContent>
                 <TabsContent value={STEP_IDS.REVIEW}>
