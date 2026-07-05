@@ -12,6 +12,8 @@ type ListElement = TElement & { listStyleType?: string; indent?: number; checked
 export function ParagraphElement({ element, children, ...props }: PlateElementProps) {
   const el = element as ListElement;
   const readOnly = useReadOnly();
+  const todoState = useTodoListElementState({ element: el });
+  const { checkboxProps } = useTodoListElement(todoState);
 
   if (el.listStyleType === 'disc') {
     return (
@@ -44,8 +46,6 @@ export function ParagraphElement({ element, children, ...props }: PlateElementPr
   }
 
   if (el.listStyleType === 'todo') {
-    const state = useTodoListElementState({ element: el });
-    const { checkboxProps } = useTodoListElement(state);
     return (
       <PlateElement
         {...props}

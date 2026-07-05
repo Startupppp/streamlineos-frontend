@@ -104,7 +104,7 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
         </p>
       )}
       {row.comment && (
-        <p className="text-xs text-muted-foreground italic pl-9">"{row.comment}"</p>
+        <p className="text-xs text-muted-foreground italic pl-9">&quot;{row.comment}&quot;</p>
       )}
 
       {isActive && canAct && (

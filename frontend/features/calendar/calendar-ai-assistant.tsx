@@ -172,7 +172,7 @@ export function CalendarAiAssistant({ onEventCreated, isOpen, onClose }: Calenda
       }
 
       // Default meeting parameters
-      let meetingSubject = `Meeting with ${invitee}`;
+      const meetingSubject = `Meeting with ${invitee}`;
       let startDate = startOfHour(addHours(addDays(new Date(), 1), 0)); // Tomorrow same hour
       startDate.setHours(10, 0, 0, 0); // 10:00 AM
       let endDate = addHours(startDate, 1); // 11:00 AM
@@ -365,7 +365,7 @@ export function CalendarAiAssistant({ onEventCreated, isOpen, onClose }: Calenda
                               ) : (
                                 <Check className="h-3 w-3 mr-1" />
                               )}
-                              Let's do it
+                              Let&apos;s do it
                             </Button>
                           </div>
                         )}

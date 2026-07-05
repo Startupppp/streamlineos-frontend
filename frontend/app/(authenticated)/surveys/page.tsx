@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
@@ -37,12 +38,12 @@ export default function SurveysPage() {
           subtitle="Build surveys, quizzes, live polls, and lead forms."
           actions={
             hasAnySurveys ? (
-              <a
+              <Link
                 href="/surveys/new"
                 className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
               >
                 New Survey
-              </a>
+              </Link>
             ) : undefined
           }
           filters={
