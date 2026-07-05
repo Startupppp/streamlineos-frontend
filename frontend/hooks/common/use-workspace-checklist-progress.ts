@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useUserStats } from "@/hooks/api/users";
 import { useDashboardStats } from "@/hooks/api/dashboard";
-import { useCalendarConnections } from "@/hooks/api/calendar";
+import { useIntegrationConnections } from "@/hooks/api/integrations";
 import { useLeads } from "@/hooks/api/leads";
 import { useAiUsage } from "@/hooks/api/ai";
 
@@ -42,14 +42,16 @@ export function useWorkspaceChecklistProgress() {
   const { data: session } = useSession();
   const [aiVisited, setAiVisited] = useState(false);
 
-  const { data: userStats, isLoading: userStatsLoading } = useUserStats();
-  const { data: dashboardStats, isLoading: dashboardLoading } = useDashboardStats();
-  const { data: connections, isLoading: connectionsLoading } = useCalendarConnections();
+  const { data: dashboardStats, isLoading: dashboardLoading } =
+    useDashboardStats();
+  const { data: connections, isLoading: connectionsLoading } =
+    useIntegrationConnections();
+  const { data: aiUsage, isLoading: aiUsageLoading } = useAiUsage();
   const { data: leadsData, isLoading: leadsLoading } = useLeads(
     { limit: 1 },
     { enabled: true },
   );
-  const { data: aiUsage, isLoading: aiUsageLoading } = useAiUsage();
+  const { data: userStats, isLoading: userStatsLoading } = useUserStats();
 
   useEffect(() => {
     setAiVisited(readAiVisited());

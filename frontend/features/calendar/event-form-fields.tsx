@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
@@ -13,8 +11,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Video, Loader2, Tag, Clock, MapPin, Lock, Circle, FileText } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Tag, Clock, MapPin, Lock, Circle, FileText, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { IntegrationConnection } from "@/hooks/api/integrations";
 
 const EVENT_COLORS: Record<string, string> = {
   blue: "#3b82f6",
@@ -37,12 +37,6 @@ const EVENT_CATEGORIES = [
 
 type EventCategory = (typeof EVENT_CATEGORIES)[number];
 
-interface MeetStatus {
-  connected: boolean;
-  authUrl?: string | null;
-  googleEmail?: string | null;
-}
-
 interface EventFormFieldsProps {
   title: string;
   description: string;
@@ -55,8 +49,10 @@ interface EventFormFieldsProps {
   endTime: string;
   category: EventCategory;
   color: string;
-  meetStatus: MeetStatus | undefined;
-  isMeetPending: boolean;
+  connections: IntegrationConnection[];
+  syncConnectionId: string;
+  addConference: boolean;
+  isEdit: boolean;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLocationChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -67,7 +63,8 @@ interface EventFormFieldsProps {
   onEndTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCategoryChange: (v: string) => void;
   onColorChange: (v: string) => void;
-  onGenerateMeet: () => void;
+  onSyncConnectionChange: (v: string) => void;
+  onAddConferenceChange: (v: boolean) => void;
 }
 
 export function EventFormFields({
@@ -82,8 +79,10 @@ export function EventFormFields({
   endTime,
   category,
   color,
-  meetStatus,
-  isMeetPending,
+  connections,
+  syncConnectionId,
+  addConference,
+  isEdit,
   onTitleChange,
   onDescriptionChange,
   onLocationChange,
@@ -94,15 +93,14 @@ export function EventFormFields({
   onEndTimeChange,
   onCategoryChange,
   onColorChange,
-  onGenerateMeet,
+  onSyncConnectionChange,
+  onAddConferenceChange,
 }: EventFormFieldsProps) {
-  const handleGenerateMeetClick = useCallback(() => {
-    onGenerateMeet();
-  }, [onGenerateMeet]);
+  const activeConnections = connections.filter((c) => c.status === "active");
+  const selectedToolkit = activeConnections.find((c) => String(c.id) === syncConnectionId)?.toolkit;
 
   return (
     <div className="space-y-4">
-      {/* Title Row */}
       <div className="flex items-center gap-3">
         <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
         <div className="flex-1">
@@ -117,7 +115,6 @@ export function EventFormFields({
         </div>
       </div>
 
-      {/* Date Time Row */}
       <div className="flex items-start gap-3">
         <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
         <div className="flex-1 min-w-0 space-y-2">
@@ -171,67 +168,56 @@ export function EventFormFields({
         </div>
       </div>
 
-      {/* Location / Video conference Row */}
       <div className="flex items-start gap-3">
         <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
         <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              id="ev-location"
-              value={location}
-              onChange={onLocationChange}
-              placeholder="Room or Location"
-              className={cn("h-9 text-xs flex-1 min-w-0", locationError && "border-destructive")}
-            />
-            {meetStatus &&
-              (meetStatus.connected ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 shrink-0 gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs font-semibold px-2 w-full sm:w-auto justify-center"
-                  disabled={isMeetPending}
-                  onClick={handleGenerateMeetClick}
-                >
-                  {isMeetPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Video className="h-3.5 w-3.5" />
-                  )}
-                  + Video conference
-                </Button>
-              ) : (
-                <a
-                  href={meetStatus.authUrl || undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn("shrink-0", !meetStatus.authUrl && "pointer-events-none")}
-                >
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs font-semibold px-2 w-full sm:w-auto justify-center"
-                    disabled={!meetStatus.authUrl}
-                  >
-                    <Video className="h-3.5 w-3.5" />
-                    + Video conference
-                  </Button>
-                </a>
-              ))}
-          </div>
+          <Input
+            id="ev-location"
+            value={location}
+            onChange={onLocationChange}
+            placeholder="Room or Location"
+            className={cn("h-9 text-xs flex-1 min-w-0", locationError && "border-destructive")}
+          />
           {locationError && (
             <p className="text-[10px] text-destructive">{locationError}</p>
-          )}
-          {!locationError && meetStatus?.connected && meetStatus.googleEmail && (
-            <p className="text-[10px] text-muted-foreground px-1">
-              Google Calendar linked: {meetStatus.googleEmail}
-            </p>
           )}
         </div>
       </div>
 
-      {/* Visibility / Privacy Select */}
+      {!isEdit && (
+        activeConnections.length > 0 ? (
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Sync to calendar account</Label>
+            <Select value={syncConnectionId} onValueChange={onSyncConnectionChange}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Don&apos;t sync</SelectItem>
+                {activeConnections.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.accountEmail ?? c.accountLabel ?? c.toolkit}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {syncConnectionId !== "none" && (
+              <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <Video className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs">
+                    {selectedToolkit === "outlook" ? "Add Teams meeting link" : "Add Google Meet link"}
+                  </span>
+                </div>
+                <Switch checked={addConference} onCheckedChange={onAddConferenceChange} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground pl-7">Connect an account to sync events</p>
+        )
+      )}
+
       <div className="flex items-center gap-3">
         <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
         <div className="flex-1">
@@ -250,7 +236,6 @@ export function EventFormFields({
         </div>
       </div>
 
-      {/* Busy / Free Select */}
       <div className="flex items-center gap-3">
         <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
         <div className="flex-1">
@@ -275,7 +260,6 @@ export function EventFormFields({
         </div>
       </div>
 
-      {/* Notes / Description Row */}
       <div className="flex items-start gap-3">
         <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
         <div className="flex-1">

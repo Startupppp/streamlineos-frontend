@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { CalendarCheck2, Plus, Star, Unplug } from "lucide-react";
+import { useCallback, useState } from "react";
+import { CalendarCheck2, Loader2, Plus, RefreshCw, Star, Unplug } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,34 +14,73 @@ import { RequireModule } from "@/components/auth/require-module";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useCalendarConnections,
-  useDisconnectCalendar,
-  useSetPrimaryCalendar,
-  type CalendarConnection,
-  type CalendarConnectionProvider,
-} from "@/hooks/api/calendar";
+  useIntegrationConnections,
+  useInitiateIntegrationConnection,
+  useDisconnectIntegration,
+  useSetPrimaryIntegration,
+  type IntegrationConnection,
+  type IntegrationToolkit,
+} from "@/hooks/api/integrations";
 
-const PROVIDER_LABELS: Record<CalendarConnectionProvider, string> = {
-  GOOGLE: "Google Calendar",
-  MICROSOFT: "Microsoft Outlook",
+const TOOLKIT_LABELS: Record<IntegrationToolkit, string> = {
+  googlecalendar: "Google Calendar",
+  outlook: "Microsoft Outlook",
 };
 
-const CONNECT_OPTIONS: { provider: CalendarConnectionProvider; label: string; href: string }[] = [
-  { provider: "GOOGLE", label: "Google Calendar", href: "/api/auth/calendar/google" },
-  { provider: "MICROSOFT", label: "Microsoft Outlook", href: "/api/auth/calendar/microsoft" },
+const CONNECT_OPTIONS: { toolkit: IntegrationToolkit; label: string }[] = [
+  { toolkit: "googlecalendar", label: "Google Calendar" },
+  { toolkit: "outlook", label: "Microsoft Outlook" },
 ];
+
+function ConnectButton({
+  toolkit,
+  label,
+  pending,
+  disabled,
+  onConnect,
+}: {
+  toolkit: IntegrationToolkit;
+  label: string;
+  pending: boolean;
+  disabled: boolean;
+  onConnect: (toolkit: IntegrationToolkit) => void;
+}) {
+  const handleClick = useCallback(() => onConnect(toolkit), [onConnect, toolkit]);
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="sm:flex-1"
+      disabled={disabled}
+      onClick={handleClick}
+    >
+      {pending ? (
+        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <Plus className="mr-1.5 h-3.5 w-3.5" />
+      )}
+      {label}
+    </Button>
+  );
+}
 
 function ConnectionRow({
   connection,
+  onReconnect,
   onDisconnect,
   onSetPrimary,
   isBusy,
 }: {
-  connection: CalendarConnection;
+  connection: IntegrationConnection;
+  onReconnect: (toolkit: IntegrationToolkit) => void;
   onDisconnect: (id: number) => void;
   onSetPrimary: (id: number) => void;
   isBusy: boolean;
 }) {
+  const handleReconnect = useCallback(
+    () => onReconnect(connection.toolkit),
+    [onReconnect, connection.toolkit],
+  );
   const handleDisconnect = useCallback(
     () => onDisconnect(connection.id),
     [onDisconnect, connection.id],
@@ -61,22 +99,33 @@ function ConnectionRow({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="truncate text-sm font-medium text-foreground">
-              {connection.providerEmail ?? PROVIDER_LABELS[connection.provider]}
+              {connection.accountEmail ?? connection.accountLabel ?? TOOLKIT_LABELS[connection.toolkit]}
             </p>
             {connection.isPrimary && (
               <Badge variant="default" className="shrink-0 text-[10px]">
                 Default
               </Badge>
             )}
+            {connection.status === "needs_reauth" && (
+              <Badge variant="outline" className="shrink-0 text-[10px] text-amber-600">
+                Needs reconnect
+              </Badge>
+            )}
           </div>
           <p className="truncate text-xs text-muted-foreground">
-            {PROVIDER_LABELS[connection.provider]} · Connected{" "}
-            {format(new Date(connection.updatedAt), "MMM d, yyyy")}
+            {TOOLKIT_LABELS[connection.toolkit]} · Connected{" "}
+            {format(new Date(connection.createdAt), "MMM d, yyyy")}
           </p>
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
-        {!connection.isPrimary && (
+        {connection.status === "needs_reauth" && (
+          <Button variant="outline" size="sm" onClick={handleReconnect} disabled={isBusy}>
+            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+            Reconnect
+          </Button>
+        )}
+        {!connection.isPrimary && connection.status === "active" && (
           <Button variant="ghost" size="sm" onClick={handleSetPrimary} disabled={isBusy}>
             <Star className="mr-1.5 h-3.5 w-3.5" />
             Make default
@@ -98,12 +147,25 @@ function ConnectionRow({
 }
 
 export default function CalendarIntegrationsPage() {
-  const searchParams = useSearchParams();
+  const { data: connections = [], isLoading, isError, refetch } = useIntegrationConnections();
+  const initiate = useInitiateIntegrationConnection();
+  const disconnect = useDisconnectIntegration();
+  const setPrimary = useSetPrimaryIntegration();
+  const [pendingToolkit, setPendingToolkit] = useState<IntegrationToolkit | null>(null);
 
-  const { data: connections = [], isLoading, isError, refetch } = useCalendarConnections();
-
-  const disconnect = useDisconnectCalendar();
-  const setPrimary = useSetPrimaryCalendar();
+  const handleConnect = useCallback(
+    async (toolkit: IntegrationToolkit) => {
+      setPendingToolkit(toolkit);
+      try {
+        const { redirectUrl } = await initiate.mutateAsync(toolkit);
+        window.location.assign(redirectUrl);
+      } catch (e) {
+        setPendingToolkit(null);
+        toast.error(getErrorMessage(e));
+      }
+    },
+    [initiate],
+  );
 
   const handleDisconnect = useCallback(
     (connectionId: number) => {
@@ -129,22 +191,13 @@ export default function CalendarIntegrationsPage() {
     void refetch();
   }, [refetch]);
 
-  useEffect(() => {
-    const success = searchParams.get("success");
-    const error = searchParams.get("error");
-    if (success === "google") toast.success("Google Calendar connected successfully");
-    if (success === "microsoft") toast.success("Microsoft Outlook Calendar connected successfully");
-    if (error === "access_denied") toast.error("Calendar access was denied");
-    if (error === "exchange_failed") toast.error("Failed to connect calendar — please try again");
-  }, [searchParams]);
-
   const isBusy = disconnect.isPending || setPrimary.isPending;
   const hasConnections = connections.length > 0;
 
   return (
     <PageWrapper
       title="Calendar Integration"
-      subtitle="Connect one or more Google or Microsoft Outlook accounts for real-time availability and automatic event creation"
+      subtitle="Connect Google or Microsoft Outlook accounts for real-time availability and automatic event creation"
       backHref="/settings/integrations"
       badge="HR module"
     >
@@ -181,6 +234,7 @@ export default function CalendarIntegrationsPage() {
                       <ConnectionRow
                         key={connection.id}
                         connection={connection}
+                        onReconnect={handleConnect}
                         onDisconnect={handleDisconnect}
                         onSetPrimary={handleSetPrimary}
                         isBusy={isBusy}
@@ -206,18 +260,14 @@ export default function CalendarIntegrationsPage() {
               <CardContent>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   {CONNECT_OPTIONS.map((option) => (
-                    <Button
-                      key={option.provider}
-                      variant="outline"
-                      size="sm"
-                      asChild
-                      className="sm:flex-1"
-                    >
-                      <a href={option.href}>
-                        <Plus className="mr-1.5 h-3.5 w-3.5" />
-                        {option.label}
-                      </a>
-                    </Button>
+                    <ConnectButton
+                      key={option.toolkit}
+                      toolkit={option.toolkit}
+                      label={option.label}
+                      pending={pendingToolkit === option.toolkit}
+                      disabled={pendingToolkit !== null}
+                      onConnect={handleConnect}
+                    />
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">

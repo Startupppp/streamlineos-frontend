@@ -14,12 +14,11 @@ import {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
   useCalendarOrgMembers,
-  useGoogleMeetStatus,
-  useCreateMeetLink,
   useEventAttendees,
   extractEventNumericId,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { useIntegrationConnections } from "@/hooks/api/integrations";
 import { toast } from "sonner";
 import { EventFormFields } from "./event-form-fields";
 import { EventAttendeesPicker } from "./event-attendees-picker";
@@ -42,6 +41,8 @@ interface FormState {
   endTime: string;
   attendeeIds: string[];
   locationError: string;
+  syncConnectionId: string;
+  addConference: boolean;
 }
 
 function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
@@ -60,6 +61,8 @@ function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
     locationError: "",
+    syncConnectionId: "none",
+    addConference: true,
   };
 }
 
@@ -79,6 +82,8 @@ function toEditForm(event: CalendarListItem): FormState {
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
     locationError: "",
+    syncConnectionId: "none",
+    addConference: false,
   };
 }
 
@@ -119,15 +124,20 @@ export function EventCreateDialog({
   const createEvent = useCreateCalendarEvent();
   const updateEvent = useUpdateCalendarEvent();
   const { data: members = [] } = useCalendarOrgMembers();
-  const { data: meetStatus } = useGoogleMeetStatus();
-  const createMeet = useCreateMeetLink();
+  const { data: connections = [] } = useIntegrationConnections();
   const { data: existingAttendees } = useEventAttendees(
     isEdit && open ? editNumericId : null,
   );
 
   useEffect(() => {
     if (open) {
-      setForm(isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot));
+      const primaryConnection = connections.find((c) => c.isPrimary && c.status === "active") ?? null;
+      const base = isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot);
+      setForm(
+        isEdit
+          ? base
+          : { ...base, syncConnectionId: primaryConnection ? String(primaryConnection.id) : "none" },
+      );
       setLinkedTicket(null);
       setExistingEntityId(
         isEdit && event?.entityType === "ticket" && event.entityId
@@ -135,7 +145,7 @@ export function EventCreateDialog({
           : null,
       );
     }
-  }, [open, defaultSlot, event, isEdit]);
+  }, [open, defaultSlot, event, isEdit, connections]);
 
   useEffect(() => {
     if (open && isEdit && existingAttendees && existingAttendees.length > 0) {
@@ -165,15 +175,6 @@ export function EventCreateDialog({
         : [...prev.attendeeIds, memberId],
     }));
   }, []);
-
-  const handleGenerateMeet = useCallback(async () => {
-    try {
-      const res = await createMeet.mutateAsync();
-      set("location", res.meetLink);
-    } catch {
-      toast.error("Failed to generate Meet link");
-    }
-  }, [createMeet, set]);
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,6 +250,24 @@ export function EventCreateDialog({
       set("color", v);
     },
     [set],
+  );
+
+  const handleSyncConnectionChange = useCallback(
+    (v: string) => {
+      setForm((f) => ({
+        ...f,
+        syncConnectionId: v,
+        addConference: v === "none" ? false : f.addConference,
+      }));
+    },
+    [],
+  );
+
+  const handleAddConferenceChange = useCallback(
+    (v: boolean) => {
+      setForm((f) => ({ ...f, addConference: v }));
+    },
+    [],
   );
 
   const handleSave = useCallback(async () => {
@@ -340,6 +359,10 @@ export function EventCreateDialog({
       attendeeIds: form.attendeeIds,
       entityType: resolvedEntityId ? "ticket" : undefined,
       entityId: resolvedEntityId,
+      syncConnectionId:
+        !isEdit && form.syncConnectionId !== "none" ? Number(form.syncConnectionId) : undefined,
+      addConference:
+        !isEdit && form.syncConnectionId !== "none" ? form.addConference : undefined,
     };
 
     try {
@@ -352,8 +375,14 @@ export function EventCreateDialog({
         await updateEvent.mutateAsync({ id: numericId, ...payload });
         toast.success("Event updated");
       } else {
-        await createEvent.mutateAsync(payload);
-        toast.success("Event created");
+        const result = await createEvent.mutateAsync(payload);
+        if (result.syncError) {
+          toast.warning(`Event created, but calendar sync failed: ${result.syncError}`);
+        } else if (result.meetingUrl) {
+          toast.success("Event created — meeting link added");
+        } else {
+          toast.success("Event created");
+        }
       }
       handleClose();
     } catch {
@@ -432,8 +461,10 @@ export function EventCreateDialog({
                 endTime={form.endTime}
                 category={form.category}
                 color={form.color}
-                meetStatus={meetStatus}
-                isMeetPending={createMeet.isPending}
+                connections={connections}
+                syncConnectionId={form.syncConnectionId}
+                addConference={form.addConference}
+                isEdit={isEdit}
                 onTitleChange={handleTitleChange}
                 onDescriptionChange={handleDescriptionChange}
                 onLocationChange={handleLocationChange}
@@ -444,7 +475,8 @@ export function EventCreateDialog({
                 onEndTimeChange={handleEndTimeChange}
                 onCategoryChange={handleCategoryChange}
                 onColorChange={handleColorChange}
-                onGenerateMeet={handleGenerateMeet}
+                onSyncConnectionChange={handleSyncConnectionChange}
+                onAddConferenceChange={handleAddConferenceChange}
               />
 
               {/* Attendees Picker with icon on left */}

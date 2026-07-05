@@ -26,15 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Video, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
   useCalendarOrgMembers,
-  useGoogleMeetStatus,
-  useCreateMeetLink,
   useEventAttendees,
   extractEventNumericId,
 } from "@/hooks/api/calendar";
@@ -154,8 +152,6 @@ export function CrmEventDialog({
   const createEvent = useCreateCalendarEvent();
   const updateEvent = useUpdateCalendarEvent();
   const { data: members = [] } = useCalendarOrgMembers();
-  const { data: meetStatus } = useGoogleMeetStatus();
-  const createMeetLink = useCreateMeetLink();
   const { data: existingAttendees } = useEventAttendees(
     isEdit && open ? numericId : null,
   );
@@ -210,15 +206,6 @@ export function CrmEventDialog({
     },
     [form],
   );
-
-  const handleGenerateMeetLink = useCallback(async () => {
-    try {
-      const result = await createMeetLink.mutateAsync();
-      form.setValue("location", result.meetLink);
-    } catch {
-      toast.error("Failed to generate Meet link");
-    }
-  }, [createMeetLink, form]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
     const startISO = values.allDay
@@ -412,45 +399,12 @@ export function CrmEventDialog({
               <Label htmlFor="location" className="text-[13px] font-medium text-foreground">
                 Location
               </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="location"
-                  placeholder="Add location or meeting link"
-                  {...form.register("location")}
-                  className="h-9 flex-1"
-                />
-                {meetStatus?.connected && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleGenerateMeetLink}
-                    disabled={createMeetLink.isPending}
-                    className="h-9 shrink-0 gap-1.5 text-xs"
-                  >
-                    {createMeetLink.isPending ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Video className="h-3.5 w-3.5 text-emerald-600" />
-                    )}
-                    Meet
-                  </Button>
-                )}
-                {!meetStatus?.connected && meetStatus?.authUrl && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    asChild
-                    className="h-9 shrink-0 gap-1.5 text-xs"
-                  >
-                    <a href={meetStatus.authUrl} target="_blank" rel="noopener noreferrer">
-                      <Video className="h-3.5 w-3.5" />
-                      Connect
-                    </a>
-                  </Button>
-                )}
-              </div>
+              <Input
+                id="location"
+                placeholder="Add location or meeting link"
+                {...form.register("location")}
+                className="h-9"
+              />
             </div>
 
             <div className="space-y-1.5">

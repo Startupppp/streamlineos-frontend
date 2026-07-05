@@ -105,14 +105,14 @@ Minimum required:
 
 | Variable | What |
 |---|---|
-| `DATABASE_URL` | Postgres connection string |
 | `NEXTAUTH_SECRET` | `openssl rand -base64 48` |
 | `NEXTAUTH_URL` | e.g. `http://localhost:1000` |
 | `NEXT_PUBLIC_APP_URL` | Same as above |
+| `NEXT_PUBLIC_API_URL` | NestJS backend URL, e.g. `http://localhost:1500` |
+| `BACKEND_JWT_SECRET` | Must match the backend `.env` |
+| `INTERNAL_API_SECRET` | Must match the backend `.env` |
 
-Optional but recommended for full functionality: Resend or SendGrid (email), Upstash Redis (sessions & rate limits), Cloudflare R2 (uploads), Ably (chat), Google OAuth (sign-in), Razorpay (billing). See `.env.example` for the complete list.
-
-> A separate `BLOGS_DB` connection string lets the public blog point at a dedicated Postgres database. If unset, the blog falls back to `DATABASE_URL`.
+Optional: Google OAuth (sign-in), Resend or SendGrid (owner-console email status), Turnstile site key (landing captcha), analytics IDs. All business-side secrets (database, Redis, R2, Ably, Razorpay, VAPID) live in the backend `.env` — see `.env.example` for the complete frontend list.
 
 ### 3. Provision the database
 
@@ -201,11 +201,8 @@ The seeder is idempotent — re-running it refreshes the OWNER password and tops
 ## Production deployment
 
 - Runs on any Next-compatible host (Vercel, Fly.io, Railway, self-hosted Node).
-- Required for prod: Postgres, Redis (Upstash), R2 or S3-compatible bucket, Resend or SendGrid, HTTPS termination.
-- Middleware enforces HTTPS redirects (`x-forwarded-proto`), per-org IP allowlisting (Redis key `org:ip-allowlist:<orgId>`), MFA gates, and rate limits.
-- Run `pnpm db:generate` + `pnpm db:migrate` as part of the deployment pipeline instead of `pnpm db:push`.
-- Audit logs land in the `audit_logs` table; opt-in webhook forwarding via secrets in `.env`.
-- Cron-style endpoints under `app/api/cron/*` are secured with `CRON_SECRET` — schedule them with your platform's scheduler.
+- Required for prod: the NestJS backend (`streamlineos-api`) reachable at `NEXT_PUBLIC_API_URL`, matching `BACKEND_JWT_SECRET`/`INTERNAL_API_SECRET`, and HTTPS termination. Database, Redis, storage, email delivery, and payments are provisioned in the backend.
+- Middleware enforces HTTPS redirects (`x-forwarded-proto`), MFA gates, and coarse routing; authorization is re-asserted in the backend on every request.
 
 ---
 

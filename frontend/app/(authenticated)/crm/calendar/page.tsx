@@ -32,9 +32,9 @@ import { CrmEventDialog } from "@/features/crm/calendar/crm-event-dialog";
 import { CrmEventDetail } from "@/features/crm/calendar/crm-event-detail";
 import {
   useCalendarEvents,
-  useCalendarConnections,
   useCalendarOrgMembers,
 } from "@/hooks/api/calendar";
+import { useIntegrationConnections } from "@/hooks/api/integrations";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 
 const CRM_CATEGORIES = new Set(["meeting", "call", "demo", "general", "other"]);
@@ -77,7 +77,7 @@ export default function CrmCalendarPage() {
   }, [currentDate, view]);
 
   const { data: connections, isLoading: connectionsLoading } =
-    useCalendarConnections();
+    useIntegrationConnections();
   const {
     data: events = [],
     isLoading: eventsLoading,
