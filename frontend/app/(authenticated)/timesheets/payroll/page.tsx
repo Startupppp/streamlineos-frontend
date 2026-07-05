@@ -30,7 +30,7 @@ import type { PayrollSummaryRow } from "@/features/timesheets/payroll/types";
 import { DEFAULT_PAYROLL_MAPPING } from "@/features/timesheets/payroll/types";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { EmptyReportIllustration } from "@/components/illustrations/empty-report";
+import { EmptyReportIllustration } from "@/components/illustrations";
 
 const MAX_RANGE_DAYS = 92;
 

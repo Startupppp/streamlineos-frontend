@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Zap } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { AutomationsIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,7 +85,11 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
     <div className="space-y-4">
       {!rules?.length && !adding && (
         <EmptyState
-          illustration={<Zap className="h-10 w-10 text-muted-foreground/40" />}
+          illustration={
+            <div className="h-28 w-28">
+              <AutomationsIllustration />
+            </div>
+          }
           title="No automations yet"
           description="Route leads to CRM, notify the survey owner, or trigger a webhook based on responses."
           compact

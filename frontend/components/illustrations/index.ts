@@ -1,34 +1,56 @@
-export { EmptyInboxIllustration } from "./empty-inbox";
-export { EmptyProjectsIllustration } from "./empty-projects";
-export { EmptyTeamIllustration } from "./empty-team";
-export { EmptyTasksIllustration } from "./empty-tasks";
-export { EmptyDocumentsIllustration } from "./empty-documents";
-export { EmptyTimeIllustration } from "./empty-time";
-export { EmptyExpensesIllustration } from "./empty-expenses";
-export { EmptyDevicesIllustration } from "./empty-devices";
-export { EmptySearchIllustration } from "./empty-search";
-export { EmptyActivityIllustration } from "./empty-activity";
-export { EmptyCalendarIllustration } from "./empty-calendar";
-export { EmptySprintIllustration } from "./empty-sprint";
-export { EmptyMailIllustration } from "./empty-mail";
-export { EmptyPersonIllustration } from "./empty-person";
-export { EmptyWfhIllustration } from "./empty-wfh";
-export { EmptyApprovalIllustration } from "./empty-approval";
-export { NotFoundIllustration } from "./not-found";
-export { EmptyTargetIllustration } from "./empty-target";
-export { EmptyLeaderboardIllustration } from "./empty-leaderboard";
-export { EmptyLeaveIllustration } from "./empty-leave";
-export { EmptyTicketIllustration } from "./empty-ticket";
-export { EmptyPublicDocsIllustration } from "./empty-public-docs";
-export { EmptyUploadIllustration } from "./empty-upload";
-export { EmptyProductsIllustration } from "./empty-products";
-export { EmptyWarehouseIllustration } from "./empty-warehouse";
-export { EmptyOrdersIllustration } from "./empty-orders";
-export { EmptyTransferIllustration } from "./empty-transfer";
-export { EmptyReportIllustration } from "./empty-report";
-export { EmptyKnowledgeIllustration } from "./empty-knowledge";
-export { EmptyLeadsIllustration } from "./empty-leads";
-export { EmptyDealsIllustration } from "./empty-deals";
-export { EmptyCompaniesIllustration } from "./empty-companies";
-export { EmptyClientsIllustration } from "./empty-clients";
-export { EmptyPayroll } from "./empty-payroll";
+export {
+  IllustrationImage,
+  type IllustrationName,
+  type IllustrationProps,
+  EmptyInboxIllustration,
+  EmptyProjectsIllustration,
+  EmptyTeamIllustration,
+  EmptyTasksIllustration,
+  EmptyDocumentsIllustration,
+  EmptyTimeIllustration,
+  EmptyExpensesIllustration,
+  EmptyDevicesIllustration,
+  EmptySearchIllustration,
+  EmptyActivityIllustration,
+  EmptyCalendarIllustration,
+  EmptySprintIllustration,
+  EmptyMailIllustration,
+  EmptyPersonIllustration,
+  EmptyWfhIllustration,
+  EmptyApprovalIllustration,
+  NotFoundIllustration,
+  EmptyTargetIllustration,
+  EmptyLeaderboardIllustration,
+  EmptyLeaveIllustration,
+  EmptyTicketIllustration,
+  EmptyPublicDocsIllustration,
+  EmptyUploadIllustration,
+  EmptyProductsIllustration,
+  EmptyWarehouseIllustration,
+  EmptyOrdersIllustration,
+  EmptyTransferIllustration,
+  EmptyReportIllustration,
+  EmptyKnowledgeIllustration,
+  EmptyLeadsIllustration,
+  EmptyDealsIllustration,
+  EmptyCompaniesIllustration,
+  EmptyClientsIllustration,
+  EmptyPayroll,
+  AuthenticationIllustration,
+  ForgotPasswordIllustration,
+  OnboardingIllustration,
+  WelcomeIllustration,
+  SurveyIllustration,
+  SurveyCompleteIllustration,
+  ChatIllustration,
+  ServerErrorIllustration,
+  ConnectionLostIllustration,
+  SecurityIllustration,
+  SettingsIllustration,
+  SetupWizardIllustration,
+  LearningIllustration,
+  TravelIllustration,
+  AiIllustration,
+  InvitationIllustration,
+  AutomationsIllustration,
+} from "./illustration-image";

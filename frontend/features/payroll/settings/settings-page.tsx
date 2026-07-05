@@ -2,7 +2,7 @@
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyPayroll } from "@/components/illustrations/empty-payroll";
+import { EmptyPayroll } from "@/components/illustrations";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll";
 import { PolicyProfileSection } from "./policy-profile-section";
 import { ToggleSettingsSection } from "./toggle-settings-section";

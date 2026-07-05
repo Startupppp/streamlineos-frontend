@@ -73,7 +73,9 @@ export function EmptyState({
       {illustration ? (
         <div
           className={cn(
-            compact ? "mb-2 [&>svg]:h-10 [&>svg]:w-10" : "mb-5 [&>svg]:h-32 [&>svg]:w-32"
+            compact
+              ? "mb-2 [&>svg]:h-10 [&>svg]:w-10 [&>img]:h-10 [&>img]:w-10"
+              : "mb-5 [&>svg]:h-32 [&>svg]:w-32 [&>img]:h-32 [&>img]:w-32"
           )}
         >
           {illustration}

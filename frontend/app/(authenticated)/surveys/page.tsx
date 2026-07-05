@@ -7,7 +7,7 @@ import { ErrorState } from "@/components/shared";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyReportIllustration } from "@/components/illustrations/empty-report";
+import { EmptyReportIllustration } from "@/components/illustrations";
 import { useSurveys, type SurveyMode, type SurveyStatus } from "@/hooks/api/surveys/forms";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { SurveyCard } from "@/features/surveys/list/survey-card";

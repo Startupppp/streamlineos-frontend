@@ -15,7 +15,7 @@ import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-form
 import { RunStatusBadge } from "@/features/payroll/runs/run-status-badge";
 import { ChecklistCard } from "@/features/payroll/runs/checklist-card";
 import { CommandCenterPanels } from "@/features/payroll/runs/command-center-panels";
-import { EmptyPayroll } from "@/components/illustrations/empty-payroll";
+import { EmptyPayroll } from "@/components/illustrations";
 import { useCommandCenter } from "@/hooks/api/payroll/command-center";
 import { useCreateRun } from "@/hooks/api/payroll/runs";
 import { useCan } from "@/hooks/api/access";
