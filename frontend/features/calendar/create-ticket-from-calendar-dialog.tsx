@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { FolderOpen } from "lucide-react";
+import { FolderOpenIcon } from "@animateicons/react/lucide";
 import Link from "next/link";
 import { useProjects, useCreateTicket } from "@/hooks/api/projects";
 import { queryKeys } from "@/lib/query-keys";
@@ -161,7 +161,7 @@ export function CreateTicketFromCalendarDialog({
                           href="/projects"
                           className="text-primary underline-offset-2 hover:underline"
                         >
-                          <FolderOpen className="inline h-3 w-3 mr-1" />
+                          <FolderOpenIcon size={12} className="inline mr-1" />
                           Go to Projects
                         </Link>
                       </div>

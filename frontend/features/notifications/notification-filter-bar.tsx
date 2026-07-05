@@ -113,7 +113,7 @@ export function NotificationFilterBar({
     (activeSection !== "ALL" ? 1 : 0) + (activeCategory ? 1 : 0) + (activePriority ? 1 : 0);
 
   const filterControlClassName =
-    "h-8 bg-card border-border text-xs font-normal shadow-xs hover:border-blue-300 focus-visible:border-blue-500 focus-visible:ring-blue-200 focus-visible:ring-[3px]";
+    "h-9 bg-card border-border text-xs font-normal shadow-xs hover:border-blue-300 focus-visible:border-blue-500 focus-visible:ring-blue-200 focus-visible:ring-[3px]";
 
   return (
     <div className="flex w-full min-w-0 items-center gap-2">
@@ -248,7 +248,7 @@ export function NotificationFilterBar({
         <Button
           variant="ghost"
           size="sm"
-          className="hidden sm:inline-flex h-8 shrink-0 text-xs text-muted-foreground"
+          className="hidden sm:inline-flex h-9 shrink-0 text-xs text-muted-foreground"
           onClick={onClearFilters}
         >
           <X className="mr-1 h-3 w-3" />

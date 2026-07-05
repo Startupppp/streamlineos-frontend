@@ -88,6 +88,13 @@ export default function WikiHomePage() {
     );
   }, [createPage, router]);
 
+  const newPageAction = canCreate ? (
+    <Button onClick={handleNewPage} disabled={createPage.isPending} size="sm">
+      <Plus className="h-4 w-4 mr-1" />
+      New page
+    </Button>
+  ) : undefined;
+
   if (isLoading) {
     return (
       <PageWrapper title="Wiki">
@@ -98,7 +105,7 @@ export default function WikiHomePage() {
 
   if (rootPages.length === 0 && recentPages.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center p-8">
+      <PageWrapper title="Wiki" actions={newPageAction}>
         <EmptyState
           illustration={<EmptyKnowledgeIllustration />}
           title="Your wiki starts here"
@@ -106,18 +113,11 @@ export default function WikiHomePage() {
           action={
             canCreate ? { label: "New page", onClick: handleNewPage } : undefined
           }
-          className="flex-1 min-h-[50vh]"
+          className="min-h-[50vh]"
         />
-      </div>
+      </PageWrapper>
     );
   }
-
-  const newPageAction = canCreate ? (
-    <Button onClick={handleNewPage} disabled={createPage.isPending} size="sm">
-      <Plus className="h-4 w-4 mr-1" />
-      New page
-    </Button>
-  ) : undefined;
 
   const subtitle = pageCount > 0 ? `${pageCount} page${pageCount === 1 ? "" : "s"}` : undefined;
 

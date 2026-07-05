@@ -8,7 +8,12 @@ import type { Variants } from "framer-motion"
 import { ChevronDown, Lock, Check, LayoutGrid } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useIsMobile } from "@/hooks/common/use-mobile"
 import { useEnabledModules } from "@/hooks/api/access/org-modules"
 import {
@@ -334,9 +339,11 @@ export function ProductSwitcherMenu({
 
   if (sheetOnly) {
     return (
-      <Sheet open={open} onOpenChange={handleOpenChange}>
-        {sheetContent}
-      </Sheet>
+      <TooltipProvider delayDuration={200}>
+        <Sheet open={open} onOpenChange={handleOpenChange}>
+          {sheetContent}
+        </Sheet>
+      </TooltipProvider>
     )
   }
 
