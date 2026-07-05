@@ -124,7 +124,9 @@ import {
   PlaceholderElement,
 } from "./plate-media-elements";
 import { FixedToolbar } from "./toolbar/fixed-toolbar";
-import type { UploadedKbMedia } from "@/features/knowledge-base/lib/upload-kb-media";
+import { LinkFloatingToolbar } from "./toolbar/link-floating-toolbar";
+import { uploadEditorMedia } from "./upload-media";
+import type { EditorMediaUploader } from "./upload-media";
 
 export { EditorPageContext, useEditorPageContext };
 export type { EditorPageContextValue };
@@ -140,7 +142,7 @@ export interface PlateDocumentEditorProps {
   fetchPageLinks?: (q: string) => Promise<Array<{ id: number; label: string }>>;
   onNavigateToPage?: (pageId: number) => void;
   contentKey?: string | number;
-  uploadFile?: (file: File) => Promise<UploadedKbMedia>;
+  uploadFile?: EditorMediaUploader;
 }
 
 type PageLinkItem = { id: number; label: string };
@@ -318,6 +320,8 @@ const UPLOAD_CONFIG: UploadConfig = {
   blob: { mediaType: "file", maxFileCount: 1, maxFileSize: "32MB" },
 };
 
+const MAX_FILES_PER_DROP = 5;
+
 function buildPlugins() {
   return [
     ParagraphPlugin.withComponent(ParagraphElement),
@@ -375,9 +379,15 @@ function buildPlugins() {
     AudioPlugin.withComponent(AudioElement),
     FilePlugin.withComponent(FileElement),
     PlaceholderPlugin.configure({
-      options: { uploadConfig: UPLOAD_CONFIG },
+      options: {
+        uploadConfig: UPLOAD_CONFIG,
+        disableEmptyPlaceholder: true,
+        disableFileDrop: true,
+      },
     }).withComponent(PlaceholderElement),
-    LinkPlugin.withComponent(LinkElement),
+    LinkPlugin.configure({
+      render: { afterEditable: LinkFloatingToolbar },
+    }).withComponent(LinkElement),
     TablePlugin.withComponent(TableElement),
     TableRowPlugin.withComponent(TableRowElement),
     TableCellPlugin.withComponent(TableCellElement),
@@ -439,6 +449,31 @@ export default function PlateDocumentEditor({
     setTimeout(checkTrigger, 0);
   }
 
+  function uploadDroppedFiles(files: FileList) {
+    if (!uploadFile) return;
+    Array.from(files)
+      .slice(0, MAX_FILES_PER_DROP)
+      .forEach((file) => {
+        void uploadEditorMedia(editor, file, uploadFile);
+      });
+  }
+
+  function handleContentDrop(e: React.DragEvent<HTMLDivElement>) {
+    if (!editable || !uploadFile) return;
+    if (e.dataTransfer.files.length === 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    uploadDroppedFiles(e.dataTransfer.files);
+  }
+
+  function handleContentPaste(e: React.ClipboardEvent<HTMLDivElement>) {
+    if (!editable || !uploadFile) return;
+    if (e.clipboardData.files.length === 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    uploadDroppedFiles(e.clipboardData.files);
+  }
+
   const contextValue = useMemo<EditorPageContextValue>(
     () => ({ fetchMentionUsers, fetchPageLinks, onNavigateToPage }),
     [fetchMentionUsers, fetchPageLinks, onNavigateToPage],
@@ -452,6 +487,8 @@ export default function PlateDocumentEditor({
           placeholder={placeholder}
           readOnly={!editable}
           className="plate-editor min-h-[150px] outline-none px-1 py-2"
+          onDropCapture={handleContentDrop}
+          onPasteCapture={handleContentPaste}
         />
         {picker && (
           <PageLinkPickerDropdown

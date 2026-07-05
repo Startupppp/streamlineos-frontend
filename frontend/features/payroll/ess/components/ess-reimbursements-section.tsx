@@ -15,12 +15,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssReimbursements, useSubmitReimbursement } from "@/hooks/api/payroll/ess";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 
 const CLAIM_CATEGORIES = ["Travel", "Food", "Internet", "Medical", "Fuel", "Office Supplies", "Client Expenses", "Other"];
+
+function getCurrentMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
 
 const reimbursementSchema = z.object({
   category: z.string().min(1, "Select a category"),
@@ -29,6 +35,7 @@ const reimbursementSchema = z.object({
     return Number.isFinite(n) && n > 0;
   }, "Amount must be a positive number"),
   description: z.string().min(1, "Description is required").max(500),
+  payrollMonth: z.string().min(1, "Payroll month is required"),
 });
 
 type ReimbursementFormValues = z.infer<typeof reimbursementSchema>;
@@ -64,7 +71,7 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
 
   const form = useForm<ReimbursementFormValues>({
     resolver: zodResolver(reimbursementSchema),
-    defaultValues: { category: "", amount: "", description: "" },
+    defaultValues: { category: "", amount: "", description: "", payrollMonth: getCurrentMonth() },
   });
 
   function handleReceiptChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -97,6 +104,7 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
         amount: parseFloat(values.amount),
         description: values.description,
         receiptUrl: receiptUrl ?? undefined,
+        payrollMonth: values.payrollMonth,
       });
       toast.success("Claim submitted for approval");
       form.reset();
@@ -109,7 +117,7 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
   };
 
   function handleClose() {
-    form.reset();
+    form.reset({ category: "", amount: "", description: "", payrollMonth: getCurrentMonth() });
     setReceiptUrl(null);
     setReceiptName(null);
     onClose();
@@ -169,6 +177,21 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Input placeholder="Brief description of the expense" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="payrollMonth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Payroll Month <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <MonthPicker value={field.value} onChange={field.onChange} yearRange={[-1, 1]} className="w-full" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

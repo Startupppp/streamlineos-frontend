@@ -69,6 +69,10 @@ export function FileElement({ element, children, ...props }: PlateElementProps) 
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
   }
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'Enter' || e.key === ' ') handleOpen();
+  }
+
   return (
     <PlateElement {...props} element={element} className="my-2">
       <div
@@ -78,7 +82,7 @@ export function FileElement({ element, children, ...props }: PlateElementProps) 
         role="button"
         tabIndex={0}
         aria-label={`Open file: ${name ?? 'file'}`}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpen(); }}
+        onKeyDown={handleKeyDown}
       >
         <FileIcon className="size-5 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">

@@ -103,9 +103,7 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
           <div className="space-y-1">
             {panels.topExceptions.map((ex) => {
               const href = runId
-                ? ex.runEmployeeId
-                  ? `/payroll/runs/${runId}/employees/${ex.runEmployeeId}?highlight=exceptions`
-                  : `/payroll/runs/${runId}?tab=exceptions`
+                ? `/payroll/runs/${runId}?tab=exceptions${ex.runEmployeeId ? `&employee=${ex.runEmployeeId}` : ""}`
                 : "#";
               return (
                 <Link

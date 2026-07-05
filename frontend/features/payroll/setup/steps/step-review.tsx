@@ -176,24 +176,18 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
           </div>
         )}
 
-        {calendarPlan && (calendarPlan.attendanceCutoff || calendarPlan.approvalDeadline || calendarPlan.payDate) && (
+        {calendarPlan && calendarPlan.length > 0 && (
           <div className="bg-muted rounded-lg p-4 space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Payroll Calendar
             </p>
             <div className="space-y-1.5">
-              {[
-                { label: "Attendance Cutoff", value: calendarPlan.attendanceCutoff },
-                { label: "Approval Deadline", value: calendarPlan.approvalDeadline },
-                { label: "Pay Date", value: calendarPlan.payDate },
-              ]
-                .filter((row) => row.value)
-                .map((row) => (
-                  <div key={row.label} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{row.label}</span>
-                    <span className="font-mono text-foreground">{row.value}</span>
-                  </div>
-                ))}
+              {calendarPlan.map((event) => (
+                <div key={event.type} className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{event.title}</span>
+                  <span className="font-mono text-foreground">{event.date}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}

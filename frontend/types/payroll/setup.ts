@@ -192,11 +192,13 @@ export type ApprovalStage = {
   requiredPermission: string;
 };
 
-export type CalendarPlan = {
-  attendanceCutoff: string | null;
-  approvalDeadline: string | null;
-  payDate: string | null;
+export type CalendarPlanEvent = {
+  type: string;
+  date: string;
+  title: string;
 };
+
+export type CalendarPlan = CalendarPlanEvent[];
 
 export type PolicyPreviewResult = {
   toggles: Record<ToggleKey, boolean>;

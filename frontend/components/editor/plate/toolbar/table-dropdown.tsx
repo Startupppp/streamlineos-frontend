@@ -4,6 +4,14 @@ import React from 'react';
 import { Table } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
 import {
+  insertTable,
+  insertTableRow,
+  insertTableColumn,
+  deleteTable,
+  deleteRow,
+  deleteColumn,
+} from '@platejs/table';
+import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
@@ -16,27 +24,27 @@ export function TableDropdown() {
   const editor = useEditorRef();
 
   function handleInsertTable() {
-    editor.tf.insert.table({ rowCount: 3, colCount: 3 });
+    insertTable(editor, { rowCount: 3, colCount: 3 });
   }
 
   function handleAddRow() {
-    editor.tf.insert.tableRow();
+    insertTableRow(editor);
   }
 
   function handleAddColumn() {
-    editor.tf.insert.tableColumn();
+    insertTableColumn(editor);
   }
 
   function handleDeleteRow() {
-    editor.tf.delete.tableRow();
+    deleteRow(editor);
   }
 
   function handleDeleteColumn() {
-    editor.tf.delete.tableColumn();
+    deleteColumn(editor);
   }
 
   function handleDeleteTable() {
-    editor.tf.delete.table();
+    deleteTable(editor);
   }
 
   return (

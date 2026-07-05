@@ -48,6 +48,19 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
     setNotes(e.target.value);
   }
 
+  async function handleDownloadStatement() {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      await downloadFnfStatement(settlementId);
+      toast.success("Statement downloaded");
+    } catch {
+      toast.error("Failed to download statement");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   function handleApprove() {
     approveMutation.mutate(
       { settlementId, notes: notes.trim() || undefined },
@@ -108,7 +121,20 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
         ) : null}
       </div>
 
-      <div className="border-t px-6 py-4 shrink-0 grid grid-cols-2 gap-2">
+      <div className="border-t px-6 py-4 shrink-0 flex flex-col gap-2">
+        {settlement?.statementPublishedAt && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-1.5"
+            onClick={handleDownloadStatement}
+            disabled={downloading || isLoading}
+          >
+            <Download className="h-3.5 w-3.5" />
+            {downloading ? "Downloading…" : "Download statement"}
+          </Button>
+        )}
+        <div className="grid grid-cols-2 gap-2">
         <Button variant="outline" size="sm" onClick={onClose}>
           Close
         </Button>
@@ -145,6 +171,7 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
           </AlertDialog>
         )}
         {!showApprove && <div />}
+        </div>
       </div>
     </>
   );

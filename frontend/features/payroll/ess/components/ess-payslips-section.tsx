@@ -147,6 +147,20 @@ export function EssPayslipsSection() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground leading-none">{formatMonth(payslip.month)}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">Published {formatDate(payslip.publishedAt)}</p>
+                    {payslip.workerType === "CONTRACTOR" && (
+                      <div className="mt-0.5 flex items-center gap-2 flex-wrap">
+                        {payslip.invoiceNumber && (
+                          <span className="text-[10px] text-muted-foreground">
+                            Invoice #{payslip.invoiceNumber}
+                          </span>
+                        )}
+                        {payslip.paymentAdvice && (
+                          <span className="text-[10px] text-muted-foreground">
+                            Advice: {payslip.paymentAdvice}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">

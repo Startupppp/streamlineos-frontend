@@ -107,7 +107,7 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
         <p className="text-xs text-muted-foreground italic pl-9">"{row.comment}"</p>
       )}
 
-      {isActive && canAct && (
+      {isActive && canAct && row.isCurrentUserApprover !== false && (
         <div className="flex gap-2 pl-9 pt-1">
           <Button size="sm" variant="outline" className="h-8" onClick={handleApprove} disabled={approvePending}>
             <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve
@@ -116,6 +116,11 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
             <XCircle className="mr-1 h-3.5 w-3.5" /> Reject
           </Button>
         </div>
+      )}
+      {isActive && canAct && row.isCurrentUserApprover === false && (
+        <p className="text-xs text-muted-foreground pl-9 pt-1">
+          Waiting on{row.approverName ? ` ${row.approverName}` : " approver"} to act
+        </p>
       )}
 
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>

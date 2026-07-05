@@ -96,10 +96,16 @@ export type ValidationItem = {
   onHold: boolean;
 };
 
-export type CreateBatchResult = {
+export type CreateBatchResultGroup = {
   batch: PayoutBatch;
   items: PayoutBatchItem[];
   fileUrl: string | null;
+  currencyCode: string;
+  replayed: boolean;
+};
+
+export type CreateBatchResult = {
+  batches: CreateBatchResultGroup[];
   replayed: boolean;
 };
 

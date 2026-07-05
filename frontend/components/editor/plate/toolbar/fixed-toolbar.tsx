@@ -45,10 +45,7 @@ export function FixedToolbar({ uploadFile }: FixedToolbarProps) {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div
-        className="sticky top-0 z-30 flex items-center gap-0.5 overflow-x-auto border-b border-border bg-background px-2 py-1"
-        style={{ scrollbarWidth: 'thin' }}
-      >
+      <div className="sticky top-0 z-30 flex items-center gap-0.5 overflow-x-auto scrollbar-hide border-b border-border bg-background px-2 py-1">
         <HistoryButtons />
         <VSep />
         <TurnIntoDropdown />

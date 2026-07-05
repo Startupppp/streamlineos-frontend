@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { Image, Film, Music, FileUp, Link2 } from 'lucide-react';
+import { Image as ImageIcon, Film, Music, FileUp, Link2 } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
 import type { TElement } from 'platejs';
-import { toast } from 'sonner';
 import type { UploadedKbMedia } from '@/features/knowledge-base/lib/upload-kb-media';
+import { uploadEditorMedia } from '../upload-media';
+import type { EditorMediaType } from '../upload-media';
 import {
   Dialog,
   DialogContent,
@@ -104,58 +105,31 @@ export function MediaButtons({ uploadFile }: MediaButtonsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [embedOpen, setEmbedOpen] = useState(false);
 
-  async function doUpload(file: File, mediaType: 'img' | 'video' | 'audio' | 'file') {
-    const placeholderNode: TElement = {
-      type: 'placeholder',
-      mediaType,
-      name: file.name,
-      children: [{ text: '' }],
-    };
-    editor.tf.insertNodes(placeholderNode);
-    const sel = editor.selection;
-    if (!sel) {
-      toast.error('Failed to position upload');
-      return;
-    }
-    const placeholderPath = sel.focus.path.slice(0, -1);
-    try {
-      const result = await uploadFile(file);
-      editor.tf.setNodes(
-        {
-          type: mediaType,
-          url: result.url,
-          name: result.name,
-          mediaType: undefined,
-        } as unknown as Partial<TElement>,
-        { at: placeholderPath },
-      );
-    } catch {
-      editor.tf.removeNodes({ at: placeholderPath });
-      toast.error('Upload failed');
-    }
+  function doUpload(file: File, mediaType: EditorMediaType) {
+    void uploadEditorMedia(editor, file, uploadFile, mediaType);
   }
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) void doUpload(file, 'img');
+    if (file) doUpload(file, 'img');
     e.target.value = '';
   }
 
   function handleVideoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) void doUpload(file, 'video');
+    if (file) doUpload(file, 'video');
     e.target.value = '';
   }
 
   function handleAudioChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) void doUpload(file, 'audio');
+    if (file) doUpload(file, 'audio');
     e.target.value = '';
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) void doUpload(file, 'file');
+    if (file) doUpload(file, 'file');
     e.target.value = '';
   }
 
@@ -226,7 +200,7 @@ export function MediaButtons({ uploadFile }: MediaButtonsProps) {
         aria-hidden
       />
       <ToolbarButton tooltip="Upload image" onClick={handleImageClick} aria-label="Upload image">
-        <Image className="size-4" />
+        <ImageIcon className="size-4" />
       </ToolbarButton>
       <ToolbarButton tooltip="Upload video" onClick={handleVideoClick} aria-label="Upload video">
         <Film className="size-4" />

@@ -44,36 +44,55 @@ export function ParagraphElement({ element, children, ...props }: PlateElementPr
   }
 
   if (el.listStyleType === 'todo') {
-    const state = useTodoListElementState({ element: el });
-    const { checkboxProps } = useTodoListElement(state);
     return (
-      <PlateElement
-        {...props}
-        element={element}
-        as="div"
-        className="flex items-start my-0.5 leading-7"
-        style={{ paddingLeft: `${(el.indent ?? 1) * 1.5}rem` }}
-      >
-        <span className="mr-2 shrink-0 mt-1" contentEditable={false}>
-          <input
-            type="checkbox"
-            checked={checkboxProps.checked ?? false}
-            onChange={(e) => checkboxProps.onCheckedChange(e.target.checked)}
-            onMouseDown={checkboxProps.onMouseDown}
-            disabled={readOnly}
-            className="cursor-pointer accent-primary"
-          />
-        </span>
-        <span className={`flex-1 min-w-0 ${checkboxProps.checked ? 'line-through text-muted-foreground' : ''}`}>
-          {children}
-        </span>
-      </PlateElement>
+      <TodoListItemElement {...props} element={element} readOnly={readOnly}>
+        {children}
+      </TodoListItemElement>
     );
   }
 
   return (
     <PlateElement {...props} element={element} as="p" className="my-1 leading-7">
       {children}
+    </PlateElement>
+  );
+}
+
+function TodoListItemElement({
+  element,
+  children,
+  readOnly,
+  ...props
+}: PlateElementProps & { readOnly: boolean }) {
+  const el = element as ListElement;
+  const state = useTodoListElementState({ element: el });
+  const { checkboxProps } = useTodoListElement(state);
+
+  function handleCheckedChange(e: React.ChangeEvent<HTMLInputElement>) {
+    checkboxProps.onCheckedChange(e.target.checked);
+  }
+
+  return (
+    <PlateElement
+      {...props}
+      element={element}
+      as="div"
+      className="flex items-start my-0.5 leading-7"
+      style={{ paddingLeft: `${(el.indent ?? 1) * 1.5}rem` }}
+    >
+      <span className="mr-2 shrink-0 mt-1" contentEditable={false}>
+        <input
+          type="checkbox"
+          checked={checkboxProps.checked ?? false}
+          onChange={handleCheckedChange}
+          onMouseDown={checkboxProps.onMouseDown}
+          disabled={readOnly}
+          className="cursor-pointer accent-primary"
+        />
+      </span>
+      <span className={`flex-1 min-w-0 ${checkboxProps.checked ? 'line-through text-muted-foreground' : ''}`}>
+        {children}
+      </span>
     </PlateElement>
   );
 }

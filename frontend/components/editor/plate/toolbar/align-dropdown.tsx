@@ -8,7 +8,7 @@ import {
   AlignJustify,
 } from 'lucide-react';
 import { useEditorRef, useEditorSelector } from 'platejs/react';
-import { TextAlignPlugin } from '@platejs/basic-styles/react';
+
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -46,7 +46,9 @@ export function AlignDropdown() {
   }, []);
 
   function handleSelect(value: Alignment) {
-    editor.getApi(TextAlignPlugin).textAlign.setNodes(value);
+    const block = editor.api.block();
+    if (!block) return;
+    editor.tf.setNodes({ textAlign: value }, { at: block[1] });
   }
 
   return (

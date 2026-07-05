@@ -45,7 +45,7 @@ export function StepActivate({ draft, clearAll }: StepActivateProps) {
     activate.mutate(
       {
         policyId: draft.policyId,
-        templateKey: draft.templateKey,
+        templateKey: draft.templateKey ?? undefined,
         toggleOverrides: toOverridesRecord(draft.toggleOverrides),
         payslipLayout: "MODERN",
         reason: "Initial setup",

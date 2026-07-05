@@ -3,7 +3,7 @@
 import React from 'react';
 import { Link } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
-import { triggerFloatingLink } from '@platejs/link';
+import { triggerFloatingLink } from '@platejs/link/react';
 import { ToolbarButton } from './toolbar-button';
 
 export function LinkButton() {
