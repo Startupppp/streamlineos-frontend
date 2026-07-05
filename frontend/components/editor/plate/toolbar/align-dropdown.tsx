@@ -1,30 +1,45 @@
-'use client';
+"use client";
 
-import React from 'react';
-import {
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-} from 'lucide-react';
-import { useEditorRef, useEditorSelector } from 'platejs/react';
+import React from "react";
+import { AlignLeft, AlignCenter, AlignRight, AlignJustify } from "lucide-react";
+import { useEditorRef, useEditorSelector } from "platejs/react";
 
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-type Alignment = 'left' | 'center' | 'right' | 'justify';
+type Alignment = "left" | "center" | "right" | "justify";
 
-const ALIGN_OPTIONS: { value: Alignment; label: string; icon: React.ReactNode }[] = [
-  { value: 'left', label: 'Align left', icon: <AlignLeft className="size-4" /> },
-  { value: 'center', label: 'Align center', icon: <AlignCenter className="size-4" /> },
-  { value: 'right', label: 'Align right', icon: <AlignRight className="size-4" /> },
-  { value: 'justify', label: 'Justify', icon: <AlignJustify className="size-4" /> },
+const ALIGN_OPTIONS: {
+  value: Alignment;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    value: "left",
+    label: "Align left",
+    icon: <AlignLeft className="size-4" />,
+  },
+  {
+    value: "center",
+    label: "Align center",
+    icon: <AlignCenter className="size-4" />,
+  },
+  {
+    value: "right",
+    label: "Align right",
+    icon: <AlignRight className="size-4" />,
+  },
+  {
+    value: "justify",
+    label: "Justify",
+    icon: <AlignJustify className="size-4" />,
+  },
 ];
 
 const ICONS: Record<Alignment, React.ReactNode> = {
@@ -39,10 +54,10 @@ export function AlignDropdown() {
 
   const currentAlign = useEditorSelector<Alignment>((e) => {
     const block = e.api.block();
-    if (!block) return 'left';
-    const val = (block[0] as Record<string, unknown>)['textAlign'];
-    if (val === 'center' || val === 'right' || val === 'justify') return val;
-    return 'left';
+    if (!block) return "left";
+    const val = (block[0] as Record<string, unknown>)["textAlign"];
+    if (val === "center" || val === "right" || val === "justify") return val;
+    return "left";
   }, []);
 
   function handleSelect(value: Alignment) {
@@ -68,7 +83,9 @@ export function AlignDropdown() {
           <DropdownMenuItem
             key={opt.value}
             onClick={() => handleSelect(opt.value)}
-            className={cn(currentAlign === opt.value && 'bg-accent text-accent-foreground')}
+            className={cn(
+              currentAlign === opt.value && "bg-accent text-accent-foreground",
+            )}
           >
             {opt.icon}
             <span className="ml-2">{opt.label}</span>

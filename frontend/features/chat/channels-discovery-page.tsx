@@ -2,14 +2,16 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Globe, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { usePublicChannels, useJoinChannel, useLeaveChannel } from "@/hooks/api";
 import { PublicChannelRow } from "./public-channel-row";
+import { NewGroupDialog } from "./new-group-dialog";
 
 const PAGE_SIZE = 10;
 
@@ -22,6 +24,7 @@ export function ChannelsDiscoveryPage() {
   const [page, setPage] = useState(0);
   const [joiningId, setJoiningId] = useState<number | null>(null);
   const [leavingId, setLeavingId] = useState<number | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -83,14 +86,24 @@ export function ChannelsDiscoveryPage() {
     (channelId: number) => router.push(`/chat?channel=${channelId}`),
     [router],
   );
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-background">
       <div className="px-6 pt-5 pb-3 border-b border-border/30">
-        <h1 className="text-[16px] font-bold">Channels</h1>
-        <p className="text-[12px] text-muted-foreground">
-          Browse and join public channels in your organization.
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-[16px] font-bold">Channels</h1>
+            <p className="text-[12px] text-muted-foreground">
+              Browse and join public channels in your organization. Your direct messages and
+              private channels live under Discuss.
+            </p>
+          </div>
+          <Button size="sm" className="h-8 gap-1.5 shrink-0" onClick={handleOpenCreate}>
+            <Plus className="h-3.5 w-3.5" />
+            Create Channel
+          </Button>
+        </div>
         <div className="relative mt-3 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
           <Input
@@ -117,15 +130,19 @@ export function ChannelsDiscoveryPage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex-1 h-full flex flex-col items-center justify-center text-center py-16">
-            <Globe className="h-10 w-10 mb-3 text-muted-foreground/30" />
-            <p className="text-[13px] text-muted-foreground font-medium">
-              {search ? "No channels match your search" : "No public channels yet"}
-            </p>
-            <p className="text-[11px] text-muted-foreground/50 mt-1">
-              {search ? "Try a different search term" : "Create a public channel to get started"}
-            </p>
-          </div>
+          <EmptyState
+            illustrationPreset={search ? "search" : "chat"}
+            title={search ? "No channels match your search" : "No public channels yet"}
+            description={
+              search
+                ? "Try a different search term"
+                : "Create a public channel to get started"
+            }
+            action={
+              search ? undefined : { label: "Create Channel", onClick: handleOpenCreate }
+            }
+            className="flex-1 h-full border-0 bg-transparent py-16"
+          />
         ) : (
           <div className="max-w-2xl">
             <div className="grid gap-2 sm:grid-cols-2">
@@ -175,6 +192,13 @@ export function ChannelsDiscoveryPage() {
           </div>
         )}
       </div>
+
+      <NewGroupDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={handleSelect}
+        hideTrigger
+      />
     </div>
   );
 }

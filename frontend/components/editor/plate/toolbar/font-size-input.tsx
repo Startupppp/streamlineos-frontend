@@ -1,18 +1,17 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
-import { useEditorRef, useEditorSelector } from 'platejs/react';
-
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import { useEditorRef, useEditorSelector } from "platejs/react";
+import { Button } from "@/components/ui/button";
 
 const DEFAULT_SIZE = 16;
 const MIN_SIZE = 8;
 const MAX_SIZE = 96;
 
 function parseSize(raw: unknown): number {
-  if (typeof raw !== 'string') return DEFAULT_SIZE;
-  const n = parseInt(raw.replace('px', ''), 10);
+  if (typeof raw !== "string") return DEFAULT_SIZE;
+  const n = parseInt(raw.replace("px", ""), 10);
   return isNaN(n) ? DEFAULT_SIZE : n;
 }
 
@@ -21,12 +20,12 @@ export function FontSizeInput() {
 
   const currentSize = useEditorSelector<number>((e) => {
     const marks = e.api.marks() as Record<string, unknown> | null;
-    return parseSize(marks?.['fontSize']);
+    return parseSize(marks?.["fontSize"]);
   }, []);
 
   function applySize(size: number) {
     const clamped = Math.min(MAX_SIZE, Math.max(MIN_SIZE, size));
-    editor.tf.addMark('fontSize', `${clamped}px`);
+    editor.tf.addMark("fontSize", `${clamped}px`);
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {

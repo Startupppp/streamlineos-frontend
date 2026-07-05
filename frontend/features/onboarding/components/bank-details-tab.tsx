@@ -11,9 +11,17 @@ import { toast } from "sonner";
 import { useBankDetailsMutation } from "@/lib/api/hooks/onboarding";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 
+const BANK_NAME_REGEX = /^[A-Za-z][A-Za-z0-9.,'&()\-\s]*$/;
+const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+const SSN_REGEX = /^\d{3}-?\d{2}-?\d{4}$/;
+
 const bankSchema = z.object({
   accountHolder: z.string().min(2, "Account Holder Name is required"),
-  bankName: z.string().min(2, "Bank Name is required"),
+  bankName: z
+    .string()
+    .min(2, "Bank Name is required")
+    .max(100, "Bank Name must be at most 100 characters")
+    .regex(BANK_NAME_REGEX, "Bank Name can only contain letters, numbers, spaces, and basic punctuation"),
   accountNumber: z
     .string()
     .min(8, "Account Number must be at least 8 digits")
@@ -27,7 +35,13 @@ const bankSchema = z.object({
       /^[A-Z]{4}0[A-Z0-9]{6}$/,
       "Enter a valid IFSC Code (e.g. HDFC0001234)",
     ),
-  taxId: z.string().optional(),
+  taxId: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || PAN_REGEX.test(val.toUpperCase()) || SSN_REGEX.test(val),
+      "Enter a valid PAN (ABCDE1234F) or SSN (123-45-6789)",
+    ),
 });
 
 type BankFormValues = z.infer<typeof bankSchema>;
@@ -47,6 +61,7 @@ export function BankDetailsTab({
 
   const form = useForm<BankFormValues>({
     resolver: zodResolver(bankSchema),
+    mode: "onChange",
     defaultValues: {
       accountHolder: "",
       bankName: "",

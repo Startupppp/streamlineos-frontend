@@ -21,10 +21,14 @@ interface CalendarAiAssistantProps {
 const WELCOME: AskAIMessage = {
   role: "assistant",
   content:
-    "Hello! I can help you schedule meetings and events on your calendar. Try asking me:\n\n*\"Schedule a meeting with Aditya tomorrow at 10 AM\"*",
+    'Hello! I can help you schedule meetings and events on your calendar. Try asking me:\n\n*"Schedule a meeting with Aditya tomorrow at 10 AM"*',
 };
 
-export function CalendarAiAssistant({ onEventCreated, isOpen, onClose }: CalendarAiAssistantProps) {
+export function CalendarAiAssistant({
+  onEventCreated,
+  isOpen,
+  onClose,
+}: CalendarAiAssistantProps) {
   const [messages, setMessages] = useState<AskAIMessage[]>([WELCOME]);
   const [inputValue, setInputValue] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
@@ -42,7 +46,10 @@ export function CalendarAiAssistant({ onEventCreated, isOpen, onClose }: Calenda
       if (!text || isStreaming) return;
 
       setInputValue("");
-      const userMessages: AskAIMessage[] = [...messages, { role: "user", content: text }];
+      const userMessages: AskAIMessage[] = [
+        ...messages,
+        { role: "user", content: text },
+      ];
       setMessages([...userMessages, { role: "assistant", content: "" }]);
 
       try {
@@ -51,13 +58,19 @@ export function CalendarAiAssistant({ onEventCreated, isOpen, onClose }: Calenda
             const updated = [...prev];
             const last = updated[updated.length - 1];
             if (last?.role === "assistant") {
-              updated[updated.length - 1] = { ...last, content: last.content + token };
+              updated[updated.length - 1] = {
+                ...last,
+                content: last.content + token,
+              };
             }
             return updated;
           });
           messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         });
-        void qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.calendar.all,
+          exact: false,
+        });
         onEventCreated?.();
       } catch (err) {
         toast.error(getErrorMessage(err));
@@ -158,7 +171,12 @@ export function CalendarAiAssistant({ onEventCreated, isOpen, onClose }: Calenda
                         m.content
                       ) : (
                         <MarkdownContent
-                          content={m.content || (isStreaming && i === messages.length - 1 ? "…" : "")}
+                          content={
+                            m.content ||
+                            (isStreaming && i === messages.length - 1
+                              ? "…"
+                              : "")
+                          }
                         />
                       )}
                     </div>
@@ -182,7 +200,13 @@ export function CalendarAiAssistant({ onEventCreated, isOpen, onClose }: Calenda
               className="flex-1 h-8 rounded-md border border-input px-3 text-xs bg-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
             />
             {isStreaming ? (
-              <Button type="button" size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={stop}>
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="h-8 w-8 shrink-0"
+                onClick={stop}
+              >
                 <Square className="h-3 w-3" />
               </Button>
             ) : (

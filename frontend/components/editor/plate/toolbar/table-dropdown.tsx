@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Table } from 'lucide-react';
-import { useEditorRef } from 'platejs/react';
+import React from "react";
+import { Table } from "lucide-react";
+import { useEditorRef } from "platejs/react";
+import { TablePlugin } from "@platejs/table/react";
 import {
   insertTable,
   insertTableRow,
@@ -10,15 +11,15 @@ import {
   deleteTable,
   deleteRow,
   deleteColumn,
-} from '@platejs/table';
+} from "@platejs/table";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { ToolbarButton } from './toolbar-button';
+} from "@/components/ui/dropdown-menu";
+import { ToolbarButton } from "./toolbar-button";
 
 export function TableDropdown() {
   const editor = useEditorRef();
@@ -60,10 +61,16 @@ export function TableDropdown() {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleAddRow}>Add row</DropdownMenuItem>
-        <DropdownMenuItem onClick={handleAddColumn}>Add column</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleAddColumn}>
+          Add column
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleDeleteRow}>Delete row</DropdownMenuItem>
-        <DropdownMenuItem onClick={handleDeleteColumn}>Delete column</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDeleteRow}>
+          Delete row
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDeleteColumn}>
+          Delete column
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleDeleteTable}

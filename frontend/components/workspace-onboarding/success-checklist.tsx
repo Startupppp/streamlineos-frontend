@@ -185,6 +185,7 @@ export function SuccessChecklist() {
   const { data: org } = useOrgSettings();
   const { data: session } = useSession();
   const orgId = session?.orgId;
+  const canSetUpWorkspace = session?.user?.isOrgOwner || session?.user?.isPlatformAdmin;
   const { completed, doneCount, isLoading } = useWorkspaceChecklistProgress();
   const [dismissed, setDismissed] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -233,7 +234,7 @@ export function SuccessChecklist() {
     setCollapsed((prev) => !prev);
   }, []);
 
-  if (!org?.onboardingCompletedAt || dismissed || isLoading || allDone) return null;
+  if (!canSetUpWorkspace || !org?.onboardingCompletedAt || dismissed || isLoading || allDone) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50">

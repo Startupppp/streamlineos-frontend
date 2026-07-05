@@ -1,22 +1,37 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Baseline, Highlighter } from 'lucide-react';
-import { useEditorRef, useEditorSelector } from 'platejs/react';
-
+import React, { useState } from "react";
+import { Baseline, Highlighter } from "lucide-react";
+import { useEditorRef, useEditorSelector } from "platejs/react";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const COLOR_PALETTE = [
-  '#000000', '#374151', '#6B7280', '#D1D5DB', '#FFFFFF',
-  '#EF4444', '#F97316', '#EAB308', '#22C55E', '#06B6D4',
-  '#3B82F6', '#8B5CF6', '#EC4899', '#F43F5E', '#FDE68A',
-  '#BBF7D0', '#BAE6FD', '#DDD6FE', '#FBCFE8', '#FEF3C7',
+  "#000000",
+  "#374151",
+  "#6B7280",
+  "#D1D5DB",
+  "#FFFFFF",
+  "#EF4444",
+  "#F97316",
+  "#EAB308",
+  "#22C55E",
+  "#06B6D4",
+  "#3B82F6",
+  "#8B5CF6",
+  "#EC4899",
+  "#F43F5E",
+  "#FDE68A",
+  "#BBF7D0",
+  "#BAE6FD",
+  "#DDD6FE",
+  "#FBCFE8",
+  "#FEF3C7",
 ];
 
 interface ColorSwatchProps {
@@ -35,8 +50,8 @@ function ColorSwatch({ color, selected, onSelect }: ColorSwatchProps) {
       aria-label={color}
       onClick={handleClick}
       className={cn(
-        'size-6 rounded border border-border transition-transform hover:scale-110',
-        selected && 'ring-2 ring-primary ring-offset-1',
+        "size-6 rounded border border-border transition-transform hover:scale-110",
+        selected && "ring-2 ring-primary ring-offset-1",
       )}
       style={{ backgroundColor: color }}
     />
@@ -95,28 +110,28 @@ export function ColorButtons() {
 
   const currentTextColor = useEditorSelector<string | undefined>((e) => {
     const marks = e.api.marks() as Record<string, unknown> | null;
-    return marks ? (marks['color'] as string | undefined) : undefined;
+    return marks ? (marks["color"] as string | undefined) : undefined;
   }, []);
 
   const currentBgColor = useEditorSelector<string | undefined>((e) => {
     const marks = e.api.marks() as Record<string, unknown> | null;
-    return marks ? (marks['backgroundColor'] as string | undefined) : undefined;
+    return marks ? (marks["backgroundColor"] as string | undefined) : undefined;
   }, []);
 
   function applyTextColor(color: string) {
-    editor.tf.addMark('color', color);
+    editor.tf.addMark("color", color);
   }
 
   function applyBgColor(color: string) {
-    editor.tf.addMark('backgroundColor', color);
+    editor.tf.addMark("backgroundColor", color);
   }
 
   function clearTextColor() {
-    editor.tf.removeMark('color');
+    editor.tf.removeMark("color");
   }
 
   function clearBgColor() {
-    editor.tf.removeMark('backgroundColor');
+    editor.tf.removeMark("backgroundColor");
   }
 
   return (
@@ -135,7 +150,7 @@ export function ColorButtons() {
             <Baseline className="size-3.5" />
             <span
               className="h-1 w-4 rounded-sm"
-              style={{ backgroundColor: currentTextColor ?? '#000000' }}
+              style={{ backgroundColor: currentTextColor ?? "#000000" }}
             />
           </Button>
         }
@@ -154,7 +169,7 @@ export function ColorButtons() {
             <Highlighter className="size-3.5" />
             <span
               className="h-1 w-4 rounded-sm border border-border"
-              style={{ backgroundColor: currentBgColor ?? 'transparent' }}
+              style={{ backgroundColor: currentBgColor ?? "transparent" }}
             />
           </Button>
         }
