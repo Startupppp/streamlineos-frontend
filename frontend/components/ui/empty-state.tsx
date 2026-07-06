@@ -15,6 +15,8 @@ interface ActionProps {
 interface EmptyStateProps {
   illustration?: React.ReactNode;
   illustrationPreset?: StateIllustrationPreset;
+  /** Fixed illustration box size. Defaults to `sm` when compact, otherwise `md`. */
+  illustrationSize?: "sm" | "md";
   title: string;
   description?: string;
   action?: ActionProps;
@@ -53,9 +55,15 @@ function ActionButton({
   );
 }
 
+const ILLUSTRATION_BOX_CLASS: Record<"sm" | "md", string> = {
+  sm: "mb-2 h-20 w-20",
+  md: "mb-5 h-28 w-28",
+};
+
 export function EmptyState({
   illustration,
   illustrationPreset,
+  illustrationSize,
   title,
   description,
   action,
@@ -63,9 +71,11 @@ export function EmptyState({
   className,
   compact = false,
 }: EmptyStateProps) {
+  const size = illustrationSize ?? (compact ? "sm" : "md");
+
   const visual = illustration ?? (
     illustrationPreset ? (
-      <StateIllustration preset={illustrationPreset} className={compact ? "h-20 w-20" : "h-28 w-28"} />
+      <StateIllustration preset={illustrationPreset} className="h-full w-full" />
     ) : null
   );
 
@@ -82,9 +92,9 @@ export function EmptyState({
       {visual ? (
         <div
           className={cn(
-            compact
-              ? "mb-2 [&_img]:max-h-20 [&_img]:max-w-20"
-              : "mb-5 [&_img]:max-h-32 [&_img]:max-w-32"
+            "flex items-center justify-center shrink-0",
+            ILLUSTRATION_BOX_CLASS[size],
+            "[&_img]:h-full [&_img]:w-full [&_img]:object-contain"
           )}
         >
           {visual}
