@@ -38,6 +38,9 @@ export interface SupportTicket {
   mergedIntoTicketId: number | null;
   createdBy: string;
   slaDeadline: Date | null;
+  firstResponseDueAt: Date | null;
+  firstRespondedAt: Date | null;
+  slaPausedAt: Date | null;
   resolvedAt: Date | null;
   closedAt: Date | null;
   client: { id: number; name: string } | null;
