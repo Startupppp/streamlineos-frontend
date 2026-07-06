@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
 import { KbImageIcon, KbXIcon } from "@/features/knowledge-base/lib/kb-icons";
+import { uploadKbMedia } from "@/features/knowledge-base/lib/upload-kb-media";
+import { getApiError } from "@/lib/api-client";
 
 const GRADIENT_PRESETS = [
   { key: "slate", css: "linear-gradient(135deg, #1e293b 0%, #334155 100%)" },
@@ -64,7 +66,8 @@ export default function PageCover({
   onCoverChange,
 }: PageCoverProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [urlInput, setUrlInput] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleGradientSelect(e: React.MouseEvent<HTMLButtonElement>) {
     const key = e.currentTarget.dataset.gradientKey;
@@ -73,26 +76,63 @@ export default function PageCover({
     setPickerOpen(false);
   }
 
-  function handleApplyUrl() {
-    if (!urlInput.trim()) return;
-    onCoverChange(urlInput.trim());
-    setUrlInput("");
-    setPickerOpen(false);
-  }
-
   function handleRemoveCover() {
     onCoverChange(null);
     setPickerOpen(false);
   }
 
-  function handleUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setUrlInput(e.target.value);
+  function handlePickImage() {
+    fileInputRef.current?.click();
   }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const result = await uploadKbMedia(file);
+      onCoverChange(result.url);
+      setPickerOpen(false);
+    } catch (error) {
+      toast.error("Failed to upload cover", { description: getApiError(error) });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  const fileInput = (
+    <input
+      ref={fileInputRef}
+      type="file"
+      accept="image/jpeg,image/png,image/gif,image/webp"
+      className="hidden"
+      onChange={handleFileChange}
+    />
+  );
+
+  const picker = (
+    <>
+      <p className="text-xs font-semibold mb-2">Choose gradient</p>
+      <GradientPicker onSelect={handleGradientSelect} />
+      <p className="text-xs font-semibold mb-1">Or upload an image</p>
+      <Button
+        size="sm"
+        onClick={handlePickImage}
+        disabled={uploading}
+        className="h-7 text-xs w-full"
+      >
+        <KbImageIcon className="h-3 w-3 mr-1" />
+        {uploading ? "Uploading…" : "Upload image"}
+      </Button>
+    </>
+  );
 
   if (!coverImage) {
     if (!isEditable) return null;
     return (
       <div className="relative flex h-10 w-full items-center px-3">
+        {fileInput}
         <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -104,22 +144,7 @@ export default function PageCover({
               Add cover
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-72 p-4">
-            <p className="text-xs font-semibold mb-2">Choose gradient</p>
-            <GradientPicker onSelect={handleGradientSelect} />
-            <p className="text-xs font-semibold mb-1">Or image URL</p>
-            <div className="flex gap-2">
-              <Input
-                value={urlInput}
-                onChange={handleUrlChange}
-                placeholder="https://â€¦"
-                className="h-7 text-xs"
-              />
-              <Button size="sm" onClick={handleApplyUrl} className="h-7 text-xs">
-                Apply
-              </Button>
-            </div>
-          </PopoverContent>
+          <PopoverContent className="w-72 p-4">{picker}</PopoverContent>
         </Popover>
       </div>
     );
@@ -129,28 +154,14 @@ export default function PageCover({
     <div className="group relative h-40 w-full" style={getCoverStyle(coverImage)}>
       {isEditable && (
         <div className="absolute bottom-3 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          {fileInput}
           <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
             <PopoverTrigger asChild>
               <Button size="sm" variant="secondary" className="text-xs h-7">
                 Change cover
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-72 p-4">
-              <p className="text-xs font-semibold mb-2">Choose gradient</p>
-              <GradientPicker onSelect={handleGradientSelect} />
-              <p className="text-xs font-semibold mb-1">Or image URL</p>
-              <div className="flex gap-2">
-                <Input
-                  value={urlInput}
-                  onChange={handleUrlChange}
-                  placeholder="https://â€¦"
-                  className="h-7 text-xs"
-                />
-                <Button size="sm" onClick={handleApplyUrl} className="h-7 text-xs">
-                  Apply
-                </Button>
-              </div>
-            </PopoverContent>
+            <PopoverContent className="w-72 p-4">{picker}</PopoverContent>
           </Popover>
 
           <Button

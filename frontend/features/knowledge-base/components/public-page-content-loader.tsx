@@ -8,7 +8,7 @@ const PublicPageContent = dynamicImport(
 );
 
 interface PublicPageContentLoaderProps {
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown> | Record<string, unknown>[] | null;
 }
 
 export function PublicPageContentLoader({ content }: PublicPageContentLoaderProps) {

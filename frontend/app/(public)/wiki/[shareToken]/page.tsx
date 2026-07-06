@@ -39,7 +39,7 @@ type PublicWikiData = {
   title: string;
   icon: string | null;
   coverImage: string | null;
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown> | Record<string, unknown>[] | null;
   updatedAt: string;
 };
 
@@ -57,8 +57,9 @@ function extractData(raw: unknown): PublicWikiData | null {
     title: d.title,
     icon: typeof d.icon === "string" ? d.icon : null,
     coverImage: typeof d.coverImage === "string" ? d.coverImage : null,
-    content:
-      typeof d.content === "object" && d.content !== null && !Array.isArray(d.content)
+    content: Array.isArray(d.content)
+      ? (d.content as Record<string, unknown>[])
+      : typeof d.content === "object" && d.content !== null
         ? (d.content as Record<string, unknown>)
         : null,
     updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : new Date().toISOString(),
