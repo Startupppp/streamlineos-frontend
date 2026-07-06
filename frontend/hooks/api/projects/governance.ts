@@ -1,0 +1,136 @@
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+import type {
+  Risk, Decision,
+  CreateRiskInput, UpdateRiskInput,
+  CreateDecisionInput, UpdateDecisionInput,
+} from "@/types/projects";
+
+interface ListFilters {
+  status?: string;
+}
+
+export function useProjectRisks(projectId: number, filters?: ListFilters) {
+  const params: Record<string, string> = {};
+  if (filters?.status) params["status"] = filters.status;
+
+  return useQuery<Risk[]>({
+    queryKey: queryKeys.projects.risks.list(
+      projectId,
+      Object.keys(params).length > 0 ? params : undefined,
+    ),
+    queryFn: () => apiClient.get<Risk[]>(`/projects/${projectId}/risks`, params),
+    enabled: !!projectId,
+    staleTime: 60_000,
+  });
+}
+
+export function useRisk(projectId: number, id: number) {
+  return useQuery<Risk>({
+    queryKey: queryKeys.projects.risks.detail(projectId, id),
+    queryFn: () => apiClient.get<Risk>(`/projects/${projectId}/risks/${id}`),
+    enabled: !!projectId && !!id,
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateRisk(projectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", projectId, "risks", "create"],
+    mutationFn: (data: CreateRiskInput) =>
+      apiClient.post<Risk>(`/projects/${projectId}/risks`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.projects.risks.list(projectId) });
+    },
+  });
+}
+
+export function useUpdateRisk(projectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", projectId, "risks", "update"],
+    mutationFn: ({ id, ...data }: UpdateRiskInput & { id: number }) =>
+      apiClient.patch<Risk>(`/projects/${projectId}/risks/${id}`, data),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.projects.risks.list(projectId) });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.risks.detail(projectId, vars.id) });
+    },
+  });
+}
+
+export function useDeleteRisk(projectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", projectId, "risks", "delete"],
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/projects/${projectId}/risks/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.projects.risks.list(projectId) });
+    },
+  });
+}
+
+export function useProjectDecisions(projectId: number, filters?: ListFilters) {
+  const params: Record<string, string> = {};
+  if (filters?.status) params["status"] = filters.status;
+
+  return useQuery<Decision[]>({
+    queryKey: queryKeys.projects.decisions.list(
+      projectId,
+      Object.keys(params).length > 0 ? params : undefined,
+    ),
+    queryFn: () => apiClient.get<Decision[]>(`/projects/${projectId}/decisions`, params),
+    enabled: !!projectId,
+    staleTime: 60_000,
+  });
+}
+
+export function useDecision(projectId: number, id: number) {
+  return useQuery<Decision>({
+    queryKey: queryKeys.projects.decisions.detail(projectId, id),
+    queryFn: () => apiClient.get<Decision>(`/projects/${projectId}/decisions/${id}`),
+    enabled: !!projectId && !!id,
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateDecision(projectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", projectId, "decisions", "create"],
+    mutationFn: (data: CreateDecisionInput) =>
+      apiClient.post<Decision>(`/projects/${projectId}/decisions`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.projects.decisions.list(projectId) });
+    },
+  });
+}
+
+export function useUpdateDecision(projectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", projectId, "decisions", "update"],
+    mutationFn: ({ id, ...data }: UpdateDecisionInput & { id: number }) =>
+      apiClient.patch<Decision>(`/projects/${projectId}/decisions/${id}`, data),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.projects.decisions.list(projectId) });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.decisions.detail(projectId, vars.id) });
+    },
+  });
+}
+
+export function useDeleteDecision(projectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", projectId, "decisions", "delete"],
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/projects/${projectId}/decisions/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.projects.decisions.list(projectId) });
+    },
+  });
+}

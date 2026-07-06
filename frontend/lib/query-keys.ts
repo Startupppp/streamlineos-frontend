@@ -214,6 +214,14 @@ export const queryKeys = {
       list: (projectId: number, params?: Record<string, unknown>) => [...base, "projects", projectId, "approvals", params] as const,
       detail: (projectId: number, id: number) => [...base, "projects", projectId, "approvals", id] as const,
     },
+    risks: {
+      list: (projectId: number, params?: Record<string, unknown>) => [...base, "projects", projectId, "risks", params] as const,
+      detail: (projectId: number, id: number) => [...base, "projects", projectId, "risks", id] as const,
+    },
+    decisions: {
+      list: (projectId: number, params?: Record<string, unknown>) => [...base, "projects", projectId, "decisions", params] as const,
+      detail: (projectId: number, id: number) => [...base, "projects", projectId, "decisions", id] as const,
+    },
   },
 
   chat: {

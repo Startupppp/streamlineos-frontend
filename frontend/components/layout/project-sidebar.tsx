@@ -35,6 +35,8 @@ import {
   Globe,
   ClipboardCheck,
   Sparkles,
+  ShieldAlert,
+  Gavel,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -63,6 +65,8 @@ function useSidebarSections(baseUrl: string): NavSection[] {
   const canClientVisibility = useCan("projects:clientvisibility:manage");
   const canApprovals = useCan("projects:approvals:view");
   const canAI = useCan("projects:ai:use");
+  const canRisks = useCan("projects:risks:view");
+  const canDecisions = useCan("projects:decisions:view");
   return [
     {
       label: "Planning",
@@ -98,6 +102,13 @@ function useSidebarSections(baseUrl: string): NavSection[] {
       items: [
         ...(canChangerequests ? [{ label: "Change Requests", icon: FilePen, href: `${baseUrl}/change-requests` }] : []),
         ...(canClientVisibility ? [{ label: "Client Portal", icon: Globe, href: `${baseUrl}/client-portal` }] : []),
+      ],
+    },
+    {
+      label: "Governance",
+      items: [
+        ...(canRisks ? [{ label: "Risks", icon: ShieldAlert, href: `${baseUrl}/risks` }] : []),
+        ...(canDecisions ? [{ label: "Decisions", icon: Gavel, href: `${baseUrl}/decisions` }] : []),
       ],
     },
     {
