@@ -6,7 +6,7 @@ import { DollarSign, Layers, Eye } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   Select,
   SelectContent,
@@ -111,7 +111,7 @@ function LayersSheet({
         ) : error ? (
           <ErrorState compact />
         ) : layers.length === 0 ? (
-          <EmptyState
+          <InventoryEmptyState
             illustrationPreset="inventory"
             title="No cost layers"
             description="No stock layers recorded for this variant."
@@ -191,7 +191,7 @@ export function ValuationClient() {
   if (!canRead) {
     return (
       <PageWrapper title="Inventory Valuation">
-        <EmptyState
+        <InventoryEmptyState
           illustrationPreset="security"
           title="Access restricted"
           description="You don't have permission to view inventory valuation."
@@ -270,7 +270,7 @@ export function ValuationClient() {
       ) : error ? (
         <ErrorState onRetry={handleRetry} />
       ) : rows.length === 0 ? (
-        <EmptyState
+        <InventoryEmptyState
           illustrationPreset="inventory"
           title="No valuation data"
           description="Stock valuation data will appear here once inventory is received."

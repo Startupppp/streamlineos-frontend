@@ -5,7 +5,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { useAllOffers, type OfferListItem } from "@/hooks/api/hr/recruitment/offers";
@@ -72,7 +72,7 @@ export default function OffersPage() {
       badge={offers ? `${offers.length}` : undefined}
     >
       {!offers?.length ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyDocumentsIllustration />}
           title="No offers yet"
           description="Offers created from a candidate's profile will appear here."

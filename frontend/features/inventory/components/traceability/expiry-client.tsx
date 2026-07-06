@@ -6,7 +6,7 @@ import { Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   Select,
   SelectContent,
@@ -99,7 +99,7 @@ export function ExpiryClient() {
         />
       ) : items.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
-          <EmptyState
+          <InventoryEmptyState
             illustration={<EmptyReportIllustration />}
             title={`No stock expiring within ${days} days`}
             description="All tracked lots are within acceptable expiry windows for this period."

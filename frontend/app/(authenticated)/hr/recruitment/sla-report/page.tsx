@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, AlertTriangle, CheckCircle, TrendingUp, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmptyReportIllustration } from "@/components/illustrations";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
@@ -72,16 +74,13 @@ export default function SlaReportPage() {
           </Button>
         </div>
       ) : !data || data.stages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
-          <CheckCircle className="h-10 w-10 text-muted-foreground/30" />
-          <p className="text-sm font-medium text-muted-foreground">No SLA tracking data yet.</p>
-          <p className="text-xs text-muted-foreground">
-            SLA data is recorded as candidates move through recruitment stages.
-          </p>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/sla">Configure SLAs</Link>
-          </Button>
-        </div>
+        <RecruitmentEmptyState
+          illustration={<EmptyReportIllustration />}
+          title="No SLA tracking data yet"
+          description="SLA data is recorded as candidates move through recruitment stages."
+          action={{ label: "Configure SLAs", href: "/hr/recruitment/sla" }}
+          className="flex-1 border-0 bg-transparent shadow-none"
+        />
       ) : (
         <div className="space-y-6">
           <div>

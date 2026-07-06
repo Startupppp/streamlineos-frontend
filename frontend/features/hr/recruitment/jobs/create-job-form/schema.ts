@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  overviewWordCheck,
+  responsibilitiesWordCheck,
+  jobRequirementsWordCheck,
+  benefitsWordCheck,
+} from "./job-description-limits";
 
 export const NO_HIRING_FLOW = "none";
 
@@ -85,10 +91,31 @@ export const createJobFormSchema = z
     preferredSkills: z.array(z.string().min(1)).optional(),
     tags: z.array(z.string().min(1)).optional(),
 
-    overview: z.string().min(10, "Overview must be at least 10 characters").max(5000),
-    responsibilities: z.string().min(10, "Responsibilities must be at least 10 characters").max(5000),
-    jobRequirements: z.string().min(10, "Requirements must be at least 10 characters").max(5000),
-    benefits: z.string().max(5000).optional(),
+    overview: z
+      .string()
+      .min(1, "Overview is required")
+      .superRefine((v, ctx) => {
+        const result = overviewWordCheck(v);
+        if (result !== true) ctx.addIssue({ code: "custom", message: result });
+      }),
+    responsibilities: z
+      .string()
+      .min(1, "Responsibilities are required")
+      .superRefine((v, ctx) => {
+        const result = responsibilitiesWordCheck(v);
+        if (result !== true) ctx.addIssue({ code: "custom", message: result });
+      }),
+    jobRequirements: z
+      .string()
+      .min(1, "Requirements are required")
+      .superRefine((v, ctx) => {
+        const result = jobRequirementsWordCheck(v);
+        if (result !== true) ctx.addIssue({ code: "custom", message: result });
+      }),
+    benefits: z.string().superRefine((v, ctx) => {
+      const result = benefitsWordCheck(v);
+      if (result !== true) ctx.addIssue({ code: "custom", message: result });
+    }).optional(),
 
     hiringManager: z.string().min(2, "Hiring Manager is required").max(100),
     hiringFlowId: z.string().optional(),

@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { toast } from "sonner";
 import { Plus, Gift } from "lucide-react";
 
@@ -122,7 +122,7 @@ export function ReferralsTab({ candidateId }: Props) {
       </div>
 
       {!referrals?.length ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustrationPreset="leads"
           title="No referrals recorded"
           description="Record who referred this candidate to track bonus eligibility."

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -283,7 +283,7 @@ function ChannelsContent() {
             ))}
           </motion.div>
         ) : (
-          <EmptyState
+          <InventoryEmptyState
             illustration={<EmptyOrdersIllustration />}
             title="No channels yet"
             description="Create your first sales or fulfilment channel to start publishing stock."

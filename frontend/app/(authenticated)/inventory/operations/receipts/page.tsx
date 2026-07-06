@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVendors } from "@/hooks/api/inventory/vendors";
@@ -138,7 +138,7 @@ export default function ReceiptsPage() {
           query.error ? (
             <ErrorState description={query.error.message} onRetry={handleRetry} compact />
           ) : (
-            <EmptyState
+            <InventoryEmptyState
               title="No receipts found"
               description="Goods receipt notes will appear here after receiving POs."
               compact

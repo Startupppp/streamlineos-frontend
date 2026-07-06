@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { useQualityInspections } from "@/hooks/api/inventory/quality";
 import type { Inspection } from "@/hooks/api/inventory/quality";
@@ -197,7 +197,7 @@ function InspectionsPageInner() {
             onRowClick={handleRowClick}
             isLoading={inspectionsQuery.isLoading}
             emptyState={
-              <EmptyState
+              <InventoryEmptyState
                 illustration={<EmptyOrdersIllustration />}
                 title={hasFilters ? "No inspections found" : "No inspections yet"}
                 description={hasFilters ? "Try adjusting your filters." : "Create your first quality inspection."}

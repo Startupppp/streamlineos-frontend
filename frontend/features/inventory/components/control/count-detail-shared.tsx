@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -254,7 +254,7 @@ export function CountDetailShared({
           getRowKey={(row) => row.id}
           isLoading={isLoading}
           emptyState={
-            <EmptyState
+            <InventoryEmptyState
               compact
               title="No lines"
               description={`No inventory lines are assigned to this ${shortNoun.toLowerCase()}.`}

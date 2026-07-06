@@ -8,7 +8,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { useHrDepartments } from "@/hooks/api/hr";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -374,7 +374,7 @@ export default function HeadcountPage() {
       }
     >
       {requests.length === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyTeamIllustration />}
           title="No headcount requests"
           description="Submit a request to start the hiring approval process."

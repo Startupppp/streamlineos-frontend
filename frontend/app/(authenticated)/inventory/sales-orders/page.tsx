@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { SO_STATUS_BADGE, SO_STATUS_LABEL, type SoStatus } from "@/features/inventory/lib";
 import {
@@ -245,7 +245,7 @@ function SalesOrdersListContent() {
   );
 
   const emptyState = isFiltered ? (
-    <EmptyState
+    <InventoryEmptyState
       illustration={<EmptySearchIllustration />}
       title="No matching orders"
       description="No sales orders match your current filters."
@@ -253,7 +253,7 @@ function SalesOrdersListContent() {
       className="border-0 bg-transparent min-h-[40vh]"
     />
   ) : (
-    <EmptyState
+    <InventoryEmptyState
       illustration={<EmptyOrdersIllustration />}
       title="No sales orders yet"
       description="Create a sales order to start fulfilling customer requests."

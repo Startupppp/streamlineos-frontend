@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useProduct, useStockLevels } from "@/hooks/api/inventory";
 import { ProductEditForm } from "@/features/inventory/components/product-edit-form";
 import {
@@ -312,7 +312,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <CardContent className="p-0">
               {variants.length === 0 ? (
                 <div className="px-4 pb-4">
-                  <EmptyState
+                  <InventoryEmptyState
                     compact
                     title="No variants"
                     description="Add variants like size or colour to this product."
@@ -380,7 +380,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </div>
               ) : stockItems.length === 0 ? (
                 <div className="px-4 pb-4">
-                  <EmptyState
+                  <InventoryEmptyState
                     compact
                     title="No stock records"
                     description="Stock will appear here once inventory is adjusted."

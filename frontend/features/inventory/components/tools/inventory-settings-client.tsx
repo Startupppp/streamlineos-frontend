@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
@@ -67,7 +67,7 @@ export function InventorySettingsClient() {
   if (!canManage) {
     return (
       <PageWrapper eyebrow="Inventory" title="Settings" subtitle="">
-        <EmptyState
+        <InventoryEmptyState
           title="Access Denied"
           description="You don't have permission to manage inventory settings."
         />

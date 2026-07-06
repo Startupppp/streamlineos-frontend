@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SkeletonTable, ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useStockSummary, type StockSummaryRow } from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
@@ -195,7 +195,7 @@ function StockSummaryContent() {
       )}
 
       {!query.isLoading && !query.error && rows.length === 0 && (
-        <EmptyState
+        <InventoryEmptyState
           illustration={<EmptyReportIllustration />}
           title="No stock data"
           description="No products have stock levels recorded yet."
@@ -206,7 +206,7 @@ function StockSummaryContent() {
       {!query.isLoading && !query.error && rows.length > 0 && (
         <>
           {filtered.length === 0 ? (
-            <EmptyState
+            <InventoryEmptyState
               illustration={<EmptySearchIllustration />}
               title="No results"
               description="No stock records match your search."

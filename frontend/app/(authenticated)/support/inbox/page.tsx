@@ -21,11 +21,27 @@ import { ErrorState } from "@/components/shared/error-state";
 import { TicketList } from "@/features/support/inbox/ticket-list";
 import { TicketDetailSheet } from "@/features/support/inbox/ticket-detail-sheet";
 import { CreateTicketDialog } from "@/features/support/inbox/create-ticket-dialog";
+import { QueueViewRail } from "@/features/support/inbox/queue-view-rail";
+import { SupportAblyProvider } from "@/features/support/inbox/support-ably-provider";
+import { useInboxShortcuts } from "@/features/support/inbox/use-inbox-shortcuts";
+
+const TICKET_STATUSES: readonly SupportTicketStatus[] = ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"];
+const TICKET_PRIORITIES: readonly SupportTicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+
+function isTicketStatus(v: string): v is SupportTicketStatus {
+  return (TICKET_STATUSES as readonly string[]).includes(v);
+}
+
+function isTicketPriority(v: string): v is SupportTicketPriority {
+  return (TICKET_PRIORITIES as readonly string[]).includes(v);
+}
 
 export default function SupportInboxPage() {
   return (
     <DashboardGate permission="dashboard:support:view">
-      <InboxContent />
+      <SupportAblyProvider>
+        <InboxContent />
+      </SupportAblyProvider>
     </DashboardGate>
   );
 }
@@ -40,6 +56,7 @@ function InboxContent() {
 
   const statusFilter = searchParams.get("status") || "all";
   const priorityFilter = searchParams.get("priority") || "all";
+  const queueIdFilter = searchParams.get("queueId");
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -53,26 +70,22 @@ function InboxContent() {
     [searchParams, router, pathname]
   );
 
-  const TICKET_STATUSES: readonly SupportTicketStatus[] = ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"];
-  const TICKET_PRIORITIES: readonly SupportTicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
-
-  function isTicketStatus(v: string): v is SupportTicketStatus {
-    return (TICKET_STATUSES as readonly string[]).includes(v);
-  }
-
-  function isTicketPriority(v: string): v is SupportTicketPriority {
-    return (TICKET_PRIORITIES as readonly string[]).includes(v);
-  }
-
   const { data: ticketsData, isLoading, isError, refetch } = useSupportTickets({
     ...(isTicketStatus(statusFilter) ? { status: statusFilter } : {}),
     ...(isTicketPriority(priorityFilter) ? { priority: priorityFilter } : {}),
+    ...(queueIdFilter ? { queueId: Number(queueIdFilter) } : {}),
   });
   const { data: stats, isLoading: statsLoading } = useSupportStats();
 
   const tickets = ticketsData?.items ?? [];
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  useInboxShortcuts({
+    tickets,
+    selectedTicketId,
+    onSelect: setSelectedTicketId,
+    onCreateNew: handleOpenCreate,
+  });
   const handleStatusFilter = useCallback(
     (v: string) => updateFilter("status", v),
     [updateFilter]
@@ -82,6 +95,27 @@ function InboxContent() {
     [updateFilter]
   );
   const handleBackFromTicket = useCallback(() => setSelectedTicketId(null), []);
+
+  const handleSelectQueue = useCallback(
+    (queueId: number | null) => updateFilter("queueId", queueId ? String(queueId) : "all"),
+    [updateFilter],
+  );
+
+  const handleApplyView = useCallback(
+    (filter: Record<string, unknown>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (typeof filter.status === "string" && isTicketStatus(filter.status)) {
+        params.set("status", filter.status);
+      }
+      if (typeof filter.priority === "string" && isTicketPriority(filter.priority)) {
+        params.set("priority", filter.priority);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
 
   function handleRetry() {
     void refetch();
@@ -137,6 +171,14 @@ function InboxContent() {
         noInternalScroll
         contentClassName="flex overflow-hidden !py-0 !px-0"
       >
+        <div className={cn("hidden md:flex", selectedTicketId && "md:flex")}>
+          <QueueViewRail
+            activeQueueId={queueIdFilter ? Number(queueIdFilter) : null}
+            onSelectQueue={handleSelectQueue}
+            onApplyView={handleApplyView}
+          />
+        </div>
+
         {isError ? (
           <div className="flex-1 flex items-center justify-center">
             <ErrorState

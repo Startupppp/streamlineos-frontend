@@ -29,7 +29,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -350,7 +350,7 @@ export default function OfferTemplatesPage() {
       actions={pageActions}
     >
       {templates.length === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyDocumentsIllustration />}
           title="No offer templates"
           description="Create a reusable offer letter template to speed up your hiring process."

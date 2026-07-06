@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EditVendorSheet } from "@/features/inventory/components/edit-vendor-sheet";
 import { useVendor, useVendorPurchaseOrders } from "@/hooks/api/inventory";
 import { useVendorPerformance, useToggleVendorActive } from "@/hooks/api/inventory/vendors";
@@ -237,7 +237,7 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
             )}
 
             {!posQuery.isLoading && !posQuery.error && poItems.length === 0 && (
-              <EmptyState
+              <InventoryEmptyState
                 illustrationPreset="inventory"
                 title="No purchase orders"
                 description="Create a purchase order for this vendor."

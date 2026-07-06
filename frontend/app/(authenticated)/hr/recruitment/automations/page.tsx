@@ -17,7 +17,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { LoadingState } from "@/components/shared/loading-state";
 import { toast } from "sonner";
@@ -229,7 +229,7 @@ export default function RecruitmentAutomationsPage() {
         {isLoading ? (
         <LoadingState variant="list" rows={3} />
       ) : !automations?.length ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyActivityIllustration />}
           title="No automations yet"
           description="Create automations to trigger actions when pipeline events occur."

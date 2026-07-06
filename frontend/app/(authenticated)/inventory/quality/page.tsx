@@ -8,7 +8,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { useQualityInspections, useQualityHolds, useRecalls } from "@/hooks/api/inventory/quality";
 import type { Inspection } from "@/hooks/api/inventory/quality";
@@ -143,7 +143,7 @@ function QualityHubInner() {
             getRowKey={(r) => r.id}
             isLoading={recentQuery.isLoading}
             emptyState={
-              <EmptyState
+              <InventoryEmptyState
                 illustration={<EmptyOrdersIllustration />}
                 title="No inspections yet"
                 description="Quality inspections will appear here once created."

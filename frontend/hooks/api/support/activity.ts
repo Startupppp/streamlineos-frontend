@@ -12,7 +12,9 @@ export type SupportActivityAction =
   | "replied"
   | "internal_note"
   | "resolved"
-  | "reopened";
+  | "reopened"
+  | "merged"
+  | "linked";
 
 export interface SupportActivityEntry {
   id: number;

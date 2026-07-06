@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Settings2, ShoppingCart } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { SkeletonTable, ErrorState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -185,7 +185,7 @@ export function ReplenishmentClient() {
       ) : error ? (
         <ErrorState onRetry={handleRetry} />
       ) : suggestions.length === 0 ? (
-        <EmptyState
+        <InventoryEmptyState
           illustrationPreset="inventory"
           title="No replenishment needed"
           description="All stock levels are above minimum thresholds."

@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -581,7 +581,7 @@ export default function ReportsPage() {
 
         <div>
           {!result && !generate.isPending && (
-            <EmptyState
+            <RecruitmentEmptyState
               illustration={<EmptyLeaderboardIllustration />}
               title="No report generated yet"
               description="Configure the report builder on the left and click Generate Report."

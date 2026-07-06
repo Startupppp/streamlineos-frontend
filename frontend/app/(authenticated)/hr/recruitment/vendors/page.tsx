@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -92,7 +92,7 @@ export default function VendorsPage() {
       }
     >
       {vendors.length === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyTeamIllustration />}
           title="No vendors yet"
           description="Add a recruitment agency or staffing partner to track submissions and placements."

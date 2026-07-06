@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   Select,
   SelectContent,
@@ -298,14 +298,14 @@ export default function WarehousesPage() {
           ))}
         </motion.div>
       ) : hasActiveFilters ? (
-        <EmptyState
+        <InventoryEmptyState
           illustration={<EmptySearchIllustration />}
           title="No warehouses found"
           description="No warehouses match your current filters."
           action={{ label: "Clear filters", onClick: clearFilters }}
         />
       ) : (
-        <EmptyState
+        <InventoryEmptyState
           illustration={<EmptyWarehouseIllustration />}
           title="No warehouses yet"
           description="Add your first warehouse to start managing stock locations."

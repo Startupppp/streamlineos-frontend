@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import type { LotMovement } from "@/hooks/api/inventory/traceability";
 
 const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
@@ -20,7 +20,7 @@ interface MovementHistoryTableProps {
 export function MovementHistoryTable({ movements }: MovementHistoryTableProps) {
   if (movements.length === 0) {
     return (
-      <EmptyState
+      <InventoryEmptyState
         compact
         title="No movements recorded"
         description="Movement history will appear here once transactions occur."

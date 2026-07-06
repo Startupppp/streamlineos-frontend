@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -177,7 +177,7 @@ export default function WarehouseDetailPage({
         eyebrow="Operations · Inventory"
         backHref="/inventory/warehouses"
       >
-        <EmptyState
+        <InventoryEmptyState
           illustration={<EmptyWarehouseIllustration />}
           title="Warehouse not found"
           description="This warehouse does not exist or you do not have access."
@@ -231,7 +231,7 @@ export default function WarehouseDetailPage({
 
         <TabsContent value="locations">
           {locations.length === 0 ? (
-            <EmptyState
+            <InventoryEmptyState
               illustration={<EmptyWarehouseIllustration />}
               title="No locations yet"
               description="Add zones, aisles, racks, and bins to organize stock within this warehouse."

@@ -26,6 +26,8 @@ import { basicsSchema } from "../project-create-schema";
 import type { BasicsValues } from "../project-create-schema";
 import type { StepSharedProps } from "../use-project-create";
 
+const NONE_SENTINEL = "__none__";
+
 export type BasicsHandle = {
   validate: () => Promise<boolean>;
 };
@@ -86,11 +88,11 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
     }
 
     function handleManagerChange(value: string) {
-      form.setValue("managerId", value);
+      form.setValue("managerId", value === NONE_SENTINEL ? undefined : value);
     }
 
     function handleClientChange(value: string) {
-      form.setValue("clientId", value);
+      form.setValue("clientId", value === NONE_SENTINEL ? undefined : value);
     }
 
     return (
@@ -162,14 +164,17 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                   Project Manager{" "}
                   <span className="text-muted-foreground font-normal">(Optional)</span>
                 </FormLabel>
-                <Select value={field.value} onValueChange={handleManagerChange}>
+                <Select
+                  value={field.value || NONE_SENTINEL}
+                  onValueChange={handleManagerChange}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select manager…" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No manager</SelectItem>
+                    <SelectItem value={NONE_SENTINEL}>No manager</SelectItem>
                     {members.map((m) => (
                       <SelectItem key={m.userId} value={m.userId}>
                         {m.name ?? m.email}
@@ -191,14 +196,17 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                   Client{" "}
                   <span className="text-muted-foreground font-normal">(Optional)</span>
                 </FormLabel>
-                <Select value={field.value} onValueChange={handleClientChange}>
+                <Select
+                  value={field.value || NONE_SENTINEL}
+                  onValueChange={handleClientChange}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select client…" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No client</SelectItem>
+                    <SelectItem value={NONE_SENTINEL}>No client</SelectItem>
                     {clientList.map((c) => (
                       <SelectItem key={c.id} value={String(c.id)}>
                         {c.name}

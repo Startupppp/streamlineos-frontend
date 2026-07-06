@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { X, CheckCircle2, XCircle, Clock, CalendarClock, Users, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
@@ -292,14 +293,14 @@ export function InterviewList() {
                 <TableBody>
                   {!interviews?.length ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                        <div className="flex flex-col items-center justify-center gap-3 py-4">
-                          <EmptyCalendarIllustration className="h-32 w-32 opacity-90" />
-                          <div>
-                            <p className="text-sm font-medium text-foreground">No interviews scheduled</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">Schedule interviews to track candidate progress</p>
-                          </div>
-                        </div>
+                      <TableCell colSpan={7} className="p-0">
+                        <RecruitmentEmptyState
+                          illustration={<EmptyCalendarIllustration />}
+                          title="No interviews scheduled"
+                          description="Schedule interviews to track candidate progress"
+                          compact
+                          className="border-0 bg-transparent shadow-none"
+                        />
                       </TableCell>
                     </TableRow>
                   ) : (

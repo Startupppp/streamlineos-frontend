@@ -20,7 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -329,7 +329,7 @@ export default function TransfersPage() {
         />
       ) : transfers.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
-          <EmptyState
+          <InventoryEmptyState
             illustration={hasActiveFilters ? <EmptySearchIllustration /> : <EmptyTransferIllustration />}
             title={hasActiveFilters ? "No results" : "No transfers found"}
             description={

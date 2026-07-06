@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { SkeletonTable, ErrorState } from "@/components/shared";
 import { useWarehouseStock } from "@/hooks/api/inventory/warehouses";
 import type { WarehouseStockRow } from "@/types/inventory";
@@ -111,7 +111,7 @@ export function WarehouseStockTab({ warehouseId }: WarehouseStockTabProps) {
       columns={columns}
       getRowKey={(row) => `${row.locationId}-${row.productVariantId}`}
       emptyState={
-        <EmptyState
+        <InventoryEmptyState
           title="No stock in this warehouse"
           description="Stock will appear here once goods are received into this warehouse."
           compact

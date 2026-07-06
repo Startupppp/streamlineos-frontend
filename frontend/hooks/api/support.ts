@@ -23,6 +23,7 @@ interface SupportFilters {
   status?: SupportTicketStatus;
   priority?: SupportTicketPriority;
   assigneeId?: string;
+  queueId?: number;
   page?: number;
   limit?: number;
 }
@@ -40,6 +41,13 @@ interface UpdateTicketInput {
   id: number;
   status?: SupportTicketStatus;
   assigneeId?: string;
+  queueId?: number | null;
+  expectedUpdatedAt?: string;
+}
+
+interface UpdateTicketResult {
+  success: boolean;
+  updatedAt: string;
 }
 
 interface AddMessageInput {
@@ -63,6 +71,7 @@ export const useSupportTickets = (
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.priority ? { priority: filters.priority } : {}),
         ...(filters?.assigneeId ? { assigneeId: filters.assigneeId } : {}),
+        ...(filters?.queueId ? { queueId: String(filters.queueId) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
       }),
@@ -99,9 +108,9 @@ export const useCreateSupportTicket = () => {
 
 export const useUpdateSupportTicket = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, UpdateTicketInput>({
+  return useMutation<UpdateTicketResult, Error, UpdateTicketInput>({
     mutationFn: ({ id, ...data }) =>
-      apiClient.patch<{ success: boolean }>(`/support/${id}`, data),
+      apiClient.patch<UpdateTicketResult>(`/support/${id}`, data),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.support.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.support.detail(vars.id) });

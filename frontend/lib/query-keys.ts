@@ -665,6 +665,26 @@ export const queryKeys = {
     list: () => [...base, "supportRouting", "list"] as const,
   },
 
+  supportQueues: {
+    all: [...base, "supportQueues"] as const,
+    list: () => [...base, "supportQueues", "list"] as const,
+  },
+
+  supportViews: {
+    all: [...base, "supportViews"] as const,
+    list: () => [...base, "supportViews", "list"] as const,
+  },
+
+  supportTags: {
+    all: [...base, "supportTags"] as const,
+    list: () => [...base, "supportTags", "list"] as const,
+  },
+
+  supportWatchers: {
+    all: [...base, "supportWatchers"] as const,
+    list: (ticketId: number) => [...base, "supportWatchers", "list", ticketId] as const,
+  },
+
   webhooks: {
     all: [...base, "webhooks"] as const,
     list: () => [...base, "webhooks", "list"] as const,

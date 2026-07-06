@@ -11,6 +11,8 @@ import {
   MessageSquare,
   Lock,
   PlusCircle,
+  GitMerge,
+  Link2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,6 +38,8 @@ const ACTION_ICONS: Record<SupportActivityAction, LucideIcon> = {
   internal_note: Lock,
   resolved: CheckCircle2,
   reopened: RotateCcw,
+  merged: GitMerge,
+  linked: Link2,
 };
 
 function describeChange(entry: SupportActivityEntry) {

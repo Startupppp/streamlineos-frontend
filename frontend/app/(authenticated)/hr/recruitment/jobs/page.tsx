@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import type { JobPostingStatus } from "@/types/hr";
 import { EmptyPersonIllustration } from "@/components/illustrations";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
@@ -258,18 +259,13 @@ export default function JobPostingsPage() {
             <Button size="sm" variant="outline" onClick={() => void refetch()}>Try again</Button>
           </div>
         ) : !jobs?.length ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-            <EmptyPersonIllustration className="h-28 w-28 opacity-90" />
-            <div>
-              <p className="text-sm font-semibold text-foreground">No job postings yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Create your first job posting to start hiring</p>
-            </div>
-            <Button size="sm" asChild>
-              <Link href="/hr/recruitment/jobs/new">
-                <Plus className="mr-1.5 h-4 w-4" /> New Job Posting
-              </Link>
-            </Button>
-          </div>
+          <RecruitmentEmptyState
+            illustration={<EmptyPersonIllustration />}
+            title="No job postings yet"
+            description="Create your first job posting to start hiring"
+            action={{ label: "New Job Posting", href: "/hr/recruitment/jobs/new" }}
+            className="border-0 bg-transparent shadow-none"
+          />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {jobs.map((job) => {

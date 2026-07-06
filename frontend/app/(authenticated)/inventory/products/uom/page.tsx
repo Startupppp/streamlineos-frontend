@@ -38,7 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useUom, useCreateUom } from "@/hooks/api/inventory";
 
 const uomSchema = z.object({
@@ -308,7 +308,7 @@ function UomPageInner() {
             onRetry={handleRetry}
           />
         ) : filteredUom.length === 0 ? (
-          <EmptyState
+          <InventoryEmptyState
             illustration={
               hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
             }

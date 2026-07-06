@@ -17,6 +17,8 @@ import {
 import { ChevronLeft, Clock, TrendingUp, UserCheck, AlertCircle, Users } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
+import { EmptyLeaderboardIllustration } from "@/components/illustrations";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 
 function getSpeedLabel(hours: number | null): { label: string; color: string } {
   if (hours === null) return { label: "—", color: "text-muted-foreground" };
@@ -165,14 +167,14 @@ export default function InterviewerPerformancePage() {
                 </TableRow>
               ) : stats.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6}>
-                    <div className="flex flex-col items-center justify-center gap-3 py-12">
-                      <Users className="h-8 w-8 text-muted-foreground/40" />
-                      <p className="text-sm text-muted-foreground">No scorecard data for the selected period.</p>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href="/hr/recruitment/interviews">View Interviews</Link>
-                      </Button>
-                    </div>
+                  <TableCell colSpan={6} className="p-0">
+                    <RecruitmentEmptyState
+                      illustration={<EmptyLeaderboardIllustration />}
+                      title="No scorecard data for the selected period"
+                      action={{ label: "View Interviews", href: "/hr/recruitment/interviews" }}
+                      compact
+                      className="border-0 bg-transparent shadow-none"
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

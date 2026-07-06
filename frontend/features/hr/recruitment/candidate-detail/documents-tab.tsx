@@ -15,7 +15,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 import { useRolloutDocuments, type RolloutDocumentRecord } from "@/hooks/api/hr/recruitment";
@@ -193,8 +193,8 @@ export function DocumentsTab({
       )}
 
       {list.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyDocumentsIllustration className="h-24 w-24" />}
+        <RecruitmentEmptyState
+          illustration={<EmptyDocumentsIllustration />}
           title="No documents yet"
           description="Generate and send offer documents to this candidate."
           action={{ label: "Generate Offer", onClick: handleGenerateOffer }}

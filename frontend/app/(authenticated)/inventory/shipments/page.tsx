@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState, AppDialog } from "@/components/shared";
 import { ShipmentDetailSheet } from "@/features/inventory/components/shipping/shipment-detail-sheet";
 import {
@@ -239,7 +239,7 @@ function ShipmentsPageInner() {
             isLoading={shipmentsQuery.isLoading}
             onRowClick={handleRowClick}
             emptyState={
-              <EmptyState
+              <InventoryEmptyState
                 illustration={<EmptyOrdersIllustration />}
                 title="No shipments yet"
                 description="Create a shipment to track outbound deliveries."

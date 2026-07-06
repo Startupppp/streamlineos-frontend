@@ -18,7 +18,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared";
 import { EmptyProductsIllustration } from "@/components/illustrations";
@@ -107,7 +107,7 @@ function LowStockAlertSection() {
 
   if (items.length === 0) {
     return (
-      <EmptyState
+      <InventoryEmptyState
         compact
         title="All stock levels healthy"
         description="No items are currently at or below their reorder point."
@@ -191,7 +191,7 @@ export function InventoryDashboardClient() {
         subtitle="Track stock levels, movements, and reorder alerts."
         actions={ADD_PRODUCT_ACTION}
       >
-        <EmptyState
+        <InventoryEmptyState
           illustration={<EmptyProductsIllustration />}
           title="No inventory data yet"
           description="Add your first product to start tracking stock levels and movements."

@@ -14,8 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
-import { Plus, Search, XCircle, CheckSquare, GitCompare, Users, Upload } from "lucide-react";
+import { Plus, Search, XCircle, CheckSquare, GitCompare, Upload } from "lucide-react";
 import type { Candidate, CandidateStatus } from "@/types/hr";
+import { EmptyPersonIllustration, EmptySearchIllustration } from "@/components/illustrations";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CandidateComparisonDialog } from "@/components/hr/recruitment/candidate-comparison-dialog";
 import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
 import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
@@ -296,26 +298,23 @@ export default function CandidatesPage() {
             ))}
           </div>
         ) : filteredCandidates.length === 0 ? (
-          <div className="flex flex-col items-center justify-center flex-1 py-24 gap-4 text-center">
-            <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center">
-              <Users className="h-7 w-7 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">
-                {searchQuery ? "No candidates match your search" : "No candidates yet"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {searchQuery
-                  ? "Try a different search term or clear the filter"
-                  : "Add your first candidate to start building your pipeline"}
-              </p>
-            </div>
-            {!searchQuery && (
-              <Button size="sm" className="gap-1.5" onClick={handleOpenAddSheet}>
-                <Plus className="h-4 w-4" /> Add Candidate
-              </Button>
-            )}
-          </div>
+          <RecruitmentEmptyState
+            illustration={
+              searchQuery ? <EmptySearchIllustration /> : <EmptyPersonIllustration />
+            }
+            title={searchQuery ? "No candidates match your search" : "No candidates yet"}
+            description={
+              searchQuery
+                ? "Try a different search term or clear the filter"
+                : "Add your first candidate to start building your pipeline"
+            }
+            action={
+              searchQuery
+                ? undefined
+                : { label: "Add Candidate", onClick: handleOpenAddSheet }
+            }
+            className="flex-1 border-0 bg-transparent shadow-none"
+          />
         ) : (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {filteredCandidates.map((candidate) => (

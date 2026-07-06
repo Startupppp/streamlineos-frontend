@@ -6,7 +6,7 @@ import { Lock, Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Tooltip,
@@ -180,7 +180,7 @@ export function CostingClient() {
       ) : error ? (
         <ErrorState onRetry={handleRetry} />
       ) : rows.length === 0 ? (
-        <EmptyState
+        <InventoryEmptyState
           illustrationPreset="inventory"
           title="No products found"
           description={search ? "No products match your search." : "Add products to configure costing methods."}

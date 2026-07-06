@@ -8,7 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { CarrierSheet } from "@/features/inventory/components/shipping/carrier-sheet";
 import { useCarriers, type Carrier } from "@/hooks/api/inventory/shipping";
@@ -115,7 +115,7 @@ function CarriersPageInner() {
             isLoading={carriersQuery.isLoading}
             onRowClick={handleRowClick}
             emptyState={
-              <EmptyState
+              <InventoryEmptyState
                 illustration={<EmptyProductsIllustration />}
                 title="No carriers yet"
                 description="Add a carrier to assign tracking numbers to shipments."

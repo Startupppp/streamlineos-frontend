@@ -17,7 +17,7 @@ import {
 import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { toast } from "sonner";
 import { Plus, Users, Calendar, CheckCircle, Pencil, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
@@ -185,7 +185,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
       </div>
 
       {!sessions?.length ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustrationPreset="team"
           title="No calibration sessions yet"
           description="Schedule a calibration session to align your hiring team on a decision."

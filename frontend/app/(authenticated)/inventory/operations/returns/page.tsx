@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -284,7 +284,7 @@ export default function ReturnsPage() {
               vendorQuery.error ? (
                 <ErrorState description={vendorQuery.error.message} onRetry={handleVendorRetry} compact />
               ) : (
-                <EmptyState title="No vendor returns" description="Create a vendor return to get started." compact />
+                <InventoryEmptyState title="No vendor returns" description="Create a vendor return to get started." compact />
               )
             }
             minWidth="580px"
@@ -307,7 +307,7 @@ export default function ReturnsPage() {
               customerQuery.error ? (
                 <ErrorState description={customerQuery.error.message} onRetry={handleCustomerRetry} compact />
               ) : (
-                <EmptyState title="No customer returns" description="Create a customer return to get started." compact />
+                <InventoryEmptyState title="No customer returns" description="Create a customer return to get started." compact />
               )
             }
             minWidth="580px"

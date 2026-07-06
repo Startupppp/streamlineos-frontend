@@ -8,7 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   Select,
   SelectContent,
@@ -125,7 +125,7 @@ export function SerialsClient() {
         />
       ) : items.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
-          <EmptyState
+          <InventoryEmptyState
             illustration={
               hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
             }

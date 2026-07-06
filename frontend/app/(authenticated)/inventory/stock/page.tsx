@@ -7,7 +7,7 @@ import { AlertTriangle, TrendingDown, CheckCircle2, Search } from "lucide-react"
 import { EmptyWarehouseIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import {
@@ -313,7 +313,7 @@ export default function StockLevelsPage() {
           />
         ) : rows.length === 0 ? (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
-            <EmptyState
+            <InventoryEmptyState
               illustration={
                 hasActiveFilters ? <EmptySearchIllustration /> : <EmptyWarehouseIllustration />
               }

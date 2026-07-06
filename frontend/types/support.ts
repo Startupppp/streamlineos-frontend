@@ -34,14 +34,20 @@ export interface SupportTicket {
   priority: SupportTicketPriority;
   status: SupportTicketStatus;
   assigneeId: string | null;
+  queueId: number | null;
+  mergedIntoTicketId: number | null;
   createdBy: string;
   slaDeadline: Date | null;
+  firstResponseDueAt: Date | null;
+  firstRespondedAt: Date | null;
+  slaPausedAt: Date | null;
   resolvedAt: Date | null;
   closedAt: Date | null;
   client: { id: number; name: string } | null;
   assignee: { id: string; name: string | null; image: string | null } | null;
   creator: { id: string; name: string | null } | null;
   messages?: SupportMessage[];
+  possibleDuplicateOf?: { id: number; title: string } | null;
   createdAt: Date;
   updatedAt: Date;
 }

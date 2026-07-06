@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   useCategories,
   useCreateCategory,
@@ -398,7 +398,7 @@ function CategoriesPageInner() {
             onRetry={handleRetry}
           />
         ) : filteredCategories.length === 0 ? (
-          <EmptyState
+          <InventoryEmptyState
             illustration={
               hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
             }

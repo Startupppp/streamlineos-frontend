@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription, SheetTrigger,
 } from "@/components/ui/sheet";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -115,7 +115,13 @@ function ManageReferrersSheet() {
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)
           ) : referrers.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-6 text-center">No external referrers registered yet.</p>
+            <RecruitmentEmptyState
+              illustration={<EmptyTeamIllustration />}
+              title="No external referrers yet"
+              description="Registered referral partners will appear here."
+              compact
+              className="border-0 bg-transparent shadow-none"
+            />
           ) : (
             referrers.map((r) => <ReferrerRow key={r.id} id={r.id} name={r.name} email={r.email} status={r.status} referralCount={r.referralCount} />)
           )}
@@ -263,7 +269,7 @@ export function ExternalReferralsTab() {
       </div>
 
       {referrals.length === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyTeamIllustration />}
           title="No external referrals yet"
           description="Candidates referred by non-employees through your public referral portal will appear here."

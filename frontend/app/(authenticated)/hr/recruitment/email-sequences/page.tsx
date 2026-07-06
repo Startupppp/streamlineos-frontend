@@ -23,7 +23,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -410,7 +410,7 @@ export default function EmailSequencesPage() {
   return (
     <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns to nurture candidates at each pipeline stage." actions={pageActions}>
       {sequences.length === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyMailIllustration />}
           title="No email sequences"
           description="Create your first drip campaign to automatically follow up with candidates."

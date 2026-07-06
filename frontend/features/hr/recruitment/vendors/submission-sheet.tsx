@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getTodayString } from "@/lib/date-utils";
 import { Plus } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import {
   useVendorSubmissions,
   useCreateVendorSubmission,
@@ -167,7 +167,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)
           ) : submissions.length === 0 ? (
-            <EmptyState
+            <RecruitmentEmptyState
               illustrationPreset="person"
               title="No submissions yet"
               className="border-0 bg-transparent shadow-none"
