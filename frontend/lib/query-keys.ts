@@ -871,6 +871,7 @@ export const queryKeys = {
     reportsOverview: (params?: Record<string, unknown>) => [...base, "timesheets", "reports", "overview", params] as const,
     settings: () => [...base, "timesheets", "settings"] as const,
     rates: () => [...base, "timesheets", "rates"] as const,
+    budgets: () => [...base, "timesheets", "budgets"] as const,
     audit: (params?: Record<string, unknown>) => [...base, "timesheets", "audit", params] as const,
   },
 

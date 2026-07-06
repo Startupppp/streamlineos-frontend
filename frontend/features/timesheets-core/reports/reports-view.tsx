@@ -22,6 +22,7 @@ import { EmptyReportIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
 import { OverviewReport } from "./overview-report";
+import { ProjectBudgetsTab } from "./project-budgets-tab";
 
 const REPORT_TABS = [
   { value: "overview", label: "Overview" },
@@ -178,12 +179,16 @@ export function ReportsView() {
 
           {REPORT_TABS.slice(1).map((tab) => (
             <TabsContent key={tab.value} value={tab.value} className="mt-3">
-              <EmptyState
-                illustrationPreset="chart"
-                title="Coming Soon"
-                description="This report is currently under development."
-                compact
-              />
+              {tab.value === "project-budgets" ? (
+                <ProjectBudgetsTab />
+              ) : (
+                <EmptyState
+                  illustrationPreset="chart"
+                  title="Coming Soon"
+                  description="This report is currently under development."
+                  compact
+                />
+              )}
             </TabsContent>
           ))}
         </Tabs>

@@ -253,6 +253,8 @@ export type PermissionKey =
   | "timesheets:rates:view"
   | "timesheets:rates:manage"
   | "timesheets:audit:view"
+  | "timesheets:budgets:view"
+  | "timesheets:budgets:manage"
   | "self:payroll"
   | "hr:bonuses:manage"
   | "hr:loans:view"

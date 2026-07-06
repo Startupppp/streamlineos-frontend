@@ -34,7 +34,7 @@ export interface Project {
   settings: ProjectSettings | null;
 }
 
-export interface ProjectStatusRecord {
+interface ProjectStatusRecord {
   id: number;
   orgId: string;
   projectId: number;
@@ -105,17 +105,6 @@ export interface Cycle {
   totalItems?: number;
   completedItems?: number;
   progress?: number;
-}
-
-export interface CycleWithStats extends Cycle {
-  stats?: {
-    total: number;
-    completed: number;
-    inProgress: number;
-    pending: number;
-    progress: number;
-  };
-  workItems?: Ticket[];
 }
 
 export interface Module {

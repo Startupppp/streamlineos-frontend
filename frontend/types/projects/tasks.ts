@@ -48,7 +48,7 @@ export interface TicketLabel {
   createdAt: string | Date | null;
 }
 
-export interface TicketLabelMapping {
+interface TicketLabelMapping {
   id: number;
   ticketId: number;
   labelId: number;

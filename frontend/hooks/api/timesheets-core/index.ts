@@ -6,4 +6,5 @@ export * from "./billing";
 export * from "./reports";
 export * from "./settings";
 export * from "./rates";
+export * from "./budgets";
 export * from "./audit";

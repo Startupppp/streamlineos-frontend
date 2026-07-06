@@ -30,6 +30,7 @@ export type WizardDraft = {
     timeTracking: boolean;
     wiki: boolean;
   };
+  features: Record<string, boolean>;
   workflow: string;
   memberIds: string[];
 };
@@ -50,6 +51,25 @@ const INITIAL_DRAFT: WizardDraft = {
   projectType: "",
   templateId: null,
   modules: { sprints: true, epics: true, timeTracking: true, wiki: true },
+  features: {
+    backlog: true,
+    sprints: true,
+    kanban: true,
+    qa: false,
+    bugs: true,
+    releases: false,
+    timeTracking: true,
+    budget: false,
+    clientPortal: false,
+    changeRequests: false,
+    forms: false,
+    chat: true,
+    docs: true,
+    automations: false,
+    devops: false,
+    approvals: false,
+    ai: false,
+  },
   workflow: "simple",
   memberIds: [],
 };

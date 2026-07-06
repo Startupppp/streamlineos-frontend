@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
@@ -45,7 +45,7 @@ interface PageCardProps {
   updatedAt: string;
 }
 
-function PageCard({ id, icon, title, updatedAt }: PageCardProps) {
+const PageCard = memo(function PageCard({ id, icon, title, updatedAt }: PageCardProps) {
   return (
     <Link
       href={pageHref(id)}
@@ -62,7 +62,7 @@ function PageCard({ id, icon, title, updatedAt }: PageCardProps) {
       </div>
     </Link>
   );
-}
+});
 
 export default function WikiHomePage() {
   const router = useRouter();

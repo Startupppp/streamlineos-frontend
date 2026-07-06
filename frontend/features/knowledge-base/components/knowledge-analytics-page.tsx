@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -47,7 +48,7 @@ const TRUST_VARIANT: Record<
   verification_expired: "destructive",
 };
 
-function NoResultsRow({ row, rank }: { row: KbNoResultRow; rank: number }) {
+const NoResultsRow = memo(function NoResultsRow({ row, rank }: { row: KbNoResultRow; rank: number }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/40 transition-colors">
       <span className="text-xs text-muted-foreground w-5 shrink-0 tabular-nums">
@@ -59,9 +60,9 @@ function NoResultsRow({ row, rank }: { row: KbNoResultRow; rank: number }) {
       </span>
     </div>
   );
-}
+});
 
-function PageAnalyticsTableRow({ row }: { row: KbPageAnalyticsRow }) {
+const PageAnalyticsTableRow = memo(function PageAnalyticsTableRow({ row }: { row: KbPageAnalyticsRow }) {
   return (
     <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
       <Link
@@ -99,9 +100,9 @@ function PageAnalyticsTableRow({ row }: { row: KbPageAnalyticsRow }) {
       </span>
     </div>
   );
-}
+});
 
-function GapTableRow({
+const GapTableRow = memo(function GapTableRow({
   row,
   onCreatePage,
   isCreating,
@@ -138,7 +139,7 @@ function GapTableRow({
       </Button>
     </div>
   );
-}
+});
 
 function AnalyticsSkeleton() {
   return (

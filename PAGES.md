@@ -137,7 +137,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/timesheets/approvals` — Approval queue (bulk approve/reject, period detail + audit timeline)
 - [x] `/timesheets/billing` — Billing queue (uninvoiced hours, rate resolution, CSV/XLSX export, invoice draft)
 - [x] `/timesheets/payroll` — Timesheets payroll queue & export (summary, overtime, mapping, CSV/XLSX, history)
-- [x] `/timesheets/reports` — Reports (overview analytics + report catalog)
+- [x] `/timesheets/reports` — Reports (overview analytics + Project Budgets burn tab live; other catalog tabs "coming soon")
 - [x] `/timesheets/settings` — Settings (general policy, rates/rate cards, audit trail)
   - Standalone Timesheets product (MVP loop) — **its own top-level product module**: header product-switcher tile + dedicated sidebar (removed from Projects), RBAC-only core module (no `@RequireModule`, always-on). Backend module `timesheets-core/` (`TimesheetsCoreModule`), FE `features/timesheets-core/` + `hooks/api/timesheets-core/`; payroll queue stays in `timesheets/` (`TimesheetsModule`). APIs `/timesheets/{entries,timer,periods,approvals,billing,reports,settings,rates,audit}`; schema `timesheet_periods|timer_sessions|timesheet_audit_events|timesheet_rate_cards|timesheet_rates` + extended `timesheets`; migration `0160_timesheets_standalone.sql` (NOT YET RUN — deferred; renumbered from 0156 after siblings took 0156-0159); RBAC `timesheets:*` catalog. Backend + FE timesheets typecheck clean; pure-logic unit tests green.
 
