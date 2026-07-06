@@ -5,12 +5,12 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Bug, CreateBugInput, UpdateBugInput } from "@/types/projects";
 
-interface BugFilters {
+type BugFilters = {
   status?: string;
   severity?: string;
   assigneeId?: string;
   q?: string;
-}
+};
 
 export function useBugs(projectId?: number, filters?: BugFilters) {
   const params: Record<string, string> = {};

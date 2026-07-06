@@ -183,10 +183,11 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
             <div className="space-y-1.5">
               <Label className="text-[11px]">Description</Label>
               <TiptapEditor
-                value={form.watch("description")}
-                onChange={(v) => form.setValue("description", v)}
+                content={form.watch("description")}
+                output="html"
+                onChangeHtml={(v) => form.setValue("description", v)}
                 placeholder="Detailed description..."
-                minHeight={80}
+                minHeightClassName="min-h-[80px]"
               />
             </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion, type MotionProps } from "framer-motion";
 import { useCustomStates } from "@/hooks/api/projects/custom-states";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -25,7 +25,7 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
     refetch,
   } = useCustomStates(projectId);
 
-  const fadeUp = shouldReduce
+  const fadeUp: MotionProps = shouldReduce
     ? {}
     : {
         initial: { opacity: 0, y: 10 },

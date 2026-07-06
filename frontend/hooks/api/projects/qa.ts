@@ -18,12 +18,12 @@ import type {
   UpdateTestResultInput,
 } from "@/types/projects";
 
-interface TestCaseFilters {
+type TestCaseFilters = {
   q?: string;
   suiteId?: number;
   priority?: string;
   automationStatus?: string;
-}
+};
 
 interface TestRunFilters {
   status?: string;

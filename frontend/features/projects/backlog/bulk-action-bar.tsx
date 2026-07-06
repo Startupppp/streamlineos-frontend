@@ -10,12 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface Sprint {
-  id: number;
-  name: string;
-  status: string;
-}
+import type { Sprint } from "@/types/projects";
 
 interface Member {
   id: string;

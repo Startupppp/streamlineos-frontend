@@ -48,7 +48,7 @@ const uomSchema = z.object({
     .min(1, "Abbreviation is required")
     .max(10, "Abbreviation must be 10 characters or less"),
   category: z.string().optional(),
-  isBase: z.boolean().default(false),
+  isBase: z.boolean(),
   ratioToBase: z
     .string()
     .optional()
@@ -56,7 +56,10 @@ const uomSchema = z.object({
       (v) => !v || (Number.isFinite(Number(v)) && Number(v) > 0),
       "Must be a positive number",
     ),
-  roundingPrecision: z.coerce.number().int().min(0).max(6).default(2),
+  roundingPrecision: z.string().refine((v) => {
+    const n = Number(v);
+    return Number.isInteger(n) && n >= 0 && n <= 6;
+  }, "Must be a whole number between 0 and 6"),
 });
 
 type UomFormValues = z.infer<typeof uomSchema>;
@@ -72,7 +75,7 @@ function CreateUomForm({ onSuccess }: { onSuccess: () => void }) {
       category: "",
       isBase: false,
       ratioToBase: "",
-      roundingPrecision: 2,
+      roundingPrecision: "2",
     },
   });
 
@@ -86,7 +89,7 @@ function CreateUomForm({ onSuccess }: { onSuccess: () => void }) {
         category: values.category || undefined,
         isBase: values.isBase,
         ratioToBase: values.ratioToBase || undefined,
-        roundingPrecision: values.roundingPrecision,
+        roundingPrecision: Number(values.roundingPrecision),
       });
       toast.success(`Unit "${values.name}" created`);
       form.reset();

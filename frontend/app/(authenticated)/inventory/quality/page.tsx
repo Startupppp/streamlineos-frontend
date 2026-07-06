@@ -25,7 +25,7 @@ function QualityHubInner() {
   const recallsQuery = useRecalls({ limit: 100 });
   const recentQuery = useQualityInspections({ limit: 5 });
 
-  const openRecalls = (recallsQuery.data?.items ?? []).filter((r) => r.status === "ACTIVE").length;
+  const openRecalls = (recallsQuery.data?.items ?? []).filter((r) => r.status !== "CLOSED").length;
   const recentInspections = recentQuery.data?.items ?? [];
 
   function handleViewInspections(): void {

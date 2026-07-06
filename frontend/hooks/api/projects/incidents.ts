@@ -12,10 +12,10 @@ import type {
   AddIncidentUpdateInput,
 } from "@/types/projects";
 
-interface IncidentFilters {
+type IncidentFilters = {
   status?: string;
   severity?: string;
-}
+};
 
 export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   const params: Record<string, string> = {};
