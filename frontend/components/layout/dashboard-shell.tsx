@@ -13,6 +13,7 @@ import { usePushSubscription } from "@/hooks/common/use-push-subscription"
 import { TrialBanner } from "@/components/billing/trial-banner"
 import { ProductSwitcherMenu } from "./header/product-switcher-menu"
 import { WorkspaceSwitcher } from "./header/workspace-switcher"
+import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility"
 
 const SuccessChecklist = dynamic(
   () =>
@@ -55,6 +56,7 @@ export function DashboardShell({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false)
   const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false)
+  const { hideSidebar } = useProductSidebarVisibility()
   usePushSubscription(userId)
 
   const handleToggleSidebar = useCallback(() => {
@@ -65,7 +67,13 @@ export function DashboardShell({
     })
   }, [])
 
-  const handleOpenMobileMenu = useCallback(() => setMobileMenuOpen(true), [])
+  const handleOpenMobileMenu = useCallback(() => {
+    if (hideSidebar) {
+      setProductSwitcherOpen(true)
+      return
+    }
+    setMobileMenuOpen(true)
+  }, [hideSidebar])
   const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), [])
 
   const deferCloseMobileMenu = useCallback(() => {
@@ -102,16 +110,18 @@ export function DashboardShell({
           <TrialBanner />
 
           <div className="flex-1 flex min-h-0">
-            <aside
-              aria-label="Sidebar"
-              style={{ width: sidebarW }}
-              className="hidden md:flex flex-col h-full border-r border-sidebar-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-visible relative z-50"
-            >
-              <AppSidebar
-                isCollapsed={isSidebarCollapsed}
-                onToggleCollapse={handleToggleSidebar}
-              />
-            </aside>
+            {!hideSidebar && (
+              <aside
+                aria-label="Sidebar"
+                style={{ width: sidebarW }}
+                className="hidden md:flex flex-col h-full border-r border-sidebar-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-visible relative z-50"
+              >
+                <AppSidebar
+                  isCollapsed={isSidebarCollapsed}
+                  onToggleCollapse={handleToggleSidebar}
+                />
+              </aside>
+            )}
 
             <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
               <GlobalHeader />
@@ -128,17 +138,19 @@ export function DashboardShell({
             </div>
           </div>
 
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
-            <SheetContent side="left" className="z-[100] p-0 w-[17rem] border-r-sidebar-border">
-              <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <AppSidebar
-                isMobile
-                onNavigate={handleCloseMobileMenu}
-                onRequestProductSwitcher={handleRequestProductSwitcher}
-                onRequestWorkspaceSwitcher={handleRequestWorkspaceSwitcher}
-              />
-            </SheetContent>
-          </Sheet>
+          {!hideSidebar && (
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
+              <SheetContent side="left" className="z-[100] p-0 w-[17rem] border-r-sidebar-border">
+                <SheetTitle className="sr-only">Navigation</SheetTitle>
+                <AppSidebar
+                  isMobile
+                  onNavigate={handleCloseMobileMenu}
+                  onRequestProductSwitcher={handleRequestProductSwitcher}
+                  onRequestWorkspaceSwitcher={handleRequestWorkspaceSwitcher}
+                />
+              </SheetContent>
+            </Sheet>
+          )}
 
           <ProductSwitcherMenu
             sheetOnly

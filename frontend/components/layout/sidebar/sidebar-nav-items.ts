@@ -1531,6 +1531,29 @@ export function flattenNavRoutes(routes: NavRoute[]): NavRoute[] {
   return out;
 }
 
+export function countNavLeaves(routes: NavRoute[]): number {
+  let count = 0;
+  for (const route of routes) {
+    if (route.children && route.children.length > 0) {
+      count += countNavLeaves(route.children);
+    } else {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+export function countProductNavLeaves(navGroups: NavGroup[]): number {
+  return navGroups.reduce(
+    (sum, group) => sum + countNavLeaves(group.routes),
+    0,
+  );
+}
+
+export function shouldHideProductSidebar(navGroups: NavGroup[]): boolean {
+  return countProductNavLeaves(navGroups) <= 1;
+}
+
 export type ProductKey =
   | "home"
   | "crm"
@@ -1692,26 +1715,29 @@ export function getNavGroupsForProduct(
       },
     ];
   }
-  if (productKey === "documents")
-    return [
+  if (productKey === "documents") {
+    const isOwner = role === "OWNER";
+    const granted = new Set(permissions ?? []);
+    const documentRoutes = [
       {
-        label: "Documents",
-        routes: [
-          {
-            label: "Knowledge Base",
-            icon: BookOpen,
-            href: "/support/kb",
-            requiredPermission: "support:kb:view",
-          },
-          {
-            label: "Wiki",
-            icon: NotebookPen,
-            href: "/knowledge",
-            requiredPermission: "kb:pages:view",
-          },
-        ],
+        label: "Knowledge Base",
+        icon: BookOpen,
+        href: "/support/kb",
+        requiredPermission: "support:kb:view",
+      },
+      {
+        label: "Wiki",
+        icon: NotebookPen,
+        href: "/knowledge",
+        requiredPermission: "kb:pages:view",
       },
     ];
+    const visibleRoutes = documentRoutes
+      .map((route) => filterRoute(route, isOwner, granted, enabledModules))
+      .filter((route): route is NavRoute => route !== null);
+    if (visibleRoutes.length === 0) return [];
+    return [{ label: "Documents", routes: visibleRoutes }];
+  }
 
   const allGroups = getNavGroupsForUser(role, permissions, enabledModules);
   const labels = PRODUCT_NAV_GROUP_LABELS[productKey];
