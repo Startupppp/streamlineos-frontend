@@ -10,7 +10,7 @@ import type {
   StartTimerInput,
   TimerSession,
   TimesheetEntry,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets-core/types";
 
 export function useActiveTimer() {
   return useQuery({

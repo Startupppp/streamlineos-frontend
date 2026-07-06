@@ -16,14 +16,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { usePeriod } from "@/hooks/api/timesheets/periods";
-import { useApprovePeriod, useRejectPeriod } from "@/hooks/api/timesheets/approvals";
+import { usePeriod } from "@/hooks/api/timesheets-core/periods";
+import { useApprovePeriod, useRejectPeriod } from "@/hooks/api/timesheets-core/approvals";
 import {
   PERIOD_STATUS_BADGE,
   PERIOD_STATUS_LABEL,
   ENTRY_STATUS_BADGE,
-} from "@/features/timesheets/types";
-import type { TimesheetPeriod, TimesheetEntry } from "@/features/timesheets/types";
+} from "@/features/timesheets-core/types";
+import type { TimesheetPeriod, TimesheetEntry } from "@/features/timesheets-core/types";
 import { cn } from "@/lib/utils";
 
 interface ApprovalDetailSheetProps {

@@ -11,8 +11,8 @@ import {
   useUpdateTimesheetEntry,
   useVoidTimesheetEntry,
   useTimesheetEntries,
-} from "@/hooks/api/timesheets";
-import type { TimesheetEntry } from "@/features/timesheets";
+} from "@/hooks/api/timesheets-core";
+import type { TimesheetEntry } from "@/features/timesheets-core";
 
 interface GridRow {
   rowKey: string;

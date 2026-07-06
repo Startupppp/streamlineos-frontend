@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { PeriodDetail, PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
+import type { PeriodDetail, PeriodStatus, TimesheetPeriod } from "@/features/timesheets-core/types";
 
 interface PeriodsQuery {
   userId?: string;

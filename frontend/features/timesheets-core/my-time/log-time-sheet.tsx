@@ -20,8 +20,8 @@ import { ProjectTicketSelect } from "./project-ticket-select";
 import {
   useCreateTimesheetEntry,
   useUpdateTimesheetEntry,
-} from "@/hooks/api/timesheets";
-import type { TimesheetEntry } from "@/features/timesheets";
+} from "@/hooks/api/timesheets-core";
+import type { TimesheetEntry } from "@/features/timesheets-core";
 
 const logTimeSchema = z.object({
   date: z.string().min(1, "Date is required"),

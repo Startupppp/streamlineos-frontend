@@ -20,7 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
-import { useReportsOverview } from "@/hooks/api/timesheets/reports";
+import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
 import { OverviewReport } from "./overview-report";
 
 const REPORT_TABS = [

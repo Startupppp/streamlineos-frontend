@@ -10,7 +10,7 @@ import type {
   EntriesQuery,
   TimesheetEntry,
   UpdateEntryInput,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets-core/types";
 
 function toParams(query: EntriesQuery): Record<string, unknown> {
   return {

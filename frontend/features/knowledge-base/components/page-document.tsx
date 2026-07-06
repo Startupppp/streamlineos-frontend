@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { KbAlertCircleIcon } from "@/features/knowledge-base/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, getApiError } from "@/lib/api-client";
 import { uploadKbMedia } from "@/features/knowledge-base/lib/upload-kb-media";
 import {
   useKbPage,
@@ -109,9 +109,11 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
         { pageId, ...patch },
         {
           onSuccess: () => setSaveState("saved"),
-          onError: () => {
+          onError: (error) => {
             setSaveState("idle");
-            toast.error("Failed to save page");
+            toast.error("Failed to save page", {
+              description: getApiError(error),
+            });
           },
         }
       );

@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { ReportOverview } from "@/features/timesheets/types";
+import type { ReportOverview } from "@/features/timesheets-core/types";
 
 interface OverviewQuery {
   startDate?: string;

@@ -14,9 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePeriod } from "@/hooks/api/timesheets/periods";
-import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
-import type { TimesheetPeriod, TimesheetEntry } from "@/features/timesheets/types";
+import { usePeriod } from "@/hooks/api/timesheets-core/periods";
+import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets-core/types";
+import type { TimesheetPeriod, TimesheetEntry } from "@/features/timesheets-core/types";
 import { cn } from "@/lib/utils";
 
 interface MemberDetailSheetProps {

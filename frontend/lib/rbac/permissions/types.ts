@@ -302,4 +302,5 @@ export type PermissionKey =
   | "projects:approvals:view"
   | "projects:approvals:request"
   | "projects:approvals:decide"
-  | "projects:approvals:manage";
+  | "projects:approvals:manage"
+  | "projects:ai:use";

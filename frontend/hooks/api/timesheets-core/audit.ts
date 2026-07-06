@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { AuditResponse } from "@/features/timesheets/types";
+import type { AuditResponse } from "@/features/timesheets-core/types";
 
 interface AuditQuery {
   entityType?: string;

@@ -4,7 +4,7 @@ import { Clock, TrendingUp, CheckCircle2, AlertTriangle, Users } from "lucide-re
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ByDayChart, ByProjectChart } from "./report-charts";
-import type { ReportOverview } from "@/features/timesheets/types";
+import type { ReportOverview } from "@/features/timesheets-core/types";
 
 interface OverviewReportProps {
   overview: ReportOverview | undefined;

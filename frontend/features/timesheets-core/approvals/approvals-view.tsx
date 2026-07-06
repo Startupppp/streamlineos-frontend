@@ -25,10 +25,10 @@ import {
   useApprovals,
   useBulkApprove,
   useBulkReject,
-} from "@/hooks/api/timesheets/approvals";
+} from "@/hooks/api/timesheets-core/approvals";
 import { useHrEmployees } from "@/hooks/api/hr";
-import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
-import type { TimesheetPeriod } from "@/features/timesheets/types";
+import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets-core/types";
+import type { TimesheetPeriod } from "@/features/timesheets-core/types";
 import type { Employee } from "@/types/hr";
 import { cn } from "@/lib/utils";
 import { BulkRejectDialog } from "./bulk-reject-dialog";

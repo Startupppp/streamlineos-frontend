@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
-import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
+import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets-core/types";
+import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets-core/types";
 import { cn } from "@/lib/utils";
 
 export interface TeamMemberRow {

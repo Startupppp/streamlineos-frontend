@@ -10,7 +10,7 @@ import type {
   BillingUninvoiced,
   InvoiceDraftInput,
   RatePreview,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets-core/types";
 
 interface UninvoicedQuery {
   startDate?: string;

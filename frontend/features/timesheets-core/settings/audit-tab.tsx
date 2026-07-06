@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { format, parseISO } from "date-fns";
-import { useAuditEvents } from "@/hooks/api/timesheets/audit";
+import { useAuditEvents } from "@/hooks/api/timesheets-core/audit";
 import { useCan } from "@/hooks/api/access";
-import type { AuditEvent } from "@/features/timesheets/types";
+import type { AuditEvent } from "@/features/timesheets-core/types";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select,

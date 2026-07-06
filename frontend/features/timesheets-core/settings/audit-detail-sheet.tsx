@@ -9,7 +9,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import type { AuditEvent } from "@/features/timesheets/types";
+import type { AuditEvent } from "@/features/timesheets-core/types";
 
 function renderValue(value: unknown): string {
   if (value === null || value === undefined) return "—";

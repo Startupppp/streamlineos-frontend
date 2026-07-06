@@ -21,11 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateRate, useUpdateRate } from "@/hooks/api/timesheets/rates";
+import { useCreateRate, useUpdateRate } from "@/hooks/api/timesheets-core/rates";
 import { useProjects } from "@/hooks/api/projects";
 import { useHrEmployees } from "@/hooks/api/hr";
-import type { TimesheetRate, CreateRateInput, BillingType } from "@/features/timesheets/types";
-import { BILLING_TYPE_LABEL } from "@/features/timesheets/types";
+import type { TimesheetRate, CreateRateInput, BillingType } from "@/features/timesheets-core/types";
+import { BILLING_TYPE_LABEL } from "@/features/timesheets-core/types";
 
 const BILLING_TYPE_OPTIONS: BillingType[] = ["BILLABLE", "NON_BILLABLE", "INTERNAL"];
 

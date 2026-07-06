@@ -34,8 +34,8 @@ import {
   useConvertTimer,
   useDiscardTimer,
   useTimesheetEntries,
-} from "@/hooks/api/timesheets";
-import { BILLING_TYPE_LABEL } from "@/features/timesheets";
+} from "@/hooks/api/timesheets-core";
+import { BILLING_TYPE_LABEL } from "@/features/timesheets-core";
 
 function formatDuration(totalSec: number): string {
   const h = Math.floor(totalSec / 3600);

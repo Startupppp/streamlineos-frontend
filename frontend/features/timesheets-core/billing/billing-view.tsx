@@ -25,10 +25,10 @@ import {
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
-import { useBillingUninvoiced } from "@/hooks/api/timesheets/billing";
+import { useBillingUninvoiced } from "@/hooks/api/timesheets-core/billing";
 import { BillingExportDialog } from "./billing-export-dialog";
 import { InvoiceDraftDialog } from "./invoice-draft-dialog";
-import type { BillingGroup } from "@/features/timesheets/types";
+import type { BillingGroup } from "@/features/timesheets-core/types";
 
 const now = new Date();
 const DEFAULT_START = format(startOfMonth(now), "yyyy-MM-dd");

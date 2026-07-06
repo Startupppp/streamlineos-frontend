@@ -24,9 +24,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useBillingExport } from "@/hooks/api/timesheets/billing";
+import { useBillingExport } from "@/hooks/api/timesheets-core/billing";
 import { downloadBillingFile } from "./lib/build-billing-file";
-import type { BillingGroup } from "@/features/timesheets/types";
+import type { BillingGroup } from "@/features/timesheets-core/types";
 
 const exportSchema = z.object({ format: z.enum(["CSV", "XLSX"]) });
 

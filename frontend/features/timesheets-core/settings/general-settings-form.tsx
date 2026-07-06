@@ -8,9 +8,9 @@ import { Loader2 } from "lucide-react";
 import {
   useTimesheetSettings,
   useUpdateTimesheetSettings,
-} from "@/hooks/api/timesheets/settings";
+} from "@/hooks/api/timesheets-core/settings";
 import { useCan } from "@/hooks/api/access";
-import type { RoundingRule, ApprovalMode, TimesheetSettings } from "@/features/timesheets/types";
+import type { RoundingRule, ApprovalMode, TimesheetSettings } from "@/features/timesheets-core/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,

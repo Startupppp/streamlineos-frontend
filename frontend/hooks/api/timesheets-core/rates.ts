@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { CreateRateInput, RatesResponse, TimesheetRate } from "@/features/timesheets/types";
+import type { CreateRateInput, RatesResponse, TimesheetRate } from "@/features/timesheets-core/types";
 
 export function useRates(enabled = true) {
   return useQuery({

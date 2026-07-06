@@ -1,6 +1,6 @@
 "use client";
 
-import { ApprovalsView } from "@/features/timesheets/approvals";
+import { ApprovalsView } from "@/features/timesheets-core/approvals";
 
 export default function TimesheetApprovalsPage() {
   return <ApprovalsView />;

@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { useRates, useDeleteRate } from "@/hooks/api/timesheets/rates";
+import { useRates, useDeleteRate } from "@/hooks/api/timesheets-core/rates";
 import { useCan } from "@/hooks/api/access";
-import type { TimesheetRate } from "@/features/timesheets/types";
-import { BILLING_TYPE_LABEL } from "@/features/timesheets/types";
+import type { TimesheetRate } from "@/features/timesheets-core/types";
+import { BILLING_TYPE_LABEL } from "@/features/timesheets-core/types";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

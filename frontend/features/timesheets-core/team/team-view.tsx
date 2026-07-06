@@ -18,12 +18,12 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
-import { usePeriods } from "@/hooks/api/timesheets/periods";
-import { useTimesheetEntries } from "@/hooks/api/timesheets/entries";
-import { useReportsOverview } from "@/hooks/api/timesheets/reports";
+import { usePeriods } from "@/hooks/api/timesheets-core/periods";
+import { useTimesheetEntries } from "@/hooks/api/timesheets-core/entries";
+import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
 import { useHrEmployees } from "@/hooks/api/hr";
-import { PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
-import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
+import { PERIOD_STATUS_LABEL } from "@/features/timesheets-core/types";
+import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets-core/types";
 import type { Employee } from "@/types/hr";
 import { TeamStats } from "./team-stats";
 import { TeamTable, type TeamMemberRow } from "./team-table";

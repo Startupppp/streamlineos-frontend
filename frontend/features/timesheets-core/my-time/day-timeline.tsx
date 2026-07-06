@@ -17,12 +17,12 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { LogTimeSheet } from "./log-time-sheet";
-import { useVoidTimesheetEntry } from "@/hooks/api/timesheets";
+import { useVoidTimesheetEntry } from "@/hooks/api/timesheets-core";
 import {
   BILLING_TYPE_LABEL,
   ENTRY_STATUS_BADGE,
   type TimesheetEntry,
-} from "@/features/timesheets";
+} from "@/features/timesheets-core";
 
 interface DayTimelineProps {
   entries: TimesheetEntry[] | undefined;

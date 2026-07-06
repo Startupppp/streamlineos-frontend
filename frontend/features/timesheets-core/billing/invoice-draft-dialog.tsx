@@ -10,8 +10,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useCreateInvoiceDraft } from "@/hooks/api/timesheets/billing";
-import type { BillingGroup } from "@/features/timesheets/types";
+import { useCreateInvoiceDraft } from "@/hooks/api/timesheets-core/billing";
+import type { BillingGroup } from "@/features/timesheets-core/types";
 
 interface InvoiceDraftDialogProps {
   open: boolean;
