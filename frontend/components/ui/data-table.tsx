@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
 declare module "@tanstack/react-table" {
-  interface ColumnMeta<_TData, _TValue> {
+  interface ColumnMeta<TData, TValue> {
     className?: string;
     headerClassName?: string;
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { BarChart3, TrendingUp, BookOpen, AlertCircle, Activity, Layers } from "lucide-react";
+import { BarChart3, TrendingUp, BookOpen, AlertCircle, Activity } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

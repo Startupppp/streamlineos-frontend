@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
+import Image from "next/image";
 
 type TipTapMark = { type: string; attrs?: Record<string, unknown> };
 type TipTapNode = {
@@ -245,7 +246,7 @@ function renderSlateNode(node: unknown, idx: number): React.ReactNode {
     case "img": {
       const src = typeof el.url === "string" ? el.url : undefined;
       return src ? (
-        <img key={idx} src={src} alt={typeof el.name === "string" ? el.name : ""} className="max-w-full h-auto rounded-md my-3" />
+        <Image key={idx} src={src} alt={typeof el.name === "string" ? el.name : ""} width={800} height={600} unoptimized className="max-w-full h-auto rounded-md my-3" />
       ) : null;
     }
     case "video": {

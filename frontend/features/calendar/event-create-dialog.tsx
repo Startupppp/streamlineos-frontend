@@ -395,7 +395,7 @@ export function EventCreateDialog({
     } catch {
       toast.error(isEdit ? "Failed to update event" : "Failed to create event");
     }
-  }, [form, isEdit, event, createEvent, updateEvent, handleClose]);
+  }, [form, isEdit, event, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket]);
 
   const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
 

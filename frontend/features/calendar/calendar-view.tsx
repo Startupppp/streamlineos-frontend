@@ -102,7 +102,7 @@ export function CalendarView() {
     null,
   );
   const [accountsOpen, setAccountsOpen] = useState(false);
-  const [checkedAttendees, setCheckedAttendees] = useState<
+  const [, setCheckedAttendees] = useState<
     Record<string, boolean>
   >({});
 
@@ -168,7 +168,7 @@ export function CalendarView() {
     [selectedEventId, events],
   );
 
-  const { allCalEvents, todayActivities, visibleRange } = useCalendarComputed({
+  const { allCalEvents, visibleRange } = useCalendarComputed({
     events,
     externalData,
     hiddenIds,
@@ -256,21 +256,10 @@ export function CalendarView() {
     () => setIsCreateTicketOpen(false),
     [],
   );
-  const handleSelectActivity = useCallback(
-    (id: string) => setSelectedEventId(id),
-    [],
-  );
   const handleSelectEventById = useCallback(
     (eventId: string) => setSelectedEventId(eventId),
     [],
   );
-  const handleAttendeeChange = useCallback(
-    (memberId: string, checked: boolean) => {
-      setCheckedAttendees((prev) => ({ ...prev, [memberId]: checked }));
-    },
-    [],
-  );
-
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
     const connectedAccountId = searchParams.get("connected_account_id");
