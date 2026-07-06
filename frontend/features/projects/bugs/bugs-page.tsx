@@ -82,7 +82,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
   const { data: bugs, isLoading, isError, refetch } = useBugs(projectId, filters);
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteBug = useDeleteBug();
-  const members = membersData?.data ?? [];
+  const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
   const handleEdit = useCallback((bug: Bug) => { setEditBug(bug); setSheetOpen(true); }, []);
   const handleNewBug = useCallback(() => { setEditBug(null); setSheetOpen(true); }, []);

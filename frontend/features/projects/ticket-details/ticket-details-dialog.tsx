@@ -67,6 +67,7 @@ export function TicketDetailsDialog({
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [localTitle, setLocalTitle] = useState("");
+  const [syncedTitleId, setSyncedTitleId] = useState<number | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedAtRef = useRef<string | undefined>(undefined);
 
@@ -167,9 +168,10 @@ export function TicketDetailsDialog({
     [ticketId, updateTicketMutation],
   );
 
-  useEffect(() => {
-    if (ticket) setLocalTitle(ticket.title);
-  }, [ticket]);
+  if (ticket && ticket.id !== syncedTitleId) {
+    setSyncedTitleId(ticket.id);
+    setLocalTitle(ticket.title);
+  }
 
   useEffect(() => {
     return () => {

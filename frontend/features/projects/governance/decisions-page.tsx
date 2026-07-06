@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { MoreHorizontal, Plus } from "lucide-react";
 import { useProjectDecisions, useCreateDecision, useUpdateDecision, useDeleteDecision } from "@/hooks/api/projects";
@@ -63,13 +63,13 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const updateDecision = useUpdateDecision(projectId);
   const deleteDecision = useDeleteDecision(projectId);
 
-  function memberName(userId: string | null): string {
+  const memberName = useCallback((userId: string | null): string => {
     if (!userId) return "â€”";
     const m = members.find((x) => x.userId === userId);
     return m?.name ?? m?.email ?? userId;
-  }
+  }, [members]);
 
-  const allDecisions = data ?? [];
+  const allDecisions = useMemo(() => data ?? [], [data]);
 
   const displayed = useMemo(() => {
     if (!search.trim()) return allDecisions;
@@ -157,7 +157,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
         );
       },
     },
-  ], [canManage, members]);
+  ], [canManage, memberName]);
 
   const isFiltered = statusFilter !== "all" || !!search.trim();
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,14 +48,17 @@ export function MentionTextarea({
   const [selectedIdx, setSelectedIdx] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const filtered =
-    mentionSearch !== null
-      ? users
-          .filter((u) =>
-            u.name.toLowerCase().includes(mentionSearch.toLowerCase()),
-          )
-          .slice(0, 5)
-      : [];
+  const filtered = useMemo(
+    () =>
+      mentionSearch !== null
+        ? users
+            .filter((u) =>
+              u.name.toLowerCase().includes(mentionSearch.toLowerCase()),
+            )
+            .slice(0, 5)
+        : [],
+    [users, mentionSearch],
+  );
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

@@ -13,7 +13,7 @@ import type { StepSharedProps } from "../use-project-create";
 export function StepTeam({ draft, updateDraft }: StepSharedProps) {
   const canManage = useCan("projects:manage");
   const { data: membersData } = useOrgMembers(1, 100);
-  const members = membersData?.data ?? [];
+  const members = useMemo(() => membersData?.data ?? [], [membersData]);
   const [search, setSearch] = useState("");
 
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {

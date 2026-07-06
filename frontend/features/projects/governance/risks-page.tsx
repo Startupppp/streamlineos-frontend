@@ -81,7 +81,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
     return m?.name ?? m?.email ?? userId;
   }
 
-  const allRisks = data ?? [];
+  const allRisks = useMemo(() => data ?? [], [data]);
   const openCount = allRisks.filter((r) => r.status === "open").length;
   const highCritCount = allRisks.filter((r) => {
     const { label } = getRiskSeverity(r.probability, r.impact);

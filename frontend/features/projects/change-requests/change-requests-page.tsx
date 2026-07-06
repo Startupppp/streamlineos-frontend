@@ -64,7 +64,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   );
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteCr = useDeleteChangeRequest(projectId);
-  const members = membersData?.data ?? [];
+  const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
   const handleNew = useCallback(() => { setEditCr(null); setSheetOpen(true); }, []);
   const handleEdit = useCallback((cr: ChangeRequest) => { setEditCr(cr); setSheetOpen(true); }, []);

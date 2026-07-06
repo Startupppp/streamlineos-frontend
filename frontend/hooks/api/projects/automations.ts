@@ -1,7 +1,7 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { AutomationCondition, AutomationAction, ProjectAutomation } from "@/types/projects";
+import type { ProjectAutomation } from "@/types/projects";
 export type { AutomationCondition, AutomationAction, ProjectAutomation } from "@/types/projects";
 
 export const TRIGGER_EVENTS = [

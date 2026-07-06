@@ -35,7 +35,7 @@ export function ApprovalsInboxPage() {
 
   const { data, isLoading, isError, refetch } = useApprovalInbox();
   const { data: membersRes } = useOrgMembers(1, 100);
-  const members = membersRes?.data ?? [];
+  const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
   const [decideTarget, setDecideTarget] = useState<DecideTarget | null>(null);
   const decideApproval = useDecideApproval(decideTarget?.projectId ?? 0);

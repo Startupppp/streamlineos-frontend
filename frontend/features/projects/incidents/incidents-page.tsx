@@ -73,9 +73,9 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const { data: incidents, isLoading, isError, refetch } = useIncidents(projectId, filters);
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteIncident = useDeleteIncident();
-  const members = membersData?.data ?? [];
+  const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
-  const all = incidents ?? [];
+  const all = useMemo(() => incidents ?? [], [incidents]);
   const filtered = useMemo(
     () => search ? all.filter((i) => i.title.toLowerCase().includes(search.toLowerCase()) || `INC-${i.incidentNumber}`.toLowerCase().includes(search.toLowerCase())) : all,
     [all, search],
