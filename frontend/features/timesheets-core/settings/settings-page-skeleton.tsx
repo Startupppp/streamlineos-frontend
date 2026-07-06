@@ -3,7 +3,12 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export function SettingsPageSkeleton() {
   return (
-    <PageWrapper title="Timesheet Settings" eyebrow="Timesheets">
+    <PageWrapper
+      title="Timesheet Settings"
+      eyebrow="Timesheets"
+      noInternalScroll
+      className="flex-none"
+    >
       <div className="space-y-4">
         <div className="flex gap-1">
           {[80, 60, 60].map((w, i) => (

@@ -1179,18 +1179,10 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "projects:roadmap:view",
       },
       {
-        label: "Settings",
-        icon: SlidersHorizontal,
+        label: "Integrations",
+        icon: Plug,
         href: "/projects/settings/integrations",
         requiredPermission: "settings:manage",
-        children: [
-          {
-            label: "Integrations",
-            icon: Plug,
-            href: "/projects/settings/integrations",
-            requiredPermission: "settings:manage",
-          },
-        ],
       },
     ],
   },

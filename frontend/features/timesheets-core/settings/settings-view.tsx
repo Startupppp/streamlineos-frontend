@@ -29,7 +29,12 @@ export function SettingsView() {
 
   if (!canViewSettings) {
     return (
-      <PageWrapper title="Timesheet Settings" eyebrow="Timesheets">
+      <PageWrapper
+        title="Timesheet Settings"
+        eyebrow="Timesheets"
+        noInternalScroll
+        className="flex-none"
+      >
         <EmptyState
           title="Access restricted"
           description="You don't have permission to view timesheet settings."
@@ -40,7 +45,12 @@ export function SettingsView() {
   }
 
   return (
-    <PageWrapper title="Timesheet Settings" eyebrow="Timesheets">
+    <PageWrapper
+      title="Timesheet Settings"
+      eyebrow="Timesheets"
+      noInternalScroll
+      className="flex-none"
+    >
       <Tabs defaultValue="general" onValueChange={handleTabChange}>
         <TabsList className="h-8 mb-4">
           <TabsTrigger value="general" className="text-xs h-7">
