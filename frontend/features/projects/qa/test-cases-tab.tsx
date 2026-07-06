@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTestCases, useTestSuites, useDeleteTestCase } from "@/hooks/api/projects/qa";
 import { useCan } from "@/hooks/api/access";
 import type { TestCase, TestCasePriority, TestCaseAutomationStatus } from "@/types/projects";
@@ -80,17 +80,17 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
   const { data: suites } = useTestSuites(projectId);
   const deleteCase = useDeleteTestCase();
 
-  function handleEdit(tc: TestCase) {
+  const handleEdit = useCallback((tc: TestCase) => {
     setEditCase(tc);
     setSheetOpen(true);
-  }
+  }, []);
 
-  function handleNewCase() {
+  const handleNewCase = useCallback(() => {
     setEditCase(null);
     setSheetOpen(true);
-  }
+  }, []);
 
-  function handleDelete() {
+  const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteCase.mutate(
       { projectId, id: deleteTarget.id },
@@ -102,17 +102,17 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
         onError: () => toast.error("Failed to delete test case"),
       },
     );
-  }
+  }, [deleteTarget, deleteCase, projectId]);
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-  }
+  }, []);
 
-  function handleDeleteDialogChange(open: boolean) {
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
-  }
+  }, []);
 
-  const columns: DataTableColumn<TestCase>[] = [
+  const columns = useMemo<DataTableColumn<TestCase>[]>(() => [
     {
       key: "id",
       header: "ID",
@@ -183,7 +183,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
         ) : null,
       className: "w-[40px]",
     },
-  ];
+  ], [canManage, handleEdit]);
 
   if (isLoading) return <SkeletonTable rows={8} columns={5} />;
   if (isError) return <ErrorState onRetry={refetch} />;

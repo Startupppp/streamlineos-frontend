@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { memo, useState, useMemo, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,42 @@ function severityClasses(s: AiSeverity): string {
 }
 
 type TaskGroup = { label: string; indices: number[] };
+
+interface TaskItemProps {
+  task: SuggestedTaskListItem;
+  idx: number;
+  projectId: number;
+  isChecked: boolean;
+  onToggle: (idx: number) => void;
+}
+
+const TaskItem = memo(function TaskItem({ task, idx, projectId, isChecked, onToggle }: TaskItemProps) {
+  const handleChange = useCallback(() => onToggle(idx), [idx, onToggle]);
+  return (
+    <div className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/30 transition-colors">
+      <Checkbox
+        id={`stl-task-${projectId}-${idx}`}
+        checked={isChecked}
+        onCheckedChange={handleChange}
+        className="shrink-0"
+      />
+      <label
+        htmlFor={`stl-task-${projectId}-${idx}`}
+        className="flex-1 min-w-0 cursor-pointer"
+      >
+        <span className="text-[13px] text-foreground block truncate">{task.title}</span>
+        {task.badge && (
+          <span className="text-[11px] text-muted-foreground">{task.badge}</span>
+        )}
+      </label>
+      <span
+        className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide ${severityClasses(task.priority)}`}
+      >
+        {task.priority}
+      </span>
+    </div>
+  );
+});
 
 export function SuggestedTaskList({ items, projectId }: SuggestedTaskListProps) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -138,28 +174,14 @@ export function SuggestedTaskList({ items, projectId }: SuggestedTaskListProps) 
               const task = items[idx];
               if (!task) return null;
               return (
-                <div key={idx} className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/30 transition-colors">
-                  <Checkbox
-                    id={`stl-task-${projectId}-${idx}`}
-                    checked={selected.has(idx)}
-                    onCheckedChange={() => handleToggle(idx)}
-                    className="shrink-0"
-                  />
-                  <label
-                    htmlFor={`stl-task-${projectId}-${idx}`}
-                    className="flex-1 min-w-0 cursor-pointer"
-                  >
-                    <span className="text-[13px] text-foreground block truncate">{task.title}</span>
-                    {task.badge && (
-                      <span className="text-[11px] text-muted-foreground">{task.badge}</span>
-                    )}
-                  </label>
-                  <span
-                    className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide ${severityClasses(task.priority)}`}
-                  >
-                    {task.priority}
-                  </span>
-                </div>
+                <TaskItem
+                  key={idx}
+                  task={task}
+                  idx={idx}
+                  projectId={projectId}
+                  isChecked={selected.has(idx)}
+                  onToggle={handleToggle}
+                />
               );
             })}
           </div>

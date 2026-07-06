@@ -1,34 +1,18 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Send, Loader2, MessageSquare, Link, Pencil, Trash2, X, AlertTriangle } from "lucide-react";
-import { resolveImageUrl } from "@/lib/utils";
+import { Send, Loader2, MessageSquare, AlertTriangle, X } from "lucide-react";
 import { useAddComment } from "@/hooks/api/projects";
 import { useUpdateComment, useDeleteComment } from "@/hooks/api/projects/comment-mutations";
 import { useAddReaction, useRemoveReaction } from "@/hooks/api/projects/reactions";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatDistanceToNow } from "date-fns";
-import type { TicketComment, TicketUser, CommentReaction } from "@/types/projects";
+import type { TicketComment } from "@/types/projects";
 import { MentionTextarea, type MentionUser } from "@/features/projects/comments/mention-textarea";
-import { EmojiReactionBar, type ReactionGroup } from "@/features/projects/comments/emoji-reaction-bar";
-import { formatMentionText } from "@/lib/format-mention";
+import { CommentItem } from "./comment-item";
 
 interface ActivityFeedProps {
   ticketId: number;
@@ -38,20 +22,16 @@ interface ActivityFeedProps {
   highlightCommentId?: number | null;
 }
 
-function groupReactions(
-  rawReactions: CommentReaction[],
-  currentUserId?: string
-): ReactionGroup[] {
-  const groups: Record<string, { count: number; hasReacted: boolean }> = {};
-  for (const r of rawReactions) {
-    if (!groups[r.emoji]) groups[r.emoji] = { count: 0, hasReacted: false };
-    groups[r.emoji].count++;
-    if (r.userId === currentUserId) groups[r.emoji].hasReacted = true;
-  }
-  return Object.entries(groups).map(([emoji, g]) => ({ emoji, count: g.count, hasReacted: g.hasReacted }));
-}
+const noopVoid = () => {};
+const noopStr = (_: string) => {};
 
-export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], highlightCommentId }: ActivityFeedProps) {
+export function ActivityFeed({
+  ticketId,
+  projectId = 0,
+  comments,
+  members = [],
+  highlightCommentId,
+}: ActivityFeedProps) {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
@@ -72,18 +52,12 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
   useEffect(() => {
     if (!highlightCommentId) return;
     const el = commentRefs.current.get(highlightCommentId);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [highlightCommentId]);
 
   const addComment = useAddComment({
-    onSuccess: () => {
-      setNewComment("");
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
+    onSuccess: () => setNewComment(""),
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const addReply = useAddComment({
@@ -91,14 +65,11 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
       setReplyText("");
       setReplyingTo(null);
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const updateComment = useUpdateComment();
   const deleteComment = useDeleteComment();
-
   const addReaction = useAddReaction(projectId, ticketId);
   const removeReaction = useRemoveReaction(projectId, ticketId);
 
@@ -109,12 +80,12 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
   }, [newComment, ticketId, projectId, addComment]);
 
   const handleReplySubmit = useCallback(
-    (parentId: number) => {
+    (commentId: number) => {
       const content = replyText.trim();
       if (!content) return;
-      addReply.mutate({ ticketId, projectId, content, parentCommentId: parentId });
+      addReply.mutate({ ticketId, projectId, content, parentCommentId: commentId });
     },
-    [replyText, ticketId, projectId, addReply]
+    [replyText, ticketId, projectId, addReply],
   );
 
   const handleSaveEdit = useCallback(
@@ -126,10 +97,10 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
           onSuccess: () => toast.success("Comment updated"),
           onError: (err) => toast.error(getErrorMessage(err)),
           onSettled: () => setEditingSaveId(null),
-        }
+        },
       );
     },
-    [updateComment, ticketId, projectId]
+    [updateComment, ticketId, projectId],
   );
 
   const handleDeleteComment = useCallback(
@@ -141,10 +112,10 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
           onSuccess: () => toast.success("Comment deleted"),
           onError: (err) => toast.error(getErrorMessage(err)),
           onSettled: () => setDeletingId(null),
-        }
+        },
       );
     },
-    [deleteComment, ticketId, projectId]
+    [deleteComment, ticketId, projectId],
   );
 
   const handleTopKeyDown = useCallback(
@@ -154,7 +125,7 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
         handleSubmit();
       }
     },
-    [handleSubmit]
+    [handleSubmit],
   );
 
   const handleReplyKeyDown = useCallback(
@@ -165,12 +136,37 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
           handleReplySubmit(parentId);
         }
       },
-    [handleReplySubmit]
+    [handleReplySubmit],
   );
+
+  const handleReply = useCallback((commentId: number) => {
+    setReplyingTo(commentId);
+  }, []);
+
+  const handleReact = useCallback(
+    (commentId: number, emoji: string) => {
+      addReaction.mutate({ commentId, emoji });
+    },
+    [addReaction],
+  );
+
+  const handleUnreact = useCallback(
+    (commentId: number, emoji: string) => {
+      removeReaction.mutate({ commentId, emoji });
+    },
+    [removeReaction],
+  );
+
+  const handleCancelReply = useCallback(() => {
+    setReplyingTo(null);
+    setReplyText("");
+  }, []);
+
+  const handleDismissNotFound = useCallback(() => setCommentNotFoundDismissed(true), []);
 
   const { repliesMap, sortedTopLevel } = useMemo(() => {
     const topLevel = comments.filter((c) => !c.parentCommentId);
-    const repliesMap = comments
+    const built = comments
       .filter((c) => !!c.parentCommentId)
       .reduce<Record<number, TicketComment[]>>((acc, r) => {
         const parentId = r.parentCommentId!;
@@ -180,17 +176,10 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
       }, {});
     const sortedTopLevel = [...topLevel].sort(
       (a, b) =>
-        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
     );
-    return { repliesMap, sortedTopLevel };
+    return { repliesMap: built, sortedTopLevel };
   }, [comments]);
-
-  const handleCancelReply = useCallback(() => {
-    setReplyingTo(null);
-    setReplyText("");
-  }, []);
-
-  const handleDismissNotFound = useCallback(() => setCommentNotFoundDismissed(true), []);
 
   return (
     <div className="space-y-4">
@@ -257,15 +246,15 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
                 currentUserId={currentUserId}
                 members={members}
                 isReplying={replyingTo === comment.id}
-                onReply={() => setReplyingTo(comment.id)}
+                onReply={handleReply}
                 onCancelReply={handleCancelReply}
                 replyText={replyText}
                 onReplyTextChange={setReplyText}
-                onReplySubmit={() => handleReplySubmit(comment.id)}
+                onReplySubmit={handleReplySubmit}
                 onReplyKeyDown={handleReplyKeyDown(comment.id)}
                 isReplyPending={addReply.isPending}
-                onReact={(emoji) => addReaction.mutate({ commentId: comment.id, emoji })}
-                onUnreact={(emoji) => removeReaction.mutate({ commentId: comment.id, emoji })}
+                onReact={handleReact}
+                onUnreact={handleUnreact}
                 isHighlighted={highlightCommentId === comment.id}
                 permalinkUrl={`/projects/${projectId}?ticket=${ticketId}&comment=${comment.id}`}
                 canManage={canManage}
@@ -280,7 +269,7 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
                     .sort(
                       (a, b) =>
                         new Date(a.createdAt || 0).getTime() -
-                        new Date(b.createdAt || 0).getTime()
+                        new Date(b.createdAt || 0).getTime(),
                     )
                     .map((reply) => (
                       <div
@@ -295,15 +284,15 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
                           currentUserId={currentUserId}
                           members={members}
                           isReplying={false}
-                          onReply={() => {}}
-                          onCancelReply={() => {}}
+                          onReply={handleReply}
+                          onCancelReply={handleCancelReply}
                           replyText=""
-                          onReplyTextChange={() => {}}
-                          onReplySubmit={() => {}}
-                          onReplyKeyDown={() => {}}
+                          onReplyTextChange={noopStr}
+                          onReplySubmit={handleReplySubmit}
+                          onReplyKeyDown={noopVoid}
                           isReplyPending={false}
-                          onReact={(emoji) => addReaction.mutate({ commentId: reply.id, emoji })}
-                          onUnreact={(emoji) => removeReaction.mutate({ commentId: reply.id, emoji })}
+                          onReact={handleReact}
+                          onUnreact={handleUnreact}
                           hideReplyButton
                           isHighlighted={highlightCommentId === reply.id}
                           permalinkUrl={`/projects/${projectId}?ticket=${ticketId}&comment=${reply.id}`}
@@ -327,296 +316,6 @@ export function ActivityFeed({ ticketId, projectId = 0, comments, members = [], 
           No comments yet. Be the first to comment.
         </p>
       )}
-    </div>
-  );
-}
-
-interface CommentItemProps {
-  comment: TicketComment;
-  currentUserId?: string;
-  members: MentionUser[];
-  isReplying: boolean;
-  onReply: () => void;
-  onCancelReply: () => void;
-  replyText: string;
-  onReplyTextChange: (text: string) => void;
-  onReplySubmit: () => void;
-  onReplyKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
-  isReplyPending: boolean;
-  onReact: (emoji: string) => void;
-  onUnreact: (emoji: string) => void;
-  hideReplyButton?: boolean;
-  isHighlighted?: boolean;
-  permalinkUrl?: string;
-  canManage: boolean;
-  onSaveEdit: (commentId: number, content: string) => void;
-  onDelete: (commentId: number) => void;
-  isSavingEdit: boolean;
-  isDeletingComment: boolean;
-}
-
-function CommentItem({
-  comment,
-  currentUserId,
-  members,
-  isReplying,
-  onReply,
-  onCancelReply,
-  replyText,
-  onReplyTextChange,
-  onReplySubmit,
-  onReplyKeyDown,
-  isReplyPending,
-  onReact,
-  onUnreact,
-  hideReplyButton = false,
-  isHighlighted = false,
-  permalinkUrl,
-  canManage,
-  onSaveEdit,
-  onDelete,
-  isSavingEdit,
-  isDeletingComment,
-}: CommentItemProps) {
-  const user = comment.user as TicketUser | undefined;
-  const timeAgo = comment.createdAt
-    ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
-    : "";
-  const isEdited =
-    comment.updatedAt &&
-    comment.createdAt &&
-    new Date(comment.updatedAt).getTime() > new Date(comment.createdAt).getTime();
-
-  const isAuthor = !!currentUserId && user?.id === currentUserId;
-  const canDelete = isAuthor || canManage;
-
-  const reactionGroups = groupReactions(comment.reactions ?? [], currentUserId);
-  const [showHighlight, setShowHighlight] = useState(isHighlighted);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState(comment.content);
-
-  useEffect(() => {
-    if (!isHighlighted) return;
-    setShowHighlight(true);
-    const timer = setTimeout(() => setShowHighlight(false), 2500);
-    return () => clearTimeout(timer);
-  }, [isHighlighted]);
-
-  const handleCopyLink = useCallback(() => {
-    if (!permalinkUrl) return;
-    navigator.clipboard.writeText(window.location.origin + permalinkUrl).then(() => {
-      toast.success("Link copied");
-    });
-  }, [permalinkUrl]);
-
-  const handleStartEdit = useCallback(() => {
-    setEditText(comment.content);
-    setIsEditing(true);
-  }, [comment.content]);
-
-  const handleCancelEdit = useCallback(() => {
-    setIsEditing(false);
-    setEditText(comment.content);
-  }, [comment.content]);
-
-  const handleSaveEdit = useCallback(() => {
-    const trimmed = editText.trim();
-    if (!trimmed || trimmed === comment.content) {
-      setIsEditing(false);
-      return;
-    }
-    onSaveEdit(comment.id, trimmed);
-    setIsEditing(false);
-  }, [editText, comment.content, comment.id, onSaveEdit]);
-
-  const handleEditKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        handleSaveEdit();
-      }
-      if (e.key === "Escape") {
-        handleCancelEdit();
-      }
-    },
-    [handleSaveEdit, handleCancelEdit]
-  );
-
-  const handleDeleteConfirm = useCallback(() => {
-    onDelete(comment.id);
-  }, [onDelete, comment.id]);
-
-  return (
-    <div className={`flex gap-2.5 group rounded-lg transition-colors duration-500 ${showHighlight ? "bg-blue-50/40 ring-1 ring-blue-200 px-2 -mx-2 py-1" : ""}`}>
-      <Avatar className="h-6 w-6 shrink-0 mt-0.5">
-        <AvatarImage src={resolveImageUrl(user?.image)} />
-        <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
-          {user?.firstName?.[0]}
-          {user?.lastName?.[0]}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold">
-            {user?.firstName} {user?.lastName}
-          </span>
-          <span className="text-[11px] text-muted-foreground">{timeAgo}</span>
-          {isEdited && (
-            <span className="text-[10px] text-muted-foreground/60 italic">(edited)</span>
-          )}
-        </div>
-
-        {isEditing ? (
-          <div className="mt-1 space-y-1.5">
-            <Textarea
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onKeyDown={handleEditKeyDown}
-              className="min-h-[60px] text-sm resize-none"
-              autoFocus
-            />
-            <div className="flex gap-1.5 justify-end">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleCancelEdit}
-                className="h-7 px-2 text-xs"
-                disabled={isSavingEdit}
-              >
-                <X className="h-3 w-3 mr-1" />
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSaveEdit}
-                disabled={!editText.trim() || isSavingEdit}
-                className="h-7 px-2 text-xs"
-              >
-                {isSavingEdit ? (
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                ) : (
-                  <Send className="h-3 w-3 mr-1" />
-                )}
-                Save
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <p className="text-[13px] text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
-            {formatMentionText(comment.content)}
-          </p>
-        )}
-
-        {!isEditing && (
-          <div className="flex items-center gap-3 mt-1.5">
-            <EmojiReactionBar
-              reactions={reactionGroups}
-              onReact={onReact}
-              onUnreact={onUnreact}
-            />
-            {!hideReplyButton && (
-              <button
-                type="button"
-                onClick={onReply}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-              >
-                Reply
-              </button>
-            )}
-            {permalinkUrl && (
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
-                aria-label="Copy comment link"
-              >
-                <Link className="h-3 w-3" />
-                Copy link
-              </button>
-            )}
-            {isAuthor && (
-              <button
-                type="button"
-                onClick={handleStartEdit}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
-                aria-label="Edit comment"
-              >
-                <Pencil className="h-3 w-3" />
-                Edit
-              </button>
-            )}
-            {canDelete && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <button
-                    type="button"
-                    className="text-[11px] text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 flex items-center gap-1"
-                    aria-label="Delete comment"
-                    disabled={isDeletingComment}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    Delete
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete comment?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete the comment and all replies. This cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteConfirm}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </div>
-        )}
-
-        {isReplying && (
-          <div className="mt-2 space-y-1.5">
-            <MentionTextarea
-              value={replyText}
-              onChange={onReplyTextChange}
-              onKeyDown={onReplyKeyDown}
-              placeholder="Write a reply... (Ctrl+Enter to send)"
-              className="min-h-[60px] text-sm"
-              users={members}
-              rows={2}
-            />
-            <div className="flex gap-1.5 justify-end">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={onCancelReply}
-                className="h-7 px-2 text-xs"
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={onReplySubmit}
-                disabled={!replyText.trim() || isReplyPending}
-                className="h-7 px-2 text-xs"
-              >
-                {isReplyPending ? (
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                ) : (
-                  <Send className="h-3 w-3 mr-1" />
-                )}
-                Reply
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

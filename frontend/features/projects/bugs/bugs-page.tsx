@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useBugs, useDeleteBug } from "@/hooks/api/projects/bugs";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -84,10 +84,10 @@ export function BugsPage({ projectId }: BugsPageProps) {
   const deleteBug = useDeleteBug();
   const members = membersData?.data ?? [];
 
-  function handleEdit(bug: Bug) { setEditBug(bug); setSheetOpen(true); }
-  function handleNewBug() { setEditBug(null); setSheetOpen(true); }
+  const handleEdit = useCallback((bug: Bug) => { setEditBug(bug); setSheetOpen(true); }, []);
+  const handleNewBug = useCallback(() => { setEditBug(null); setSheetOpen(true); }, []);
 
-  function handleDelete() {
+  const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteBug.mutate(
       { projectId, id: deleteTarget.id },
@@ -96,9 +96,9 @@ export function BugsPage({ projectId }: BugsPageProps) {
         onError: () => toast.error("Failed to delete bug"),
       },
     );
-  }
+  }, [deleteTarget, deleteBug, projectId]);
 
-  const columns: DataTableColumn<Bug>[] = [
+  const columns = useMemo<DataTableColumn<Bug>[]>(() => [
     {
       key: "bugNumber",
       header: "ID",
@@ -184,7 +184,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       ) : null,
       className: "w-[40px]",
     },
-  ];
+  ], [canUpdate, canDelete, handleEdit, members]);
 
   const filtersBar = (
     <div className="flex items-center gap-2 flex-wrap w-full">

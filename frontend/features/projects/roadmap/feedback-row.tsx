@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback } from "react";
 import { ArrowBigUp, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +22,10 @@ interface FeedbackRowProps {
   onDelete: (post: FeedbackPost) => void;
 }
 
-export function FeedbackRow({ post, roadmapItems, onDelete }: FeedbackRowProps) {
+export const FeedbackRow = memo(function FeedbackRow({ post, roadmapItems, onDelete }: FeedbackRowProps) {
   const update = useUpdateFeedbackPost();
 
-  function handleStatusChange(value: string) {
+  const handleStatusChange = useCallback((value: string) => {
     update.mutate(
       { id: post.id, status: value as FeedbackStatus },
       {
@@ -32,9 +33,9 @@ export function FeedbackRow({ post, roadmapItems, onDelete }: FeedbackRowProps) 
         onError: () => toast.error("Failed to update status"),
       },
     );
-  }
+  }, [update, post.id]);
 
-  function handleLinkChange(value: string) {
+  const handleLinkChange = useCallback((value: string) => {
     update.mutate(
       { id: post.id, linkedRoadmapItemId: value === "none" ? null : Number(value) },
       {
@@ -42,11 +43,11 @@ export function FeedbackRow({ post, roadmapItems, onDelete }: FeedbackRowProps) 
         onError: () => toast.error("Failed to link item"),
       },
     );
-  }
+  }, [update, post.id]);
 
-  function handleDeleteClick() {
+  const handleDeleteClick = useCallback(() => {
     onDelete(post);
-  }
+  }, [onDelete, post]);
 
   return (
     <div className="bg-card border border-border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
@@ -106,4 +107,4 @@ export function FeedbackRow({ post, roadmapItems, onDelete }: FeedbackRowProps) 
       </div>
     </div>
   );
-}
+});

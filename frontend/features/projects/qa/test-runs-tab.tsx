@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTestRuns, useDeleteTestRun } from "@/hooks/api/projects/qa";
 import { useCan } from "@/hooks/api/access";
@@ -85,7 +85,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
   const { data: runs, isLoading, isError, refetch } = useTestRuns(projectId, filters);
   const deleteRun = useDeleteTestRun();
 
-  function handleDelete() {
+  const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteRun.mutate(
       { projectId, id: deleteTarget.id },
@@ -97,17 +97,17 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
         onError: () => toast.error("Failed to delete test run"),
       },
     );
-  }
+  }, [deleteTarget, deleteRun, projectId]);
 
-  function handleDeleteDialogChange(open: boolean) {
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
-  }
+  }, []);
 
-  function handleNewRun() {
+  const handleNewRun = useCallback(() => {
     setSheetOpen(true);
-  }
+  }, []);
 
-  const columns: DataTableColumn<TestRun>[] = [
+  const columns = useMemo<DataTableColumn<TestRun>[]>(() => [
     {
       key: "runNumber",
       header: "Run",
@@ -183,7 +183,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
         ) : null,
       className: "w-[40px]",
     },
-  ];
+  ], [canManage, projectId]);
 
   if (isLoading) return <SkeletonTable rows={5} columns={5} />;
   if (isError) return <ErrorState onRetry={refetch} />;

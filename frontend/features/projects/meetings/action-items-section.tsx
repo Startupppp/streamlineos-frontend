@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Plus, MoreHorizontal, ArrowRightCircle } from "lucide-react";
 import {
@@ -22,6 +22,80 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMember } from "@/types/projects";
 
 const CONVERTIBLE = new Set(["open", "in_progress"]);
+
+interface ActionItemRowProps {
+  item: ActionItem;
+  assigneeName: string;
+  canManage: boolean;
+  convertPending: boolean;
+  onConvert: (item: ActionItem) => void;
+  onEdit: (item: ActionItem) => void;
+  onDelete: (item: ActionItem) => void;
+}
+
+const ActionItemRow = memo(function ActionItemRow({
+  item,
+  assigneeName,
+  canManage,
+  convertPending,
+  onConvert,
+  onEdit,
+  onDelete,
+}: ActionItemRowProps) {
+  const isConverted = item.status === "converted" || item.convertedTicketId != null;
+  const handleConvertClick = useCallback(() => onConvert(item), [item, onConvert]);
+  const handleEditClick = useCallback(() => onEdit(item), [item, onEdit]);
+  const handleDeleteClick = useCallback(() => onDelete(item), [item, onDelete]);
+
+  return (
+    <div className="flex items-start gap-3 px-3 py-2.5">
+      <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`text-sm font-medium ${isConverted ? "text-muted-foreground line-through" : "text-foreground"} truncate`}>
+            {item.title}
+          </span>
+          <ActionItemStatusBadge status={item.status} />
+          {item.convertedTicketId != null && (
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 text-violet-600 border-violet-200">
+              → TASK-{item.convertedTicketId}
+            </Badge>
+          )}
+        </div>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span>{assigneeName}</span>
+          {item.dueDate && <span>Due {item.dueDate.slice(0, 10)}</span>}
+        </div>
+      </div>
+      {canManage && !isConverted && (
+        <div className="flex items-center gap-1 shrink-0">
+          {CONVERTIBLE.has(item.status) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+              onClick={handleConvertClick}
+              disabled={convertPending}
+              title="Convert to task"
+            >
+              <ArrowRightCircle className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleEditClick}>Edit</DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600" onClick={handleDeleteClick}>Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+    </div>
+  );
+});
 
 interface ActionItemsSectionProps {
   projectId: number;
@@ -71,12 +145,15 @@ export function ActionItemsSection({
     });
   }
 
-  function handleConvert(item: ActionItem) {
+  const handleConvert = useCallback((item: ActionItem) => {
     convertItem.mutate(item.id, {
       onSuccess: () => toast.success("Converted to task"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }
+  }, [convertItem]);
+
+  const handleEditRow = useCallback((item: ActionItem) => setEditItem(item), []);
+  const handleDeleteRow = useCallback((item: ActionItem) => setDeleteTarget(item), []);
 
   return (
     <div className="space-y-3">
@@ -98,57 +175,18 @@ export function ActionItemsSection({
         <EmptyState compact title="No action items" description="Track follow-up tasks from this meeting." />
       ) : (
         <div className="divide-y divide-border rounded-lg border bg-card">
-          {actionItems.map((item) => {
-            const isConverted = item.status === "converted" || item.convertedTicketId != null;
-            return (
-              <div key={item.id} className="flex items-start gap-3 px-3 py-2.5">
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-sm font-medium ${isConverted ? "text-muted-foreground line-through" : "text-foreground"} truncate`}>
-                      {item.title}
-                    </span>
-                    <ActionItemStatusBadge status={item.status} />
-                    {item.convertedTicketId != null && (
-                      <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 text-violet-600 border-violet-200">
-                        → TASK-{item.convertedTicketId}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span>{memberName(item.assigneeId)}</span>
-                    {item.dueDate && <span>Due {item.dueDate.slice(0, 10)}</span>}
-                  </div>
-                </div>
-                {canManage && !isConverted && (
-                  <div className="flex items-center gap-1 shrink-0">
-                    {CONVERTIBLE.has(item.status) && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
-                        onClick={() => handleConvert(item)}
-                        disabled={convertItem.isPending}
-                        title="Convert to task"
-                      >
-                        <ArrowRightCircle className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditItem(item)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600" onClick={() => setDeleteTarget(item)}>Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {actionItems.map((item) => (
+            <ActionItemRow
+              key={item.id}
+              item={item}
+              assigneeName={memberName(item.assigneeId)}
+              canManage={canManage}
+              convertPending={convertItem.isPending}
+              onConvert={handleConvert}
+              onEdit={handleEditRow}
+              onDelete={handleDeleteRow}
+            />
+          ))}
         </div>
       )}
 

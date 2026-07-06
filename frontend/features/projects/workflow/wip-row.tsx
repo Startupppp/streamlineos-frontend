@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { memo, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -14,7 +14,7 @@ interface WipRowProps {
   canManage: boolean;
 }
 
-export function WipRow({ status, projectId, canManage }: WipRowProps) {
+export const WipRow = memo(function WipRow({ status, projectId, canManage }: WipRowProps) {
   const [value, setValue] = useState(
     status.wipLimit != null ? String(status.wipLimit) : "",
   );
@@ -89,4 +89,4 @@ export function WipRow({ status, projectId, canManage }: WipRowProps) {
       </div>
     </div>
   );
-}
+});

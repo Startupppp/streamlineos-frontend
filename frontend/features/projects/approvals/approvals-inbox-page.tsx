@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useReducedMotion } from "framer-motion";
@@ -40,35 +40,33 @@ export function ApprovalsInboxPage() {
   const [decideTarget, setDecideTarget] = useState<DecideTarget | null>(null);
   const decideApproval = useDecideApproval(decideTarget?.projectId ?? 0);
 
-  const now = new Date();
   const pending = useMemo(
     () => (data ?? []).filter((a) => a.status === "pending" || a.status === "requested").length,
     [data],
   );
-  const overdue = useMemo(
-    () =>
-      (data ?? []).filter(
-        (a) =>
-          a.dueAt &&
-          new Date(a.dueAt) < now &&
-          a.status !== "approved" &&
-          a.status !== "rejected" &&
-          a.status !== "cancelled",
-      ).length,
-    [data, now],
-  );
+  const overdue = useMemo(() => {
+    const now = new Date();
+    return (data ?? []).filter(
+      (a) =>
+        a.dueAt &&
+        new Date(a.dueAt) < now &&
+        a.status !== "approved" &&
+        a.status !== "rejected" &&
+        a.status !== "cancelled",
+    ).length;
+  }, [data]);
 
-  function memberName(userId: string | null): string {
+  const memberName = useCallback((userId: string | null): string => {
     if (!userId) return "—";
     const m = members.find((m) => m.userId === userId);
     return m?.name ?? m?.email ?? userId;
-  }
+  }, [members]);
 
-  function handleDecideClick(item: ApprovalInboxItem) {
+  const handleDecideClick = useCallback((item: ApprovalInboxItem) => {
     setDecideTarget({ approvalId: item.id, projectId: item.projectId, title: item.title });
-  }
+  }, []);
 
-  function handleDecideConfirm(input: DecideApprovalInput) {
+  const handleDecideConfirm = useCallback((input: DecideApprovalInput) => {
     if (!decideTarget) return;
     decideApproval.mutate(
       { id: decideTarget.approvalId, ...input },
@@ -80,9 +78,9 @@ export function ApprovalsInboxPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }
+  }, [decideTarget, decideApproval]);
 
-  const columns: DataTableColumn<ApprovalInboxItem>[] = [
+  const columns = useMemo<DataTableColumn<ApprovalInboxItem>[]>(() => [
     {
       key: "project",
       header: "Project",
@@ -128,7 +126,7 @@ export function ApprovalsInboxPage() {
       header: "Due",
       cell: (row) => {
         if (!row.dueAt) return <span className="text-muted-foreground">—</span>;
-        const isOverdue = new Date(row.dueAt) < now;
+        const isOverdue = new Date(row.dueAt) < new Date();
         return (
           <span className={isOverdue ? "text-red-600 font-medium" : "text-muted-foreground"}>
             {row.dueAt.slice(0, 10)}
@@ -162,7 +160,7 @@ export function ApprovalsInboxPage() {
         ) : null,
       className: "w-20",
     },
-  ];
+  ], [canDecide, memberName, handleDecideClick]);
 
   const fadeVariant = prefersReduced
     ? {}

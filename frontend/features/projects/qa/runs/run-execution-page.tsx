@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useTestRunDetail, useUpdateTestRun, useCreateBugFromResult } from "@/hooks/api/projects/qa";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -70,7 +70,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   const [bugTitle, setBugTitle] = useState("");
   const [bugSeverity, setBugSeverity] = useState("major");
 
-  function handleCompleteRun() {
+  const handleCompleteRun = useCallback(() => {
     if (!run) return;
     updateRun.mutate(
       { projectId, id: run.id, status: "completed" },
@@ -79,16 +79,16 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
         onError: () => toast.error("Failed to complete run"),
       },
     );
-  }
+  }, [run, updateRun, projectId]);
 
-  function handleOpenCreateBug(resultId: number) {
+  const handleOpenCreateBug = useCallback((resultId: number) => {
     const result = run?.results.find((r) => r.id === resultId);
     setBugTitle(result?.testCase ? `Bug in TC-${result.testCase.caseNumber}: ${result.testCase.title}` : "");
     setBugResultId(resultId);
     setBugSheetOpen(true);
-  }
+  }, [run]);
 
-  function handleSubmitBug() {
+  const handleSubmitBug = useCallback(() => {
     if (!bugResultId) return;
     createBugFromResult.mutate(
       { projectId, runId, resultId: bugResultId, title: bugTitle || undefined, severity: bugSeverity },
@@ -97,7 +97,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
         onError: () => toast.error("Failed to create bug"),
       },
     );
-  }
+  }, [bugResultId, bugTitle, bugSeverity, createBugFromResult, projectId, runId]);
 
   if (isLoading) {
     return (

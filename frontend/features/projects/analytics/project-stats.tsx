@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const STATE_COLORS: Record<string, string> = {
@@ -48,7 +49,7 @@ interface ProjectStatsProps {
   healthBreakdown: HealthBreakdown | undefined;
 }
 
-export function ProjectStats({
+export const ProjectStats = memo(function ProjectStats({
   healthScore,
   healthStatus,
   healthBreakdown,
@@ -132,4 +133,4 @@ export function ProjectStats({
       </CardContent>
     </Card>
   );
-}
+});

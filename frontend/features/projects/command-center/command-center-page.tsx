@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { memo, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useMyWork } from "@/hooks/api/projects/my-work";
 import type { MyWorkItem } from "@/types/projects/my-work";
+import type { ProjectListItem } from "@/types/projects";
 import { isPast, isToday, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +36,7 @@ function isOverdue(item: MyWorkItem): boolean {
   }
 }
 
-function MyWorkRow({ item, index }: { item: MyWorkItem; index: number }) {
+const MyWorkRow = memo(function MyWorkRow({ item, index }: { item: MyWorkItem; index: number }) {
   const shouldReduceMotion = useReducedMotion();
 
   return (
@@ -64,7 +65,59 @@ function MyWorkRow({ item, index }: { item: MyWorkItem; index: number }) {
       </Link>
     </motion.div>
   );
-}
+});
+
+const ProjectCard = memo(function ProjectCard({ project, index }: { project: ProjectListItem; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04, duration: 0.18, ease: "easeOut" }}
+    >
+      <Link
+        href={`/projects/${project.id}`}
+        className="flex items-center gap-3 px-3 py-2.5 bg-card rounded-lg border border-border hover:shadow-sm hover:border-border/80 transition-all group"
+      >
+        <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
+          {project.key.substring(0, 2).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
+          {project.description && (
+            <p className="text-[11px] text-muted-foreground truncate">{project.description}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {project.progress && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 rounded-full transition-[width] duration-500"
+                  style={{ width: `${project.progress.percentage}%` }}
+                />
+              </div>
+              <span className="text-[10px] text-muted-foreground tabular-nums">
+                {project.progress.percentage}%
+              </span>
+            </div>
+          )}
+          {project.status && (
+            <Badge
+              variant="outline"
+              className={cn("text-[10px] py-0 h-4 px-1.5", STATUS_COLOR[project.status] ?? "")}
+            >
+              {project.status.replace(/_/g, " ")}
+            </Badge>
+          )}
+          <ChevronRight className={cn(
+            "h-3.5 w-3.5 text-muted-foreground transition-opacity",
+            "opacity-0 group-hover:opacity-100",
+          )} />
+        </div>
+      </Link>
+    </motion.div>
+  );
+});
 
 export function CommandCenterPage() {
   const {
@@ -208,55 +261,7 @@ export function CommandCenterPage() {
           ) : (
             <div className="space-y-2">
               {projects.slice(0, 8).map((project, idx) => (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.04, duration: 0.18, ease: "easeOut" }}
-                  >
-                    <Link
-                      href={`/projects/${project.id}`}
-                      className="flex items-center gap-3 px-3 py-2.5 bg-card rounded-lg border border-border hover:shadow-sm hover:border-border/80 transition-all group"
-                    >
-
-                      <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
-                        {project.key.substring(0, 2).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
-                        {project.description && (
-                          <p className="text-[11px] text-muted-foreground truncate">{project.description}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {project.progress && (
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                              <div
-                                className="h-full bg-blue-500 rounded-full transition-[width] duration-500"
-                                style={{ width: `${project.progress.percentage}%` }}
-                              />
-                            </div>
-                            <span className="text-[10px] text-muted-foreground tabular-nums">
-                              {project.progress.percentage}%
-                            </span>
-                          </div>
-                        )}
-                        {project.status && (
-                          <Badge
-                            variant="outline"
-                            className={cn("text-[10px] py-0 h-4 px-1.5", STATUS_COLOR[project.status] ?? "")}
-                          >
-                            {project.status.replace(/_/g, " ")}
-                          </Badge>
-                        )}
-                        <ChevronRight className={cn(
-                          "h-3.5 w-3.5 text-muted-foreground transition-opacity",
-                          "opacity-0 group-hover:opacity-100",
-                        )} />
-                      </div>
-                    </Link>
-                  </motion.div>
+                <ProjectCard key={project.id} project={project} index={idx} />
               ))}
             </div>
           )}

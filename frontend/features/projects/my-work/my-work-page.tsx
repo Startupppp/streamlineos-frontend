@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { memo, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -44,7 +44,7 @@ function getDueBucket(item: MyWorkItem): DueBucket {
   }
 }
 
-function WorkItemRow({ item, index }: { item: MyWorkItem; index: number }) {
+const WorkItemRow = memo(function WorkItemRow({ item, index }: { item: MyWorkItem; index: number }) {
   const shouldReduceMotion = useReducedMotion();
 
   return (
@@ -88,7 +88,7 @@ function WorkItemRow({ item, index }: { item: MyWorkItem; index: number }) {
       </Link>
     </motion.div>
   );
-}
+});
 
 function BucketSection({ bucket, items }: { bucket: DueBucket; items: MyWorkItem[] }) {
   const cfg = BUCKET_CONFIG[bucket];

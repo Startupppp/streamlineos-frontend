@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback } from "react";
 import { ChevronUp, ChevronDown, X, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,37 +21,37 @@ interface FormFieldEditorProps {
 }
 
 export function FormFieldEditor({ fields, onChange }: FormFieldEditorProps) {
-  function handleAdd() {
+  const handleAdd = useCallback(() => {
     onChange([...fields, { key: "", label: "", type: "text", required: false }]);
-  }
+  }, [fields, onChange]);
 
-  function handleRemove(idx: number) {
+  const handleRemove = useCallback((idx: number) => {
     onChange(fields.filter((_, i) => i !== idx));
-  }
+  }, [fields, onChange]);
 
-  function handleMoveUp(idx: number) {
+  const handleMoveUp = useCallback((idx: number) => {
     if (idx === 0) return;
     const next = [...fields];
     [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
     onChange(next);
-  }
+  }, [fields, onChange]);
 
-  function handleMoveDown(idx: number) {
+  const handleMoveDown = useCallback((idx: number) => {
     if (idx === fields.length - 1) return;
     const next = [...fields];
     [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
     onChange(next);
-  }
+  }, [fields, onChange]);
 
-  function handleLabelChange(idx: number, label: string) {
+  const handleLabelChange = useCallback((idx: number, label: string) => {
     onChange(
       fields.map((f, i) =>
         i === idx ? { ...f, label, key: f.key || slugify(label) } : f,
       ),
     );
-  }
+  }, [fields, onChange]);
 
-  function handleTypeChange(idx: number, type: FormFieldType) {
+  const handleTypeChange = useCallback((idx: number, type: FormFieldType) => {
     onChange(
       fields.map((f, i) =>
         i === idx
@@ -58,16 +59,16 @@ export function FormFieldEditor({ fields, onChange }: FormFieldEditorProps) {
           : f,
       ),
     );
-  }
+  }, [fields, onChange]);
 
-  function handleRequiredChange(idx: number, required: boolean) {
+  const handleRequiredChange = useCallback((idx: number, required: boolean) => {
     onChange(fields.map((f, i) => (i === idx ? { ...f, required } : f)));
-  }
+  }, [fields, onChange]);
 
-  function handleOptionsChange(idx: number, raw: string) {
+  const handleOptionsChange = useCallback((idx: number, raw: string) => {
     const options = raw.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
     onChange(fields.map((f, i) => (i === idx ? { ...f, options } : f)));
-  }
+  }, [fields, onChange]);
 
   return (
     <div className="space-y-2">
@@ -77,13 +78,13 @@ export function FormFieldEditor({ fields, onChange }: FormFieldEditorProps) {
           field={field}
           index={idx}
           total={fields.length}
-          onLabelChange={(v) => handleLabelChange(idx, v)}
-          onTypeChange={(v) => handleTypeChange(idx, v)}
-          onRequiredChange={(v) => handleRequiredChange(idx, v)}
-          onOptionsChange={(v) => handleOptionsChange(idx, v)}
-          onMoveUp={() => handleMoveUp(idx)}
-          onMoveDown={() => handleMoveDown(idx)}
-          onRemove={() => handleRemove(idx)}
+          onLabelChange={handleLabelChange}
+          onTypeChange={handleTypeChange}
+          onRequiredChange={handleRequiredChange}
+          onOptionsChange={handleOptionsChange}
+          onMoveUp={handleMoveUp}
+          onMoveDown={handleMoveDown}
+          onRemove={handleRemove}
         />
       ))}
       <Button type="button" variant="outline" size="sm" className="h-7 text-xs w-full" onClick={handleAdd}>
@@ -98,16 +99,16 @@ interface FieldRowProps {
   field: FormField;
   index: number;
   total: number;
-  onLabelChange: (v: string) => void;
-  onTypeChange: (v: FormFieldType) => void;
-  onRequiredChange: (v: boolean) => void;
-  onOptionsChange: (v: string) => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  onRemove: () => void;
+  onLabelChange: (idx: number, v: string) => void;
+  onTypeChange: (idx: number, v: FormFieldType) => void;
+  onRequiredChange: (idx: number, v: boolean) => void;
+  onOptionsChange: (idx: number, v: string) => void;
+  onMoveUp: (idx: number) => void;
+  onMoveDown: (idx: number) => void;
+  onRemove: (idx: number) => void;
 }
 
-function FieldRow({
+const FieldRow = memo(function FieldRow({
   field, index, total,
   onLabelChange, onTypeChange, onRequiredChange, onOptionsChange,
   onMoveUp, onMoveDown, onRemove,
@@ -120,24 +121,24 @@ function FieldRow({
         <div className="flex flex-col gap-0.5 shrink-0">
           <Button
             type="button" variant="ghost" size="icon" className="h-5 w-5"
-            onClick={onMoveUp} disabled={index === 0} aria-label="Move field up"
+            onClick={() => onMoveUp(index)} disabled={index === 0} aria-label="Move field up"
           >
             <ChevronUp className="h-3 w-3" />
           </Button>
           <Button
             type="button" variant="ghost" size="icon" className="h-5 w-5"
-            onClick={onMoveDown} disabled={index === total - 1} aria-label="Move field down"
+            onClick={() => onMoveDown(index)} disabled={index === total - 1} aria-label="Move field down"
           >
             <ChevronDown className="h-3 w-3" />
           </Button>
         </div>
         <Input
           value={field.label}
-          onChange={(e) => onLabelChange(e.target.value)}
+          onChange={(e) => onLabelChange(index, e.target.value)}
           placeholder="Field label"
           className="h-8 text-sm flex-1 min-w-0"
         />
-        <Select value={field.type} onValueChange={(v) => onTypeChange(v as FormFieldType)}>
+        <Select value={field.type} onValueChange={(v) => onTypeChange(index, v as FormFieldType)}>
           <SelectTrigger className="h-8 w-36 text-xs shrink-0">
             <SelectValue />
           </SelectTrigger>
@@ -149,12 +150,12 @@ function FieldRow({
         </Select>
         <div className="flex items-center gap-1.5 shrink-0">
           <Label className="text-xs text-muted-foreground">Req</Label>
-          <Switch checked={field.required} onCheckedChange={onRequiredChange} />
+          <Switch checked={field.required} onCheckedChange={(v) => onRequiredChange(index, v)} />
         </div>
         <Button
           type="button" variant="ghost" size="icon"
           className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-          onClick={onRemove} aria-label="Remove field"
+          onClick={() => onRemove(index)} aria-label="Remove field"
         >
           <X className="h-3.5 w-3.5" />
         </Button>
@@ -162,11 +163,11 @@ function FieldRow({
       {meta.needsOptions && (
         <Textarea
           value={(field.options ?? []).join("\n")}
-          onChange={(e) => onOptionsChange(e.target.value)}
+          onChange={(e) => onOptionsChange(index, e.target.value)}
           placeholder="Options — one per line or comma-separated"
           className="text-xs h-16 resize-none"
         />
       )}
     </div>
   );
-}
+});

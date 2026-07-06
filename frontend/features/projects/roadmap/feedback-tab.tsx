@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -38,7 +38,7 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
 
   function handleRetry() { refetch(); }
   function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
-  function handleSetDeleteTarget(post: FeedbackPost) { setDeleteTarget(post); }
+  const handleSetDeleteTarget = useCallback((post: FeedbackPost) => { setDeleteTarget(post); }, []);
 
   function handleDelete() {
     if (!deleteTarget) return;

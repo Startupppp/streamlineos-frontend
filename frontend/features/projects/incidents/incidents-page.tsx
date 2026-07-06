@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { Siren, Plus, MoreHorizontal } from "lucide-react";
@@ -85,9 +85,9 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const slaBreachedCount = all.filter((i) => { const s = getSlaState(i); return s.responseBreached || s.resolutionBreached; }).length;
   const resolvedCount = all.filter((i) => i.status === "resolved" || i.status === "closed").length;
 
-  function handleEdit(inc: Incident) { setEditIncident(inc); setSheetOpen(true); }
-  function handleNew() { setEditIncident(null); setSheetOpen(true); }
-  function handleDeleteConfirm() {
+  const handleEdit = useCallback((inc: Incident) => { setEditIncident(inc); setSheetOpen(true); }, []);
+  const handleNew = useCallback(() => { setEditIncident(null); setSheetOpen(true); }, []);
+  const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
     deleteIncident.mutate(
       { projectId, id: deleteTarget.id },
@@ -96,9 +96,9 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         onError: () => toast.error("Failed to delete incident"),
       },
     );
-  }
+  }, [deleteTarget, deleteIncident, projectId]);
 
-  const columns: DataTableColumn<Incident>[] = [
+  const columns = useMemo<DataTableColumn<Incident>[]>(() => [
     {
       key: "incidentNumber",
       header: "ID",
@@ -184,7 +184,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       ) : null,
       className: "w-[40px]",
     },
-  ];
+  ], [canManage, projectId, handleEdit, members]);
 
   const filtersBar = (
     <div className="flex items-center gap-2 flex-wrap w-full">

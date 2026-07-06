@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useChangeRequests, useDeleteChangeRequest } from "@/hooks/api/projects/change-requests";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -66,22 +66,23 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const deleteCr = useDeleteChangeRequest(projectId);
   const members = membersData?.data ?? [];
 
-  function handleNew() { setEditCr(null); setSheetOpen(true); }
-  function handleEdit(cr: ChangeRequest) { setEditCr(cr); setSheetOpen(true); }
+  const handleNew = useCallback(() => { setEditCr(null); setSheetOpen(true); }, []);
+  const handleEdit = useCallback((cr: ChangeRequest) => { setEditCr(cr); setSheetOpen(true); }, []);
 
-  function handleDelete() {
+  const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteCr.mutate(deleteTarget.id, {
       onSuccess: () => { toast.success("Change request deleted"); setDeleteTarget(null); },
       onError: () => toast.error("Failed to delete"),
     });
-  }
+  }, [deleteTarget, deleteCr]);
 
-  const filtered = (crs ?? []).filter((cr) =>
-    !search || cr.title.toLowerCase().includes(search.toLowerCase()),
+  const filtered = useMemo(
+    () => (crs ?? []).filter((cr) => !search || cr.title.toLowerCase().includes(search.toLowerCase())),
+    [crs, search],
   );
 
-  const columns: DataTableColumn<ChangeRequest>[] = [
+  const columns = useMemo<DataTableColumn<ChangeRequest>[]>(() => [
     {
       key: "crNumber",
       header: "ID",
@@ -163,7 +164,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         ) : null,
       className: "w-[40px]",
     },
-  ];
+  ], [canManage, handleEdit, members]);
 
   const filtersBar = (
     <div className="flex items-center gap-2 flex-wrap w-full">

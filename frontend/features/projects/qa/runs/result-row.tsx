@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +33,7 @@ interface ResultRowProps {
   onCreateBug: (resultId: number) => void;
 }
 
-export function ResultRow({ result, projectId, canExecute, canCreateBug, onCreateBug }: ResultRowProps) {
+export const ResultRow = memo(function ResultRow({ result, projectId, canExecute, canCreateBug, onCreateBug }: ResultRowProps) {
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState(result.notes ?? "");
   const updateResult = useUpdateTestResult();
@@ -148,4 +148,4 @@ export function ResultRow({ result, projectId, canExecute, canCreateBug, onCreat
       )}
     </div>
   );
-}
+});

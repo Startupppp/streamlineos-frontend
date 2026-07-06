@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { MoreHorizontal } from "lucide-react";
@@ -107,13 +107,13 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
   const updateApproval = useUpdateApproval(projectId);
   const deleteApproval = useDeleteApproval(projectId);
 
-  function memberName(userId: string | null): string {
+  const memberName = useCallback((userId: string | null): string => {
     if (!userId) return "—";
     const m = members.find((x) => x.userId === userId);
     return m?.name ?? m?.email ?? userId;
-  }
+  }, [members]);
 
-  function handleCreate(input: CreateApprovalInput) {
+  const handleCreate = useCallback((input: CreateApprovalInput) => {
     createApproval.mutate(input, {
       onSuccess: () => {
         toast.success("Approval requested");
@@ -121,9 +121,9 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }
+  }, [createApproval]);
 
-  function handleDecide(input: DecideApprovalInput) {
+  const handleDecide = useCallback((input: DecideApprovalInput) => {
     if (!decideTarget) return;
     decideApproval.mutate(
       { id: decideTarget.id, ...input },
@@ -135,9 +135,9 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }
+  }, [decideTarget, decideApproval]);
 
-  function handleDelegate(approverId: string) {
+  const handleDelegate = useCallback((approverId: string) => {
     if (!delegateTarget) return;
     updateApproval.mutate(
       { id: delegateTarget.id, approverId },
@@ -149,9 +149,9 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }
+  }, [delegateTarget, updateApproval]);
 
-  function handleEscalate(row: Approval) {
+  const handleEscalate = useCallback((row: Approval) => {
     updateApproval.mutate(
       { id: row.id, status: "escalated" },
       {
@@ -159,9 +159,9 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }
+  }, [updateApproval]);
 
-  function handleCancelConfirm() {
+  const handleCancelConfirm = useCallback(() => {
     if (!cancelTarget) return;
     updateApproval.mutate(
       { id: cancelTarget.id, status: "cancelled" },
@@ -173,9 +173,9 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }
+  }, [cancelTarget, updateApproval]);
 
-  function handleDeleteConfirm() {
+  const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
     deleteApproval.mutate(deleteTarget.id, {
       onSuccess: () => {
@@ -184,9 +184,9 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }
+  }, [deleteTarget, deleteApproval]);
 
-  const columns: DataTableColumn<Approval>[] = [
+  const columns = useMemo<DataTableColumn<Approval>[]>(() => [
     {
       key: "entityType",
       header: "Type",
@@ -266,7 +266,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         );
       },
     },
-  ];
+  ], [canDecide, canManage, currentUserId, memberName, handleEscalate]);
 
   const filtersBar = (
     <div className="flex items-center gap-2">

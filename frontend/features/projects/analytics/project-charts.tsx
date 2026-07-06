@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart,
@@ -32,7 +33,7 @@ interface StateChartProps {
   data: { state: string; count: number; fill: string }[];
 }
 
-export function StateDistributionChart({ data }: StateChartProps) {
+export const StateDistributionChart = memo(function StateDistributionChart({ data }: StateChartProps) {
   if (data.length === 0) {
     return <ChartEmptyState message="No state data available" />;
   }
@@ -56,13 +57,13 @@ export function StateDistributionChart({ data }: StateChartProps) {
       </BarChart>
     </ResponsiveContainer>
   );
-}
+});
 
 interface PriorityChartProps {
   data: { name: string; value: number; fill: string }[];
 }
 
-export function PriorityBreakdownChart({ data }: PriorityChartProps) {
+export const PriorityBreakdownChart = memo(function PriorityBreakdownChart({ data }: PriorityChartProps) {
   if (data.length === 0) {
     return <ChartEmptyState message="No priority data available" />;
   }
@@ -88,13 +89,13 @@ export function PriorityBreakdownChart({ data }: PriorityChartProps) {
       </PieChart>
     </ResponsiveContainer>
   );
-}
+});
 
 interface VolumeChartProps {
   data: { date: string; created: number }[];
 }
 
-export function VolumeOverTimeChart({ data }: VolumeChartProps) {
+export const VolumeOverTimeChart = memo(function VolumeOverTimeChart({ data }: VolumeChartProps) {
   if (data.length === 0) {
     return <ChartEmptyState message="No volume data available" />;
   }
@@ -122,7 +123,7 @@ export function VolumeOverTimeChart({ data }: VolumeChartProps) {
       </AreaChart>
     </ResponsiveContainer>
   );
-}
+});
 
 interface AssigneeChartProps {
   data: {
@@ -133,7 +134,7 @@ interface AssigneeChartProps {
   }[];
 }
 
-export function AssigneeCompletionChart({ data }: AssigneeChartProps) {
+export const AssigneeCompletionChart = memo(function AssigneeCompletionChart({ data }: AssigneeChartProps) {
   if (data.length === 0) {
     return <ChartEmptyState message="No assignee data available" />;
   }
@@ -168,13 +169,13 @@ export function AssigneeCompletionChart({ data }: AssigneeChartProps) {
       </BarChart>
     </ResponsiveContainer>
   );
-}
+});
 
 interface VelocityChartProps {
   data: { cycle: string; points: number }[];
 }
 
-export function CycleVelocityChart({ data }: VelocityChartProps) {
+export const CycleVelocityChart = memo(function CycleVelocityChart({ data }: VelocityChartProps) {
   if (data.length === 0) {
     return <ChartEmptyState message="No velocity data available" />;
   }
@@ -199,7 +200,7 @@ export function CycleVelocityChart({ data }: VelocityChartProps) {
       </BarChart>
     </ResponsiveContainer>
   );
-}
+});
 
 interface BurndownChartProps {
   data: { date: string; remaining: number; ideal: number }[];
@@ -208,14 +209,16 @@ interface BurndownChartProps {
   onSprintChange: (id: number) => void;
 }
 
-export function SprintBurndownChart({
+export const SprintBurndownChart = memo(function SprintBurndownChart({
   data,
   sprints,
   sprintId,
   onSprintChange,
 }: BurndownChartProps) {
-  const handleSprintChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-    onSprintChange(Number(e.target.value));
+  const handleSprintChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => onSprintChange(Number(e.target.value)),
+    [onSprintChange],
+  );
 
   return (
     <Card className="md:col-span-2 rounded-lg border border-border bg-card shadow-none">
@@ -284,13 +287,13 @@ export function SprintBurndownChart({
       </CardContent>
     </Card>
   );
-}
+});
 
 interface EstimateChartProps {
   data: { label: string; estimate: number; actual: number }[];
 }
 
-export function EstimateVsActualChart({ data }: EstimateChartProps) {
+export const EstimateVsActualChart = memo(function EstimateVsActualChart({ data }: EstimateChartProps) {
   if (data.length === 0) {
     return <ChartEmptyState message="No estimate data available" />;
   }
@@ -333,6 +336,6 @@ export function EstimateVsActualChart({ data }: EstimateChartProps) {
       </ScatterChart>
     </ResponsiveContainer>
   );
-}
+});
 
 export { STATE_COLORS, PRIORITY_COLORS, CHART_COLORS };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckSquare, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ interface TicketChecklistsProps {
   ticketId: number;
 }
 
-function ChecklistItemRow({
+const ChecklistItemRow = memo(function ChecklistItemRow({
   item,
   checklistId,
   projectId,
@@ -160,7 +160,7 @@ function ChecklistItemRow({
       </button>
     </motion.div>
   );
-}
+});
 
 function ChecklistSection({
   checklist,

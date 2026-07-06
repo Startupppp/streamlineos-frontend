@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { format, addDays, isSameDay, parseISO } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -69,7 +69,7 @@ function isTicketOverdue(ticket: KanbanTicket): boolean {
   }
 }
 
-export function WorkloadView({ tickets, members }: WorkloadViewProps) {
+export const WorkloadView = memo(function WorkloadView({ tickets, members }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
     new Set(),
@@ -93,7 +93,7 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
   const totalAssigned = tickets.filter((t) => !!t.assigneeId).length;
   const overCapacity = memberWorkload.filter((m) => m.total > 5).length;
 
-  function handleToggleExpand(memberId: string) {
+  const handleToggleExpand = useCallback((memberId: string) => {
     setExpandedMembers((prev) => {
       const next = new Set(prev);
       if (next.has(memberId)) {
@@ -103,7 +103,7 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
       }
       return next;
     });
-  }
+  }, []);
 
   const stats = [
     {
@@ -336,4 +336,4 @@ export function WorkloadView({ tickets, members }: WorkloadViewProps) {
       </div>
     </div>
   );
-}
+});

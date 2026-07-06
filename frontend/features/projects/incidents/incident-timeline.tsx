@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -94,6 +95,24 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
   );
 }
 
+const TimelineEntry = memo(function TimelineEntry({ update }: { update: IncidentUpdate }) {
+  return (
+    <div className="border-l-2 border-border pl-3 py-0.5 space-y-0.5">
+      <div className="flex items-center gap-2 flex-wrap">
+        {update.newStatus && (
+          <Badge variant="outline" className={`text-[10px] ${STATUS_STYLES[update.newStatus]}`}>
+            → {STATUS_LABELS[update.newStatus]}
+          </Badge>
+        )}
+        <span className="text-[10px] text-muted-foreground">
+          {update.createdBy ?? "System"} · {new Date(update.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+        </span>
+      </div>
+      <p className="text-[12px] text-foreground whitespace-pre-wrap">{update.message}</p>
+    </div>
+  );
+});
+
 interface IncidentTimelineProps {
   projectId: number;
   incidentId: number;
@@ -102,8 +121,9 @@ interface IncidentTimelineProps {
 }
 
 export function IncidentTimeline({ projectId, incidentId, updates, canManage }: IncidentTimelineProps) {
-  const sorted = [...updates].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  const sorted = useMemo(
+    () => [...updates].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [updates],
   );
 
   return (
@@ -117,19 +137,7 @@ export function IncidentTimeline({ projectId, incidentId, updates, canManage }: 
       )}
 
       {sorted.map((u) => (
-        <div key={u.id} className="border-l-2 border-border pl-3 py-0.5 space-y-0.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            {u.newStatus && (
-              <Badge variant="outline" className={`text-[10px] ${STATUS_STYLES[u.newStatus]}`}>
-                → {STATUS_LABELS[u.newStatus]}
-              </Badge>
-            )}
-            <span className="text-[10px] text-muted-foreground">
-              {u.createdBy ?? "System"} · {new Date(u.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
-            </span>
-          </div>
-          <p className="text-[12px] text-foreground whitespace-pre-wrap">{u.message}</p>
-        </div>
+        <TimelineEntry key={u.id} update={u} />
       ))}
 
       {canManage && (

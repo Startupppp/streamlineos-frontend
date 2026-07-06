@@ -1,46 +1,18 @@
 "use client";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Clock,
-  User,
-  Calendar,
-  Circle,
-  Timer,
-  CheckCircle2,
-  AlertCircle,
-  Zap,
-  Target,
-  Boxes,
-  X,
-} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Clock, User, Calendar, X } from "lucide-react";
 import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import { useEpics, useModules } from "@/hooks/api/projects";
 import { LabelPicker } from "../tickets/label-picker";
 import { RecurrencePicker } from "../tickets/recurrence-picker";
-import {
-  useSetRecurrence,
-  type RecurrenceRule,
-} from "@/hooks/api/projects/recurring";
+import { useSetRecurrence, type RecurrenceRule } from "@/hooks/api/projects/recurring";
 import type { ProjectMember } from "./types";
-
-interface DisplayedAssignee {
-  id: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  image?: string | null;
-}
+import { SidebarSelectFields } from "./sidebar-select-fields";
+import { SidebarAssigneeSection, type DisplayedAssignee } from "./sidebar-assignee-section";
 
 interface TicketSidebarProps {
   ticket: {
@@ -101,9 +73,7 @@ interface PropertyRowProps {
 function PropertyRow({ label, children }: PropertyRowProps) {
   return (
     <div className="grid grid-cols-[100px_1fr] items-center gap-2 min-h-[36px]">
-      <span className="text-xs text-muted-foreground font-medium truncate">
-        {label}
-      </span>
+      <span className="text-xs text-muted-foreground font-medium truncate">{label}</span>
       <div className="min-w-0">{children}</div>
     </div>
   );
@@ -123,18 +93,11 @@ export function TicketSidebar({
   const setRecurrence = useSetRecurrence(projectId ?? 0, ticketId);
   const selectableEpics = (epics ?? []).filter((e) => e.id !== ticket.id);
 
-  const handleStartDateChange = (value: string) =>
-    onAutoSave({ startDate: value || null });
-
-  const handleDueDateChange = (value: string) =>
-    onAutoSave({ dueDate: value || null });
-
+  const handleStartDateChange = (value: string) => onAutoSave({ startDate: value || null });
+  const handleDueDateChange = (value: string) => onAutoSave({ dueDate: value || null });
   const handleClearStartDate = () => onAutoSave({ startDate: null });
-
   const handleClearDueDate = () => onAutoSave({ dueDate: null });
-
-  const handleRecurrenceChange = (rule: RecurrenceRule | null) =>
-    setRecurrence.mutate(rule);
+  const handleRecurrenceChange = (rule: RecurrenceRule | null) => setRecurrence.mutate(rule);
 
   const handleStatusChange = (v: string) => onAutoSave({ status: v });
   const handlePriorityChange = (v: string) => onAutoSave({ priority: v });
@@ -145,20 +108,15 @@ export function TicketSidebar({
     onAutoSave({ epicId: v === "none" ? null : parseInt(v) });
   const handleModuleChange = (v: string) =>
     onAutoSave({ moduleId: v === "none" ? null : parseInt(v) });
-
   const handlePointsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value === "" ? undefined : parseInt(e.target.value);
     onAutoSave({ points: val });
   };
 
   const timeSpent = ticket.timeSpent ? parseFloat(ticket.timeSpent) : 0;
-  const originalEstimate = ticket.originalEstimate
-    ? parseFloat(ticket.originalEstimate)
-    : 0;
+  const originalEstimate = ticket.originalEstimate ? parseFloat(ticket.originalEstimate) : 0;
   const timeProgress =
-    originalEstimate > 0
-      ? Math.min((timeSpent / originalEstimate) * 100, 100)
-      : 0;
+    originalEstimate > 0 ? Math.min((timeSpent / originalEstimate) * 100, 100) : 0;
 
   const currentAssigneeIds = ticket.assignees
     ? ticket.assignees.map((a) => a.userId)
@@ -194,180 +152,20 @@ export function TicketSidebar({
 
   return (
     <div className="px-4 py-3 space-y-1 bg-muted/10">
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            Status
-          </span>
-          <Select
-            value={ticket.status || "TODO"}
-            onValueChange={handleStatusChange}
-          >
-            <SelectTrigger className="h-8 text-xs bg-background w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {statuses?.map((s) => (
-                <SelectItem key={s.id} value={s.name}>
-                  {s.name.replace(/_/g, " ")}
-                </SelectItem>
-              )) || (
-                <>
-                  <SelectItem value="TODO">
-                    <span className="flex items-center gap-1.5">
-                      <Circle className="h-3 w-3" /> To Do
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="IN_PROGRESS">
-                    <span className="flex items-center gap-1.5">
-                      <Timer className="h-3 w-3 text-blue-500" /> In Progress
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="IN_REVIEW">
-                    <span className="flex items-center gap-1.5">
-                      <AlertCircle className="h-3 w-3 text-amber-500" /> In
-                      Review
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="DONE">
-                    <span className="flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3 w-3 text-green-500" /> Done
-                    </span>
-                  </SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            Priority
-          </span>
-          <Select
-            value={ticket.priority || "MEDIUM"}
-            onValueChange={handlePriorityChange}
-          >
-            <SelectTrigger className="h-8 text-xs bg-background w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="LOW">Low</SelectItem>
-              <SelectItem value="MEDIUM">Medium</SelectItem>
-              <SelectItem value="HIGH">High</SelectItem>
-              <SelectItem value="URGENT">Urgent</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            Type
-          </span>
-          <Select
-            value={ticket.type || "TASK"}
-            onValueChange={handleTypeChange}
-          >
-            <SelectTrigger className="h-8 text-xs bg-background w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="TASK">Task</SelectItem>
-              <SelectItem value="BUG">Bug</SelectItem>
-              <SelectItem value="STORY">Story</SelectItem>
-              <SelectItem value="EPIC">Epic</SelectItem>
-              <SelectItem value="SUBTASK">Subtask</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            Points
-          </span>
-          <Input
-            type="number"
-            min={0}
-            value={ticket.points ?? ""}
-            onChange={handlePointsChange}
-            className="h-8 text-xs bg-background w-full"
-            placeholder="0"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            <Target className="h-3 w-3 inline mr-0.5" />
-            Sprint
-          </span>
-          <Select
-            value={ticket.sprintId?.toString() || "none"}
-            onValueChange={handleSprintChange}
-          >
-            <SelectTrigger className="h-8 text-xs bg-background w-full">
-              <SelectValue placeholder="None" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {sprints?.map((s) => (
-                <SelectItem key={s.id} value={s.id.toString()}>
-                  {s.name}
-                  {s.status === "ACTIVE" ? " (Active)" : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            <Zap className="h-3 w-3 inline mr-0.5" />
-            Epic
-          </span>
-          <Select
-            value={ticket.epicId?.toString() || "none"}
-            onValueChange={handleEpicChange}
-          >
-            <SelectTrigger className="h-8 text-xs bg-background w-full">
-              <SelectValue placeholder="None" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {selectableEpics.map((epic) => (
-                <SelectItem key={epic.id} value={epic.id.toString()}>
-                  {epic.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            <Boxes className="h-3 w-3 inline mr-0.5" />
-            Module
-          </span>
-          <Select
-            value={ticket.moduleId?.toString() || "none"}
-            onValueChange={handleModuleChange}
-          >
-            <SelectTrigger className="h-8 text-xs bg-background w-full">
-              <SelectValue placeholder="None" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {(modules ?? []).map((mod) => (
-                <SelectItem key={mod.id} value={mod.id.toString()}>
-                  {mod.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <SidebarSelectFields
+        ticket={ticket}
+        statuses={statuses}
+        sprints={sprints}
+        epics={selectableEpics}
+        modules={modules ?? []}
+        onStatusChange={handleStatusChange}
+        onPriorityChange={handlePriorityChange}
+        onTypeChange={handleTypeChange}
+        onPointsChange={handlePointsChange}
+        onSprintChange={handleSprintChange}
+        onEpicChange={handleEpicChange}
+        onModuleChange={handleModuleChange}
+      />
 
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -405,9 +203,7 @@ export function TicketSidebar({
               value={ticket.dueDate ?? undefined}
               onChange={handleDueDateChange}
               placeholder="Set due"
-              fromDate={
-                ticket.startDate ? new Date(ticket.startDate) : undefined
-              }
+              fromDate={ticket.startDate ? new Date(ticket.startDate) : undefined}
               className="h-8 text-xs"
             />
             {ticket.dueDate && (
@@ -431,62 +227,13 @@ export function TicketSidebar({
         />
       </div>
 
-      <div className="pt-1">
-        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-          Assignees
-        </span>
-        {displayedAssignees.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-1.5">
-            {displayedAssignees.map((person) => (
-              <div
-                key={person.id}
-                className="flex items-center gap-1 bg-muted rounded-full pl-0.5 pr-1.5 py-0.5"
-              >
-                <Avatar className="h-5 w-5">
-                  <AvatarImage src={resolveImageUrl(person.image)} />
-                  <AvatarFallback className="text-[7px]">
-                    {person.firstName?.[0]}
-                    {person.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-[11px]">{person.firstName}</span>
-                <button
-                  className="text-muted-foreground hover:text-destructive transition-colors leading-none"
-                  onClick={() => handleRemoveAssignee(person.id)}
-                  aria-label={`Remove ${person.firstName}`}
-                >
-                  <span className="text-xs font-bold">&times;</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <Select value="" onValueChange={handleAddAssignee}>
-          <SelectTrigger className="h-8 text-xs bg-background w-full">
-            <SelectValue placeholder="+ Add assignee" />
-          </SelectTrigger>
-          <SelectContent>
-            {members
-              ?.filter((m) => !currentAssigneeIds.includes(m.id))
-              .map((member) => (
-                <SelectItem key={member.id} value={member.id}>
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-5 w-5">
-                      <AvatarImage src={resolveImageUrl(member.image)} />
-                      <AvatarFallback className="text-[8px]">
-                        {member.firstName?.[0]}
-                        {member.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-xs">
-                      {member.firstName} {member.lastName}
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <SidebarAssigneeSection
+        members={members}
+        displayedAssignees={displayedAssignees}
+        currentAssigneeIds={currentAssigneeIds}
+        onAddAssignee={handleAddAssignee}
+        onRemoveAssignee={handleRemoveAssignee}
+      />
 
       <div className="pt-1">
         <LabelPicker
@@ -507,14 +254,10 @@ export function TicketSidebar({
               <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
               <span>{timeSpent}h logged</span>
               {originalEstimate > 0 && (
-                <span className="text-muted-foreground">
-                  / {originalEstimate}h est
-                </span>
+                <span className="text-muted-foreground">/ {originalEstimate}h est</span>
               )}
             </div>
-            {originalEstimate > 0 && (
-              <Progress value={timeProgress} className="h-1 mt-1" />
-            )}
+            {originalEstimate > 0 && <Progress value={timeProgress} className="h-1 mt-1" />}
           </PropertyRow>
         </div>
       )}
@@ -522,15 +265,11 @@ export function TicketSidebar({
       <div className="grid grid-cols-2 gap-3 pt-1">
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Calendar className="h-3 w-3 shrink-0" />
-          {ticket.createdAt
-            ? format(new Date(ticket.createdAt), "MMM d, yyyy")
-            : "—"}
+          {ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d, yyyy") : "—"}
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Clock className="h-3 w-3 shrink-0" />
-          {ticket.updatedAt
-            ? format(new Date(ticket.updatedAt), "MMM d, yyyy")
-            : "—"}
+          {ticket.updatedAt ? format(new Date(ticket.updatedAt), "MMM d, yyyy") : "—"}
         </div>
       </div>
 

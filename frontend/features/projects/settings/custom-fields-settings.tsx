@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { memo, useState, useCallback } from "react";
 import {
   useProjectCustomFields,
   useCreateProjectCustomField,
@@ -58,6 +58,92 @@ const fieldTypeColors: Record<CustomFieldType, string> = {
   url: "bg-blue-50 text-blue-600",
   currency: "bg-green-100 text-green-700",
 };
+
+interface CustomFieldItem {
+  id: number;
+  name: string;
+  type: CustomFieldType;
+  options?: string[] | null;
+  required?: boolean;
+}
+
+interface CustomFieldRowProps {
+  field: CustomFieldItem;
+  index: number;
+  onDelete: (fieldId: number) => void;
+}
+
+const CustomFieldRow = memo(function CustomFieldRow({
+  field,
+  index,
+  onDelete,
+}: CustomFieldRowProps) {
+  const handleDelete = useCallback(() => onDelete(field.id), [field.id, onDelete]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ delay: index * 0.03 }}
+      className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/40 transition-colors"
+    >
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground truncate">
+          {field.name}
+        </p>
+        {field.options && field.options.length > 0 && (
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+            Options: {field.options.join(", ")}
+          </p>
+        )}
+      </div>
+      <Badge
+        variant="secondary"
+        className={`text-[10px] shrink-0 ${fieldTypeColors[field.type]}`}
+      >
+        {field.type.replace("_", " ")}
+      </Badge>
+      {field.required && (
+        <Badge
+          variant="outline"
+          className="text-[10px] shrink-0 border-red-200 text-red-600"
+        >
+          required
+        </Badge>
+      )}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button
+            type="button"
+            className="h-7 w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0"
+            aria-label="Delete field"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete custom field?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the field and all its values from all
+              tickets. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </motion.div>
+  );
+});
 
 interface CustomFieldsSettingsProps {
   projectId: number;
@@ -158,68 +244,12 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
               )}
 
               {fields.map((field, idx) => (
-                <motion.div
+                <CustomFieldRow
                   key={field.id}
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ delay: idx * 0.03 }}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/40 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {field.name}
-                    </p>
-                    {field.options && field.options.length > 0 && (
-                      <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                        Options: {field.options.join(", ")}
-                      </p>
-                    )}
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className={`text-[10px] shrink-0 ${fieldTypeColors[field.type]}`}
-                  >
-                    {field.type.replace("_", " ")}
-                  </Badge>
-                  {field.required && (
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] shrink-0 border-red-200 text-red-600"
-                    >
-                      required
-                    </Badge>
-                  )}
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button
-                        type="button"
-                        className="h-7 w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0"
-                        aria-label="Delete field"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete custom field?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will remove the field and all its values from all
-                          tickets. This cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(field.id)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </motion.div>
+                  field={field}
+                  index={idx}
+                  onDelete={handleDelete}
+                />
               ))}
             </AnimatePresence>
 
