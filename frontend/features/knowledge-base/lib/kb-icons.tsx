@@ -112,7 +112,6 @@ export const KbTrash2Icon = createAnimatedIcon(Trash2Icon);
 export const KbLockIcon = createAnimatedIcon(LockIcon);
 export const KbUsersIcon = createAnimatedIcon(UsersIcon);
 export const KbLayoutGridIcon = createAnimatedIcon(LayoutGridIcon);
-export const KbChartBarIcon = createAnimatedIcon(ChartBarIcon);
 export const KbBarChart2Icon = createAnimatedIcon(ChartBarIcon);
 export const KbSettingsIcon = createAnimatedIcon(SettingsIcon);
 export const KbUploadIcon = createAnimatedIcon(UploadIcon);

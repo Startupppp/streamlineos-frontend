@@ -89,16 +89,6 @@ export interface CreateCategoryInput {
   parentId?: number | null;
 }
 
-export interface UpdateCategoryInput {
-  categoryId: number;
-  spaceId: number;
-  name?: string;
-  description?: string | null;
-  icon?: string | null;
-  sortOrder?: number;
-  parentId?: number | null;
-}
-
 export interface CreateArticleInput {
   title: string;
   spaceId: number;

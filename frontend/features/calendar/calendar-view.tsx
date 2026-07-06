@@ -45,7 +45,6 @@ import {
   useIntegrationConnections,
 } from "@/hooks/api/integrations";
 import { CalendarToolbar } from "./calendar-toolbar";
-import { CalendarSidebar } from "./calendar-sidebar";
 import { useEventPropGetter } from "./use-event-prop-getter";
 import { useCalendarComputed } from "./use-calendar-computed";
 
@@ -56,7 +55,6 @@ const BigCalendarWrapper = dynamic(
     })),
   { ssr: false },
 );
-
 
 export function CalendarView() {
   const router = useRouter();
@@ -170,15 +168,14 @@ export function CalendarView() {
     [selectedEventId, events],
   );
 
-  const { allCalEvents, todayActivities, visibleRange } =
-    useCalendarComputed({
-      events,
-      externalData,
-      hiddenIds,
-      connections,
-      currentDate,
-      view,
-    });
+  const { allCalEvents, todayActivities, visibleRange } = useCalendarComputed({
+    events,
+    externalData,
+    hiddenIds,
+    connections,
+    currentDate,
+    view,
+  });
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
     setPendingSlot({ start: slotInfo.start, end: slotInfo.end });
@@ -358,17 +355,6 @@ export function CalendarView() {
             )}
           </div>
         </div>
-
-        <CalendarSidebar
-          currentDate={currentDate}
-          members={members}
-          checkedAttendees={checkedAttendees}
-          todayActivities={todayActivities}
-          onDateSelect={setCurrentDate}
-          onAttendeeChange={handleAttendeeChange}
-          onOpenCreate={handleOpenCreate}
-          onSelectActivity={handleSelectActivity}
-        />
       </div>
 
       <button
