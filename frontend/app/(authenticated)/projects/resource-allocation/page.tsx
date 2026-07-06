@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { RequireModule } from "@/components/auth/require-module";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Users, Briefcase, AlertTriangle } from "lucide-react";
 import { useResourceAllocation } from "@/hooks/api/projects";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -31,14 +33,36 @@ export default function ResourceAllocationPage() {
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
+  const stats = useMemo(() => {
+    if (!entries) return { members: 0, openTickets: 0, overloaded: 0 };
+    return {
+      members: entries.length,
+      openTickets: entries.reduce((sum, e) => sum + e.totalOpen, 0),
+      overloaded: entries.filter((e) => e.totalOpen > 10).length,
+    };
+  }, [entries]);
+
   const maxTickets = entries ? Math.max(...entries.map((e) => e.totalOpen), 1) : 1;
 
   return (
     <RequireModule module="PROJECTS">
       <PageWrapper
         title="Resource Allocation"
+        eyebrow="Projects"
         subtitle="Open ticket distribution across team members and active projects"
       >
+        {!isLoading && !isError && entries && entries.length > 0 && (
+          <StatCardGrid cols={3} className="mb-4">
+            <StatCard label="Team Members" value={stats.members} icon={Users} tone="blue" />
+            <StatCard label="Open Tickets" value={stats.openTickets} icon={Briefcase} tone="emerald" />
+            <StatCard
+              label="Overloaded"
+              value={stats.overloaded}
+              icon={AlertTriangle}
+              tone={stats.overloaded > 0 ? "red" : "default"}
+            />
+          </StatCardGrid>
+        )}
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3, 4].map((i) => (
@@ -59,7 +83,7 @@ export default function ResourceAllocationPage() {
             {entries.map((entry, idx) => {
               const utilPct = Math.round((entry.totalOpen / maxTickets) * 100);
               return (
-                <Card key={entry.user.id} className="hover:shadow-md transition-shadow">
+                <Card key={entry.user.id} className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
                   <CardContent className="py-2 px-4">
                     <div className="flex items-start gap-4">
                       <Avatar className="h-9 w-9 shrink-0">

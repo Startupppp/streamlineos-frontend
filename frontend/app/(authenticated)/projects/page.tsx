@@ -92,7 +92,9 @@ export default function ProjectsPage() {
   return (
     <RequireModule module="PROJECTS">
     <PageWrapper
-      title="Projects"
+      title="All Projects"
+      eyebrow="Projects"
+      subtitle="Browse and manage every project in your workspace"
       badge={pagination?.total ? String(pagination.total) : undefined}
       actions={<NewProjectDialog />}
       filters={
@@ -110,7 +112,7 @@ export default function ProjectsPage() {
         viewMode === "grid" ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-3 shadow-sm">
+              <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
                 <div className="flex justify-between">
                   <Skeleton className="h-5 w-14 rounded" />
                   <Skeleton className="h-5 w-16 rounded-full" />
@@ -132,7 +134,7 @@ export default function ProjectsPage() {
         ) : (
           <div className="space-y-2">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="rounded-lg border border-border bg-card p-3 shadow-sm">
+              <div key={i} className="rounded-xl border border-border bg-card p-3 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex items-center gap-2">

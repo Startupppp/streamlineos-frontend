@@ -15,29 +15,28 @@ interface ViewToggleProps<T extends string = string> {
   options: ViewOption<T>[];
   onChange: (value: T) => void;
   size?: "sm" | "default";
+  showLabel?: boolean;
   className?: string;
 }
 
-/**
- * Segmented control for switching between display modes (grid / list / card etc).
- * Renders as a single bordered pill where the active segment uses primary ink.
- */
 export function ViewToggle<T extends string = string>({
   value,
   options,
   onChange,
   size = "default",
+  showLabel = false,
   className,
 }: ViewToggleProps<T>) {
   const h = size === "sm" ? "h-7" : "h-8";
   const pad = size === "sm" ? "px-2" : "px-2.5";
+  const labelPad = size === "sm" ? "px-2.5" : "px-3";
   const iconSize = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
 
   return (
     <div
       role="group"
       className={cn(
-        "inline-flex items-center rounded-md border border-border bg-card p-0.5",
+        "inline-flex items-center rounded-lg border border-border bg-muted/40 p-0.5",
         className,
       )}
     >
@@ -52,15 +51,17 @@ export function ViewToggle<T extends string = string>({
             aria-label={opt.label}
             aria-pressed={isActive}
             className={cn(
-              "inline-flex items-center justify-center rounded-sm transition-colors press-scale",
+              "inline-flex items-center justify-center rounded-md transition-all press-scale",
+              showLabel && "gap-1.5 text-xs font-medium",
               h,
-              pad,
+              showLabel ? labelPad : pad,
               isActive
-                ? "bg-primary text-primary-foreground shadow-[0_2px_8px_-2px_rgba(11,18,32,0.25)]"
+                ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted",
             )}
           >
             <Icon className={iconSize} />
+            {showLabel ? opt.label : null}
           </button>
         );
       })}

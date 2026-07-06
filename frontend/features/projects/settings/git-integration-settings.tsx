@@ -169,17 +169,18 @@ export function ProjectsGitIntegrationSettings() {
   }, [refetch]);
 
   return (
+    <RequireModule module="PROJECTS">
     <PageWrapper
-      title="Git Integration"
-      subtitle="Connect a repository to link commits and pull requests to tickets automatically"
+      title="Integrations"
+      eyebrow="Projects"
+      subtitle="Connect Git repositories to link commits and pull requests to tickets"
       actions={
-        <Button onClick={handleOpenDialog}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button size="sm" onClick={handleOpenDialog}>
+          <Plus className="h-4 w-4 mr-1" />
           Add connection
         </Button>
       }
     >
-      <RequireModule module="PROJECTS">
       {isLoading ? (
         <LoadingState variant="cards" rows={3} />
       ) : isError ? (
@@ -306,7 +307,7 @@ export function ProjectsGitIntegrationSettings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      </RequireModule>
     </PageWrapper>
+    </RequireModule>
   );
 }

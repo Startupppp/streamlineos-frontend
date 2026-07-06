@@ -168,7 +168,7 @@ export function ApprovalsInboxPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Approvals Inbox" eyebrow="Projects" variant="display">
+      <PageWrapper title="Approvals" eyebrow="Projects" variant="display">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <Skeleton className="h-14 rounded-lg" />
@@ -182,7 +182,7 @@ export function ApprovalsInboxPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Approvals Inbox" eyebrow="Projects" variant="display">
+      <PageWrapper title="Approvals" eyebrow="Projects" variant="display">
         <ErrorState onRetry={() => void refetch()} />
       </PageWrapper>
     );
@@ -192,7 +192,7 @@ export function ApprovalsInboxPage() {
 
   return (
     <PageWrapper
-      title="Approvals Inbox"
+      title="Approvals"
       eyebrow="Projects"
       variant="display"
       subtitle="Approvals waiting for your decision across all projects"

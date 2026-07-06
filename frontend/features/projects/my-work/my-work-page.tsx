@@ -4,6 +4,7 @@ import { memo, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -130,12 +131,30 @@ export function MyWorkPage() {
     [data],
   );
 
+  const bucketCounts = useMemo(() => {
+    if (!grouped) return { overdue: 0, today: 0, upcoming: 0 };
+    return {
+      overdue: grouped.overdue.length,
+      today: grouped.today.length,
+      upcoming: grouped.upcoming.length,
+    };
+  }, [grouped]);
+
   return (
     <PageWrapper
       title="My Work"
+      eyebrow="Projects"
       subtitle="Your assigned tickets across all projects"
       badge={isLoading ? undefined : String(totalOpen)}
     >
+      {!isLoading && !isError && data && data.length > 0 && (
+        <StatCardGrid cols={4} className="mb-4">
+          <StatCard label="Open" value={totalOpen} icon={CheckCircle2} tone="blue" />
+          <StatCard label="Overdue" value={bucketCounts.overdue} icon={AlertCircle} tone={bucketCounts.overdue > 0 ? "red" : "default"} />
+          <StatCard label="Due Today" value={bucketCounts.today} icon={CalendarClock} tone="amber" />
+          <StatCard label="Upcoming" value={bucketCounts.upcoming} icon={Clock} tone="emerald" />
+        </StatCardGrid>
+      )}
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 6 }).map((_, i) => (

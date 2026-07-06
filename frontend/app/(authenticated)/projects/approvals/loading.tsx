@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ApprovalsInboxLoading() {
   return (
-    <PageWrapper title="Approvals Inbox" eyebrow="Projects" variant="display">
+    <PageWrapper title="Approvals" eyebrow="Projects" variant="display">
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-2">
           <Skeleton className="h-14 rounded-lg" />

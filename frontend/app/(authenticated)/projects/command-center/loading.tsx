@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function CommandCenterLoading() {
   return (
-    <PageWrapper title="Command Center" variant="display">
+    <PageWrapper title="Command Center" eyebrow="Projects" variant="display">
       <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (

@@ -157,24 +157,23 @@ export function PortfoliosPage() {
         </Button>
       ) : undefined}
     >
-      <div className="px-4 pb-4">
-        {isLoading ? (
-          <SkeletonTable rows={5} columns={7} />
-        ) : isError ? (
-          <ErrorState className="flex-1" onRetry={() => void refetch()} />
-        ) : displayed.length === 0 ? (
-          <EmptyState
-            illustrationPreset="projects"
-            title={isFiltered ? "No matching portfolios" : "No portfolios yet"}
-            description={isFiltered ? "Try adjusting your filters." : "Create a portfolio to group and govern your projects."}
-            action={isFiltered
-              ? { label: "Clear filters", onClick: () => { setStatusFilter("all"); setSearch(""); } }
-              : canManage ? { label: "New Portfolio", onClick: () => setSheetOpen(true) } : undefined}
-          />
-        ) : (
-          <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="780px" />
-        )}
-      </div>
+      {isLoading ? (
+        <SkeletonTable rows={5} columns={7} />
+      ) : isError ? (
+        <ErrorState className="flex-1" onRetry={() => void refetch()} />
+      ) : displayed.length === 0 ? (
+        <EmptyState
+          illustrationPreset="projects"
+          title={isFiltered ? "No matching portfolios" : "No portfolios yet"}
+          description={isFiltered ? "Try adjusting your filters." : "Create a portfolio to group and govern your projects."}
+          action={isFiltered
+            ? { label: "Clear filters", onClick: () => { setStatusFilter("all"); setSearch(""); } }
+            : canManage ? { label: "New Portfolio", onClick: () => setSheetOpen(true) } : undefined}
+          className="flex-1 min-h-[40vh]"
+        />
+      ) : (
+        <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="780px" />
+      )}
 
       <PortfolioFormSheet
         open={sheetOpen || !!editTarget}

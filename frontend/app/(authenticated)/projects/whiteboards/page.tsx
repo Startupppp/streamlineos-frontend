@@ -206,6 +206,7 @@ export default function WhiteboardsHubPage() {
     <RequireModule module="PROJECTS">
       <PageWrapper
         title="Whiteboards"
+        eyebrow="Projects"
         subtitle="Every board you can access across your projects"
         actions={
           canManage ? (

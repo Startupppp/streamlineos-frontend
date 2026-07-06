@@ -162,7 +162,7 @@ export function CommandCenterPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Command Center" variant="display">
+      <PageWrapper title="Command Center" eyebrow="Projects" variant="display">
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -178,7 +178,7 @@ export function CommandCenterPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Command Center" variant="display">
+      <PageWrapper title="Command Center" eyebrow="Projects" variant="display">
         <ErrorState
           title="Failed to load command center"
           description="Could not fetch project data. Please try again."
@@ -189,7 +189,7 @@ export function CommandCenterPage() {
   }
 
   return (
-    <PageWrapper title="Command Center" variant="display" subtitle="Overview of your projects and active work">
+    <PageWrapper title="Command Center" eyebrow="Projects" variant="display" subtitle="Overview of your projects and active work">
       <div className="space-y-6">
         <StatCardGrid cols={3}>
           <StatCard

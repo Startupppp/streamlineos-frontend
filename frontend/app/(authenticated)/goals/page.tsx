@@ -3,9 +3,11 @@
 import { useMemo, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { RequireModule } from "@/components/auth/require-module";
 import {
   Select,
   SelectContent,
@@ -45,39 +47,13 @@ import {
 
 const LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: typeof Target;
-  label: string;
-  value: string | number;
-  tone: string;
-}) {
-  return (
-    <div className="bg-muted/40 rounded-lg p-3 flex items-center gap-3">
-      <div
-        className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${tone}`}
-      >
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs text-muted-foreground truncate">{label}</p>
-        <p className="text-base font-semibold tabular-nums">{value}</p>
-      </div>
-    </div>
-  );
-}
-
 function GoalCard({ goal }: { goal: GoalListItem }) {
   const cfg = STATUS_CONFIG[goal.status];
   const ownerName = goal.owner?.name ?? goal.owner?.email ?? null;
 
   return (
     <Link href={`/goals/${goal.id}`} className="block group">
-      <div className="bg-card border border-border rounded-lg p-4 space-y-3 transition-colors group-hover:border-primary/40">
+      <div className="bg-card border border-border rounded-xl p-4 space-y-3 shadow-sm transition-colors group-hover:border-primary/40">
         <div className="flex items-start justify-between gap-2">
           <p className="font-medium text-sm leading-snug line-clamp-2">
             {goal.title}
@@ -94,7 +70,7 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-300"
+              className="h-full rounded-full bg-blue-500 transition-all duration-300"
               style={{ width: `${goal.progress}%` }}
             />
           </div>
@@ -172,8 +148,10 @@ export default function GoalsPage() {
   }
 
   return (
+    <RequireModule module="PROJECTS">
     <PageWrapper
       title="Goals & OKRs"
+      eyebrow="Projects"
       subtitle="Track company, team, and individual objectives and their key results"
       actions={
         <Button size="sm" onClick={handleOpenCreate}>
@@ -220,32 +198,36 @@ export default function GoalsPage() {
         </div>
       }
     >
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <StatCardGrid cols={4} className="mb-4">
         <StatCard
-          icon={Target}
           label="Total Goals"
           value={stats?.total ?? 0}
-          tone="bg-blue-500/10 text-blue-600"
+          icon={Target}
+          tone="blue"
+          isLoading={isLoading}
         />
         <StatCard
-          icon={TrendingUp}
           label="On Track"
           value={stats?.byStatus.on_track ?? 0}
-          tone="bg-emerald-500/10 text-emerald-600"
+          icon={TrendingUp}
+          tone="emerald"
+          isLoading={isLoading}
         />
         <StatCard
-          icon={AlertTriangle}
           label="At Risk"
           value={stats?.atRisk ?? 0}
-          tone="bg-amber-500/10 text-amber-600"
+          icon={AlertTriangle}
+          tone="amber"
+          isLoading={isLoading}
         />
         <StatCard
-          icon={TrendingUp}
           label="Avg Progress"
           value={`${stats?.avgProgress ?? 0}%`}
-          tone="bg-violet-500/10 text-violet-600"
+          icon={TrendingUp}
+          tone="violet"
+          isLoading={isLoading}
         />
-      </div>
+      </StatCardGrid>
 
       {isLoading ? (
         <LoadingState variant="cards" rows={6} />
@@ -292,5 +274,6 @@ export default function GoalsPage() {
 
       <GoalFormSheet open={createOpen} onOpenChange={setCreateOpen} />
     </PageWrapper>
+    </RequireModule>
   );
 }

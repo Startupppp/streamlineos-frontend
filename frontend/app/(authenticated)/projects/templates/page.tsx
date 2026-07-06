@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Plus, LayoutTemplate } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +30,7 @@ import { CreateTemplateSheet } from "@/features/projects/templates/create-templa
 import { ApplyTemplateDialog } from "@/features/projects/templates/apply-template-dialog";
 
 export default function ProjectTemplatesPage() {
-  const { data: templates, isLoading } = useProjectTemplates();
+  const { data: templates, isLoading, isError, refetch } = useProjectTemplates();
   const deleteTemplate = useDeleteProjectTemplate();
   const [createOpen, setCreateOpen] = useState(false);
   const [applyTarget, setApplyTarget] = useState<ProjectTemplate | null>(null);
@@ -55,15 +57,16 @@ export default function ProjectTemplatesPage() {
     });
   }, [deleteTarget, deleteTemplate]);
 
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
     <RequireModule module="PROJECTS">
       <PageWrapper
-        title="Project Templates"
-        subtitle={
-          templates
-            ? `${templates.length} template${templates.length !== 1 ? "s" : ""}`
-            : undefined
-        }
+        title="Templates"
+        eyebrow="Projects"
+        subtitle="Reusable project structures to bootstrap new work"
         actions={
           <Button size="sm" onClick={handleOpenCreate} className="active:scale-[0.98]">
             <Plus className="h-3.5 w-3.5 mr-1" /> New Template
@@ -75,7 +78,7 @@ export default function ProjectTemplatesPage() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="rounded-lg border border-border bg-card p-4 space-y-3"
+                className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1.5">
@@ -94,6 +97,8 @@ export default function ProjectTemplatesPage() {
               </div>
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState onRetry={handleRetry} className="flex-1 min-h-[40vh]" />
         ) : templates && templates.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {templates.map((t) => (
@@ -107,9 +112,7 @@ export default function ProjectTemplatesPage() {
           </div>
         ) : (
           <EmptyState
-            illustration={
-              <LayoutTemplate className="h-8 w-8 text-muted-foreground/40" />
-            }
+            illustration={<EmptyProjectsIllustration className="h-32 w-32" />}
             title="No templates yet"
             description="Create a reusable project structure to bootstrap new projects quickly."
             action={{ label: "Create your first template", onClick: handleOpenCreate }}

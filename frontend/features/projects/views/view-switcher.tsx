@@ -31,7 +31,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({ activeView, onViewChang
             "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
             activeView === type
               ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
           )}
         >
           <Icon className="h-3.5 w-3.5" />

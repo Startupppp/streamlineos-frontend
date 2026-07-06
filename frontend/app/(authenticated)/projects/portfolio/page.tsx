@@ -10,6 +10,7 @@ import {
   List,
   TrendingUp,
 } from "lucide-react";
+import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 import { useProjects } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
@@ -24,7 +25,6 @@ import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { RequireModule } from "@/components/auth/require-module";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { cn } from "@/lib/utils";
 import { PortfolioSkeleton } from "@/features/projects/portfolio/portfolio-skeleton";
 import { ProjectTableRow } from "@/features/projects/portfolio/project-table-row";
 import { ProjectHealthCard } from "@/features/projects/portfolio/project-health-card";
@@ -35,6 +35,11 @@ import {
   type SortKey,
   type ViewMode,
 } from "@/features/projects/portfolio/portfolio-config";
+
+const VIEW_OPTIONS: ViewOption<ViewMode>[] = [
+  { value: "table", icon: List, label: "Table" },
+  { value: "cards", icon: LayoutGrid, label: "Cards" },
+];
 
 export default function PortfolioPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -67,37 +72,15 @@ export default function PortfolioPage() {
   const handleStatusChange = useCallback((v: string) => setStatusFilter(v as StatusFilter), []);
   const handleSortChange = useCallback((v: string) => setSort(v as SortKey), []);
   const handleRetry = useCallback(() => refetch(), [refetch]);
-  const handleSetTableView = useCallback(() => setViewMode("table"), []);
-  const handleSetCardsView = useCallback(() => setViewMode("cards"), []);
-
   const filters = (
     <div className="flex items-center gap-2 flex-wrap">
-      <div className="flex items-center bg-muted/40 rounded-lg p-0.5 border border-border">
-        <button
-          type="button"
-          onClick={handleSetTableView}
-          className={cn(
-            "h-7 px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5",
-            viewMode === "table"
-              ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          <List className="h-3.5 w-3.5" /> Table
-        </button>
-        <button
-          type="button"
-          onClick={handleSetCardsView}
-          className={cn(
-            "h-7 px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5",
-            viewMode === "cards"
-              ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          <LayoutGrid className="h-3.5 w-3.5" /> Cards
-        </button>
-      </div>
+      <ViewToggle
+        value={viewMode}
+        options={VIEW_OPTIONS}
+        onChange={setViewMode}
+        size="sm"
+        showLabel
+      />
       <Select value={statusFilter} onValueChange={handleStatusChange}>
         <SelectTrigger className="h-8 w-36 text-xs"><SelectValue /></SelectTrigger>
         <SelectContent>
@@ -119,7 +102,13 @@ export default function PortfolioPage() {
 
   return (
     <RequireModule module="PROJECTS">
-      <PageWrapper title="Portfolio" badge={data ? String(stats.total) : undefined} filters={filters}>
+      <PageWrapper
+        title="Portfolio"
+        eyebrow="Projects"
+        subtitle="Health and progress across all projects"
+        badge={data ? String(stats.total) : undefined}
+        filters={filters}
+      >
         {isLoading ? (
           <PortfolioSkeleton />
         ) : isError ? (
@@ -140,7 +129,7 @@ export default function PortfolioPage() {
                 action={{ label: "Go to Projects", href: "/projects" }}
               />
             ) : viewMode === "table" ? (
-              <div className="rounded-lg border border-border overflow-hidden">
+              <div className="rounded-xl border border-border overflow-hidden shadow-sm">
                 <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_minmax(100px,140px)_auto_auto] gap-3 px-4 py-2 bg-muted/40 border-b border-border">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Project</span>
                   <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Status</span>
