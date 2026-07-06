@@ -15,6 +15,9 @@ export interface ProjectSettings {
     timeTracking: boolean;
     wiki: boolean;
   };
+  projectType?: string;
+  workflow?: string;
+  features?: Record<string, boolean>;
 }
 
 export interface Project {
@@ -227,6 +230,9 @@ export interface CreateProjectInput {
     timeTracking: boolean;
     wiki: boolean;
   };
+  projectType?: string;
+  workflow?: string;
+  features?: Record<string, boolean>;
 }
 
 export interface UpdateProjectInput {
@@ -240,6 +246,9 @@ export interface UpdateProjectInput {
   endDate?: Date | string | null;
   memberIds?: string[];
   reassignments?: Record<string, string>;
+  projectType?: string;
+  workflow?: string;
+  features?: Record<string, boolean>;
 }
 
 export interface AddProjectMemberInput {
