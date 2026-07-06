@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowDown, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, Link, ListPlus, Loader2, MessageSquare, Pencil, Pin, Reply, Smile, Ticket, Trash2 } from "lucide-react";
+import { ArrowDown, BookmarkCheck, BookmarkPlus, CalendarClock, CheckCheck, Copy, FileText, Forward, Link, ListPlus, Loader2, MessageSquare, Pencil, Pin, Reply, Smile, Ticket, Trash2, UserPlus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,8 @@ import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from
 import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { ConvertToTaskDialog } from "./convert-to-task-dialog";
+import { AssignTicketDialog } from "./assign-ticket-dialog";
+import { SetDueDateDialog } from "./set-due-date-dialog";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/projects/comment-permalink";
 import { InternalLinkPreview } from "./internal-link-preview";
 import { getStatusBadgeClass } from "@/features/projects/shared/status-badge";
@@ -249,9 +251,15 @@ export function ChatBubble({
 }) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
   const canConvertToTask = useCan("projects:tickets:create");
+  const canAssignTicket = useCan("projects:tickets:assign");
+  const canSetDueDate = useCan("projects:tickets:update");
 
   const handleOpenConvertDialog = useCallback(() => setConvertDialogOpen(true), []);
+  const handleOpenAssignDialog = useCallback(() => setAssignDialogOpen(true), []);
+  const handleOpenDueDateDialog = useCallback(() => setDueDateDialogOpen(true), []);
 
   const handleEditInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => onEditInputChange(e.target.value), [onEditInputChange]);
   const handleEditKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -279,6 +287,11 @@ export function ChatBubble({
   }, [isPinned, onPin, onUnpin]);
 
   const meta = message.metadata as MessageMetadata | null;
+  const linkedTicket = (() => {
+    const entities = meta?.entities ?? [];
+    const t = entities.find((e): e is TicketEntityRef => e.type === "ticket");
+    return t !== undefined ? { ticketId: Number(t.id), projectId: t.projectId } : null;
+  })();
   const { label: forwardLabel, content: displayContent } = getForwardedDisplay(
     message.content,
     meta?.forwardCount,
@@ -542,6 +555,24 @@ export function ChatBubble({
             defaultTitle={(message.content ?? "").slice(0, 80)}
           />
         )}
+        {canAssignTicket && (
+          <AssignTicketDialog
+            open={assignDialogOpen}
+            onOpenChange={setAssignDialogOpen}
+            channelId={message.channelId}
+            ticketId={linkedTicket?.ticketId}
+            projectId={linkedTicket?.projectId}
+          />
+        )}
+        {canSetDueDate && (
+          <SetDueDateDialog
+            open={dueDateDialogOpen}
+            onOpenChange={setDueDateDialogOpen}
+            channelId={message.channelId}
+            ticketId={linkedTicket?.ticketId}
+            projectId={linkedTicket?.projectId}
+          />
+        )}
         {!isEditing && (
           <div
             className={cn(
@@ -618,6 +649,26 @@ export function ChatBubble({
                   aria-label="Convert to task"
                 >
                   <ListPlus className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {canAssignTicket && (
+                <button
+                  onClick={handleOpenAssignDialog}
+                  className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                  title="Assign ticket"
+                  aria-label="Assign ticket"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {canSetDueDate && (
+                <button
+                  onClick={handleOpenDueDateDialog}
+                  className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                  title="Set due date"
+                  aria-label="Set due date"
+                >
+                  <CalendarClock className="h-3.5 w-3.5" />
                 </button>
               )}
               {isOwn && (

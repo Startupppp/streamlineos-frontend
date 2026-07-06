@@ -55,6 +55,9 @@ export function useProjectProvisioning(onSuccess: () => void) {
           startDate: draft.startDate || undefined,
           endDate: draft.endDate || undefined,
           modules: draft.modules,
+          projectType: draft.projectType || undefined,
+          workflow: draft.workflow || undefined,
+          features: draft.modules,
         });
         projectId = project.id;
       }

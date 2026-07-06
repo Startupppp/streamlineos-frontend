@@ -738,6 +738,48 @@ export interface CreateTaskFromMessageInput {
   title?: string;
 }
 
+export interface AssignTicketFromChatInput {
+  channelId: number;
+  ticketId: number;
+  projectId: number;
+  assigneeId: string;
+}
+
+export function useAssignTicketFromChat() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["chat", "actions", "assign-ticket"],
+    mutationFn: (input: AssignTicketFromChatInput) =>
+      apiClient.post<{ ok: boolean }>("/chat/actions/assign-ticket", input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.messages(variables.channelId),
+      });
+    },
+  });
+}
+
+export interface SetDueDateFromChatInput {
+  channelId: number;
+  ticketId: number;
+  projectId: number;
+  dueDate: string;
+}
+
+export function useSetDueDateFromChat() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["chat", "actions", "set-due-date"],
+    mutationFn: (input: SetDueDateFromChatInput) =>
+      apiClient.post<{ ok: boolean }>("/chat/actions/set-due-date", input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.messages(variables.channelId),
+      });
+    },
+  });
+}
+
 export function useCreateTaskFromMessage() {
   const queryClient = useQueryClient();
   return useMutation({

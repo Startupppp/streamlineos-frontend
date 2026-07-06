@@ -301,6 +301,14 @@ Ordered money-path first. Check off each page after fixing.
 
 All slices 7–11: build not run (sibling sessions mid-edit) — verified by cross-agent import reconciliation; migrations `0165/0166/0167/0168` HAND-WRITTEN, NOT applied.
 
+**PM follow-ups completed (2026-07-06, NO migrations) — the cross-cutting items previously documented as deferred:**
+- **AI-PM tools in chat** — added `searchProjects`/`askProjectAI`/`getProjectSummary` tools to `ChatAssistantService.processChat()` (reuse `ProjectsAiService`, same AiModule so DI is trivial) → "what's blocked?"/"summarize project" answerable in chat.
+- **Chat→work actions** — `POST /chat/actions/assign-ticket` (`projects:tickets:assign`) + `/set-due-date` (`projects:tickets:update`) mirroring the ticket-status membership+pill pattern; frontend toolbar actions + `assign-ticket-dialog`/`set-due-date-dialog` (prefill ticket/project from the message's linked-ticket entity via a type-predicate, no cast).
+- **Work→chat** — approval-requested posts a system message to the project's entity chat channel; FAIL-SAFE fire-and-forget (`void notifyProjectChannel(...).catch(()=>undefined)`, outside the txn) so approval creation can't break; cycle-checked; `ChatModule` now exports `ChatChannelsService`/`ChatMessagesService`, imported by `ProjectsApprovalsModule`.
+- **Board transition enforcement** — `assertTransitionAllowed` in `projects-tickets.service` `updateTicket`+`reorder`; FAIL-OPEN (allows when no `workflow_transitions` configured / unmappable status / any query error; throws 400 only on a clean "transitions exist + this from→to matches none"). `validateTicketStatus` untouched. (Service now 611 lines — known debt.)
+- **Wizard persistence** — `projects.settings` `$type` widened (+`projectType`/`workflow`/`features?`, no migration); `createProjectSchema` + `createProject` merge them additively; wizard now sends them (were UI-only). Additive — a create without them behaves exactly as before.
+All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not run (siblings mid-edit).
+
 ---
 
 ## Sales
