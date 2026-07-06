@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, MessageSquare, Ticket } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -293,8 +294,7 @@ export function InternalLinkPreview({
   content: string;
   isOwn: boolean;
 }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useHydrated();
   const link = useMemo(() => {
     if (!mounted) return null;
     const raw = extractFirstUrl(content);

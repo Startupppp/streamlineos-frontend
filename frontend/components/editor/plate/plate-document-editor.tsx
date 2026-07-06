@@ -445,7 +445,7 @@ export default function PlateDocumentEditor({
   contentKey,
   uploadFile,
 }: PlateDocumentEditorProps) {
-  const initialValue = useMemo(() => normalizePlateValue(value), []);
+  const [initialValue] = useState(() => normalizePlateValue(value));
 
   const editor = usePlateEditor({
     plugins: buildPlugins(),
@@ -461,7 +461,7 @@ export default function PlateDocumentEditor({
       editor.tf.reset();
       editor.tf.insertNodes(next);
     }
-  }, [contentKey]);
+  }, [contentKey, value, editor]);
 
   const { picker, checkTrigger, selectPageLink, dismissPicker } =
     usePageLinkPicker(editor, fetchPageLinks);

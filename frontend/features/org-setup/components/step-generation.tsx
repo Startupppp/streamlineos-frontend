@@ -159,12 +159,17 @@ export function StepGeneration({ data }: StepGenerationProps) {
     }
   }
 
+  const runSetupRef = useRef(runSetup);
+  useEffect(() => {
+    runSetupRef.current = runSetup;
+  });
+
   useEffect(() => {
     if (sessionStorage.getItem(SETUP_DONE_KEY) === "1") {
       window.location.replace("/dashboard");
       return;
     }
-    runSetup();
+    runSetupRef.current();
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };

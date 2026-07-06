@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll";
@@ -41,16 +42,16 @@ export function SetupWizard() {
   const [direction, setDirection] = useState(1);
   const [draft, setDraft] = useState<SetupDraft>({});
   const [initialized, setInitialized] = useState(false);
+  const hydrated = useHydrated();
 
   const { data: current, isLoading: policyLoading } = usePayrollPolicyCurrent();
 
-  useEffect(() => {
-    if (initialized) return;
+  if (hydrated && !initialized) {
+    setInitialized(true);
     setDraft(loadDraft());
     const saved = loadStep();
     if (saved >= 1 && saved <= TOTAL_STEPS) setStep(saved);
-    setInitialized(true);
-  }, [initialized]);
+  }
 
   useEffect(() => {
     if (!policyLoading && current?.policy?.status === "ACTIVE") {

@@ -99,9 +99,14 @@ export function SalaryProfileSheet({
     },
   });
 
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open && !employeeUserId) setPickedUserId("");
+  }
+
   useEffect(() => {
     if (open) {
-      if (!employeeUserId) setPickedUserId("");
       form.reset({
         effectiveFrom: existingProfile?.effectiveFrom ?? "",
         annualCtc: existingProfile?.annualCtc ?? "",
@@ -112,7 +117,7 @@ export function SalaryProfileSheet({
         costCenter: existingProfile?.costCenter ?? "",
       });
     }
-  }, [open, existingProfile, form, employeeUserId, policyCurrency]);
+  }, [open, existingProfile, form, policyCurrency]);
 
   function handleSubmit(values: ProfileForm) {
     if (!resolvedUserId) {

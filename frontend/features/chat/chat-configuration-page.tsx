@@ -34,17 +34,12 @@ export function ChatConfigurationPage() {
   const { data: settings, isLoading } = useChatOrgSettings();
   const updateSettings = useUpdateChatOrgSettings();
 
-  const [activeTab, setActiveTab] = useState<TabValue>(() =>
-    resolveConfigTab(searchParams.get("tab")),
-  );
+  const activeTab = resolveConfigTab(searchParams.get("tab"));
 
   useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab === "notifications") {
+    if (searchParams.get("tab") === "notifications") {
       router.replace("/chat/configuration?tab=settings");
-      return;
     }
-    setActiveTab(resolveConfigTab(tab));
   }, [searchParams, router]);
 
   const [draft, setDraft] = useState<ChatOrgSettings | null>(null);
@@ -56,7 +51,6 @@ export function ChatConfigurationPage() {
   }
 
   const handleSelectTab = (tab: TabValue) => {
-    setActiveTab(tab);
     router.replace(`/chat/configuration?tab=${tab}`);
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import type { LucideIcon } from "lucide-react";
@@ -27,6 +27,37 @@ import { cn } from "@/lib/utils";
 
 function dismissedKey(orgId: string): string {
   return `ws_checklist_dismissed_${orgId}`;
+}
+
+const dismissListeners = new Set<() => void>();
+
+function readDismissed(orgId: string | null | undefined): boolean {
+  if (!orgId) return false;
+  try {
+    const legacy = localStorage.getItem("ws_checklist_dismissed") === "true";
+    const scoped = localStorage.getItem(dismissedKey(orgId)) === "true";
+    return legacy || scoped;
+  } catch {
+    return false;
+  }
+}
+
+function subscribeDismissed(callback: () => void): () => void {
+  dismissListeners.add(callback);
+  return () => {
+    dismissListeners.delete(callback);
+  };
+}
+
+function persistDismissed(orgId: string | null | undefined): void {
+  if (!orgId) return;
+  try {
+    localStorage.setItem(dismissedKey(orgId), "true");
+    localStorage.removeItem("ws_checklist_dismissed");
+  } catch {
+    return;
+  }
+  dismissListeners.forEach((listener) => listener());
 }
 
 const TOTAL = 5;
@@ -187,47 +218,24 @@ export function SuccessChecklist() {
   const orgId = session?.orgId;
   const canSetUpWorkspace = session?.user?.isOrgOwner || session?.user?.isPlatformAdmin;
   const { completed, doneCount, isLoading } = useWorkspaceChecklistProgress();
-  const [dismissed, setDismissed] = useState(false);
+  const storedDismissed = useSyncExternalStore(
+    subscribeDismissed,
+    () => readDismissed(orgId),
+    () => false,
+  );
   const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
-    if (!orgId) return;
-    try {
-      const legacy = localStorage.getItem("ws_checklist_dismissed") === "true";
-      const scoped = localStorage.getItem(dismissedKey(orgId)) === "true";
-      if (legacy && !scoped) {
-        localStorage.setItem(dismissedKey(orgId), "true");
-        localStorage.removeItem("ws_checklist_dismissed");
-      }
-      setDismissed(legacy || scoped);
-    } catch {
-      setDismissed(false);
-    }
-  }, [orgId]);
 
   const progress = Math.round((doneCount / TOTAL) * 100);
   const progressFraction = doneCount / TOTAL;
   const allDone = doneCount >= TOTAL;
+  const dismissed = storedDismissed || allDone;
 
   useEffect(() => {
-    if (!allDone || !orgId || dismissed) return;
-    try {
-      localStorage.setItem(dismissedKey(orgId), "true");
-    } catch {
-      // ignore
-    }
-    setDismissed(true);
-  }, [allDone, orgId, dismissed]);
+    if (allDone && orgId && !storedDismissed) persistDismissed(orgId);
+  }, [allDone, orgId, storedDismissed]);
 
   const handleDismiss = useCallback(() => {
-    if (orgId) {
-      try {
-        localStorage.setItem(dismissedKey(orgId), "true");
-      } catch {
-        // ignore
-      }
-    }
-    setDismissed(true);
+    persistDismissed(orgId);
   }, [orgId]);
 
   const handleToggleCollapse = useCallback(() => {

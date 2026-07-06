@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useUserStats } from "@/hooks/api/users";
@@ -21,6 +21,8 @@ export type ChecklistItemId = (typeof CHECKLIST_ITEM_IDS)[number];
 
 const AI_VISITED_KEY = "ws_checklist_ai_visited";
 
+const aiVisitedListeners = new Set<() => void>();
+
 function readAiVisited(): boolean {
   try {
     return localStorage.getItem(AI_VISITED_KEY) === "true";
@@ -29,18 +31,30 @@ function readAiVisited(): boolean {
   }
 }
 
+function subscribeAiVisited(callback: () => void): () => void {
+  aiVisitedListeners.add(callback);
+  return () => {
+    aiVisitedListeners.delete(callback);
+  };
+}
+
 function markAiVisited(): void {
   try {
     localStorage.setItem(AI_VISITED_KEY, "true");
   } catch {
-    // ignore
+    return;
   }
+  aiVisitedListeners.forEach((listener) => listener());
 }
 
 export function useWorkspaceChecklistProgress() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const [aiVisited, setAiVisited] = useState(false);
+  const aiVisited = useSyncExternalStore(
+    subscribeAiVisited,
+    readAiVisited,
+    () => false,
+  );
 
   const { data: dashboardStats, isLoading: dashboardLoading } =
     useDashboardStats();
@@ -54,13 +68,7 @@ export function useWorkspaceChecklistProgress() {
   const { data: userStats, isLoading: userStatsLoading } = useUserStats();
 
   useEffect(() => {
-    setAiVisited(readAiVisited());
-  }, []);
-
-  useEffect(() => {
-    if (!pathname?.startsWith("/ai")) return;
-    markAiVisited();
-    setAiVisited(true);
+    if (pathname?.startsWith("/ai")) markAiVisited();
   }, [pathname]);
 
   const completed = useMemo(() => {

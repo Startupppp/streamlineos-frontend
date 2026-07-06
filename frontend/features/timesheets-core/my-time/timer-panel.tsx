@@ -59,14 +59,18 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
 
   const { data: weekEntries } = useTimesheetEntries({ startDate: weekStart, endDate: weekEnd });
 
-  const [displaySeconds, setDisplaySeconds] = useState(0);
-  useEffect(() => {
-    const base = timer?.elapsedSeconds ?? 0;
+  const base = timer?.elapsedSeconds ?? 0;
+  const [displaySeconds, setDisplaySeconds] = useState(base);
+  const [prevBase, setPrevBase] = useState(base);
+  if (base !== prevBase) {
+    setPrevBase(base);
     setDisplaySeconds(base);
+  }
+  useEffect(() => {
     if (timer?.status !== "RUNNING") return;
     const id = setInterval(() => setDisplaySeconds((s) => s + 1), 1000);
     return () => clearInterval(id);
-  }, [timer?.elapsedSeconds, timer?.status]);
+  }, [timer?.status]);
 
   const [startProject, setStartProject] = useState<number | null>(null);
   const [startTicket, setStartTicket] = useState<number | null>(null);

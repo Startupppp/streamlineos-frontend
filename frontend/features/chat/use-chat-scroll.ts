@@ -67,10 +67,11 @@ export function useChatScroll({
   // Open channel at the latest message.
   useEffect(() => {
     isAtBottomRef.current = true;
-    setShowScrollBtn(false);
-    if (!isLoading) {
-      requestAnimationFrame(() => scrollToBottom("auto"));
-    }
+    const raf = requestAnimationFrame(() => {
+      if (!isLoading) scrollToBottom("auto");
+      setShowScrollBtn(false);
+    });
+    return () => cancelAnimationFrame(raf);
   }, [channelId, isLoading, scrollToBottom]);
 
   // Stick to bottom for new messages only when already near bottom.
