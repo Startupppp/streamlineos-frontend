@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState, AppDialog } from "@/components/shared";
 import { PackageDetailSheet } from "@/features/inventory/components/shipping/package-detail-sheet";
 import {
@@ -212,7 +212,7 @@ function PackagesPageInner() {
             isLoading={packagesQuery.isLoading}
             onRowClick={handleRowClick}
             emptyState={
-              <EmptyState
+              <InventoryEmptyState
                 illustration={<EmptyOrdersIllustration />}
                 title="No packages yet"
                 description="Create a package to start organising shipments."

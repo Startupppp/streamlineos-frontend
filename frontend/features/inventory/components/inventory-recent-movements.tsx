@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -77,7 +77,7 @@ export function RecentMovementsTable() {
 
   if (movements.length === 0) {
     return (
-      <EmptyState
+      <InventoryEmptyState
         compact
         title="No movements yet"
         description="Stock transactions will appear here as items move in and out."

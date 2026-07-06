@@ -23,7 +23,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState, SkeletonTable } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import {
   usePhysicalAudits,
@@ -235,7 +235,7 @@ export function PhysicalAuditsClient() {
             columns={columns}
             getRowKey={(row) => row.id}
             emptyState={
-              <EmptyState
+              <InventoryEmptyState
                 illustration={<EmptyWarehouseIllustration />}
                 title="No physical audits yet"
                 description="Create a physical audit to count all stock in a warehouse."

@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState, AppDialog } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { useRecalls, useCreateRecall } from "@/hooks/api/inventory/quality";
 import type { Recall } from "@/hooks/api/inventory/quality";
@@ -247,7 +247,7 @@ function RecallsPageInner() {
             onRowClick={handleRowClick}
             isLoading={recallsQuery.isLoading}
             emptyState={
-              <EmptyState
+              <InventoryEmptyState
                 illustration={<EmptySearchIllustration />}
                 title="No recalls yet"
                 description="Product recalls will appear here once created."

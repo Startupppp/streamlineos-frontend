@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   AlertDialog,
@@ -275,7 +275,7 @@ export default function TransferDetailPage({
           </Button>
         }
       >
-        <EmptyState
+        <InventoryEmptyState
           illustration={<EmptyTransferIllustration />}
           title="Transfer not found"
           description="This transfer does not exist or you do not have access."
@@ -430,7 +430,7 @@ export default function TransferDetailPage({
             </CardHeader>
             <CardContent className="px-4 pb-4">
               {lines.length === 0 ? (
-                <EmptyState
+                <InventoryEmptyState
                   compact
                   title="No line items"
                   description="This transfer has no product lines."

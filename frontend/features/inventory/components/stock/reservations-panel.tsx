@@ -37,7 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { MoreHorizontal } from "lucide-react";
 import { useReservations, useReleaseReservation } from "@/hooks/api/inventory/stock";
 import { useCan } from "@/hooks/api/access";
@@ -211,7 +211,7 @@ export function ReservationsPanel() {
       {isLoading ? (
         <SkeletonTable rows={6} columns={6} />
       ) : items.length === 0 ? (
-        <EmptyState
+        <InventoryEmptyState
           title="No active reservations"
           description="Reservations will appear here when stock is reserved for sales orders or other sources."
           className="flex-1 min-h-[30vh]"

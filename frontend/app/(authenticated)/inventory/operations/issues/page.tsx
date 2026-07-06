@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -183,7 +183,7 @@ export default function IssuesPage() {
           query.error ? (
             <ErrorState description={query.error.message} onRetry={handleRetry} compact />
           ) : (
-            <EmptyState
+            <InventoryEmptyState
               title="No outbound issues"
               description="Sale and outbound stock transactions will appear here."
               compact

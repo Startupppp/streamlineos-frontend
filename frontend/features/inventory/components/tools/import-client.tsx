@@ -3,7 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,7 +50,7 @@ export function ImportClient() {
   if (!canImport) {
     return (
       <PageWrapper eyebrow="Operations · Inventory" title="Import" subtitle="">
-        <EmptyState
+        <InventoryEmptyState
           title="Access Denied"
           description="You don't have permission to import inventory data."
         />

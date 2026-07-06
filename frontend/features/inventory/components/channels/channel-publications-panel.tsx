@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useChannelPublications,
@@ -118,7 +118,7 @@ function PublicationsTable({ channelId, statusFilter, showRetry }: PublicationsT
 
   if (publications.length === 0) {
     return (
-      <EmptyState
+      <InventoryEmptyState
         compact
         title="No publications"
         description={

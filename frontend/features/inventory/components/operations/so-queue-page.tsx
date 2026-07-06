@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -142,7 +142,7 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
           query.error ? (
             <ErrorState description={query.error.message} onRetry={handleRetry} compact />
           ) : (
-            <EmptyState title={emptyTitle} description={emptyDescription} compact />
+            <InventoryEmptyState title={emptyTitle} description={emptyDescription} compact />
           )
         }
         minWidth="640px"

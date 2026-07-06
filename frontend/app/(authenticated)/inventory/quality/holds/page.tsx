@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import { useQualityHolds, useReleaseQualityHold } from "@/hooks/api/inventory/quality";
 import type { QualityHold } from "@/hooks/api/inventory/quality";
@@ -215,7 +215,7 @@ function HoldsPageInner() {
             getRowKey={(r) => r.id}
             isLoading={holdsQuery.isLoading}
             emptyState={
-              <EmptyState
+              <InventoryEmptyState
                 illustration={<EmptyWarehouseIllustration />}
                 title={hasFilters ? "No holds found" : "No holds yet"}
                 description={hasFilters ? "Try adjusting your filters." : "Create a quality hold to quarantine inventory."}

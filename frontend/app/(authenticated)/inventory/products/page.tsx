@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   useProducts,
   useCategories,
@@ -454,7 +454,7 @@ function ProductsPageInner() {
           getRowKey={(p) => p.id}
           isLoading={productsQuery.isLoading}
           emptyState={
-            <EmptyState
+            <InventoryEmptyState
               illustration={
                 hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
               }

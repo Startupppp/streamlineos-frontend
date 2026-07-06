@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SkeletonTable, ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { useMovementsReport, type MovementType } from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
@@ -250,7 +250,7 @@ function MovementsReportContent() {
       )}
 
       {!query.isLoading && !query.error && filtered.length === 0 && (
-        <EmptyState
+        <InventoryEmptyState
           illustration={<EmptyActivityIllustration />}
           title="No movements found"
           description={

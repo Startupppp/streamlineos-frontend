@@ -28,7 +28,7 @@ import {
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
 import { useProductVariants } from "@/hooks/api/inventory/products";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -260,7 +260,7 @@ export default function AdjustmentsPage() {
         />
       ) : adjustments.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
-          <EmptyState
+          <InventoryEmptyState
             illustration={hasActiveFilters ? <EmptySearchIllustration /> : <EmptyActivityIllustration />}
             title={hasActiveFilters ? "No results" : "No adjustments yet"}
             description={

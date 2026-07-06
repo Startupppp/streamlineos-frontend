@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SkeletonTable, ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useReorderReport } from "@/hooks/api/inventory/reports";
 
@@ -149,7 +149,7 @@ function ReorderReportContent() {
       )}
 
       {!query.isLoading && !query.error && rows.length === 0 && (
-        <EmptyState
+        <InventoryEmptyState
           illustration={<EmptyReportIllustration />}
           title="No products need reordering"
           description="All products are above their reorder points."
@@ -166,7 +166,7 @@ function ReorderReportContent() {
           </StatCardGrid>
 
           {filtered.length === 0 ? (
-            <EmptyState
+            <InventoryEmptyState
               illustration={<EmptySearchIllustration />}
               title="No results"
               description="No products match your search."

@@ -29,7 +29,8 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { usePurchaseOrders, useVendors } from "@/hooks/api/inventory";
 import {
@@ -389,7 +390,10 @@ export default function PurchaseOrdersListPage() {
           query.error ? (
             <ErrorState description={query.error.message} onRetry={handleRetry} compact />
           ) : (
-            <EmptyState
+            <InventoryEmptyState
+              illustration={
+                hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
+              }
               title={hasFilters ? "No orders found" : "No purchase orders"}
               description={
                 hasFilters

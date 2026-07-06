@@ -20,7 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { EmptyCompaniesIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { VendorFormSheet } from "@/features/inventory/components/vendor-form-sheet";
 import { useVendors } from "@/hooks/api/inventory";
@@ -246,7 +247,10 @@ export default function VendorsListPage() {
           query.error ? (
             <ErrorState description={query.error.message} onRetry={handleRetry} compact />
           ) : (
-            <EmptyState
+            <InventoryEmptyState
+              illustration={
+                search ? <EmptySearchIllustration /> : <EmptyCompaniesIllustration />
+              }
               title={search ? "No vendors found" : "No vendors yet"}
               description={
                 search

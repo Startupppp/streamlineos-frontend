@@ -6,7 +6,7 @@ import { Plus, Pencil, PowerOff } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -146,7 +146,7 @@ export function ReplenishmentRulesClient() {
       ) : error ? (
         <ErrorState onRetry={handleRetry} />
       ) : rules.length === 0 ? (
-        <EmptyState
+        <InventoryEmptyState
           illustrationPreset="inventory"
           title="No replenishment rules"
           description="Add rules to automate stock replenishment suggestions."

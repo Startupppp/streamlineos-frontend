@@ -4,7 +4,7 @@ import { useState, memo } from "react";
 import { Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { SkeletonTable, ErrorState, DataTablePagination } from "@/components/shared";
 import { useForecasting, type ForecastRow } from "@/hooks/api/inventory/planning";
 
@@ -93,7 +93,7 @@ export function ForecastingClient() {
       ) : error ? (
         <ErrorState onRetry={handleRetry} />
       ) : rows.length === 0 ? (
-        <EmptyState
+        <InventoryEmptyState
           illustrationPreset="chart"
           title="No forecast data available"
           description="Sales history is needed to generate forecasts."

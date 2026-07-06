@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState, AppSheet } from "@/components/shared";
 import { LoadCreateSheet } from "@/features/inventory/components/shipping/load-create-sheet";
 import {
@@ -347,7 +347,7 @@ function LoadsPageInner() {
             isLoading={loadsQuery.isLoading}
             onRowClick={handleRowClick}
             emptyState={
-              <EmptyState
+              <InventoryEmptyState
                 illustration={<EmptyTransferIllustration />}
                 title="No loads yet"
                 description="Create a load to group shipments for transport."

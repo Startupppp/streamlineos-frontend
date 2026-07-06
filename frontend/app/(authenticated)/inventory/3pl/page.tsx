@@ -8,7 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptySearchIllustration } from "@/components/illustrations";
@@ -250,7 +250,7 @@ function ThreePlContent() {
             onRowClick={handleRowClick}
           />
         ) : (
-          <EmptyState
+          <InventoryEmptyState
             illustration={<EmptySearchIllustration />}
             title="No 3PL connections"
             description="Add a third-party logistics provider to enable fulfilment integrations."

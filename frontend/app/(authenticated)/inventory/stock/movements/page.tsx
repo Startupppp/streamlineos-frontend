@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import {
@@ -226,7 +226,7 @@ export default function MovementsPage() {
         />
       ) : transactions.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
-          <EmptyState
+          <InventoryEmptyState
             illustration={
               <EmptyActivityIllustration />
             }

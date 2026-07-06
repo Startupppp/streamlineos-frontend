@@ -8,7 +8,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import type { AiInsight } from "@/hooks/api/inventory/reports";
 
 const SEVERITY_CLASS: Record<AiInsight["severity"], string> = {
@@ -148,7 +148,7 @@ export function DashboardInsightsPanel({ insights }: Props) {
       </CardHeader>
       <CardContent className="pt-3">
         {activeInsights.length === 0 ? (
-          <EmptyState
+          <InventoryEmptyState
             compact
             title="No active insights"
             description="Generate insights to get AI-powered inventory recommendations."
