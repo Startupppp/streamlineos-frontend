@@ -23,6 +23,7 @@ export function EmojiButton() {
   const [open, setOpen] = useState(false);
 
   function handleEmojiSelect(emoji: string) {
+    editor.tf.focus();
     editor.tf.insertText(emoji);
     setOpen(false);
   }

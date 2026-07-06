@@ -1098,6 +1098,18 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "projects:view",
       },
       {
+        label: "Portfolios",
+        icon: LayoutGrid,
+        href: "/projects/portfolios",
+        requiredPermission: "projects:portfolios:view",
+      },
+      {
+        label: "Programs",
+        icon: Network,
+        href: "/projects/programs",
+        requiredPermission: "projects:programs:view",
+      },
+      {
         label: "Client Portal",
         icon: Globe,
         href: "/projects/portal",

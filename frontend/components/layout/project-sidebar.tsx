@@ -38,6 +38,9 @@ import {
   Sparkles,
   ShieldAlert,
   Gavel,
+  Siren,
+  ClipboardList,
+  GitBranch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -62,13 +65,16 @@ interface NavSection {
 function useSidebarSections(baseUrl: string): NavSection[] {
   const canQA = useCan("projects:qa:view");
   const canBugs = useCan("projects:bugs:view");
+  const canIncidents = useCan("projects:incidents:view");
   const canChangerequests = useCan("projects:changerequests:view");
   const canClientVisibility = useCan("projects:clientvisibility:manage");
   const canApprovals = useCan("projects:approvals:view");
   const canAI = useCan("projects:ai:use");
+  const canForms = useCan("projects:forms:view");
   const canRisks = useCan("projects:risks:view");
   const canDecisions = useCan("projects:decisions:view");
   const canMeetings = useCan("projects:meetings:view");
+  const canWorkflow = useCan("projects:workflow:view");
   return [
     {
       label: "Planning",
@@ -98,6 +104,7 @@ function useSidebarSections(baseUrl: string): NavSection[] {
       items: [
         ...(canQA ? [{ label: "QA / Tests", icon: FlaskConical, href: `${baseUrl}/qa` }] : []),
         ...(canBugs ? [{ label: "Bugs", icon: Bug, href: `${baseUrl}/bugs` }] : []),
+        ...(canIncidents ? [{ label: "Incidents", icon: Siren, href: `${baseUrl}/incidents` }] : []),
       ],
     },
     {
@@ -117,6 +124,8 @@ function useSidebarSections(baseUrl: string): NavSection[] {
     {
       label: "More",
       items: [
+        ...(canForms ? [{ label: "Forms", icon: ClipboardList, href: `${baseUrl}/forms` }] : []),
+        ...(canWorkflow ? [{ label: "Workflow", icon: GitBranch, href: `${baseUrl}/workflow` }] : []),
         { label: "Wiki", icon: FileText, href: `${baseUrl}/pages` },
         { label: "Reports", icon: BarChart3, href: `${baseUrl}/analytics` },
         { label: "Agile Reports", icon: Activity, href: `${baseUrl}/reports` },

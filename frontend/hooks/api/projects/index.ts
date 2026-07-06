@@ -1,4 +1,5 @@
 export * from "./projects";
+export * from "./portfolios";
 export * from "./tickets";
 export * from "./reactions";
 export * from "./sprints";
@@ -26,3 +27,6 @@ export * from "./approvals";
 export * from "./ai";
 export * from "./governance";
 export * from "./meetings";
+export * from "./incidents";
+export * from "./forms";
+export * from "./workflow";

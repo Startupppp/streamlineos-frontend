@@ -309,4 +309,14 @@ export type PermissionKey =
   | "projects:decisions:view"
   | "projects:decisions:manage"
   | "projects:meetings:view"
-  | "projects:meetings:manage";
+  | "projects:meetings:manage"
+  | "projects:incidents:view"
+  | "projects:incidents:manage"
+  | "projects:forms:view"
+  | "projects:forms:manage"
+  | "projects:portfolios:view"
+  | "projects:portfolios:manage"
+  | "projects:programs:view"
+  | "projects:programs:manage"
+  | "projects:workflow:view"
+  | "projects:workflow:manage";

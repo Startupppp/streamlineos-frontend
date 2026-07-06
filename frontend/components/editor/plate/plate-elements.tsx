@@ -7,7 +7,7 @@ import type { TElement } from 'platejs';
 import { useTodoListElement, useTodoListElementState } from '@platejs/list/react';
 import { useEditorPageContext } from './plate-context';
 
-type ListElement = TElement & { listStyleType?: string; indent?: number; checked?: boolean };
+type ListElement = TElement & { listStyleType?: string; indent?: number; checked?: boolean; textAlign?: string };
 
 export function ParagraphElement({ element, children, ...props }: PlateElementProps) {
   const el = element as ListElement;
@@ -53,8 +53,11 @@ export function ParagraphElement({ element, children, ...props }: PlateElementPr
     );
   }
 
+  const style: React.CSSProperties = {};
+  if (el.textAlign) style.textAlign = el.textAlign as React.CSSProperties['textAlign'];
+  if (typeof el.indent === 'number') style.marginLeft = `${el.indent * 24}px`;
   return (
-    <PlateElement {...props} element={element} as="p" className="my-1 leading-7">
+    <PlateElement {...props} element={element} as="p" className="my-1 leading-7" style={style}>
       {children}
     </PlateElement>
   );
@@ -106,8 +109,12 @@ export function HeadingElement({ element, children, ...props }: PlateElementProp
     h2: 'text-2xl font-semibold tracking-tight mt-5 mb-2',
     h3: 'text-xl font-semibold mt-4 mb-1',
   };
+  const el = element as ListElement;
+  const style: React.CSSProperties = {};
+  if (el.textAlign) style.textAlign = el.textAlign as React.CSSProperties['textAlign'];
+  if (typeof el.indent === 'number') style.marginLeft = `${el.indent * 24}px`;
   return (
-    <PlateElement {...props} element={element} as={tag} className={styles[tag] ?? styles['h3']!}>
+    <PlateElement {...props} element={element} as={tag} className={styles[tag] ?? styles['h3']!} style={style}>
       {children}
     </PlateElement>
   );

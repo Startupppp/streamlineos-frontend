@@ -148,29 +148,36 @@ function renderSlateNode(node: unknown, idx: number): React.ReactNode {
     ? el.children.map((c, i) => renderSlateNode(c, i))
     : [];
   const type = typeof el.type === "string" ? el.type : "p";
+  const style: React.CSSProperties = {};
+  if (typeof el.textAlign === "string") {
+    style.textAlign = el.textAlign as React.CSSProperties["textAlign"];
+  }
+  if (typeof el.indent === "number") {
+    style.marginLeft = `${el.indent * 24}px`;
+  }
   switch (type) {
     case "p":
     case "paragraph":
       return (
-        <p key={idx} className="mb-4 text-sm leading-relaxed">
+        <p key={idx} className="mb-4 text-sm leading-relaxed" style={style}>
           {children}
         </p>
       );
     case "h1":
       return (
-        <h1 key={idx} className="text-2xl font-bold mb-3 mt-6">
+        <h1 key={idx} className="text-2xl font-bold mb-3 mt-6" style={style}>
           {children}
         </h1>
       );
     case "h2":
       return (
-        <h2 key={idx} className="text-xl font-semibold mb-2 mt-5">
+        <h2 key={idx} className="text-xl font-semibold mb-2 mt-5" style={style}>
           {children}
         </h2>
       );
     case "h3":
       return (
-        <h3 key={idx} className="text-lg font-medium mb-2 mt-4">
+        <h3 key={idx} className="text-lg font-medium mb-2 mt-4" style={style}>
           {children}
         </h3>
       );

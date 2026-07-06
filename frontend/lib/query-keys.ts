@@ -230,6 +230,26 @@ export const queryKeys = {
           : ([...base, "projects", projectId, "meetings", "list", params] as const),
       detail: (projectId: number, id: number) => [...base, "projects", projectId, "meetings", id] as const,
     },
+    incidents: {
+      list: (projectId?: number, params?: Record<string, unknown>) => [...base, "projects", projectId, "incidents", params] as const,
+      detail: (projectId?: number, id?: number) => [...base, "projects", projectId, "incidents", id] as const,
+    },
+    forms: {
+      list: (projectId: number, params?: Record<string, unknown>) => [...base, "projects", projectId, "forms", params] as const,
+      detail: (projectId: number, formId: number) => [...base, "projects", projectId, "forms", formId] as const,
+      submissions: (projectId: number, formId: number) => [...base, "projects", projectId, "forms", formId, "submissions"] as const,
+    },
+    portfolios: {
+      list: (params?: Record<string, unknown>) => [...base, "projects", "portfolios", "list", params] as const,
+      detail: (id: number) => [...base, "projects", "portfolios", "detail", id] as const,
+    },
+    programs: {
+      list: (params?: Record<string, unknown>) => [...base, "projects", "programs", "list", params] as const,
+      detail: (id: number) => [...base, "projects", "programs", "detail", id] as const,
+    },
+    workflow: {
+      transitions: (projectId: number) => [...base, "projects", projectId, "workflow", "transitions"] as const,
+    },
   },
 
   chat: {

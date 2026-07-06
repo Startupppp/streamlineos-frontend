@@ -7,7 +7,15 @@ import type { PlateElementProps, PlateEditor } from 'platejs/react';
 import { NodeApi } from 'platejs';
 import type { TElement, Path } from 'platejs';
 import { getMentionOnSelectItem } from '@platejs/mention';
+import emojiData from '@emoji-mart/data';
+import type { EmojiMartData } from '@emoji-mart/data';
 import { useEditorPageContext } from './plate-context';
+
+type EmojiItem = { id: string; native: string; name: string };
+
+const EMOJI_LIST: EmojiItem[] = Object.values((emojiData as EmojiMartData).emojis)
+  .map((e) => ({ id: e.id, native: e.skins[0]?.native ?? '', name: e.name }))
+  .filter((e) => e.native.length > 0);
 
 type UserItem = { id: string; label: string };
 type CommandItem = { key: string; label: string; description: string };
@@ -240,6 +248,82 @@ export function SlashInputElement({ element, children, ...props }: PlateElementP
               <span className="text-xs text-muted-foreground">{cmd.description}</span>
             </button>
           ))}
+        </div>,
+        document.body
+      )}
+    </PlateElement>
+  );
+}
+
+export function EmojiInputElement({ element, children, ...props }: PlateElementProps) {
+  const editor = useEditorRef();
+  const spanRef = useRef<HTMLSpanElement>(null);
+  const query = NodeApi.string(element).toLowerCase();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+
+  const filtered = (
+    query
+      ? EMOJI_LIST.filter((e) => e.id.includes(query) || e.name.toLowerCase().includes(query))
+      : EMOJI_LIST
+  ).slice(0, 36);
+
+  useEffect(() => {
+    if (spanRef.current) setRect(spanRef.current.getBoundingClientRect());
+  });
+
+  useEffect(() => { setActiveIndex(0); }, [query]);
+
+  function handleSelect(item: EmojiItem) {
+    const path = editor.api.findPath(element);
+    if (!path) return;
+    editor.tf.removeNodes({ at: path });
+    editor.tf.insertText(item.native);
+    editor.tf.focus();
+  }
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault(); e.stopPropagation();
+        setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault(); e.stopPropagation();
+        setActiveIndex((i) => Math.max(i - 1, 0));
+      } else if (e.key === 'Enter' && filtered[activeIndex]) {
+        e.preventDefault(); e.stopPropagation();
+        handleSelect(filtered[activeIndex]!);
+      }
+    }
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [filtered, activeIndex]);
+
+  return (
+    <PlateElement {...props} element={element} as="span">
+      <span ref={spanRef} className="text-muted-foreground">:{children}</span>
+      {rect && ReactDOM.createPortal(
+        <div
+          style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, zIndex: 9999 }}
+          className="w-[288px] rounded-md border border-border bg-popover shadow-lg p-1 max-h-[240px] overflow-y-auto"
+        >
+          {filtered.length === 0 ? (
+            <div className="px-3 py-2 text-xs text-muted-foreground">No emojis found</div>
+          ) : (
+            <div className="grid grid-cols-8 gap-0.5">
+              {filtered.map((item, idx) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-label={item.name}
+                  className={`flex size-8 items-center justify-center rounded text-lg ${idx === activeIndex ? 'bg-accent' : 'hover:bg-accent/50'}`}
+                  onMouseDown={(e) => { e.preventDefault(); handleSelect(item); }}
+                >
+                  {item.native}
+                </button>
+              ))}
+            </div>
+          )}
         </div>,
         document.body
       )}

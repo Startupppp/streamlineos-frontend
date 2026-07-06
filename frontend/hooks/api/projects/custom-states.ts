@@ -12,6 +12,7 @@ export interface CustomState {
   color: string | null;
   order: number;
   type?: "unstarted" | "started" | "completed" | "cancelled";
+  wipLimit?: number | null;
 }
 
 function stateKeys(projectId: number) {

@@ -117,6 +117,7 @@ import {
 import {
   MentionInputElement,
   SlashInputElement,
+  EmojiInputElement,
 } from "./plate-combobox-elements";
 import {
   ImageElementWithCaption,
@@ -314,12 +315,12 @@ function PageLinkPickerDropdown({
 const lowlight = createLowlight(common);
 
 const UPLOAD_CONFIG: UploadConfig = {
-  image: { mediaType: "img", maxFileCount: 1, maxFileSize: "16MB" },
-  video: { mediaType: "video", maxFileCount: 1, maxFileSize: "128MB" },
-  audio: { mediaType: "audio", maxFileCount: 1, maxFileSize: "32MB" },
-  pdf: { mediaType: "file", maxFileCount: 1, maxFileSize: "32MB" },
-  text: { mediaType: "file", maxFileCount: 1, maxFileSize: "32MB" },
-  blob: { mediaType: "file", maxFileCount: 1, maxFileSize: "32MB" },
+  image: { mediaType: "img", maxFileCount: 1, maxFileSize: "8MB" },
+  video: { mediaType: "video", maxFileCount: 1, maxFileSize: "64MB" },
+  audio: { mediaType: "audio", maxFileCount: 1, maxFileSize: "16MB" },
+  pdf: { mediaType: "file", maxFileCount: 1, maxFileSize: "16MB" },
+  text: { mediaType: "file", maxFileCount: 1, maxFileSize: "16MB" },
+  blob: { mediaType: "file", maxFileCount: 1, maxFileSize: "16MB" },
 };
 
 const MAX_FILES_PER_DROP = 5;
@@ -358,8 +359,26 @@ function buildPlugins() {
     FontColorPlugin,
     FontBackgroundColorPlugin,
     FontSizePlugin,
-    TextAlignPlugin,
-    IndentPlugin,
+    TextAlignPlugin.configure({
+      inject: {
+        targetPlugins: [
+          ParagraphPlugin.key,
+          H1Plugin.key,
+          H2Plugin.key,
+          H3Plugin.key,
+        ],
+      },
+    }),
+    IndentPlugin.configure({
+      inject: {
+        targetPlugins: [
+          ParagraphPlugin.key,
+          H1Plugin.key,
+          H2Plugin.key,
+          H3Plugin.key,
+        ],
+      },
+    }),
     ListPlugin.configure({
       inputRules: [
         BulletedListRules.markdown({ variant: "-" }),
@@ -403,7 +422,7 @@ function buildPlugins() {
     EmojiPlugin.configure({
       options: { data: emojiData as EmojiMartData },
     }),
-    EmojiInputPlugin,
+    EmojiInputPlugin.withComponent(EmojiInputElement),
     createPlatePlugin({
       key: "page_link",
       node: { isElement: true, isInline: true, isVoid: true },
