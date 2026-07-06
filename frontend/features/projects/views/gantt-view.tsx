@@ -11,6 +11,11 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getStatusHexColor } from "../shared/status-badge";
+import { useCriticalPath } from "@/hooks/api/projects/reports";
+import { useProjectMilestones } from "@/hooks/api/projects/milestones";
+import { computeBarGeometry } from "./gantt/gantt-geometry";
+import { GanttDependencyOverlay } from "./gantt/gantt-dependency-overlay";
+import { GanttMilestoneMarkers } from "./gantt/gantt-milestone-markers";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -31,11 +36,11 @@ interface Ticket {
 
 interface GanttViewProps {
   tickets: Ticket[];
+  projectId: number;
   onTicketClick: (ticketId: number) => void;
 }
 
-
-export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
+export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps) {
   const [weekOffset, setWeekOffset] = useState(0);
 
   const datedTickets = useMemo(
@@ -111,30 +116,50 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
     [onTicketClick]
   );
 
+  const { data: cpData } = useCriticalPath(projectId);
+  const { data: milestones } = useProjectMilestones(projectId);
+
+  const criticalPathIds = useMemo(
+    () => new Set((cpData?.criticalPath ?? []).map((n) => n.ticketId)),
+    [cpData]
+  );
+
+  const rowMap = useMemo<Map<number, number>>(
+    () => new Map(datedTickets.map((t, i): [number, number] => [t.id, i])),
+    [datedTickets]
+  );
+
+  const barGeometries = useMemo(
+    () =>
+      new Map(
+        datedTickets.map((t) => [
+          t.id,
+          computeBarGeometry(
+            t.startDate, t.dueDate,
+            rowMap.get(t.id) ?? 0,
+            startOfWeek, numDays, dayWidth, labelWidth, rowHeight,
+          ),
+        ])
+      ),
+    [datedTickets, rowMap, startOfWeek, numDays, dayWidth, labelWidth, rowHeight]
+  );
+
+  const svgHeight = Math.max(datedTickets.length * rowHeight + 40, 200);
+
   return (
     <div className="p-4">
       <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
         <div className="flex items-center gap-1.5">
-          <Select
-            value={String(displayMonth)}
-            onValueChange={handleMonthChange}
-          >
-            <SelectTrigger className="h-8 w-[120px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
+          <Select value={String(displayMonth)} onValueChange={handleMonthChange}>
+            <SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               {MONTHS.map((m, i) => (
                 <SelectItem key={m} value={String(i)} className="text-xs">{m}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Select
-            value={String(displayYear)}
-            onValueChange={handleYearChange}
-          >
-            <SelectTrigger className="h-8 w-[80px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
+          <Select value={String(displayYear)} onValueChange={handleYearChange}>
+            <SelectTrigger className="h-8 w-[80px] text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               {yearOptions.map((y) => (
                 <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
@@ -146,9 +171,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePrevWeek} aria-label="Previous week">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" className="h-8" onClick={handleResetWeek}>
-            Today
-          </Button>
+          <Button variant="outline" size="sm" className="h-8" onClick={handleResetWeek}>Today</Button>
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleNextWeek} aria-label="Next week">
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -157,11 +180,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
 
       <div className="overflow-x-auto rounded-lg border border-border">
         <div className="min-w-max">
-          <svg
-            width={labelWidth + days.length * dayWidth}
-            height={Math.max(datedTickets.length * rowHeight + 40, 200)}
-            className="text-foreground"
-          >
+          <svg width={labelWidth + days.length * dayWidth} height={svgHeight} className="text-foreground">
             <rect x={0} y={0} width={labelWidth} height={40} className="fill-muted/50" />
             <text x={12} y={26} className="fill-muted-foreground text-xs" fontSize={12}>Work Item</text>
 
@@ -172,22 +191,10 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
               return (
                 <g key={i}>
                   {isWeekend && (
-                    <rect
-                      x={x}
-                      y={40}
-                      width={dayWidth}
-                      height={datedTickets.length * rowHeight}
-                      className="fill-muted/30"
-                    />
+                    <rect x={x} y={40} width={dayWidth} height={datedTickets.length * rowHeight} className="fill-muted/30" />
                   )}
                   {isToday && (
-                    <rect
-                      x={x}
-                      y={40}
-                      width={dayWidth}
-                      height={datedTickets.length * rowHeight}
-                      className="fill-primary/10"
-                    />
+                    <rect x={x} y={40} width={dayWidth} height={datedTickets.length * rowHeight} className="fill-primary/10" />
                   )}
                   <line x1={x} y1={0} x2={x} y2={datedTickets.length * rowHeight + 40} className="stroke-border" strokeWidth={0.5} />
                   <text x={x + dayWidth / 2} y={16} textAnchor="middle" className="fill-muted-foreground" fontSize={10}>
@@ -202,39 +209,47 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
 
             <line x1={labelWidth} y1={40} x2={labelWidth + days.length * dayWidth} y2={40} className="stroke-border" />
 
-            {datedTickets.map((ticket, rowIdx) => {
-              const y = 40 + rowIdx * rowHeight;
-              const start = ticket.startDate ? new Date(ticket.startDate) : ticket.dueDate ? new Date(ticket.dueDate) : null;
-              const end = ticket.dueDate ? new Date(ticket.dueDate) : start;
-
-              if (!start || !end) return null;
-
-              const startDay = Math.max(0, Math.floor((start.getTime() - startOfWeek.getTime()) / (1000 * 60 * 60 * 24)));
-              const endDay = Math.min(days.length - 1, Math.floor((end.getTime() - startOfWeek.getTime()) / (1000 * 60 * 60 * 24)));
-
-              const barX = labelWidth + startDay * dayWidth + 2;
-              const barWidth = Math.max(dayWidth - 4, (endDay - startDay + 1) * dayWidth - 4);
-
+            {datedTickets.map((ticket) => {
+              const geo = barGeometries.get(ticket.id);
+              if (!geo) return null;
+              const y = geo.y;
+              const isCp = criticalPathIds.has(ticket.id);
               return (
                 <g key={ticket.id} data-ticket-id={ticket.id} onClick={handleGanttRowClick} className="cursor-pointer">
                   <line x1={0} y1={y} x2={labelWidth + days.length * dayWidth} y2={y} className="stroke-border" strokeWidth={0.5} />
                   <text x={8} y={y + rowHeight / 2 + 4} className="fill-foreground" fontSize={labelWidth < 180 ? 9 : 11}>
                     {(ticket.sequenceId ?? `#${ticket.ticketNumber}`)} {ticket.title.slice(0, labelWidth < 180 ? 12 : 25)}{ticket.title.length > (labelWidth < 180 ? 12 : 25) ? "…" : ""}
                   </text>
-                  {startDay <= days.length - 1 && endDay >= 0 && (
+                  {geo.visible && (
                     <rect
-                      x={barX}
+                      x={geo.x}
                       y={y + 6}
-                      width={barWidth}
+                      width={geo.width}
                       height={rowHeight - 12}
                       rx={4}
                       fill={getStatusHexColor(ticket.status)}
                       opacity={0.8}
+                      {...(isCp ? { stroke: "#f87171", strokeWidth: 2 } : {})}
                     />
                   )}
                 </g>
               );
             })}
+
+            <GanttMilestoneMarkers
+              milestones={milestones ?? []}
+              startOfWeek={startOfWeek}
+              numDays={numDays}
+              dayWidth={dayWidth}
+              labelWidth={labelWidth}
+              totalHeight={svgHeight}
+            />
+            <GanttDependencyOverlay
+              nodes={cpData?.criticalPath ?? []}
+              rowMap={rowMap}
+              geometries={barGeometries}
+              rowHeight={rowHeight}
+            />
           </svg>
         </div>
       </div>
@@ -242,6 +257,15 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
       {datedTickets.length === 0 && (
         <div className="text-center py-12 text-muted-foreground text-sm">
           No work items with dates found. Set start/due dates to see them on the Gantt chart.
+        </div>
+      )}
+
+      {(cpData?.criticalPath.length ?? 0) > 0 && (
+        <div className="flex items-center gap-2 mt-2 px-1">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-xs text-red-600">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-400 border border-red-500" />
+            Critical path
+          </span>
         </div>
       )}
     </div>

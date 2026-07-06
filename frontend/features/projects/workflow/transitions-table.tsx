@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { TransitionFormSheet } from "./transition-form-sheet";
 import type { CustomState } from "@/hooks/api/projects/custom-states";
-import type { WorkflowTransition, CreateTransitionInput, UpdateTransitionInput } from "@/types/projects/workflow";
+import type { WorkflowTransition, CreateTransitionInput } from "@/types/projects/workflow";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface TransitionsTableProps {
@@ -70,10 +70,10 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
     setSheetOpen(true);
   }
 
-  function handleSubmit(data: CreateTransitionInput | UpdateTransitionInput) {
+  function handleSubmit(data: CreateTransitionInput) {
     if (editTarget) {
       updateTransition.mutate(
-        { id: editTarget.id, ...(data as UpdateTransitionInput) },
+        { id: editTarget.id, ...data },
         {
           onSuccess: () => {
             toast.success("Transition updated");
@@ -84,7 +84,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
         },
       );
     } else {
-      createTransition.mutate(data as CreateTransitionInput, {
+      createTransition.mutate(data, {
         onSuccess: () => {
           toast.success("Transition added");
           setSheetOpen(false);

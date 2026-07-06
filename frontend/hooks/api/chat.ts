@@ -729,3 +729,28 @@ export function useLinkPreview(url: string | null) {
     retry: false,
   });
 }
+
+export interface CreateTaskFromMessageInput {
+  channelId: number;
+  messageId: number;
+  projectId: number;
+  type: "TASK" | "BUG";
+  title?: string;
+}
+
+export function useCreateTaskFromMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["chat", "actions", "create-task-from-message"],
+    mutationFn: (input: CreateTaskFromMessageInput) =>
+      apiClient.post<{ ticketId: number; ticketNumber: number }>(
+        "/chat/actions/create-task-from-message",
+        input,
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.messages(variables.channelId),
+      });
+    },
+  });
+}

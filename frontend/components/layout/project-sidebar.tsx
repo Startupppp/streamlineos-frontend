@@ -35,6 +35,7 @@ import {
   FilePen,
   Globe,
   ClipboardCheck,
+  MessageSquare,
   Sparkles,
   ShieldAlert,
   Gavel,
@@ -75,6 +76,7 @@ function useSidebarSections(baseUrl: string): NavSection[] {
   const canDecisions = useCan("projects:decisions:view");
   const canMeetings = useCan("projects:meetings:view");
   const canWorkflow = useCan("projects:workflow:view");
+  const canChat = useCan("projects:tickets:view");
   return [
     {
       label: "Planning",
@@ -84,6 +86,7 @@ function useSidebarSections(baseUrl: string): NavSection[] {
         { label: "My Tickets", icon: User, href: `${baseUrl}/my-tickets` },
         { label: "Sprints", icon: Calendar, href: `${baseUrl}/sprints` },
         ...(canMeetings ? [{ label: "Meetings", icon: CalendarClock, href: `${baseUrl}/meetings` }] : []),
+        ...(canChat ? [{ label: "Chat", icon: MessageSquare, href: `${baseUrl}/chat` }] : []),
       ],
     },
     {

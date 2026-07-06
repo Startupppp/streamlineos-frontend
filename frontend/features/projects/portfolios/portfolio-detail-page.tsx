@@ -1,11 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, X, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
-import { usePortfolio, useUpdatePortfolio, useDeletePortfolio, useLinkPortfolioProject, useUnlinkPortfolioProject } from "@/hooks/api/projects";
-import { useProjects } from "@/hooks/api/projects";
+import { usePortfolio, useUpdatePortfolio, useDeletePortfolio, useLinkPortfolioProject, useUnlinkPortfolioProject, useProjects } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -47,7 +46,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   const unlinkProject = useUnlinkPortfolioProject(portfolioId);
 
   function memberName(userId: string | null): string {
-    if (!userId) return "—";
+    if (!userId) return "â€”";
     const m = members.find((x) => x.userId === userId);
     return m?.name ?? m?.email ?? userId;
   }
@@ -149,7 +148,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
             {canManage && availableProjects.length > 0 && (
               <div className="flex items-center gap-2">
                 <Select value={linkProjectId} onValueChange={setLinkProjectId}>
-                  <SelectTrigger className="h-7 w-48 text-xs"><SelectValue placeholder="Link a project…" /></SelectTrigger>
+                  <SelectTrigger className="h-7 w-48 text-xs"><SelectValue placeholder="Link a projectâ€¦" /></SelectTrigger>
                   <SelectContent>
                     {availableProjects.map((p) => (
                       <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>

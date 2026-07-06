@@ -170,12 +170,20 @@ export interface KbSearchResponse {
   totalPages: number;
 }
 
-export interface KbAskCitation {
-  articleId: number;
-  title: string;
-  slug: string;
-  spaceId: number | null;
-}
+export type KbAskCitation =
+  | {
+      kind: "article";
+      articleId: number;
+      title: string;
+      slug: string;
+      spaceId: number | null;
+    }
+  | {
+      kind: "page";
+      pageId: number;
+      title: string;
+      spaceId: number | null;
+    };
 
 export interface KbAskResponse {
   answer: string;

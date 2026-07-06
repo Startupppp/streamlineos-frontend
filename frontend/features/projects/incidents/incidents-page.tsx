@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Siren, Plus } from "lucide-react";
+import { Siren, Plus, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { useIncidents, useDeleteIncident } from "@/hooks/api/projects/incidents";
 import { useCan } from "@/hooks/api/access";
@@ -24,7 +24,6 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
 import { IncidentSheet } from "./incident-sheet";
 import { getSlaState } from "./sla";
 import type { Incident, IncidentSeverity, IncidentStatus } from "@/types/projects";
@@ -153,7 +152,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       header: "Owner",
       cell: (row) => {
         const member = members.find((m) => m.userId === row.ownerId);
-        return <span className="text-[11px] text-muted-foreground">{member ? (member.name ?? member.email) : "—"}</span>;
+        return <span className="text-[11px] text-muted-foreground">{member ? (member.name ?? member.email) : "â€”"}</span>;
       },
       className: "w-[120px]",
     },
@@ -162,7 +161,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       header: "Detected",
       cell: (row) => (
         <span className="text-[11px] text-muted-foreground">
-          {row.detectedAt ? new Date(row.detectedAt).toLocaleDateString() : "—"}
+          {row.detectedAt ? new Date(row.detectedAt).toLocaleDateString() : "â€”"}
         </span>
       ),
       className: "w-[100px]",

@@ -32,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import type { CustomState } from "@/hooks/api/projects/custom-states";
-import type { WorkflowTransition, CreateTransitionInput, UpdateTransitionInput } from "@/types/projects/workflow";
+import type { WorkflowTransition, CreateTransitionInput } from "@/types/projects/workflow";
 
 const ANY_STATUS_SENTINEL = "ANY_STATUS";
 
@@ -50,7 +50,7 @@ type FormValues = z.infer<typeof schema>;
 interface TransitionFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: CreateTransitionInput | UpdateTransitionInput) => void;
+  onSubmit: (data: CreateTransitionInput) => void;
   isPending?: boolean;
   statuses: CustomState[];
   transition?: WorkflowTransition;

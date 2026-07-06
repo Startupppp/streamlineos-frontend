@@ -339,7 +339,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       )}
       {view === "gantt" && (
         <div className="h-full overflow-auto px-4 py-2">
-          <GanttView tickets={filteredTickets} onTicketClick={handleTicketSelect} />
+          <GanttView tickets={filteredTickets} projectId={projectId} onTicketClick={handleTicketSelect} />
         </div>
       )}
       {view === "workload" && (

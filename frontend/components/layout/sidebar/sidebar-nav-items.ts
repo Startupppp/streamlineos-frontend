@@ -1031,7 +1031,64 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Projects & Time",
+    label: "Timesheets",
+    module: "timesheets",
+    requiredPermission: [
+      "timesheets:entries:view",
+      "timesheets:team:view",
+      "timesheets:approvals:view",
+      "timesheets:billing:view",
+      "timesheets:payroll:view",
+      "timesheets:reports:view",
+      "timesheets:settings:view",
+    ],
+    routes: [
+      {
+        label: "My Time",
+        icon: Timer,
+        href: "/timesheets",
+        requiredPermission: "timesheets:entries:view",
+      },
+      {
+        label: "Team",
+        icon: Users,
+        href: "/timesheets/team",
+        requiredPermission: "timesheets:team:view",
+      },
+      {
+        label: "Approvals",
+        icon: ListChecks,
+        href: "/timesheets/approvals",
+        requiredPermission: "timesheets:approvals:view",
+      },
+      {
+        label: "Billing",
+        icon: Receipt,
+        href: "/timesheets/billing",
+        requiredPermission: "timesheets:billing:view",
+      },
+      {
+        label: "Payroll",
+        icon: Banknote,
+        href: "/timesheets/payroll",
+        requiredPermission: "timesheets:payroll:view",
+      },
+      {
+        label: "Reports",
+        icon: BarChart3,
+        href: "/timesheets/reports",
+        requiredPermission: "timesheets:reports:view",
+      },
+      {
+        label: "Settings",
+        icon: SlidersHorizontal,
+        href: "/timesheets/settings",
+        requiredPermission: "timesheets:settings:view",
+      },
+    ],
+  },
+  {
+    label: "Projects",
     module: "projects",
     requiredPermission: [
       "projects:view",
@@ -1120,50 +1177,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Map,
         href: "/projects/roadmap",
         requiredPermission: "projects:roadmap:view",
-      },
-      {
-        label: "Timesheets",
-        icon: Timer,
-        href: "/timesheets",
-        requiredPermission: "timesheets:entries:view",
-        children: [
-          {
-            label: "Team",
-            icon: Users,
-            href: "/timesheets/team",
-            requiredPermission: "timesheets:team:view",
-          },
-          {
-            label: "Approvals",
-            icon: ListChecks,
-            href: "/timesheets/approvals",
-            requiredPermission: "timesheets:approvals:view",
-          },
-          {
-            label: "Billing",
-            icon: Receipt,
-            href: "/timesheets/billing",
-            requiredPermission: "timesheets:billing:view",
-          },
-          {
-            label: "Payroll",
-            icon: Banknote,
-            href: "/timesheets/payroll",
-            requiredPermission: "timesheets:payroll:view",
-          },
-          {
-            label: "Reports",
-            icon: BarChart3,
-            href: "/timesheets/reports",
-            requiredPermission: "timesheets:reports:view",
-          },
-          {
-            label: "Settings",
-            icon: SlidersHorizontal,
-            href: "/timesheets/settings",
-            requiredPermission: "timesheets:settings:view",
-          },
-        ],
       },
       {
         label: "Settings",
@@ -1571,6 +1584,7 @@ export type ProductKey =
   | "crm"
   | "hrms"
   | "projects"
+  | "timesheets"
   | "inventory"
   | "finance"
   | "helpdesk"
@@ -1591,6 +1605,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "crm", label: "CRM", href: "/crm", icon: Handshake },
   { key: "hrms", label: "HRMS", href: "/hr", icon: Users },
   { key: "projects", label: "Projects", href: "/projects", icon: Briefcase },
+  { key: "timesheets", label: "Timesheets", href: "/timesheets", icon: Timer },
   { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
   { key: "helpdesk", label: "Helpdesk", href: "/support", icon: LifeBuoy },
@@ -1642,6 +1657,12 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-violet-600 dark:bg-violet-500",
     border: "border-violet-600 dark:border-violet-500",
   },
+  timesheets: {
+    text: "!text-indigo-600 dark:!text-indigo-400",
+    bg: "bg-indigo-50 dark:bg-indigo-950/40",
+    indicator: "bg-indigo-600 dark:bg-indigo-500",
+    border: "border-indigo-600 dark:border-indigo-500",
+  },
   inventory: {
     text: "!text-amber-600 dark:!text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/40",
@@ -1690,7 +1711,8 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   home: [],
   crm: ["CRM"],
   hrms: ["HR – People", "Recruitment"],
-  projects: ["Projects & Time"],
+  projects: ["Projects"],
+  timesheets: ["Timesheets"],
   inventory: ["Inventory"],
   finance: ["Accounting"],
   helpdesk: ["Support"],
@@ -1795,10 +1817,10 @@ export function getProductFromPathname(pathname: string): ProductKey {
     return "crm";
   if (pathname.startsWith("/hr") || pathname.startsWith("/recruitment"))
     return "hrms";
+  if (pathname.startsWith("/timesheets")) return "timesheets";
   if (
     pathname.startsWith("/projects") ||
-    pathname.startsWith("/goals") ||
-    pathname.startsWith("/timesheets")
+    pathname.startsWith("/goals")
   )
     return "projects";
   if (pathname.startsWith("/inventory")) return "inventory";

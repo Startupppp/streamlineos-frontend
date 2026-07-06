@@ -1,3 +1,4 @@
+﻿import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import type { MeetingType, MeetingStatus, ActionItemStatus } from "@/types/projects";
 
@@ -47,26 +48,26 @@ const AI_STATUS_STYLE: Record<ActionItemStatus, string> = {
   cancelled: "text-slate-500 border-slate-200",
 };
 
-export function MeetingTypeBadge({ type }: { type: MeetingType }) {
+export const MeetingTypeBadge = memo(function MeetingTypeBadge({ type }: { type: MeetingType }) {
   return (
     <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${TYPE_STYLE[type]}`}>
       {TYPE_LABEL[type]}
     </Badge>
   );
-}
+});
 
-export function MeetingStatusBadge({ status }: { status: MeetingStatus }) {
+export const MeetingStatusBadge = memo(function MeetingStatusBadge({ status }: { status: MeetingStatus }) {
   return (
     <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${STATUS_STYLE[status]}`}>
       {STATUS_LABEL[status]}
     </Badge>
   );
-}
+});
 
-export function ActionItemStatusBadge({ status }: { status: ActionItemStatus }) {
+export const ActionItemStatusBadge = memo(function ActionItemStatusBadge({ status }: { status: ActionItemStatus }) {
   return (
     <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${AI_STATUS_STYLE[status]}`}>
       {AI_STATUS_LABEL[status]}
     </Badge>
   );
-}
+});

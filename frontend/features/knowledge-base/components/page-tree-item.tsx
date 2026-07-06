@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -37,7 +37,7 @@ interface PageTreeItemProps {
   onCloseMobile?: () => void;
 }
 
-export default function PageTreeItem({
+const PageTreeItem = memo(function PageTreeItemInner({
   node,
   allNodes,
   depth,
@@ -313,4 +313,6 @@ export default function PageTreeItem({
       </AnimatePresence>
     </div>
   );
-}
+});
+
+export default PageTreeItem;

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -64,7 +64,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const deleteDecision = useDeleteDecision(projectId);
 
   function memberName(userId: string | null): string {
-    if (!userId) return "—";
+    if (!userId) return "â€”";
     const m = members.find((x) => x.userId === userId);
     return m?.name ?? m?.email ?? userId;
   }
@@ -101,7 +101,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     });
   }
 
-  const columns: DataTableColumn<Decision>[] = [
+  const columns = useMemo((): DataTableColumn<Decision>[] => [
     {
       key: "decisionNumber", header: "ID", className: "w-20",
       cell: (row) => <span className="font-mono text-xs text-muted-foreground">DEC-{row.decisionNumber}</span>,
@@ -126,7 +126,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       key: "decidedAt", header: "Decided", sortable: true, sortValue: (d) => d.decidedAt ?? "",
       cell: (row) => (
         <span className="text-muted-foreground tabular-nums text-sm">
-          {row.decidedAt ? row.decidedAt.slice(0, 10) : "—"}
+          {row.decidedAt ? row.decidedAt.slice(0, 10) : "â€”"}
         </span>
       ),
     },
@@ -134,7 +134,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       key: "revisitAt", header: "Revisit", sortable: true, sortValue: (d) => d.revisitAt ?? "",
       cell: (row) => (
         <span className="text-muted-foreground tabular-nums text-sm">
-          {row.revisitAt ? row.revisitAt.slice(0, 10) : "—"}
+          {row.revisitAt ? row.revisitAt.slice(0, 10) : "â€”"}
         </span>
       ),
     },
@@ -157,7 +157,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
         );
       },
     },
-  ];
+  ], [canManage, members]);
 
   const isFiltered = statusFilter !== "all" || !!search.trim();
 
@@ -183,7 +183,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
           </Select>
           <Input
             className="h-8 text-xs w-52"
-            placeholder="Search decisions…"
+            placeholder="Search decisionsâ€¦"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

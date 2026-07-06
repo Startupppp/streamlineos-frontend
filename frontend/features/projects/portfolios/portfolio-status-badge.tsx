@@ -1,3 +1,4 @@
+﻿import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import type { PortfolioStatus, PortfolioHealth } from "@/types/projects";
 
@@ -27,21 +28,19 @@ const HEALTH_LABEL: Record<PortfolioHealth, string> = {
   off_track: "Off Track",
 };
 
-export function PortfolioStatusBadge({ status }: { status: PortfolioStatus }) {
+export const PortfolioStatusBadge = memo(function PortfolioStatusBadge({ status }: { status: PortfolioStatus }) {
   return (
     <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${STATUS_STYLE[status]}`}>
       {STATUS_LABEL[status]}
     </Badge>
   );
-}
+});
 
-export function PortfolioHealthBadge({ health }: { health: PortfolioHealth | null }) {
+export const PortfolioHealthBadge = memo(function PortfolioHealthBadge({ health }: { health: PortfolioHealth | null }) {
   if (!health) return null;
   return (
     <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${HEALTH_STYLE[health]}`}>
       {HEALTH_LABEL[health]}
     </Badge>
   );
-}
-
-export { STATUS_LABEL, STATUS_STYLE, HEALTH_LABEL, HEALTH_STYLE };
+});

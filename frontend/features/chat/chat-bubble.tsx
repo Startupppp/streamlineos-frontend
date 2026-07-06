@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowDown, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, Link, Loader2, MessageSquare, Pencil, Pin, Reply, Smile, Ticket, Trash2 } from "lucide-react";
+import { ArrowDown, BookmarkCheck, BookmarkPlus, CheckCheck, Copy, FileText, Forward, Link, ListPlus, Loader2, MessageSquare, Pencil, Pin, Reply, Smile, Ticket, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ import {
 import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
+import { ConvertToTaskDialog } from "./convert-to-task-dialog";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/projects/comment-permalink";
 import { InternalLinkPreview } from "./internal-link-preview";
 import { getStatusBadgeClass } from "@/features/projects/shared/status-badge";
@@ -247,6 +248,10 @@ export function ChatBubble({
   onForward?: () => void;
 }) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const canConvertToTask = useCan("projects:tickets:create");
+
+  const handleOpenConvertDialog = useCallback(() => setConvertDialogOpen(true), []);
 
   const handleEditInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => onEditInputChange(e.target.value), [onEditInputChange]);
   const handleEditKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -528,6 +533,15 @@ export function ChatBubble({
           </div>
         )}
 
+        {canConvertToTask && (
+          <ConvertToTaskDialog
+            open={convertDialogOpen}
+            onOpenChange={setConvertDialogOpen}
+            channelId={message.channelId}
+            messageId={message.id}
+            defaultTitle={(message.content ?? "").slice(0, 80)}
+          />
+        )}
         {!isEditing && (
           <div
             className={cn(
@@ -594,6 +608,16 @@ export function ChatBubble({
                   aria-label="Forward message"
                 >
                   <Forward className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {canConvertToTask && (
+                <button
+                  onClick={handleOpenConvertDialog}
+                  className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                  title="Convert to task"
+                  aria-label="Convert to task"
+                >
+                  <ListPlus className="h-3.5 w-3.5" />
                 </button>
               )}
               {isOwn && (
