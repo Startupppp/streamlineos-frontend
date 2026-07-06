@@ -17,6 +17,16 @@ import { Button } from "@/components/ui/button";
 import type { OrgMember } from "@/types/organization";
 import type { Portfolio, Program, CreateProgramInput, UpdateProgramInput, PortfolioStatus, PortfolioHealth } from "@/types/projects";
 
+const NONE_SENTINEL = "__none__";
+
+function optionalSelectValue(value: string) {
+  return value || NONE_SENTINEL;
+}
+
+function optionalSelectChange(value: string) {
+  return value === NONE_SENTINEL ? "" : value;
+}
+
 const schema = z.object({
   name: z.string().min(1, "Required").max(200),
   description: z.string(),
@@ -105,10 +115,13 @@ export function ProgramFormSheet({ open, onOpenChange, mode, defaultValues, onSu
               <FormField control={form.control} name="portfolioId" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Portfolio (optional)</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={optionalSelectValue(field.value)}
+                    onValueChange={(v) => field.onChange(optionalSelectChange(v))}
+                  >
                     <FormControl><SelectTrigger><SelectValue placeholder="None" /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value={NONE_SENTINEL}>None</SelectItem>
                       {portfolios.map((p) => (
                         <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
                       ))}
@@ -136,10 +149,13 @@ export function ProgramFormSheet({ open, onOpenChange, mode, defaultValues, onSu
                 <FormField control={form.control} name="health" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Health (optional)</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={optionalSelectValue(field.value)}
+                      onValueChange={(v) => field.onChange(optionalSelectChange(v))}
+                    >
                       <FormControl><SelectTrigger><SelectValue placeholder="None" /></SelectTrigger></FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value={NONE_SENTINEL}>None</SelectItem>
                         <SelectItem value="on_track">On Track</SelectItem>
                         <SelectItem value="at_risk">At Risk</SelectItem>
                         <SelectItem value="off_track">Off Track</SelectItem>
@@ -152,10 +168,13 @@ export function ProgramFormSheet({ open, onOpenChange, mode, defaultValues, onSu
               <FormField control={form.control} name="ownerId" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Owner (optional)</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={optionalSelectValue(field.value)}
+                    onValueChange={(v) => field.onChange(optionalSelectChange(v))}
+                  >
                     <FormControl><SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value={NONE_SENTINEL}>None</SelectItem>
                       {members.map((m) => (
                         <SelectItem key={m.userId} value={m.userId}>{m.name ?? m.email}</SelectItem>
                       ))}
