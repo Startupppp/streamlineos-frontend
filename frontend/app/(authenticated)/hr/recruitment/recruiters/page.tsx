@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useRecruiters, useRecruiterActivity } from "@/hooks/api/hr/recruitment";
 import type { RecruiterSummary, RecruiterActivityEntry } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +65,7 @@ function ActivitySheet({ recruiter, onClose }: ActivitySheetProps) {
               <Skeleton key={i} className="h-14 w-full rounded-lg" />
             ))
           ) : !activity.length ? (
-            <EmptyState
+            <RecruitmentEmptyState
               illustrationPreset="activity"
               title="No activity recorded yet"
               className="border-0 bg-transparent shadow-none"
@@ -190,7 +190,7 @@ export default function RecruitersPage() {
       badge={`${recruiters.length} members`}
     >
       {recruiters.length === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyTeamIllustration />}
           title="No recruiters found"
           description="Users with HR, HR_MANAGER, CEO, ADMIN, or RECRUITER roles will appear here."

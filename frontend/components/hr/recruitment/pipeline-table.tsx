@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Users, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -36,7 +36,7 @@ export function PipelineTable({ stages, isLoading }: PipelineTableProps) {
 
   if (!rows.length) {
     return (
-      <EmptyState
+      <RecruitmentEmptyState
         illustrationPreset="team"
         title="No candidates in the pipeline"
         description="Candidates will appear here once they enter the hiring flow."

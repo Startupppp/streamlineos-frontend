@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptySprintIllustration } from "@/components/illustrations";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
@@ -509,7 +509,7 @@ export default function HiringFlowsPage() {
 
     if (!flows || flows.length === 0) {
       return (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptySprintIllustration />}
           title="No hiring flows yet"
           description="Create reusable interview workflows to assign to job postings."

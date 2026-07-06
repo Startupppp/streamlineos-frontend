@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -123,7 +123,7 @@ export default function ScorecardAnalyticsPage() {
       </div>
 
       {stats.length === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyLeaderboardIllustration />}
           title="No scorecard data"
           description="Scorecard analytics will appear once interviewers submit scorecards for completed interviews."

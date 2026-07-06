@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -104,7 +104,7 @@ export default function BookingLinksPage() {
       badge={`${links?.length ?? 0} links`}
     >
       {!links?.length ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyCalendarIllustration />}
           title="No booking links yet"
           description="Send self-scheduling links to candidates from their profile or the interviews page."

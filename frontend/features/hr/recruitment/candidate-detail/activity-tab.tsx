@@ -2,7 +2,7 @@
 
 import { useCandidateActivity } from "@/hooks/api/hr/recruitment";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { History, Video, MessageSquare, FileText, Activity as ActivityIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -43,7 +43,7 @@ export function ActivityTab({ candidateId }: Props) {
 
   if (!events?.length) {
     return (
-      <EmptyState
+      <RecruitmentEmptyState
         illustrationPreset="activity"
         title="No activity yet"
         description="Stage changes, interviews, messages, and documents will show up here."

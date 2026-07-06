@@ -19,7 +19,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { LoadingState } from "@/components/shared/loading-state";
 import {
@@ -221,7 +221,7 @@ export function OffersTab({ candidateId }: Props) {
       {isLoading ? (
         <LoadingState variant="list" rows={2} />
       ) : !offers?.length ? (
-        <EmptyState illustration={<EmptyDocumentsIllustration />} title="No offers created yet" compact />
+        <RecruitmentEmptyState illustration={<EmptyDocumentsIllustration />} title="No offers created yet" compact />
       ) : (
         <div className="space-y-3">
           {offers.map((offer) => {

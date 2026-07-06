@@ -16,7 +16,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { ChevronDown, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Department } from "@/types/hr";
@@ -255,7 +255,7 @@ export default function DiversityReportPage() {
           </Button>
         </div>
       ) : !data || data.total === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustrationPreset="chart"
           title="No applicant data found"
           description="Adjust the filters or wait for candidates to apply."

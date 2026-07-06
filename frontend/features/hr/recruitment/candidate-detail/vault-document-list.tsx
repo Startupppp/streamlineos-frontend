@@ -18,6 +18,8 @@ import {
   FileBadge,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -147,18 +149,13 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
 
   if (!docs?.length) {
     return (
-      <div className="py-8 text-center">
-        <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
-          <FileText
-            className="h-5 w-5 text-muted-foreground/50"
-            aria-hidden="true"
-          />
-        </div>
-        <p className="text-sm font-medium text-foreground">No documents yet</p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Upload verification documents using the button above.
-        </p>
-      </div>
+      <RecruitmentEmptyState
+        illustration={<EmptyDocumentsIllustration />}
+        title="No documents yet"
+        description="Upload verification documents using the button above."
+        compact
+        className="border-0 bg-transparent shadow-none"
+      />
     );
   }
 

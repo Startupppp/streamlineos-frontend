@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useMessageThreads, useCandidateMessages, useSendCandidateMessage } from "@/hooks/api/hr/recruitment";
 import type { MessageThread, CandidateMessage, MessageChannel } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -277,7 +277,7 @@ export default function InboxPage() {
       subtitle="Manage candidate conversations across channels"
     >
       {threads.length === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyInboxIllustration />}
           title="No messages yet"
           description="Send the first message to a candidate from their profile page."

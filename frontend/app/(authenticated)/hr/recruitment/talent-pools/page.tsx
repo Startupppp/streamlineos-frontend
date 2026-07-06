@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -227,7 +227,7 @@ export default function TalentPoolsPage() {
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
           </div>
         ) : isEmpty ? (
-          <EmptyState
+          <RecruitmentEmptyState
             illustrationPreset="projects"
             title="No talent pools yet"
             description="Create a pool to group candidates for future roles, campus hiring, or ongoing sourcing."

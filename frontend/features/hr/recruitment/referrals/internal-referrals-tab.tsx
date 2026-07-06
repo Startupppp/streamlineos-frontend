@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -186,7 +186,7 @@ export function InternalReferralsTab() {
   return (
     <>
       {referrals.length === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptyTeamIllustration />}
           title="No referrals yet"
           description="Referrals submitted by employees will appear here."

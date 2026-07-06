@@ -19,7 +19,7 @@ import {
 import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { toast } from "sonner";
 import {
   Plus, Trash2, Mail, Phone, Building2, User2,
@@ -193,7 +193,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
       </div>
 
       {!checks?.length ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustrationPreset="team"
           title="No reference checks yet"
           description="Add professional references to verify this candidate's background."

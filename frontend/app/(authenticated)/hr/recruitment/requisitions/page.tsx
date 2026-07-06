@@ -43,6 +43,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { EmptyApprovalIllustration } from "@/components/illustrations";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 
 const STATUS_TABS = [
   { label: "All", value: undefined },
@@ -764,24 +766,21 @@ export default function RequisitionsPage() {
             <Button size="sm" variant="outline" onClick={() => void refetch()}>Try again</Button>
           </div>
         ) : isEmpty ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center flex-1">
-            <div className="h-12 w-12 rounded-full bg-violet-50 flex items-center justify-center">
-              <Briefcase className="h-6 w-6 text-violet-500" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">
-                {activeStatus ? `No ${STATUS_STYLES[activeStatus]?.label ?? activeStatus} requisitions` : "No requisitions yet"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {activeStatus
-                  ? "Try another status filter or create a new requisition."
-                  : "Create your first headcount request to get started."}
-              </p>
-            </div>
-            <Button size="sm" onClick={handleOpenSheet}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" /> New Requisition
-            </Button>
-          </div>
+          <RecruitmentEmptyState
+            illustration={<EmptyApprovalIllustration />}
+            title={
+              activeStatus
+                ? `No ${STATUS_STYLES[activeStatus]?.label ?? activeStatus} requisitions`
+                : "No requisitions yet"
+            }
+            description={
+              activeStatus
+                ? "Try another status filter or create a new requisition."
+                : "Create your first headcount request to get started."
+            }
+            action={{ label: "New Requisition", onClick: handleOpenSheet }}
+            className="flex-1 border-0 bg-transparent shadow-none"
+          />
         ) : (
           <AnimatePresence mode="popLayout">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

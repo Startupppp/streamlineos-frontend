@@ -1,6 +1,6 @@
 "use client";
 
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { Button } from "@/components/ui/button";
 import { FileText, ExternalLink } from "lucide-react";
 
@@ -12,7 +12,7 @@ interface Props {
 export function ResumeTab({ resumeUrl, resumeText }: Props) {
   if (!resumeUrl && !resumeText) {
     return (
-      <EmptyState
+      <RecruitmentEmptyState
         illustrationPreset="documents"
         title="No resume on file"
         description="This candidate hasn't uploaded a resume yet."

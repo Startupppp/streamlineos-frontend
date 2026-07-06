@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import type { AtsPipelineCandidate, CandidateStatus } from "@/types/hr";
 import { getInitials, formatDate, SLA_CONFIG, COLUMNS } from "./types";
 import { SlaBadge } from "./sla-badge";
@@ -275,17 +277,13 @@ export const CandidateSheet = memo(function CandidateSheet({
                 className="flex-1 w-full border-0"
               />
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
-                <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-muted-foreground/50" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-muted-foreground">No resume uploaded</p>
-                  <p className="text-xs text-muted-foreground/60 mt-0.5">
-                    The candidate hasn&apos;t uploaded a resume yet.
-                  </p>
-                </div>
-              </div>
+              <RecruitmentEmptyState
+                illustration={<EmptyDocumentsIllustration />}
+                title="No resume uploaded"
+                description="The candidate hasn't uploaded a resume yet."
+                compact
+                className="flex-1 border-0 bg-transparent shadow-none"
+              />
             )}
           </div>
         )}

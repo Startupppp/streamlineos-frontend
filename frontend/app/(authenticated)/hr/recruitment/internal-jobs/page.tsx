@@ -12,7 +12,7 @@ import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -180,7 +180,7 @@ export default function InternalJobsPage() {
       subtitle="Open positions available exclusively for existing employees. Apply directly without going through external recruitment."
     >
       {jobs.length === 0 ? (
-        <EmptyState
+        <RecruitmentEmptyState
           illustration={<EmptySearchIllustration />}
           title="No internal openings"
           description="There are no internal job openings available at this time. Check back later."

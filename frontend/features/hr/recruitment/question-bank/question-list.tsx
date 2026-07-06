@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import {
   DropdownMenu,
@@ -141,8 +141,8 @@ export function QuestionList({
         {isLoading ? (
           <LoadingState variant="table" rows={6} />
         ) : !questions?.length ? (
-          <EmptyState
-            illustration={<EmptyDocumentsIllustration className="h-32 w-32 opacity-95" />}
+          <RecruitmentEmptyState
+            illustration={<EmptyDocumentsIllustration />}
             title="No questions yet"
             description="Add questions to build your bank."
           />

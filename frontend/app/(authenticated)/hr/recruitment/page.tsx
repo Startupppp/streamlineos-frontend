@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
-import { PlusIcon, UserSearchIcon } from "@animateicons/react/lucide";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { PlusIcon } from "@animateicons/react/lucide";
 import {
   Briefcase,
   ArrowRight,
@@ -341,16 +342,13 @@ export default function RecruitmentCommandCenterPage() {
                 </div>
 
                 {!statsLoading && !stats?.totalCandidates && (
-                  <div className="rounded-2xl border border-dashed border-border p-6 text-center">
-                    <EmptyPersonIllustration className="mx-auto mb-3 h-16 w-16 opacity-80" />
-                    <div className="text-xs font-medium text-foreground flex items-center justify-center gap-1.5">
-                      <UserSearchIcon className="h-3.5 w-3.5" />
-                      No candidates yet
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mt-1">
-                      Publish a job or import resumes to get started.
-                    </p>
-                  </div>
+                  <RecruitmentEmptyState
+                    illustration={<EmptyPersonIllustration />}
+                    title="No candidates yet"
+                    description="Publish a job or import resumes to get started."
+                    compact
+                    className="rounded-2xl border border-dashed border-border bg-card py-6 px-4 shadow-none"
+                  />
                 )}
               </div>
             </div>

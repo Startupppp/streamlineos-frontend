@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
@@ -358,8 +358,8 @@ export default function ScorecardTemplatesPage() {
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36 w-full rounded-xl" />)}
           </div>
         ) : !templates?.length ? (
-          <EmptyState
-            illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
+          <RecruitmentEmptyState
+            illustration={<EmptyDocumentsIllustration />}
             title="No Scorecard Templates"
             description="Create a template to standardize how interviewers evaluate candidates."
             action={{ label: "Create Template", onClick: handleOpenCreate }}

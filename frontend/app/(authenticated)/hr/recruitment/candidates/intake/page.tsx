@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -162,10 +162,11 @@ export default function IntakeInboxPage() {
             <Button size="sm" variant="outline" onClick={() => void refetch()}>Try again</Button>
           </div>
         ) : isEmpty ? (
-          <EmptyState
-            illustration={<EmptyPersonIllustration className="h-28 w-28 opacity-90" />}
+          <RecruitmentEmptyState
+            illustration={<EmptyPersonIllustration />}
             title="No new applicants right now"
             description="New applications will show up here for triage before entering the pipeline."
+            className="border-0 bg-transparent shadow-none"
           />
         ) : (
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
