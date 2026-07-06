@@ -13,6 +13,7 @@ import {
   Menu,
   Layers,
   Calendar,
+  CalendarClock,
   RefreshCcw,
   Package,
   GanttChart,
@@ -67,6 +68,7 @@ function useSidebarSections(baseUrl: string): NavSection[] {
   const canAI = useCan("projects:ai:use");
   const canRisks = useCan("projects:risks:view");
   const canDecisions = useCan("projects:decisions:view");
+  const canMeetings = useCan("projects:meetings:view");
   return [
     {
       label: "Planning",
@@ -75,6 +77,7 @@ function useSidebarSections(baseUrl: string): NavSection[] {
         { label: "Backlog", icon: ListTodo, href: `${baseUrl}/backlog` },
         { label: "My Tickets", icon: User, href: `${baseUrl}/my-tickets` },
         { label: "Sprints", icon: Calendar, href: `${baseUrl}/sprints` },
+        ...(canMeetings ? [{ label: "Meetings", icon: CalendarClock, href: `${baseUrl}/meetings` }] : []),
       ],
     },
     {

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Search, CalendarDays, MessageSquare } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ProductSwitcherMenu } from "./product-switcher-menu"
+import { WorkspaceSwitcher } from "./workspace-switcher"
 import { QuickCreateButton } from "./quick-create-button"
 import { UserAvatarMenu } from "./user-avatar-menu"
 
@@ -31,7 +32,7 @@ function SearchButton() {
       type="button"
       onClick={handleClick}
       aria-label="Search (⌘K)"
-      className="flex items-center gap-2 h-8 w-full max-w-xs px-3 rounded-lg bg-muted/60 border border-border text-muted-foreground hover:bg-muted hover:border-border transition-colors"
+      className="flex items-center gap-2 h-8 w-full max-w-xs px-3 rounded-lg bg-card border border-border shadow-xs text-muted-foreground hover:border-blue-300 transition-[color,box-shadow,border-color]"
     >
       <Search className="h-4 w-4 shrink-0" />
       <span className="flex-1 text-left text-xs">Search…</span>
@@ -70,8 +71,10 @@ function HeaderIconLink({
 function DesktopHeader() {
   return (
     <div className="flex items-center h-full w-full px-4 gap-3">
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 min-w-0">
         <ProductSwitcherMenu />
+        <div className="w-px h-4 bg-border/70" />
+        <WorkspaceSwitcher variant="header" />
       </div>
 
       <div className="flex-1 flex justify-center min-w-0 px-4">

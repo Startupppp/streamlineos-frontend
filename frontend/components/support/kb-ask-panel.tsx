@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { Sparkles, Send, Loader2, FileText, Paperclip } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getApiError } from "@/lib/api-client";
@@ -30,12 +30,23 @@ export function KbAskPanel(props: KbAskPanelProps) {
   const publicAsk = usePublicAskKb();
   const isPending = props.mode === "public" ? publicAsk.isPending : authedAsk.isPending;
 
-  function handleQuestionChange(event: ChangeEvent<HTMLTextAreaElement>) {
+  function handleQuestionChange(event: ChangeEvent<HTMLInputElement>) {
     setQuestion(event.target.value);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    submitQuestion();
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter" && !isPending) {
+      event.preventDefault();
+      submitQuestion();
+    }
+  }
+
+  function submitQuestion() {
     const trimmed = question.trim();
     if (trimmed.length < MIN_QUESTION_LENGTH) {
       toast.error("Please enter a longer question");
@@ -61,49 +72,52 @@ export function KbAskPanel(props: KbAskPanelProps) {
 
   return (
     <Card className={cn("border-primary/20", props.className)}>
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Sparkles className="h-4 w-4 text-primary" />
+      <CardContent className="p-3 space-y-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
             <p className="text-sm font-semibold leading-none">Ask the knowledge base</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Get answers from articles and attached documents.
+            <p className="text-[11px] text-muted-foreground">
+              Get answers from articles and attached documents
             </p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-2">
-          <Textarea
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <Input
             value={question}
             onChange={handleQuestionChange}
+            onKeyDown={handleKeyDown}
             placeholder="e.g. How do I reset my password?"
-            rows={2}
-            className="resize-none text-sm"
+            className="h-8 flex-1 text-[13px]"
             disabled={isPending}
           />
-          <div className="flex justify-end">
-            <Button type="submit" size="sm" disabled={isPending || question.trim().length < MIN_QUESTION_LENGTH}>
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-              <span className="ml-1.5">{isPending ? "Thinking…" : "Ask"}</span>
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={isPending || question.trim().length < MIN_QUESTION_LENGTH}
+            className="h-8 gap-1.5 text-xs shrink-0"
+          >
+            {isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Send className="h-3.5 w-3.5" />
+            )}
+            {isPending ? "Thinking…" : "Ask"}
+          </Button>
         </form>
 
         {answer && !isPending && (
-          <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
-            <p className="text-sm whitespace-pre-wrap leading-relaxed">{answer.answer}</p>
+          <div className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
+            <p className="text-[13px] whitespace-pre-wrap leading-relaxed">{answer.answer}</p>
             {answer.sources.length > 0 && (
-              <div className="space-y-1.5 pt-1 border-t">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              <div className="space-y-1 pt-1 border-t">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                   Sources
                 </p>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0.5">
                   {answer.sources.map((source) => (
                     <Link
                       key={`${source.articleId}-${source.attachmentId ?? "body"}`}

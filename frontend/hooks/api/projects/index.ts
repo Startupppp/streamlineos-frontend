@@ -25,3 +25,4 @@ export * from "./client-portal";
 export * from "./approvals";
 export * from "./ai";
 export * from "./governance";
+export * from "./meetings";

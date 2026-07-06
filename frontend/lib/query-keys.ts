@@ -222,6 +222,14 @@ export const queryKeys = {
       list: (projectId: number, params?: Record<string, unknown>) => [...base, "projects", projectId, "decisions", params] as const,
       detail: (projectId: number, id: number) => [...base, "projects", projectId, "decisions", id] as const,
     },
+    meetings: {
+      all: (projectId: number) => [...base, "projects", projectId, "meetings"] as const,
+      list: (projectId: number, params?: Record<string, unknown>) =>
+        params === undefined
+          ? ([...base, "projects", projectId, "meetings", "list"] as const)
+          : ([...base, "projects", projectId, "meetings", "list", params] as const),
+      detail: (projectId: number, id: number) => [...base, "projects", projectId, "meetings", id] as const,
+    },
   },
 
   chat: {

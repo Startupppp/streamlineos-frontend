@@ -51,7 +51,10 @@ import {
 import { useReindexAllKb } from "@/hooks/api/support/kb-rag";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getApiError } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+const filterControlClassName = "h-9 text-xs";
 
 function isStatus(v: string): v is KbArticleStatus {
   return v === "draft" || v === "published" || v === "archived";
@@ -252,55 +255,62 @@ export function KbManagerContent() {
   }
 
   const filters = (
-    <>
+    <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       <Input
         placeholder="Search…"
         value={localSearch}
         onChange={handleSearchChange}
-        className="h-8 text-xs w-full sm:max-w-[200px]"
+        className={cn(filterControlClassName, "w-full sm:max-w-[200px]")}
       />
-      <Select value={statusParam} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 text-xs w-full sm:w-[130px]">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          <SelectItem value="draft">Draft</SelectItem>
-          <SelectItem value="published">Published</SelectItem>
-          <SelectItem value="archived">Archived</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select value={visibilityParam} onValueChange={handleVisibilityChange}>
-        <SelectTrigger className="h-8 text-xs w-full sm:w-[130px]">
-          <SelectValue placeholder="Visibility" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All visibility</SelectItem>
-          <SelectItem value="public">Public</SelectItem>
-          <SelectItem value="internal">Internal</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select value={categoryParam} onValueChange={handleCategoryChange}>
-        <SelectTrigger className="h-8 text-xs w-full sm:w-[150px]">
-          <SelectValue placeholder="Category" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All categories</SelectItem>
-          {categories.map((c) => (
-            <SelectItem key={c.id} value={String(c.id)}>
-              {c.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </>
+      <div className="grid w-full grid-cols-3 gap-2 sm:contents">
+        <Select value={statusParam} onValueChange={handleStatusChange}>
+          <SelectTrigger className={cn(filterControlClassName, "w-full sm:w-[130px]")}>
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="published">Published</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={visibilityParam} onValueChange={handleVisibilityChange}>
+          <SelectTrigger className={cn(filterControlClassName, "w-full sm:w-[130px]")}>
+            <SelectValue placeholder="Visibility" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All visibility</SelectItem>
+            <SelectItem value="public">Public</SelectItem>
+            <SelectItem value="internal">Internal</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={categoryParam} onValueChange={handleCategoryChange}>
+          <SelectTrigger className={cn(filterControlClassName, "w-full sm:w-[150px]")}>
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c.id} value={String(c.id)}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
   );
 
   return (
     <PageWrapper
       eyebrow="Documents"
       title="Knowledge Base"
-      subtitle={`${stats.total} article${stats.total === 1 ? "" : "s"}`}
+      subtitle={
+        stats.total === 0
+          ? "Create and publish help articles for customers and your team"
+          : "Manage help articles, categories, and AI-indexed content for your team"
+      }
+      mobileFiltersInline
       filters={filters}
       actions={
         <>

@@ -240,7 +240,12 @@ export function WorkspaceSwitcher({
       />
       {!iconOnly && (
         <>
-          <span className="min-w-0 flex-1 truncate text-left text-sm font-medium text-sidebar-foreground">
+          <span
+            className={cn(
+              "min-w-0 flex-1 truncate text-left text-sm font-medium",
+              isSidebar ? "text-sidebar-foreground" : "text-foreground",
+            )}
+          >
             {workspaceName}
           </span>
           <ChevronsUpDown

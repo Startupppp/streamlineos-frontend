@@ -145,9 +145,6 @@ export function AppSidebar({
           <Skeleton className="h-8 w-8 rounded-lg bg-sidebar-border" />
           <Skeleton className="h-6 w-6 rounded-md bg-sidebar-border" />
         </div>
-        <div className="shrink-0 border-b border-sidebar-border px-3 py-2">
-          <Skeleton className="h-8 w-full rounded-lg bg-sidebar-border" />
-        </div>
         <div className="px-3 py-4 flex-1 space-y-6">
           <div className="space-y-1">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -198,11 +195,12 @@ export function AppSidebar({
           </div>
         )}
 
-        <SidebarWorkspaceRow
-          isCollapsed={effectiveCollapsed}
-          triggerOnly={isMobile}
-          onRequestOpen={onRequestWorkspaceSwitcher}
-        />
+        {isMobile && (
+          <SidebarWorkspaceRow
+            triggerOnly
+            onRequestOpen={onRequestWorkspaceSwitcher}
+          />
+        )}
 
         <ScrollArea className="flex-1 min-h-0">
           <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
