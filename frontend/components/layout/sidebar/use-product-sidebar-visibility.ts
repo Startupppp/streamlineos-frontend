@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { usePermissions } from "@/lib/rbac/hooks";
@@ -29,9 +29,9 @@ export function useProductSidebarVisibility(): {
     session?.user?.isOrgOwner === true ||
     session?.user?.isPlatformAdmin === true;
 
-  const lastKnownRoleRef = useRef<string | undefined>(role);
-  if (role) lastKnownRoleRef.current = role;
-  const rawRole = role || lastKnownRoleRef.current;
+  const [lastKnownRole, setLastKnownRole] = useState<string | undefined>(role);
+  if (role && role !== lastKnownRole) { setLastKnownRole(role); }
+  const rawRole = role || lastKnownRole;
   const effectiveRole = isOrgOwner ? "OWNER" : rawRole;
 
   const activeProduct = getProductFromPathname(pathname);

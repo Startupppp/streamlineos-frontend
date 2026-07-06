@@ -3,8 +3,6 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 
-const ROOT = path.join(process.cwd(), "frontend");
-
 const ICON_TO_PRESET = {
   Users: "team",
   UsersRound: "team",

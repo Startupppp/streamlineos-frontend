@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { signIn } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,6 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const [completedSteps, setCompletedSteps] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const dataRef = useRef(data);
-  dataRef.current = data;
 
   const wantsPayments = !!data.paymentsChoice && data.paymentsChoice !== "skip";
   const wantsInvites = data.invitees.length > 0;
@@ -56,11 +55,15 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const completeOrgSetup = useCompleteOrgSetupMutation();
   const bulkInvite = useBulkInviteUsers();
   const generateWorkspaceRef = useRef(generateWorkspace);
-  generateWorkspaceRef.current = generateWorkspace;
   const completeOrgSetupRef = useRef(completeOrgSetup);
-  completeOrgSetupRef.current = completeOrgSetup;
   const bulkInviteRef = useRef(bulkInvite);
-  bulkInviteRef.current = bulkInvite;
+
+  useLayoutEffect(() => {
+    dataRef.current = data;
+    generateWorkspaceRef.current = generateWorkspace;
+    completeOrgSetupRef.current = completeOrgSetup;
+    bulkInviteRef.current = bulkInvite;
+  });
 
   function buildPayload(d: WizardData): OrgSetupPayload {
     return {

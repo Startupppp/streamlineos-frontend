@@ -35,7 +35,6 @@ import {
   Download,
   CheckCircle2,
   LogOut,
-  AlertCircle,
 } from "lucide-react";
 import { FileUpload } from "@/components/storage/file-upload";
 import { EmptyPersonIllustration } from "@/components/illustrations";

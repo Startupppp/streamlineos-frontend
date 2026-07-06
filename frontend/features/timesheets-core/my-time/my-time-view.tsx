@@ -31,7 +31,7 @@ export function MyTimeView() {
   const recallPeriod = useRecallPeriod();
 
   const period = periodDetail?.period;
-  const entries = entriesData ?? [];
+  const entries = useMemo(() => entriesData ?? [], [entriesData]);
 
   const totalHours = useMemo(
     () => entries.reduce((sum, e) => sum + Number(e.hours), 0),

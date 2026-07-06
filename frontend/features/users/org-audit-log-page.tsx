@@ -20,7 +20,6 @@ import { useOrgAuditLog } from "@/hooks/api/users";
 import {
   ChevronLeft,
   ChevronRight,
-  History,
   Search,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";

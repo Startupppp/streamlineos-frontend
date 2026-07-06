@@ -143,7 +143,9 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
   const handleConvertDescChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setConvertDesc(e.target.value), []);
 
   const quickStartRef = useRef(startTimer);
-  quickStartRef.current = startTimer;
+  useEffect(() => {
+    quickStartRef.current = startTimer;
+  });
   const handleQuickStart = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const id = parseInt(e.currentTarget.dataset.projectId ?? "0", 10);
     if (!id) return;

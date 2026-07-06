@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { AtsPipelineStage } from "@/types/hr/recruitment";
 

@@ -16,7 +16,6 @@ import {
   Users,
   TrendingUp,
   CheckCircle2,
-  AlertCircle,
   BarChart3,
   ArrowRight,
 } from "lucide-react";

@@ -27,7 +27,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Layers, Trash2, UserPlus, X } from "lucide-react";
+import { Plus, Trash2, UserPlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function CreatePoolSheet() {

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { Plus, Share2, Gift } from "lucide-react";
+import { Plus, Gift } from "lucide-react";
 
 interface Props {
   candidateId: number;

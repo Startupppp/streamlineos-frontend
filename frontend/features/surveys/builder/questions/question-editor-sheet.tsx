@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -51,24 +51,29 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
   const [choices, setChoices] = useState<ChoiceInput[]>([]);
   const [settings, setSettings] = useState<Record<string, unknown>>({});
 
-  useEffect(() => {
-    if (!open) return;
-    setTitle(question?.title ?? "");
-    setDescription(question?.description ?? "");
-    setType(question?.type ?? "short_text");
-    setRequired(question?.required ?? false);
-    setVariableName(question?.variableName ?? "");
-    setSettings(question?.settings ?? {});
-    setChoices(
-      question?.choices.map((c) => ({
-        choiceKey: c.choiceKey,
-        label: c.label,
-        value: c.value ?? undefined,
-        score: c.score ?? undefined,
-        isCorrect: c.isCorrect,
-      })) ?? [],
-    );
-  }, [open, question]);
+  const [prevOpen, setPrevOpen] = useState(open);
+  const [prevQuestion, setPrevQuestion] = useState(question);
+  if (open !== prevOpen || question !== prevQuestion) {
+    setPrevOpen(open);
+    setPrevQuestion(question);
+    if (open) {
+      setTitle(question?.title ?? "");
+      setDescription(question?.description ?? "");
+      setType(question?.type ?? "short_text");
+      setRequired(question?.required ?? false);
+      setVariableName(question?.variableName ?? "");
+      setSettings(question?.settings ?? {});
+      setChoices(
+        question?.choices.map((c) => ({
+          choiceKey: c.choiceKey,
+          label: c.label,
+          value: c.value ?? undefined,
+          score: c.score ?? undefined,
+          isCorrect: c.isCorrect,
+        })) ?? [],
+      );
+    }
+  }
 
   const meta = QUESTION_TYPE_META[type];
   const isBusy = createQuestion.isPending || patchQuestion.isPending;

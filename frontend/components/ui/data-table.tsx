@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
 declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData, TValue> {
+  interface ColumnMeta<_TData, _TValue> {
     className?: string;
     headerClassName?: string;
   }
@@ -212,7 +212,6 @@ export function DataTable<T>({
   });
 
   const rows = table.getRowModel().rows;
-  const colCount = columnDefs.length;
 
   const currentPage = isServerPagination ? serverPag!.page - 1 : internalPage;
   const totalPages = isServerPagination

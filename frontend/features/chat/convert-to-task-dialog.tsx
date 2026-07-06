@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -42,13 +42,15 @@ export function ConvertToTaskDialog({
   const [type, setType] = useState<"TASK" | "BUG">("TASK");
   const [title, setTitle] = useState(defaultTitle);
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setTitle(defaultTitle);
       setProjectId("");
       setType("TASK");
     }
-  }, [open, defaultTitle]);
+  }
 
   const { data: projectsData, isLoading: loadingProjects } = useProjects(
     undefined,

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { PlateElement, PlateLeaf, useReadOnly } from 'platejs/react';
 import type { PlateElementProps, PlateLeafProps } from 'platejs/react';
 import type { TElement } from 'platejs';
@@ -13,7 +14,7 @@ export function ParagraphElement({ element, children, ...props }: PlateElementPr
   const el = element as ListElement;
   const readOnly = useReadOnly();
   const todoState = useTodoListElementState({ element: el });
-  const { checkboxProps } = useTodoListElement(todoState);
+  useTodoListElement(todoState);
 
   if (el.listStyleType === 'disc') {
     return (
@@ -219,10 +220,14 @@ export function ImageElement({ element, children, ...props }: PlateElementProps)
   return (
     <PlateElement {...props} element={element} className="my-3">
       {url ? (
-        <img
+        <Image
           src={url}
           alt=""
-          className="max-w-full h-auto rounded-md border border-border"
+          unoptimized
+          width={800}
+          height={600}
+          style={{ width: '100%', height: 'auto' }}
+          className="rounded-md border border-border"
           contentEditable={false}
         />
       ) : (

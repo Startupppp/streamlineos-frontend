@@ -19,7 +19,7 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2, AlertCircle, Search } from "lucide-react";
+import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2 } from "lucide-react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
@@ -224,8 +224,6 @@ function FnfContent() {
   const [deductions, setDeductions] = useState("");
   const [loanRecovery, setLoanRecovery] = useState("");
   const [notes, setNotes] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "PAID">("ALL");
 
   const resetForm = useCallback(() => {
     setUserId("");
@@ -289,35 +287,7 @@ function FnfContent() {
   const handleLoanRecoveryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLoanRecovery(e.target.value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
 
-  const draftCount = useMemo(() => (items ?? []).filter((i) => i.status !== "PAID" && i.status !== "APPROVED" && i.status !== "PENDING_APPROVAL").length, [items]);
-  const pendingCount = useMemo(() => (items ?? []).filter((i) => i.status === "PENDING_APPROVAL").length, [items]);
-  const approvedCount = useMemo(() => (items ?? []).filter((i) => i.status === "APPROVED").length, [items]);
-  const paidCount = useMemo(() => (items ?? []).filter((i) => i.status === "PAID").length, [items]);
-
-  const filteredItems = useMemo(() => {
-    const base = items ?? [];
-    return base.filter((item) => {
-      if (statusFilter !== "ALL") {
-        if (statusFilter === "DRAFT") {
-          if (item.status === "PAID" || item.status === "APPROVED" || item.status === "PENDING_APPROVAL") return false;
-        } else {
-          if (item.status !== statusFilter) return false;
-        }
-      }
-      if (searchQuery.trim()) {
-        const name = (item.user?.name ?? "").toLowerCase();
-        if (!name.includes(searchQuery.trim().toLowerCase())) return false;
-      }
-      return true;
-    });
-  }, [items, statusFilter, searchQuery]);
-
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), []);
-  const handleSetStatusAll = useCallback(() => setStatusFilter("ALL"), []);
-  const handleSetStatusDraft = useCallback(() => setStatusFilter("DRAFT"), []);
-  const handleSetStatusPending = useCallback(() => setStatusFilter("PENDING_APPROVAL"), []);
-  const handleSetStatusApproved = useCallback(() => setStatusFilter("APPROVED"), []);
-  const handleSetStatusPaid = useCallback(() => setStatusFilter("PAID"), []);
+;
 
   if (isLoading) {
     return (

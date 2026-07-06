@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useUserDevices, useRemoveDevice } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { Laptop, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface UserDevicesTabProps {

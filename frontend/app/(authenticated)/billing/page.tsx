@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useState } from "react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { format, isPast } from "date-fns";
@@ -83,7 +83,7 @@ export default function BillingPage() {
   const { data: overdueData } = useInvoices({ status: "FAILED", limit: 5 });
   const { data: subData } = useSubscription();
 
-  const now = useMemo(() => Date.now(), []);
+  const [now] = useState(() => Date.now());
 
   function handleRetryStats() {
     void refetchStats();

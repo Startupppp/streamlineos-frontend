@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Users, Pencil, Trash2, Crown } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Crown } from "lucide-react";
 
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";

@@ -19,7 +19,7 @@ import {
 import { MonthPicker } from "@/features/payroll/shared";
 import { useUpdatePolicy } from "@/hooks/api/payroll";
 import { CURRENCIES, PAY_FREQUENCIES } from "@/features/payroll/setup/lib/constants";
-import type { PolicyRow, PayFrequency } from "@/types/payroll/setup";
+import type { PolicyRow } from "@/types/payroll/setup";
 
 const schema = z.object({
   legalEntityName: z.string().optional(),

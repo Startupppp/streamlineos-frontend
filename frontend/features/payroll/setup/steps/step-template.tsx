@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TemplateCard } from "@/features/payroll/shared";
@@ -41,11 +41,10 @@ export function StepTemplate({
   const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
   const [duplicateTemplate, setDuplicateTemplate] = useState<TemplateRow | null>(null);
 
-  useEffect(() => {
-    if (!preselectedKey || selectedId !== null || templates.length === 0) return;
+  if (preselectedKey && selectedId === null && templates.length > 0) {
     const found = templates.find((t) => t.key === preselectedKey);
     if (found) setSelectedId(found.id);
-  }, [preselectedKey, templates, selectedId]);
+  }
 
   function handleSelectTemplate(t: TemplateRow) {
     setSelectedId(t.id);

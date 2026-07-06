@@ -3,7 +3,6 @@
 import React from "react";
 import { Table } from "lucide-react";
 import { useEditorRef } from "platejs/react";
-import { TablePlugin } from "@platejs/table/react";
 import {
   insertTable,
   insertTableRow,

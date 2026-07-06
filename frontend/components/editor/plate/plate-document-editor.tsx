@@ -160,7 +160,7 @@ type PickerState = {
 
 function usePageLinkPicker(
   editor: PlateEditor,
-  fetchPageLinks?: (q: string) => Promise<PageLinkItem[]>,
+  _fetchPageLinks?: (q: string) => Promise<PageLinkItem[]>,
 ) {
   const [picker, setPicker] = useState<PickerState | null>(null);
 

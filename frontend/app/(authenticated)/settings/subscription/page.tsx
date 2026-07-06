@@ -177,7 +177,7 @@ export default function SubscriptionPage() {
     [data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon],
   );
 
-  const now = Date.now();
+  const [now] = useState(Date.now);
   const currentPlan = data?.subscription?.plan ?? null;
   const currentStatus = data?.subscription?.status ?? null;
   const statusInfo = currentStatus ? STATUS_BADGE[currentStatus] : null;

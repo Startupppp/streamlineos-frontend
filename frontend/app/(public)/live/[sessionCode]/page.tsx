@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -28,9 +28,11 @@ export default function LiveSessionJoinPage() {
   const session = sessionQuery.data;
   const currentQuestion = session?.currentQuestion;
 
-  useEffect(() => {
+  const [prevQuestionId, setPrevQuestionId] = useState(currentQuestion?.id);
+  if (currentQuestion?.id !== prevQuestionId) {
+    setPrevQuestionId(currentQuestion?.id);
     setAnswer(undefined);
-  }, [currentQuestion?.id]);
+  }
 
   async function handleJoin() {
     try {

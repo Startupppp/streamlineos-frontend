@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -42,13 +42,15 @@ export function SetDueDateDialog({
   const [ticketIdStr, setTicketIdStr] = useState("");
   const [dueDateValue, setDueDateValue] = useState("");
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setProjectIdStr(projectId !== undefined ? String(projectId) : "");
       setTicketIdStr(ticketId !== undefined ? String(ticketId) : "");
       setDueDateValue("");
     }
-  }, [open, projectId, ticketId]);
+  }
 
   const effectiveProjectId =
     projectId !== undefined ? projectId : projectIdStr ? Number(projectIdStr) : 0;

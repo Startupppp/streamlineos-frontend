@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { UsersRound, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgTeams,
@@ -71,7 +71,7 @@ function TeamForm({
   defaultValues,
   departments,
   onSubmit,
-  isPending,
+  isPending: _isPending,
 }: {
   defaultValues?: Partial<FormValues>;
   departments: { id: string; name: string }[];

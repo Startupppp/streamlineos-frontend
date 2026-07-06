@@ -126,14 +126,15 @@ export function StepToggles({ draft, updateDraft, goNext, goBack }: StepTogglesP
   const country = draft.profile?.country ?? "IN";
   const isNonIN = country !== "IN";
   const packPreview = usePreviewPolicy();
+  const { mutate: packPreviewMutate } = packPreview;
   const packCalledRef = useRef(false);
 
   useEffect(() => {
     if (!isNonIN) return;
     if (packCalledRef.current) return;
     packCalledRef.current = true;
-    packPreview.mutate({ country });
-  }, []);
+    packPreviewMutate({ country });
+  }, [country, isNonIN, packPreviewMutate]);
 
   function getEffectiveValue(key: ToggleKey): boolean {
     if (key in overrides) return overrides[key] ?? false;

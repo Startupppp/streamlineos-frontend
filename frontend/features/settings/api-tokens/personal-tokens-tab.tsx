@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Key, Clock, ShieldOff } from "lucide-react";
+import { Clock, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 import {
   useUserApiTokens,

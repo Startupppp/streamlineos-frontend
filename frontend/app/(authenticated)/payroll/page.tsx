@@ -30,13 +30,11 @@ function currentYearMonth(): string {
 function PrimaryAction({
   status,
   runId,
-  month,
   onCreateRun,
   isPending,
 }: {
   status: PayrollRunStatus | null;
   runId?: number;
-  month: string;
   onCreateRun: () => void;
   isPending: boolean;
 }) {
@@ -122,7 +120,6 @@ export default function PayrollCommandCenterPage() {
   const excCount = header ? header.exceptionCounts.BLOCKER + header.exceptionCounts.WARNING : 0;
 
   const isPreSetup = !isLoading && (error || !data);
-  const noRun = !isLoading && data && !data.header.status;
 
   return (
     <PageWrapper
@@ -145,7 +142,6 @@ export default function PayrollCommandCenterPage() {
             <PrimaryAction
               status={header?.status ?? null}
               runId={runId}
-              month={month}
               onCreateRun={handleCreateRun}
               isPending={createRunMutation.isPending}
             />

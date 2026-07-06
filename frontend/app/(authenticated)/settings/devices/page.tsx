@@ -1,6 +1,6 @@
 "use client";
 
-import { Laptop, ShieldCheck, Trash2 } from "lucide-react";
+import { ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useDevices, useTrustDevice, useRemoveDevice } from "@/hooks/api/auth";

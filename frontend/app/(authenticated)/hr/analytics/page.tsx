@@ -25,7 +25,6 @@ import {
   Activity,
   CalendarDays,
   BarChart3,
-  AlertCircle,
 } from "lucide-react";
 import { WorkforceSection } from "@/features/hr/analytics/workforce-section";
 import { RecruitmentSection } from "@/features/hr/analytics/recruitment-section";

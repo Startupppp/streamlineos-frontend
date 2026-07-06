@@ -80,7 +80,7 @@ function DelegationsContent() {
   const [revoking, setRevoking] = useState<string | null>(null);
 
   const { data: membersData } = useOrgMembers(1, 200);
-  const members = membersData?.data ?? [];
+  const members = useMemo(() => membersData?.data ?? [], [membersData]);
   const memberMap = useMemo(
     () => new Map(members.map((m) => [m.userId, m.name ?? m.email])),
     [members],
@@ -303,8 +303,6 @@ function DelegationRow({
   const principalId = delegation[nameField];
   const displayName = memberMap.get(principalId) ?? principalId.slice(0, 12);
   const isRevoked = delegation.status === "REVOKED";
-  const isExpired =
-    !isRevoked && new Date(delegation.endsAt) <= new Date();
 
   return (
     <div className="flex items-center gap-3 px-4 py-2.5">

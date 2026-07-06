@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { FileIcon } from 'lucide-react';
 import { PlateElement } from 'platejs/react';
 import type { PlateElementProps } from 'platejs/react';
@@ -125,10 +126,14 @@ export function ImageElementWithCaption({ element, children, ...props }: PlateEl
     <PlateElement {...props} element={element} as="figure" className="my-3">
       <div contentEditable={false}>
         {url ? (
-          <img
+          <Image
             src={url}
             alt=""
-            className="max-w-full h-auto rounded-md border border-border"
+            unoptimized
+            width={800}
+            height={600}
+            style={{ width: '100%', height: 'auto' }}
+            className="rounded-md border border-border"
           />
         ) : (
           <div className="flex h-24 items-center justify-center rounded-md border-2 border-dashed border-border text-sm text-muted-foreground">

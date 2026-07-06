@@ -41,7 +41,6 @@ import {
   useBulkArchive,
   useBulkRestore,
 } from "@/hooks/api/users";
-import type { User } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
 import { UserStatusBadge } from "./user-status-badge";

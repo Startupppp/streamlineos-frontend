@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -57,23 +57,20 @@ export default function OnboardingPage() {
   const [savedFormData, setSavedFormData] = useState<
     Record<string, FormValues>
   >({});
-  const hydratedFromSessionRef = useRef(false);
+  const [sessionHydrated, setSessionHydrated] = useState(false);
 
   const { data: session } = useOnboardingSessionQuery();
   const { mutate: patchSession } = usePatchOnboardingSessionMutation();
 
-  // Server session is the resume source of truth (survives refresh/device switch);
-  // per-tab data itself is already saved server-side by each tab's own mutation.
-  useEffect(() => {
-    if (hydratedFromSessionRef.current || !session) return;
-    hydratedFromSessionRef.current = true;
+  if (!sessionHydrated && session) {
+    setSessionHydrated(true);
     if (session.completedSteps?.length) {
       setCompletedSteps(new Set(session.completedSteps));
     }
     if (session.currentStep && isStepId(session.currentStep)) {
       setActiveTab(session.currentStep);
     }
-  }, [session]);
+  }
 
   const currentStepIndex = Math.max(
     0,

@@ -73,20 +73,20 @@ export function TemplatesPageContent() {
 
   const deleteTemplateMutation = useDeleteTemplate();
 
-  function updateUrl(updates: Record<string, string | undefined>) {
+  const updateUrl = useCallback((updates: Record<string, string | undefined>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([k, v]) => {
       if (v && v !== "all") params.set(k, v);
       else params.delete(k);
     });
     router.replace(`/payroll/templates?${params.toString()}`);
-  }
+  }, [searchParams, router]);
 
   const handleSearchKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") updateUrl({ search: searchInput });
     },
-    [searchInput],
+    [searchInput, updateUrl],
   );
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,11 +95,11 @@ export function TemplatesPageContent() {
 
   const handleCategoryChange = useCallback((value: string) => {
     updateUrl({ category: value });
-  }, []);
+  }, [updateUrl]);
 
   const handleComplexityChange = useCallback((value: string) => {
     updateUrl({ complexity: value });
-  }, []);
+  }, [updateUrl]);
 
   const handleUseInSetup = useCallback(
     (template: TemplateRow) => {
@@ -150,7 +150,7 @@ export function TemplatesPageContent() {
   const handleClearFilters = useCallback(() => {
     setSearchInput("");
     updateUrl({ search: undefined, category: undefined, complexity: undefined });
-  }, []);
+  }, [updateUrl]);
 
   const handleRetry = useCallback(() => {
     void refetch();

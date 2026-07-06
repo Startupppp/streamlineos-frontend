@@ -3,7 +3,7 @@
 import { useCandidateActivity } from "@/hooks/api/hr/recruitment";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { History, Video, MessageSquare, FileText, Activity as ActivityIcon } from "lucide-react";
+import { Video, MessageSquare, FileText, Activity as ActivityIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 

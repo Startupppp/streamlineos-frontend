@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -175,7 +175,7 @@ export function SuspendedUsersPage() {
 
   const { mutate: bulkRestore, isPending: isRestoring } = useBulkRestore();
 
-  const users = data?.data ?? [];
+  const users = useMemo(() => data?.data ?? [], [data]);
   const pagination = data?.pagination;
   const allSelected = users.length > 0 && users.every((u) => selectedIds.has(u.id));
   const someSelected = selectedIds.size > 0;

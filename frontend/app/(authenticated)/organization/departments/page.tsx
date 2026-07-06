@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Users, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgDepartments,
@@ -70,7 +70,7 @@ function DeptForm({
   defaultValues,
   branches,
   onSubmit,
-  isPending,
+  isPending: _isPending,
 }: {
   defaultValues?: FormValues;
   branches: { id: string; name: string }[];

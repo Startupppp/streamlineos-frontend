@@ -112,7 +112,7 @@ export function SalaryProfileSheet({
         costCenter: existingProfile?.costCenter ?? "",
       });
     }
-  }, [open, existingProfile, form, employeeUserId]);
+  }, [open, existingProfile, form, employeeUserId, policyCurrency]);
 
   function handleSubmit(values: ProfileForm) {
     if (!resolvedUserId) {

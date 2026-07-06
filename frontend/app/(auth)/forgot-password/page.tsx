@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -57,6 +57,10 @@ export default function ForgotPasswordPage() {
   };
 
   const forgotPassword = useForgotPassword();
+
+  function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
+    form.handleSubmit(onSubmit)(e);
+  }
 
   const onSubmit = (values: ForgotPasswordFormValues) => {
     forgotPassword.mutate(
@@ -188,7 +192,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       <div className="rounded-xl border bg-card shadow-soft p-4">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-foreground">
               Email Address

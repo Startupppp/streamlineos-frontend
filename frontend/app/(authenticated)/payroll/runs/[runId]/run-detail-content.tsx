@@ -37,7 +37,6 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
 
   const { data, isLoading, error, refetch } = usePayrollRun(runId);
   const run = data?.run;
-  const checklist = data?.checklist ?? [];
 
   const isLocked = run ? LOCKED_STATUSES.has(run.status) : false;
 

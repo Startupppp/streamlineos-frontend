@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,10 @@ function NumberField({ label, value, onChange, placeholder }: { label: string; v
 }
 
 export function QuestionTypeSettings({ type, settings, onChange }: QuestionTypeSettingsProps) {
-  const rows = Array.isArray(settings.rows) ? (settings.rows as string[]) : [];
+  const rows = useMemo(
+    () => (Array.isArray(settings.rows) ? (settings.rows as string[]) : []),
+    [settings.rows],
+  );
 
   const handleAddRow = useCallback(() => {
     onChange({ ...settings, rows: [...rows, ""] });

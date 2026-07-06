@@ -54,12 +54,13 @@ type StepReviewProps = {
 
 export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
   const preview = usePreviewPolicy();
+  const { mutate: previewMutate } = preview;
   const calledRef = useRef(false);
 
   useEffect(() => {
     if (calledRef.current) return;
     calledRef.current = true;
-    preview.mutate({
+    previewMutate({
       templateKey: draft.templateKey ?? undefined,
       toggleOverrides: toOverridesRecord(draft.toggleOverrides),
       country: draft.profile?.country,
@@ -67,11 +68,11 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
       payDay: draft.profile?.payDay,
       startMonth: draft.profile?.startMonth,
     });
-  }, []);
+  }, [draft.profile?.country, draft.profile?.currency, draft.profile?.payDay, draft.profile?.startMonth, draft.templateKey, draft.toggleOverrides, previewMutate]);
 
   function handleRetry() {
     calledRef.current = false;
-    preview.mutate({
+    previewMutate({
       templateKey: draft.templateKey ?? undefined,
       toggleOverrides: toOverridesRecord(draft.toggleOverrides),
       country: draft.profile?.country,

@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Building2, Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   useBusinessUnits,
@@ -56,7 +56,7 @@ type FormValues = z.infer<typeof formSchema>;
 function BuForm({
   defaultValues,
   onSubmit,
-  isPending,
+  isPending: _isPending,
 }: {
   defaultValues?: FormValues;
   onSubmit: (v: FormValues) => void;

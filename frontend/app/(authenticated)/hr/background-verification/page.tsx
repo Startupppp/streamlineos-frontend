@@ -45,12 +45,10 @@ import {
   ShieldCheck,
   CheckCircle2,
   XCircle,
-  BarChart2,
   Pencil,
   Building2,
   Clock,
   ShieldAlert,
-  AlertCircle,
 } from "lucide-react";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import type { Employee } from "@/types/hr";

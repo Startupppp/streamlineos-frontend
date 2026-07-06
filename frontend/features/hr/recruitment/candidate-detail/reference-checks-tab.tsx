@@ -23,7 +23,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import {
   Plus, Trash2, Mail, Phone, Building2, User2,
-  CheckCircle2, Clock, XCircle, AlertCircle, Users,
+  CheckCircle2, Clock, XCircle, AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

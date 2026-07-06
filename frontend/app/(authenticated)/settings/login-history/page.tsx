@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { History } from "lucide-react";
 import { format } from "date-fns";
 import { useLoginHistory } from "@/hooks/api/auth";
 import { PageWrapper } from "@/components/ui/page-wrapper";

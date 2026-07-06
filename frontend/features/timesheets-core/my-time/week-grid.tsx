@@ -74,7 +74,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
   );
   const prevWeekQuery = useTimesheetEntries({ startDate: prevWeekStart, endDate: prevWeekEnd }, false);
 
-  const entryList = entries ?? [];
+  const entryList = useMemo(() => entries ?? [], [entries]);
   const entryMap = useMemo(() => {
     const m = new Map<string, TimesheetEntry>();
     for (const e of entryList) {

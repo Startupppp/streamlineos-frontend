@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -73,12 +73,13 @@ interface TemplateEditSheetProps {
 export function TemplateEditSheet({ open, onOpenChange, template }: TemplateEditSheetProps) {
   const isEdit = template !== undefined;
   const [form, setForm] = useState<TemplateFormState>(() => buildDefaultState(template));
-
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setForm(buildDefaultState(template));
     }
-  }, [open, template]);
+  }
 
   const createMutation = useCreatePayslipTemplate();
   const updateMutation = useUpdatePayslipTemplate();

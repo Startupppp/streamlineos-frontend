@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Shield, Clock, Globe, Monitor } from "lucide-react";
 import { useOrgSettings, useUpdateOrgSecuritySettings } from "@/hooks/api/organization";
@@ -24,14 +24,17 @@ export default function SecurityPage() {
   const [expiryDays, setExpiryDays] = useState("");
   const [allowedDomains, setAllowedDomains] = useState("");
   const [maxSessions, setMaxSessions] = useState("");
+  const [prevOrg, setPrevOrg] = useState(org);
 
-  useEffect(() => {
-    if (!org) return;
-    setMfaEnforced(org.mfaEnforced ?? false);
-    setExpiryDays(org.passwordExpiryDays != null ? String(org.passwordExpiryDays) : "");
-    setAllowedDomains(org.allowedEmailDomains?.length ? org.allowedEmailDomains.join("\n") : "");
-    setMaxSessions(org.maxConcurrentSessions != null ? String(org.maxConcurrentSessions) : "");
-  }, [org]);
+  if (org !== prevOrg) {
+    setPrevOrg(org);
+    if (org) {
+      setMfaEnforced(org.mfaEnforced ?? false);
+      setExpiryDays(org.passwordExpiryDays != null ? String(org.passwordExpiryDays) : "");
+      setAllowedDomains(org.allowedEmailDomains?.length ? org.allowedEmailDomains.join("\n") : "");
+      setMaxSessions(org.maxConcurrentSessions != null ? String(org.maxConcurrentSessions) : "");
+    }
+  }
 
   const handleMfaChange = useCallback((checked: boolean) => {
     setMfaEnforced(checked);

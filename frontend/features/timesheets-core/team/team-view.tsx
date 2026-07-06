@@ -84,9 +84,10 @@ export function TeamView() {
   );
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees: Employee[] = Array.isArray(employeesRaw)
-    ? employeesRaw
-    : employeesRaw?.data ?? [];
+  const employees = useMemo<Employee[]>(
+    () => (Array.isArray(employeesRaw) ? employeesRaw : employeesRaw?.data ?? []),
+    [employeesRaw],
+  );
 
   const periodsForWeek = useMemo<TimesheetPeriod[]>(() => {
     if (!periodsData) return [];
