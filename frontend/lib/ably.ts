@@ -15,3 +15,16 @@ export function getAblyClient(): Ably.Realtime {
   }
   return client;
 }
+
+let supportClient: Ably.Realtime | null = null;
+
+export function getSupportAblyClient(): Ably.Realtime {
+  if (!supportClient) {
+    supportClient = new Ably.Realtime({
+      authUrl: "/api/support/ably-token",
+      authMethod: "GET",
+      autoConnect: false,
+    });
+  }
+  return supportClient;
+}
