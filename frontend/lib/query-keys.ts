@@ -587,6 +587,7 @@ export const queryKeys = {
         ? ([...base, "kb", "search"] as const)
         : ([...base, "kb", "search", params] as const),
     ask: () => [...base, "kb", "ask"] as const,
+    chatHistory: () => [...base, "kb", "chatHistory"] as const,
     analyticsOverview: (range?: Record<string, unknown>) =>
       range === undefined
         ? ([...base, "kb", "analyticsOverview"] as const)

@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, BellRing, CheckCheck, Inbox } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
 import {
   useUnreadNotificationCount,
@@ -21,6 +22,8 @@ import {
 import { formatRelativeTime } from "./format-relative-time";
 import { useNotificationEvents } from "./use-notification-events";
 import type { Notification } from "@/types/notifications";
+
+const HOVER_CLOSE_DELAY_MS = 175;
 
 function BellBadge({ count }: { count: number }) {
   if (count === 0) return null;
@@ -94,6 +97,11 @@ function PopoverSkeleton() {
 
 export function NotificationBell() {
   const router = useRouter();
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const enableHoverOpen = !isMobile;
+
   useNotificationEvents();
   const { data: unreadData } = useUnreadNotificationCount();
   const { data: notifications, isLoading } = useNotifications({ section: "ALL", limit: 10 });
@@ -102,6 +110,34 @@ export function NotificationBell() {
 
   const unreadCount = unreadData?.count ?? 0;
   const recentNotifications = notifications?.slice(0, 5) ?? [];
+
+  const handleOpenChange = useCallback((next: boolean) => {
+    setOpen(next);
+  }, []);
+
+  const clearCloseTimeout = useCallback(() => {
+    if (closeTimeoutRef.current !== null) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  }, []);
+
+  const handleHoverEnter = useCallback(() => {
+    if (!enableHoverOpen) return;
+    clearCloseTimeout();
+    handleOpenChange(true);
+  }, [enableHoverOpen, clearCloseTimeout, handleOpenChange]);
+
+  const handleHoverLeave = useCallback(() => {
+    if (!enableHoverOpen) return;
+    clearCloseTimeout();
+    closeTimeoutRef.current = setTimeout(() => {
+      handleOpenChange(false);
+      closeTimeoutRef.current = null;
+    }, HOVER_CLOSE_DELAY_MS);
+  }, [enableHoverOpen, clearCloseTimeout, handleOpenChange]);
+
+  useEffect(() => clearCloseTimeout, [clearCloseTimeout]);
 
   const handleItemClick = useCallback(
     (notification: Notification) => {
@@ -120,11 +156,13 @@ export function NotificationBell() {
   }
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
           type="button"
           aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
+          onMouseEnter={enableHoverOpen ? handleHoverEnter : undefined}
+          onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
           className="relative h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
         >
           {unreadCount > 0 ? (
@@ -135,7 +173,13 @@ export function NotificationBell() {
           <BellBadge count={unreadCount} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={8} className="w-80 sm:w-[360px] p-0 shadow-lg">
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        className="w-80 sm:w-[360px] p-0 shadow-lg"
+        onMouseEnter={enableHoverOpen ? handleHoverEnter : undefined}
+        onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
+      >
         <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
           <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
           <div className="flex items-center gap-1">

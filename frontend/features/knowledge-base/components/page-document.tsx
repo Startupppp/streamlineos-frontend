@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { KbAlertCircleIcon } from "@/features/knowledge-base/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
 import { apiClient, getApiError } from "@/lib/api-client";
+import { KbPageNotFound } from "./kb-page-not-found";
 import { uploadKbMedia } from "@/features/knowledge-base/lib/upload-kb-media";
 import {
   useKbPage,
@@ -57,7 +57,7 @@ interface PageDocumentProps {
 
 export default function PageDocument({ pageId }: PageDocumentProps) {
   const router = useRouter();
-  const { data: page, isLoading, isError, refetch } = useKbPage(pageId);
+  const { data: page, isLoading, isError, error, refetch } = useKbPage(pageId);
   const updatePage = useUpdateKbPage();
   const recordVisit = useRecordKbPageVisit();
   const canManage = useCan("kb:pages:manage");
@@ -163,15 +163,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
   }
 
   if (isError || !page) {
-    return (
-      <div className="flex h-full items-center justify-center p-8">
-        <ErrorState
-          title="Page not found"
-          description="This page may have been deleted or you may not have access."
-          onRetry={refetch}
-        />
-      </div>
-    );
+    return <KbPageNotFound error={error} onRetry={refetch} />;
   }
 
   const isEditable = !page.isLocked || canManage;

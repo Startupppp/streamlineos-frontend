@@ -19,6 +19,7 @@ interface MentionTextareaProps {
   onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   placeholder?: string;
   className?: string;
+  wrapperClassName?: string;
   users: MentionUser[];
   disabled?: boolean;
   rows?: number;
@@ -39,6 +40,7 @@ export function MentionTextarea({
   onKeyDown,
   placeholder,
   className,
+  wrapperClassName,
   users,
   disabled,
   rows = 3,
@@ -126,14 +128,14 @@ export function MentionTextarea({
   );
 
   return (
-    <div className="relative">
+    <div className={cn("relative w-full min-w-0", wrapperClassName)}>
       <Textarea
         ref={textareaRef}
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className={cn("resize-none", className)}
+        className={cn("field-sizing-fixed resize-none w-full", className)}
         disabled={disabled}
         rows={rows}
         aria-label="Comment input"
