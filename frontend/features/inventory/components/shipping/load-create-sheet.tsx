@@ -90,7 +90,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
       toast.success("Load created");
       handleClose();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create load");
+      toast.error(getErrorMessage(error));
     }
   }
 

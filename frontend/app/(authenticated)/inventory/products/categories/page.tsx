@@ -327,9 +327,7 @@ function CategoriesPageInner() {
       });
       toast.success(cat.isActive ? "Category archived" : "Category restored");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Action failed",
-      );
+      toast.error(getErrorMessage(error));
     }
   }
 

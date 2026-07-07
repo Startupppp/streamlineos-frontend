@@ -182,7 +182,7 @@ export default function OrganizationSettingsPage() {
       { ipAllowlist },
       {
         onSuccess: () => toast.success("IP allowlist saved"),
-        onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to save"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [ipAllowlist, updateOrg]);

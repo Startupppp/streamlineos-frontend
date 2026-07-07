@@ -104,9 +104,7 @@ export function RecordVendorPaymentDialog({
       toast.success(`Payment recorded for ${billNumber}`);
       onOpenChange(false);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to record payment";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     }
   }
 

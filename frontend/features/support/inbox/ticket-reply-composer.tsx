@@ -82,7 +82,7 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
       }
       setPendingFiles((prev) => [...prev, ...uploaded]);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "File upload failed");
+      toast.error(getErrorMessage(err));
     } finally {
       setUploading(false);
       e.target.value = "";
