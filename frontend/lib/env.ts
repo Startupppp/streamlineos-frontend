@@ -27,13 +27,11 @@ const serverSchema = z.object({
 });
 
 const clientSchema = z.object({
-  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_API_URL: z.string().url().optional(),
   NEXT_PUBLIC_GOOGLE_ENABLED: z.string().optional(),
   NEXT_PUBLIC_MICROSOFT_ENABLED: z.string().optional(),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
   NEXT_PUBLIC_GTM_ID: z.string().optional(),
-  NEXT_PUBLIC_GA4_ID: z.string().optional(),
   NEXT_PUBLIC_CLARITY_ID: z.string().optional(),
 });
 
@@ -58,13 +56,11 @@ function validateEnv() {
 
 function validateClientEnv() {
   const result = clientSchema.safeParse({
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_GOOGLE_ENABLED: process.env.NEXT_PUBLIC_GOOGLE_ENABLED,
     NEXT_PUBLIC_MICROSOFT_ENABLED: process.env.NEXT_PUBLIC_MICROSOFT_ENABLED,
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
     NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
-    NEXT_PUBLIC_GA4_ID: process.env.NEXT_PUBLIC_GA4_ID,
     NEXT_PUBLIC_CLARITY_ID: process.env.NEXT_PUBLIC_CLARITY_ID,
   });
 

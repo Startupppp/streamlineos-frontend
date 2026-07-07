@@ -107,7 +107,6 @@ Minimum required:
 |---|---|
 | `NEXTAUTH_SECRET` | `openssl rand -base64 48` |
 | `NEXTAUTH_URL` | e.g. `http://localhost:1000` |
-| `NEXT_PUBLIC_APP_URL` | Same as above |
 | `NEXT_PUBLIC_API_URL` | NestJS backend URL, e.g. `http://localhost:1500` |
 | `BACKEND_JWT_SECRET` | Must match the backend `.env` |
 | `INTERNAL_API_SECRET` | Must match the backend `.env` |

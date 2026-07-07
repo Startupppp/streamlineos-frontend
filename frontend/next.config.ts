@@ -1,10 +1,7 @@
 import type { NextConfig } from "next";
 
 function isLocalOrLoopbackAppUrl(): boolean {
-  for (const raw of [
-    process.env.NEXT_PUBLIC_APP_URL,
-    process.env.NEXTAUTH_URL,
-  ]) {
+  for (const raw of [process.env.NEXTAUTH_URL]) {
     if (!raw) continue;
     try {
       const host = new URL(raw).hostname.toLowerCase();
@@ -37,7 +34,7 @@ const nextConfig: NextConfig = {
       allowedOrigins: [
         ...(process.env.NODE_ENV === "development" ? ["*.devtunnels.ms", "*.vscode.dev"] : []),
         ...(() => {
-          const urls = [process.env.NEXT_PUBLIC_APP_URL, process.env.NEXTAUTH_URL].filter(Boolean);
+          const urls = [process.env.NEXTAUTH_URL].filter(Boolean);
           const hosts = urls.flatMap((u) => {
             try { return [new URL(u!).host]; } catch { return []; }
           });
@@ -117,10 +114,6 @@ const nextConfig: NextConfig = {
       ],
     },
   ],
-  env: {
-    NEXT_PUBLIC_QR_REDIRECT_BASE_URL:
-      process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL,
-  },
 };
 
 export default nextConfig;

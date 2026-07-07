@@ -37,7 +37,7 @@ const geistMono = Geist_Mono({
   weight: ["400", "500", "600", "700"],
 });
 
-const SITE_URL = new URL(process.env.NEXT_PUBLIC_APP_URL || BRAND_URL);
+const SITE_URL = new URL(process.env.NEXTAUTH_URL || BRAND_URL);
 
 export const metadata: Metadata = {
   metadataBase: SITE_URL,

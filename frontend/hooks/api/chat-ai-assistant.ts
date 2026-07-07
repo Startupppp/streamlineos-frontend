@@ -1,11 +1,53 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { authedFetch, buildUrl } from "@/lib/api-client";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient, authedFetch, buildUrl } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface AskAIMessage {
   role: "user" | "assistant";
   content: string;
+}
+
+export interface AskAiHistoryMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+}
+
+export interface AskAiHistoryPage {
+  messages: AskAiHistoryMessage[];
+  nextCursor: number | null;
+}
+
+const HISTORY_PAGE_SIZE = 30;
+
+export function useAskAiHistory(enabled: boolean) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.aiChat.history(),
+    queryFn: ({ pageParam }) => {
+      const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
+      if (pageParam) params.cursor = pageParam;
+      return apiClient.get<AskAiHistoryPage>("/chat/history", params);
+    },
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+export function useClearAskAiHistory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["aiChat", "history", "clear"],
+    mutationFn: () => apiClient.delete<{ success: boolean }>("/chat/history"),
+    onSuccess: () => {
+      qc.removeQueries({ queryKey: queryKeys.aiChat.history() });
+    },
+  });
 }
 
 export function useAskAI() {

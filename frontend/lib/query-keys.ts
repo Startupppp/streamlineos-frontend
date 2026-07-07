@@ -273,6 +273,11 @@ export const queryKeys = {
     orgSettings: () => [...base, "chat", "orgSettings"] as const,
   },
 
+  aiChat: {
+    all: [...base, "aiChat"] as const,
+    history: () => [...base, "aiChat", "history"] as const,
+  },
+
   dashboard: {
     all: [...base, "dashboard"] as const,
     stats: () => [...base, "dashboard", "stats"] as const,
