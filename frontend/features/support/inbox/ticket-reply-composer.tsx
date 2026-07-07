@@ -28,6 +28,7 @@ import {
   useApplyMacro,
   type SupportMacro,
 } from "@/hooks/api/support/macros";
+import { dispatchTicketTyping } from "@/features/support/inbox/ticket-presence";
 import {
   SUPPORT_FOCUS_REPLY_EVENT,
   SUPPORT_INSERT_REPLY_DRAFT_EVENT,
@@ -203,8 +204,11 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
   const handleToggleInternal = useCallback(() => setIsInternal((v) => !v), []);
 
   const handleReplyChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => setReplyText(e.target.value),
-    [],
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setReplyText(e.target.value);
+      dispatchTicketTyping(ticketId);
+    },
+    [ticketId],
   );
 
   const handleKeyDown = useCallback(
