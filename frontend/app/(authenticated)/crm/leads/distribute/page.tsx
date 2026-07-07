@@ -25,6 +25,7 @@ import { useLeads } from "@/hooks/api/leads";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { Lead, PipelineStatus } from "@/types/leads";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -256,9 +257,7 @@ export default function LeadDistributionPage() {
 
         {isError ? (
           <ErrorState
-            description={
-              error instanceof Error ? error.message : "Failed to load leads."
-            }
+            description={getErrorMessage(error)}
             onRetry={refetch}
             className="flex-1"
           />

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Timer, Play, Square, Plus, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface TicketTimeTrackerProps {
   ticketId: number;
@@ -74,7 +75,7 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           setRunning(false);
           startTimeRef.current = null;
         },
-        onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to log time"),
+        onError: (e: unknown) => toast.error(getErrorMessage(e)),
       }
     );
   }, [elapsed, projectId, ticketId, description, logTime]);
@@ -100,7 +101,7 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           setDescription("");
           setShowManual(false);
         },
-        onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to log time"),
+        onError: (e: unknown) => toast.error(getErrorMessage(e)),
       }
     );
   }, [manualHours, projectId, ticketId, description, logTime]);

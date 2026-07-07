@@ -29,6 +29,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCategories, useUom, useCreateProduct } from "@/hooks/api/inventory";
 
 interface Category {
@@ -131,8 +132,7 @@ export default function NewProductPage() {
       toast.success("Product created successfully");
       router.push("/inventory/products");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create product";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     }
   }
 

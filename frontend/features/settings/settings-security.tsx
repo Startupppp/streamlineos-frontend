@@ -10,6 +10,7 @@ import { useChangePassword } from "@/hooks/api/hr";
 import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 
@@ -216,7 +217,7 @@ export function SettingsSecurity() {
           setCurrent(""); setNext(""); setConfirm("");
         },
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to change password");
+          toast.error(getErrorMessage(err));
         },
       }
     );

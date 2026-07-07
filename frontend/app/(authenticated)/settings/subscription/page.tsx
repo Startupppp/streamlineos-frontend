@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Calendar, CreditCard } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Badge } from "@/components/ui/badge";
 import {
   useSubscription,
@@ -161,7 +162,7 @@ export default function SubscriptionPage() {
               });
               toast.success(`Upgraded to ${PLAN_CONFIG[plan].label} plan successfully!`);
             } catch (err) {
-              toast.error(err instanceof Error ? err.message : "Payment verification failed");
+              toast.error(getErrorMessage(err));
             }
           },
           modal: {

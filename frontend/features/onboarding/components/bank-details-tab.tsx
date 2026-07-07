@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { toast } from "sonner";
 import { useBankDetailsMutation } from "@/lib/api/hooks/onboarding";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 
 const BANK_NAME_REGEX = /^[A-Za-z][A-Za-z0-9.,'&()\-\s]*$/;
@@ -81,7 +82,7 @@ export function BankDetailsTab({
         onComplete(values as Record<string, string | undefined>);
       },
       onError: (err) => {
-        toast.error(err instanceof Error ? err.message : "Failed to save bank details");
+        toast.error(getErrorMessage(err));
       },
     });
   }

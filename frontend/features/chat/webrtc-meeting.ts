@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSendMeetingSignal } from "@/hooks/api";
 import type { HuddleParticipant } from "@/types/chat";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function getIceServers(): RTCIceServer[] {
   const servers: RTCIceServer[] = [

@@ -38,6 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useUom, useCreateUom } from "@/hooks/api/inventory";
 
@@ -95,8 +96,7 @@ function CreateUomForm({ onSuccess }: { onSuccess: () => void }) {
       form.reset();
       onSuccess();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create UOM";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     }
   }
 

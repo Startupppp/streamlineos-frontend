@@ -26,6 +26,7 @@ import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
 import { useSession } from "next-auth/react";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LeadsStatsBar } from "@/features/crm/leads/leads-stats-bar";
 import { LeadsToolbar } from "@/features/crm/leads/leads-toolbar";
 import { LeadsKanban } from "@/features/crm/leads/leads-kanban";
@@ -212,7 +213,7 @@ export default function LeadsPipelinePage() {
         await updateStatus.mutateAsync({ leadId, status, expectedStatus });
         toast.success(`Lead moved to ${STATUS_CONFIG[status].label}`);
       } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : "Failed to update status");
+        toast.error(getErrorMessage(err));
       }
     },
     [updateStatus],

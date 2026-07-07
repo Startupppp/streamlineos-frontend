@@ -10,6 +10,7 @@ import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
 import { Camera, Loader2, Trash2, Check, X } from "lucide-react";
 import { useUpdateProfile } from "@/hooks/api/hr";
 import { apiClient, getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -84,7 +85,7 @@ export function SettingsProfile() {
               resolve();
             },
             onError: (err) => {
-              toast.error(err instanceof Error ? err.message : "Failed to update photo");
+              toast.error(getErrorMessage(err));
               reject(err);
             },
           }

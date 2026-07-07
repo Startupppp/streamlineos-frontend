@@ -10,6 +10,7 @@ import { Loader2, Pencil, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type DayKey = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
 
@@ -84,7 +85,7 @@ export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectio
           toast.success("Business hours saved");
           setIsEditing(false);
         },
-        onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to save"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [hours, updateOrg]);

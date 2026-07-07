@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import type { OrgSettings } from "@/types/organization";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
@@ -125,7 +126,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
       form.setValue(field, result.url, { shouldDirty: true });
       toast.success(`${field === "logo" ? "Logo" : "Favicon"} uploaded`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+      toast.error(getErrorMessage(err));
     } finally {
       setter(false);
       if (field === "logo" && logoInputRef.current) logoInputRef.current.value = "";

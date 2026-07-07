@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 import { useAddSupportMessage } from "@/hooks/api/support";
 import {

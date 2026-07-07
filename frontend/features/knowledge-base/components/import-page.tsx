@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCan } from "@/hooks/api/access";
 import { useKbPagesTree } from "@/hooks/api/kb";
 import { useImportKbPages, useKbImportJobs } from "@/hooks/api/kb";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { KNOWLEDGE_BASE } from "@/features/knowledge-base/lib/knowledge-routes";
 import {
   KbUploadIcon,
@@ -189,7 +190,7 @@ export default function ImportPage() {
           setItems([]);
         },
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Import failed");
+          toast.error(getErrorMessage(err));
         },
       },
     );

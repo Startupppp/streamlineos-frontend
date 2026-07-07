@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EntityFormDialog } from "@/components/shared";
 import {
   FormControl,
@@ -68,9 +69,7 @@ export function CreateAccountDialog({
       toast.success("Account created");
       onOpenChange(false);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to create account";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     }
   }
 

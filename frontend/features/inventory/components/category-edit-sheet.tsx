@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sheet";
 import { useUpdateCategory } from "@/hooks/api/inventory";
 import type { InventoryCategory } from "@/types/inventory";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const NO_PARENT = "none";
 
@@ -87,9 +88,7 @@ export function CategoryEditSheet({
       toast.success("Category updated");
       onClose();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update category",
-      );
+      toast.error(getErrorMessage(error));
     }
   }
 

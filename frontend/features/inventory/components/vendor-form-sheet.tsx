@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { AppSheet } from "@/components/shared/app-sheet";
 import { useCreateVendor } from "@/hooks/api/inventory";
 import type { CreateVendorInput } from "@/types/inventory";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const vendorSchema = z.object({
   name: z.string().min(1, "Vendor name is required"),

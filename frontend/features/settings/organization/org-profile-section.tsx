@@ -14,6 +14,7 @@ import { Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const INDUSTRIES = [
   "Technology", "Finance & Banking", "Healthcare", "Retail & E-commerce",
@@ -107,7 +108,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
           toast.success("Organization settings saved");
           setIsEditing(false);
         },
-        onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to save"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [updateOrg]);

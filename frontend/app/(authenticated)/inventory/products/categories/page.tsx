@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   useCategories,
@@ -89,9 +90,7 @@ function CreateCategoryForm({
       form.reset();
       onSuccess();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create category",
-      );
+      toast.error(getErrorMessage(error));
     }
   }
 

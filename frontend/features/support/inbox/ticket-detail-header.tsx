@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getApiErrorCode } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateSupportTicket } from "@/hooks/api/support";
 import { useSupportQueues } from "@/hooks/api/support/queues";
 import { useSupportWatchers, useFollowTicket, useUnfollowTicket } from "@/hooks/api/support/watchers";
@@ -55,7 +56,7 @@ export function TicketDetailHeader({ ticket, onBack }: TicketDetailHeaderProps) 
       toast.error("This ticket changed since you opened it. Refresh to see the latest.");
       return;
     }
-    toast.error(err instanceof Error ? err.message : "Failed to update ticket");
+    toast.error(getErrorMessage(err));
   }, []);
 
   const handleStatusValueChange = useCallback(

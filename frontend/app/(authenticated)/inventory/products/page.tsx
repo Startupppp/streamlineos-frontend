@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   useProducts,
@@ -122,14 +123,14 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
   function handleArchive(): void {
     archiveMutation.mutate(product.id, {
       onSuccess: () => toast.success("Product archived"),
-      onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to archive"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
   function handleRestore(): void {
     restoreMutation.mutate(product.id, {
       onSuccess: () => toast.success("Product restored"),
-      onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to restore"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 

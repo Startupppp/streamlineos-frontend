@@ -28,6 +28,7 @@ import {
 import { AppSheet } from "@/components/shared/app-sheet";
 import { useReceiveGoods, useLocations } from "@/hooks/api/inventory";
 import type { PurchaseOrder, ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { TrackingMethod } from "@/types/inventory";
 
 const grnLineSchema = z.object({
@@ -342,7 +343,7 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
       toast.success(`GRN ${grn.grnNumber} recorded`);
       handleClose();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to receive goods");
+      toast.error(getErrorMessage(error));
     }
   }
 

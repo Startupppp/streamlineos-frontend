@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useUpdateProduct, useCategories, useUom } from "@/hooks/api/inventory";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface ProductForEdit {
   name: string;
@@ -115,8 +116,7 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
       toast.success("Product updated");
       onDone();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update product";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     }
   }
 

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useSupportTags, useTicketTags, useAttachTag, useDetachTag } from "@/hooks/api/support/tags";
 import {
   useSupportTicketLinks,
@@ -59,7 +60,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
       { ticketId, tagId: Number(selectedTagId) },
       {
         onSuccess: () => setSelectedTagId(""),
-        onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to add tag"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [selectedTagId, ticketId, attachTag]);

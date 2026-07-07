@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { AppSheet } from "@/components/shared/app-sheet";
 import { useUpdateVendor } from "@/hooks/api/inventory";
 import type { InventoryVendor, UpdateVendorInput } from "@/types/inventory";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const editVendorSchema = z.object({
   name: z.string().min(1, "Vendor name is required"),
@@ -89,7 +90,7 @@ export function EditVendorSheet({ vendor, open, onOpenChange }: EditVendorSheetP
       toast.success("Vendor updated");
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update vendor");
+      toast.error(getErrorMessage(error));
     }
   }
 

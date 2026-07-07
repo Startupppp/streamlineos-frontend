@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 async function sendReply(
   publicCode: string,

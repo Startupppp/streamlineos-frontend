@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateLoad } from "@/hooks/api/inventory/shipping";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const memberSchema = z.object({
   type: z.enum(["SHIPMENT", "TRANSFER"]),

@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { useHrEmployees } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface UserOption {
   id: string;
@@ -255,9 +256,7 @@ export function AttendanceEmailDialog() {
       toast.success("Attendance report sent successfully");
       handleClose();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to send attendance report",
-      );
+      toast.error(getErrorMessage(err));
     } finally {
       setIsSending(false);
     }

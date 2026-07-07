@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,7 @@ function PackagesPageInner() {
       toast.success("Package created");
       handleCreateClose();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create package");
+      toast.error(getErrorMessage(error));
     }
   }
 

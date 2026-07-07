@@ -12,6 +12,7 @@ import { Loader2, Pencil, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const TIMEZONES = [
   { value: "Asia/Kolkata", label: "Asia/Kolkata (IST, UTC+5:30)" },
@@ -168,7 +169,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
           toast.success("Localization settings saved");
           setIsEditing(false);
         },
-        onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to save"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [updateOrg]);

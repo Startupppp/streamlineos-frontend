@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import type { InboundMessage } from "ably";
 import { useSendHuddleSignal } from "@/hooks/api/chat-huddles";
 import type { HuddleParticipant } from "@/types/chat";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function getIceServers(): RTCIceServer[] {
   const servers: RTCIceServer[] = [

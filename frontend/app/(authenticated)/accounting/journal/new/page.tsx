@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -306,9 +307,7 @@ export default function NewJournalEntryPage() {
       toast.success(`Entry ${result.entryNumber} created`);
       router.push(`/accounting/journal/${result.id}`);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to create entry";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     }
   }
 

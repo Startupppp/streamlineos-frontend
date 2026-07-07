@@ -19,6 +19,7 @@ import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { toast } from "sonner";
 import { usePersonalInfoMutation } from "@/lib/api/hooks/onboarding";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 import type { Variants } from "framer-motion";
 
@@ -106,7 +107,7 @@ export function PersonalInfoTab({
         onComplete(values as Record<string, string | undefined>);
       },
       onError: (err) => {
-        toast.error(err instanceof Error ? err.message : "Failed to save personal details");
+        toast.error(getErrorMessage(err));
       },
     });
   }

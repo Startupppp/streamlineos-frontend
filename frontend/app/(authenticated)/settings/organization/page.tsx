@@ -9,6 +9,7 @@ import { useOrgSettings, useUpdateOrgSettings, useUpdateOrgSecuritySettings } fr
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { OrgProfileSection } from "@/features/settings/organization/org-profile-section";
 import { OrgBrandingSection } from "@/features/settings/organization/org-branding-section";
 import { OrgLocalizationSection } from "@/features/settings/organization/org-localization-section";
@@ -151,7 +152,7 @@ export default function OrganizationSettingsPage() {
           setIsEditingConfig(false);
         },
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to save configuration");
+          toast.error(getErrorMessage(err));
         },
       },
     );

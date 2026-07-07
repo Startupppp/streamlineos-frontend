@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCreateCarrier, useUpdateCarrier, type Carrier } from "@/hooks/api/inventory/shipping";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const carrierSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -89,7 +90,7 @@ export function CarrierSheet({ open, onOpenChange, carrier }: CarrierSheetProps)
       }
       handleClose();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : `Failed to ${isEdit ? "update" : "create"} carrier`);
+      toast.error(getErrorMessage(error));
     }
   }
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -110,7 +111,7 @@ export default function PayrollCommandCenterPage() {
         router.push(`/payroll/runs/${res.runId}`);
       },
       onError: (err) => {
-        toast.error(err instanceof Error ? err.message : "Failed to start run");
+        toast.error(getErrorMessage(err));
       },
     });
   }

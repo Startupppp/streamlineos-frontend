@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateSalesOrder, useProductVariants, useWarehouses } from "@/hooks/api/inventory";
 
 const lineSchema = z.object({
@@ -221,7 +222,7 @@ export default function NewSalesOrderPage() {
       toast.success(`Sales order ${result.soNumber} created`);
       router.push(`/inventory/sales-orders/${result.id}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create sales order");
+      toast.error(getErrorMessage(error));
     }
   }
 

@@ -27,6 +27,7 @@ import {
   useCreateProductVariant,
   useUpdateProductVariant,
 } from "@/hooks/api/inventory";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const variantSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -204,8 +205,7 @@ export function AddVariantSheet({ productId, open, onOpenChange }: AddVariantShe
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create variant";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     }
   }
 

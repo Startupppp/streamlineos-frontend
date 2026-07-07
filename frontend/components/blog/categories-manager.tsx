@@ -15,6 +15,7 @@ import {
   useUpdateCategory,
   useDeleteCategory,
 } from "@/hooks/api/blog";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const DEFAULT_COLOR = "#3B82F6";
 

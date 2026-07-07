@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useCreateCustomerReturn } from "@/hooks/api/inventory/operations";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const DISPOSITIONS = [
   { value: "RESTOCK", label: "Restock" },
@@ -94,7 +95,7 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
       toast.success("Customer return created");
       handleClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create customer return");
+      toast.error(getErrorMessage(err));
     }
   }
 

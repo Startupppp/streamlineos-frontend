@@ -22,6 +22,7 @@ import { BlogContentEditor } from "./blog-content-editor";
 import { CoverImageUpload } from "./cover-image-upload";
 import { useCreatePost, useUpdatePost } from "@/hooks/api/blog";
 import type { PostPayload } from "@/types/blog";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required").max(256),

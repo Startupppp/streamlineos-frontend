@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useVendors, useProductVariants, useCreatePurchaseOrder } from "@/hooks/api/inventory";
 import type { CreatePurchaseOrderInput, CreatePoLineInput, ProductVariantFlat } from "@/types/inventory";
 
@@ -252,7 +253,7 @@ export default function NewPurchaseOrderPage() {
       toast.success(`PO ${result.poNumber} created`);
       router.push(`/inventory/purchase-orders/${result.id}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create purchase order");
+      toast.error(getErrorMessage(error));
     }
   }
 

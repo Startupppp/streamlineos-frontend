@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useKbSearch, useKbSpaces } from "@/hooks/api/kb";
 import { useCreateKbArticleFromTicket } from "@/hooks/api/kb/from-ticket";
 
@@ -48,7 +49,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
           );
         },
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to create article");
+          toast.error(getErrorMessage(err));
         },
       },
     );

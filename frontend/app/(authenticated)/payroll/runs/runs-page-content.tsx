@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -107,8 +108,7 @@ export function RunsPageContent() {
         router.push(`/payroll/runs/${res.runId}`);
       },
       onError: (err) => {
-        const msg = err instanceof Error ? err.message : "Failed to create run";
-        toast.error(msg);
+        toast.error(getErrorMessage(err));
       },
     });
   }

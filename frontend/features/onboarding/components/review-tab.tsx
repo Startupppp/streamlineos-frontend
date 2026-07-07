@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { clearBackendTokenCache } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useSubmitOnboardingMutation } from "@/lib/api/hooks/onboarding";
@@ -73,7 +74,7 @@ export function ReviewTab({
         window.location.replace("/dashboard");
       },
       onError: (err) => {
-        toast.error(err instanceof Error ? err.message : "Failed to submit onboarding");
+        toast.error(getErrorMessage(err));
       },
     });
   }

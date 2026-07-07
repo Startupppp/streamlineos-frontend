@@ -22,6 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 import type { SupportTicketPriority } from "@/types/support";
 
@@ -150,7 +151,7 @@ export function CreateTicketDialog({ open, onOpenChange }: CreateTicketDialogPro
         }
         setPendingFiles((prev) => [...prev, ...uploaded]);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "File upload failed");
+        toast.error(getErrorMessage(err));
       } finally {
         setUploading(false);
         e.target.value = "";

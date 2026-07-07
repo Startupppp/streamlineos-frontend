@@ -22,6 +22,7 @@ import {
 import { useVendors } from "@/hooks/api/inventory/vendors";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
 import { useCreateVendorReturn } from "@/hooks/api/inventory/operations";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const RETURN_REASONS = [
   { value: "DAMAGED", label: "Damaged" },
@@ -107,7 +108,7 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
       toast.success("Vendor return created");
       handleClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create vendor return");
+      toast.error(getErrorMessage(err));
     }
   }
 
