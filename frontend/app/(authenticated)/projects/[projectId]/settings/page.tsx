@@ -189,13 +189,13 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Settings">
-        <div className="flex flex-col md:flex-row gap-0 pb-8">
-          <div className="flex md:flex-col gap-1 md:w-44 shrink-0 p-2 mb-4 md:mb-0 border-b border-border md:border-b-0 md:border-r md:pr-4 bg-card/50 md:rounded-l-lg">
+        <div className="flex flex-col md:flex-row md:items-stretch gap-0 pb-8 md:min-h-full">
+          <div className="flex md:flex-col gap-1 md:w-44 shrink-0 p-2 mb-4 md:mb-0 md:self-stretch border-b border-border md:border-b-0 md:border-r md:pr-4 bg-card/50 md:rounded-l-lg">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-8 w-24 md:w-full" />
             ))}
           </div>
-          <div className="flex-1 space-y-3">
+          <div className="flex-1 min-w-0 md:pl-6 space-y-3">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-10 w-full" />
@@ -229,8 +229,11 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       subtitle={project.name}
       backHref={`/projects/${projectId}`}
     >
-      <div className="flex flex-col md:flex-row gap-6 pb-8">
-        <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible md:w-44 shrink-0 pb-1 md:pb-0">
+      <div className="flex flex-col md:flex-row md:items-stretch gap-0 pb-8 md:min-h-full">
+        <nav
+          aria-label="Project settings"
+          className="flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible md:w-44 shrink-0 p-2 mb-4 md:mb-0 md:self-stretch border-b border-border md:border-b-0 md:border-r md:pr-4 bg-card/50 md:rounded-l-lg"
+        >
           {navSections.map((section) => (
             <button
               key={section.id}
@@ -241,11 +244,11 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                 "whitespace-nowrap rounded-md px-3 py-2 text-sm text-left transition-colors",
                 activeSection === section.id
                   ? section.id === "danger"
-                    ? "bg-destructive/5 text-destructive font-medium"
-                    : "bg-muted text-foreground font-medium"
+                    ? "bg-destructive/10 text-destructive font-medium border border-destructive/20"
+                    : "bg-background text-foreground font-medium border border-border shadow-sm"
                   : section.id === "danger"
                     ? "text-destructive/70 hover:bg-destructive/5 hover:text-destructive"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
               )}
             >
               {section.label}
@@ -253,7 +256,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           ))}
         </nav>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 md:pl-6">
           {activeSection === "general" && (
             <div className="bg-card border border-border rounded-lg p-4">
               <div className="pb-3 mb-3 border-b border-border">

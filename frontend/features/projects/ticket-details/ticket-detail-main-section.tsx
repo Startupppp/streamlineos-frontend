@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { ExternalLink } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { viewFile } from "@/hooks/common/use-file-url";
 import { TicketSubtasks } from "./ticket-subtasks";
 import { TicketRelations } from "./ticket-relations";
@@ -33,7 +33,7 @@ interface TicketDetailMainSectionProps {
   subtasks: Ticket[];
   members: ProjectMember[];
   highlightCommentId?: number | null;
-  onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onTitleChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onDescriptionChange: (html: string) => void;
 }
 
@@ -51,10 +51,11 @@ export function TicketDetailMainSection({
 }: TicketDetailMainSectionProps) {
   return (
     <div className="space-y-5">
-      <Input
+      <Textarea
         value={localTitle}
         onChange={onTitleChange}
-        className="text-xl font-semibold border-0 bg-transparent px-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+        rows={1}
+        className="text-xl font-semibold border-0 bg-transparent px-0 py-0 min-h-0 h-auto resize-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 shadow-none hover:border-0"
         placeholder="Ticket title"
       />
 

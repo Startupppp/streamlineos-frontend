@@ -173,7 +173,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       }
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
-        <div className="order-2 min-w-0 flex-1 px-4 py-4 md:order-1 md:overflow-y-auto md:scrollbar-thin md:px-6 md:py-5">
+        <div className="order-2 min-w-0 flex-1 px-4 pb-4 pt-0 md:order-1 md:overflow-y-auto md:scrollbar-thin md:px-6 md:pb-5 md:pt-0">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={ticketId}

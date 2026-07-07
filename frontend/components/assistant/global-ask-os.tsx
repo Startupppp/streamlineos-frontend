@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { Bot, ChevronDown, ChevronUp, Loader2, Send, Square, Trash2, X } from "lucide-react";
+import { ArrowLeft, Bot, ChevronDown, ChevronUp, Clock, Loader2, Search, Send, Square, Trash2, X } from "lucide-react";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
@@ -58,6 +58,8 @@ export function GlobalAskOs() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [atBottom, setAtBottom] = useState(true);
+  const [view, setView] = useState<"chat" | "history">("chat");
+  const [historySearch, setHistorySearch] = useState("");
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
@@ -216,6 +218,22 @@ export function GlobalAskOs() {
 
   function handleClose() {
     setOpen(false);
+    setView("chat");
+    setHistorySearch("");
+  }
+
+  function handleOpenHistory() {
+    setView("history");
+    setHistorySearch("");
+  }
+
+  function handleBackToChat() {
+    setView("chat");
+    setHistorySearch("");
+  }
+
+  function handleHistorySearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setHistorySearch(e.target.value);
   }
 
   function handleStop() {
@@ -226,13 +244,30 @@ export function GlobalAskOs() {
     if (isStreaming || clearHistory.isPending) return;
     clearHistory.mutate();
     setErrorMessage(null);
+    setView("chat");
+    setHistorySearch("");
   }
 
   const showEmpty = !isLoading && persisted.length === 0 && !draft;
   const showClear = persisted.length > 0 || Boolean(draft);
-  const showJump = !atBottom && !isLoading && !showEmpty;
+  const hasHistory = persisted.length > 0;
 
   const historyRows = useMemo(() => buildHistoryRows(persisted), [persisted]);
+  const historySearchQuery = historySearch.trim().toLowerCase();
+  const historyFilteredRows = useMemo(
+    () =>
+      historySearchQuery
+        ? buildHistoryRows(
+            persisted.filter((m) => m.content.toLowerCase().includes(historySearchQuery)),
+          )
+        : historyRows,
+    [historyRows, persisted, historySearchQuery],
+  );
+  const isHistory = view === "history";
+  const rowsToRender = isHistory ? historyFilteredRows : historyRows;
+  const showJump =
+    !atBottom && !isLoading && (isHistory ? rowsToRender.length > 0 : !showEmpty);
+
   const lastPersisted = persisted.length > 0 ? persisted[persisted.length - 1] : undefined;
   const draftNeedsToday =
     Boolean(draft) &&
@@ -266,16 +301,41 @@ export function GlobalAskOs() {
           >
             <div className="flex h-[min(70dvh,560px)] flex-col overflow-hidden rounded-tl-2xl border border-b-0 border-border bg-card shadow-2xl">
               <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/40 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <AnimatedLogo size={32} gradient className="rounded-full" />
-                  <div>
-                    <p className="text-sm font-semibold leading-none text-foreground">Ask OS</p>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      Your workspace assistant
-                    </p>
+                {isHistory ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleBackToChat}
+                      aria-label="Back to chat"
+                      className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
+                    <p className="text-sm font-semibold leading-none text-foreground">History</p>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <AnimatedLogo size={32} gradient className="rounded-full" />
+                    <div>
+                      <p className="text-sm font-semibold leading-none text-foreground">Ask OS</p>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">
+                        Your workspace assistant
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-1">
+                  {!isHistory && hasHistory && (
+                    <button
+                      type="button"
+                      onClick={handleOpenHistory}
+                      aria-label="View history"
+                      title="View history"
+                      className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted"
+                    >
+                      <Clock className="h-4 w-4" />
+                    </button>
+                  )}
                   {showClear && (
                     <button
                       type="button"
@@ -297,6 +357,21 @@ export function GlobalAskOs() {
                   </button>
                 </div>
               </div>
+
+              {isHistory && (
+                <div className="shrink-0 border-b border-border bg-background/40 px-3 py-2">
+                  <div className="flex items-center gap-2 rounded-lg border border-input bg-background px-2.5">
+                    <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={historySearch}
+                      onChange={handleHistorySearchChange}
+                      placeholder="Search your history…"
+                      className="h-8 flex-1 bg-transparent text-xs focus-visible:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="relative flex-1 overflow-hidden">
                 <div

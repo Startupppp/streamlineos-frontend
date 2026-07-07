@@ -165,7 +165,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   }, [deleteTicketMutation, ticketId]);
 
   const handleTitleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setLocalTitle(e.target.value);
       debouncedSave({ title: e.target.value });
     },
