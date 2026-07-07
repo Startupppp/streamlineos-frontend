@@ -189,8 +189,8 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Settings">
-        <div className="flex flex-col md:flex-row gap-6 pb-8">
-          <div className="flex md:flex-col gap-1 md:w-44 shrink-0">
+        <div className="flex flex-col md:flex-row gap-0 pb-8">
+          <div className="flex md:flex-col gap-1 md:w-44 shrink-0 p-2 mb-4 md:mb-0 border-b border-border md:border-b-0 md:border-r md:pr-4 bg-card/50 md:rounded-l-lg">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-8 w-24 md:w-full" />
             ))}

@@ -1,10 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import type { IconHandle } from "@animateicons/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+  SidebarAnimatedNavIcon,
+  useAnimatedNavIconHover,
+} from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
   ActivityIcon,
   BookOpenTextIcon,
@@ -53,6 +56,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useCan } from "@/hooks/api/access";
 
 interface ProjectSidebarProps {
@@ -238,23 +247,6 @@ function useIsActive(baseUrl: string) {
   };
 }
 
-type NavIconComponent = React.ForwardRefExoticComponent<
-  { className?: string } & React.RefAttributes<IconHandle>
->;
-
-function SidebarNavIcon({
-  icon: Icon,
-  iconRef,
-  className,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  iconRef: React.RefObject<IconHandle | null>;
-  className?: string;
-}) {
-  const IconWithRef = Icon as NavIconComponent;
-  return <IconWithRef ref={iconRef} className={className} />;
-}
-
 function ProjectNavLink({
   href,
   label,
@@ -270,35 +262,39 @@ function ProjectNavLink({
   collapsed: boolean;
   onNavigate?: () => void;
 }) {
-  const iconRef = useRef<IconHandle>(null);
+  const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
 
-  return (
+  const link = (
     <Link
       href={href}
       onClick={onNavigate}
-      onMouseEnter={() => iconRef.current?.startAnimation()}
-      onMouseLeave={() => iconRef.current?.stopAnimation()}
+      {...animatedNavHoverHandlers}
       className={cn(
-        "flex items-center rounded-md text-[13px] font-medium transition-colors group relative",
+        "flex items-center rounded-md text-[13px] font-medium transition-colors",
         collapsed ? "justify-center p-1.5 mx-auto" : "px-2 py-1.5",
         active
           ? "bg-muted text-foreground"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
-      title={collapsed ? label : undefined}
     >
-      <SidebarNavIcon
+      <SidebarAnimatedNavIcon
         icon={Icon}
         iconRef={iconRef}
         className={cn("h-4 w-4 shrink-0", !collapsed && "mr-2")}
       />
       {!collapsed && <span className="truncate">{label}</span>}
-      {collapsed && (
-        <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md shadow-md border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">
-          {label}
-        </div>
-      )}
     </Link>
+  );
+
+  if (!collapsed) return link;
+
+  return (
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>{link}</TooltipTrigger>
+      <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
+        {label}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -315,14 +311,13 @@ function MobileProjectNavLink({
   active: boolean;
   onNavigate: () => void;
 }) {
-  const iconRef = useRef<IconHandle>(null);
+  const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
 
   return (
     <Link
       href={href}
       onClick={onNavigate}
-      onMouseEnter={() => iconRef.current?.startAnimation()}
-      onMouseLeave={() => iconRef.current?.stopAnimation()}
+      {...animatedNavHoverHandlers}
       className={cn(
         "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors",
         active
@@ -330,7 +325,7 @@ function MobileProjectNavLink({
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
-      <SidebarNavIcon
+      <SidebarAnimatedNavIcon
         icon={Icon}
         iconRef={iconRef}
         className="h-4 w-4 mr-2.5 shrink-0"
@@ -381,6 +376,7 @@ function DesktopSidebar({
   }
 
   return (
+    <TooltipProvider delayDuration={0}>
     <div
       className={cn(
         "h-full flex flex-col border-r border-border bg-card/50 transition-[width] duration-200 ease-out",
@@ -448,6 +444,7 @@ function DesktopSidebar({
         </div>
       </ScrollArea>
     </div>
+    </TooltipProvider>
   );
 }
 

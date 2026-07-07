@@ -51,7 +51,7 @@ export default async function ProjectLayout({
         projectName={project.name}
         projectKey={project.key}
       />
-      <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-y-auto">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
         {children}
       </div>
     </div>

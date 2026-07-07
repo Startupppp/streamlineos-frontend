@@ -238,7 +238,7 @@ export function KanbanBoard({
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={cn(
-                      "flex-1 overflow-y-auto min-h-[100px] px-2 pb-2 space-y-1.5 transition-colors",
+                      "flex-1 overflow-y-auto scrollbar-hide min-h-[100px] px-2 pb-2 space-y-1.5 transition-colors",
                       snapshot.isDraggingOver && "bg-primary/5",
                     )}
                   >

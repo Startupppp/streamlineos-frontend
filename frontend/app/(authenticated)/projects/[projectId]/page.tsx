@@ -252,9 +252,10 @@ export default function ProjectBoardPage({ params }: PageProps) {
       subtitle={data.description ?? undefined}
       noInternalScroll
       contentClassName="!p-0"
+      filtersClassName="pb-0"
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={
-        <>
+        <div className="flex min-h-8 w-full flex-wrap items-center gap-2 sm:gap-3">
           <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
           <Button
             variant="outline"
@@ -301,11 +302,11 @@ export default function ProjectBoardPage({ params }: PageProps) {
             onHideCompletedChange={setHideCompleted}
             doneCount={doneCount}
           />
-        </>
+        </div>
       }
     >
       {view === "board" && (
-        <div className="h-full w-full px-3 pt-2 pb-1">
+        <div className="h-full w-full px-3 pb-1">
           <KanbanBoard
             tickets={filteredTickets}
             projectId={projectId}

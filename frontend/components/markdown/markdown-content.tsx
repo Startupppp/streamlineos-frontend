@@ -12,14 +12,18 @@ const components: Components = {
   h3: ({ children }) => (
     <h3 className="text-xs font-semibold mt-1.5 mb-0.5 first:mt-0">{children}</h3>
   ),
-  p: ({ children }) => <p className="mb-1.5 last:mb-0 leading-relaxed">{children}</p>,
+  p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
   ul: ({ children }) => (
-    <ul className="list-disc list-inside mb-1.5 space-y-0.5 pl-1">{children}</ul>
+    <ul className="list-disc list-outside mb-2 space-y-1 pl-5 marker:text-muted-foreground/70">
+      {children}
+    </ul>
   ),
   ol: ({ children }) => (
-    <ol className="list-decimal list-inside mb-1.5 space-y-0.5 pl-1">{children}</ol>
+    <ol className="list-decimal list-outside mb-2 space-y-1 pl-5 marker:text-muted-foreground/70">
+      {children}
+    </ol>
   ),
-  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+  li: ({ children }) => <li className="pl-1 leading-relaxed [&>p]:mb-0">{children}</li>,
   strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
   em: ({ children }) => <em className="italic">{children}</em>,
   code: ({ children, className }) => {

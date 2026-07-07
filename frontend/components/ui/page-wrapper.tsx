@@ -16,6 +16,7 @@ interface PageWrapperProps {
   leading?: React.ReactNode;
   actions?: React.ReactNode;
   filters?: React.ReactNode;
+  filtersClassName?: string;
   filtersCollapseBreakpoint?: "sm" | "md";
   mobileFiltersInline?: boolean;
   children: React.ReactNode;
@@ -34,6 +35,7 @@ export function PageWrapper({
   leading,
   actions,
   filters,
+  filtersClassName,
   filtersCollapseBreakpoint = "sm",
   mobileFiltersInline = false,
   children,
@@ -100,7 +102,7 @@ export function PageWrapper({
       {filters && (
         <div className="shrink-0">
           {!mobileFiltersInline && (
-            <div className={cn("px-4 sm:px-6 pb-2", mobileFiltersClass)}>
+            <div className={cn("px-4 sm:px-6 pb-2", mobileFiltersClass, filtersClassName)}>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="h-8 text-xs gap-1.5">
@@ -120,6 +122,7 @@ export function PageWrapper({
             className={cn(
               "px-4 sm:px-6 pb-2 flex-wrap items-center gap-2 sm:gap-3",
               mobileFiltersInline ? "flex" : desktopFiltersClass,
+              filtersClassName,
             )}
           >
             {filters}

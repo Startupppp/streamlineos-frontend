@@ -22,6 +22,7 @@ import {
 } from "@/hooks/api/kb/sources";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import { KbSourcesSheet } from "@/features/knowledge-base/components/kb-sources-sheet";
+import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { getErrorMessage } from "@/lib/api-client";
 import type { KbAskCitation } from "@/types/kb";
 
@@ -355,8 +356,8 @@ function EmptyChat({
 }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 py-10 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 text-accent">
-        <MessageCircleIcon size={24} />
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10">
+        <AnimatedLogo size={28} gradient className="rounded-xl" />
       </div>
       <div>
         <p className="text-sm font-semibold text-foreground">
@@ -442,43 +443,55 @@ function Citations({
   citations: KbAskCitation[];
   onCitation: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
+  const seen = new Set<string>();
+  const unique = citations.filter((citation) => {
+    const key =
+      citation.kind === "page"
+        ? `page-${citation.pageId}`
+        : citation.kind === "source"
+          ? `source-${citation.sourceId}`
+          : `article-${citation.articleId}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  if (unique.length === 0) return null;
+
   return (
-    <div className="mt-2.5 flex flex-wrap gap-1.5 border-t border-border/60 pt-2.5">
-      {citations.map((citation, index) => {
-        if (citation.kind === "page") {
-          return (
-            <button
-              key={`page-${citation.pageId}-${index}`}
-              type="button"
-              data-page-id={citation.pageId}
-              onClick={onCitation}
-              className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-accent transition-colors hover:bg-muted"
-            >
-              <BookOpenTextIcon size={11} />
-              <span className="truncate">{citation.title || "Untitled"}</span>
-            </button>
-          );
-        }
-        if (citation.kind === "source") {
+    <div className="mt-2.5 border-t border-border/60 pt-2.5">
+      <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+        Sources
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {unique.map((citation) => {
+          if (citation.kind === "page") {
+            return (
+              <button
+                key={`page-${citation.pageId}`}
+                type="button"
+                data-page-id={citation.pageId}
+                onClick={onCitation}
+                className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-accent transition-colors hover:bg-muted"
+              >
+                <BookOpenTextIcon size={11} />
+                <span className="truncate">{(citation.title ?? "").trim() || "Untitled page"}</span>
+              </button>
+            );
+          }
+          const isSource = citation.kind === "source";
+          const label =
+            (citation.title ?? "").trim() || (isSource ? "Uploaded document" : "Untitled");
           return (
             <span
-              key={`source-${citation.sourceId}-${index}`}
+              key={isSource ? `source-${citation.sourceId}` : `article-${citation.articleId}`}
               className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground"
             >
               <BookOpenTextIcon size={11} />
-              <span className="truncate">{citation.title || "Untitled"}</span>
+              <span className="truncate">{label}</span>
             </span>
           );
-        }
-        return (
-          <span
-            key={`article-${citation.articleId}-${index}`}
-            className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground"
-          >
-            <span className="truncate">{citation.title || "Untitled"}</span>
-          </span>
-        );
-      })}
+        })}
+      </div>
     </div>
   );
 }

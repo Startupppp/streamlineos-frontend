@@ -1,6 +1,8 @@
 "use client";
 
-import type { ComponentType, JSX } from "react";
+import { forwardRef } from "react";
+import type { IconHandle } from "@animateicons/react";
+import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
   BookOpenCheckIcon,
   BookOpenTextIcon,
@@ -62,7 +64,7 @@ export type KbIconProps = {
   size?: number;
 };
 
-export type KbIconComponent = (props: KbIconProps) => JSX.Element;
+export type KbIconComponent = AnimatedNavIconComponent;
 
 const TAILWIND_UNIT_PX = 4;
 const TAILWIND_SIZE_TOKEN_RE = /^(?:h|w|size)-(\d+(?:\.\d+)?)$/;
@@ -93,16 +95,32 @@ function classNameToIconSize(className?: string): number | undefined {
   return undefined;
 }
 
-function createAnimatedIcon(Icon: ComponentType<KbIconProps>): KbIconComponent {
-  return function KbAnimatedIcon({ className, size }: KbIconProps) {
-    return <Icon className={className} size={size ?? classNameToIconSize(className)} />;
-  };
+type AnimateIconSource = React.ForwardRefExoticComponent<
+  KbIconProps & React.RefAttributes<IconHandle>
+>;
+
+function createAnimatedIcon(Icon: AnimateIconSource): KbIconComponent {
+  return forwardRef<IconHandle, KbIconProps>(function KbAnimatedIcon(
+    { className, size },
+    ref,
+  ) {
+    return (
+      <Icon
+        ref={ref}
+        className={className}
+        size={size ?? classNameToIconSize(className)}
+      />
+    );
+  });
 }
 
 function createLucideIcon(Icon: LucideIcon): KbIconComponent {
-  return function KbLucideIcon({ className, size }: KbIconProps) {
+  return forwardRef<IconHandle, KbIconProps>(function KbLucideIcon(
+    { className, size },
+    _ref,
+  ) {
     return <Icon className={className} size={size ?? classNameToIconSize(className)} />;
-  };
+  });
 }
 
 export const KbPlusIcon = createAnimatedIcon(PlusIcon);

@@ -29,6 +29,10 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
+  SidebarAnimatedNavIcon,
+  useAnimatedNavIconHover,
+} from "@/components/layout/sidebar/sidebar-animated-nav";
+import {
   KB_ANALYTICS,
   KB_FAVORITES,
   KB_IMPORT,
@@ -145,7 +149,7 @@ function WikiNavLink({
   isActive: boolean;
   isCollapsed?: boolean;
 }) {
-  const Icon = item.icon;
+  const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
 
   if (isCollapsed) {
     return (
@@ -155,6 +159,7 @@ function WikiNavLink({
             href={item.href}
             aria-current={isActive ? "page" : undefined}
             aria-label={item.label}
+            {...animatedNavHoverHandlers}
             className={cn(
               "flex size-8 items-center justify-center rounded-md transition-colors",
               isActive
@@ -162,7 +167,11 @@ function WikiNavLink({
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            <Icon className="size-4 shrink-0" />
+            <SidebarAnimatedNavIcon
+              icon={item.icon}
+              iconRef={iconRef}
+              className="size-4 shrink-0"
+            />
           </Link>
         </TooltipTrigger>
         <TooltipContent side="right" sideOffset={8} className="text-xs">
@@ -176,6 +185,7 @@ function WikiNavLink({
     <Link
       href={item.href}
       aria-current={isActive ? "page" : undefined}
+      {...animatedNavHoverHandlers}
       className={cn(
         "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
         isActive
@@ -183,7 +193,11 @@ function WikiNavLink({
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
-      <Icon className="size-4 shrink-0" />
+      <SidebarAnimatedNavIcon
+        icon={item.icon}
+        iconRef={iconRef}
+        className="size-4 shrink-0"
+      />
       <span>{item.label}</span>
     </Link>
   );
@@ -192,6 +206,8 @@ function WikiNavLink({
 export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFooterProps) {
   const pathname = usePathname();
   const trashActive = isNavItemActive(pathname, KB_TRASH);
+  const quickFindIcon = useAnimatedNavIconHover();
+  const trashIcon = useAnimatedNavIconHover();
 
   if (isCollapsed) {
     return (
@@ -205,8 +221,13 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
               className="size-8 text-muted-foreground hover:text-foreground"
               onClick={onQuickFind}
               aria-label="Quick find"
+              {...quickFindIcon.animatedNavHoverHandlers}
             >
-              <KbSearchIcon className="size-4" />
+              <SidebarAnimatedNavIcon
+                icon={KbSearchIcon}
+                iconRef={quickFindIcon.iconRef}
+                className="size-4"
+              />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8} className="text-xs">
@@ -219,6 +240,7 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
               href={KB_TRASH}
               aria-current={trashActive ? "page" : undefined}
               aria-label="Trash"
+              {...trashIcon.animatedNavHoverHandlers}
               className={cn(
                 "flex size-8 items-center justify-center rounded-md transition-colors",
                 trashActive
@@ -226,7 +248,11 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
-              <KbTrash2Icon className="size-4" />
+              <SidebarAnimatedNavIcon
+                icon={KbTrash2Icon}
+                iconRef={trashIcon.iconRef}
+                className="size-4"
+              />
             </Link>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8} className="text-xs">
@@ -245,14 +271,20 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
         size="sm"
         className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
         onClick={onQuickFind}
+        {...quickFindIcon.animatedNavHoverHandlers}
       >
-        <KbSearchIcon className="size-4" />
+        <SidebarAnimatedNavIcon
+          icon={KbSearchIcon}
+          iconRef={quickFindIcon.iconRef}
+          className="size-4"
+        />
         <span>Quick find</span>
         <span className="ml-auto text-xs text-muted-foreground">⌘K</span>
       </Button>
       <Link
         href={KB_TRASH}
         aria-current={trashActive ? "page" : undefined}
+        {...trashIcon.animatedNavHoverHandlers}
         className={cn(
           "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
           trashActive
@@ -260,7 +292,11 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
             : "text-muted-foreground hover:bg-muted hover:text-foreground",
         )}
       >
-        <KbTrash2Icon className="size-4" />
+        <SidebarAnimatedNavIcon
+          icon={KbTrash2Icon}
+          iconRef={trashIcon.iconRef}
+          className="size-4"
+        />
         <span>Trash</span>
       </Link>
     </div>

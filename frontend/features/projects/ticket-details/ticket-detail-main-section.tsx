@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { viewFile } from "@/hooks/common/use-file-url";
 import { TicketSubtasks } from "./ticket-subtasks";
 import { TicketRelations } from "./ticket-relations";
-import { TicketTimeTracker } from "./ticket-time-tracker";
-import { WatcherList } from "./watcher-list";
 import { ActivityFeed } from "./activity-feed";
 import { TicketActivityLog } from "@/features/projects/tickets/ticket-activity-log";
 import { TicketChecklists } from "./ticket-checklists";
@@ -108,16 +106,6 @@ export function TicketDetailMainSection({
       <TicketChecklists projectId={projectId} ticketId={ticketId} />
       <TicketCustomFields projectId={projectId} ticketId={ticketId} />
       <TicketRelations ticketId={ticketId} projectId={projectId} />
-      <TicketTimeTracker
-        ticketId={ticketId}
-        projectId={projectId}
-        timeSpent={ticket.timeSpent ?? null}
-      />
-      <WatcherList
-        projectId={projectId}
-        ticketId={ticketId}
-        members={members}
-      />
       <ActivityFeed
         ticketId={ticketId}
         projectId={projectId}

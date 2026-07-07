@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { Bot, ChevronDown, Loader2, Send, Square, Trash2, X } from "lucide-react";
+import { Bot, ChevronDown, ChevronUp, Loader2, Send, Square, Trash2, X } from "lucide-react";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
+import { cn } from "@/lib/utils";
 import {
   useAskAI,
   useAskAiHistory,
@@ -27,18 +29,35 @@ const SUGGESTIONS = [
 
 const CONTEXT_WINDOW = 24;
 
+function normalizePathname(pathname: string): string {
+  if (!pathname) return "";
+  if (pathname.length > 1 && pathname.endsWith("/")) {
+    return pathname.slice(0, -1);
+  }
+  return pathname;
+}
+
+function hasBottomComposer(pathname: string): boolean {
+  const path = normalizePathname(pathname);
+  if (path === "/chat" || path.startsWith("/chat/")) return true;
+  return /^\/projects\/[^/]+\/chat(?:\/|$)/.test(path);
+}
+
 interface Draft {
   user: string;
   assistant: string;
 }
 
 export function GlobalAskOs() {
+  const pathname = usePathname();
   const reduce = useReducedMotion();
   const qc = useQueryClient();
+  const composerRoute = hasBottomComposer(pathname);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [atBottom, setAtBottom] = useState(true);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
@@ -94,6 +113,7 @@ export function GlobalAskOs() {
     } else {
       el.scrollTop = el.scrollHeight;
       isNearBottomRef.current = true;
+      setAtBottom(true);
     }
   }, [persisted.length, open]);
 
@@ -107,7 +127,17 @@ export function GlobalAskOs() {
   function handleScroll() {
     const el = scrollRef.current;
     if (!el) return;
-    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    const near = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    isNearBottomRef.current = near;
+    setAtBottom((prev) => (prev === near ? prev : near));
+  }
+
+  function handleJumpToLatest() {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: reduce ? "auto" : "smooth" });
+    isNearBottomRef.current = true;
+    setAtBottom(true);
   }
 
   const send = useCallback(
@@ -200,6 +230,13 @@ export function GlobalAskOs() {
 
   const showEmpty = !isLoading && persisted.length === 0 && !draft;
   const showClear = persisted.length > 0 || Boolean(draft);
+  const showJump = !atBottom && !isLoading && !showEmpty;
+
+  const historyRows = useMemo(() => buildHistoryRows(persisted), [persisted]);
+  const lastPersisted = persisted.length > 0 ? persisted[persisted.length - 1] : undefined;
+  const draftNeedsToday =
+    Boolean(draft) &&
+    (!lastPersisted || dayKey(lastPersisted.createdAt) !== dayKey(new Date().toISOString()));
 
   const panelTransition = reduce
     ? { duration: 0 }
@@ -207,7 +244,13 @@ export function GlobalAskOs() {
 
   return (
     <div
-      className={`fixed bottom-20 right-0 z-50 flex flex-col items-stretch md:bottom-0 ${open ? "w-[min(100vw,400px)]" : "w-[min(100vw,180px)]"}`}
+      className={cn(
+        "fixed right-0 z-50 flex flex-col items-stretch",
+        composerRoute
+          ? "bottom-[calc(11rem+4rem+env(safe-area-inset-bottom,0px))] md:bottom-44"
+          : "bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] md:bottom-0",
+        open ? "w-[min(100vw,400px)]" : "w-[min(100vw,130px)]",
+      )}
       role="complementary"
       aria-label="Ask OS assistant"
     >
@@ -255,57 +298,96 @@ export function GlobalAskOs() {
                 </div>
               </div>
 
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className="flex-1 overflow-y-auto scrollbar-hide p-4"
-              >
-                {isLoading ? (
-                  <div className="flex h-full items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : showEmpty ? (
-                  <EmptyAskOs onSuggestion={handleSuggestion} />
-                ) : (
-                  <div className="space-y-4">
-                    {hasNextPage && <div ref={topSentinelRef} className="h-px w-full" />}
-                    {isFetchingNextPage && (
-                      <div className="flex justify-center py-1">
-                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                      </div>
-                    )}
-                    {persisted.map((message) => (
-                      <AskOsBubble
-                        key={message.id}
-                        role={message.role}
-                        content={message.content}
-                        streaming={false}
-                        reduce={Boolean(reduce)}
-                      />
-                    ))}
-                    {draft && (
-                      <AskOsBubble
-                        key="draft-user"
-                        role="user"
-                        content={draft.user}
-                        streaming={false}
-                        reduce={Boolean(reduce)}
-                      />
-                    )}
-                    {draft && (
-                      <AskOsBubble
-                        key="draft-assistant"
-                        role="assistant"
-                        content={draft.assistant}
-                        streaming={isStreaming}
-                        reduce={Boolean(reduce)}
-                      />
-                    )}
-                    {errorMessage && (
-                      <p className="px-1 text-[11px] text-destructive">{errorMessage}</p>
-                    )}
-                  </div>
-                )}
+              <div className="relative flex-1 overflow-hidden">
+                <div
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                  className="absolute inset-0 overflow-y-auto scrollbar-hide p-4"
+                >
+                  {isLoading ? (
+                    <div className="flex h-full items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : showEmpty ? (
+                    <EmptyAskOs onSuggestion={handleSuggestion} />
+                  ) : (
+                    <div className="space-y-4">
+                      {hasNextPage ? (
+                        <div ref={topSentinelRef} className="flex justify-center pb-1">
+                          {isFetchingNextPage ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={loadOlder}
+                              className="flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted"
+                            >
+                              <ChevronUp className="h-3 w-3" />
+                              Load older messages
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        persisted.length > 0 && (
+                          <p className="pb-1 text-center text-[10px] text-muted-foreground/60">
+                            Beginning of your conversation
+                          </p>
+                        )
+                      )}
+                      {historyRows.map((row) =>
+                        row.type === "sep" ? (
+                          <DaySeparator key={row.id} label={row.label} />
+                        ) : (
+                          <AskOsBubble
+                            key={row.message.id}
+                            role={row.message.role}
+                            content={row.message.content}
+                            streaming={false}
+                            reduce={Boolean(reduce)}
+                          />
+                        ),
+                      )}
+                      {draftNeedsToday && <DaySeparator key="sep-draft-today" label="Today" />}
+                      {draft && (
+                        <AskOsBubble
+                          key="draft-user"
+                          role="user"
+                          content={draft.user}
+                          streaming={false}
+                          reduce={Boolean(reduce)}
+                        />
+                      )}
+                      {draft && (
+                        <AskOsBubble
+                          key="draft-assistant"
+                          role="assistant"
+                          content={draft.assistant}
+                          streaming={isStreaming}
+                          reduce={Boolean(reduce)}
+                        />
+                      )}
+                      {errorMessage && (
+                        <p className="px-1 text-[11px] text-destructive">{errorMessage}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <AnimatePresence>
+                  {showJump && (
+                    <motion.button
+                      type="button"
+                      onClick={handleJumpToLatest}
+                      initial={reduce ? false : { opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={reduce ? undefined : { opacity: 0, scale: 0.8 }}
+                      aria-label="Jump to latest"
+                      className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-md transition-colors hover:bg-muted"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
               </div>
 
               <form
@@ -357,12 +439,12 @@ export function GlobalAskOs() {
         whileTap={reduce ? undefined : { scale: 0.98 }}
         aria-expanded={open}
         aria-label={open ? "Minimize Ask OS assistant" : "Open Ask OS assistant"}
-        className={`flex h-9 w-full items-center gap-2 bg-primary px-3 text-primary-foreground shadow-lg ring-1 ring-inset ring-blue-500/20 transition-colors hover:bg-primary/90 ${open ? "" : "rounded-tl-xl"}`}
+        className={`flex h-6 w-full items-center gap-1 bg-primary px-1.5 py-0 text-primary-foreground shadow-lg ring-1 ring-inset ring-blue-500/20 transition-colors hover:bg-primary/90 ${open ? "" : "rounded-tl-lg"}`}
       >
-        <AnimatedLogo size={18} gradient />
-        <span className="flex-1 text-left text-xs font-semibold tracking-wide">ASK OS</span>
+        <AnimatedLogo size={13} gradient />
+        <span className="flex-1 text-left text-[9px] font-semibold leading-none tracking-wide">ASK OS</span>
         <ChevronDown
-          className={`h-3.5 w-3.5 shrink-0 text-blue-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`h-2.5 w-2.5 shrink-0 text-blue-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           aria-hidden
         />
       </motion.button>
@@ -461,4 +543,50 @@ function TypingDots({ reduce }: { reduce: boolean }) {
       ))}
     </div>
   );
+}
+
+function DaySeparator({ label }: { label: string }) {
+  return (
+    <div className="flex items-center justify-center py-0.5">
+      <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+type HistoryRow =
+  | { type: "sep"; id: string; label: string }
+  | { type: "msg"; message: AskAiHistoryMessage };
+
+function dayKey(iso: string): string {
+  return new Date(iso).toDateString();
+}
+
+function dayLabel(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((startOf(now) - startOf(d)) / 86_400_000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  const opts: Intl.DateTimeFormatOptions =
+    d.getFullYear() === now.getFullYear()
+      ? { month: "short", day: "numeric" }
+      : { month: "short", day: "numeric", year: "numeric" };
+  return d.toLocaleDateString(undefined, opts);
+}
+
+function buildHistoryRows(messages: AskAiHistoryMessage[]): HistoryRow[] {
+  const rows: HistoryRow[] = [];
+  let lastDay: string | null = null;
+  for (const message of messages) {
+    const key = dayKey(message.createdAt);
+    if (key !== lastDay) {
+      rows.push({ type: "sep", id: `sep-${key}-${message.id}`, label: dayLabel(message.createdAt) });
+      lastDay = key;
+    }
+    rows.push({ type: "msg", message });
+  }
+  return rows;
 }

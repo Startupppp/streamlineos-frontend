@@ -27,10 +27,11 @@ export default function ProjectBoardLoading() {
       title="Loading project..."
       noInternalScroll
       contentClassName="!p-0"
+      filtersClassName="pb-0"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
       filters={filterBar}
     >
-      <div className="h-full w-full px-3 pt-2 pb-1 overflow-hidden">
+      <div className="h-full w-full px-3 pb-1 overflow-hidden">
         <KanbanBoardSkeleton />
       </div>
     </PageWrapper>

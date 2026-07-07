@@ -5,6 +5,10 @@ import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
+  SidebarAnimatedNavIcon,
+  useAnimatedNavIconHover,
+} from "@/components/layout/sidebar/sidebar-animated-nav";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -58,6 +62,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const duplicatePage = useDuplicateKbPage();
   const toggleFavorite = useToggleFavoriteKbPage();
   const updatePage = useUpdateKbPage();
+  const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
 
   const shouldReduceMotion = useReducedMotion();
 
@@ -201,6 +206,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
         style={{ paddingLeft: 8 + depth * 16, paddingRight: 4 }}
         onClick={handleNavigate}
         onKeyDown={handleKeyDown}
+        {...animatedNavHoverHandlers}
       >
         <button
           className="shrink-0 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
@@ -223,7 +229,11 @@ const PageTreeItem = memo(function PageTreeItemInner({
           {node.icon ? (
             node.icon
           ) : (
-            <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground" />
+            <SidebarAnimatedNavIcon
+              icon={KbFileTextIcon}
+              iconRef={iconRef}
+              className="h-3.5 w-3.5 text-muted-foreground"
+            />
           )}
         </span>
 
