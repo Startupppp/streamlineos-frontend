@@ -48,7 +48,7 @@ function AttendeeRow({
       type="button"
       onClick={handleClick}
       className={cn(
-        "w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors text-left",
+        "w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors text-left",
         selected
           ? "bg-blue-500/10 ring-1 ring-blue-500/30"
           : "hover:bg-muted",
@@ -89,7 +89,7 @@ export function EventAttendeesPicker({
   if (members.length === 0) return null;
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <div className="flex items-center justify-between">
         <Label className="text-xs font-medium">Attendees</Label>
         {selectedIds.length > 0 && (

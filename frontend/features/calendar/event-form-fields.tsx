@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Tag, Clock, MapPin, Lock, Circle, FileText, Video } from "lucide-react";
+import { Tag, Clock, MapPin, Lock, Circle, FileText, Video, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { IntegrationConnection } from "@/hooks/api/integrations";
 
@@ -53,6 +54,8 @@ interface EventFormFieldsProps {
   syncConnectionId: string;
   addConference: boolean;
   isEdit: boolean;
+  showEndDate: boolean;
+  dateTimeError: string;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLocationChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -65,6 +68,7 @@ interface EventFormFieldsProps {
   onColorChange: (v: string) => void;
   onSyncConnectionChange: (v: string) => void;
   onAddConferenceChange: (v: boolean) => void;
+  onShowEndDate: () => void;
 }
 
 export function EventFormFields({
@@ -83,6 +87,8 @@ export function EventFormFields({
   syncConnectionId,
   addConference,
   isEdit,
+  showEndDate,
+  dateTimeError,
   onTitleChange,
   onDescriptionChange,
   onLocationChange,
@@ -95,13 +101,14 @@ export function EventFormFields({
   onColorChange,
   onSyncConnectionChange,
   onAddConferenceChange,
+  onShowEndDate,
 }: EventFormFieldsProps) {
   const activeConnections = connections.filter((c) => c.status === "active");
   const selectedToolkit = activeConnections.find((c) => String(c.id) === syncConnectionId)?.toolkit;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
+    <div className="space-y-3">
+      <div className="flex items-center gap-2.5">
         <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
         <div className="flex-1">
           <Input
@@ -109,22 +116,22 @@ export function EventFormFields({
             value={title}
             onChange={onTitleChange}
             placeholder="Add Title"
-            className="h-10 text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 font-medium"
+            className="h-9 text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 font-medium"
             autoFocus
           />
         </div>
       </div>
 
-      <div className="flex items-start gap-3">
-        <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
-        <div className="flex-1 min-w-0 space-y-2">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+      <div className="flex items-start gap-2.5">
+        <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex items-center gap-2">
             <DatePicker
               value={startDate}
               onChange={onStartDateChange}
               placeholder="Start date"
               dateFormat="MMM d, yyyy"
-              className="h-8 text-xs"
+              className="h-8 text-xs flex-1 min-w-0"
             />
             {!allDay && (
               <Input
@@ -134,26 +141,47 @@ export function EventFormFields({
                 onChange={onStartTimeChange}
               />
             )}
-          </div>
-
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <DatePicker
-              value={endDate}
-              onChange={onEndDateChange}
-              fromDate={startDate ? new Date(startDate) : undefined}
-              placeholder="End date"
-              dateFormat="MMM d, yyyy"
-              className="h-8 text-xs"
-            />
-            {!allDay && (
-              <Input
-                type="time"
-                className="h-8 text-xs w-[7.5rem] shrink-0"
-                value={endTime}
-                onChange={onEndTimeChange}
-              />
+            {!showEndDate && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={onShowEndDate}
+                aria-label="Add end date"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
             )}
           </div>
+
+          {showEndDate && (
+            <div className="flex items-center gap-2">
+              <DatePicker
+                value={endDate}
+                onChange={onEndDateChange}
+                fromDate={startDate ? new Date(startDate) : undefined}
+                placeholder="End date"
+                dateFormat="MMM d, yyyy"
+                className={cn("h-8 text-xs flex-1 min-w-0", dateTimeError && "border-destructive")}
+              />
+              {!allDay && (
+                <Input
+                  type="time"
+                  className={cn(
+                    "h-8 text-xs w-[7.5rem] shrink-0",
+                    dateTimeError && "border-destructive",
+                  )}
+                  value={endTime}
+                  onChange={onEndTimeChange}
+                />
+              )}
+            </div>
+          )}
+
+          {dateTimeError && (
+            <p className="text-[10px] text-destructive">{dateTimeError}</p>
+          )}
 
           <div className="flex items-center gap-2 pt-0.5">
             <Checkbox
@@ -168,9 +196,9 @@ export function EventFormFields({
         </div>
       </div>
 
-      <div className="flex items-start gap-3">
-        <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
-        <div className="flex-1 min-w-0 space-y-1.5">
+      <div className="flex items-start gap-2.5">
+        <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
+        <div className="flex-1 min-w-0 space-y-1">
           <Input
             id="ev-location"
             value={location}
@@ -202,7 +230,7 @@ export function EventFormFields({
               </SelectContent>
             </Select>
             {syncConnectionId !== "none" && (
-              <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+              <div className="flex items-center justify-between rounded-md border border-border px-3 py-1.5">
                 <div className="flex items-center gap-2">
                   <Video className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-xs">
@@ -218,7 +246,7 @@ export function EventFormFields({
         )
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
         <div className="flex-1">
           <Select value={category} onValueChange={onCategoryChange}>
@@ -236,7 +264,7 @@ export function EventFormFields({
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
         <div className="flex-1">
           <Select value={color} onValueChange={onColorChange}>
@@ -260,8 +288,8 @@ export function EventFormFields({
         </div>
       </div>
 
-      <div className="flex items-start gap-3">
-        <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
+      <div className="flex items-start gap-2.5">
+        <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
         <div className="flex-1">
           <Input
             id="ev-desc"

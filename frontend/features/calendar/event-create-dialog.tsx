@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { format, parseISO, addHours, differenceInMinutes } from "date-fns";
+import { format, parseISO, addHours, differenceInMinutes, endOfDay, startOfDay } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -96,6 +96,53 @@ function isValidUrl(value: string): boolean {
   }
 }
 
+function needsEndDateField(
+  form: Pick<FormState, "startDate" | "startTime" | "endDate" | "endTime" | "allDay">,
+): boolean {
+  if (form.startDate !== form.endDate) return true;
+  if (form.allDay) return false;
+  if (!form.startTime || !form.endTime) return false;
+  const start = parseISO(`${form.startDate}T${form.startTime}`);
+  const end = parseISO(`${form.endDate}T${form.endTime}`);
+  return differenceInMinutes(end, start) !== 60;
+}
+
+function resolveEventDateTimes(
+  form: FormState,
+  showEndDate: boolean,
+): { start: Date; end: Date } | null {
+  if (!form.startDate) return null;
+
+  const start = form.allDay
+    ? startOfDay(parseISO(form.startDate))
+    : parseISO(`${form.startDate}T${form.startTime}`);
+
+  if (showEndDate) {
+    if (!form.endDate) return null;
+    if (!form.allDay && !form.endTime) return null;
+    const end = form.allDay
+      ? endOfDay(parseISO(form.endDate))
+      : parseISO(`${form.endDate}T${form.endTime}`);
+    return { start, end };
+  }
+
+  const end = form.allDay ? endOfDay(parseISO(form.startDate)) : addHours(start, 1);
+  return { start, end };
+}
+
+function getDateTimeError(
+  form: FormState,
+  showEndDate: boolean,
+): string {
+  if (!showEndDate) return "";
+  const resolved = resolveEventDateTimes(form, true);
+  if (!resolved) return "";
+  if (resolved.end < resolved.start) {
+    return "End must be on or after start";
+  }
+  return "";
+}
+
 interface EventCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -117,6 +164,10 @@ export function EventCreateDialog({
   const [form, setForm] = useState<FormState>(() =>
     isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot),
   );
+  const [showEndDate, setShowEndDate] = useState(() =>
+    needsEndDateField(isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot)),
+  );
+  const [dateTimeError, setDateTimeError] = useState("");
   const [linkedTicket, setLinkedTicket] = useState<TicketSearchResult | null>(null);
   const [existingEntityId, setExistingEntityId] = useState<string | null>(null);
   const [ticketPickerOpen, setTicketPickerOpen] = useState(false);
@@ -132,6 +183,8 @@ export function EventCreateDialog({
     if (open) {
       const base = isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot);
       setForm(isEdit ? base : { ...base, syncConnectionId: "none" });
+      setShowEndDate(needsEndDateField(base));
+      setDateTimeError("");
       setLinkedTicket(null);
       setExistingEntityId(
         isEdit && event?.entityType === "ticket" && event.entityId
@@ -212,38 +265,79 @@ export function EventCreateDialog({
 
   const handleAllDayChange = useCallback(
     (v: boolean) => {
-      set("allDay", v);
+      setForm((prev) => {
+        const next = { ...prev, allDay: v };
+        setDateTimeError(getDateTimeError(next, showEndDate));
+        return next;
+      });
     },
-    [set],
+    [showEndDate],
   );
 
   const handleStartDateChange = useCallback(
     (v: string) => {
-      set("startDate", v);
+      setForm((prev) => {
+        const next = {
+          ...prev,
+          startDate: v,
+          endDate: showEndDate ? prev.endDate : v,
+        };
+        setDateTimeError(getDateTimeError(next, showEndDate));
+        return next;
+      });
     },
-    [set],
+    [showEndDate],
   );
 
   const handleStartTimeChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      set("startTime", e.target.value);
+      setForm((prev) => {
+        const next = { ...prev, startTime: e.target.value };
+        setDateTimeError(getDateTimeError(next, showEndDate));
+        return next;
+      });
     },
-    [set],
+    [showEndDate],
   );
 
   const handleEndDateChange = useCallback(
     (v: string) => {
-      set("endDate", v);
+      setForm((prev) => {
+        const next = { ...prev, endDate: v };
+        setDateTimeError(getDateTimeError(next, showEndDate));
+        return next;
+      });
     },
-    [set],
+    [showEndDate],
   );
 
   const handleEndTimeChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      set("endTime", e.target.value);
+      setForm((prev) => {
+        const next = { ...prev, endTime: e.target.value };
+        setDateTimeError(getDateTimeError(next, showEndDate));
+        return next;
+      });
     },
-    [set],
+    [showEndDate],
   );
+
+  const handleShowEndDate = useCallback(() => {
+    setShowEndDate(true);
+    setForm((prev) => {
+      const start = prev.allDay
+        ? startOfDay(parseISO(prev.startDate))
+        : parseISO(`${prev.startDate}T${prev.startTime || "09:00"}`);
+      const end = prev.allDay ? endOfDay(parseISO(prev.startDate)) : addHours(start, 1);
+      const next = {
+        ...prev,
+        endDate: format(end, "yyyy-MM-dd"),
+        endTime: format(end, "HH:mm"),
+      };
+      setDateTimeError(getDateTimeError(next, true));
+      return next;
+    });
+  }, []);
 
   const handleCategoryChange = useCallback(
     (v: string) => {
@@ -328,24 +422,25 @@ export function EventCreateDialog({
       toast.error("Start time is required");
       return;
     }
-    if (!form.endDate) {
+    if (showEndDate && !form.endDate) {
       toast.error("End date is required");
       return;
     }
-    if (!form.allDay && !form.endTime) {
+    if (showEndDate && !form.allDay && !form.endTime) {
       toast.error("End time is required");
       return;
     }
 
-    const startDate = form.allDay
-      ? parseISO(`${form.startDate}T12:00:00`)
-      : parseISO(`${form.startDate}T${form.startTime}`);
-    const endDate = form.allDay
-      ? parseISO(`${form.endDate}T12:00:00`)
-      : parseISO(`${form.endDate}T${form.endTime}`);
+    const resolved = resolveEventDateTimes(form, showEndDate);
+    if (!resolved) {
+      toast.error("Invalid date or time");
+      return;
+    }
 
-    if (endDate <= startDate) {
-      toast.error("End time must be after start time");
+    const { start: startDate, end: endDate } = resolved;
+
+    if (showEndDate && endDate < startDate) {
+      toast.error("End must be on or after start");
       return;
     }
     if (!form.allDay && differenceInMinutes(endDate, startDate) < 15) {
@@ -395,7 +490,7 @@ export function EventCreateDialog({
     } catch {
       toast.error(isEdit ? "Failed to update event" : "Failed to create event");
     }
-  }, [form, isEdit, event, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket]);
+  }, [form, showEndDate, isEdit, event, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket]);
 
   const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
 
@@ -430,7 +525,7 @@ export function EventCreateDialog({
           className="flex flex-col p-0 w-[calc(100%-1rem)] sm:w-full max-w-xl rounded-xl overflow-hidden shadow-2xl border bg-card max-h-[min(92dvh,48rem)]"
         >
           {/* Header controls (New Event, Sizing controls, Close controls) */}
-          <DialogHeader className="px-4 sm:px-6 py-4 border-b flex flex-row items-center justify-between shrink-0 select-none">
+          <DialogHeader className="px-4 py-2.5 border-b flex flex-row items-center justify-between shrink-0 select-none">
             <DialogTitle className="text-base font-semibold text-foreground">
               {isEdit ? "Edit Event" : "New Event"}
             </DialogTitle>
@@ -454,7 +549,7 @@ export function EventCreateDialog({
           </DialogHeader>
 
           <ScrollArea className="flex-1 min-h-0">
-            <div className="px-4 sm:px-6 py-4 space-y-4">
+            <div className="px-4 py-3 space-y-3">
               <EventFormFields
                 title={form.title}
                 description={form.description}
@@ -471,6 +566,8 @@ export function EventCreateDialog({
                 syncConnectionId={form.syncConnectionId}
                 addConference={form.addConference}
                 isEdit={isEdit}
+                showEndDate={showEndDate}
+                dateTimeError={dateTimeError}
                 onTitleChange={handleTitleChange}
                 onDescriptionChange={handleDescriptionChange}
                 onLocationChange={handleLocationChange}
@@ -483,11 +580,12 @@ export function EventCreateDialog({
                 onColorChange={handleColorChange}
                 onSyncConnectionChange={handleSyncConnectionChange}
                 onAddConferenceChange={handleAddConferenceChange}
+                onShowEndDate={handleShowEndDate}
               />
 
               {/* Attendees Picker with icon on left */}
-              <div className="flex items-start gap-3">
-                <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
+              <div className="flex items-start gap-2.5">
+                <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <EventAttendeesPicker
                     members={members}
@@ -497,12 +595,12 @@ export function EventCreateDialog({
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 pb-2">
-                <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
-                <div className="flex-1 space-y-1.5">
+              <div className="flex items-start gap-2.5">
+                <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-1">
                   <p className="text-xs font-semibold text-muted-foreground">Linked work item</p>
                   {displayLinkedKey ? (
-                    <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
+                    <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-1.5">
                       <Ticket className="h-3.5 w-3.5 text-violet-600 shrink-0" />
                       <span className="font-mono text-[11px] text-violet-600 shrink-0">
                         {displayLinkedKey}
@@ -523,7 +621,7 @@ export function EventCreateDialog({
                     <button
                       type="button"
                       onClick={handleOpenTicketPicker}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-2 w-full transition-colors hover:border-violet-400"
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-1.5 w-full transition-colors hover:border-violet-400"
                     >
                       <Ticket className="h-3.5 w-3.5" />
                       Link a ticket…
@@ -535,10 +633,11 @@ export function EventCreateDialog({
           </ScrollArea>
 
           {/* Action Footer matches Google Calendar style */}
-          <div className="px-4 sm:px-6 py-3 border-t bg-muted/20 shrink-0 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="px-4 py-2.5 border-t bg-muted/20 shrink-0 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                className="h-8 text-xs px-4 bg-violet-600 hover:bg-violet-700 text-white font-medium"
+                size="sm"
+                className="h-8 text-xs px-4 font-medium"
                 onClick={handleSave}
                 disabled={isPending || !form.title.trim()}
               >
@@ -549,8 +648,8 @@ export function EventCreateDialog({
                   : "Save"}
               </Button>
               <Button
-                variant="outline"
-                className="h-8 text-xs px-3 font-normal"
+                size="sm"
+                className="h-8 text-xs px-3 font-medium"
                 disabled={isPending}
               >
                 More Options

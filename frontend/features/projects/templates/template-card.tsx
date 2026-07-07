@@ -1,11 +1,22 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ListChecks, ListTodo, Play, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, Trash2 } from "lucide-react";
+import { getColorSafe } from "@/lib/theme-constants";
+import { cn } from "@/lib/utils";
 import type { ProjectTemplate } from "@/hooks/api/projects";
+import {
+  categoryAccentBar,
+  categoryAvatarTints,
+  categoryBadgeColors,
+  categoryDotColors,
+  formatCategoryLabel,
+  getPreviewTickets,
+  getTemplateInitials,
+  ticketTypeColors,
+} from "./template-card-utils";
 
 interface TemplateCardProps {
   template: ProjectTemplate;
@@ -13,70 +24,162 @@ interface TemplateCardProps {
   onDelete: (template: ProjectTemplate) => void;
 }
 
-export const TemplateCard = memo(function TemplateCard({ template, onApply, onDelete }: TemplateCardProps) {
+interface TaskPreviewRowProps {
+  index: number;
+  title: string;
+  type: string;
+  phase: string | null;
+}
+
+const TaskPreviewRow = memo(function TaskPreviewRow({
+  index,
+  title,
+  type,
+  phase,
+}: TaskPreviewRowProps) {
+  const typeColor = getColorSafe(ticketTypeColors, type);
+
+  return (
+    <div className="flex items-center gap-2 rounded-md bg-muted/40 px-2 py-1.5">
+      <span
+        className="w-3 shrink-0 text-center text-[10px] tabular-nums text-muted-foreground/50"
+        aria-hidden="true"
+      >
+        {index + 1}
+      </span>
+      <span
+        className={cn(
+          "shrink-0 rounded px-1 py-px text-[9px] font-semibold uppercase tracking-wide",
+          typeColor,
+        )}
+      >
+        {type}
+      </span>
+      <span className="min-w-0 flex-1 truncate text-[11px] text-foreground/90">{title}</span>
+      {phase ? (
+        <span className="shrink-0 rounded bg-muted px-1 py-px text-[9px] text-muted-foreground">
+          {phase}
+        </span>
+      ) : null}
+    </div>
+  );
+});
+
+export const TemplateCard = memo(function TemplateCard({
+  template,
+  onApply,
+  onDelete,
+}: TemplateCardProps) {
   const handleApply = useCallback(() => onApply(template), [onApply, template]);
   const handleDelete = useCallback(() => onDelete(template), [onDelete, template]);
 
+  const category = template.category || "GENERAL";
+  const accentBar = getColorSafe(categoryAccentBar, category);
+  const badgeColor = getColorSafe(categoryBadgeColors, category);
+  const dotColor = getColorSafe(categoryDotColors, category);
+  const avatarTint = getColorSafe(categoryAvatarTints, category);
+  const initials = getTemplateInitials(template.name);
+  const taskCount = template.tickets.length;
+  const hasTasks = taskCount > 0;
+  const { preview, overflow } = getPreviewTickets(template.tickets);
+
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <CardTitle className="text-base">{template.name}</CardTitle>
-            {template.description && (
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {template.description}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            <Badge variant="secondary" className="text-[10px]">
-              {template.category}
-            </Badge>
-            <Badge variant="outline">{template.tickets.length} tasks</Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="space-y-1">
-          {template.tickets.slice(0, 4).map((t) => (
-            <div key={t.id} className="flex items-center gap-2 text-sm">
-              <Badge variant="outline" className="text-[10px] shrink-0">
-                {t.type}
-              </Badge>
-              <span className="flex-1 truncate text-sm">{t.title}</span>
-              {t.phase && (
-                <span className="text-[10px] bg-muted rounded px-1 text-muted-foreground shrink-0">
-                  {t.phase}
-                </span>
-              )}
-            </div>
-          ))}
-          {template.tickets.length > 4 && (
-            <p className="text-xs text-muted-foreground">
-              +{template.tickets.length - 4} more tasks
-            </p>
+    <div
+      className={cn(
+        "group relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm",
+        "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
+        "hover:border-blue-500/35 hover:shadow-md",
+      )}
+      role="listitem"
+      aria-label={`${template.name} template — ${formatCategoryLabel(category)}, ${taskCount} tasks`}
+    >
+      <div className={cn("absolute inset-x-0 top-0 h-0.5", accentBar)} aria-hidden="true" />
+
+      <div className="mb-2.5 flex items-start gap-2.5">
+        <div
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
+            "text-[11px] font-bold tracking-tight",
+            avatarTint,
           )}
+          aria-hidden="true"
+        >
+          {initials}
         </div>
 
-        <div className="flex gap-2 pt-1">
-          <Button
-            size="sm"
-            className="flex-1 active:scale-[0.98]"
-            onClick={handleApply}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="line-clamp-1 text-sm font-semibold text-foreground transition-colors group-hover:text-blue-600">
+              {template.name}
+            </h3>
+            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+              <ListChecks className="h-2.5 w-2.5" aria-hidden="true" />
+              {taskCount} {taskCount === 1 ? "task" : "tasks"}
+            </span>
+          </div>
+
+          <Badge
+            variant="secondary"
+            className={cn(
+              "mt-1.5 gap-1 rounded-full border-0 px-2 py-0 text-[9px] font-semibold uppercase tracking-wide",
+              badgeColor,
+            )}
           >
-            <PlayCircle className="h-4 w-4 mr-1" /> Use Template
+            <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} aria-hidden="true" />
+            {formatCategoryLabel(category)}
+          </Badge>
+        </div>
+      </div>
+
+      {template.description ? (
+        <p className="mb-2.5 line-clamp-2 flex-1 text-[11px] leading-relaxed text-muted-foreground">
+          {template.description}
+        </p>
+      ) : (
+        <div className="mb-2.5 flex-1" aria-hidden="true" />
+      )}
+
+      <div className="mt-auto space-y-2.5 border-t border-border/80 pt-2.5">
+        {hasTasks ? (
+          <div className="space-y-1" role="list" aria-label="Task preview">
+            {preview.map((ticket, idx) => (
+              <TaskPreviewRow
+                key={ticket.id}
+                index={idx}
+                title={ticket.title}
+                type={ticket.type}
+                phase={ticket.phase}
+              />
+            ))}
+            {overflow > 0 ? (
+              <p className="pl-1 text-[10px] text-muted-foreground">
+                +{overflow} more {overflow === 1 ? "task" : "tasks"}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/70 bg-muted/30 px-2.5 py-2">
+            <ListTodo className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" aria-hidden="true" />
+            <span className="text-[10px] text-muted-foreground/70">No tasks defined</span>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <Button size="sm" className="flex-1 active:scale-[0.98]" onClick={handleApply}>
+            <Play className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+            Use Template
           </Button>
           <Button
             size="sm"
             variant="outline"
-            className="text-destructive hover:text-destructive active:scale-[0.98]"
+            className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive active:scale-[0.98]"
             onClick={handleDelete}
+            aria-label={`Delete ${template.name} template`}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 });
