@@ -32,11 +32,11 @@ function SearchButton() {
       type="button"
       onClick={handleClick}
       aria-label="Search (⌘K)"
-      className="flex items-center gap-2 h-8 w-full max-w-xs px-3 rounded-lg bg-card border border-border shadow-xs text-muted-foreground hover:border-blue-300 transition-[color,box-shadow,border-color]"
+      className="flex items-center gap-2 h-8 w-full max-w-xs px-3 rounded-lg border border-sidebar-border text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-[color,background-color]"
     >
       <Search className="h-4 w-4 shrink-0" />
       <span className="flex-1 text-left text-xs">Search…</span>
-      <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-border bg-background px-1 font-mono text-[9px] text-muted-foreground">
+      <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-sidebar-border bg-sidebar px-1 font-mono text-[9px] text-sidebar-foreground/50">
         ⌘K
       </kbd>
     </button>
@@ -57,7 +57,7 @@ function HeaderIconLink({
       <TooltipTrigger asChild>
         <Link
           href={href}
-          className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          className="h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
           aria-label={label}
         >
           {children}
@@ -73,7 +73,7 @@ function DesktopHeader() {
     <div className="flex items-center h-full w-full px-4 gap-3">
       <div className="flex items-center gap-2 shrink-0 min-w-0">
         <ProductSwitcherMenu />
-        <div className="w-px h-4 bg-border/70" />
+        <div className="w-px h-4 bg-sidebar-border" />
         <WorkspaceSwitcher variant="header" />
       </div>
 
@@ -92,11 +92,11 @@ function DesktopHeader() {
 
         <NotificationBell />
 
-        <div className="w-px h-4 bg-border/70 mx-1" />
+        <div className="w-px h-4 bg-sidebar-border mx-1" />
 
         <QuickCreateButton />
 
-        <div className="w-px h-4 bg-border/70 mx-1" />
+        <div className="w-px h-4 bg-sidebar-border mx-1" />
 
         <UserAvatarMenu />
       </div>
@@ -106,7 +106,7 @@ function DesktopHeader() {
 
 export function GlobalHeader() {
   return (
-    <header className="hidden md:block h-14 border-b border-border bg-background shrink-0 z-40 relative">
+    <header className="hidden md:block h-14 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 z-40 relative">
       <TooltipProvider>
         <DesktopHeader />
       </TooltipProvider>

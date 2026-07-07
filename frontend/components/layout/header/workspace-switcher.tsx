@@ -226,7 +226,7 @@ export function WorkspaceSwitcher({
           ? "h-8 w-8 justify-center rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
           : isSidebar
             ? "gap-1.5 h-8 w-full min-w-0 px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            : "gap-1.5 h-8 px-2 rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted max-w-[160px]",
+            : "gap-1.5 h-8 px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent max-w-[160px]",
         className,
       )}
       disabled={switchOrg.isPending}
@@ -235,7 +235,7 @@ export function WorkspaceSwitcher({
         className={cn(
           "shrink-0",
           iconOnly ? "h-4 w-4" : "h-3.5 w-3.5",
-          isSidebar ? "text-sidebar-foreground/50" : "text-muted-foreground",
+          "text-sidebar-foreground/50",
         )}
       />
       {!iconOnly && (
@@ -243,7 +243,7 @@ export function WorkspaceSwitcher({
           <span
             className={cn(
               "min-w-0 flex-1 truncate text-left text-sm font-medium",
-              isSidebar ? "text-sidebar-foreground" : "text-foreground",
+              isSidebar || !iconOnly ? "text-sidebar-foreground" : "text-foreground",
             )}
           >
             {workspaceName}
@@ -251,7 +251,7 @@ export function WorkspaceSwitcher({
           <ChevronsUpDown
             className={cn(
               "h-3 w-3 shrink-0",
-              isSidebar ? "text-sidebar-foreground/50" : "text-muted-foreground",
+              isSidebar || !iconOnly ? "text-sidebar-foreground/50" : "text-muted-foreground",
             )}
           />
         </>

@@ -64,7 +64,7 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
             className="h-8 w-8 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 transition-opacity hover:opacity-80"
             aria-label="Account menu"
           >
-            <Avatar className="h-8 w-8 ring-2 ring-border/50">
+            <Avatar className="h-8 w-8 ring-2 ring-sidebar-border">
               <AvatarImage src={image} alt={name} />
               <AvatarFallback className="text-[11px] font-bold bg-blue-500/15 text-blue-600">
                 {initials}

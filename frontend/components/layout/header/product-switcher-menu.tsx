@@ -279,12 +279,15 @@ export function ProductSwitcherMenu({
       aria-label="Switch product"
       onClick={triggerOnly ? handleTriggerClick : undefined}
       className={cn(
-        "flex items-center rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        isSidebarVariant
-          ? "gap-2 h-9 w-full min-w-0 px-2.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          : iconOnlyTrigger
-            ? "h-11 w-11 justify-center gap-0 shrink-0"
-            : "gap-1.5 h-8 px-2",
+        "flex items-center rounded-lg text-sm font-medium transition-colors outline-none focus-visible:ring-2",
+        iconOnlyTrigger
+          ? "h-11 w-11 justify-center gap-0 shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring"
+          : cn(
+              "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent focus-visible:ring-sidebar-ring",
+              isSidebarVariant
+                ? "gap-2 h-9 w-full min-w-0 px-2.5"
+                : "gap-1.5 h-8 px-2",
+            ),
       )}
     >
       {iconOnlyTrigger ? (
@@ -307,7 +310,7 @@ export function ProductSwitcherMenu({
               "text-xs font-medium truncate",
               isSidebarVariant
                 ? "min-w-0 flex-1 text-left text-sidebar-foreground"
-                : "hidden lg:inline max-w-[5rem]",
+                : "hidden lg:inline max-w-[5rem] text-sidebar-foreground",
             )}
           >
             {activeDefinition?.label}
@@ -315,7 +318,7 @@ export function ProductSwitcherMenu({
           <ChevronDown
             className={cn(
               "h-3 w-3 shrink-0",
-              isSidebarVariant ? "text-sidebar-foreground/50" : "text-muted-foreground",
+              iconOnlyTrigger ? "text-muted-foreground" : "text-sidebar-foreground/50",
               !shouldReduceMotion && "transition-transform duration-150",
               !shouldReduceMotion && open && "rotate-180",
             )}
