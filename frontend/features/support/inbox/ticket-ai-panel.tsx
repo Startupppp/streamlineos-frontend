@@ -11,6 +11,8 @@ import {
   Reply,
   Wand2,
   Loader2,
+  Users,
+  GitBranch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +25,8 @@ import {
   useSuggestKbArticles,
   useSuggestReply,
   useSuggestMacro,
+  useGenerateHandoffSummary,
+  useFindRootCauseCluster,
   useResolveAiSuggestion,
   type AiSuggestion,
 } from "@/hooks/api/support/ai";
@@ -64,6 +68,10 @@ function suggestionTypeLabel(type: AiSuggestion["type"]): string {
       return "Related KB articles";
     case "duplicate":
       return "Possible duplicate";
+    case "handoff_summary":
+      return "Handoff summary";
+    case "root_cause_cluster":
+      return "Root cause cluster";
     default:
       return assertNever(type);
   }
@@ -89,6 +97,10 @@ function acceptLabel(suggestion: AiSuggestion): string {
       return "Accept KB suggestions";
     case "duplicate":
       return "Link as duplicate";
+    case "handoff_summary":
+      return "Acknowledge summary";
+    case "root_cause_cluster":
+      return "Acknowledge root cause";
     default:
       return assertNever(suggestion);
   }
@@ -164,6 +176,32 @@ function SuggestionBody({ suggestion, macros }: SuggestionBodyProps) {
           Ticket #{suggestion.payload.candidateTicketId} — {suggestion.payload.title}
         </p>
       );
+    case "handoff_summary":
+      return (
+        <div className="space-y-1.5">
+          <p className="text-[12px] text-foreground/90 whitespace-pre-wrap">{suggestion.payload.summary}</p>
+          {suggestion.payload.keyPoints.length > 0 && (
+            <ul className="list-disc list-inside text-[11px] text-muted-foreground space-y-0.5">
+              {suggestion.payload.keyPoints.map((point, i) => (
+                <li key={i}>{point}</li>
+              ))}
+            </ul>
+          )}
+          <p className="text-[11px] font-medium text-foreground/80">
+            Next step: {suggestion.payload.suggestedNextStep}
+          </p>
+        </div>
+      );
+    case "root_cause_cluster":
+      return (
+        <div className="space-y-1">
+          <p className="text-[12px] font-medium text-foreground/90">{suggestion.payload.rootCause}</p>
+          <p className="text-[11px] text-muted-foreground">{suggestion.payload.summary}</p>
+          <p className="text-[11px] text-muted-foreground">
+            Related: {suggestion.payload.relatedTicketIds.map((id) => `#${id}`).join(", ")}
+          </p>
+        </div>
+      );
     default:
       return assertNever(suggestion);
   }
@@ -179,6 +217,8 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
   const suggestKbArticles = useSuggestKbArticles(ticketId);
   const suggestReply = useSuggestReply(ticketId);
   const suggestMacro = useSuggestMacro(ticketId);
+  const handoffSummary = useGenerateHandoffSummary(ticketId);
+  const rootCauseCluster = useFindRootCauseCluster(ticketId);
   const resolveSuggestion = useResolveAiSuggestion(ticketId);
 
   const handleToggle = useCallback(() => setOpen((v) => !v), []);
@@ -214,6 +254,24 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
     });
   }, [suggestMacro]);
 
+  const handleHandoffSummary = useCallback(() => {
+    handoffSummary.mutate(undefined, {
+      onSuccess: (result) => {
+        if (!result) toast.info("No handoff summary available");
+      },
+      onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to generate handoff summary"),
+    });
+  }, [handoffSummary]);
+
+  const handleRootCauseCluster = useCallback(() => {
+    rootCauseCluster.mutate(undefined, {
+      onSuccess: (result) => {
+        if (!result) toast.info("No related tickets found");
+      },
+      onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to find root cause"),
+    });
+  }, [rootCauseCluster]);
+
   const handleAccept = useCallback(
     (suggestion: AiSuggestion) => {
       resolveSuggestion.mutate(
@@ -243,6 +301,8 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
               case "sentiment":
               case "spam":
               case "kb_article":
+              case "handoff_summary":
+              case "root_cause_cluster":
                 toast.success("Suggestion accepted");
                 return;
               default:
@@ -339,6 +399,36 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
                 <Wand2 className="h-3.5 w-3.5 mr-1" />
               )}
               Suggest macro
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              disabled={handoffSummary.isPending}
+              onClick={handleHandoffSummary}
+            >
+              {handoffSummary.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+              ) : (
+                <Users className="h-3.5 w-3.5 mr-1" />
+              )}
+              Handoff summary
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              disabled={rootCauseCluster.isPending}
+              onClick={handleRootCauseCluster}
+            >
+              {rootCauseCluster.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+              ) : (
+                <GitBranch className="h-3.5 w-3.5 mr-1" />
+              )}
+              Find root cause
             </Button>
           </div>
 

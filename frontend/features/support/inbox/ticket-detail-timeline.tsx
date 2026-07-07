@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import { SupportActivityLog } from "@/components/support/support-activity-log";
+import { MessageTranslateControl } from "@/features/support/inbox/message-translate-control";
 import type { SupportTicket } from "@/types/support";
 
 function toSentenceCase(str: string) {
@@ -74,6 +75,9 @@ export function TicketDetailTimeline({ ticket }: TicketDetailTimelineProps) {
                 </div>
                 {msg.body && msg.body !== "(attachment)" && (
                   <p className="text-[13px] mt-0.5 whitespace-pre-wrap">{msg.body}</p>
+                )}
+                {msg.body && msg.body !== "(attachment)" && (
+                  <MessageTranslateControl ticketId={ticket.id} messageId={msg.id} />
                 )}
                 {attachments.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
