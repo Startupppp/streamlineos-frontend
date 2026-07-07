@@ -501,6 +501,34 @@
   animation: brand-sweep 8s ease-in-out infinite;
 }
 
+.logo-gradient-sweep {
+  background: linear-gradient(120deg, var(--brand-bright) 0%, var(--brand-core) 25%, var(--brand-cyan) 50%, var(--brand-core) 75%, var(--brand-bright) 100%);
+  background-size: 220% 100%;
+  animation: brand-sweep 8s ease-in-out infinite;
+  -webkit-mask-image: url("/logo.svg");
+  mask-image: url("/logo.svg");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.logo-gradient-static {
+  animation: none;
+  background: linear-gradient(135deg, var(--brand-core), var(--brand-cyan));
+  background-size: 100% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-gradient-sweep {
+    animation: none;
+    background: linear-gradient(135deg, var(--brand-core), var(--brand-cyan));
+    background-size: 100% 100%;
+  }
+}
+
 @keyframes pulse-ring {
   0%   { transform: scale(1);   opacity: 0.55; }
   100% { transform: scale(1.8); opacity: 0;    }

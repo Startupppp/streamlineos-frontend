@@ -262,7 +262,9 @@ export function CalendarView() {
   );
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
-    const connectedAccountId = searchParams.get("connected_account_id");
+    const connectedAccountId =
+      searchParams.get("connected_account_id") ??
+      searchParams.get("connectedAccountId");
     if (!connectedAccountId) return;
     if (finalizeRef.current) return;
     finalizeRef.current = true;

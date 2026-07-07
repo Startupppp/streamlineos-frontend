@@ -5,7 +5,6 @@ import { headers } from "next/headers";
 import "../globals.css";
 import { Toaster } from "../components/ui/sonner";
 import { SessionProvider } from "../components/providers/session-provider";
-import { ThemeProvider } from "../components/theme-provider";
 import { MotionProvider } from "../components/providers/motion-provider";
 import { QueryProvider } from "../components/providers/query-provider";
 import {
@@ -125,7 +124,8 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geist.variable} ${geistMono.variable}`}
+      className={`light ${geist.variable} ${geistMono.variable}`}
+      style={{ colorScheme: "light" }}
     >
       <head>
         <OrganizationJsonLd />
@@ -134,21 +134,12 @@ export default async function RootLayout({
       </head>
       <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950">
         <GoogleTagManagerNoscript />
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          forcedTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-          nonce={nonce}
-        >
-          <SessionProvider>
-            <QueryProvider>
-              <MotionProvider>{children}</MotionProvider>
-              <Toaster position="top-right" richColors />
-            </QueryProvider>
-          </SessionProvider>
-        </ThemeProvider>
+        <SessionProvider>
+          <QueryProvider>
+            <MotionProvider>{children}</MotionProvider>
+            <Toaster position="top-right" richColors />
+          </QueryProvider>
+        </SessionProvider>
         <MicrosoftClarity nonce={nonce} />
       </body>
     </html>

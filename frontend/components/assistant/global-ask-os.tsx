@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Bot, Send, Square, X } from "lucide-react";
+import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import { useAskAI, type AskAIMessage } from "@/hooks/api";
@@ -96,10 +97,10 @@ export function GlobalAskOs() {
             exit={reduce ? undefined : { scale: 0, opacity: 0 }}
             whileHover={reduce ? undefined : { scale: 1.06 }}
             whileTap={reduce ? undefined : { scale: 0.94 }}
-            className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-black/5 md:bottom-6 md:right-6"
+            className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-blue-500/20 md:bottom-6 md:right-6"
             aria-label="Open Ask OS assistant"
           >
-            <Bot className="h-6 w-6" />
+            <AnimatedLogo size={30} gradient />
           </motion.button>
         )}
       </AnimatePresence>
@@ -115,9 +116,7 @@ export function GlobalAskOs() {
           >
             <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/40 px-4 py-3">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <Bot className="h-4 w-4" />
-                </span>
+                <AnimatedLogo size={32} gradient className="rounded-full" />
                 <div>
                   <p className="text-sm font-semibold leading-none text-foreground">Ask OS</p>
                   <p className="mt-0.5 text-[10px] text-muted-foreground">
@@ -135,7 +134,7 @@ export function GlobalAskOs() {
               </button>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+            <div className="flex-1 space-y-4 overflow-y-auto scrollbar-hide p-4">
               {messages.length === 0 ? (
                 <EmptyAskOs onSuggestion={handleSuggestion} />
               ) : (
@@ -259,9 +258,7 @@ function AskOsBubble({
       animate={{ opacity: 1, y: 0 }}
       className="flex justify-start gap-2"
     >
-      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <Bot className="h-3.5 w-3.5" />
-      </span>
+      <AnimatedLogo size={24} gradient className="mt-0.5 shrink-0 rounded-full" />
       <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm">
         {message.content ? (
           <div className="break-words">

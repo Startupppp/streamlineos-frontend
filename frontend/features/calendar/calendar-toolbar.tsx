@@ -179,7 +179,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           <DropdownMenuTrigger asChild>
             <Button
               size="sm"
-              className="h-8 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white gap-1"
+              className="h-8 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
             >
               <Plus className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Add</span>
