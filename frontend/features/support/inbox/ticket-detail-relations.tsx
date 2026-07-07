@@ -69,7 +69,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
     (tagId: number) => {
       detachTag.mutate(
         { ticketId, tagId },
-        { onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to remove tag") },
+        { onError: (err) => toast.error(getErrorMessage(err)) },
       );
     },
     [ticketId, detachTag],
@@ -88,7 +88,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
           setLinkedTicketId("");
           toast.success("Ticket linked");
         },
-        onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to link ticket"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [linkedTicketId, linkRelation, ticketId, addLink]);
@@ -106,7 +106,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
           setMergeTargetId("");
           toast.success(`Merged into ticket #${parsed}`);
         },
-        onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to merge ticket"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [mergeTargetId, ticketId, mergeTicket]);

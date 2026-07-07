@@ -349,7 +349,7 @@ function SourcesList({
   if (sources.length === 0) {
     return (
       <EmptyState
-        illustrationPreset="empty"
+        illustrationPreset="knowledge"
         title="No sources yet"
         description="Upload a file or add a note to ground AI answers on your content."
       />

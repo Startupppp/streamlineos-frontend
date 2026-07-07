@@ -1605,7 +1605,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
   { key: "helpdesk", label: "Helpdesk", href: "/support", icon: LifeBuoy },
-  { key: "documents", label: "Documents", href: "/knowledge", icon: Library },
+  { key: "documents", label: "Documents", href: "/knowledge/uploads", icon: Library },
   { key: "surveys", label: "Surveys", href: "/surveys", icon: ClipboardList },
   {
     key: "administration",
@@ -1750,9 +1750,15 @@ export function getNavGroupsForProduct(
     const granted = new Set(permissions ?? []);
     const documentRoutes = [
       {
-        label: "Knowledge Base",
+        label: "Wiki",
         icon: NotebookPen,
         href: "/knowledge",
+        requiredPermission: "kb:pages:view",
+      },
+      {
+        label: "Knowledge Base",
+        icon: Library,
+        href: "/knowledge/uploads",
         requiredPermission: "kb:pages:view",
       },
       {

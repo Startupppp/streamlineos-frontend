@@ -80,7 +80,7 @@ async function emailExpenseReport(
     await apiClient.post("/hr/expenses/email-report", { filters, emailTarget });
     return { success: true };
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to send email" };
+    return { success: false, error: getErrorMessage(err) };
   }
 }
 
