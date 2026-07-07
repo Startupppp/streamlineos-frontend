@@ -47,6 +47,7 @@ import {
 import { CalendarToolbar } from "./calendar-toolbar";
 import { useEventPropGetter } from "./use-event-prop-getter";
 import { useCalendarComputed } from "./use-calendar-computed";
+import { useCalendarSlotSelectionGuard } from "./use-calendar-slot-selection-guard";
 
 const BigCalendarWrapper = dynamic(
   () =>
@@ -181,6 +182,20 @@ export function CalendarView() {
     setPendingSlot({ start: slotInfo.start, end: slotInfo.end });
     setIsSlotChoiceOpen(true);
   }, []);
+
+  const isCalendarOverlayOpen =
+    isCreateOpen ||
+    isSlotChoiceOpen ||
+    isCreateTicketOpen ||
+    isAiOpen ||
+    accountsOpen ||
+    selectedEventId !== null ||
+    selectedExternal !== null;
+
+  const guardedSelectSlot = useCalendarSlotSelectionGuard(
+    handleSelectSlot,
+    isCalendarOverlayOpen,
+  );
 
   const handleSlotChooseEvent = useCallback(() => {
     setIsSlotChoiceOpen(false);
@@ -332,7 +347,9 @@ export function CalendarView() {
                 calHeight={calHeight}
                 onView={setView}
                 onNavigate={setCurrentDate}
-                onSelectSlot={handleSelectSlot}
+                onSelectSlot={
+                  isCalendarOverlayOpen ? undefined : guardedSelectSlot
+                }
                 onSelectEvent={handleSelectEvent}
                 eventPropGetter={eventPropGetter}
               />
