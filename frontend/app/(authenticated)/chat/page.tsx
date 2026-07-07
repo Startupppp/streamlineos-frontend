@@ -167,7 +167,6 @@ export default function ChatPage() {
             autoFocusSearch={showSearchFocus}
             onSearchFocused={handleSearchFocused}
             isCollapsed={sidebarCollapsed}
-            onToggleCollapse={handleToggleSidebar}
             onStartCall={handleStartCallFromSidebar}
             onOpenSettings={handleOpenChannelSettings}
           />
@@ -192,12 +191,16 @@ export default function ChatPage() {
                   : null
               }
               onAutoStartHandled={handleAutoStartHandled}
+              isSidebarCollapsed={sidebarCollapsed}
+              onToggleSidebar={handleToggleSidebar}
             />
           ) : (
             <EmptyChatState
               onNewDM={handleNewDM}
               onNewChannel={handleNewChannel}
               onSearch={handleSearch}
+              isSidebarCollapsed={sidebarCollapsed}
+              onToggleSidebar={handleToggleSidebar}
             />
           )}
         </div>

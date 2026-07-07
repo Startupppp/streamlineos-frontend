@@ -109,6 +109,10 @@ export function NotificationCard({
     onReject?.(id);
   }, [id, onReject]);
 
+  const hasHoverActions = Boolean(
+    (!isArchived && onArchive) || onPin || onDelete,
+  );
+
   return (
     <div
       onClick={handleCardClick}
@@ -163,13 +167,10 @@ export function NotificationCard({
               {sourceModule}
             </Badge>
           )}
-          <span className="ml-auto shrink-0 text-[11px] text-muted-foreground/60 whitespace-nowrap">
-            {formatRelativeTime(createdAt)}
-          </span>
         </div>
 
         {message && (
-          <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5 pr-16">
+          <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
             {message}
           </p>
         )}
@@ -202,49 +203,58 @@ export function NotificationCard({
         )}
       </div>
 
-      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 top-2">
-        {!isArchived && onArchive && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={handleArchive}
-            title="Archive"
+      <div className="flex items-center gap-1.5 shrink-0 self-start pt-0.5">
+        {hasHoverActions && (
+          <div
+            className="flex items-center gap-0.5 w-0 overflow-hidden opacity-0 group-hover:w-auto group-hover:opacity-100 transition-all duration-150"
+            onClick={(e) => e.stopPropagation()}
           >
-            <Archive className="h-3 w-3 text-muted-foreground" />
-          </Button>
-        )}
-        {onPin && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={handlePin}
-            title={pinned ? "Unpin" : "Pin"}
-          >
-            {pinned ? (
-              <PinOff className="h-3 w-3 text-amber-500" />
-            ) : (
-              <Pin className="h-3 w-3 text-muted-foreground" />
+            {!isArchived && onArchive && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                onClick={handleArchive}
+                title="Archive"
+              >
+                <Archive className="h-3 w-3 text-muted-foreground" />
+              </Button>
             )}
-          </Button>
+            {onPin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                onClick={handlePin}
+                title={pinned ? "Unpin" : "Pin"}
+              >
+                {pinned ? (
+                  <PinOff className="h-3 w-3 text-amber-500" />
+                ) : (
+                  <Pin className="h-3 w-3 text-muted-foreground" />
+                )}
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0 hover:text-destructive"
+                onClick={handleDelete}
+                title="Delete"
+              >
+                <Trash2 className="h-3 w-3 text-muted-foreground" />
+              </Button>
+            )}
+          </div>
         )}
-        {onDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 hover:text-destructive"
-            onClick={handleDelete}
-            title="Delete"
-          >
-            <Trash2 className="h-3 w-3 text-muted-foreground" />
-          </Button>
+        <span className="text-[11px] text-muted-foreground/60 whitespace-nowrap tabular-nums">
+          {formatRelativeTime(createdAt)}
+        </span>
+        {isUnread && !isArchived && (
+          <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
         )}
       </div>
-
-      {isUnread && !isArchived && (
-        <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />
-      )}
     </div>
   );
 }

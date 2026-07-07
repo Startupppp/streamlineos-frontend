@@ -14,8 +14,6 @@ import {
   Archive,
   ArrowLeft,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Compass,
   MessageSquareText,
   Search,
@@ -78,7 +76,6 @@ interface ChannelSidebarProps {
   autoFocusSearch?: boolean;
   onSearchFocused?: () => void;
   isCollapsed?: boolean;
-  onToggleCollapse?: () => void;
   onStartCall?: (channelId: number, type: "huddle" | "video") => void;
   onOpenSettings?: (channelId: number) => void;
 }
@@ -90,7 +87,6 @@ export function ChannelSidebar({
   autoFocusSearch,
   onSearchFocused,
   isCollapsed = false,
-  onToggleCollapse,
   onStartCall,
   onOpenSettings,
 }: ChannelSidebarProps) {
@@ -143,7 +139,6 @@ export function ChannelSidebar({
   }, []);
   const handleOpenBrowse = useCallback(() => router.push("/chat/channels"), [router]);
   const handleOpenChatSearch = useCallback(() => setChatSearchOpen(true), []);
-  const handleToggleCollapse = useCallback(() => onToggleCollapse?.(), [onToggleCollapse]);
 
   useEffect(() => {
     if (autoFocusSearch && searchInputRef.current) {
@@ -223,8 +218,6 @@ export function ChannelSidebar({
     [favorites, publicChannels, groups, dms]
   );
 
-  const showCollapseToggle = !!onToggleCollapse;
-
   function renderCompactActionButton(
     label: string,
     icon: React.ReactNode,
@@ -252,22 +245,6 @@ export function ChannelSidebar({
   return (
     <TooltipProvider>
       <div className="relative flex flex-col h-full overflow-visible">
-        {showCollapseToggle && (
-          <button
-            type="button"
-            onClick={handleToggleCollapse}
-            aria-label={isCollapsed ? "Expand channel sidebar" : "Collapse channel sidebar"}
-            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="absolute top-7 -right-3 z-10 hidden md:flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card text-muted-foreground shadow-md transition-colors hover:border-blue-500/40 hover:bg-muted/50 hover:text-blue-600"
-          >
-            {isCollapsed ? (
-              <ChevronRight className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronLeft className="h-3.5 w-3.5" />
-            )}
-          </button>
-        )}
-
         <div className={cn("px-4 pt-4 pb-2", isCollapsed && "md:hidden")}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
@@ -413,7 +390,7 @@ export function ChannelSidebar({
             </div>
           ) : (
             <>
-              <div className={cn("py-1 space-y-1", isCollapsed && "hidden md:block")}>
+              <div className={cn("py-1 flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-1 [&>*]:shrink-0", isCollapsed && "hidden md:block")}>
                 {compactChannels.map((ch) => (
                   <ChannelListEntry
                     key={ch.id}

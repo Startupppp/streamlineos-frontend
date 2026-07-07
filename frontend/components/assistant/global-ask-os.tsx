@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { Bot, Loader2, Send, Square, Trash2, X } from "lucide-react";
+import { Bot, ChevronDown, Loader2, Send, Square, Trash2, X } from "lucide-react";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
@@ -180,8 +180,8 @@ export function GlobalAskOs() {
     void send(e.currentTarget.dataset.suggestion ?? "");
   }
 
-  function handleOpen() {
-    setOpen(true);
+  function handleToggle() {
+    setOpen((prev) => !prev);
   }
 
   function handleClose() {
@@ -201,160 +201,172 @@ export function GlobalAskOs() {
   const showEmpty = !isLoading && persisted.length === 0 && !draft;
   const showClear = persisted.length > 0 || Boolean(draft);
 
-  return (
-    <>
-      <AnimatePresence>
-        {!open && (
-          <motion.button
-            type="button"
-            onClick={handleOpen}
-            initial={reduce ? false : { scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={reduce ? undefined : { scale: 0, opacity: 0 }}
-            whileHover={reduce ? undefined : { scale: 1.06 }}
-            whileTap={reduce ? undefined : { scale: 0.94 }}
-            className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-blue-500/20 md:bottom-6 md:right-6"
-            aria-label="Open Ask OS assistant"
-          >
-            <AnimatedLogo size={30} gradient />
-          </motion.button>
-        )}
-      </AnimatePresence>
+  const panelTransition = reduce
+    ? { duration: 0 }
+    : { duration: 0.25, ease: "easeOut" as const };
 
-      <AnimatePresence>
+  return (
+    <div
+      className={`fixed bottom-20 right-0 z-50 flex flex-col items-stretch md:bottom-0 ${open ? "w-[min(100vw,400px)]" : "w-[min(100vw,180px)]"}`}
+      role="complementary"
+      aria-label="Ask OS assistant"
+    >
+      <AnimatePresence initial={false}>
         {open && (
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 20, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={reduce ? undefined : { opacity: 0, y: 20, scale: 0.97 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed inset-x-3 bottom-20 z-50 flex h-[70dvh] max-h-[560px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl md:inset-x-auto md:bottom-6 md:right-6 md:h-[560px] md:w-[400px]"
+            key="ask-os-panel"
+            initial={reduce ? false : { height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={reduce ? undefined : { height: 0, opacity: 0 }}
+            transition={panelTransition}
+            className="overflow-hidden"
           >
-            <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/40 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <AnimatedLogo size={32} gradient className="rounded-full" />
-                <div>
-                  <p className="text-sm font-semibold leading-none text-foreground">Ask OS</p>
-                  <p className="mt-0.5 text-[10px] text-muted-foreground">
-                    Your workspace assistant
-                  </p>
+            <div className="flex h-[min(70dvh,560px)] flex-col overflow-hidden rounded-tl-2xl border border-b-0 border-border bg-card shadow-2xl">
+              <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/40 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <AnimatedLogo size={32} gradient className="rounded-full" />
+                  <div>
+                    <p className="text-sm font-semibold leading-none text-foreground">Ask OS</p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">
+                      Your workspace assistant
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                {showClear && (
+                <div className="flex items-center gap-1">
+                  {showClear && (
+                    <button
+                      type="button"
+                      onClick={handleClear}
+                      disabled={isStreaming || clearHistory.isPending}
+                      aria-label="Clear conversation"
+                      className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={handleClear}
-                    disabled={isStreaming || clearHistory.isPending}
-                    aria-label="Clear conversation"
-                    className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                    onClick={handleClose}
+                    aria-label="Close"
+                    className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <X className="h-4 w-4" />
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  aria-label="Close"
-                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                </div>
               </div>
-            </div>
 
-            <div
-              ref={scrollRef}
-              onScroll={handleScroll}
-              className="flex-1 overflow-y-auto scrollbar-hide p-4"
-            >
-              {isLoading ? (
-                <div className="flex h-full items-center justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : showEmpty ? (
-                <EmptyAskOs onSuggestion={handleSuggestion} />
-              ) : (
-                <div className="space-y-4">
-                  {hasNextPage && <div ref={topSentinelRef} className="h-px w-full" />}
-                  {isFetchingNextPage && (
-                    <div className="flex justify-center py-1">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  )}
-                  {persisted.map((message) => (
-                    <AskOsBubble
-                      key={message.id}
-                      role={message.role}
-                      content={message.content}
-                      streaming={false}
-                      reduce={Boolean(reduce)}
-                    />
-                  ))}
-                  {draft && (
-                    <AskOsBubble
-                      key="draft-user"
-                      role="user"
-                      content={draft.user}
-                      streaming={false}
-                      reduce={Boolean(reduce)}
-                    />
-                  )}
-                  {draft && (
-                    <AskOsBubble
-                      key="draft-assistant"
-                      role="assistant"
-                      content={draft.assistant}
-                      streaming={isStreaming}
-                      reduce={Boolean(reduce)}
-                    />
-                  )}
-                  {errorMessage && (
-                    <p className="px-1 text-[11px] text-destructive">{errorMessage}</p>
-                  )}
-                </div>
-              )}
-            </div>
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto scrollbar-hide p-4"
+              >
+                {isLoading ? (
+                  <div className="flex h-full items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : showEmpty ? (
+                  <EmptyAskOs onSuggestion={handleSuggestion} />
+                ) : (
+                  <div className="space-y-4">
+                    {hasNextPage && <div ref={topSentinelRef} className="h-px w-full" />}
+                    {isFetchingNextPage && (
+                      <div className="flex justify-center py-1">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                    {persisted.map((message) => (
+                      <AskOsBubble
+                        key={message.id}
+                        role={message.role}
+                        content={message.content}
+                        streaming={false}
+                        reduce={Boolean(reduce)}
+                      />
+                    ))}
+                    {draft && (
+                      <AskOsBubble
+                        key="draft-user"
+                        role="user"
+                        content={draft.user}
+                        streaming={false}
+                        reduce={Boolean(reduce)}
+                      />
+                    )}
+                    {draft && (
+                      <AskOsBubble
+                        key="draft-assistant"
+                        role="assistant"
+                        content={draft.assistant}
+                        streaming={isStreaming}
+                        reduce={Boolean(reduce)}
+                      />
+                    )}
+                    {errorMessage && (
+                      <p className="px-1 text-[11px] text-destructive">{errorMessage}</p>
+                    )}
+                  </div>
+                )}
+              </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="flex shrink-0 items-center gap-2 border-t border-border bg-background/60 p-3"
-            >
-              <input
-                type="text"
-                value={input}
-                onChange={handleInputChange}
-                placeholder="Ask anything about your workspace…"
-                disabled={isStreaming}
-                className="h-10 flex-1 rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
-              />
-              {isStreaming ? (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  className="h-10 w-10 shrink-0 rounded-xl"
-                  onClick={handleStop}
-                  aria-label="Stop"
-                >
-                  <Square className="h-3.5 w-3.5" />
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="h-10 w-10 shrink-0 rounded-xl"
-                  disabled={!input.trim()}
-                  aria-label="Send"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              )}
-            </form>
+              <form
+                onSubmit={handleSubmit}
+                className="flex shrink-0 items-center gap-2 border-t border-border bg-background/60 p-3"
+              >
+                <input
+                  type="text"
+                  value={input}
+                  onChange={handleInputChange}
+                  placeholder="Ask anything about your workspace…"
+                  disabled={isStreaming}
+                  className="h-10 flex-1 rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
+                />
+                {isStreaming ? (
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    className="h-10 w-10 shrink-0 rounded-xl"
+                    onClick={handleStop}
+                    aria-label="Stop"
+                  >
+                    <Square className="h-3.5 w-3.5" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    size="icon"
+                    className="h-10 w-10 shrink-0 rounded-xl"
+                    disabled={!input.trim()}
+                    aria-label="Send"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                )}
+              </form>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+
+      <motion.button
+        type="button"
+        onClick={handleToggle}
+        initial={reduce ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={panelTransition}
+        whileTap={reduce ? undefined : { scale: 0.98 }}
+        aria-expanded={open}
+        aria-label={open ? "Minimize Ask OS assistant" : "Open Ask OS assistant"}
+        className={`flex h-9 w-full items-center gap-2 bg-primary px-3 text-primary-foreground shadow-lg ring-1 ring-inset ring-blue-500/20 transition-colors hover:bg-primary/90 ${open ? "" : "rounded-tl-xl"}`}
+      >
+        <AnimatedLogo size={18} gradient />
+        <span className="flex-1 text-left text-xs font-semibold tracking-wide">ASK OS</span>
+        <ChevronDown
+          className={`h-3.5 w-3.5 shrink-0 text-blue-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          aria-hidden
+        />
+      </motion.button>
+    </div>
   );
 }
 

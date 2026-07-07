@@ -1,11 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AskAIPanel } from "./ask-ai-panel";
 
 const TABS = [
   { href: "/chat", label: "Discuss" },
@@ -37,7 +34,6 @@ export function ChatTopNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const configTab = searchParams.get("tab") ?? "settings";
-  const [askAiOpen, setAskAiOpen] = useState(false);
 
   return (
     <div className="h-11 shrink-0 border-b border-border/40 bg-card/50 flex items-center gap-1 px-4">
@@ -58,18 +54,6 @@ export function ChatTopNav() {
           </Link>
         );
       })}
-
-      <button
-        type="button"
-        onClick={() => setAskAiOpen(true)}
-        className="ml-auto h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 transition-colors"
-        title="Ask AI"
-        aria-label="Ask AI"
-      >
-        <Sparkles className="h-4 w-4" />
-      </button>
-
-      {askAiOpen && <AskAIPanel onClose={() => setAskAiOpen(false)} />}
     </div>
   );
 }

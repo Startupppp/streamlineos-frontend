@@ -57,6 +57,7 @@ import { ThreadPanel } from "./thread-panel";
 import { SavedMessagesPanel } from "./saved-messages-panel";
 import { SharedFilesPanel } from "./shared-files-panel";
 import { ForwardMessageDialog } from "./forward-message-dialog";
+import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
 
 export function MessagePanel({
   channelId,
@@ -66,6 +67,8 @@ export function MessagePanel({
   showInfoPanel,
   autoStartCall,
   onAutoStartHandled,
+  isSidebarCollapsed,
+  onToggleSidebar,
 }: {
   channelId: number;
   currentUserId: string;
@@ -74,6 +77,8 @@ export function MessagePanel({
   showInfoPanel: boolean;
   autoStartCall?: "huddle" | "video" | null;
   onAutoStartHandled?: () => void;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }) {
   const queryClient = useQueryClient();
   const { data: channel } = useChatChannel(channelId);
@@ -832,6 +837,12 @@ export function MessagePanel({
     <div className="flex flex-1 min-w-0 overflow-hidden">
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <div className="h-[56px] px-4 border-b border-border/40 flex items-center gap-3 shrink-0 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
+          {onToggleSidebar && (
+            <ChannelSidebarCollapseButton
+              isCollapsed={isSidebarCollapsed ?? false}
+              onToggle={onToggleSidebar}
+            />
+          )}
           <button
             onClick={onBack}
             className="md:hidden p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"
