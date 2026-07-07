@@ -10,10 +10,12 @@ export function useNetworkQuality(pc: RTCPeerConnection | null): NetworkQuality 
   useEffect(() => {
     if (!pc) return;
     let stopped = false;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
     const poll = async () => {
       if (stopped) return;
       try {
         const stats = await pc.getStats();
+        if (stopped) return;
         let totalPacketsLost = 0;
         let totalPacketsSent = 0;
         let rtt = 0;
@@ -29,13 +31,14 @@ export function useNetworkQuality(pc: RTCPeerConnection | null): NetworkQuality 
         else if (rtt < 0.3 && lossRate < 0.05) setQuality("good");
         else setQuality("poor");
       } catch {
-        setQuality("unknown");
+        if (!stopped) setQuality("unknown");
       }
-      setTimeout(poll, 4000);
+      if (!stopped) timerId = setTimeout(poll, 4000);
     };
-    poll();
+    void poll();
     return () => {
       stopped = true;
+      if (timerId) clearTimeout(timerId);
     };
   }, [pc]);
 

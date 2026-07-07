@@ -21,9 +21,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { CheckCircle2, Download, Bookmark, X } from "lucide-react";
+import { Download, Bookmark, X } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -259,55 +257,51 @@ export default function ProjectBoardPage({ params }: PageProps) {
       filters={
         <>
           <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
-          <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
-          <Button variant="outline" size="sm" onClick={handleExportCsv} className="h-8 text-xs gap-1.5 shrink-0">
-            <Download className="h-3.5 w-3.5" /> Export
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleExportCsv}
+            className="h-8 w-8 shrink-0 bg-card"
+            aria-label="Export tickets"
+          >
+            <Download className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            onClick={() => { setSaveViewName(""); setSaveViewOpen(true); }}
-            className="h-8 text-xs gap-1.5 shrink-0"
+            size="icon"
+            onClick={() => {
+              setSaveViewName("");
+              setSaveViewOpen(true);
+            }}
+            className="h-8 w-8 shrink-0 bg-card"
+            aria-label="Save view"
           >
-            <Bookmark className="h-3.5 w-3.5" /> Save view
+            <Bookmark className="h-3.5 w-3.5" />
           </Button>
           {activeView && (
             <Badge
               variant="secondary"
-              className="h-6 text-xs font-normal gap-1 shrink-0 pl-2 pr-1 cursor-default bg-card"
+              className="h-6 shrink-0 cursor-default gap-1 bg-card pl-2 pr-1 text-xs font-normal"
             >
               View: {activeView.name}
               <button
                 type="button"
                 onClick={handleClearView}
                 aria-label="Clear view"
-                className="ml-0.5 rounded-sm hover:bg-muted transition-colors"
+                className="ml-0.5 rounded-sm transition-colors hover:bg-muted"
               >
                 <X className="h-3 w-3" />
               </button>
             </Badge>
           )}
-          <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
-          <TicketFilterBar members={members} showSprintFilter={false} />
-          <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
-          <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-            <Switch
-              id="hide-done"
-              checked={hideCompleted}
-              onCheckedChange={setHideCompleted}
-              className="scale-90 data-[state=unchecked]:bg-card data-[state=unchecked]:border data-[state=unchecked]:border-border"
-            />
-            <Label
-              htmlFor="hide-done"
-              className="text-[11px] font-normal cursor-pointer flex items-center gap-1 whitespace-nowrap"
-            >
-              <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
-              Done
-              {hideCompleted && doneCount > 0 && (
-                <span className="text-muted-foreground">({doneCount})</span>
-              )}
-            </Label>
-          </div>
+          <TicketFilterBar
+            members={members}
+            showSprintFilter={false}
+            showDoneToggle
+            hideCompleted={hideCompleted}
+            onHideCompletedChange={setHideCompleted}
+            doneCount={doneCount}
+          />
         </>
       }
     >

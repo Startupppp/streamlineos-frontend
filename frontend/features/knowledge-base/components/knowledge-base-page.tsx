@@ -3,7 +3,15 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { FileText, StickyNote, Loader2 } from "lucide-react";
+import {
+  MessageCircleIcon,
+  UploadIcon,
+  PlusIcon,
+  Trash2Icon,
+  BookOpenTextIcon,
+  MoveRightIcon,
+} from "@animateicons/react/lucide";
+import { StickyNote, Loader2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,16 +39,15 @@ import {
   useDeleteKbSource,
 } from "@/hooks/api/kb/sources";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
-import {
-  KbMessageSquareIcon,
-  KbFileTextIcon,
-  KbUploadIcon,
-  KbPlusIcon,
-  KbTrash2Icon,
-} from "@/features/knowledge-base/lib/kb-icons";
 import { getApiError } from "@/lib/api-client";
 import type { KbAskResponse } from "@/types/kb";
 import type { KbSource } from "@/hooks/api/kb/sources";
+
+const SUGGESTIONS = [
+  "Summarize the key points across my documents",
+  "What processes are documented here?",
+  "What do the uploaded files say about pricing?",
+];
 
 export default function KnowledgeBasePage() {
   const router = useRouter();
@@ -60,12 +67,8 @@ export default function KnowledgeBasePage() {
   const createNote = useCreateKbSourceNote();
   const deleteSource = useDeleteKbSource();
 
-  function handleQuestionChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setQuestion(e.target.value);
-  }
-
-  function handleAsk() {
-    const trimmed = question.trim();
+  function runAsk(value: string) {
+    const trimmed = value.trim();
     if (!trimmed) return;
     ask.mutate(
       { question: trimmed },
@@ -77,11 +80,25 @@ export default function KnowledgeBasePage() {
     );
   }
 
+  function handleQuestionChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setQuestion(e.target.value);
+  }
+
+  function handleAsk() {
+    runAsk(question);
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       e.preventDefault();
       handleAsk();
     }
+  }
+
+  function handleSuggestion(e: React.MouseEvent<HTMLButtonElement>) {
+    const value = e.currentTarget.dataset.suggestion ?? "";
+    setQuestion(value);
+    runAsk(value);
   }
 
   function handleCitationClick(e: React.MouseEvent<HTMLButtonElement>) {
@@ -150,6 +167,7 @@ export default function KnowledgeBasePage() {
   }
 
   const sources = sourcesQuery.data ?? [];
+  const readyCount = sources.filter((s) => s.status === "ready").length;
 
   return (
     <PageWrapper
@@ -157,36 +175,60 @@ export default function KnowledgeBasePage() {
       title="Knowledge Base"
       subtitle="Upload files and notes, then ask questions answered from them and your wiki."
     >
-      <div className="mx-auto w-full max-w-3xl space-y-8">
+      <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[1fr_20rem]">
         <section className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              value={question}
-              onChange={handleQuestionChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask anything about your knowledge base…"
-              className="h-11 text-sm"
-              autoFocus
-            />
-            <Button
-              onClick={handleAsk}
-              disabled={ask.isPending || !question.trim()}
-              className="h-11 shrink-0"
-            >
-              {ask.isPending ? "Asking…" : "Ask"}
-            </Button>
+          <div className="rounded-2xl border border-border bg-gradient-to-b from-card to-muted/20 p-5 shadow-sm">
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <MessageCircleIcon size={18} className="text-accent" />
+              Ask your knowledge base
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={question}
+                onChange={handleQuestionChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask anything about your files, notes and wiki…"
+                className="h-11 text-sm"
+                autoFocus
+              />
+              <Button
+                onClick={handleAsk}
+                disabled={ask.isPending || !question.trim()}
+                className="h-11 shrink-0 gap-1.5"
+              >
+                {ask.isPending ? "Asking…" : "Ask"}
+                {!ask.isPending && <MoveRightIcon size={15} />}
+              </Button>
+            </div>
+
+            {!result && !ask.isPending && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    data-suggestion={s}
+                    onClick={handleSuggestion}
+                    className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {ask.isPending && (
-            <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-sm">
-              Searching the knowledge base…
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Searching your knowledge base…
             </div>
           )}
 
           {result && !ask.isPending && (
             <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <KbMessageSquareIcon className="h-3.5 w-3.5" />
+                <MessageCircleIcon size={14} />
                 Answer
               </div>
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
@@ -209,10 +251,13 @@ export default function KnowledgeBasePage() {
                             onClick={handleCitationClick}
                             className="flex w-full items-center gap-2 truncate rounded-md px-2 py-1.5 text-left text-sm text-accent transition-colors hover:bg-muted"
                           >
-                            <KbFileTextIcon className="h-3.5 w-3.5 shrink-0" />
+                            <BookOpenTextIcon size={14} className="shrink-0" />
                             <span className="truncate">
                               {citation.title || "Untitled"}
                             </span>
+                            <Badge variant="outline" className="ml-auto shrink-0 text-[10px]">
+                              Wiki
+                            </Badge>
                           </button>
                         );
                       }
@@ -222,10 +267,13 @@ export default function KnowledgeBasePage() {
                             key={`source-${citation.sourceId}-${index}`}
                             className="flex items-center gap-2 truncate rounded-md bg-muted/50 px-2 py-1.5 text-sm text-foreground"
                           >
-                            <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <BookOpenTextIcon size={14} className="shrink-0 text-muted-foreground" />
                             <span className="truncate">
                               {citation.title || "Untitled"}
                             </span>
+                            <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
+                              File
+                            </Badge>
                           </div>
                         );
                       }
@@ -234,7 +282,7 @@ export default function KnowledgeBasePage() {
                           key={`article-${citation.articleId}-${index}`}
                           className="flex items-center gap-2 truncate px-2 py-1.5 text-sm text-muted-foreground"
                         >
-                          <KbFileTextIcon className="h-3.5 w-3.5 shrink-0" />
+                          <BookOpenTextIcon size={14} className="shrink-0" />
                           <span className="truncate">
                             {citation.title || "Untitled"}
                           </span>
@@ -248,31 +296,45 @@ export default function KnowledgeBasePage() {
           )}
         </section>
 
-        <section className="space-y-4">
+        <aside className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground">Sources</h2>
-            <div className="flex items-center gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.docx,.txt,.md,.csv"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleUploadClick}
-                disabled={uploadSource.isPending}
-              >
-                <KbUploadIcon className="mr-1.5 h-3.5 w-3.5" />
-                {uploadSource.isPending ? "Uploading…" : "Upload file"}
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleAddNoteClick}>
-                <KbPlusIcon className="mr-1.5 h-3.5 w-3.5" />
-                Add note
-              </Button>
-            </div>
+            <h2 className="text-sm font-semibold text-foreground">
+              Sources
+              {sources.length > 0 && (
+                <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                  {readyCount}/{sources.length} ready
+                </span>
+              )}
+            </h2>
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,.txt,.md,.csv"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={handleUploadClick}
+              disabled={uploadSource.isPending}
+            >
+              <UploadIcon size={14} />
+              {uploadSource.isPending ? "Uploading…" : "Upload"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={handleAddNoteClick}
+            >
+              <PlusIcon size={14} />
+              Note
+            </Button>
           </div>
 
           <SourcesList
@@ -282,7 +344,7 @@ export default function KnowledgeBasePage() {
             deletingId={deleteSource.variables}
             isDeleting={deleteSource.isPending}
           />
-        </section>
+        </aside>
       </div>
 
       <Dialog open={noteOpen} onOpenChange={handleNoteOpenChange}>
@@ -297,22 +359,20 @@ export default function KnowledgeBasePage() {
               onChange={handleNoteTitleChange}
             />
             <Textarea
-              placeholder="Note content…"
+              placeholder="Paste or type the content you want the AI to learn…"
               value={noteText}
               onChange={handleNoteTextChange}
-              rows={5}
+              rows={6}
             />
           </div>
           <DialogFooter>
             <Button
               onClick={handleNoteSave}
               disabled={
-                createNote.isPending ||
-                !noteTitle.trim() ||
-                !noteText.trim()
+                createNote.isPending || !noteTitle.trim() || !noteText.trim()
               }
             >
-              {createNote.isPending ? "Saving…" : "Save"}
+              {createNote.isPending ? "Saving…" : "Save note"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -381,7 +441,7 @@ function SourceRow({ source, onDelete, isDeleting }: SourceRowProps) {
     <li className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
         {source.kind === "file" ? (
-          <FileText className="h-4 w-4 text-muted-foreground" />
+          <BookOpenTextIcon size={16} className="text-muted-foreground" />
         ) : (
           <StickyNote className="h-4 w-4 text-muted-foreground" />
         )}
@@ -409,7 +469,7 @@ function SourceRow({ source, onDelete, isDeleting }: SourceRowProps) {
         {isDeleting ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
-          <KbTrash2Icon className="h-3.5 w-3.5" />
+          <Trash2Icon size={14} />
         )}
       </Button>
     </li>

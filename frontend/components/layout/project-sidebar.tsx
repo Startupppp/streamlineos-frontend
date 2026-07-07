@@ -5,42 +5,44 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  ListTodo,
-  Settings,
-  KanbanSquare,
-  Menu,
-  Layers,
+  ActivityIcon,
+  BookOpenTextIcon,
+  ChartBarIcon,
+  CircleCheckIcon,
+  ClipboardIcon,
+  GitBranchIcon,
+  GlobeIcon,
+  IndianRupeeIcon,
+  LayersIcon,
+  LayoutGridIcon,
+  LayoutListIcon,
+  MenuIcon,
+  MessageCircleIcon,
+  PackageOpenIcon,
+  RocketIcon,
+  SettingsIcon,
+  ShieldXIcon,
+  SparklesIcon,
+  TriangleAlertIcon,
+  UserIcon,
+  UsersIcon,
+  WebhookIcon,
+  ZapIcon,
+} from "@animateicons/react/lucide";
+import {
   Calendar,
   CalendarClock,
   RefreshCcw,
-  Package,
   GanttChart,
-  FileText,
-  BarChart3,
   Inbox,
-  User,
   Diamond,
-  IndianRupee,
-  Activity,
   PenTool,
-  Workflow,
-  Webhook,
   PanelLeftClose,
   PanelLeftOpen,
-  Tag,
-  Users,
   FlaskConical,
   Bug,
   FilePen,
-  Globe,
-  ClipboardCheck,
-  MessageSquare,
-  Sparkles,
-  ShieldAlert,
   Gavel,
-  Siren,
-  ClipboardList,
-  GitBranch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -80,25 +82,25 @@ function useSidebarSections(baseUrl: string): NavSection[] {
     {
       label: "Planning",
       items: [
-        { label: "Board", icon: KanbanSquare, href: baseUrl },
-        { label: "Backlog", icon: ListTodo, href: `${baseUrl}/backlog` },
-        { label: "My Tickets", icon: User, href: `${baseUrl}/my-tickets` },
+        { label: "Board", icon: LayoutGridIcon, href: baseUrl },
+        { label: "Backlog", icon: LayoutListIcon, href: `${baseUrl}/backlog` },
+        { label: "My Tickets", icon: UserIcon, href: `${baseUrl}/my-tickets` },
         { label: "Sprints", icon: Calendar, href: `${baseUrl}/sprints` },
         ...(canMeetings ? [{ label: "Meetings", icon: CalendarClock, href: `${baseUrl}/meetings` }] : []),
-        ...(canChat ? [{ label: "Chat", icon: MessageSquare, href: `${baseUrl}/chat` }] : []),
+        ...(canChat ? [{ label: "Chat", icon: MessageCircleIcon, href: `${baseUrl}/chat` }] : []),
       ],
     },
     {
       label: "Tracking",
       items: [
         { label: "Cycles", icon: RefreshCcw, href: `${baseUrl}/cycles` },
-        { label: "Modules", icon: Package, href: `${baseUrl}/modules` },
-        { label: "Epics", icon: Layers, href: `${baseUrl}/epics` },
+        { label: "Modules", icon: PackageOpenIcon, href: `${baseUrl}/modules` },
+        { label: "Epics", icon: LayersIcon, href: `${baseUrl}/epics` },
         { label: "Timeline", icon: GanttChart, href: `${baseUrl}/timeline` },
         { label: "Milestones", icon: Diamond, href: `${baseUrl}/milestones` },
-        { label: "Releases", icon: Tag, href: `${baseUrl}/releases` },
-        { label: "Workload", icon: Users, href: `${baseUrl}/workload` },
-        ...(canApprovals ? [{ label: "Approvals", icon: ClipboardCheck, href: `${baseUrl}/approvals` }] : []),
+        { label: "Releases", icon: RocketIcon, href: `${baseUrl}/releases` },
+        { label: "Workload", icon: UsersIcon, href: `${baseUrl}/workload` },
+        ...(canApprovals ? [{ label: "Approvals", icon: CircleCheckIcon, href: `${baseUrl}/approvals` }] : []),
       ],
     },
     {
@@ -106,38 +108,38 @@ function useSidebarSections(baseUrl: string): NavSection[] {
       items: [
         ...(canQA ? [{ label: "QA / Tests", icon: FlaskConical, href: `${baseUrl}/qa` }] : []),
         ...(canBugs ? [{ label: "Bugs", icon: Bug, href: `${baseUrl}/bugs` }] : []),
-        ...(canIncidents ? [{ label: "Incidents", icon: Siren, href: `${baseUrl}/incidents` }] : []),
+        ...(canIncidents ? [{ label: "Incidents", icon: TriangleAlertIcon, href: `${baseUrl}/incidents` }] : []),
       ],
     },
     {
       label: "Client",
       items: [
         ...(canChangerequests ? [{ label: "Change Requests", icon: FilePen, href: `${baseUrl}/change-requests` }] : []),
-        ...(canClientVisibility ? [{ label: "Client Portal", icon: Globe, href: `${baseUrl}/client-portal` }] : []),
+        ...(canClientVisibility ? [{ label: "Client Portal", icon: GlobeIcon, href: `${baseUrl}/client-portal` }] : []),
       ],
     },
     {
       label: "Governance",
       items: [
-        ...(canRisks ? [{ label: "Risks", icon: ShieldAlert, href: `${baseUrl}/risks` }] : []),
+        ...(canRisks ? [{ label: "Risks", icon: ShieldXIcon, href: `${baseUrl}/risks` }] : []),
         ...(canDecisions ? [{ label: "Decisions", icon: Gavel, href: `${baseUrl}/decisions` }] : []),
       ],
     },
     {
       label: "More",
       items: [
-        ...(canForms ? [{ label: "Forms", icon: ClipboardList, href: `${baseUrl}/forms` }] : []),
-        ...(canWorkflow ? [{ label: "Workflow", icon: GitBranch, href: `${baseUrl}/workflow` }] : []),
-        { label: "Wiki", icon: FileText, href: `${baseUrl}/pages` },
-        { label: "Reports", icon: BarChart3, href: `${baseUrl}/analytics` },
-        { label: "Agile Reports", icon: Activity, href: `${baseUrl}/reports` },
+        ...(canForms ? [{ label: "Forms", icon: ClipboardIcon, href: `${baseUrl}/forms` }] : []),
+        ...(canWorkflow ? [{ label: "Workflow", icon: GitBranchIcon, href: `${baseUrl}/workflow` }] : []),
+        { label: "Wiki", icon: BookOpenTextIcon, href: `${baseUrl}/pages` },
+        { label: "Reports", icon: ChartBarIcon, href: `${baseUrl}/analytics` },
+        { label: "Agile Reports", icon: ActivityIcon, href: `${baseUrl}/reports` },
         { label: "Whiteboard", icon: PenTool, href: `${baseUrl}/whiteboard` },
-        { label: "Budget", icon: IndianRupee, href: `${baseUrl}/budget` },
+        { label: "Budget", icon: IndianRupeeIcon, href: `${baseUrl}/budget` },
         { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
-        { label: "Automations", icon: Workflow, href: `${baseUrl}/automations` },
-        { label: "Webhooks", icon: Webhook, href: `${baseUrl}/webhooks` },
-        ...(canAI ? [{ label: "AI Assistant", icon: Sparkles, href: `${baseUrl}/ai` }] : []),
-        { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },
+        { label: "Automations", icon: ZapIcon, href: `${baseUrl}/automations` },
+        { label: "Webhooks", icon: WebhookIcon, href: `${baseUrl}/webhooks` },
+        ...(canAI ? [{ label: "AI Assistant", icon: SparklesIcon, href: `${baseUrl}/ai` }] : []),
+        { label: "Settings", icon: SettingsIcon, href: `${baseUrl}/settings` },
       ],
     },
   ].filter((s) => s.items.length > 0);
@@ -282,7 +284,7 @@ function MobileProjectNav({
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Open project menu">
-            <Menu className="h-4 w-4" />
+            <MenuIcon className="h-4 w-4" />
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-64 p-0 bg-card/50">
