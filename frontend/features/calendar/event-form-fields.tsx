@@ -12,9 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Tag, Clock, MapPin, Lock, FileText, Video, Plus } from "lucide-react";
+import { Tag, Clock, Lock, FileText, Video, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { IntegrationConnection } from "@/hooks/api/integrations";
+import type { CalendarOrgMember } from "@/hooks/api/calendar";
+import { EventAttendeesPicker } from "./event-attendees-picker";
 
 const EVENT_COLORS: Record<string, string> = {
   blue: "#3b82f6",
@@ -40,8 +42,6 @@ type EventCategory = (typeof EVENT_CATEGORIES)[number];
 interface EventFormFieldsProps {
   title: string;
   description: string;
-  location: string;
-  locationError: string;
   allDay: boolean;
   startDate: string;
   startTime: string;
@@ -57,7 +57,6 @@ interface EventFormFieldsProps {
   dateTimeError: string;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onLocationChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onAllDayChange: (v: boolean) => void;
   onStartDateChange: (v: string) => void;
   onStartTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -68,13 +67,17 @@ interface EventFormFieldsProps {
   onSyncConnectionChange: (v: string) => void;
   onAddConferenceChange: (v: boolean) => void;
   onShowEndDate: () => void;
+  members: Pick<
+    CalendarOrgMember,
+    "id" | "firstName" | "lastName" | "name" | "email" | "image"
+  >[];
+  attendeeIds: string[];
+  onToggleAttendee: (id: string) => void;
 }
 
 export function EventFormFields({
   title,
   description,
-  location,
-  locationError,
   allDay,
   startDate,
   startTime,
@@ -90,7 +93,6 @@ export function EventFormFields({
   dateTimeError,
   onTitleChange,
   onDescriptionChange,
-  onLocationChange,
   onAllDayChange,
   onStartDateChange,
   onStartTimeChange,
@@ -101,6 +103,9 @@ export function EventFormFields({
   onSyncConnectionChange,
   onAddConferenceChange,
   onShowEndDate,
+  members,
+  attendeeIds,
+  onToggleAttendee,
 }: EventFormFieldsProps) {
   const activeConnections = connections.filter((c) => c.status === "active");
   const selectedToolkit = activeConnections.find((c) => String(c.id) === syncConnectionId)?.toolkit;
@@ -136,7 +141,7 @@ export function EventFormFields({
               {!allDay && (
                 <Input
                   type="time"
-                  className="h-8 w-20 shrink-0 text-xs"
+                  className="h-8 w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs"
                   value={startTime}
                   onChange={onStartTimeChange}
                 />
@@ -167,7 +172,7 @@ export function EventFormFields({
                 <Input
                   type="time"
                   className={cn(
-                    "h-8 w-20 shrink-0 text-xs",
+                    "h-8 w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs",
                     dateTimeError && "border-destructive",
                   )}
                   value={endTime}
@@ -197,54 +202,15 @@ export function EventFormFields({
       </div>
 
       <div className="flex items-start gap-2.5">
-        <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
-        <div className="flex-1 min-w-0 space-y-1">
-          <Input
-            id="ev-location"
-            value={location}
-            onChange={onLocationChange}
-            placeholder="Room or Location"
-            className={cn("h-9 text-xs flex-1 min-w-0", locationError && "border-destructive")}
+        <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <EventAttendeesPicker
+            members={members}
+            selectedIds={attendeeIds}
+            onToggle={onToggleAttendee}
           />
-          {locationError && (
-            <p className="text-[10px] text-destructive">{locationError}</p>
-          )}
         </div>
       </div>
-
-      {!isEdit && (
-        activeConnections.length > 0 ? (
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Sync to calendar account</Label>
-            <Select value={syncConnectionId} onValueChange={onSyncConnectionChange}>
-              <SelectTrigger className="h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Don&apos;t sync</SelectItem>
-                {activeConnections.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.accountEmail ?? c.accountLabel ?? c.toolkit}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {syncConnectionId !== "none" && (
-              <div className="flex items-center justify-between rounded-md border border-border px-3 py-1.5">
-                <div className="flex items-center gap-2">
-                  <Video className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs">
-                    {selectedToolkit === "outlook" ? "Add Teams meeting link" : "Add Google Meet link"}
-                  </span>
-                </div>
-                <Switch checked={addConference} onCheckedChange={onAddConferenceChange} />
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground pl-7">Connect an account to sync events</p>
-        )
-      )}
 
       <div className="flex items-center gap-2.5">
         <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -298,6 +264,40 @@ export function EventFormFields({
           />
         </div>
       </div>
+
+      {!isEdit && (
+        activeConnections.length > 0 ? (
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Sync to calendar account</Label>
+            <Select value={syncConnectionId} onValueChange={onSyncConnectionChange}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Don&apos;t sync</SelectItem>
+                {activeConnections.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.accountEmail ?? c.accountLabel ?? c.toolkit}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {syncConnectionId !== "none" && (
+              <div className="flex items-center justify-between rounded-md border border-border px-3 py-1.5">
+                <div className="flex items-center gap-2">
+                  <Video className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs">
+                    {selectedToolkit === "outlook" ? "Add Teams meeting link" : "Add Google Meet link"}
+                  </span>
+                </div>
+                <Switch checked={addConference} onCheckedChange={onAddConferenceChange} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground pl-7">Connect an account to sync events</p>
+        )
+      )}
     </div>
   );
 }

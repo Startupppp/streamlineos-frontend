@@ -41,11 +41,10 @@ export function TicketHeader({
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   return (
-    <div className="shrink-0 border-b px-4 py-3">
+    <div className="shrink-0 border-b px-4 py-3 pr-12">
       <SheetHeader className="space-y-0">
-        <div className="flex items-center justify-between gap-2">
-
-          <div className="flex items-center gap-2 min-w-0 flex-wrap">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0 flex-wrap flex-1">
             <Badge variant="outline" className="font-mono text-[11px] shrink-0 h-5 px-1.5">
               {projectKey && ticketNumber != null ? `${projectKey}-${ticketNumber}` : `#${ticketNumber ?? ticketId}`}
             </Badge>
@@ -64,32 +63,34 @@ export function TicketHeader({
           </div>
 
           {!isLoading && ticketId && (
-            <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
-                  aria-label="Delete ticket"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 p-3" align="end">
-                <p className="text-sm font-medium text-destructive mb-1">Delete Ticket</p>
-                <p className="text-xs text-muted-foreground mb-3">
-                  This cannot be undone.
-                </p>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteOpen(false)}>
-                    Cancel
+            <div className="flex items-center gap-2 shrink-0">
+              <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    aria-label="Delete ticket"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={onDelete} disabled={isDeleting}>
-                    {isDeleting ? "Deleting..." : "Delete"}
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-3" align="end">
+                  <p className="text-sm font-medium text-destructive mb-1">Delete Ticket</p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    This cannot be undone.
+                  </p>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={onDelete} disabled={isDeleting}>
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           )}
         </div>
 

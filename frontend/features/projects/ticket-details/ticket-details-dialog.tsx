@@ -1,215 +1,76 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
-import {
-  useTicket,
-  useUpdateTicket,
-  useDeleteTicket,
-  useProject,
-  useSprints,
-  useSubtasks,
-} from "@/hooks/api";
-import { queryKeys } from "@/lib/query-keys";
-import { isApiError, getApiErrorCode } from "@/lib/api-client";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
+import { useEffect, useMemo } from "react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import dynamic from "next/dynamic";
-import { ExternalLink, Loader2, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { useQueryClient } from "@tanstack/react-query";
-import { viewFile } from "@/hooks/common/use-file-url";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { TicketHeader } from "./ticket-header";
 import { TicketSidebar } from "./ticket-sidebar";
-import { TicketSubtasks } from "./ticket-subtasks";
-import { TicketRelations } from "./ticket-relations";
-import { TicketTimeTracker } from "./ticket-time-tracker";
-import { WatcherList } from "./watcher-list";
-import { ActivityFeed } from "./activity-feed";
-import { TicketActivityLog } from "@/features/projects/tickets/ticket-activity-log";
-import { TicketChecklists } from "./ticket-checklists";
-import { TicketCustomFields } from "./ticket-custom-fields";
-import { AttachmentImage } from "./attachment-image";
-import type { TicketDetailsDialogProps, ProjectMember } from "./types";
-
-const TiptapEditorDynamic = dynamic(
-  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="rounded-md border border-input bg-background animate-pulse min-h-[120px]" />
-    ),
-  },
-);
-
-interface ProjectManager {
-  id: string;
-  name?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  image?: string | null;
-  email?: string | null;
-}
-
-function isProjectWithManager(data: unknown): data is { manager?: ProjectManager } {
-  return typeof data === "object" && data !== null && "manager" in data;
-}
+import { TicketDetailMainSection } from "./ticket-detail-main-section";
+import { useTicketDetail } from "./use-ticket-detail";
+import type { TicketDetailsDialogProps } from "./types";
 
 export function TicketDetailsDialog({
   ticketId,
   open,
   onOpenChange,
   projectId,
-  statuses,
+  statuses: statusesProp,
   highlightCommentId,
 }: TicketDetailsDialogProps) {
-  const queryClient = useQueryClient();
-  const [saving, setSaving] = useState(false);
-  const [localTitle, setLocalTitle] = useState("");
-  const [syncedTitleId, setSyncedTitleId] = useState<number | null>(null);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSavedAtRef = useRef<string | undefined>(undefined);
+  const handleDeleted = () => onOpenChange(false);
 
   const {
-    data: ticket,
+    ticket,
     isLoading,
-    error: ticketError,
-  } = useTicket(projectId, ticketId || 0);
-  const { data: projectData } = useProject(projectId);
-  const { data: sprints } = useSprints(projectId);
-  const { data: subtasks } = useSubtasks(ticketId || 0, projectId);
+    ticketError,
+    projectData,
+    sprints,
+    subtasks,
+    members,
+    statuses: statusesFromProject,
+    saving,
+    localTitle,
+    handleTitleChange,
+    handleDescriptionEditorChange,
+    autoSave,
+    handleDelete,
+    isDeleting,
+  } = useTicketDetail({ projectId, ticketId, onDeleted: handleDeleted });
 
-  const members = useMemo<ProjectMember[]>(() => {
-    if (!projectData?.members) return [];
-    const list = projectData.members
-      .filter((m) => !!m.user)
-      .map((m) => ({
-        id: m.user!.id,
-        name: m.user!.name || `${m.user!.firstName || ""} ${m.user!.lastName || ""}`.trim(),
-        firstName: m.user!.firstName || undefined,
-        lastName: m.user!.lastName || undefined,
-        image: m.user!.image || null,
-        email: m.user!.email || "",
-      }));
-    const mgr = isProjectWithManager(projectData) ? projectData.manager : undefined;
-    if (mgr && !list.some((m) => m.id === mgr.id)) {
-      list.unshift({
-        id: mgr.id,
-        name: mgr.name || `${mgr.firstName || ""} ${mgr.lastName || ""}`.trim(),
-        firstName: mgr.firstName || undefined,
-        lastName: mgr.lastName || undefined,
-        image: mgr.image || null,
-        email: mgr.email || "",
-      });
-    }
-    return list;
-  }, [projectData]);
+  const statuses = statusesProp ?? statusesFromProject;
 
-  const invalidateAll = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
-    if (ticketId !== null) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
-    }
-  }, [queryClient, projectId, ticketId]);
-
-  const updateTicketMutation = useUpdateTicket(projectId, {
-    onSuccess: (data) => {
-      lastSavedAtRef.current = data.updatedAt;
-      setSaving(false);
-      invalidateAll();
-    },
-    onError: (error) => {
-      setSaving(false);
-      if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
-        toast.warning("This ticket was changed elsewhere — refreshed with the latest version.");
-        if (ticketId !== null) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
-        }
-        return;
-      }
-      toast.error(getErrorMessage(error));
-    },
-  });
-
-  const deleteTicketMutation = useDeleteTicket(projectId, {
-    onSuccess: () => {
-      toast.success("Ticket deleted");
-      invalidateAll();
-      onOpenChange(false);
-    },
-    onError: (error) => toast.error(getErrorMessage(error)),
-  });
+  const sheetTitle = useMemo(() => {
+    if (isLoading) return "Loading...";
+    return localTitle || ticket?.title || "";
+  }, [isLoading, localTitle, ticket?.title]);
 
   useEffect(() => {
-    if (ticket?.updatedAt) {
-      lastSavedAtRef.current = new Date(ticket.updatedAt).toISOString();
-    }
-  }, [ticket?.updatedAt]);
-
-  const autoSave = useCallback(
-    (field: Record<string, unknown>) => {
-      if (!ticketId) return;
-      setSaving(true);
-      updateTicketMutation.mutate({ ticketId, expectedUpdatedAt: lastSavedAtRef.current, ...field });
-    },
-    [ticketId, updateTicketMutation],
-  );
-
-  const debouncedSave = useCallback(
-    (field: Record<string, unknown>) => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      setSaving(true);
-      debounceTimerRef.current = setTimeout(() => {
-        if (!ticketId) return;
-        updateTicketMutation.mutate({ ticketId, expectedUpdatedAt: lastSavedAtRef.current, ...field });
-      }, 500);
-    },
-    [ticketId, updateTicketMutation],
-  );
-
-  if (ticket && ticket.id !== syncedTitleId) {
-    setSyncedTitleId(ticket.id);
-    setLocalTitle(ticket.title);
-  }
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOpenChange(false);
     };
-  }, []);
-
-  function handleDelete() {
-    if (!ticketId) return;
-    deleteTicketMutation.mutate({ ticketId });
-  }
-
-  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setLocalTitle(e.target.value);
-    debouncedSave({ title: e.target.value });
-  }
-
-  const handleDescriptionEditorChange = useCallback(
-    (html: string) => {
-      if (html === (ticket?.description ?? "")) return;
-      debouncedSave({ description: html });
-    },
-    [debouncedSave, ticket?.description],
-  );
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onOpenChange]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[50vw] overflow-hidden p-0 flex flex-col">
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-none lg:w-3/4 lg:max-w-[75vw] overflow-hidden p-0 flex flex-col"
+      >
         <TicketHeader
           ticketId={ticketId}
           ticketNumber={ticket?.ticketNumber}
           projectKey={projectData?.key}
           priority={ticket?.priority || "MEDIUM"}
           status={ticket?.status || "TODO"}
-          title={ticket?.title || ""}
+          title={sheetTitle}
           isLoading={isLoading}
           saving={saving}
-          isDeleting={deleteTicketMutation.isPending}
+          isDeleting={isDeleting}
           onDelete={handleDelete}
         />
 
@@ -240,81 +101,33 @@ export function TicketDetailsDialog({
                 Back to board
               </Button>
             </div>
-          ) : ticket ? (
+          ) : ticket && ticketId ? (
             <>
               <div className="border-b">
                 <TicketSidebar
                   ticket={ticket}
-                  ticketId={ticketId!}
+                  ticketId={ticketId}
                   projectId={projectId}
                   members={members}
-                  sprints={sprints || []}
+                  sprints={sprints}
                   statuses={statuses}
                   onAutoSave={autoSave}
                 />
               </div>
 
-              <div className="p-4 space-y-4">
-                <Input
-                  value={localTitle}
-                  onChange={handleTitleChange}
-                  className="text-base font-semibold border-0 bg-transparent px-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                  placeholder="Ticket title"
-                />
-
-                <TiptapEditorDynamic
-                  content={ticket.description ?? ""}
-                  contentKey={ticketId ?? 0}
-                  onChangeHtml={handleDescriptionEditorChange}
-                  output="html"
-                  minHeightClassName="min-h-[120px]"
-                  placeholder="Add a description..."
-                />
-
-                <TicketSubtasks ticketId={ticketId!} projectId={projectId} subtasks={subtasks || []} />
-
-                {ticket.attachments && ticket.attachments.length > 0 && (
-                  <div>
-                    <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
-                      Attachments
-                    </h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      {ticket.attachments.map((att) => (
-                        <button
-                          key={att.id}
-                          type="button"
-                          onClick={() => viewFile(att.fileUrl)}
-                          className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
-                        >
-                          {att.mimeType?.startsWith("image/") ? (
-                            <AttachmentImage fileUrl={att.fileUrl} fileName={att.fileName} />
-                          ) : (
-                            <div className="flex items-center justify-center h-full text-muted-foreground text-[10px] p-1 text-center">
-                              {att.fileName}
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <ExternalLink className="h-4 w-4 text-white" />
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <TicketChecklists projectId={projectId} ticketId={ticketId!} />
-                <TicketCustomFields projectId={projectId} ticketId={ticketId!} />
-                <TicketRelations ticketId={ticketId!} projectId={projectId} />
-                <TicketTimeTracker ticketId={ticketId!} projectId={projectId} timeSpent={ticket.timeSpent ?? null} />
-                <WatcherList projectId={projectId} ticketId={ticketId!} members={members} />
-                <ActivityFeed
-                  ticketId={ticketId!}
+              <div className="p-4">
+                <TicketDetailMainSection
+                  ticket={ticket}
+                  ticketId={ticketId}
                   projectId={projectId}
-                  comments={ticket.comments || []}
-                  members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}
+                  projectKey={projectData?.key}
+                  localTitle={localTitle}
+                  subtasks={subtasks}
+                  members={members}
                   highlightCommentId={highlightCommentId}
+                  onTitleChange={handleTitleChange}
+                  onDescriptionChange={handleDescriptionEditorChange}
                 />
-                {ticketId ? <TicketActivityLog ticketId={ticketId} projectId={projectId} /> : null}
               </div>
             </>
           ) : (

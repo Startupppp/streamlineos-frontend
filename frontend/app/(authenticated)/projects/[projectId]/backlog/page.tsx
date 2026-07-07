@@ -1,13 +1,13 @@
 "use client";
 
-import { use, useMemo, useCallback, useState } from "react";
+import { use, useMemo, useCallback, useState, useEffect } from "react";
 import { useProject, useSprints } from "@/hooks/api";
 import { useBulkUpdateTickets } from "@/hooks/api/projects";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/projects";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
-import { TicketDetailsDialog } from "@/features/projects/ticket-details/ticket-details-dialog";
+import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,23 +81,17 @@ export default function BacklogPage({ params }: PageProps) {
 
   const handleTicketSelect = useCallback(
     (id: number) => {
-      const p = new URLSearchParams(searchParams.toString());
-      p.set("ticket", String(id));
-      router.replace(`?${p.toString()}`, { scroll: false });
+      const href = buildTicketDetailUrl(projectId, data?.key, id, tickets);
+      if (href) router.push(href);
     },
-    [router, searchParams],
+    [router, projectId, data?.key, tickets],
   );
 
-  const handleTicketClose = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        const p = new URLSearchParams(searchParams.toString());
-        p.delete("ticket");
-        router.replace(`?${p.toString()}`, { scroll: false });
-      }
-    },
-    [router, searchParams],
-  );
+  useEffect(() => {
+    if (!selectedTicketId || !data) return;
+    const href = buildTicketDetailUrl(projectId, data.key, selectedTicketId, tickets);
+    if (href) router.replace(href);
+  }, [selectedTicketId, data, tickets, projectId, router]);
 
   const toggleSelect = useCallback((id: number) => {
     setSelectedIds((prev) => {
@@ -253,13 +247,6 @@ export default function BacklogPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
-      <TicketDetailsDialog
-        ticketId={selectedTicketId}
-        open={!!selectedTicketId}
-        onOpenChange={handleTicketClose}
-        projectId={projectId}
-        statuses={statuses?.map((s) => ({ id: s.id, name: s.name }))}
-      />
     </PageWrapper>
   );
 }

@@ -13,10 +13,13 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { TicketComment } from "@/types/projects";
 import { MentionTextarea, type MentionUser } from "@/features/projects/comments/mention-textarea";
 import { CommentItem } from "./comment-item";
+import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
 
 interface ActivityFeedProps {
   ticketId: number;
   projectId?: number;
+  projectKey?: string | null;
+  ticketNumber?: number | null;
   comments: TicketComment[];
   members?: MentionUser[];
   highlightCommentId?: number | null;
@@ -28,6 +31,8 @@ const noopStr = (_: string) => {};
 export function ActivityFeed({
   ticketId,
   projectId = 0,
+  projectKey,
+  ticketNumber,
   comments,
   members = [],
   highlightCommentId,
@@ -42,6 +47,16 @@ export function ActivityFeed({
   const currentUserId = session?.user?.id;
   const commentRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const canManage = useCan("projects:manage");
+
+  const commentPermalink = useCallback(
+    (commentId: number) => {
+      if (ticketNumber != null) {
+        return getTicketDetailHref(projectId, projectKey, ticketNumber, commentId);
+      }
+      return `/projects/${projectId}?ticket=${ticketId}&comment=${commentId}`;
+    },
+    [projectId, projectKey, ticketNumber, ticketId],
+  );
 
   const commentNotFound =
     !commentNotFoundDismissed &&
@@ -256,7 +271,7 @@ export function ActivityFeed({
                 onReact={handleReact}
                 onUnreact={handleUnreact}
                 isHighlighted={highlightCommentId === comment.id}
-                permalinkUrl={`/projects/${projectId}?ticket=${ticketId}&comment=${comment.id}`}
+                permalinkUrl={commentPermalink(comment.id)}
                 canManage={canManage}
                 onSaveEdit={handleSaveEdit}
                 onDelete={handleDeleteComment}
@@ -295,7 +310,7 @@ export function ActivityFeed({
                           onUnreact={handleUnreact}
                           hideReplyButton
                           isHighlighted={highlightCommentId === reply.id}
-                          permalinkUrl={`/projects/${projectId}?ticket=${ticketId}&comment=${reply.id}`}
+                          permalinkUrl={commentPermalink(reply.id)}
                           canManage={canManage}
                           onSaveEdit={handleSaveEdit}
                           onDelete={handleDeleteComment}

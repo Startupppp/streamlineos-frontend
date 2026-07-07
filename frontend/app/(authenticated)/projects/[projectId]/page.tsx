@@ -15,8 +15,8 @@ import {
 } from "@/features/projects/views/view-switcher";
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
 import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
-import { TicketDetailsDialog } from "@/features/projects/ticket-details/ticket-details-dialog";
 import { SaveViewDialog } from "@/features/projects/views/save-view-dialog";
+import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Button } from "@/components/ui/button";
@@ -124,24 +124,23 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const handleTicketSelect = useCallback(
     (id: number) => {
-      const p = new URLSearchParams(searchParams.toString());
-      p.set("ticket", String(id));
-      router.replace(`?${p.toString()}`, { scroll: false });
+      const href = buildTicketDetailUrl(projectId, data?.key, id, allTickets);
+      if (href) router.push(href);
     },
-    [router, searchParams],
+    [router, projectId, data?.key, allTickets],
   );
 
-  const handleTicketClose = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        const p = new URLSearchParams(searchParams.toString());
-        p.delete("ticket");
-        p.delete("comment");
-        router.replace(`?${p.toString()}`, { scroll: false });
-      }
-    },
-    [router, searchParams],
-  );
+  useEffect(() => {
+    if (!selectedTicketId || !data) return;
+    const href = buildTicketDetailUrl(
+      projectId,
+      data.key,
+      selectedTicketId,
+      allTickets,
+      highlightCommentId,
+    );
+    if (href) router.replace(href);
+  }, [selectedTicketId, data, allTickets, projectId, highlightCommentId, router]);
 
   const handleSaveViewNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setSaveViewName(e.target.value),
@@ -341,15 +340,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
           <WorkloadView tickets={filteredTickets} projectId={projectId} members={members} />
         </div>
       )}
-
-      <TicketDetailsDialog
-        ticketId={selectedTicketId}
-        open={!!selectedTicketId}
-        onOpenChange={handleTicketClose}
-        projectId={projectId}
-        statuses={statuses?.map((s) => ({ id: s.id, name: s.name }))}
-        highlightCommentId={highlightCommentId}
-      />
 
       <SaveViewDialog
         open={saveViewOpen}

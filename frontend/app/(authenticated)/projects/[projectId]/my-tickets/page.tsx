@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useCallback, memo } from "react";
+import { use, useMemo, useCallback, memo, useEffect } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useProject } from "@/hooks/api";
@@ -9,7 +9,7 @@ import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
 import { TicketTypeIcon } from "@/features/projects/shared/ticket-type-icon";
 import { PriorityBadge } from "@/features/projects/shared/priority-badge";
 import { StatusBadge } from "@/features/projects/shared/status-badge";
-import { TicketDetailsDialog } from "@/features/projects/ticket-details/ticket-details-dialog";
+import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -138,23 +138,17 @@ export default function MyTicketsPage({ params }: PageProps) {
 
   const handleTicketSelect = useCallback(
     (id: number) => {
-      const p = new URLSearchParams(searchParams.toString());
-      p.set("ticket", String(id));
-      router.replace(`?${p.toString()}`, { scroll: false });
+      const href = buildTicketDetailUrl(projectId, data?.key, id, myTickets);
+      if (href) router.push(href);
     },
-    [router, searchParams],
+    [router, projectId, data?.key, myTickets],
   );
 
-  const handleTicketClose = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        const p = new URLSearchParams(searchParams.toString());
-        p.delete("ticket");
-        router.replace(`?${p.toString()}`, { scroll: false });
-      }
-    },
-    [router, searchParams],
-  );
+  useEffect(() => {
+    if (!selectedTicketId || !data) return;
+    const href = buildTicketDetailUrl(projectId, data.key, selectedTicketId, myTickets);
+    if (href) router.replace(href);
+  }, [selectedTicketId, data, myTickets, projectId, router]);
 
   const statuses =
     data && "statuses" in data
@@ -265,13 +259,6 @@ export default function MyTicketsPage({ params }: PageProps) {
         </div>
       )}
 
-      <TicketDetailsDialog
-        ticketId={selectedTicketId}
-        open={!!selectedTicketId}
-        onOpenChange={handleTicketClose}
-        projectId={projectId}
-        statuses={statuses?.map((s) => ({ id: s.id, name: s.name }))}
-      />
     </PageWrapper>
   );
 }

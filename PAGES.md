@@ -238,6 +238,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/projects/[projectId]/views` — Views
 - [x] `/projects/[projectId]/intake` — Intake
 - [x] `/projects/[projectId]/my-tickets` — My tickets
+- [x] `/projects/[projectId]/tickets/[ticketKey]` — Ticket detail (Jira-like 2-column page: title/description/activity left, status/assignees/labels sidebar right; board/backlog/my-tickets navigate here; sheet widened to 3/4 for quick-view fallback)
 - [x] `/projects/[projectId]/analytics` — Analytics (E2E fix: assignee chart now joins users for real names)
 - [x] `/projects/[projectId]/budget` — Budget
 - [x] `/projects/[projectId]/settings` — Project settings

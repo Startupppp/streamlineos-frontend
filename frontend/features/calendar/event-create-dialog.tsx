@@ -23,11 +23,10 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 import { useIntegrationConnections } from "@/hooks/api/integrations";
 import { toast } from "sonner";
 import { EventFormFields } from "./event-form-fields";
-import { EventAttendeesPicker } from "./event-attendees-picker";
 import type { TicketSearchResult } from "@/hooks/api/projects";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
 import { Input } from "@/components/ui/input";
-import { Ticket, X, Users, Link as LinkIcon, Video } from "lucide-react";
+import { Ticket, X, Link as LinkIcon, Video, MapPin } from "lucide-react";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
 
@@ -587,8 +586,6 @@ export function EventCreateDialog({
               <EventFormFields
                 title={form.title}
                 description={form.description}
-                location={form.location}
-                locationError={form.locationError}
                 allDay={form.allDay}
                 startDate={form.startDate}
                 startTime={form.startTime}
@@ -604,7 +601,6 @@ export function EventCreateDialog({
                 dateTimeError={dateTimeError}
                 onTitleChange={handleTitleChange}
                 onDescriptionChange={handleDescriptionChange}
-                onLocationChange={handleLocationChange}
                 onAllDayChange={handleAllDayChange}
                 onStartDateChange={handleStartDateChange}
                 onStartTimeChange={handleStartTimeChange}
@@ -615,6 +611,9 @@ export function EventCreateDialog({
                 onSyncConnectionChange={handleSyncConnectionChange}
                 onAddConferenceChange={handleAddConferenceChange}
                 onShowEndDate={handleShowEndDate}
+                members={members}
+                attendeeIds={form.attendeeIds}
+                onToggleAttendee={toggleAttendee}
               />
 
               {/* Manual meeting link (Google Meet / Teams / Zoom) */}
@@ -647,15 +646,22 @@ export function EventCreateDialog({
                 </div>
               </div>
 
-              {/* Attendees Picker with icon on left */}
               <div className="flex items-start gap-2.5">
-                <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <EventAttendeesPicker
-                    members={members}
-                    selectedIds={form.attendeeIds}
-                    onToggle={toggleAttendee}
+                <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
+                <div className="flex-1 min-w-0 space-y-1">
+                  <Input
+                    id="ev-location"
+                    value={form.location}
+                    onChange={handleLocationChange}
+                    placeholder="Room or Location"
+                    className={cn(
+                      "h-9 text-xs flex-1 min-w-0",
+                      form.locationError && "border-destructive",
+                    )}
                   />
+                  {form.locationError && (
+                    <p className="text-[10px] text-destructive">{form.locationError}</p>
+                  )}
                 </div>
               </div>
 
