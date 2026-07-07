@@ -427,6 +427,15 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 ## Support
 - [x] `/support` — Support overview
 - [x] `/support/inbox` — Support inbox; `DashboardGate permission="dashboard:support:view"`
+- [x] `/support/settings/sla` — SLA Policies CRUD (mirrors `/crm/settings/sla`); subject `support:settings:manage`.
+- [x] `/support/settings/business-hours` — Business-hours calendars: timezone, weekly schedule grid, holidays, 24x7/default toggles; Sheet form (multi-section); subject `support:settings:manage`.
+- [x] `/support/settings/channels` — Support channels (email/chat/whatsapp/sms) CRUD, inline active toggle; subject `support:channels:manage`.
+- [x] `/support/portal` + `/support/portal/[portalTicketId]` — Customer-facing ticket portal (reuses `CLIENT_USER` auth, no new auth system): own-tickets-only list/create/detail/reply, no internal-note visibility; subject `support:portal:tickets:*`.
+- [x] `/support/reports` (tabs: overview / agent-performance / queue-performance / channel-performance / automation-performance / csat) — Reporting dashboards: FRT/resolution time/SLA compliance/reopen rate/breakdowns, date-range + agent/queue/channel filters, recharts; subject `support:reports:view`.
+- [x] `/ticket-feedback/[token]` — Public CSAT survey (no auth; top-level path chosen to avoid the `/support` middleware-prefix collision and to stay distinct from the pre-existing generic `/csat` survey-campaign backend module).
+- [x] `/support/macros` — extended with `visibility` (org/team/private), `actions` (set status/priority/tag/internal-note on apply), usage counts, and a compose-time preview; "Use macro" wired into the inbox reply composer.
+- [x] `/support/settings/automations` — extended `AutomationTrigger`/`AutomationActionType` (shared `hooks/api/automations.ts` + `automation-meta.ts`/`automation-builder-sheet.tsx`) with `ticket.priority_changed`/`ticket.message_received` triggers and `support_assign_ticket`/`support_set_priority`/`support_add_tag`/`support_internal_note` actions.
+- [x] Ticket detail — AI suggestions panel (`ticket-ai-panel.tsx`): summary/sentiment/category/priority/spam analysis, suggested reply/macro (insert-to-composer via a `SUPPORT_INSERT_REPLY_DRAFT_EVENT` window event), KB-article suggestions, duplicate-ticket detection — every suggestion requires explicit agent accept/reject, never auto-applied. Ticket risk badge (SLA due-soon/breached/paused) added to the detail header.
 
 ---
 

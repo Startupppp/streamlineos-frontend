@@ -1,19 +1,38 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { Loader2, Send, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { Loader2, Send, Paperclip, X, FileText, Image as ImageIcon, Wand2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 import { useAddSupportMessage } from "@/hooks/api/support";
 import {
+  useSupportMacros,
+  usePreviewMacro,
+  useApplyMacro,
+  type SupportMacro,
+} from "@/hooks/api/support/macros";
+import {
   SUPPORT_FOCUS_REPLY_EVENT,
+  SUPPORT_INSERT_REPLY_DRAFT_EVENT,
   type SupportFocusReplyDetail,
+  type SupportInsertReplyDraftDetail,
 } from "./use-inbox-shortcuts";
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
@@ -39,10 +58,27 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
   const [isInternal, setIsInternal] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [macroPopoverOpen, setMacroPopoverOpen] = useState(false);
+  const [macroSearch, setMacroSearch] = useState("");
+  const [previewMacro, setPreviewMacro] = useState<SupportMacro | null>(null);
+  const [previewBody, setPreviewBody] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const addMessage = useAddSupportMessage();
+  const { data: macros } = useSupportMacros();
+  const previewMacroMutation = usePreviewMacro();
+  const applyMacro = useApplyMacro();
+
+  const filteredMacros = useMemo(() => {
+    const term = macroSearch.trim().toLowerCase();
+    if (!term) return macros ?? [];
+    return (macros ?? []).filter(
+      (macro) =>
+        macro.title.toLowerCase().includes(term) ||
+        (macro.category ?? "").toLowerCase().includes(term),
+    );
+  }, [macros, macroSearch]);
 
   useEffect(() => {
     function handleFocusReply(e: Event) {
@@ -53,6 +89,61 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
     window.addEventListener(SUPPORT_FOCUS_REPLY_EVENT, handleFocusReply);
     return () => window.removeEventListener(SUPPORT_FOCUS_REPLY_EVENT, handleFocusReply);
   }, []);
+
+  useEffect(() => {
+    function handleInsertReplyDraft(e: Event) {
+      const detail = (e as CustomEvent<SupportInsertReplyDraftDetail>).detail;
+      if (!detail?.body) return;
+      setReplyText(detail.body);
+      textareaRef.current?.focus();
+    }
+    window.addEventListener(SUPPORT_INSERT_REPLY_DRAFT_EVENT, handleInsertReplyDraft);
+    return () => window.removeEventListener(SUPPORT_INSERT_REPLY_DRAFT_EVENT, handleInsertReplyDraft);
+  }, []);
+
+  const handleMacroSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setMacroSearch(e.target.value),
+    [],
+  );
+
+  const handleSelectMacro = useCallback(
+    (macro: SupportMacro) => {
+      setMacroPopoverOpen(false);
+      previewMacroMutation.mutate(
+        { macroId: macro.id, ticketId },
+        {
+          onSuccess: (result) => {
+            setPreviewMacro(macro);
+            setPreviewBody(result.body);
+          },
+          onError: (error) => toast.error(getErrorMessage(error)),
+        },
+      );
+    },
+    [previewMacroMutation, ticketId],
+  );
+
+  const handleClosePreview = useCallback(() => {
+    setPreviewMacro(null);
+    setPreviewBody("");
+  }, []);
+
+  const handleConfirmApplyMacro = useCallback(() => {
+    if (!previewMacro) return;
+    applyMacro.mutate(
+      { macroId: previewMacro.id, ticketId },
+      {
+        onSuccess: (result) => {
+          setReplyText(result.body);
+          setIsInternal(result.isInternal);
+          toast.success("Macro applied");
+          handleClosePreview();
+          textareaRef.current?.focus();
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [applyMacro, previewMacro, ticketId, handleClosePreview]);
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -130,14 +221,64 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
 
   return (
     <div className="px-4 py-3 border-t border-border/40 shrink-0">
-      <div className="flex items-center gap-2 mb-2">
-        <Switch checked={isInternal} onCheckedChange={handleToggleInternal} className="h-4 w-7" />
-        <Label
-          className="text-[11px] text-muted-foreground cursor-pointer"
-          onClick={handleToggleInternal}
-        >
-          {isInternal ? "Internal note (not visible to client)" : "Public reply"}
-        </Label>
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2">
+          <Switch checked={isInternal} onCheckedChange={handleToggleInternal} className="h-4 w-7" />
+          <Label
+            className="text-[11px] text-muted-foreground cursor-pointer"
+            onClick={handleToggleInternal}
+          >
+            {isInternal ? "Internal note (not visible to client)" : "Public reply"}
+          </Label>
+        </div>
+        <Popover open={macroPopoverOpen} onOpenChange={setMacroPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-[11px] text-muted-foreground"
+            >
+              <Wand2 className="h-3 w-3 mr-1" />
+              Use macro
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-2" align="end">
+            <div className="relative mb-2">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                className="pl-7 h-8 text-xs"
+                placeholder="Search canned responses…"
+                value={macroSearch}
+                onChange={handleMacroSearchChange}
+                autoFocus
+              />
+            </div>
+            <div className="max-h-56 overflow-y-auto space-y-0.5">
+              {filteredMacros.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-3">
+                  No canned responses found
+                </p>
+              ) : (
+                filteredMacros.map((macro) => (
+                  <button
+                    key={macro.id}
+                    type="button"
+                    onClick={() => handleSelectMacro(macro)}
+                    className="flex w-full items-center gap-2 rounded p-1.5 text-left text-xs hover:bg-muted transition-colors"
+                  >
+                    <span className="truncate flex-1">{macro.title}</span>
+                    {macro.category && (
+                      <Badge variant="secondary" className="text-[9px] shrink-0">
+                        {macro.category}
+                      </Badge>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
       {pendingFiles.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
@@ -208,6 +349,28 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
         onChange={handleFileSelect}
         aria-label="Attach files"
       />
+      <Dialog open={!!previewMacro} onOpenChange={handleClosePreview}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{previewMacro?.title}</DialogTitle>
+            <DialogDescription>
+              Applying this macro will insert the rendered text below and may update the
+              ticket&apos;s status/priority.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border bg-muted/40 p-3 text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
+            {previewMacroMutation.isPending ? "Loading preview…" : previewBody}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClosePreview}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmApplyMacro} disabled={applyMacro.isPending}>
+              {applyMacro.isPending ? "Applying…" : "Apply & Insert"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

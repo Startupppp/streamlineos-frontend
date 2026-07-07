@@ -25,6 +25,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -35,10 +43,34 @@ import {
   useCreateMacro,
   useUpdateMacro,
   useDeleteMacro,
+  useMacroUsage,
   type SupportMacro,
+  type MacroVisibility,
+  type MacroActions,
+  type TicketPriority,
 } from "@/hooks/api/support/macros";
+import { useSupportTags } from "@/hooks/api/support/tags";
+import type { SupportTicketStatus } from "@/types/support";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
+
+const VISIBILITY_LABELS: Record<MacroVisibility, string> = {
+  org: "Organization",
+  team: "Team",
+  private: "Private",
+};
+
+const STATUS_OPTIONS: SupportTicketStatus[] = [
+  "OPEN",
+  "IN_PROGRESS",
+  "WAITING",
+  "RESOLVED",
+  "CLOSED",
+];
+
+const PRIORITY_OPTIONS: TicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+
+const NONE_VALUE = "__none__";
 
 function MacroDialog({
   macro,
@@ -53,7 +85,19 @@ function MacroDialog({
   const [title, setTitle] = useState(macro?.title ?? "");
   const [category, setCategory] = useState(macro?.category ?? "");
   const [body, setBody] = useState(macro?.body ?? "");
+  const [visibility, setVisibility] = useState<MacroVisibility>(macro?.visibility ?? "org");
+  const [setStatus, setSetStatus] = useState<SupportTicketStatus | typeof NONE_VALUE>(
+    macro?.actions.setStatus ?? NONE_VALUE,
+  );
+  const [setPriority, setSetPriority] = useState<TicketPriority | typeof NONE_VALUE>(
+    macro?.actions.setPriority ?? NONE_VALUE,
+  );
+  const [addTagId, setAddTagId] = useState<string>(
+    macro?.actions.addTagId ? String(macro.actions.addTagId) : NONE_VALUE,
+  );
+  const [actionIsInternal, setActionIsInternal] = useState(macro?.actions.isInternal ?? false);
 
+  const { data: tags } = useSupportTags();
   const create = useCreateMacro();
   const update = useUpdateMacro();
   const isPending = create.isPending || update.isPending;
@@ -70,15 +114,43 @@ function MacroDialog({
     setBody(event.target.value);
   }
 
+  function handleVisibilityChange(value: string) {
+    setVisibility(value as MacroVisibility);
+  }
+
+  function handleSetStatusChange(value: string) {
+    setSetStatus(value as SupportTicketStatus | typeof NONE_VALUE);
+  }
+
+  function handleSetPriorityChange(value: string) {
+    setSetPriority(value as TicketPriority | typeof NONE_VALUE);
+  }
+
+  function handleAddTagChange(value: string) {
+    setAddTagId(value);
+  }
+
+  function handleActionIsInternalChange(checked: boolean) {
+    setActionIsInternal(checked);
+  }
+
   function handleSave() {
     const trimmedTitle = title.trim();
     const trimmedBody = body.trim();
     if (!trimmedTitle || !trimmedBody) return;
 
+    const actions: MacroActions = {};
+    if (setStatus !== NONE_VALUE) actions.setStatus = setStatus;
+    if (setPriority !== NONE_VALUE) actions.setPriority = setPriority;
+    if (addTagId !== NONE_VALUE) actions.addTagId = Number(addTagId);
+    if (actionIsInternal) actions.isInternal = true;
+
     const payload = {
       title: trimmedTitle,
       body: trimmedBody,
       category: category.trim() || undefined,
+      visibility,
+      actions,
     };
 
     if (isEdit) {
@@ -105,7 +177,7 @@ function MacroDialog({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Canned Response" : "New Canned Response"}</DialogTitle>
         </DialogHeader>
@@ -140,6 +212,19 @@ function MacroDialog({
             </p>
           </div>
           <div className="space-y-1">
+            <Label htmlFor="macro-visibility">Visibility</Label>
+            <Select value={visibility} onValueChange={handleVisibilityChange}>
+              <SelectTrigger id="macro-visibility">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="org">Organization</SelectItem>
+                <SelectItem value="team">Team</SelectItem>
+                <SelectItem value="private">Private (only me)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
             <Label htmlFor="macro-body">Body *</Label>
             <Textarea
               id="macro-body"
@@ -148,6 +233,75 @@ function MacroDialog({
               value={body}
               onChange={handleBodyChange}
             />
+          </div>
+          <div className="space-y-3 rounded-md border border-border p-3">
+            <p className="text-xs font-medium text-foreground">Actions on apply</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="macro-set-status" className="text-xs">
+                  Set status
+                </Label>
+                <Select value={setStatus} onValueChange={handleSetStatusChange}>
+                  <SelectTrigger id="macro-set-status" size="sm">
+                    <SelectValue placeholder="No change" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_VALUE}>No change</SelectItem>
+                    {STATUS_OPTIONS.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status.replace("_", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="macro-set-priority" className="text-xs">
+                  Set priority
+                </Label>
+                <Select value={setPriority} onValueChange={handleSetPriorityChange}>
+                  <SelectTrigger id="macro-set-priority" size="sm">
+                    <SelectValue placeholder="No change" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_VALUE}>No change</SelectItem>
+                    {PRIORITY_OPTIONS.map((priority) => (
+                      <SelectItem key={priority} value={priority}>
+                        {priority}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="macro-add-tag" className="text-xs">
+                Add tag
+              </Label>
+              <Select value={addTagId} onValueChange={handleAddTagChange}>
+                <SelectTrigger id="macro-add-tag" size="sm">
+                  <SelectValue placeholder="No tag" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_VALUE}>No tag</SelectItem>
+                  {(tags ?? []).map((tag) => (
+                    <SelectItem key={tag.id} value={String(tag.id)}>
+                      {tag.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="macro-action-internal"
+                checked={actionIsInternal}
+                onCheckedChange={handleActionIsInternalChange}
+              />
+              <Label htmlFor="macro-action-internal" className="text-xs cursor-pointer">
+                Post as internal note when applied
+              </Label>
+            </div>
           </div>
         </div>
         <DialogFooter>
@@ -165,11 +319,13 @@ function MacroDialog({
 
 function MacroCard({
   macro,
+  usageCount,
   onCopy,
   onEdit,
   onDelete,
 }: {
   macro: SupportMacro;
+  usageCount: number;
   onCopy: (macro: SupportMacro) => void;
   onEdit: (macro: SupportMacro) => void;
   onDelete: (macro: SupportMacro) => void;
@@ -195,9 +351,15 @@ function MacroCard({
                   {macro.category}
                 </Badge>
               )}
+              <Badge variant="outline" className="text-[10px]">
+                {VISIBILITY_LABELS[macro.visibility]}
+              </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-1.5 line-clamp-3 whitespace-pre-wrap">
               {macro.body}
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-1.5">
+              Used {usageCount} {usageCount === 1 ? "time" : "times"}
             </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -228,7 +390,16 @@ export default function SupportMacrosPage() {
   const { data: macros, isLoading, isError, refetch } = useSupportMacros(
     search.trim() ? { search: search.trim() } : undefined,
   );
+  const { data: usageData } = useMacroUsage();
   const deleteMacro = useDeleteMacro();
+
+  const usageById = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const entry of usageData ?? []) {
+      map.set(entry.id, entry.usageCount);
+    }
+    return map;
+  }, [usageData]);
 
   const categoryOptions = useMemo(() => {
     const seen = new Map<string, string>();
@@ -331,6 +502,7 @@ export default function SupportMacrosPage() {
             <MacroCard
               key={macro.id}
               macro={macro}
+              usageCount={usageById.get(macro.id) ?? macro.usageCount ?? 0}
               onCopy={handleCopy}
               onEdit={handleEditMacro}
               onDelete={handleDeleteMacro}

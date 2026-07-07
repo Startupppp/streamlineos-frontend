@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import type { SupportTicketStatus } from "@/types/support";
 
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 type RoutingConditionOp = "eq" | "neq" | "contains";
@@ -13,15 +14,33 @@ interface RoutingCondition {
   value: string;
 }
 
+export type MacroVisibility = "org" | "team" | "private";
+
+export interface MacroActions {
+  setStatus?: SupportTicketStatus;
+  setPriority?: TicketPriority;
+  addTagId?: number;
+  isInternal?: boolean;
+}
+
 export interface SupportMacro {
   id: number;
   orgId: string;
   title: string;
   body: string;
   category: string | null;
+  visibility: MacroVisibility;
+  actions: MacroActions;
+  usageCount: number;
   createdBy: string | null;
   createdAt: string | null;
   updatedAt: string | null;
+}
+
+export interface MacroUsage {
+  id: number;
+  title: string;
+  usageCount: number;
 }
 
 export interface SupportRoutingRule {
@@ -47,12 +66,36 @@ interface CreateMacroInput {
   title: string;
   body: string;
   category?: string;
+  visibility?: MacroVisibility;
+  actions?: MacroActions;
 }
 
 interface UpdateMacroInput {
   title?: string;
   body?: string;
   category?: string | null;
+  visibility?: MacroVisibility;
+  actions?: MacroActions;
+}
+
+interface PreviewMacroInput {
+  macroId: number;
+  ticketId: number;
+}
+
+interface PreviewMacroResult {
+  body: string;
+}
+
+interface ApplyMacroInput {
+  macroId: number;
+  ticketId: number;
+}
+
+interface ApplyMacroResult {
+  body: string;
+  isInternal: boolean;
+  actionsApplied: Record<string, unknown>;
 }
 
 interface CreateRoutingRuleInput {
@@ -106,6 +149,35 @@ export function useDeleteMacro() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/macros/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportMacros.all }),
+  });
+}
+
+export function useMacroUsage() {
+  return useQuery({
+    queryKey: queryKeys.supportMacros.usage(),
+    queryFn: () => apiClient.get<MacroUsage[]>("/support/macros/usage"),
+    staleTime: 30_000,
+  });
+}
+
+export function usePreviewMacro() {
+  return useMutation({
+    mutationKey: ["supportMacros", "preview"],
+    mutationFn: ({ macroId, ticketId }: PreviewMacroInput) =>
+      apiClient.post<PreviewMacroResult>(`/support/macros/${macroId}/preview`, { ticketId }),
+  });
+}
+
+export function useApplyMacro() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["supportMacros", "apply"],
+    mutationFn: ({ macroId, ticketId }: ApplyMacroInput) =>
+      apiClient.post<ApplyMacroResult>(`/support/macros/${macroId}/apply`, { ticketId }),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.supportMacros.usage() });
+      qc.invalidateQueries({ queryKey: queryKeys.support.detail(variables.ticketId) });
+    },
   });
 }
 

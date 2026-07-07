@@ -9,6 +9,12 @@ export interface SupportFocusReplyDetail {
   internal: boolean;
 }
 
+export const SUPPORT_INSERT_REPLY_DRAFT_EVENT = "support:insert-reply-draft";
+
+export interface SupportInsertReplyDraftDetail {
+  body: string;
+}
+
 interface UseInboxShortcutsOptions {
   tickets: SupportTicket[];
   selectedTicketId: number | null;
