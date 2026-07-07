@@ -38,6 +38,8 @@ const ACTION_ICONS: Record<TicketActivityAction, LucideIcon> = {
   sprint_changed: Timer,
   due_date_changed: Timer,
   comment_added: MessageSquare,
+  comment_updated: MessageSquare,
+  comment_deleted: MessageSquare,
   label_changed: Tag,
 };
 

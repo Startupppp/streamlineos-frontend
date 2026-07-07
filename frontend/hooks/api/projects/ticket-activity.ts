@@ -13,6 +13,8 @@ export type TicketActivityAction =
   | "sprint_changed"
   | "due_date_changed"
   | "comment_added"
+  | "comment_updated"
+  | "comment_deleted"
   | "label_changed";
 
 export interface TicketActivityEntry {

@@ -30,6 +30,9 @@ export function useUpdateComment() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
+      });
     },
   });
 }
@@ -45,6 +48,9 @@ export function useDeleteComment() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
       });
     },
   });

@@ -107,6 +107,9 @@ export function KanbanBoard({
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(projectId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.ticketActivity.all,
+      });
     },
   });
 

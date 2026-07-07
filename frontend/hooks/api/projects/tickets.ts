@@ -100,6 +100,9 @@ export function useUpdateTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.tickets({ projectId }),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
+      });
       const affectsAggregates =
         variables.status !== undefined ||
         variables.sprintId !== undefined ||
@@ -202,6 +205,9 @@ export function useAddComment(
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
       });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
