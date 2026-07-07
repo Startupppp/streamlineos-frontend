@@ -1,3 +1,5 @@
+import { getErrorMessage } from "./get-error-message";
+
 const SAME_ORIGIN = "/api";
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
 
@@ -247,12 +249,14 @@ export function buildUrl(path: string, params?: Record<string, unknown>): string
 }
 
 export class ApiError extends Error {
+  readonly status?: number;
   readonly code?: string;
   readonly details?: unknown;
 
-  constructor(message: string, code?: string, details?: unknown) {
+  constructor(message: string, status?: number, code?: string, details?: unknown) {
     super(message);
     this.name = "ApiError";
+    this.status = status;
     this.code = code;
     this.details = details;
   }
@@ -274,12 +278,14 @@ async function parseResponse<T>(res: Response): Promise<T> {
     try {
       const body = (await res.json()) as Record<string, unknown>;
       if (typeof body?.message === "string" && body.message) message = body.message;
-      else if (typeof body?.error === "string" && body.error) message = body.error;
+      else if (Array.isArray(body?.message) && body.message.length > 0) {
+        message = body.message.filter((m): m is string => typeof m === "string").join(", ");
+      } else if (typeof body?.error === "string" && body.error) message = body.error;
       if (typeof body?.code === "string") code = body.code;
       if ("details" in body) details = body.details;
     } catch {
     }
-    throw new ApiError(message, code, details);
+    throw new ApiError(message, res.status, code, details);
   }
   if (res.status === 204) return undefined as T;
   const body = (await res.json()) as Record<string, unknown>;
@@ -377,11 +383,10 @@ async function download(url: string, params?: Record<string, unknown>): Promise<
 export const apiClient = { get, post, put, patch, delete: del, upload, download } as const;
 
 export function getApiError(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  return "Something went wrong";
+  return getErrorMessage(error);
 }
 
-export { getErrorMessage } from "./get-error-message";
+export { getErrorMessage };
 
 export type ApiResponse<T = void> =
   | { success: true; data: T }

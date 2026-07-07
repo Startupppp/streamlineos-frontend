@@ -66,11 +66,7 @@ export function useProjectProvisioning(onSuccess: () => void) {
       onSuccess();
       router.push(`/projects/${projectId}`);
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith("409")) {
-        toast.error("Duplicate project key — go back to Basics and choose a different one.");
-      } else {
-        toast.error(getErrorMessage(error));
-      }
+      toast.error(getErrorMessage(error));
     } finally {
       setIsProvisioning(false);
     }
