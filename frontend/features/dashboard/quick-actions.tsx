@@ -28,7 +28,7 @@ export function getQuickActionsForRole(role: string | undefined): QuickAction[] 
   switch (role) {
     case "CEO":
       return [
-        { label: "New Project", icon: Plus, href: "/projects" },
+        { label: "New Project", icon: Plus, href: "/projects/all" },
         { label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" },
         { label: "View Reports", icon: BarChart3, href: "/crm/reports" },
         { label: "Team Schedule", icon: CalendarDays, href: "/hr/attendance" },
@@ -55,8 +55,8 @@ export function getQuickActionsForRole(role: string | undefined): QuickAction[] 
     case "VIDEO_EDITOR":
     case "DIGITAL_MARKETING":
       return [
-        { label: "My Projects", icon: Briefcase, href: "/projects" },
-        { label: "My Tasks", icon: CheckSquare, href: "/projects" },
+        { label: "My Projects", icon: Briefcase, href: "/projects/all" },
+        { label: "My Tasks", icon: CheckSquare, href: "/projects/my-work" },
         { label: "Check In", icon: Clock, href: "/hr/attendance" },
       ];
     default:

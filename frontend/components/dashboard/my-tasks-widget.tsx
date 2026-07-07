@@ -25,7 +25,7 @@ export function MyTasksWidget() {
       icon={ListChecks}
       title="My Tasks"
       link={{
-        href: "/projects",
+        href: "/projects/my-work",
         label: "View all",
         ariaLabel: "View all tasks",
       }}

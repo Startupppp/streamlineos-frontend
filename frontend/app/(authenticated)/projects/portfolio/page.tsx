@@ -126,7 +126,7 @@ export default function PortfolioPage() {
               <EmptyState
                 title="No projects found"
                 description="Create a project to see it in the portfolio view."
-                action={{ label: "Go to Projects", href: "/projects" }}
+                action={{ label: "Go to Projects", href: "/projects/all" }}
               />
             ) : viewMode === "table" ? (
               <div className="rounded-xl border border-border overflow-hidden shadow-sm">

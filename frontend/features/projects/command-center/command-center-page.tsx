@@ -245,7 +245,7 @@ export function CommandCenterPage() {
           title="Active Projects"
           actions={
             <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
-              <Link href="/projects">
+              <Link href="/projects/all">
                 All projects <ArrowRight className="h-3 w-3" />
               </Link>
             </Button>

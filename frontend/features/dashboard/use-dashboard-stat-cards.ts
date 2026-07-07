@@ -64,7 +64,7 @@ export function useDashboardStatCards(
             label: "Active Projects",
             value: stats.activeProjects,
             icon: Briefcase,
-            href: "/projects",
+            href: "/projects/all",
           },
         ];
       case "SALES":
@@ -105,7 +105,7 @@ export function useDashboardStatCards(
             label: "My Projects",
             value: rs?.myProjects ?? 0,
             icon: Briefcase,
-            href: "/projects",
+            href: "/projects/all",
           },
           {
             id: "tickets",
@@ -136,7 +136,7 @@ export function useDashboardStatCards(
             label: "My Projects",
             value: rs?.myProjects ?? 0,
             icon: Briefcase,
-            href: "/projects",
+            href: "/projects/all",
           },
           {
             id: "tickets",

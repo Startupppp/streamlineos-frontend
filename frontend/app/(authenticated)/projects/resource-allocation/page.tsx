@@ -75,7 +75,7 @@ export default function ResourceAllocationPage() {
           <EmptyState
             title="No assignments yet"
             description="Assign tickets to team members to see workload distribution here."
-            action={{ label: "View Projects", href: "/projects" }}
+            action={{ label: "View Projects", href: "/projects/all" }}
             className="flex-1 min-h-[40vh]"
           />
         ) : (

@@ -228,7 +228,7 @@ export default function WhiteboardsHubPage() {
             action={
               canManage
                 ? { label: "New board", onClick: handleOpenCreate }
-                : { label: "Go to projects", href: "/projects" }
+                : { label: "Go to projects", href: "/projects/all" }
             }
             className="flex-1"
           />

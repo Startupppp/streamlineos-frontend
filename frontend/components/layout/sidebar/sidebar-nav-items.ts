@@ -1118,7 +1118,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "All Projects",
         icon: Briefcase,
-        href: "/projects",
+        href: "/projects/all",
         isProjectsList: true,
         requiredPermission: "projects:view",
       },
@@ -1143,7 +1143,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Goals & OKRs",
         icon: Target,
-        href: "/goals",
+        href: "/projects/goal",
         requiredPermission: "projects:goals:view",
       },
       {
@@ -1808,10 +1808,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/hr") || pathname.startsWith("/recruitment"))
     return "hrms";
   if (pathname.startsWith("/timesheets")) return "timesheets";
-  if (
-    pathname.startsWith("/projects") ||
-    pathname.startsWith("/goals")
-  )
+  if (pathname.startsWith("/projects") || pathname.startsWith("/goals"))
     return "projects";
   if (pathname.startsWith("/inventory")) return "inventory";
   if (pathname.startsWith("/accounting")) return "finance";

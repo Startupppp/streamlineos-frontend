@@ -50,7 +50,7 @@ import { useCan } from "@/hooks/api/access";
 
 interface ProjectSidebarProps {
   projectId: string;
-  projectName: string;
+  projectName: string | undefined;
   projectKey: string | undefined;
 }
 
@@ -154,10 +154,10 @@ function useIsActive(baseUrl: string) {
 
 const SIDEBAR_COLLAPSED_KEY = "streamlineos:project-sidebar:collapsed";
 
-function getProjectInitials(projectKey: string | undefined, projectName: string): string {
+function getProjectInitials(projectKey: string | undefined, projectName: string | undefined): string {
   const key = projectKey?.trim();
   if (key) return key.substring(0, 2).toUpperCase();
-  const name = projectName.trim();
+  const name = (projectName ?? "").trim();
   if (!name) return "P";
   const words = name.split(/\s+/).filter((word) => word.length > 0);
   if (words.length >= 2) {
@@ -213,7 +213,7 @@ function DesktopSidebar({
             {getProjectInitials(projectKey, projectName)}
           </div>
           {!isCollapsed && (
-            <span className="text-sm font-semibold truncate flex-1 min-w-0">{projectName}</span>
+            <span className="text-sm font-semibold truncate flex-1 min-w-0">{projectName ?? "Project"}</span>
           )}
           <Button
             variant="ghost"
@@ -334,7 +334,7 @@ function MobileProjectNav({
                 <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
                   {getProjectInitials(projectKey, projectName)}
                 </div>
-                <span className="text-sm font-semibold truncate">{projectName}</span>
+                <span className="text-sm font-semibold truncate">{projectName ?? "Project"}</span>
               </div>
             </div>
 

@@ -21,7 +21,7 @@ const ENTITY_PATHS: Record<TaskEntityType, string> = {
   LEAD: "/crm/leads",
   DEAL: "/crm/deals",
   CONTACT: "/crm/contacts",
-  PROJECT: "/projects",
+  PROJECT: "/projects/all",
 };
 
 const ENTITY_LABELS: Record<TaskEntityType, string> = {

@@ -225,7 +225,7 @@ Ordered money-path first. Check off each page after fixing.
 
 ## Projects
 **Projects module UI consistency (2026-07-07):** All sidebar list pages aligned to Approvals/Portfolio reference — `PageWrapper` + `eyebrow="Projects"`, shared `StatCard`/`StatCardGrid`, filters in `PageWrapper.filters`, themed empty/error states, `rounded-xl` card chrome, no double inner padding.
-- [x] `/projects` — All Projects list: eyebrow, subtitle, filter bar in PageWrapper, grid/list skeletons + empty/error states
+- [x] `/projects/all` — All Projects list: eyebrow, subtitle, filter bar in PageWrapper, grid/list skeletons + empty/error states (`/projects` redirects to Command Center)
 - [x] `/projects/[projectId]` — Project board
 - [x] `/projects/[projectId]/backlog` — Backlog
 - [x] `/projects/[projectId]/sprints` — Sprints
@@ -483,8 +483,8 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 
 ## New Non-HR Feature Pages (added — full vertical: schema → migration → service → API → TanStack hooks → UI)
 - [x] `/projects/[projectId]/reports` — Agile Reporting: velocity, burnup, cumulative-flow (CFD) + on-demand daily snapshots (`project_daily_snapshots`); recharts; per-section loading/empty/error states.
-- [x] `/goals` — Goals & OKRs: eyebrow, shared StatCardGrid, blue progress bars, RequireModule, filters in PageWrapper
-- [x] `/goals/[goalId]` — Goal detail: key results + check-in Dialog (auto progress rollup), updates timeline, linked work items.
+- [x] `/projects/goal` — Goals & OKRs: eyebrow, shared StatCardGrid, blue progress bars, RequireModule, filters in PageWrapper (`/goals` redirects here)
+- [x] `/projects/goal/[goalId]` — Goal detail: key results + check-in Dialog (auto progress rollup), updates timeline, linked work items (`/goals/[goalId]` redirects here)
 - [x] `/support/kb` — Knowledge Base manager: categories + articles, status/visibility filters, search (`kb_categories`/`kb_articles`/`kb_article_feedback`; subject `support:kb`).
 - [x] `/support/kb/[articleId]` — KB article editor (title/category/excerpt/visibility/status/tags/content) + feedback summary.
 > 2026-07-03 — refactored: monolithic pages (843/1041 lines) decomposed into `features/kb/components/*` (manager-content, article-editor + card/dialog/panels); PageWrapper filters w/ URL sync, StatCardGrid, themed empty-state illustrations, AlertDialog confirms, mutationKeys on all 16 KB mutations; `/support/kb` stays canonical (`?create=1` quick-create supported). Open item: editor is a Textarea — TipTap migration needs backend HTML contract.

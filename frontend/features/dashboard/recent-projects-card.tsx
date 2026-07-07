@@ -34,7 +34,7 @@ export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, i
           <Folder className="h-4 w-4 text-blue-600" aria-hidden="true" />
           Recent Projects
         </CardTitle>
-        <Link href="/projects">
+        <Link href="/projects/all">
           <Button variant="ghost" size="sm" className="hover:bg-blue-500/10 hover:text-blue-600" aria-label="View all projects">View All</Button>
         </Link>
       </CardHeader>

@@ -177,7 +177,7 @@ export function DashboardClient() {
 
   const handleRefresh = useCallback(() => void refetch(), [refetch]);
   const handleGoToProjects = useCallback(
-    () => router.push("/projects"),
+    () => router.push("/projects/all"),
     [router],
   );
 

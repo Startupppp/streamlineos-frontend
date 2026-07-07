@@ -152,7 +152,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       {
         onSuccess: () => {
           toast.success("Project deleted successfully");
-          router.push("/projects");
+          router.push("/projects/all");
         },
         onError: (error) => {
           toast.error(getErrorMessage(error));
