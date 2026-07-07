@@ -57,6 +57,11 @@ export function KanbanBoard({
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [isMounted, setIsMounted] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const prevTicketsRef = useRef(tickets);
+  if (prevTicketsRef.current !== tickets) {
+    prevTicketsRef.current = tickets;
+    setOptimisticTickets(tickets);
+  }
   const queryClient = useQueryClient();
 
   const columns = useMemo<KanbanColumn[]>(() => {
@@ -83,9 +88,6 @@ export function KanbanBoard({
     ];
   }, [statuses, optimisticTickets]);
 
-  useEffect(() => {
-    setOptimisticTickets(tickets);
-  }, [tickets]);
   useEffect(() => {
     setIsMounted(true);
   }, []);

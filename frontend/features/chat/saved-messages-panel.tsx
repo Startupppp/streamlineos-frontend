@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bookmark, Hash, Loader2, X } from "lucide-react";
@@ -80,10 +80,6 @@ export function SavedMessagesPanel({
 }) {
   const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useSavedMessages();
   const unsave = useUnsaveMessage();
-
-  useEffect(() => {
-    void refetch();
-  }, [refetch]);
 
   const items = useMemo(
     () => data?.pages.flatMap((p) => p.items).filter((item) => item.message) ?? [],

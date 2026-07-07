@@ -1,12 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Bot, Send, Square, X } from "lucide-react";
+import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
+import { Bot, Loader2, Send, Square, Trash2, X } from "lucide-react";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
-import { useAskAI, type AskAIMessage } from "@/hooks/api";
+import {
+  useAskAI,
+  useAskAiHistory,
+  useClearAskAiHistory,
+  type AskAIMessage,
+  type AskAiHistoryMessage,
+  type AskAiHistoryPage,
+} from "@/hooks/api";
+import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const SUGGESTIONS = [
@@ -16,22 +25,90 @@ const SUGGESTIONS = [
   "Create a task to follow up tomorrow",
 ];
 
+const CONTEXT_WINDOW = 24;
+
+interface Draft {
+  user: string;
+  assistant: string;
+}
+
 export function GlobalAskOs() {
   const reduce = useReducedMotion();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<AskAIMessage[]>([]);
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [draft, setDraft] = useState<Draft | null>(null);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const topSentinelRef = useRef<HTMLDivElement>(null);
+  const prevScrollHeightRef = useRef(0);
+  const loadingOlderRef = useRef(false);
+  const isNearBottomRef = useRef(true);
+  const assistantBufRef = useRef("");
+  const tempIdRef = useRef(0);
+
   const { sendMessage, stop, isStreaming } = useAskAI();
+  const clearHistory = useClearAskAiHistory();
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useAskAiHistory(open);
+
+  const persisted = useMemo<AskAiHistoryMessage[]>(
+    () => (data?.pages ?? []).flatMap((page) => page.messages).slice().reverse(),
+    [data],
+  );
+
+  const loadOlder = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || loadingOlderRef.current || !hasNextPage || isFetchingNextPage) return;
+    prevScrollHeightRef.current = el.scrollHeight;
+    loadingOlderRef.current = true;
+    void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
-    if (!open) return;
-    bottomRef.current?.scrollIntoView({
-      behavior: reduce ? "auto" : "smooth",
-      block: "end",
-    });
-  }, [messages, open, reduce]);
+    const sentinel = topSentinelRef.current;
+    const root = scrollRef.current;
+    if (!open || !sentinel || !root || !hasNextPage) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadOlder();
+      },
+      { root, threshold: 0.1 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [open, hasNextPage, loadOlder]);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !open) return;
+    if (loadingOlderRef.current) {
+      el.scrollTop += el.scrollHeight - prevScrollHeightRef.current;
+      loadingOlderRef.current = false;
+    } else {
+      el.scrollTop = el.scrollHeight;
+      isNearBottomRef.current = true;
+    }
+  }, [persisted.length, open]);
+
+  useEffect(() => {
+    if (!draft) return;
+    const el = scrollRef.current;
+    if (!el || !isNearBottomRef.current) return;
+    el.scrollTop = el.scrollHeight;
+  }, [draft]);
+
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  }
 
   const send = useCallback(
     async (textOverride?: string) => {
@@ -39,25 +116,55 @@ export function GlobalAskOs() {
       if (!text || isStreaming) return;
       setInput("");
       setErrorMessage(null);
-      const next: AskAIMessage[] = [...messages, { role: "user", content: text }];
-      setMessages([...next, { role: "assistant", content: "" }]);
+      isNearBottomRef.current = true;
+      assistantBufRef.current = "";
+
+      const context: AskAIMessage[] = [
+        ...persisted.slice(-CONTEXT_WINDOW).map((m) => ({ role: m.role, content: m.content })),
+        { role: "user", content: text },
+      ];
+      setDraft({ user: text, assistant: "" });
+
       try {
-        await sendMessage(next, (token) => {
-          setMessages((prev) => {
-            const updated = [...prev];
-            const last = updated[updated.length - 1];
-            if (last?.role === "assistant") {
-              updated[updated.length - 1] = { ...last, content: last.content + token };
-            }
-            return updated;
-          });
+        await sendMessage(context, (token) => {
+          assistantBufRef.current += token;
+          setDraft((prev) => (prev ? { ...prev, assistant: prev.assistant + token } : prev));
         });
+
+        const userMsg: AskAiHistoryMessage = {
+          id: (tempIdRef.current -= 1),
+          role: "user",
+          content: text,
+          createdAt: new Date().toISOString(),
+        };
+        const assistantMsg: AskAiHistoryMessage = {
+          id: (tempIdRef.current -= 1),
+          role: "assistant",
+          content: assistantBufRef.current,
+          createdAt: new Date().toISOString(),
+        };
+
+        qc.setQueryData<InfiniteData<AskAiHistoryPage>>(queryKeys.aiChat.history(), (old) => {
+          if (!old || old.pages.length === 0) {
+            return {
+              pages: [{ messages: [assistantMsg, userMsg], nextCursor: null }],
+              pageParams: [undefined],
+            };
+          }
+          const pages = old.pages.map((page, index) =>
+            index === 0
+              ? { ...page, messages: [assistantMsg, userMsg, ...page.messages] }
+              : page,
+          );
+          return { ...old, pages };
+        });
+        setDraft(null);
       } catch (error) {
         setErrorMessage(getErrorMessage(error));
-        setMessages((prev) => prev.slice(0, -1));
+        setDraft(null);
       }
     },
-    [input, isStreaming, messages, sendMessage],
+    [input, isStreaming, persisted, sendMessage, qc],
   );
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -84,6 +191,15 @@ export function GlobalAskOs() {
   function handleStop() {
     stop();
   }
+
+  function handleClear() {
+    if (isStreaming || clearHistory.isPending) return;
+    clearHistory.mutate();
+    setErrorMessage(null);
+  }
+
+  const showEmpty = !isLoading && persisted.length === 0 && !draft;
+  const showClear = persisted.length > 0 || Boolean(draft);
 
   return (
     <>
@@ -124,33 +240,80 @@ export function GlobalAskOs() {
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={handleClose}
-                aria-label="Close"
-                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                {showClear && (
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    disabled={isStreaming || clearHistory.isPending}
+                    aria-label="Clear conversation"
+                    className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  aria-label="Close"
+                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto scrollbar-hide p-4">
-              {messages.length === 0 ? (
+            <div
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto scrollbar-hide p-4"
+            >
+              {isLoading ? (
+                <div className="flex h-full items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : showEmpty ? (
                 <EmptyAskOs onSuggestion={handleSuggestion} />
               ) : (
-                messages.map((message, index) => (
-                  <AskOsBubble
-                    key={index}
-                    message={message}
-                    streaming={isStreaming && index === messages.length - 1}
-                    reduce={Boolean(reduce)}
-                  />
-                ))
+                <div className="space-y-4">
+                  {hasNextPage && <div ref={topSentinelRef} className="h-px w-full" />}
+                  {isFetchingNextPage && (
+                    <div className="flex justify-center py-1">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                  {persisted.map((message) => (
+                    <AskOsBubble
+                      key={message.id}
+                      role={message.role}
+                      content={message.content}
+                      streaming={false}
+                      reduce={Boolean(reduce)}
+                    />
+                  ))}
+                  {draft && (
+                    <AskOsBubble
+                      key="draft-user"
+                      role="user"
+                      content={draft.user}
+                      streaming={false}
+                      reduce={Boolean(reduce)}
+                    />
+                  )}
+                  {draft && (
+                    <AskOsBubble
+                      key="draft-assistant"
+                      role="assistant"
+                      content={draft.assistant}
+                      streaming={isStreaming}
+                      reduce={Boolean(reduce)}
+                    />
+                  )}
+                  {errorMessage && (
+                    <p className="px-1 text-[11px] text-destructive">{errorMessage}</p>
+                  )}
+                </div>
               )}
-              {errorMessage && (
-                <p className="px-1 text-[11px] text-destructive">{errorMessage}</p>
-              )}
-              <div ref={bottomRef} />
             </div>
 
             <form
@@ -230,16 +393,17 @@ function EmptyAskOs({
 }
 
 function AskOsBubble({
-  message,
+  role,
+  content,
   streaming,
   reduce,
 }: {
-  message: AskAIMessage;
+  role: "user" | "assistant";
+  content: string;
   streaming: boolean;
   reduce: boolean;
 }) {
-  const isUser = message.role === "user";
-  if (isUser) {
+  if (role === "user") {
     return (
       <motion.div
         initial={reduce ? false : { opacity: 0, y: 6 }}
@@ -247,7 +411,7 @@ function AskOsBubble({
         className="flex justify-end"
       >
         <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-sm text-primary-foreground shadow-sm">
-          {message.content}
+          {content}
         </div>
       </motion.div>
     );
@@ -260,9 +424,9 @@ function AskOsBubble({
     >
       <AnimatedLogo size={24} gradient className="mt-0.5 shrink-0 rounded-full" />
       <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm">
-        {message.content ? (
+        {content ? (
           <div className="break-words">
-            <MarkdownContent content={message.content} />
+            <MarkdownContent content={content} />
           </div>
         ) : streaming ? (
           <TypingDots reduce={reduce} />

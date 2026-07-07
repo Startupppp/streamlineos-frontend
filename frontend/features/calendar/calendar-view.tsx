@@ -26,7 +26,6 @@ import {
 import { toast } from "sonner";
 import {
   useCalendarEvents,
-  useCalendarOrgMembers,
   useExternalCalendarEvents,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
@@ -103,9 +102,6 @@ export function CalendarView() {
     null,
   );
   const [accountsOpen, setAccountsOpen] = useState(false);
-  const [, setCheckedAttendees] = useState<
-    Record<string, boolean>
-  >({});
 
   const rangeStart = useMemo(
     () => startOfMonth(subMonths(currentDate, 1)),
@@ -121,7 +117,6 @@ export function CalendarView() {
     rangeStart,
     rangeEnd,
   );
-  const { data: members = [] } = useCalendarOrgMembers();
   const { data: connections = [] } = useIntegrationConnections();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
@@ -137,29 +132,6 @@ export function CalendarView() {
     rangeEnd,
     activeConnectionCount > 0,
   );
-
-  const memberIds = useMemo(
-    () =>
-      members
-        .map((m) => m.id)
-        .sort()
-        .join(","),
-    [members],
-  );
-
-  useEffect(() => {
-    if (!memberIds) return;
-    setCheckedAttendees((prev) => {
-      const ids = memberIds.split(",");
-      const prevKeys = Object.keys(prev).sort().join(",");
-      if (prevKeys === memberIds) return prev;
-      const next: Record<string, boolean> = {};
-      ids.forEach((id) => {
-        next[id] = prev[id] !== false;
-      });
-      return next;
-    });
-  }, [memberIds]);
 
   const selectedEvent = useMemo<CalendarListItem | null>(
     () =>

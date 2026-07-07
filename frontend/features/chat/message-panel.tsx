@@ -140,6 +140,8 @@ export function MessagePanel({
   const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
   const [showMeeting, setShowMeeting] = useState(false);
   const autoStartHandledRef = useRef(false);
+  const markReadCalledRef = useRef<number | null>(null);
+  const joinHuddleCalledRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!autoStartCall) {
@@ -269,8 +271,10 @@ export function MessagePanel({
   }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    if (joinHuddleCalledRef.current === channelId) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("joinHuddle") === "1" && activeHuddle && !isInHuddle) {
+      joinHuddleCalledRef.current = channelId;
       joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
       const url = new URL(window.location.href);
       url.searchParams.delete("joinHuddle");
@@ -306,7 +310,10 @@ export function MessagePanel({
   }, [polledMessages, channelId, queryClient]);
 
   useEffect(() => {
-    if (channelId > 0) markRead.mutate({ channelId });
+    if (channelId > 0 && markReadCalledRef.current !== channelId) {
+      markReadCalledRef.current = channelId;
+      markRead.mutate({ channelId });
+    }
   }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const {
