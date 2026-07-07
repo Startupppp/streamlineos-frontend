@@ -22,12 +22,30 @@ export function useCalendarOrgMembers() {
   });
 }
 
+export type { CalendarOrgMember };
+
+export function useCalendarMemberSearch(search: string, enabled = true) {
+  const term = search.trim();
+  return useQuery({
+    queryKey: queryKeys.calendar.memberSearch(term),
+    queryFn: () =>
+      apiClient.get<CalendarOrgMember[]>("/org/members", {
+        search: term,
+        limit: 25,
+      }),
+    enabled: enabled && term.length > 0,
+    staleTime: 30 * 1000,
+    placeholderData: (prev) => prev,
+  });
+}
+
 interface CalendarEvent {
   id: number;
   orgId: string;
   title: string;
   description?: string | null;
   location?: string | null;
+  meetingUrl?: string | null;
   startDate: string;
   endDate: string;
   allDay: boolean | null;
@@ -68,6 +86,7 @@ export interface CalendarListItem {
   category: string;
   source: "event" | "leave" | "interview" | "task" | "holiday";
   location?: string | null;
+  meetingUrl?: string | null;
   description?: string | null;
   creatorName?: string | null;
   entityId?: string | null;
@@ -92,6 +111,7 @@ interface CreateCalendarEventPayload {
   title: string;
   description?: string;
   location?: string;
+  meetingUrl?: string;
   startDate: string;
   endDate: string;
   allDay?: boolean;
@@ -107,10 +127,14 @@ interface CreateCalendarEventPayload {
 }
 
 interface UpdateCalendarEventPayload
-  extends Omit<Partial<CreateCalendarEventPayload>, "entityType" | "entityId"> {
+  extends Omit<
+    Partial<CreateCalendarEventPayload>,
+    "entityType" | "entityId" | "meetingUrl"
+  > {
   id: number;
   entityType?: string | null;
   entityId?: string | null;
+  meetingUrl?: string | null;
 }
 
 export function useCalendarEvents(start: Date, end: Date) {

@@ -20,7 +20,6 @@ import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { Loader2, RefreshCw, Star, Unplug } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { cn } from "@/lib/utils";
 import {
   useDisconnectIntegration,
   useInitiateIntegrationConnection,
@@ -213,20 +212,15 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  const isEmpty = !isLoading && !isError && (!connections || connections.length === 0);
-
   return (
     <>
       <Sheet open={open} onOpenChange={onClose}>
-        <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
-          <SheetHeader className="px-5 py-4 border-b shrink-0">
+        <SheetContent side="right" className="w-full sm:max-w-lg gap-0 p-0 flex flex-col">
+          <SheetHeader className="px-4 py-3 border-b shrink-0">
             <SheetTitle className="text-base">Calendar accounts</SheetTitle>
           </SheetHeader>
           <div
-            className={cn(
-              "flex flex-col flex-1 min-h-0 overflow-y-auto",
-              isEmpty ? "px-4 py-2" : "px-5 py-4",
-            )}
+            className="order-2 sm:order-3 flex flex-col flex-1 min-h-0 overflow-y-auto px-4 py-2"
           >
             {isLoading ? (
               <div className="space-y-2">
@@ -234,7 +228,7 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
                 <Skeleton className="h-14 w-full" />
               </div>
             ) : isError ? (
-              <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+              <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
                 <p className="text-sm text-muted-foreground">Failed to load accounts</p>
                 <Button variant="outline" size="sm" onClick={handleRetry}>
                   Retry
@@ -244,13 +238,13 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
               <EmptyState
                 compact
                 illustrationSize="sm"
-                className="w-full flex-1 min-h-[50vh] border-0 bg-transparent py-3 px-1"
+                className="w-full flex-1 border-0 bg-transparent py-2 px-0"
                 illustration={<EmptyCalendarIllustration className="h-20 w-20" />}
                 title="No accounts connected"
                 description="Connect a Google or Microsoft account to see its events here and add meeting links."
               />
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {connections.map((connection, index) => (
                   <AccountRow
                     key={connection.id}
@@ -268,18 +262,18 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
             )}
           </div>
           {canManage && (
-            <div className="px-5 py-3 border-t shrink-0 flex flex-row flex-wrap gap-2">
+            <div className="order-3 sm:order-2 px-4 py-2 border-t sm:border-t-0 sm:border-b shrink-0 flex flex-row flex-wrap gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 h-9 px-3 text-[11px] bg-card justify-center gap-2 min-w-[9rem]"
+                className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
                 disabled={pendingToolkit !== null}
                 onClick={handleConnectGoogle}
               >
                 {pendingToolkit === "googlecalendar" ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                       fill="#4285F4"
@@ -303,14 +297,14 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 h-9 px-3 text-[11px] bg-card justify-center gap-2 min-w-[9rem]"
+                className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
                 disabled={pendingToolkit !== null}
                 onClick={handleConnectOutlook}
               >
                 {pendingToolkit === "outlook" ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 21 21" aria-hidden="true">
+                  <svg className="h-4 w-4 shrink-0" viewBox="0 0 21 21" aria-hidden="true">
                     <rect x="1" y="1" width="9" height="9" fill="#f25022" />
                     <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
                     <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />

@@ -777,6 +777,7 @@ export const queryKeys = {
     events: (start: string, end: string) => [...base, "calendar", "events", start, end] as const,
     attendees: (eventId: number) => [...base, "calendar", "attendees", eventId] as const,
     orgMembers: () => [...base, "calendar", "orgMembers"] as const,
+    memberSearch: (search: string) => [...base, "calendar", "memberSearch", search] as const,
     externalEvents: (start: string, end: string) => [...base, "calendar", "externalEvents", start, end] as const,
   },
 

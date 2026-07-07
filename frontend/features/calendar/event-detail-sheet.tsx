@@ -28,6 +28,7 @@ import {
   Pencil,
   HelpCircle,
   Ticket,
+  Video,
 } from "lucide-react";
 import {
   useDeleteCalendarEvent,
@@ -173,6 +174,19 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                       ) : (
                         <span>{event.location}</span>
                       )}
+                    </div>
+                  )}
+                  {event.meetingUrl && (
+                    <div className="flex items-center gap-2">
+                      <Video className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <a
+                        href={event.meetingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-600"
+                      >
+                        Join meeting
+                      </a>
                     </div>
                   )}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">

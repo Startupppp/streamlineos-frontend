@@ -152,8 +152,8 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 hover:bg-muted"
+                        size="icon-sm"
+                        className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
                         aria-label={`Actions for ${project.name}`}
                         onClick={handleStopPropagation}
                       >
@@ -203,7 +203,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
             <Badge
               variant="secondary"
               className={cn(
-                "mt-1.5 gap-1 rounded-full border-0 px-2 py-0 text-[9px] font-semibold uppercase tracking-wide",
+                "mt-1.5 gap-1 rounded-full border-0 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
                 statusColor,
               )}
             >
@@ -244,7 +244,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/70 bg-muted/30 px-2.5 py-2">
+            <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/70 bg-muted/30 px-3 py-2.5">
               <Ticket className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" aria-hidden="true" />
               <span className="text-[10px] text-muted-foreground/70">No tickets yet</span>
             </div>
@@ -270,7 +270,10 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                 <AvatarStack
                   users={teamMembers}
                   limit={4}
-                  className={cn(hasTickets && "ml-0.5", "[&>div]:h-5 [&>div]:w-5")}
+                  className={cn(
+                    hasTickets && "ml-0.5",
+                    "[&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar]]:text-[8px]",
+                  )}
                 />
               )}
             </div>

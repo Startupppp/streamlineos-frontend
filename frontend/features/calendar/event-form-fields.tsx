@@ -11,9 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Tag, Clock, MapPin, Lock, Circle, FileText, Video, Plus } from "lucide-react";
+import { Tag, Clock, MapPin, Lock, FileText, Video, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { IntegrationConnection } from "@/hooks/api/integrations";
 
@@ -122,78 +121,75 @@ export function EventFormFields({
         </div>
       </div>
 
-      <div className="flex items-start gap-2.5">
-        <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
-        <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="flex items-center gap-2">
-            <DatePicker
-              value={startDate}
-              onChange={onStartDateChange}
-              placeholder="Start date"
-              dateFormat="MMM d, yyyy"
-              className="h-8 text-xs flex-1 min-w-0"
+      <div className="space-y-1">
+        <div className="flex flex-row flex-wrap items-center gap-2">
+          <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+          <DatePicker
+            value={startDate}
+            onChange={onStartDateChange}
+            placeholder="Start date"
+            dateFormat="MMM d, yyyy"
+            className="h-8 text-xs min-w-[8.5rem]"
+          />
+          {!allDay && (
+            <Input
+              type="time"
+              className="h-8 text-xs w-[7.5rem] shrink-0"
+              value={startTime}
+              onChange={onStartTimeChange}
             />
-            {!allDay && (
-              <Input
-                type="time"
-                className="h-8 text-xs w-[7.5rem] shrink-0"
-                value={startTime}
-                onChange={onStartTimeChange}
-              />
-            )}
-            {!showEndDate && (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                onClick={onShowEndDate}
-                aria-label="Add end date"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
-            )}
-          </div>
-
+          )}
+          {!showEndDate && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={onShowEndDate}
+              aria-label="Add end date"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          )}
           {showEndDate && (
-            <div className="flex items-center gap-2">
-              <DatePicker
-                value={endDate}
-                onChange={onEndDateChange}
-                fromDate={startDate ? new Date(startDate) : undefined}
-                placeholder="End date"
-                dateFormat="MMM d, yyyy"
-                className={cn("h-8 text-xs flex-1 min-w-0", dateTimeError && "border-destructive")}
-              />
-              {!allDay && (
-                <Input
-                  type="time"
-                  className={cn(
-                    "h-8 text-xs w-[7.5rem] shrink-0",
-                    dateTimeError && "border-destructive",
-                  )}
-                  value={endTime}
-                  onChange={onEndTimeChange}
-                />
+            <DatePicker
+              value={endDate}
+              onChange={onEndDateChange}
+              fromDate={startDate ? new Date(startDate) : undefined}
+              placeholder="End date"
+              dateFormat="MMM d, yyyy"
+              className={cn("h-8 text-xs min-w-[8.5rem]", dateTimeError && "border-destructive")}
+            />
+          )}
+          {showEndDate && !allDay && (
+            <Input
+              type="time"
+              className={cn(
+                "h-8 text-xs w-[7.5rem] shrink-0",
+                dateTimeError && "border-destructive",
               )}
-            </div>
+              value={endTime}
+              onChange={onEndTimeChange}
+            />
           )}
-
-          {dateTimeError && (
-            <p className="text-[10px] text-destructive">{dateTimeError}</p>
-          )}
-
-          <div className="flex items-center gap-2 pt-0.5">
-            <Checkbox
+          <div className="flex items-center gap-2 shrink-0">
+            <Switch
               id="ev-allday"
               checked={allDay}
-              onCheckedChange={(checked) => onAllDayChange(!!checked)}
+              onCheckedChange={onAllDayChange}
             />
-            <Label htmlFor="ev-allday" className="text-xs text-muted-foreground cursor-pointer font-normal select-none">
+            <Label
+              htmlFor="ev-allday"
+              className="text-xs text-muted-foreground cursor-pointer font-normal select-none"
+            >
               All day
             </Label>
           </div>
         </div>
+
+        {dateTimeError && (
+          <p className="text-[10px] text-destructive">{dateTimeError}</p>
+        )}
       </div>
 
       <div className="flex items-start gap-2.5">
@@ -248,43 +244,41 @@ export function EventFormFields({
 
       <div className="flex items-center gap-2.5">
         <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
-        <div className="flex-1">
-          <Select value={category} onValueChange={onCategoryChange}>
-            <SelectTrigger className="h-9 text-xs w-full max-w-[200px]">
-              <SelectValue placeholder="Select privacy / category" />
-            </SelectTrigger>
-            <SelectContent>
-              {EVENT_CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat} className="text-xs capitalize">
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2.5">
-        <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
-        <div className="flex-1">
-          <Select value={color} onValueChange={onColorChange}>
-            <SelectTrigger className="h-9 text-xs w-full max-w-[200px]">
-              <SelectValue placeholder="Select busy status" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(EVENT_COLORS).map(([key, hex]) => (
-                <SelectItem key={key} value={key} className="text-xs">
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="h-2.5 w-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: hex }}
-                    />
-                    <span className="capitalize">{key}</span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-1 min-w-0 flex-row gap-2">
+          <div className="flex-1 min-w-0">
+            <Select value={category} onValueChange={onCategoryChange}>
+              <SelectTrigger className="h-9 w-full text-xs">
+                <SelectValue placeholder="Select privacy / category" />
+              </SelectTrigger>
+              <SelectContent>
+                {EVENT_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat} value={cat} className="text-xs capitalize">
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex-1 min-w-0">
+            <Select value={color} onValueChange={onColorChange}>
+              <SelectTrigger className="h-9 w-full text-xs">
+                <SelectValue placeholder="Select busy status" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(EVENT_COLORS).map(([key, hex]) => (
+                  <SelectItem key={key} value={key} className="text-xs">
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: hex }}
+                      />
+                      <span className="capitalize">{key}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

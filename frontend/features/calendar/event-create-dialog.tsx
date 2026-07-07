@@ -24,7 +24,8 @@ import { EventFormFields } from "./event-form-fields";
 import { EventAttendeesPicker } from "./event-attendees-picker";
 import type { TicketSearchResult } from "@/hooks/api/projects";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
-import { Ticket, X, Maximize2, Users, Link as LinkIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Ticket, X, Users, Link as LinkIcon, Video } from "lucide-react";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
 
@@ -32,6 +33,7 @@ interface FormState {
   title: string;
   description: string;
   location: string;
+  meetingUrl: string;
   allDay: boolean;
   color: string;
   category: EventCategory;
@@ -41,6 +43,7 @@ interface FormState {
   endTime: string;
   attendeeIds: string[];
   locationError: string;
+  meetingUrlError: string;
   syncConnectionId: string;
   addConference: boolean;
 }
@@ -52,6 +55,7 @@ function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
     title: "",
     description: "",
     location: "",
+    meetingUrl: "",
     allDay: false,
     color: "blue",
     category: "general",
@@ -61,6 +65,7 @@ function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
     locationError: "",
+    meetingUrlError: "",
     syncConnectionId: "none",
     addConference: true,
   };
@@ -73,6 +78,7 @@ function toEditForm(event: CalendarListItem): FormState {
     title: event.title,
     description: event.description ?? "",
     location: event.location ?? "",
+    meetingUrl: event.meetingUrl ?? "",
     allDay: event.allDay ?? false,
     color: event.color ?? "blue",
     category: (event.category as EventCategory) ?? "general",
@@ -82,6 +88,7 @@ function toEditForm(event: CalendarListItem): FormState {
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
     locationError: "",
+    meetingUrlError: "",
     syncConnectionId: "none",
     addConference: false,
   };
@@ -263,6 +270,21 @@ export function EventCreateDialog({
     [set],
   );
 
+  const handleMeetingUrlChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setForm((prev) => ({
+        ...prev,
+        meetingUrl: value,
+        meetingUrlError:
+          value.trim() && !isValidUrl(value.trim())
+            ? "Enter a valid meeting link (https://…)"
+            : "",
+      }));
+    },
+    [],
+  );
+
   const handleAllDayChange = useCallback(
     (v: boolean) => {
       setForm((prev) => {
@@ -414,6 +436,11 @@ export function EventCreateDialog({
         return;
       }
     }
+    const trimmedMeetingUrl = form.meetingUrl.trim();
+    if (trimmedMeetingUrl && !isValidUrl(trimmedMeetingUrl)) {
+      toast.error("Meeting link must be a valid URL");
+      return;
+    }
     if (!form.startDate) {
       toast.error("Start date is required");
       return;
@@ -453,6 +480,7 @@ export function EventCreateDialog({
       title: trimmedTitle,
       description: form.description || undefined,
       location: form.location || undefined,
+      meetingUrl: trimmedMeetingUrl || undefined,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       allDay: form.allDay,
@@ -474,7 +502,11 @@ export function EventCreateDialog({
           toast.error("Cannot edit this event type");
           return;
         }
-        await updateEvent.mutateAsync({ id: numericId, ...payload });
+        await updateEvent.mutateAsync({
+          id: numericId,
+          ...payload,
+          meetingUrl: trimmedMeetingUrl || null,
+        });
         toast.success("Event updated");
       } else {
         const result = await createEvent.mutateAsync(payload);
@@ -522,30 +554,22 @@ export function EventCreateDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           showCloseButton={false}
-          className="flex flex-col p-0 w-[calc(100%-1rem)] sm:w-full max-w-xl rounded-xl overflow-hidden shadow-2xl border bg-card max-h-[min(92dvh,48rem)]"
+          className="flex flex-col gap-0 p-0 pb-0 md:pb-0 w-[calc(100%-1rem)] sm:w-full max-w-xl rounded-xl overflow-hidden shadow-2xl border bg-card max-h-[min(92dvh,48rem)]"
         >
           {/* Header controls (New Event, Sizing controls, Close controls) */}
           <DialogHeader className="px-4 py-2.5 border-b flex flex-row items-center justify-between shrink-0 select-none">
             <DialogTitle className="text-base font-semibold text-foreground">
               {isEdit ? "Edit Event" : "New Event"}
             </DialogTitle>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
-                title="Expand"
-              >
-                <Maximize2 className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
-                title="Close"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
+              title="Close"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </DialogHeader>
 
           <ScrollArea className="flex-1 min-h-0">
@@ -582,6 +606,36 @@ export function EventCreateDialog({
                 onAddConferenceChange={handleAddConferenceChange}
                 onShowEndDate={handleShowEndDate}
               />
+
+              {/* Manual meeting link (Google Meet / Teams / Zoom) */}
+              <div className="flex items-start gap-2.5">
+                <Video className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
+                <div className="flex-1 space-y-1">
+                  <Input
+                    type="url"
+                    inputMode="url"
+                    value={form.meetingUrl}
+                    onChange={handleMeetingUrlChange}
+                    placeholder="Paste a Google Meet / Teams / Zoom link"
+                    aria-invalid={!!form.meetingUrlError}
+                    className="h-9 text-sm"
+                  />
+                  {form.meetingUrlError ? (
+                    <p className="text-[11px] text-destructive">
+                      {form.meetingUrlError}
+                    </p>
+                  ) : (
+                    !isEdit &&
+                    form.syncConnectionId !== "none" &&
+                    form.addConference && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Leave blank to auto-generate a link from the synced
+                        account.
+                      </p>
+                    )
+                  )}
+                </div>
+              </div>
 
               {/* Attendees Picker with icon on left */}
               <div className="flex items-start gap-2.5">
@@ -632,36 +686,27 @@ export function EventCreateDialog({
             </div>
           </ScrollArea>
 
-          {/* Action Footer matches Google Calendar style */}
-          <div className="px-4 py-2.5 border-t bg-muted/20 shrink-0 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                size="sm"
-                className="h-8 text-xs px-4 font-medium"
-                onClick={handleSave}
-                disabled={isPending || !form.title.trim()}
-              >
-                {isPending
-                  ? isEdit
-                    ? "Saving..."
-                    : "Creating..."
-                  : "Save"}
-              </Button>
-              <Button
-                size="sm"
-                className="h-8 text-xs px-3 font-medium"
-                disabled={isPending}
-              >
-                More Options
-              </Button>
-            </div>
+          <div className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t bg-muted/20 shrink-0 flex flex-row items-center justify-end gap-2">
             <Button
               variant="outline"
-              className="h-8 text-xs px-3 font-normal text-muted-foreground hover:text-foreground w-full sm:w-auto"
+              size="sm"
+              className="h-8 text-xs px-3 font-normal text-muted-foreground hover:text-foreground"
               onClick={handleClose}
               disabled={isPending}
             >
               Discard
+            </Button>
+            <Button
+              size="sm"
+              className="h-8 text-xs px-4 font-medium"
+              onClick={handleSave}
+              disabled={isPending || !form.title.trim()}
+            >
+              {isPending
+                ? isEdit
+                  ? "Saving..."
+                  : "Creating..."
+                : "Save"}
             </Button>
           </div>
         </DialogContent>
