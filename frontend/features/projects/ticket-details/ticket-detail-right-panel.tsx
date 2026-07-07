@@ -1,7 +1,8 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, PanelRightClose } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "../shared/status-badge";
 import { TicketSidebar } from "./ticket-sidebar";
@@ -61,6 +62,7 @@ interface TicketDetailRightPanelProps {
   sprints: Array<{ id: number; name: string; status?: string | null }>;
   statuses?: Array<{ name: string; id: number }>;
   onAutoSave: (field: Record<string, unknown>) => void;
+  onToggleCollapse?: () => void;
 }
 
 export function TicketDetailRightPanel({
@@ -73,21 +75,35 @@ export function TicketDetailRightPanel({
   sprints,
   statuses,
   onAutoSave,
+  onToggleCollapse,
 }: TicketDetailRightPanelProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 border-b border-border bg-card px-4 py-3">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant="outline" className="h-5 px-1.5 font-mono text-[11px]">
-            {displayKey}
-          </Badge>
-          <StatusBadge status={ticket.status ?? "TODO"} />
-          <PriorityBadge priority={ticket.priority ?? "MEDIUM"} showLabel size="sm" />
-          {saving && (
-            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Saving
-            </span>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+            <Badge variant="outline" className="h-5 px-1.5 font-mono text-[11px]">
+              {displayKey}
+            </Badge>
+            <StatusBadge status={ticket.status ?? "TODO"} />
+            <PriorityBadge priority={ticket.priority ?? "MEDIUM"} showLabel size="sm" />
+            {saving && (
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Saving
+              </span>
+            )}
+          </div>
+          {onToggleCollapse && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={onToggleCollapse}
+              aria-label="Collapse details panel"
+            >
+              <PanelRightClose className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </div>

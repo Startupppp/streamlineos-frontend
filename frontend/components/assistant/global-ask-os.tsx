@@ -383,8 +383,12 @@ export function GlobalAskOs() {
                     <div className="flex h-full items-center justify-center">
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
-                  ) : showEmpty ? (
-                    <EmptyAskOs onSuggestion={handleSuggestion} />
+                  ) : (isHistory ? rowsToRender.length === 0 : showEmpty) ? (
+                    isHistory ? (
+                      <HistoryEmpty searching={Boolean(historySearchQuery)} />
+                    ) : (
+                      <EmptyAskOs onSuggestion={handleSuggestion} />
+                    )
                   ) : (
                     <div className="space-y-4">
                       {hasNextPage ? (
@@ -409,7 +413,7 @@ export function GlobalAskOs() {
                           </p>
                         )
                       )}
-                      {historyRows.map((row) =>
+                      {rowsToRender.map((row) =>
                         row.type === "sep" ? (
                           <DaySeparator key={row.id} label={row.label} />
                         ) : (
@@ -422,8 +426,10 @@ export function GlobalAskOs() {
                           />
                         ),
                       )}
-                      {draftNeedsToday && <DaySeparator key="sep-draft-today" label="Today" />}
-                      {draft && (
+                      {!isHistory && draftNeedsToday && (
+                        <DaySeparator key="sep-draft-today" label="Today" />
+                      )}
+                      {!isHistory && draft && (
                         <AskOsBubble
                           key="draft-user"
                           role="user"
@@ -432,7 +438,7 @@ export function GlobalAskOs() {
                           reduce={Boolean(reduce)}
                         />
                       )}
-                      {draft && (
+                      {!isHistory && draft && (
                         <AskOsBubble
                           key="draft-assistant"
                           role="assistant"
@@ -441,7 +447,7 @@ export function GlobalAskOs() {
                           reduce={Boolean(reduce)}
                         />
                       )}
-                      {errorMessage && (
+                      {!isHistory && errorMessage && (
                         <p className="px-1 text-[11px] text-destructive">{errorMessage}</p>
                       )}
                     </div>
@@ -465,41 +471,43 @@ export function GlobalAskOs() {
                 </AnimatePresence>
               </div>
 
-              <form
-                onSubmit={handleSubmit}
-                className="flex shrink-0 items-center gap-2 border-t border-border bg-background/60 p-3"
-              >
-                <input
-                  type="text"
-                  value={input}
-                  onChange={handleInputChange}
-                  placeholder="Ask anything about your workspace…"
-                  disabled={isStreaming}
-                  className="h-10 flex-1 rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
-                />
-                {isStreaming ? (
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                    className="h-10 w-10 shrink-0 rounded-xl"
-                    onClick={handleStop}
-                    aria-label="Stop"
-                  >
-                    <Square className="h-3.5 w-3.5" />
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    size="icon"
-                    className="h-10 w-10 shrink-0 rounded-xl"
-                    disabled={!input.trim()}
-                    aria-label="Send"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                )}
-              </form>
+              {!isHistory && (
+                <form
+                  onSubmit={handleSubmit}
+                  className="flex shrink-0 items-center gap-2 border-t border-border bg-background/60 p-3"
+                >
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={handleInputChange}
+                    placeholder="Ask anything about your workspace…"
+                    disabled={isStreaming}
+                    className="h-10 flex-1 rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
+                  />
+                  {isStreaming ? (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-10 w-10 shrink-0 rounded-xl"
+                      onClick={handleStop}
+                      aria-label="Stop"
+                    >
+                      <Square className="h-3.5 w-3.5" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="h-10 w-10 shrink-0 rounded-xl"
+                      disabled={!input.trim()}
+                      aria-label="Send"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  )}
+                </form>
+              )}
             </div>
           </motion.div>
         )}
@@ -626,6 +634,24 @@ function DaySeparator({ label }: { label: string }) {
       <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
         {label}
       </span>
+    </div>
+  );
+}
+
+function HistoryEmpty({ searching }: { searching: boolean }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-2 py-10 text-center">
+      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+        <Clock className="h-5 w-5" />
+      </span>
+      <p className="text-sm font-semibold text-foreground">
+        {searching ? "No matches" : "No history yet"}
+      </p>
+      <p className="mx-auto max-w-[15rem] text-xs text-muted-foreground">
+        {searching
+          ? "Try a different search term."
+          : "Your past conversations will show up here once you start chatting."}
+      </p>
     </div>
   );
 }

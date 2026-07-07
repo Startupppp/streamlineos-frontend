@@ -198,13 +198,40 @@ export function ActivityFeed({
 
   return (
     <div className="space-y-4">
-      <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5">
-        <MessageSquare className="h-3.5 w-3.5" />
-        Activity
-        {comments.length > 0 && (
-          <span className="text-muted-foreground/70">({comments.length})</span>
-        )}
-      </h4>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+        <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5 shrink-0 sm:pt-2.5">
+          <MessageSquare className="h-3.5 w-3.5" />
+          Activity
+          {comments.length > 0 && (
+            <span className="text-muted-foreground/70">({comments.length})</span>
+          )}
+        </h4>
+
+        <div className="space-y-2 flex-1 min-w-0">
+          <MentionTextarea
+            value={newComment}
+            onChange={setNewComment}
+            onKeyDown={handleTopKeyDown}
+            placeholder="Write a comment... (Ctrl+Enter to send)"
+            className="min-h-[80px] text-sm"
+            users={members}
+          />
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              onClick={handleSubmit}
+              disabled={!newComment.trim() || addComment.isPending}
+            >
+              {addComment.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+              ) : (
+                <Send className="h-3.5 w-3.5 mr-1" />
+              )}
+              Comment
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {commentNotFound && (
         <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
@@ -220,31 +247,6 @@ export function ActivityFeed({
           </button>
         </div>
       )}
-
-      <div className="space-y-2">
-        <MentionTextarea
-          value={newComment}
-          onChange={setNewComment}
-          onKeyDown={handleTopKeyDown}
-          placeholder="Write a comment... (Ctrl+Enter to send)"
-          className="min-h-[80px] text-sm"
-          users={members}
-        />
-        <div className="flex justify-end">
-          <Button
-            size="sm"
-            onClick={handleSubmit}
-            disabled={!newComment.trim() || addComment.isPending}
-          >
-            {addComment.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5 mr-1" />
-            )}
-            Comment
-          </Button>
-        </div>
-      </div>
 
       {sortedTopLevel.length > 0 && (
         <div className="space-y-3">

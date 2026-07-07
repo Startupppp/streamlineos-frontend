@@ -20,6 +20,8 @@ import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { LabelColorPicker } from "../shared/label-color-picker";
+import { DEFAULT_LABEL_COLOR } from "../shared/label-colors";
 
 interface LabelPickerProps {
   ticketId: number;
@@ -29,17 +31,6 @@ interface LabelPickerProps {
   }>;
 }
 
-const PRESET_COLORS = [
-  "#3B82F6",
-  "#EF4444",
-  "#22C55E",
-  "#EAB308",
-  "#8B5CF6",
-  "#EC4899",
-  "#F97316",
-  "#06B6D4",
-];
-
 export function LabelPicker({
   ticketId,
   projectId,
@@ -47,7 +38,7 @@ export function LabelPicker({
 }: LabelPickerProps) {
   const [open, setOpen] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
-  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
+  const [selectedColor, setSelectedColor] = useState(DEFAULT_LABEL_COLOR);
   const queryClient = useQueryClient();
 
   const { data: allLabels } = useLabels();
@@ -138,8 +129,8 @@ export function LabelPicker({
               <Plus className="h-3.5 w-3.5" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-64 p-3" align="start">
-            <div className="space-y-3">
+          <PopoverContent className="w-80 p-4" align="start">
+            <div className="space-y-4">
               {availableLabels.length > 0 && (
                 <div className="space-y-1 max-h-32 overflow-y-auto">
                   {availableLabels.map((label) => (
@@ -157,40 +148,30 @@ export function LabelPicker({
                   ))}
                 </div>
               )}
-              <div className="border-t pt-2 space-y-2">
+              <div className="border-t pt-4 space-y-4">
                 <p className="text-xs font-medium text-muted-foreground">
                   Create new label
                 </p>
-                <Input
-                  value={newLabelName}
-                  onChange={(e) => setNewLabelName(e.target.value)}
-                  placeholder="Label name"
-                  className="h-7 text-sm"
-                  onKeyDown={handleLabelKeyDown}
-                />
-                <div className="flex gap-1">
-                  {PRESET_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setSelectedColor(c)}
-                      aria-label={`Select color ${c}`}
-                      className="w-5 h-5 rounded-full transition-transform"
-                      style={{
-                        backgroundColor: c,
-                        transform:
-                          selectedColor === c ? "scale(1.2)" : "scale(1)",
-                        outline:
-                          selectedColor === c
-                            ? "2px solid currentColor"
-                            : "none",
-                        outlineOffset: "2px",
-                      }}
-                    />
-                  ))}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="h-8 w-8 shrink-0 rounded-full border-2 border-white shadow-sm"
+                    style={{ backgroundColor: selectedColor }}
+                  />
+                  <Input
+                    value={newLabelName}
+                    onChange={(e) => setNewLabelName(e.target.value)}
+                    placeholder="Label name"
+                    className="h-8 text-sm"
+                    onKeyDown={handleLabelKeyDown}
+                  />
                 </div>
+                <LabelColorPicker
+                  value={selectedColor}
+                  onChange={setSelectedColor}
+                />
                 <Button
                   size="sm"
-                  className="w-full h-7 text-xs"
+                  className="w-full h-8 text-xs"
                   disabled={!newLabelName.trim() || createLabel.isPending}
                   onClick={handleCreateLabel}
                 >

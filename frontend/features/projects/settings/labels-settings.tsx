@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -27,26 +26,16 @@ import {
   useDeleteLabel,
   type TicketLabel,
 } from "@/hooks/api/projects/labels";
-import { cn } from "@/lib/utils";
-
-const COLORS = [
-  "#6366f1",
-  "#8b5cf6",
-  "#ec4899",
-  "#ef4444",
-  "#f97316",
-  "#eab308",
-  "#22c55e",
-  "#06b6d4",
-];
+import { LabelColorPicker } from "../shared/label-color-picker";
+import { DEFAULT_LABEL_COLOR } from "../shared/label-colors";
 
 export function LabelsSettings() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
-  const [color, setColor] = useState("#6366f1");
+  const [color, setColor] = useState(DEFAULT_LABEL_COLOR);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
-  const [editColor, setEditColor] = useState("#6366f1");
+  const [editColor, setEditColor] = useState(DEFAULT_LABEL_COLOR);
 
   const { data: labels = [], isLoading } = useOrgLabels();
   const createLabel = useCreateLabel();
@@ -60,7 +49,7 @@ export function LabelsSettings() {
       {
         onSuccess: () => {
           setName("");
-          setColor("#6366f1");
+          setColor(DEFAULT_LABEL_COLOR);
           setShowForm(false);
           toast.success("Label created");
         },
@@ -144,22 +133,12 @@ export function LabelsSettings() {
                   className="h-7 text-sm flex-1 max-w-[200px]"
                   autoFocus
                 />
-                <div className="flex gap-1">
-                  {COLORS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setEditColor(c)}
-                      className={cn(
-                        "h-4 w-4 rounded-full border-2 transition-transform hover:scale-110",
-                        editColor === c
-                          ? "border-slate-700 scale-110"
-                          : "border-transparent",
-                      )}
-                      style={{ background: c }}
-                    />
-                  ))}
-                </div>
+                <LabelColorPicker
+                  value={editColor}
+                  onChange={setEditColor}
+                  showLabel={false}
+                  swatchSize="md"
+                />
                 <Button
                   size="sm"
                   variant="ghost"
@@ -247,25 +226,7 @@ export function LabelsSettings() {
                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground shrink-0">
-                Color:
-              </Label>
-              {COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
-                  className={cn(
-                    "h-5 w-5 rounded-full border-2 transition-transform hover:scale-110",
-                    color === c
-                      ? "border-slate-700 scale-110"
-                      : "border-transparent",
-                  )}
-                  style={{ background: c }}
-                />
-              ))}
-            </div>
+            <LabelColorPicker value={color} onChange={setColor} />
             <div className="flex gap-2">
               <Button
                 size="sm"

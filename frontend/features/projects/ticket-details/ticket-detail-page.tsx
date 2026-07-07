@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, Share2 } from "lucide-react";
+import { AlertCircle, PanelRightOpen, Share2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +21,8 @@ interface TicketDetailPageProps {
   projectId: number;
   ticketKey: string;
 }
+
+const RIGHT_PANEL_COLLAPSED_KEY = "streamlineos:ticket-detail:right-panel:collapsed";
 
 function DetailSkeleton() {
   return (
@@ -51,6 +53,10 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   const searchParams = useSearchParams();
   const commentParam = searchParams.get("comment");
   const highlightCommentId = commentParam ? parseInt(commentParam, 10) : null;
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
+  });
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
@@ -92,6 +98,14 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       toast.error(getErrorMessage(error));
     }
   };
+
+  function handleToggleRightPanel() {
+    setRightPanelCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem(RIGHT_PANEL_COLLAPSED_KEY, String(next));
+      return next;
+    });
+  }
 
   if (!parsed) return notFound();
 
@@ -156,14 +170,25 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       contentClassName="flex flex-1 min-h-0 flex-col p-0"
       actions={
         <div className="flex shrink-0 items-center gap-2">
+          {rightPanelCollapsed && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={handleToggleRightPanel}
+              aria-label="Expand details panel"
+            >
+              <PanelRightOpen className="h-4 w-4" />
+            </Button>
+          )}
           <Button
-            size="sm"
+            size="icon"
             variant="outline"
-            className="h-8 gap-1.5 text-xs"
+            className="h-8 w-8"
             onClick={handleShare}
+            aria-label="Copy share link"
           >
             <Share2 className="h-3.5 w-3.5" />
-            Share
           </Button>
           <TicketDetailActions
             onDelete={handleDelete}
@@ -188,19 +213,22 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           />
         </div>
 
-        <aside className="order-1 w-full shrink-0 border-b border-border bg-card md:order-2 md:w-80 md:min-h-0 md:border-b-0 md:border-l md:overflow-hidden lg:w-96">
-          <TicketDetailRightPanel
-            displayKey={displayKey}
-            saving={saving}
-            ticket={ticket}
-            ticketId={ticketId}
-            projectId={projectId}
-            members={members}
-            sprints={sprints}
-            statuses={statuses}
-            onAutoSave={autoSave}
-          />
-        </aside>
+        {!rightPanelCollapsed && (
+          <aside className="order-1 w-full shrink-0 border-b border-border bg-card md:order-2 md:w-80 md:min-h-0 md:border-b-0 md:border-l md:overflow-hidden lg:w-96">
+            <TicketDetailRightPanel
+              displayKey={displayKey}
+              saving={saving}
+              ticket={ticket}
+              ticketId={ticketId}
+              projectId={projectId}
+              members={members}
+              sprints={sprints}
+              statuses={statuses}
+              onAutoSave={autoSave}
+              onToggleCollapse={handleToggleRightPanel}
+            />
+          </aside>
+        )}
       </div>
     </PageWrapper>
   );
