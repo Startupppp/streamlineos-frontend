@@ -8,6 +8,8 @@ export type AutomationTrigger =
   | "lead.created"
   | "deal.stage_changed"
   | "ticket.created"
+  | "ticket.priority_changed"
+  | "ticket.message_received"
   | "invoice.overdue"
   | "candidate.application_created"
   | "candidate.stage_changed"
@@ -50,7 +52,11 @@ export type AutomationAction =
   | { type: "notify_all"; config: { title: string; message: string; link?: string } }
   | { type: "email"; config: { to: string; subject: string; body: string } }
   | { type: "create_task"; config: { title: string; assigneeId?: string; dueInDays?: number } }
-  | { type: "webhook"; config: { event: string } };
+  | { type: "webhook"; config: { event: string } }
+  | { type: "support_assign_ticket"; config: { assigneeId: string } }
+  | { type: "support_set_priority"; config: { priority: string } }
+  | { type: "support_add_tag"; config: { tagId: number } }
+  | { type: "support_internal_note"; config: { body: string } };
 
 export type AutomationActionType = AutomationAction["type"];
 

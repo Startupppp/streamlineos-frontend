@@ -24,6 +24,7 @@ interface SupportFilters {
   priority?: SupportTicketPriority;
   assigneeId?: string;
   queueId?: number;
+  channel?: string;
   page?: number;
   limit?: number;
 }
@@ -72,6 +73,7 @@ export const useSupportTickets = (
         ...(filters?.priority ? { priority: filters.priority } : {}),
         ...(filters?.assigneeId ? { assigneeId: filters.assigneeId } : {}),
         ...(filters?.queueId ? { queueId: String(filters.queueId) } : {}),
+        ...(filters?.channel ? { channel: filters.channel } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
       }),

@@ -19,6 +19,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateSupportTicket } from "@/hooks/api/support";
 import { useSupportQueues } from "@/hooks/api/support/queues";
 import { useSupportWatchers, useFollowTicket, useUnfollowTicket } from "@/hooks/api/support/watchers";
+import { TicketRiskBadge } from "@/features/support/inbox/ticket-risk-badge";
 import type { SupportTicket, SupportTicketStatus } from "@/types/support";
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -124,6 +125,7 @@ export function TicketDetailHeader({ ticket, onBack }: TicketDetailHeaderProps) 
           <Badge variant="outline" className={cn("text-xs", PRIORITY_COLORS[ticket.priority])}>
             {ticket.priority}
           </Badge>
+          <TicketRiskBadge ticketId={ticket.id} />
           {isBreached && (
             <Badge variant="destructive" className="text-xs">
               SLA Breached

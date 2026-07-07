@@ -13,7 +13,7 @@ import {
   useAiUsage,
   type OrgFeatureFlags,
 } from "@/hooks/api/ai";
-import { BarChart3, Bot, BrainCircuit, TrendingUp, Zap } from "lucide-react";
+import { BarChart3, Bot, BrainCircuit, LifeBuoy, TrendingUp, Zap } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared/error-state";
 
@@ -52,6 +52,12 @@ const FLAG_META: {
     label: "AI Weekly Recap",
     description: "Generate a narrative CEO recap from weekly metrics automatically.",
     icon: BarChart3,
+  },
+  {
+    key: "supportAi",
+    label: "Support AI Assistant",
+    description: "Ticket summaries, sentiment/priority suggestions, suggested replies, KB and duplicate detection in the support inbox.",
+    icon: LifeBuoy,
   },
 ];
 
@@ -136,7 +142,7 @@ export function CrmAiSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             {flagsLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
+              Array.from({ length: FLAG_META.length }).map((_, i) => (
                 <div key={i} className="flex items-center justify-between py-2">
                   <div className="space-y-1">
                     <Skeleton className="h-4 w-40" />

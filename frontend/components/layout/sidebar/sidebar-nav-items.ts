@@ -1183,7 +1183,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Support",
     module: "helpdesk",
-    requiredPermission: ["projects:tickets:view", "support:kb:view"],
+    requiredPermission: ["projects:tickets:view", "support:kb:view", "support:portal:tickets:view"],
     routes: [
       {
         label: "All Tickets",
@@ -1212,6 +1212,18 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "support:macros:view",
       },
       {
+        label: "Customer Portal",
+        icon: Globe,
+        href: "/support/portal",
+        requiredPermission: "support:portal:tickets:view",
+      },
+      {
+        label: "Reports",
+        icon: BarChart3,
+        href: "/support/reports",
+        requiredPermission: "support:reports:view",
+      },
+      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/support/settings/automations",
@@ -1222,6 +1234,24 @@ export const NAV_GROUPS: NavGroup[] = [
             icon: Workflow,
             href: "/support/settings/automations",
             requiredPermission: "settings:automations:view",
+          },
+          {
+            label: "SLA Policies",
+            icon: Scale,
+            href: "/support/settings/sla",
+            requiredPermission: "support:settings:manage",
+          },
+          {
+            label: "Business Hours",
+            icon: Clock,
+            href: "/support/settings/business-hours",
+            requiredPermission: "support:settings:manage",
+          },
+          {
+            label: "Channels",
+            icon: Network,
+            href: "/support/settings/channels",
+            requiredPermission: "support:channels:manage",
           },
         ],
       },

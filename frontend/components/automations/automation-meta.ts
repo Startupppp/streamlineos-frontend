@@ -76,6 +76,40 @@ export const TRIGGER_META: TriggerMeta[] = [
     },
   },
   {
+    value: "ticket.priority_changed",
+    label: "Ticket priority changed",
+    description: "Runs when a support ticket's priority is updated",
+    module: "support",
+    fields: [
+      { value: "priority", label: "New priority" },
+      { value: "previousPriority", label: "Previous priority" },
+      { value: "status", label: "Status" },
+    ],
+    samplePayload: {
+      id: 1,
+      priority: "URGENT",
+      previousPriority: "MEDIUM",
+      status: "OPEN",
+    },
+  },
+  {
+    value: "ticket.message_received",
+    label: "Ticket message received",
+    description: "Runs when a new message is posted on a support ticket",
+    module: "support",
+    fields: [
+      { value: "isInternal", label: "Is internal note" },
+      { value: "sourceChannel", label: "Source channel" },
+      { value: "priority", label: "Ticket priority" },
+    ],
+    samplePayload: {
+      ticketId: 1,
+      isInternal: false,
+      sourceChannel: "email",
+      priority: "HIGH",
+    },
+  },
+  {
     value: "invoice.overdue",
     label: "Invoice overdue",
     description: "Runs when an invoice passes its due date unpaid",
@@ -609,6 +643,26 @@ export const ACTION_TYPES: {
     value: "webhook",
     label: "Fire webhook",
     description: "Dispatch an outbound webhook event",
+  },
+  {
+    value: "support_assign_ticket",
+    label: "Assign ticket",
+    description: "Assign the support ticket to an agent",
+  },
+  {
+    value: "support_set_priority",
+    label: "Set ticket priority",
+    description: "Change the support ticket's priority",
+  },
+  {
+    value: "support_add_tag",
+    label: "Add ticket tag",
+    description: "Attach a tag to the support ticket",
+  },
+  {
+    value: "support_internal_note",
+    label: "Add internal note",
+    description: "Post a system-authored internal note on the ticket",
   },
 ];
 

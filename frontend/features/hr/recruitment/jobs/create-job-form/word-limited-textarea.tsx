@@ -36,7 +36,8 @@ export function WordLimitedTextarea({
       control={control}
       name={name}
       render={({ field }) => {
-        const words = countWords(field.value ?? "");
+        const value = typeof field.value === "string" ? field.value : "";
+        const words = countWords(value);
         const nearLimit = words >= maxWords - 10;
         const atLimit = words >= maxWords;
 
@@ -45,7 +46,7 @@ export function WordLimitedTextarea({
             <Textarea
               rows={rows}
               placeholder={placeholder}
-              value={field.value ?? ""}
+              value={value}
               onChange={handleChange(field.onChange)}
               onBlur={field.onBlur}
               aria-describedby={counterId}

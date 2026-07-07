@@ -57,6 +57,8 @@ function InboxContent() {
   const statusFilter = searchParams.get("status") || "all";
   const priorityFilter = searchParams.get("priority") || "all";
   const queueIdFilter = searchParams.get("queueId");
+  const assigneeIdFilter = searchParams.get("assigneeId");
+  const channelFilter = searchParams.get("channel");
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -74,6 +76,8 @@ function InboxContent() {
     ...(isTicketStatus(statusFilter) ? { status: statusFilter } : {}),
     ...(isTicketPriority(priorityFilter) ? { priority: priorityFilter } : {}),
     ...(queueIdFilter ? { queueId: Number(queueIdFilter) } : {}),
+    ...(assigneeIdFilter ? { assigneeId: assigneeIdFilter } : {}),
+    ...(channelFilter ? { channel: channelFilter } : {}),
   });
   const { data: stats, isLoading: statsLoading } = useSupportStats();
 
