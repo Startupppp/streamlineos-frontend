@@ -673,6 +673,11 @@ export const queryKeys = {
     portalActive: () => [...base, "supportCustomFields", "portalActive"] as const,
   },
 
+  supportSettingsAuditLog: {
+    all: [...base, "supportSettingsAuditLog"] as const,
+    list: (entityType?: string) => [...base, "supportSettingsAuditLog", "list", entityType ?? null] as const,
+  },
+
   supportBusinessHours: {
     all: [...base, "supportBusinessHours"] as const,
     list: () => [...base, "supportBusinessHours", "list"] as const,

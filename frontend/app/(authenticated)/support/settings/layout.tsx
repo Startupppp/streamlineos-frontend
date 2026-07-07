@@ -10,6 +10,7 @@ const TABS = [
   { label: "Business Hours", href: "/support/settings/business-hours" },
   { label: "Channels", href: "/support/settings/channels" },
   { label: "Custom Fields", href: "/support/settings/custom-fields" },
+  { label: "Audit Log", href: "/support/settings/audit-log" },
 ] as const;
 
 export default function SupportSettingsLayout({
