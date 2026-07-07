@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTicketIllustration } from "@/components/illustrations";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -27,17 +25,31 @@ import type { ChangelogEntry } from "@/types/projects";
 import { ChangelogEntryCard } from "./changelog-entry-card";
 import { ChangelogSheet } from "./changelog-sheet";
 
-export function ChangelogTab() {
+interface ChangelogTabProps {
+  createOpen?: boolean;
+  onCreateOpenChange?: (open: boolean) => void;
+}
+
+export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabProps) {
   const { data, isLoading, isError, refetch } = useChangelog();
   const update = useUpdateChangelogEntry();
   const deleteEntry = useDeleteChangelogEntry();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ChangelogEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangelogEntry | null>(null);
 
+  const isCreateControlled = onCreateOpenChange !== undefined;
+  const sheetOpen = isCreateControlled ? (createOpen ?? false) : internalCreateOpen;
+
   function handleRetry() { refetch(); }
-  function handleOpenSheet() { setSheetOpen(true); }
-  function handleCloseSheet() { setSheetOpen(false); }
+  function handleOpenSheet() {
+    if (isCreateControlled) onCreateOpenChange(true);
+    else setInternalCreateOpen(true);
+  }
+  function handleCloseSheet() {
+    if (isCreateControlled) onCreateOpenChange(false);
+    else setInternalCreateOpen(false);
+  }
   function handleCloseEdit() { setEditTarget(null); }
   function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
   const handleEditEntry = useCallback((entry: ChangelogEntry) => { setEditTarget(entry); }, []);
@@ -66,13 +78,6 @@ export function ChangelogTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{data?.length ?? 0} entries</p>
-        <Button size="sm" onClick={handleOpenSheet}>
-          <Plus className="h-4 w-4 mr-1" /> New Entry
-        </Button>
-      </div>
-
       {!data || data.length === 0 ? (
         <EmptyState
           illustration={<EmptyTicketIllustration />}

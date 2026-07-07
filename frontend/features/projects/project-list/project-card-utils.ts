@@ -57,7 +57,7 @@ export function resolveDateMeta(
     return { label, tone: "muted" };
   }
   if (startDate) {
-    return { label: format(new Date(startDate), "Started MMM d"), tone: "muted" };
+    return { label: format(new Date(startDate), "'Started' MMM d"), tone: "muted" };
   }
   return null;
 }

@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -26,16 +24,21 @@ import { RoadmapItemSheet } from "./roadmap-item-sheet";
 
 interface RoadmapTabProps {
   search: string;
+  createOpen?: boolean;
+  onCreateOpenChange?: (open: boolean) => void;
 }
 
-export function RoadmapTab({ search }: RoadmapTabProps) {
+export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTabProps) {
   const { data, isLoading, isError, refetch } = useRoadmapItems(
     search.trim() ? { search: search.trim() } : {},
   );
   const deleteItem = useDeleteRoadmapItem();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<RoadmapItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RoadmapItem | null>(null);
+
+  const isCreateControlled = onCreateOpenChange !== undefined;
+  const sheetOpen = isCreateControlled ? (createOpen ?? false) : internalCreateOpen;
 
   const grouped = useMemo(() => {
     const map: Record<RoadmapStatus, RoadmapItem[]> = {
@@ -49,8 +52,14 @@ export function RoadmapTab({ search }: RoadmapTabProps) {
   }, [data]);
 
   function handleRetry() { refetch(); }
-  function handleOpenSheet() { setSheetOpen(true); }
-  function handleCloseSheet() { setSheetOpen(false); }
+  function handleOpenSheet() {
+    if (isCreateControlled) onCreateOpenChange(true);
+    else setInternalCreateOpen(true);
+  }
+  function handleCloseSheet() {
+    if (isCreateControlled) onCreateOpenChange(false);
+    else setInternalCreateOpen(false);
+  }
   function handleCloseEdit() { setEditTarget(null); }
   function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
   const handleEditItem = useCallback((item: RoadmapItem) => { setEditTarget(item); }, []);
@@ -71,13 +80,6 @@ export function RoadmapTab({ search }: RoadmapTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{total} items</p>
-        <Button size="sm" onClick={handleOpenSheet}>
-          <Plus className="h-4 w-4 mr-1" /> New Item
-        </Button>
-      </div>
-
       {total === 0 ? (
         <EmptyState
           illustration={<EmptyProjectsIllustration />}
