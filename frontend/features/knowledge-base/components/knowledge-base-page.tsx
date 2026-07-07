@@ -39,7 +39,7 @@ import {
   useDeleteKbSource,
 } from "@/hooks/api/kb/sources";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/api-client";
 import type { KbAskResponse } from "@/types/kb";
 import type { KbSource } from "@/hooks/api/kb/sources";
 
@@ -54,6 +54,7 @@ export default function KnowledgeBasePage() {
 
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<KbAskResponse | null>(null);
+  const [askError, setAskError] = useState<string | null>(null);
 
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteTitle, setNoteTitle] = useState("");
@@ -70,12 +71,20 @@ export default function KnowledgeBasePage() {
   function runAsk(value: string) {
     const trimmed = value.trim();
     if (!trimmed) return;
+    setAskError(null);
     ask.mutate(
       { question: trimmed },
       {
-        onSuccess: (data) => setResult(data),
-        onError: (error) =>
-          toast.error("Ask failed", { description: getApiError(error) }),
+        onSuccess: (data) => {
+          setAskError(null);
+          setResult(data);
+        },
+        onError: (error) => {
+          const message = getErrorMessage(error);
+          setResult(null);
+          setAskError(message);
+          toast.error("Couldn't get an answer", { description: message });
+        },
       },
     );
   }
@@ -117,7 +126,7 @@ export default function KnowledgeBasePage() {
     uploadSource.mutate(file, {
       onSuccess: () => toast.success("File uploaded and queued for processing"),
       onError: (error) =>
-        toast.error("Upload failed", { description: getApiError(error) }),
+        toast.error("Upload failed", { description: getErrorMessage(error) }),
     });
   }
 
@@ -147,7 +156,7 @@ export default function KnowledgeBasePage() {
           setNoteOpen(false);
         },
         onError: (error) =>
-          toast.error("Failed to add note", { description: getApiError(error) }),
+          toast.error("Failed to add note", { description: getErrorMessage(error) }),
       },
     );
   }
@@ -161,7 +170,7 @@ export default function KnowledgeBasePage() {
       deleteSource.mutate(id, {
         onSuccess: () => toast.success("Source removed"),
         onError: (error) =>
-          toast.error("Delete failed", { description: getApiError(error) }),
+          toast.error("Delete failed", { description: getErrorMessage(error) }),
       });
     };
   }
@@ -175,8 +184,8 @@ export default function KnowledgeBasePage() {
       title="Knowledge Base"
       subtitle="Upload files and notes, then ask questions answered from them and your wiki."
     >
-      <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[1fr_20rem]">
-        <section className="space-y-4">
+      <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <section className="min-w-0 space-y-4">
           <div className="rounded-2xl border border-border bg-gradient-to-b from-card to-muted/20 p-5 shadow-sm">
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
               <MessageCircleIcon size={18} className="text-accent" />
@@ -217,6 +226,12 @@ export default function KnowledgeBasePage() {
               </div>
             )}
           </div>
+
+          {askError && !ask.isPending && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+              {askError}
+            </div>
+          )}
 
           {ask.isPending && (
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-sm">
@@ -296,7 +311,7 @@ export default function KnowledgeBasePage() {
           )}
         </section>
 
-        <aside className="space-y-3">
+        <aside className="min-w-0 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">
               Sources
