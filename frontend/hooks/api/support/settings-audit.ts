@@ -4,7 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export type SettingsAuditEntityType = "sla_policy" | "business_hours" | "automation" | "channel" | "custom_field";
+export type SettingsAuditEntityType =
+  | "sla_policy"
+  | "business_hours"
+  | "automation"
+  | "channel"
+  | "custom_field"
+  | "routing_rule"
+  | "agent_skill"
+  | "agent_availability"
+  | "vip_client";
 export type SettingsAuditAction = "created" | "updated" | "deleted";
 
 export interface SettingsAuditLogEntry {

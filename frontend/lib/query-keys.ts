@@ -733,6 +733,21 @@ export const queryKeys = {
     list: () => [...base, "supportRouting", "list"] as const,
   },
 
+  supportAgentSkills: {
+    all: [...base, "supportAgentSkills"] as const,
+    list: () => [...base, "supportAgentSkills", "list"] as const,
+  },
+
+  supportAgentAvailability: {
+    all: [...base, "supportAgentAvailability"] as const,
+    list: () => [...base, "supportAgentAvailability", "list"] as const,
+  },
+
+  supportVipClients: {
+    all: [...base, "supportVipClients"] as const,
+    list: () => [...base, "supportVipClients", "list"] as const,
+  },
+
   supportQueues: {
     all: [...base, "supportQueues"] as const,
     list: () => [...base, "supportQueues", "list"] as const,

@@ -26,6 +26,10 @@ const ENTITY_TYPES: { value: SettingsAuditEntityType; label: string }[] = [
   { value: "automation", label: "Automation" },
   { value: "channel", label: "Channel" },
   { value: "custom_field", label: "Custom Field" },
+  { value: "routing_rule", label: "Routing Rule" },
+  { value: "agent_skill", label: "Agent Skill" },
+  { value: "agent_availability", label: "Agent Availability" },
+  { value: "vip_client", label: "VIP Client" },
 ];
 
 function entityTypeLabel(type: string) {

@@ -144,6 +144,7 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/support/settings/business-hours": ["support:settings:manage"],
   "/support/settings/channels": ["support:channels:manage"],
   "/support/settings/custom-fields": ["support:settings:manage"],
+  "/support/settings/agent-routing": ["support:macros:view"],
   "/support/settings/audit-log": ["support:settings:manage"],
   "/support/reports": ["support:reports:view"],
   "/settings/automations": ["settings:automations:view"],
