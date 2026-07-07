@@ -72,8 +72,8 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
   for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="flex shrink-0 items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-1.5">
           <Select value={String(month)} onValueChange={handleMonthChange}>
             <SelectTrigger className="h-8 w-[120px] text-xs">
@@ -109,55 +109,59 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 border rounded-lg overflow-hidden">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-          <div key={day} className="px-2 py-1.5 text-xs font-medium text-muted-foreground text-center bg-muted/50 border-b sticky top-0 z-10">
-            {day}
-          </div>
-        ))}
-        {days.map((day, idx) => {
-          if (day === null) {
-            return <div key={`empty-${idx}`} className="min-h-[100px] border-b border-r bg-muted/20" />;
-          }
-
-          const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-          const dayTickets = ticketsByDate.get(dateKey) ?? [];
-          const isToday = dateKey === today;
-
-          return (
-            <div
-              key={dateKey}
-              className={cn(
-                "min-h-[100px] border-b border-r p-1",
-                isToday ? "bg-primary/5" : "bg-background"
-              )}
-            >
-              <span
-                className={cn(
-                  "inline-flex items-center justify-center h-6 w-6 text-xs rounded-full mb-1",
-                  isToday ? "bg-primary text-primary-foreground font-bold" : "text-muted-foreground"
-                )}
-              >
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border">
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="grid grid-cols-7">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+              <div key={day} className="sticky top-0 z-10 border-b bg-muted/50 px-2 py-1.5 text-center text-xs font-medium text-muted-foreground">
                 {day}
-              </span>
-              <div className="flex flex-col gap-0.5">
-                {dayTickets.slice(0, 3).map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => onTicketClick(t.id)}
-                    className="flex items-center gap-1 px-1.5 py-0.5 rounded text-left hover:bg-muted transition-colors"
-                  >
-                    <div className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", getStatusDotClass(t.status))} />
-                    <span className="text-[10px] text-foreground truncate">{t.title}</span>
-                  </button>
-                ))}
-                {dayTickets.length > 3 && (
-                  <span className="text-[10px] text-muted-foreground px-1.5">+{dayTickets.length - 3} more</span>
-                )}
               </div>
-            </div>
-          );
-        })}
+            ))}
+            {days.map((day, idx) => {
+              if (day === null) {
+                return <div key={`empty-${idx}`} className="min-h-[100px] border-b border-r bg-muted/20" />;
+              }
+
+              const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+              const dayTickets = ticketsByDate.get(dateKey) ?? [];
+              const isToday = dateKey === today;
+
+              return (
+                <div
+                  key={dateKey}
+                  className={cn(
+                    "min-h-[100px] border-b border-r p-1",
+                    isToday ? "bg-primary/5" : "bg-background"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "inline-flex items-center justify-center h-6 w-6 text-xs rounded-full mb-1",
+                      isToday ? "bg-primary text-primary-foreground font-bold" : "text-muted-foreground"
+                    )}
+                  >
+                    {day}
+                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    {dayTickets.slice(0, 3).map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => onTicketClick(t.id)}
+                        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-left hover:bg-muted transition-colors"
+                      >
+                        <div className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", getStatusDotClass(t.status))} />
+                        <span className="text-[10px] text-foreground truncate">{t.title}</span>
+                      </button>
+                    ))}
+                    {dayTickets.length > 3 && (
+                      <span className="text-[10px] text-muted-foreground px-1.5">+{dayTickets.length - 3} more</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

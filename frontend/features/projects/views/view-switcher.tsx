@@ -27,7 +27,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({ activeView, onViewChang
       options={views}
       onChange={onViewChange}
       showLabel
-      className="bg-background"
+      className="bg-card"
     />
   );
 });

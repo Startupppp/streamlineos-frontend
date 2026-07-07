@@ -36,7 +36,7 @@ export function ViewToggle<T extends string = string>({
     <div
       role="group"
       className={cn(
-        "inline-flex items-center rounded-lg border border-border bg-muted/40 p-0.5",
+        "inline-flex items-center rounded-lg border border-border bg-card p-0.5",
         className,
       )}
     >
@@ -57,7 +57,7 @@ export function ViewToggle<T extends string = string>({
               showLabel ? labelPad : pad,
               isActive
                 ? "bg-foreground text-background shadow-sm"
-                : "bg-background text-muted-foreground hover:text-foreground",
+                : "bg-card text-muted-foreground hover:text-foreground",
             )}
           >
             <Icon className={iconSize} />

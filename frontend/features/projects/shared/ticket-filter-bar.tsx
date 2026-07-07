@@ -193,7 +193,7 @@ export function TicketFilterBar({
 
       {hasFilters && (
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={clearAll}
           className="h-8 px-2 text-xs text-muted-foreground shrink-0"

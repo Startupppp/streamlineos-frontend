@@ -190,7 +190,7 @@ function DesktopSidebar({
   return (
     <div
       className={cn(
-        "h-full flex flex-col border-r bg-muted/30 transition-[width] duration-200 ease-out",
+        "h-full flex flex-col border-r border-border bg-card/50 transition-[width] duration-200 ease-out",
         isCollapsed ? "w-[3.25rem]" : "w-52"
       )}
     >
@@ -239,7 +239,7 @@ function DesktopSidebar({
                       "flex items-center rounded-md text-[13px] font-medium transition-colors group relative",
                       isCollapsed ? "justify-center p-1.5 mx-auto" : "px-2 py-1.5",
                       active
-                        ? "bg-primary/10 text-primary"
+                        ? "bg-muted text-foreground"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                     title={isCollapsed ? item.label : undefined}
@@ -284,7 +284,7 @@ function MobileProjectNav({
             <Menu className="h-4 w-4" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0">
+        <SheetContent side="left" className="w-64 p-0 bg-card/50">
           <SheetTitle className="sr-only">Project Navigation</SheetTitle>
           <div className="flex flex-col h-full">
 
@@ -315,7 +315,7 @@ function MobileProjectNav({
                           className={cn(
                             "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors",
                             active
-                              ? "bg-primary/10 text-primary"
+                              ? "bg-muted text-foreground"
                               : "text-muted-foreground hover:bg-muted hover:text-foreground"
                           )}
                         >

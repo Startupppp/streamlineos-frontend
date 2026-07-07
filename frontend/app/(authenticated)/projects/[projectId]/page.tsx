@@ -274,7 +274,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
           {activeView && (
             <Badge
               variant="secondary"
-              className="h-6 text-xs font-normal gap-1 shrink-0 pl-2 pr-1 cursor-default"
+              className="h-6 text-xs font-normal gap-1 shrink-0 pl-2 pr-1 cursor-default bg-card"
             >
               View: {activeView.name}
               <button
@@ -295,7 +295,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
               id="hide-done"
               checked={hideCompleted}
               onCheckedChange={setHideCompleted}
-              className="scale-90"
+              className="scale-90 data-[state=unchecked]:bg-card data-[state=unchecked]:border data-[state=unchecked]:border-border"
             />
             <Label
               htmlFor="hide-done"
@@ -333,7 +333,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
         </div>
       )}
       {view === "calendar" && (
-        <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 pb-2 pt-0">
           <CalendarView tickets={filteredTickets} onTicketClick={handleTicketSelect} />
         </div>
       )}
