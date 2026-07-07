@@ -1231,9 +1231,15 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: ["kb:pages:view"],
     routes: [
       {
-        label: "Knowledge Base",
+        label: "Wiki",
         icon: NotebookPen,
         href: "/knowledge",
+        requiredPermission: "kb:pages:view",
+      },
+      {
+        label: "Knowledge Base",
+        icon: Library,
+        href: "/knowledge/uploads",
         requiredPermission: "kb:pages:view",
       },
       {
