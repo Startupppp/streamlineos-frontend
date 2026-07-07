@@ -1,8 +1,18 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, MoreHorizontal, Pencil, Archive, Trash2, RotateCcw, Ticket } from "lucide-react";
+import {
+  Calendar,
+  ChevronRight,
+  MoreHorizontal,
+  Pencil,
+  Archive,
+  Trash2,
+  RotateCcw,
+  Ticket,
+  CheckCircle2,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AvatarStack } from "@/components/ui/avatar-stack";
@@ -14,62 +24,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   getColorSafe,
   projectStatusColors,
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { toast } from "sonner";
-import { useDeleteProject, useArchiveProject } from "@/hooks/api/projects";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { EditProjectSheet } from "./edit-project-sheet";
 import { useCan } from "@/hooks/api/access";
-
-const statusAccentBar: Record<string, string> = {
-  ACTIVE: "bg-emerald-500",
-  PLANNING: "bg-blue-500",
-  COMPLETED: "bg-slate-400",
-  ON_HOLD: "bg-amber-500",
-  ARCHIVED: "bg-slate-300 dark:bg-slate-600",
-};
-
-const statusDotColors: Record<string, string> = {
-  ACTIVE: "bg-emerald-500",
-  PLANNING: "bg-blue-500",
-  COMPLETED: "bg-slate-400",
-  ON_HOLD: "bg-amber-500",
-  ARCHIVED: "bg-slate-400",
-};
+import type { ProjectListItem } from "@/types/projects/projects";
+import { ProjectCardProgressRing } from "./project-card-progress-ring";
+import { ProjectCardDialogs } from "./project-card-dialogs";
+import {
+  avatarTints,
+  buildTeamMembers,
+  dateToneClasses,
+  resolveDateMeta,
+  statusAccentBar,
+  statusDotColors,
+} from "./project-card-utils";
 
 interface ProjectCardProps {
-  project: {
-    id: number;
-    name: string;
-    key: string;
-    status: string | null;
-    description: string | null;
-    startDate: Date | string | null;
-    endDate: Date | string | null;
-    manager: {
-      id: string;
-      firstName: string | null;
-      lastName: string | null;
-      image: string | null;
-    } | null;
-    progress: { total: number; done: number; percentage: number };
-    members: { id: string; firstName: string | null; lastName: string | null; image: string | null }[];
-  };
+  project: ProjectListItem;
 }
 
 export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectCardProps) {
@@ -81,19 +55,19 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
   const canUpdate = useCan("projects:update");
   const canDelete = useCan("projects:delete");
 
-  const deleteProject = useDeleteProject();
-  const archiveProject = useArchiveProject();
-
   const status = project.status ?? "ACTIVE";
   const isArchived = status === "ARCHIVED";
   const displayLabel = projectStatusDisplayLabels[status] ?? status;
   const statusColor = getColorSafe(projectStatusColors, status);
   const accentBar = getColorSafe(statusAccentBar, status);
   const statusDot = getColorSafe(statusDotColors, status);
-  const dateStr = project.startDate ? format(new Date(project.startDate), "MMM d") : null;
+  const avatarTint = getColorSafe(avatarTints, status);
+  const dateMeta = resolveDateMeta(project.endDate, project.startDate, status);
   const progressValue = project.progress.total > 0 ? project.progress.percentage : 0;
   const hasTickets = project.progress.total > 0;
-  const isComplete = progressValue >= 100;
+  const openTickets = project.progress.total - project.progress.done;
+  const teamMembers = useMemo(() => buildTeamMembers(project), [project]);
+  const initials = project.key.slice(0, 2).toUpperCase();
 
   const handleCardClick = useCallback(() => {
     router.push(`/projects/${project.id}`);
@@ -129,43 +103,13 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
     setDeleteConfirmOpen(true);
   }, []);
 
-  const handleArchiveConfirm = useCallback(() => {
-    archiveProject.mutate(
-      { projectId: project.id, restore: isArchived },
-      {
-        onSuccess: () => {
-          toast.success(isArchived ? "Project restored" : "Project archived");
-          setArchiveConfirmOpen(false);
-        },
-        onError: (error) => {
-          toast.error(getErrorMessage(error));
-        },
-      },
-    );
-  }, [archiveProject, project.id, isArchived]);
-
-  const handleDeleteConfirm = useCallback(() => {
-    deleteProject.mutate(
-      { projectId: project.id },
-      {
-        onSuccess: () => {
-          toast.success("Project deleted");
-          setDeleteConfirmOpen(false);
-        },
-        onError: (error) => {
-          toast.error(getErrorMessage(error));
-        },
-      },
-    );
-  }, [deleteProject, project.id]);
-
   return (
     <>
       <div
         className={cn(
           "group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm",
           "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
-          "hover:border-blue-500/40 hover:shadow-md",
+          "hover:border-blue-500/35 hover:shadow-md",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         )}
         role="listitem"
@@ -174,183 +118,187 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
         onKeyDown={handleCardKeyDown}
         aria-label={`${project.name} — ${displayLabel}. Press Enter to open.`}
       >
-        <div
-          className={cn("absolute inset-x-0 top-0 h-0.5", accentBar)}
-          aria-hidden="true"
-        />
+        <div className={cn("absolute inset-x-0 top-0 h-0.5", accentBar)} aria-hidden="true" />
 
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="rounded-md border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-foreground/70">
-            {project.key}
-          </span>
-          <div className="flex items-center gap-1">
+        <div className="mb-2.5 flex items-start gap-2.5">
+          <div
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
+              "text-[11px] font-bold tracking-tight",
+              avatarTint,
+            )}
+            aria-hidden="true"
+          >
+            {initials}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-1">
+              <div className="min-w-0 flex-1">
+                <span className="mb-0.5 block font-mono text-[10px] font-semibold tracking-wide text-muted-foreground">
+                  {project.key}
+                </span>
+                <h3 className="line-clamp-1 text-sm font-semibold text-foreground transition-colors group-hover:text-blue-600">
+                  {project.name}
+                </h3>
+              </div>
+              <div className="flex shrink-0 items-center gap-0.5">
+                <ChevronRight
+                  className="h-3.5 w-3.5 opacity-0 text-blue-500/70 transition-opacity duration-200 group-hover:opacity-100 motion-reduce:transition-none"
+                  aria-hidden="true"
+                />
+                {(canUpdate || canDelete) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 hover:bg-muted"
+                        aria-label={`Actions for ${project.name}`}
+                        onClick={handleStopPropagation}
+                      >
+                        <MoreHorizontal className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44" onClick={handleStopPropagation}>
+                      {canUpdate && (
+                        <DropdownMenuItem onClick={handleEditClick}>
+                          <Pencil className="mr-2 h-3.5 w-3.5" />
+                          Edit project
+                        </DropdownMenuItem>
+                      )}
+                      {canUpdate && (
+                        <DropdownMenuItem onClick={handleArchiveClick}>
+                          {isArchived ? (
+                            <>
+                              <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                              Restore project
+                            </>
+                          ) : (
+                            <>
+                              <Archive className="mr-2 h-3.5 w-3.5" />
+                              Archive project
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                      )}
+                      {canDelete && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={handleDeleteClick}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-3.5 w-3.5" />
+                            Delete project
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            </div>
+
             <Badge
               variant="secondary"
               className={cn(
-                "gap-1 rounded-full border-0 px-2 py-0 text-[9px] font-semibold uppercase tracking-wide",
+                "mt-1.5 gap-1 rounded-full border-0 px-2 py-0 text-[9px] font-semibold uppercase tracking-wide",
                 statusColor,
               )}
             >
               <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", statusDot)} aria-hidden="true" />
               {displayLabel}
             </Badge>
-            {(canUpdate || canDelete) && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted"
-                    aria-label="Project actions"
-                    onClick={handleStopPropagation}
-                  >
-                    <MoreHorizontal className="h-3.5 w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44" onClick={handleStopPropagation}>
-                  {canUpdate && (
-                    <DropdownMenuItem onClick={handleEditClick}>
-                      <Pencil className="mr-2 h-3.5 w-3.5" />
-                      Edit project
-                    </DropdownMenuItem>
-                  )}
-                  {canUpdate && (
-                    <DropdownMenuItem onClick={handleArchiveClick}>
-                      {isArchived ? (
-                        <>
-                          <RotateCcw className="mr-2 h-3.5 w-3.5" />
-                          Restore project
-                        </>
-                      ) : (
-                        <>
-                          <Archive className="mr-2 h-3.5 w-3.5" />
-                          Archive project
-                        </>
-                      )}
-                    </DropdownMenuItem>
-                  )}
-                  {canDelete && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={handleDeleteClick}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-3.5 w-3.5" />
-                        Delete project
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
           </div>
         </div>
 
-        <h3 className="mb-0.5 line-clamp-1 text-sm font-semibold text-foreground transition-colors group-hover:text-blue-600">
-          {project.name}
-        </h3>
-
         {project.description ? (
-          <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="mb-2.5 line-clamp-2 flex-1 text-[11px] leading-relaxed text-muted-foreground">
             {project.description}
           </p>
         ) : (
-          <p className="mb-2 line-clamp-1 text-[11px] text-muted-foreground/50">
-            No description provided
-          </p>
+          <div className="mb-2.5 flex-1" aria-hidden="true" />
         )}
 
-        <div className="mt-auto border-t border-border/80 pt-2.5">
+        <div className="mt-auto space-y-2.5 border-t border-border/80 pt-2.5">
           {hasTickets ? (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="font-medium text-muted-foreground">Progress</span>
-                <span className="tabular-nums font-semibold text-foreground">
-                  {project.progress.done}/{project.progress.total}
-                  <span className="ml-1 font-normal text-muted-foreground">
-                    ({progressValue}%)
+            <div className="flex items-center gap-2.5">
+              <ProjectCardProgressRing percentage={progressValue} />
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex items-center justify-between gap-2 text-[10px]">
+                  <span className="font-medium text-muted-foreground">Progress</span>
+                  <span className="tabular-nums font-semibold text-foreground">
+                    {project.progress.done}/{project.progress.total}
                   </span>
-                </span>
-              </div>
-              <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-[width] duration-500 ease-out",
-                    isComplete ? "bg-emerald-500" : "bg-blue-500",
-                  )}
-                  style={{ width: `${progressValue}%` }}
-                />
+                </div>
+                <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none",
+                      progressValue >= 100 ? "bg-emerald-500" : "bg-blue-500",
+                    )}
+                    style={{ width: `${progressValue}%` }}
+                  />
+                </div>
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/55">
-              <Ticket className="h-3 w-3 shrink-0" aria-hidden="true" />
-              <span>No tickets yet</span>
+            <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/70 bg-muted/30 px-2.5 py-2">
+              <Ticket className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" aria-hidden="true" />
+              <span className="text-[10px] text-muted-foreground/70">No tickets yet</span>
             </div>
           )}
 
-          <div className="mt-2.5 flex items-center justify-between gap-2">
-            <AvatarStack
-              users={project.members}
-              limit={4}
-              className="[&>div]:h-5 [&>div]:w-5"
-            />
-            {dateStr && (
-              <div className="flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+              {hasTickets && (
+                <>
+                  <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-medium text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
+                    {project.progress.done} done
+                  </span>
+                  {openTickets > 0 && (
+                    <span className="inline-flex items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                      <Ticket className="h-2.5 w-2.5" aria-hidden="true" />
+                      {openTickets} open
+                    </span>
+                  )}
+                </>
+              )}
+              {teamMembers.length > 0 && (
+                <AvatarStack
+                  users={teamMembers}
+                  limit={4}
+                  className={cn(hasTickets && "ml-0.5", "[&>div]:h-5 [&>div]:w-5")}
+                />
+              )}
+            </div>
+            {dateMeta && (
+              <div
+                className={cn(
+                  "flex shrink-0 items-center gap-1 text-[10px] font-medium",
+                  dateToneClasses[dateMeta.tone],
+                )}
+              >
                 <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
-                {dateStr}
+                {dateMeta.label}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <EditProjectSheet
-        open={editOpen}
-        onOpenChange={setEditOpen}
+      <ProjectCardDialogs
         project={project}
+        isArchived={isArchived}
+        editOpen={editOpen}
+        onEditOpenChange={setEditOpen}
+        archiveConfirmOpen={archiveConfirmOpen}
+        onArchiveConfirmOpenChange={setArchiveConfirmOpen}
+        deleteConfirmOpen={deleteConfirmOpen}
+        onDeleteConfirmOpenChange={setDeleteConfirmOpen}
       />
-
-      <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{isArchived ? "Restore project?" : "Archive project?"}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isArchived
-                ? "This project will be restored and set to Active."
-                : "You can restore this project later from the project list."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchiveConfirm} disabled={archiveProject.isPending}>
-              {isArchived ? "Restore" : "Archive"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete project?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. All tickets and data in this project will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={deleteProject.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 });

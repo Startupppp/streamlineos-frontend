@@ -145,7 +145,6 @@ export function MyWorkPage() {
       title="My Work"
       eyebrow="Projects"
       subtitle="Your assigned tickets across all projects"
-      badge={isLoading ? undefined : String(totalOpen)}
     >
       {!isLoading && !isError && data && data.length > 0 && (
         <StatCardGrid cols={4} className="mb-4">

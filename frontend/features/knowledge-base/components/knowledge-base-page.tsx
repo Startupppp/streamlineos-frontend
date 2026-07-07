@@ -1,17 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   MessageCircleIcon,
   UploadIcon,
   PlusIcon,
   Trash2Icon,
   BookOpenTextIcon,
-  MoveRightIcon,
 } from "@animateicons/react/lucide";
-import { StickyNote, Loader2 } from "lucide-react";
+import { StickyNote, Loader2, Send } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { MarkdownContent } from "@/components/markdown/markdown-content";
+import { cn } from "@/lib/utils";
 import { useKbAsk } from "@/hooks/api/kb/ask";
 import {
   useKbSources,
@@ -40,27 +42,37 @@ import {
 } from "@/hooks/api/kb/sources";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import { getErrorMessage } from "@/lib/api-client";
-import type { KbAskResponse } from "@/types/kb";
+import type { KbAskCitation } from "@/types/kb";
 import type { KbSource } from "@/hooks/api/kb/sources";
 
 const SUGGESTIONS = [
   "Summarize the key points across my documents",
   "What processes are documented here?",
-  "What do the uploaded files say about pricing?",
+  "What do the uploaded files say?",
 ];
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  citations?: KbAskCitation[];
+  isError?: boolean;
+}
 
 export default function KnowledgeBasePage() {
   const router = useRouter();
+  const reduce = useReducedMotion();
 
-  const [question, setQuestion] = useState("");
-  const [result, setResult] = useState<KbAskResponse | null>(null);
-  const [askError, setAskError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
 
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteTitle, setNoteTitle] = useState("");
   const [noteText, setNoteText] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const idRef = useRef(0);
 
   const ask = useKbAsk();
   const sourcesQuery = useKbSources();
@@ -68,46 +80,68 @@ export default function KnowledgeBasePage() {
   const createNote = useCreateKbSourceNote();
   const deleteSource = useDeleteKbSource();
 
-  function runAsk(value: string) {
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    setAskError(null);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: reduce ? "auto" : "smooth",
+      block: "end",
+    });
+  }, [messages, ask.isPending, reduce]);
+
+  function nextId() {
+    idRef.current += 1;
+    return String(idRef.current);
+  }
+
+  function sendMessage(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed || ask.isPending) return;
+    setInput("");
+    setMessages((prev) => [
+      ...prev,
+      { id: nextId(), role: "user", content: trimmed },
+    ]);
     ask.mutate(
       { question: trimmed },
       {
-        onSuccess: (data) => {
-          setAskError(null);
-          setResult(data);
-        },
+        onSuccess: (data) =>
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "assistant",
+              content: data.answer,
+              citations: data.citations,
+            },
+          ]),
         onError: (error) => {
           const message = getErrorMessage(error);
-          setResult(null);
-          setAskError(message);
+          setMessages((prev) => [
+            ...prev,
+            { id: nextId(), role: "assistant", content: message, isError: true },
+          ]);
           toast.error("Couldn't get an answer", { description: message });
         },
       },
     );
   }
 
-  function handleQuestionChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setQuestion(e.target.value);
-  }
-
-  function handleAsk() {
-    runAsk(question);
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setInput(e.target.value);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       e.preventDefault();
-      handleAsk();
+      sendMessage(input);
     }
   }
 
+  function handleSend() {
+    sendMessage(input);
+  }
+
   function handleSuggestion(e: React.MouseEvent<HTMLButtonElement>) {
-    const value = e.currentTarget.dataset.suggestion ?? "";
-    setQuestion(value);
-    runAsk(value);
+    sendMessage(e.currentTarget.dataset.suggestion ?? "");
   }
 
   function handleCitationClick(e: React.MouseEvent<HTMLButtonElement>) {
@@ -177,151 +211,68 @@ export default function KnowledgeBasePage() {
 
   const sources = sourcesQuery.data ?? [];
   const readyCount = sources.filter((s) => s.status === "ready").length;
+  const isEmpty = messages.length === 0 && !ask.isPending;
 
   return (
     <PageWrapper
       eyebrow="Knowledge Base"
       title="Knowledge Base"
-      subtitle="Upload files and notes, then ask questions answered from them and your wiki."
+      subtitle="Chat with your files, notes and wiki — answers are grounded in your content."
     >
       <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <section className="min-w-0 space-y-4">
-          <div className="rounded-2xl border border-border bg-gradient-to-b from-card to-muted/20 p-5 shadow-sm">
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-              <MessageCircleIcon size={18} className="text-accent" />
-              Ask your knowledge base
-            </div>
-            <div className="flex gap-2">
+        <div className="flex h-[calc(100vh-13rem)] min-h-[440px] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex-1 space-y-4 overflow-y-auto p-4">
+            {isEmpty ? (
+              <EmptyChat onSuggestion={handleSuggestion} />
+            ) : (
+              <AnimatePresence initial={false}>
+                {messages.map((message) => (
+                  <ChatBubble
+                    key={message.id}
+                    message={message}
+                    onCitation={handleCitationClick}
+                    reduce={Boolean(reduce)}
+                  />
+                ))}
+              </AnimatePresence>
+            )}
+            {ask.isPending && <TypingBubble reduce={Boolean(reduce)} />}
+            <div ref={bottomRef} />
+          </div>
+
+          <div className="shrink-0 border-t border-border bg-background/60 p-3">
+            <div className="flex items-center gap-2">
               <Input
-                value={question}
-                onChange={handleQuestionChange}
+                value={input}
+                onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything about your files, notes and wiki…"
-                className="h-11 text-sm"
+                className="h-11 rounded-xl text-sm"
                 autoFocus
               />
               <Button
-                onClick={handleAsk}
-                disabled={ask.isPending || !question.trim()}
-                className="h-11 shrink-0 gap-1.5"
+                onClick={handleSend}
+                disabled={ask.isPending || !input.trim()}
+                className="h-11 w-11 shrink-0 rounded-xl p-0"
+                aria-label="Send"
               >
-                {ask.isPending ? "Asking…" : "Ask"}
-                {!ask.isPending && <MoveRightIcon size={15} />}
+                <motion.span whileTap={reduce ? undefined : { scale: 0.85 }}>
+                  <Send className="h-4 w-4" />
+                </motion.span>
               </Button>
             </div>
-
-            {!result && !ask.isPending && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    data-suggestion={s}
-                    onClick={handleSuggestion}
-                    className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
-
-          {askError && !ask.isPending && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-              {askError}
-            </div>
-          )}
-
-          {ask.isPending && (
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-sm">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Searching your knowledge base…
-            </div>
-          )}
-
-          {result && !ask.isPending && (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-              <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <MessageCircleIcon size={14} />
-                Answer
-              </div>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                {result.answer}
-              </p>
-
-              {result.citations.length > 0 && (
-                <div className="mt-5 border-t border-border pt-4">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Sources
-                  </p>
-                  <div className="space-y-1">
-                    {result.citations.map((citation, index) => {
-                      if (citation.kind === "page") {
-                        return (
-                          <button
-                            key={`page-${citation.pageId}-${index}`}
-                            type="button"
-                            data-page-id={citation.pageId}
-                            onClick={handleCitationClick}
-                            className="flex w-full items-center gap-2 truncate rounded-md px-2 py-1.5 text-left text-sm text-accent transition-colors hover:bg-muted"
-                          >
-                            <BookOpenTextIcon size={14} className="shrink-0" />
-                            <span className="truncate">
-                              {citation.title || "Untitled"}
-                            </span>
-                            <Badge variant="outline" className="ml-auto shrink-0 text-[10px]">
-                              Wiki
-                            </Badge>
-                          </button>
-                        );
-                      }
-                      if (citation.kind === "source") {
-                        return (
-                          <div
-                            key={`source-${citation.sourceId}-${index}`}
-                            className="flex items-center gap-2 truncate rounded-md bg-muted/50 px-2 py-1.5 text-sm text-foreground"
-                          >
-                            <BookOpenTextIcon size={14} className="shrink-0 text-muted-foreground" />
-                            <span className="truncate">
-                              {citation.title || "Untitled"}
-                            </span>
-                            <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
-                              File
-                            </Badge>
-                          </div>
-                        );
-                      }
-                      return (
-                        <div
-                          key={`article-${citation.articleId}-${index}`}
-                          className="flex items-center gap-2 truncate px-2 py-1.5 text-sm text-muted-foreground"
-                        >
-                          <BookOpenTextIcon size={14} className="shrink-0" />
-                          <span className="truncate">
-                            {citation.title || "Untitled"}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
+        </div>
 
         <aside className="min-w-0 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground">
-              Sources
-              {sources.length > 0 && (
-                <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                  {readyCount}/{sources.length} ready
-                </span>
-              )}
-            </h2>
-          </div>
+          <h2 className="text-sm font-semibold text-foreground">
+            Sources
+            {sources.length > 0 && (
+              <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                {readyCount}/{sources.length} ready
+              </span>
+            )}
+          </h2>
 
           <div className="flex gap-2">
             <input
@@ -396,6 +347,167 @@ export default function KnowledgeBasePage() {
   );
 }
 
+function EmptyChat({
+  onSuggestion,
+}: {
+  onSuggestion: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-4 py-10 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+        <MessageCircleIcon size={24} />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-foreground">
+          Ask your knowledge base
+        </p>
+        <p className="mx-auto mt-1 max-w-xs text-xs text-muted-foreground">
+          Answers are grounded in your uploaded files, notes and wiki pages.
+        </p>
+      </div>
+      <div className="flex flex-wrap justify-center gap-2">
+        {SUGGESTIONS.map((s) => (
+          <button
+            key={s}
+            type="button"
+            data-suggestion={s}
+            onClick={onSuggestion}
+            className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChatBubble({
+  message,
+  onCitation,
+  reduce,
+}: {
+  message: ChatMessage;
+  onCitation: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  reduce: boolean;
+}) {
+  const isUser = message.role === "user";
+  return (
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={reduce ? undefined : { opacity: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={cn("flex", isUser ? "justify-end" : "justify-start")}
+    >
+      {isUser ? (
+        <div className="max-w-[80%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground shadow-sm">
+          {message.content}
+        </div>
+      ) : (
+        <div className="flex max-w-[88%] gap-2">
+          <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <MessageCircleIcon size={15} />
+          </div>
+          <div
+            className={cn(
+              "min-w-0 rounded-2xl rounded-bl-sm border px-3.5 py-2.5 text-sm shadow-sm",
+              message.isError
+                ? "border-destructive/30 bg-destructive/5 text-destructive"
+                : "border-border bg-background text-foreground",
+            )}
+          >
+            {message.isError ? (
+              <p className="leading-relaxed">{message.content}</p>
+            ) : (
+              <div className="break-words">
+                <MarkdownContent content={message.content} />
+              </div>
+            )}
+            {message.citations && message.citations.length > 0 && (
+              <Citations citations={message.citations} onCitation={onCitation} />
+            )}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function Citations({
+  citations,
+  onCitation,
+}: {
+  citations: KbAskCitation[];
+  onCitation: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <div className="mt-2.5 flex flex-wrap gap-1.5 border-t border-border/60 pt-2.5">
+      {citations.map((citation, index) => {
+        if (citation.kind === "page") {
+          return (
+            <button
+              key={`page-${citation.pageId}-${index}`}
+              type="button"
+              data-page-id={citation.pageId}
+              onClick={onCitation}
+              className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-accent transition-colors hover:bg-muted"
+            >
+              <BookOpenTextIcon size={11} />
+              <span className="truncate">{citation.title || "Untitled"}</span>
+            </button>
+          );
+        }
+        if (citation.kind === "source") {
+          return (
+            <span
+              key={`source-${citation.sourceId}-${index}`}
+              className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground"
+            >
+              <BookOpenTextIcon size={11} />
+              <span className="truncate">{citation.title || "Untitled"}</span>
+            </span>
+          );
+        }
+        return (
+          <span
+            key={`article-${citation.articleId}-${index}`}
+            className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground"
+          >
+            <span className="truncate">{citation.title || "Untitled"}</span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function TypingBubble({ reduce }: { reduce: boolean }) {
+  return (
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex justify-start"
+    >
+      <div className="flex gap-2">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+          <MessageCircleIcon size={15} />
+        </div>
+        <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-border bg-background px-4 py-3 shadow-sm">
+          {[0, 1, 2].map((i) => (
+            <motion.span
+              key={i}
+              className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60"
+              animate={reduce ? undefined : { opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+            />
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 interface SourcesListProps {
   isLoading: boolean;
   sources: KbSource[];
@@ -426,7 +538,7 @@ function SourcesList({
       <EmptyState
         illustrationPreset="knowledge"
         title="No sources yet"
-        description="Upload a file or add a note to ground AI answers on your content."
+        description="Upload a file or add a note to ground answers on your content."
       />
     );
   }
@@ -445,13 +557,15 @@ function SourcesList({
   );
 }
 
-interface SourceRowProps {
+function SourceRow({
+  source,
+  onDelete,
+  isDeleting,
+}: {
   source: KbSource;
   onDelete: () => void;
   isDeleting: boolean;
-}
-
-function SourceRow({ source, onDelete, isDeleting }: SourceRowProps) {
+}) {
   return (
     <li className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">

@@ -86,7 +86,6 @@ export interface NavRoute {
   icon: React.ComponentType<{ className?: string }>;
   href: string;
   badge?: "leaves";
-  isProjectsList?: boolean;
   requiredPermission?: string | string[];
   children?: NavRoute[];
   module?: ProductKey;
@@ -1123,7 +1122,6 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "All Projects",
         icon: Briefcase,
         href: "/projects/all",
-        isProjectsList: true,
         requiredPermission: "projects:view",
       },
       {

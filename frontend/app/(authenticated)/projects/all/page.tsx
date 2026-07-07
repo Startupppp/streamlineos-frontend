@@ -115,7 +115,6 @@ export default function ProjectsPage() {
       title="All Projects"
       eyebrow="Projects"
       subtitle="Browse and manage every project in your workspace"
-      badge={pagination?.total ? String(pagination.total) : undefined}
       actions={
         <NewProjectDialog open={createOpen} onOpenChange={handleCreateOpenChange} />
       }

@@ -163,7 +163,7 @@ export function ProgramsPage() {
     <PageWrapper
       title="Programs"
       eyebrow="Projects"
-      subtitle={`${displayed.length} program${displayed.length === 1 ? "" : "s"}`}
+      subtitle="Organize projects into programs under a portfolio"
       filters={filtersBar}
       actions={canManage ? (
         <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => setSheetOpen(true)}>

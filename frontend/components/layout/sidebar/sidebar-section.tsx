@@ -40,9 +40,7 @@ interface SidebarSectionProps {
 }
 
 function routeIsActive(route: NavRoute, pathname: string): boolean {
-  if (pathname === route.href) return true;
-  if (route.isProjectsList && pathname.startsWith("/projects/")) return true;
-  return false;
+  return pathname === route.href || pathname.startsWith(route.href + "/");
 }
 
 function routeContainsActive(route: NavRoute, pathname: string): boolean {

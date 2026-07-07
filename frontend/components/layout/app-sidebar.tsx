@@ -69,10 +69,10 @@ export function AppSidebar({
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
-      const match = flattenNavRoutes(group.routes).some((route) => {
-        if (route.isProjectsList) return pathname.startsWith("/projects/")
-        return pathname === route.href || pathname.startsWith(route.href + "/")
-      })
+      const match = flattenNavRoutes(group.routes).some(
+        (route) =>
+          pathname === route.href || pathname.startsWith(route.href + "/"),
+      )
       if (match) return group.label
     }
     return null

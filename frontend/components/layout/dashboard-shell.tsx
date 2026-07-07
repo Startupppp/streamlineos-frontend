@@ -14,6 +14,7 @@ import { TrialBanner } from "@/components/billing/trial-banner"
 import { ProductSwitcherMenu } from "./header/product-switcher-menu"
 import { WorkspaceSwitcher } from "./header/workspace-switcher"
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility"
+import { GlobalAskOs } from "@/components/assistant/global-ask-os"
 
 const SuccessChecklist = dynamic(
   () =>
@@ -164,6 +165,7 @@ export function DashboardShell({
           />
 
           <MobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
+          <GlobalAskOs />
         </>
       ) : (
         <NotActivatedPage />

@@ -19,7 +19,6 @@ export default function ProjectsLoading() {
       title="All Projects"
       eyebrow="Projects"
       subtitle="Browse and manage every project in your workspace"
-      badge={<Skeleton className="h-3 w-6" />}
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
       filters={filterBar}
     >
