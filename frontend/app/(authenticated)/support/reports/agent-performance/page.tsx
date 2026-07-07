@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ReportFiltersBar } from "@/features/support/reports/report-filters";
+import { ExportCsvButton } from "@/features/support/reports/export-csv-button";
 import {
   useAgentPerformanceReport,
   type AgentPerformanceRow,
@@ -41,7 +43,14 @@ export default function AgentPerformanceReportPage() {
     {
       key: "agent",
       header: "Agent",
-      cell: (row) => <span className="font-medium">{resolveAgentName(row)}</span>,
+      cell: (row) => (
+        <Link
+          href={`/support/inbox?assigneeId=${encodeURIComponent(row.agentId)}`}
+          className="font-medium text-primary hover:underline"
+        >
+          {resolveAgentName(row)}
+        </Link>
+      ),
       sortable: true,
       sortValue: resolveAgentName,
     },
@@ -86,6 +95,18 @@ export default function AgentPerformanceReportPage() {
       title="Agent Performance"
       subtitle="Ticket handling metrics by support agent."
       filters={<ReportFiltersBar filters={filters} onChange={setFilters} />}
+      actions={
+        <ExportCsvButton
+          filename="agent-performance.csv"
+          rows={rows.map((row) => ({
+            agent: resolveAgentName(row),
+            ticketsHandled: row.ticketsHandled,
+            ticketsResolved: row.ticketsResolved,
+            avgFirstResponseMinutes: row.avgFirstResponseMinutes ?? "",
+            avgResolutionMinutes: row.avgResolutionMinutes ?? "",
+          }))}
+        />
+      }
     >
       {isError ? (
         <ErrorState title="Could not load agent performance" onRetry={handleRetry} />

@@ -6,6 +6,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ReportFiltersBar } from "@/features/support/reports/report-filters";
+import { ExportCsvButton } from "@/features/support/reports/export-csv-button";
 import {
   useAutomationPerformanceReport,
   type AutomationPerformanceRow,
@@ -103,6 +104,19 @@ export default function AutomationPerformanceReportPage() {
       title="Automation Performance"
       subtitle="Run outcomes for helpdesk automation rules."
       filters={<ReportFiltersBar filters={filters} onChange={setFilters} />}
+      actions={
+        <ExportCsvButton
+          filename="automation-performance.csv"
+          rows={rows.map((row) => ({
+            rule: row.ruleName,
+            total: row.total,
+            succeeded: row.succeeded,
+            failed: row.failed,
+            skipped: row.skipped,
+            successRatePct: successRatePct(row).toFixed(0),
+          }))}
+        />
+      }
     >
       {isError ? (
         <ErrorState title="Could not load automation performance" onRetry={handleRetry} />

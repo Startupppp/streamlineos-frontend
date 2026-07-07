@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ReportFiltersBar } from "@/features/support/reports/report-filters";
+import { ExportCsvButton } from "@/features/support/reports/export-csv-button";
 import {
   useChannelPerformanceReport,
   type ChannelPerformanceRow,
@@ -31,7 +33,14 @@ export default function ChannelPerformanceReportPage() {
     {
       key: "channel",
       header: "Channel",
-      cell: (row) => <span className="font-medium">{formatChannelLabel(row.channel)}</span>,
+      cell: (row) => (
+        <Link
+          href={`/support/inbox?channel=${encodeURIComponent(row.channel)}`}
+          className="font-medium text-primary hover:underline"
+        >
+          {formatChannelLabel(row.channel)}
+        </Link>
+      ),
       sortable: true,
       sortValue: (row) => row.channel,
     },
@@ -69,6 +78,17 @@ export default function ChannelPerformanceReportPage() {
       title="Channel Performance"
       subtitle="Ticket volume and response time by intake channel."
       filters={<ReportFiltersBar filters={filters} onChange={setFilters} />}
+      actions={
+        <ExportCsvButton
+          filename="channel-performance.csv"
+          rows={rows.map((row) => ({
+            channel: formatChannelLabel(row.channel),
+            ticketsHandled: row.ticketsHandled,
+            avgFirstResponseMinutes: row.avgFirstResponseMinutes ?? "",
+            avgResolutionMinutes: row.avgResolutionMinutes ?? "",
+          }))}
+        />
+      }
     >
       {isError ? (
         <ErrorState title="Could not load channel performance" onRetry={handleRetry} />

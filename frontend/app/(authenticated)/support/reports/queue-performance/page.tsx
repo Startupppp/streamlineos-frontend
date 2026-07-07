@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ReportFiltersBar } from "@/features/support/reports/report-filters";
+import { ExportCsvButton } from "@/features/support/reports/export-csv-button";
 import {
   useQueuePerformanceReport,
   type QueuePerformanceRow,
@@ -27,9 +29,17 @@ export default function QueuePerformanceReportPage() {
     {
       key: "queueName",
       header: "Queue",
-      cell: (row) => (
-        <span className="font-medium">{row.queueName ?? "Unassigned"}</span>
-      ),
+      cell: (row) =>
+        row.queueId ? (
+          <Link
+            href={`/support/inbox?queueId=${row.queueId}`}
+            className="font-medium text-primary hover:underline"
+          >
+            {row.queueName ?? "Unnamed queue"}
+          </Link>
+        ) : (
+          <span className="font-medium">Unassigned</span>
+        ),
       sortable: true,
       sortValue: (row) => row.queueName ?? "Unassigned",
     },
@@ -69,6 +79,17 @@ export default function QueuePerformanceReportPage() {
       title="Queue Performance"
       subtitle="Ticket load and resolution time by support queue."
       filters={<ReportFiltersBar filters={filters} onChange={setFilters} />}
+      actions={
+        <ExportCsvButton
+          filename="queue-performance.csv"
+          rows={rows.map((row) => ({
+            queue: row.queueName ?? "Unassigned",
+            ticketsHandled: row.ticketsHandled,
+            openTickets: row.openTickets,
+            avgResolutionMinutes: row.avgResolutionMinutes ?? "",
+          }))}
+        />
+      }
     >
       {isError ? (
         <ErrorState title="Could not load queue performance" onRetry={handleRetry} />

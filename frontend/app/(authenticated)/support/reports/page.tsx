@@ -17,6 +17,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportFiltersBar } from "@/features/support/reports/report-filters";
 import { OverviewCharts } from "@/features/support/reports/overview-charts";
+import { ExportCsvButton } from "@/features/support/reports/export-csv-button";
 import { useSupportOverviewReport } from "@/hooks/api/support/reports";
 import type { SupportReportFilters } from "@/hooks/api/support/reports";
 import { formatMinutes, formatPercent, formatRatioPercent } from "@/features/support/reports/lib/format";
@@ -34,6 +35,25 @@ export default function SupportOverviewReportPage() {
       title="Support Overview"
       subtitle="Ticket volume, response times, and SLA health across the helpdesk."
       filters={<ReportFiltersBar filters={filters} onChange={setFilters} />}
+      actions={
+        data && (
+          <ExportCsvButton
+            filename="support-overview.csv"
+            rows={[
+              {
+                newTickets: data.newTickets,
+                openTickets: data.openTickets,
+                backlog: data.backlog,
+                avgFirstResponseMinutes: data.avgFirstResponseMinutes ?? "",
+                avgResolutionMinutes: data.avgResolutionMinutes ?? "",
+                slaCompliancePct: data.slaCompliancePct ?? "",
+                slaBreachCount: data.slaBreachCount,
+                reopenRate: data.reopenRate,
+              },
+            ]}
+          />
+        )
+      }
     >
       {isError ? (
         <ErrorState title="Could not load the overview report" onRetry={handleRetry} />

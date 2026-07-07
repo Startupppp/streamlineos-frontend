@@ -5,8 +5,8 @@ import {
   Sparkles,
   ChevronDown,
   RefreshCw,
-  Check,
-  X,
+  ThumbsUp,
+  ThumbsDown,
   AlertTriangle,
   Reply,
   Wand2,
@@ -217,7 +217,7 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
   const handleAccept = useCallback(
     (suggestion: AiSuggestion) => {
       resolveSuggestion.mutate(
-        { suggestionId: suggestion.id, status: "accepted" },
+        { suggestionId: suggestion.id, status: "accepted", feedback: "helpful" },
         {
           onSuccess: () => {
             switch (suggestion.type) {
@@ -259,7 +259,7 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
   const handleReject = useCallback(
     (suggestionId: number) => {
       resolveSuggestion.mutate(
-        { suggestionId, status: "rejected" },
+        { suggestionId, status: "rejected", feedback: "not_helpful" },
         {
           onSuccess: () => toast.success("Suggestion dismissed"),
           onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to dismiss suggestion"),
@@ -371,24 +371,24 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/30"
-                        aria-label={acceptLabel(suggestion)}
-                        title={acceptLabel(suggestion)}
+                        aria-label={`Helpful — ${acceptLabel(suggestion)}`}
+                        title={`Helpful — ${acceptLabel(suggestion)}`}
                         disabled={resolveSuggestion.isPending}
                         onClick={() => handleAccept(suggestion)}
                       >
-                        <Check className="h-3.5 w-3.5" />
+                        <ThumbsUp className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
-                        aria-label="Reject suggestion"
-                        title="Reject suggestion"
+                        aria-label="Not helpful — dismiss suggestion"
+                        title="Not helpful — dismiss suggestion"
                         disabled={resolveSuggestion.isPending}
                         onClick={() => handleReject(suggestion.id)}
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <ThumbsDown className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -405,9 +405,18 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
                     <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                       {suggestionTypeLabel(suggestion.type)}
                     </span>
-                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 capitalize">
-                      {suggestion.status}
-                    </Badge>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {suggestion.feedback && (
+                        suggestion.feedback === "helpful" ? (
+                          <ThumbsUp className="h-3 w-3 text-green-600" aria-label="Marked helpful" />
+                        ) : (
+                          <ThumbsDown className="h-3 w-3 text-red-600" aria-label="Marked not helpful" />
+                        )
+                      )}
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 capitalize">
+                        {suggestion.status}
+                      </Badge>
+                    </div>
                   </div>
                   <SuggestionBody suggestion={suggestion} macros={macroList} />
                 </div>
