@@ -14,6 +14,7 @@ import { useSetRecurrence, type RecurrenceRule } from "@/hooks/api/projects/recu
 import type { ProjectMember } from "./types";
 import { SidebarSelectFields } from "./sidebar-select-fields";
 import { SidebarAssigneeSection, type DisplayedAssignee } from "./sidebar-assignee-section";
+import { getUserDisplayName, getUserInitials } from "./resolve-user-name";
 
 interface TicketSidebarProps {
   ticket: {
@@ -36,18 +37,23 @@ interface TicketSidebarProps {
     assignees?: Array<{
       userId: string;
       user?: {
+        name?: string | null;
         firstName?: string | null;
         lastName?: string | null;
+        email?: string | null;
         image?: string | null;
       } | null;
     }>;
     assignee?: {
       id: string;
+      name?: string | null;
       firstName?: string | null;
       lastName?: string | null;
+      email?: string | null;
       image?: string | null;
     } | null;
     reporter?: {
+      name?: string | null;
       firstName?: string | null;
       lastName?: string | null;
       image?: string | null;
@@ -143,16 +149,18 @@ export function TicketSidebar({
           .filter((a) => !!a.user)
           .map((a) => ({
             id: a.userId,
-            firstName: a.user!.firstName,
-            lastName: a.user!.lastName,
-            image: a.user!.image,
+            name: a.user?.name,
+            firstName: a.user?.firstName,
+            lastName: a.user?.lastName,
+            email: a.user?.email,
+            image: a.user?.image,
           }))
       : ticket.assignee
         ? [ticket.assignee]
         : [];
 
   return (
-    <div className="px-4 py-3 space-y-1 bg-muted/10">
+    <div className="px-4 py-3 space-y-3 bg-muted/10">
       <SidebarSelectFields
         ticket={ticket}
         statuses={statuses}
@@ -225,7 +233,7 @@ export function TicketSidebar({
         </div>
       </div>
 
-      <div className="pt-2">
+      <div>
         <RecurrencePicker
           value={ticket.recurrenceRule ?? null}
           onChange={handleRecurrenceChange}
@@ -240,7 +248,7 @@ export function TicketSidebar({
         onRemoveAssignee={handleRemoveAssignee}
       />
 
-      <div className="pt-1">
+      <div>
         <LabelPicker
           ticketId={ticketId}
           projectId={projectId}
@@ -253,7 +261,7 @@ export function TicketSidebar({
       </div>
 
       {(timeSpent > 0 || originalEstimate > 0) && (
-        <div className="pt-1">
+        <div>
           <PropertyRow label="Time">
             <div className="flex items-center gap-2 text-xs">
               <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -267,7 +275,7 @@ export function TicketSidebar({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 pt-1">
+      <div className="grid grid-cols-2 gap-3">
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Calendar className="h-3 w-3 shrink-0" />
           {ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d, yyyy") : "—"}
@@ -279,21 +287,20 @@ export function TicketSidebar({
       </div>
 
       {ticket.reporter && (
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex items-center gap-2">
           <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide shrink-0">
             <User className="h-3 w-3 inline mr-0.5" />
             Reporter
           </span>
           <div className="flex items-center gap-1.5 min-w-0">
-            <Avatar className="h-5 w-5">
+            <Avatar className="h-5 w-5 shrink-0">
               <AvatarImage src={resolveImageUrl(ticket.reporter.image)} />
               <AvatarFallback className="text-[7px] bg-primary/10 text-primary">
-                {ticket.reporter.firstName?.[0]}
-                {ticket.reporter.lastName?.[0]}
+                {getUserInitials(ticket.reporter)}
               </AvatarFallback>
             </Avatar>
             <span className="text-xs truncate">
-              {ticket.reporter.firstName} {ticket.reporter.lastName}
+              {getUserDisplayName(ticket.reporter)}
             </span>
           </div>
         </div>

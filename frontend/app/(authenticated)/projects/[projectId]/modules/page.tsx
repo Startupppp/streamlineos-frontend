@@ -4,9 +4,8 @@ import { use, useState, useCallback } from "react";
 import { useModules, useCreateModule, useProjectMembers } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
+import { ModuleCard, ModuleCardSkeleton } from "@/features/projects/modules/module-card";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -28,13 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Calendar, User, ArrowRight, Package, Activity, CheckCircle2 } from "lucide-react";
+import { Plus, Calendar, Package, Activity, CheckCircle2 } from "lucide-react";
 import { useForm, Controller, useController } from "react-hook-form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import Link from "next/link";
 
 const MODULE_STATUSES = ["backlog", "planned", "in-progress", "paused", "completed", "cancelled"] as const;
 
@@ -47,15 +45,6 @@ const createModuleSchema = z.object({
   leadId: z.string().optional(),
 });
 type CreateModuleForm = z.infer<typeof createModuleSchema>;
-
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  backlog: "secondary",
-  planned: "outline",
-  "in-progress": "default",
-  paused: "outline",
-  completed: "secondary",
-  cancelled: "destructive",
-};
 
 export default function ModulesPage({
   params,
@@ -122,7 +111,7 @@ export default function ModulesPage({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-36 w-full rounded-lg" />
+              <ModuleCardSkeleton key={i} />
             ))}
           </div>
         </div>
@@ -147,7 +136,7 @@ export default function ModulesPage({
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-6 py-5">
               <form id="module-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="mod-name">Name</Label>
                   <Input id="mod-name" {...form.register("name")} />
                   {form.formState.errors.name && (
@@ -156,11 +145,11 @@ export default function ModulesPage({
                     </p>
                   )}
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="mod-desc">Description</Label>
                   <Textarea id="mod-desc" {...form.register("description")} />
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label>Status</Label>
                   <Controller
                     control={form.control}
@@ -182,16 +171,16 @@ export default function ModulesPage({
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-1.5">
                     <Label htmlFor="mod-start">Start Date</Label>
                     <DatePicker id="mod-start" value={form.watch("startDate") || ""} onChange={handleSetStartDate} placeholder="Start date" />
                   </div>
-                  <div>
+                  <div className="space-y-1.5">
                     <Label htmlFor="mod-end">End Date</Label>
                     <DatePicker id="mod-end" value={form.watch("endDate") || ""} onChange={handleSetEndDate} placeholder="End date" />
                   </div>
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label>Lead</Label>
                   <Select
                     value={leadIdField.value?.toString() ?? ""}
@@ -238,58 +227,8 @@ export default function ModulesPage({
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {modules.map((mod) => (
-              <Link key={mod.id} href={`/projects/${projectId}/modules/${mod.id}`}>
-                <Card className="hover:border-primary/20 transition-colors cursor-pointer h-full bg-card border border-border rounded-lg">
-                  <CardHeader className="pb-2 px-4 pt-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-sm font-semibold leading-tight truncate">
-                        {mod.name}
-                      </CardTitle>
-                      <Badge
-                        variant={statusVariant[mod.status ?? "backlog"] ?? "secondary"}
-                        className="shrink-0"
-                      >
-                        {(mod.status ?? "backlog")
-                          .replace(/_/g, " ")
-                          .replace(/\b\w/g, (c) => c.toUpperCase())}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{mod.progress ?? 0}% complete</span>
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-blue-500 transition-all duration-300"
-                          style={{ width: `${mod.progress ?? 0}%` }}
-                        />
-                      </div>
-                      {(mod.startDate || mod.endDate) && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 pt-1">
-                          <Calendar className="h-3 w-3 shrink-0" />
-                          {mod.startDate
-                            ? new Date(mod.startDate).toLocaleDateString()
-                            : "TBD"}
-                          {" — "}
-                          {mod.endDate
-                            ? new Date(mod.endDate).toLocaleDateString()
-                            : "TBD"}
-                        </p>
-                      )}
-                      {mod.leadId && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-                          <User className="h-3 w-3 shrink-0" />
-                          Lead assigned
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+            {modules.map((mod, index) => (
+              <ModuleCard key={mod.id} module={mod} projectId={projectId} index={index} />
             ))}
           </div>
         )}

@@ -51,6 +51,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   useToggleFavoriteKbPage,
   useDeleteKbPage,
   useDuplicateKbPage,
@@ -80,6 +86,23 @@ const STATUS_LABELS: Record<string, string> = {
   published: "Published",
   archived: "Archived",
 };
+
+function HeaderToolbarTooltip({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactElement;
+}) {
+  return (
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={8} className="text-xs font-medium">
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 export default function PageDocumentHeader({
   page,
@@ -253,34 +276,8 @@ export default function PageDocumentHeader({
           </span>
         </nav>
 
-        {page.status && (
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Badge
-              variant="outline"
-              className={`text-[10px] h-4 px-1.5 ${statusBadgeClass[page.status] ?? ""}`}
-            >
-              {STATUS_LABELS[page.status] ?? page.status}
-            </Badge>
-            {page.trustState === "verified" && (
-              <Badge
-                variant="outline"
-                className="text-[10px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200"
-              >
-                Verified
-              </Badge>
-            )}
-            {page.trustState === "verification_expired" && (
-              <Badge
-                variant="outline"
-                className="text-[10px] h-4 px-1.5 bg-amber-50 text-amber-700 border-amber-200"
-              >
-                Stale
-              </Badge>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center gap-1 shrink-0">
+        <TooltipProvider delayDuration={0}>
+          <div className="flex items-center gap-1 shrink-0">
           {(saveState === "pending" || saveState === "saving") && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground mr-2">
               <KbLoader2Icon className="h-3 w-3 animate-spin" />
@@ -291,56 +288,95 @@ export default function PageDocumentHeader({
             <span className="text-xs text-muted-foreground mr-2">Saved</span>
           )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleOpenMetaSheet}
-            aria-label="Page settings"
-          >
-            <KbInfoIcon className="h-4 w-4" />
-          </Button>
+          {page.status && (
+            <div className="flex items-center gap-1.5 mr-1">
+              <Badge
+                variant="outline"
+                className={`text-[10px] h-4 px-1.5 ${statusBadgeClass[page.status] ?? ""}`}
+              >
+                {STATUS_LABELS[page.status] ?? page.status}
+              </Badge>
+              {page.trustState === "verified" && (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200"
+                >
+                  Verified
+                </Badge>
+              )}
+              {page.trustState === "verification_expired" && (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] h-4 px-1.5 bg-amber-50 text-amber-700 border-amber-200"
+                >
+                  Stale
+                </Badge>
+              )}
+            </div>
+          )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`h-8 w-8 ${page.isFavorite ? "text-amber-500" : ""}`}
-            onClick={handleToggleFavorite}
-            aria-label={page.isFavorite ? "Remove from favorites" : "Add to favorites"}
-          >
-            <KbStarIcon
-              className={`h-4 w-4 ${page.isFavorite ? "fill-amber-500" : ""}`}
-            />
-          </Button>
+            <HeaderToolbarTooltip label="Page info">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleOpenMetaSheet}
+                aria-label="Page settings"
+              >
+                <KbInfoIcon className="h-4 w-4" />
+              </Button>
+            </HeaderToolbarTooltip>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleOpenComments}
-            aria-label="Open comments"
-          >
-            <KbMessageSquareIcon className="h-4 w-4" />
-          </Button>
+            <HeaderToolbarTooltip
+              label={page.isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 ${page.isFavorite ? "text-amber-500" : ""}`}
+                onClick={handleToggleFavorite}
+                aria-label={page.isFavorite ? "Remove from favorites" : "Add to favorites"}
+              >
+                <KbStarIcon
+                  className={`h-4 w-4 ${page.isFavorite ? "fill-amber-500" : ""}`}
+                />
+              </Button>
+            </HeaderToolbarTooltip>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleOpenHistory}
-            aria-label="View page history"
-          >
-            <KbHistoryIcon className="h-4 w-4" />
-          </Button>
+            <HeaderToolbarTooltip label="Comments">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleOpenComments}
+                aria-label="Open comments"
+              >
+                <KbMessageSquareIcon className="h-4 w-4" />
+              </Button>
+            </HeaderToolbarTooltip>
+
+            <HeaderToolbarTooltip label="Version history">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleOpenHistory}
+                aria-label="View page history"
+              >
+                <KbHistoryIcon className="h-4 w-4" />
+              </Button>
+            </HeaderToolbarTooltip>
 
           {canUpdate && <PageSharePopover page={page} />}
 
-          <Popover open={backlinksOpen} onOpenChange={setBacklinksOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View backlinks">
-                <KbLink2Icon className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
+            <Popover open={backlinksOpen} onOpenChange={setBacklinksOpen}>
+              <HeaderToolbarTooltip label="Backlinks">
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View backlinks">
+                    <KbLink2Icon className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+              </HeaderToolbarTooltip>
             <PopoverContent align="end" className="w-64 p-3">
               <p className="text-xs font-semibold text-foreground mb-2">
                 Backlinks ({backlinks.length})
@@ -365,15 +401,17 @@ export default function PageDocumentHeader({
                 </div>
               )}
             </PopoverContent>
-          </Popover>
+            </Popover>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
-                <KbMoreHorizontalIcon className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenu>
+              <HeaderToolbarTooltip label="More actions">
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
+                    <KbMoreHorizontalIcon className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </HeaderToolbarTooltip>
+              <DropdownMenuContent align="end" className="w-48">
               {canCreate && (
                 <DropdownMenuItem onSelect={handleDuplicate}>
                   <KbCopyIcon className="h-4 w-4 mr-2" />
@@ -417,9 +455,10 @@ export default function PageDocumentHeader({
                   </DropdownMenuItem>
                 </>
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </TooltipProvider>
       </div>
 
       <PageCommentsSheet

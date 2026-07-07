@@ -207,20 +207,20 @@ export function ActivityFeed({
           )}
         </h4>
 
-        <div className="flex w-full flex-row items-end gap-2 flex-1 min-w-0">
-          <div className="flex min-w-0 flex-1">
-            <MentionTextarea
-              value={newComment}
-              onChange={setNewComment}
-              onKeyDown={handleTopKeyDown}
-              placeholder="Write a comment... (Ctrl+Enter to send)"
-              className="min-h-[80px] w-full text-sm"
-              users={members}
-            />
-          </div>
+        <div className="flex w-full min-w-0 flex-row items-end gap-2">
+          <MentionTextarea
+            value={newComment}
+            onChange={setNewComment}
+            onKeyDown={handleTopKeyDown}
+            placeholder="Write a comment... (Ctrl+Enter to send)"
+            wrapperClassName="flex-1 min-w-0"
+            className="min-h-[80px] text-sm"
+            users={members}
+          />
           <Button
             type="button"
             size="icon-sm"
+            className="shrink-0"
             onClick={handleSubmit}
             disabled={!newComment.trim() || addComment.isPending}
             aria-label="Post comment"

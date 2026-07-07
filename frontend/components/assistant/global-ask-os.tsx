@@ -250,7 +250,6 @@ export function GlobalAskOs() {
 
   const showEmpty = !isLoading && persisted.length === 0 && !draft;
   const showClear = persisted.length > 0 || Boolean(draft);
-  const hasHistory = persisted.length > 0;
 
   const historyRows = useMemo(() => buildHistoryRows(persisted), [persisted]);
   const historySearchQuery = historySearch.trim().toLowerCase();
@@ -325,7 +324,7 @@ export function GlobalAskOs() {
                   </div>
                 )}
                 <div className="flex items-center gap-1">
-                  {!isHistory && hasHistory && (
+                  {!isHistory && (
                     <button
                       type="button"
                       onClick={handleOpenHistory}

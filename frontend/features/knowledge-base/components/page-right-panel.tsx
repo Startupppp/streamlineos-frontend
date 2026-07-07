@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { useKbPageBacklinks } from "@/hooks/api/kb";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";
-import PageAskAi from "./page-ask-ai";
 
 const STORAGE_KEY = "wiki-right-panel-collapsed";
 
@@ -93,8 +92,6 @@ export default function PageRightPanel({
 
       {!collapsed && (
         <div className="w-64 border-l border-border overflow-y-auto pb-16 px-4 space-y-5 text-sm">
-          <PageAskAi spaceId={page.spaceId} onNavigate={onNavigate} />
-
           <section>
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Details

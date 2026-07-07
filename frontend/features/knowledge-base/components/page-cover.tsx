@@ -131,7 +131,7 @@ export default function PageCover({
   if (!coverImage) {
     if (!isEditable) return null;
     return (
-      <div className="relative flex h-10 w-full items-center px-3">
+      <div className="relative flex h-10 w-full items-center justify-center px-3">
         {fileInput}
         <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
           <PopoverTrigger asChild>

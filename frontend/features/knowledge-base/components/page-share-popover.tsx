@@ -12,6 +12,7 @@ import {
 } from "@/features/knowledge-base/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useSetKbPageVisibility } from "@/hooks/api/kb/pages";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";
@@ -65,11 +66,18 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Share page">
-          <KbShare2Icon className="h-4 w-4" />
-        </Button>
-      </PopoverTrigger>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Share page">
+              <KbShare2Icon className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" sideOffset={8} className="text-xs font-medium">
+          Share
+        </TooltipContent>
+      </Tooltip>
       <PopoverContent align="end" className="w-72 max-w-[85vw] p-0">
         <div className="px-4 pt-3 pb-1">
           <p className="text-xs font-semibold text-foreground">Share</p>

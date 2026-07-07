@@ -10,12 +10,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
+import { getUserDisplayName, getUserInitials } from "./resolve-user-name";
 import type { ProjectMember } from "./types";
 
 export interface DisplayedAssignee {
   id: string;
+  name?: string | null;
   firstName?: string | null;
   lastName?: string | null;
+  email?: string | null;
   image?: string | null;
 }
 
@@ -35,28 +38,27 @@ export function SidebarAssigneeSection({
   onRemoveAssignee,
 }: SidebarAssigneeSectionProps) {
   return (
-    <div className="pt-1">
+    <div>
       <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
         Assignees
       </span>
       {displayedAssignees.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-1.5">
           {displayedAssignees.map((person) => {
-            const displayName = `${person.firstName ?? ""} ${person.lastName ?? ""}`.trim();
+            const displayName = getUserDisplayName(person);
             return (
               <Badge
                 key={person.id}
                 variant="user"
                 className="gap-1.5 pl-0.5 pr-1.5 py-0.5"
               >
-                <Avatar className="h-5 w-5">
+                <Avatar className="h-5 w-5 shrink-0">
                   <AvatarImage src={resolveImageUrl(person.image)} />
                   <AvatarFallback className="text-[7px]">
-                    {person.firstName?.[0]}
-                    {person.lastName?.[0]}
+                    {getUserInitials(person)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="truncate max-w-[100px] text-[11px]">{displayName}</span>
+                <span className="truncate max-w-[140px] text-[11px]">{displayName}</span>
                 <button
                   type="button"
                   className="text-accent/70 hover:text-destructive transition-colors leading-none"
@@ -83,13 +85,10 @@ export function SidebarAssigneeSection({
                   <Avatar className="h-5 w-5">
                     <AvatarImage src={resolveImageUrl(member.image)} />
                     <AvatarFallback className="text-[8px]">
-                      {member.firstName?.[0]}
-                      {member.lastName?.[0]}
+                      {getUserInitials(member)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-xs">
-                    {member.firstName} {member.lastName}
-                  </span>
+                  <span className="text-xs">{getUserDisplayName(member)}</span>
                 </div>
               </SelectItem>
             ))}

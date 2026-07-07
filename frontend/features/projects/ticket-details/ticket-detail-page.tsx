@@ -27,7 +27,7 @@ const RIGHT_PANEL_COLLAPSED_KEY = "streamlineos:ticket-detail:right-panel:collap
 function DetailSkeleton() {
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
-      <div className="order-2 flex-1 space-y-4 bg-card px-4 py-4 md:order-1 md:overflow-y-auto md:px-6">
+      <div className="order-2 flex-1 space-y-4 bg-card px-4 pb-4 pt-2 md:order-1 md:overflow-y-auto md:px-6 md:pb-5 md:pt-2">
         <Skeleton className="h-8 w-3/4" />
         <Skeleton className="h-40 w-full rounded-lg" />
         <Skeleton className="h-24 w-full rounded-lg" />
@@ -196,7 +196,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       }
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
-        <div className="order-2 min-w-0 flex-1 bg-card px-4 pb-4 pt-0 md:order-1 md:overflow-y-auto md:scrollbar-thin md:px-6 md:pb-5 md:pt-0">
+        <div className="order-2 min-w-0 flex-1 bg-card px-4 pb-4 pt-2 md:order-1 md:overflow-y-auto md:scrollbar-thin md:px-6 md:pb-5 md:pt-2">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={ticketId}

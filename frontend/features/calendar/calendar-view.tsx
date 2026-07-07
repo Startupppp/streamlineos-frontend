@@ -13,7 +13,7 @@ import {
   addDays,
   subDays,
 } from "date-fns";
-import { Plus, Ticket, Sparkles } from "lucide-react";
+import { Plus, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +31,6 @@ import {
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";
-import { CalendarAiAssistant } from "./calendar-ai-assistant";
 import { CalendarEventsPanel } from "./calendar-events-panel";
 import { CreateTicketFromCalendarDialog } from "./create-ticket-from-calendar-dialog";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
@@ -87,7 +86,6 @@ export function CalendarView() {
   } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [isAiOpen, setIsAiOpen] = useState(false);
   const [isSlotChoiceOpen, setIsSlotChoiceOpen] = useState(false);
   const [pendingSlot, setPendingSlot] = useState<{
     start: Date;
@@ -113,7 +111,7 @@ export function CalendarView() {
   );
 
   const searchParams = useSearchParams();
-  const { data: events = [], refetch: refetchEvents } = useCalendarEvents(
+  const { data: events = [] } = useCalendarEvents(
     rangeStart,
     rangeEnd,
   );
@@ -159,7 +157,6 @@ export function CalendarView() {
     isCreateOpen ||
     isSlotChoiceOpen ||
     isCreateTicketOpen ||
-    isAiOpen ||
     accountsOpen ||
     selectedEventId !== null ||
     selectedExternal !== null;
@@ -237,8 +234,6 @@ export function CalendarView() {
   const handleCloseExternal = useCallback(() => setSelectedExternal(null), []);
   const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
   const handleCloseAccounts = useCallback(() => setAccountsOpen(false), []);
-  const handleOpenAi = useCallback(() => setIsAiOpen(true), []);
-  const handleCloseAi = useCallback(() => setIsAiOpen(false), []);
   const handleCloseCreateTicket = useCallback(
     () => setIsCreateTicketOpen(false),
     [],
@@ -336,22 +331,6 @@ export function CalendarView() {
           </div>
         </div>
       </div>
-
-      <button
-        type="button"
-        onClick={handleOpenAi}
-        aria-label="Ask AI"
-        title="Ask AI"
-        className="fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 hover:shadow-xl transition-all duration-200 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 select-none"
-      >
-        <Sparkles className="h-5 w-5" />
-      </button>
-
-      <CalendarAiAssistant
-        isOpen={isAiOpen}
-        onClose={handleCloseAi}
-        onEventCreated={refetchEvents}
-      />
 
       <EventCreateDialog
         open={isCreateOpen}

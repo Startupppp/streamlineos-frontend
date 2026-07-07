@@ -87,9 +87,13 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   }, [projectData]);
 
   const invalidateAll = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.projects.detail(projectId),
+      refetchType: "none",
+    });
     if (ticketId !== null) {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.ticketActivity.list(ticketId) });
     }
   }, [queryClient, projectId, ticketId]);
 
