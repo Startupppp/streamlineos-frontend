@@ -2,7 +2,7 @@ import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-ke
 
 interface TicketNavRef {
   id: number;
-  ticketNumber: number;
+  ticketNumber?: number;
 }
 
 export function buildTicketDetailUrl(
@@ -13,7 +13,7 @@ export function buildTicketDetailUrl(
   commentId?: number | null,
 ): string | null {
   const ticket = tickets.find((t) => t.id === ticketId);
-  if (!ticket) return null;
+  if (!ticket || ticket.ticketNumber == null) return null;
   const base = getTicketDetailHref(projectId, projectKey, ticket.ticketNumber);
   if (commentId) return `${base}?comment=${commentId}`;
   return base;

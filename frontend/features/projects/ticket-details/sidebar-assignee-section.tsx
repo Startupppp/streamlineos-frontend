@@ -11,7 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import type { ProjectMember } from "./types";
-import type { DisplayedAssignee } from "./sidebar-assignee-section";
+
+export interface DisplayedAssignee {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  image?: string | null;
+}
 
 interface SidebarAssigneeSectionProps {
   members: ProjectMember[];
@@ -92,5 +98,3 @@ export function SidebarAssigneeSection({
     </div>
   );
 }
-
-export type { DisplayedAssignee };

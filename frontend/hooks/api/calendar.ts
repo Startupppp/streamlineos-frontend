@@ -111,7 +111,6 @@ interface CreateCalendarEventPayload {
   title: string;
   description?: string;
   location?: string;
-  meetingUrl?: string;
   startDate: string;
   endDate: string;
   allDay?: boolean;
@@ -127,14 +126,10 @@ interface CreateCalendarEventPayload {
 }
 
 interface UpdateCalendarEventPayload
-  extends Omit<
-    Partial<CreateCalendarEventPayload>,
-    "entityType" | "entityId" | "meetingUrl"
-  > {
+  extends Omit<Partial<CreateCalendarEventPayload>, "entityType" | "entityId"> {
   id: number;
   entityType?: string | null;
   entityId?: string | null;
-  meetingUrl?: string | null;
 }
 
 export function useCalendarEvents(start: Date, end: Date) {

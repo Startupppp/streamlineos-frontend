@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import type { IntegrationConnection } from "@/hooks/api/integrations";
 import type { CalendarOrgMember } from "@/hooks/api/calendar";
 import { EventAttendeesPicker } from "./event-attendees-picker";
+import { CalendarConnectInline } from "./calendar-connect-inline";
 
 const EVENT_COLORS: Record<string, string> = {
   blue: "#3b82f6",
@@ -295,7 +296,9 @@ export function EventFormFields({
             )}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground pl-7">Connect an account to sync events</p>
+          <div className="pl-7">
+            <CalendarConnectInline />
+          </div>
         )
       )}
     </div>

@@ -122,26 +122,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
     [router, searchParams],
   );
 
-  const handleTicketSelect = useCallback(
-    (id: number) => {
-      const href = buildTicketDetailUrl(projectId, data?.key, id, allTickets);
-      if (href) router.push(href);
-    },
-    [router, projectId, data?.key, allTickets],
-  );
-
-  useEffect(() => {
-    if (!selectedTicketId || !data) return;
-    const href = buildTicketDetailUrl(
-      projectId,
-      data.key,
-      selectedTicketId,
-      allTickets,
-      highlightCommentId,
-    );
-    if (href) router.replace(href);
-  }, [selectedTicketId, data, allTickets, projectId, highlightCommentId, router]);
-
   const handleSaveViewNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setSaveViewName(e.target.value),
     [],
@@ -217,6 +197,26 @@ export default function ProjectBoardPage({ params }: PageProps) {
     data && "statuses" in data
       ? (data.statuses as { id: number; name: string; color: string | null; order: number }[])
       : undefined;
+
+  const handleTicketSelect = useCallback(
+    (id: number) => {
+      const href = buildTicketDetailUrl(projectId, data?.key, id, allTickets);
+      if (href) router.push(href);
+    },
+    [router, projectId, data?.key, allTickets],
+  );
+
+  useEffect(() => {
+    if (!selectedTicketId || !data) return;
+    const href = buildTicketDetailUrl(
+      projectId,
+      data.key,
+      selectedTicketId,
+      allTickets,
+      highlightCommentId,
+    );
+    if (href) router.replace(href);
+  }, [selectedTicketId, data, allTickets, projectId, highlightCommentId, router]);
 
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
 

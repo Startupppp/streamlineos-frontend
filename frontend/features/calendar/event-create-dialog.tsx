@@ -26,7 +26,7 @@ import { EventFormFields } from "./event-form-fields";
 import type { TicketSearchResult } from "@/hooks/api/projects";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
 import { Input } from "@/components/ui/input";
-import { Ticket, X, Link as LinkIcon, Video, MapPin } from "lucide-react";
+import { Ticket, X, Link as LinkIcon, MapPin } from "lucide-react";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
 
@@ -34,7 +34,6 @@ interface FormState {
   title: string;
   description: string;
   location: string;
-  meetingUrl: string;
   allDay: boolean;
   color: string;
   category: EventCategory;
@@ -44,7 +43,6 @@ interface FormState {
   endTime: string;
   attendeeIds: string[];
   locationError: string;
-  meetingUrlError: string;
   syncConnectionId: string;
   addConference: boolean;
 }
@@ -56,7 +54,6 @@ function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
     title: "",
     description: "",
     location: "",
-    meetingUrl: "",
     allDay: false,
     color: "blue",
     category: "general",
@@ -66,7 +63,6 @@ function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
     locationError: "",
-    meetingUrlError: "",
     syncConnectionId: "none",
     addConference: true,
   };
@@ -79,7 +75,6 @@ function toEditForm(event: CalendarListItem): FormState {
     title: event.title,
     description: event.description ?? "",
     location: event.location ?? "",
-    meetingUrl: event.meetingUrl ?? "",
     allDay: event.allDay ?? false,
     color: event.color ?? "blue",
     category: (event.category as EventCategory) ?? "general",
@@ -89,7 +84,6 @@ function toEditForm(event: CalendarListItem): FormState {
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
     locationError: "",
-    meetingUrlError: "",
     syncConnectionId: "none",
     addConference: false,
   };
@@ -271,21 +265,6 @@ export function EventCreateDialog({
     [set],
   );
 
-  const handleMeetingUrlChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setForm((prev) => ({
-        ...prev,
-        meetingUrl: value,
-        meetingUrlError:
-          value.trim() && !isValidUrl(value.trim())
-            ? "Enter a valid meeting link (https://…)"
-            : "",
-      }));
-    },
-    [],
-  );
-
   const handleAllDayChange = useCallback(
     (v: boolean) => {
       setForm((prev) => {
@@ -437,11 +416,6 @@ export function EventCreateDialog({
         return;
       }
     }
-    const trimmedMeetingUrl = form.meetingUrl.trim();
-    if (trimmedMeetingUrl && !isValidUrl(trimmedMeetingUrl)) {
-      toast.error("Meeting link must be a valid URL");
-      return;
-    }
     if (!form.startDate) {
       toast.error("Start date is required");
       return;
@@ -481,7 +455,6 @@ export function EventCreateDialog({
       title: trimmedTitle,
       description: form.description || undefined,
       location: form.location || undefined,
-      meetingUrl: trimmedMeetingUrl || undefined,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       allDay: form.allDay,
@@ -503,11 +476,7 @@ export function EventCreateDialog({
           toast.error("Cannot edit this event type");
           return;
         }
-        await updateEvent.mutateAsync({
-          id: numericId,
-          ...payload,
-          meetingUrl: trimmedMeetingUrl || null,
-        });
+        await updateEvent.mutateAsync({ id: numericId, ...payload });
         toast.success("Event updated");
       } else {
         const result = await createEvent.mutateAsync(payload);
@@ -615,36 +584,6 @@ export function EventCreateDialog({
                 attendeeIds={form.attendeeIds}
                 onToggleAttendee={toggleAttendee}
               />
-
-              {/* Manual meeting link (Google Meet / Teams / Zoom) */}
-              <div className="flex items-start gap-2.5">
-                <Video className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
-                <div className="flex-1 space-y-1">
-                  <Input
-                    type="url"
-                    inputMode="url"
-                    value={form.meetingUrl}
-                    onChange={handleMeetingUrlChange}
-                    placeholder="Paste a Google Meet / Teams / Zoom link"
-                    aria-invalid={!!form.meetingUrlError}
-                    className="h-9 text-sm"
-                  />
-                  {form.meetingUrlError ? (
-                    <p className="text-[11px] text-destructive">
-                      {form.meetingUrlError}
-                    </p>
-                  ) : (
-                    !isEdit &&
-                    form.syncConnectionId !== "none" &&
-                    form.addConference && (
-                      <p className="text-[11px] text-muted-foreground">
-                        Leave blank to auto-generate a link from the synced
-                        account.
-                      </p>
-                    )
-                  )}
-                </div>
-              </div>
 
               <div className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
