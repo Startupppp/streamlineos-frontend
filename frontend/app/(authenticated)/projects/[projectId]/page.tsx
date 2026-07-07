@@ -148,8 +148,10 @@ export default function ProjectBoardPage({ params }: PageProps) {
       assignee: t.assignee
         ? {
             id: t.assignee.id,
+            name: t.assignee.name ?? undefined,
             firstName: t.assignee.firstName ?? undefined,
             lastName: t.assignee.lastName ?? undefined,
+            email: t.assignee.email ?? undefined,
             image: t.assignee.image ?? null,
           }
         : null,

@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
-import { getUserDisplayName, getUserInitials } from "./resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import type { ProjectMember } from "./types";
 
 export interface DisplayedAssignee {

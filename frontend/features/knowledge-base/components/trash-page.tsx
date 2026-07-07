@@ -20,7 +20,9 @@ import {
   useKbPagesTrash,
   useRestoreKbPage,
   useHardDeleteKbPage,
+  useEmptyKbTrash,
 } from "@/hooks/api/kb";
+import { useCan } from "@/hooks/api/access";
 import {
   KbRotateCcwIcon,
   KbTrash2Icon,
@@ -138,41 +140,94 @@ function TrashSkeleton() {
 
 export default function TrashPage() {
   const { data: pages = [], isLoading, isError } = useKbPagesTrash();
+  const emptyTrash = useEmptyKbTrash();
+  const canPurge = useCan("kb:pages:purge");
+  const [emptyConfirmOpen, setEmptyConfirmOpen] = useState(false);
 
-  const subtitle =
-    pages.length > 0
-      ? `${pages.length} page${pages.length === 1 ? "" : "s"}`
-      : undefined;
+  function handleEmptyTrashClick() {
+    setEmptyConfirmOpen(true);
+  }
+
+  function handleConfirmEmptyTrash() {
+    emptyTrash.mutate(undefined, {
+      onSuccess: (data) =>
+        toast.success(`Emptied trash — ${data.purgedCount} page${data.purgedCount === 1 ? "" : "s"} permanently deleted`),
+      onError: () => toast.error("Failed to empty trash"),
+    });
+  }
+
+  function handleEmptyConfirmOpenChange(open: boolean) {
+    setEmptyConfirmOpen(open);
+  }
+
+  const actions =
+    canPurge && pages.length > 0 ? (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleEmptyTrashClick}
+        disabled={emptyTrash.isPending}
+        className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+      >
+        Empty Trash
+      </Button>
+    ) : undefined;
 
   return (
-    <PageWrapper title="Trash" subtitle={subtitle}>
-      {isLoading && <TrashSkeleton />}
-      {!isLoading && isError && (
-        <EmptyState
-          illustration={
-            <KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />
-          }
-          title="Could not load trash"
-          description="There was a problem fetching deleted pages."
-        />
-      )}
-      s
-      {!isLoading && !isError && pages.length === 0 && (
-        <EmptyState
-          illustration={
-            <KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />
-          }
-          title="Trash is empty"
-          description="Deleted pages will appear here and can be restored or permanently removed."
-        />
-      )}
-      {!isLoading && !isError && pages.length > 0 && (
-        <div className="space-y-1.5">
-          {pages.map((page) => (
-            <TrashRow key={page.id} page={page} />
-          ))}
-        </div>
-      )}
-    </PageWrapper>
+    <>
+      <PageWrapper
+        title="Trash"
+        subtitle="Deleted pages can be restored or permanently removed"
+        actions={actions}
+      >
+        {isLoading && <TrashSkeleton />}
+        {!isLoading && isError && (
+          <EmptyState
+            illustration={
+              <KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />
+            }
+            title="Could not load trash"
+            description="There was a problem fetching deleted pages."
+          />
+        )}
+        {!isLoading && !isError && pages.length === 0 && (
+          <EmptyState
+            illustration={
+              <KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />
+            }
+            title="Trash is empty"
+            description="Deleted pages will appear here and can be restored or permanently removed."
+          />
+        )}
+        {!isLoading && !isError && pages.length > 0 && (
+          <div className="space-y-1.5">
+            {pages.map((page) => (
+              <TrashRow key={page.id} page={page} />
+            ))}
+          </div>
+        )}
+      </PageWrapper>
+
+      <AlertDialog open={emptyConfirmOpen} onOpenChange={handleEmptyConfirmOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Empty the trash?</AlertDialogTitle>
+            <AlertDialogDescription>
+              All {pages.length} page{pages.length === 1 ? "" : "s"} in the trash will be permanently deleted. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleConfirmEmptyTrash}
+              disabled={emptyTrash.isPending}
+            >
+              Empty Trash
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

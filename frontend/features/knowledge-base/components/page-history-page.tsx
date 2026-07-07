@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useKbPage, useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
 import type { KbPageVersion } from "@/hooks/api/kb/pages";
+import { getErrorMessage } from "@/lib/get-error-message";
 import PublicPageContent from "./public-page-content";
 import { computeVersionDiff } from "@/features/knowledge-base/lib/version-diff";
 import { pageHref, KNOWLEDGE_BASE } from "@/features/knowledge-base/lib/knowledge-routes";
@@ -127,7 +128,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
           toast.success("Version restored");
           router.push(pageHref(pageId));
         },
-        onError: () => toast.error("Failed to restore version"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -209,8 +210,11 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                             Version {v.versionNumber}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {formatRelativeTime(v.createdAt)}
+                            {v.authorName ? `${v.authorName} · ` : ""}{formatRelativeTime(v.createdAt)}
                           </p>
+                          {v.changeSummary && (
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{v.changeSummary}</p>
+                          )}
                         </div>
                         {selectedVersionNumber === v.versionNumber && (
                           <KbArrowRightIcon className="h-3.5 w-3.5 text-blue-500 shrink-0" />
@@ -239,12 +243,16 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Version {selectedVersionNumber}
+                        {versionDetail?.authorName ? ` · ${versionDetail.authorName}` : ""}
                       </p>
+                      {versionDetail?.changeSummary && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{versionDetail.changeSummary}</p>
+                      )}
                     </div>
                     <Button
                       size="sm"
                       onClick={handleRestoreClick}
-                      disabled={restoreVersion.isPending || detailLoading}
+                      disabled={restoreVersion.isPending || detailLoading || !versionDetail?.content}
                       className="shrink-0 gap-1.5 h-7 text-xs"
                     >
                       {restoreVersion.isPending ? (

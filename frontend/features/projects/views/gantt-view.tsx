@@ -31,7 +31,7 @@ interface Ticket {
   dueDate?: string | null;
   ticketNumber?: number;
   sequenceId?: string | null;
-  assignee?: { id: string; firstName?: string | null; lastName?: string | null } | null;
+  assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null } | null;
 }
 
 interface GanttViewProps {

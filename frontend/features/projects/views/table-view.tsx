@@ -9,6 +9,7 @@ import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "../shared/status-badge";
 import { formatTicketKey } from "../shared/format-ticket-key";
 import { resolveImageUrl, cn } from "@/lib/utils";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 interface Ticket {
   id: number;
@@ -21,7 +22,7 @@ interface Ticket {
   sequenceId?: string | null;
   startDate?: string | null;
   dueDate?: string | null;
-  assignee?: { id: string; firstName?: string | null; lastName?: string | null; image?: string | null } | null;
+  assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
 }
 
 interface TableViewProps {

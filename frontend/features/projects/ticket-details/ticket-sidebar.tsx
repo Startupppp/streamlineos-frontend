@@ -14,7 +14,7 @@ import { useSetRecurrence, type RecurrenceRule } from "@/hooks/api/projects/recu
 import type { ProjectMember } from "./types";
 import { SidebarSelectFields } from "./sidebar-select-fields";
 import { SidebarAssigneeSection, type DisplayedAssignee } from "./sidebar-assignee-section";
-import { getUserDisplayName, getUserInitials } from "./resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 interface TicketSidebarProps {
   ticket: {

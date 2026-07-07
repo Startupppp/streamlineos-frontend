@@ -19,3 +19,4 @@ export * from "./import-export";
 export * from "./record-links";
 export * from "./article-migration";
 export * from "./sources";
+export * from "./settings";

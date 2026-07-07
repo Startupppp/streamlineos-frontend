@@ -10,6 +10,7 @@ import { PriorityBadge } from "@/features/projects/shared/priority-badge";
 import { StatusBadge } from "@/features/projects/shared/status-badge";
 import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 import { resolveImageUrl } from "@/lib/utils";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 export interface BacklogTicket {
   id: number;
@@ -23,8 +24,10 @@ export interface BacklogTicket {
   createdAt?: string | Date | null;
   assignee?: {
     image?: string | null;
+    name?: string | null;
     firstName?: string | null;
     lastName?: string | null;
+    email?: string | null;
   } | null;
 }
 

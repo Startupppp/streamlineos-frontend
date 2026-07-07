@@ -28,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
 import type { KbPageVersion } from "@/hooks/api/kb/pages";
 import { pageHistoryHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
@@ -61,6 +62,8 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
   );
   const restoreVersion = useRestoreKbPageVersion();
 
+  const hasContent = Boolean(versionDetail?.content);
+
   function handleVersionButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
     const vn = e.currentTarget.dataset.versionNumber;
     if (!vn) return;
@@ -68,7 +71,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
   }
 
   function handleRestore() {
-    if (!selectedVersion) return;
+    if (!selectedVersion || !hasContent) return;
     setRestoreAlertOpen(true);
   }
 
@@ -81,7 +84,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
           toast.success("Version restored");
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to restore version"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }
@@ -119,7 +122,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                 {isLoading && (
                   <div className="space-y-3">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                      <Skeleton key={i} className="h-16 w-full rounded-lg" />
                     ))}
                   </div>
                 )}
@@ -139,14 +142,17 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                       className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted transition-colors group"
                       onClick={handleVersionButtonClick}
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
                           <p className="text-sm font-medium">Version {v.versionNumber}</p>
                           <p className="text-xs text-muted-foreground">
-                            {formatRelativeTime(v.createdAt)}
+                            {v.authorName ? `${v.authorName} · ` : ""}{formatRelativeTime(v.createdAt)}
                           </p>
+                          {v.changeSummary && (
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{v.changeSummary}</p>
+                          )}
                         </div>
-                        <KbChevronRightIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                        <KbChevronRightIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
                       </div>
                     </button>
                   ))}
@@ -165,12 +171,28 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
           </>
         ) : (
           <div className="flex-1 flex flex-col min-h-0">
+            {versionDetail && !detailLoading && (
+              <div className="shrink-0 px-6 py-3 border-b bg-muted/30">
+                {versionDetail.authorName && (
+                  <p className="text-xs text-muted-foreground">
+                    By <span className="font-medium text-foreground">{versionDetail.authorName}</span>
+                    {" · "}{formatRelativeTime(versionDetail.createdAt)}
+                  </p>
+                )}
+                {!versionDetail.authorName && (
+                  <p className="text-xs text-muted-foreground">{formatRelativeTime(versionDetail.createdAt)}</p>
+                )}
+                {versionDetail.changeSummary && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{versionDetail.changeSummary}</p>
+                )}
+              </div>
+            )}
             <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
               {detailLoading ? (
                 <Skeleton className="h-64 w-full" />
-              ) : versionDetail?.content ? (
+              ) : hasContent ? (
                 <PlateDocumentEditor
-                  value={versionDetail.content}
+                  value={versionDetail!.content}
                   contentKey={`${pageId}-v${selectedVersion}`}
                   editable={false}
                 />
@@ -186,7 +208,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
             <div className="shrink-0 border-t px-6 py-4">
               <Button
                 onClick={handleRestore}
-                disabled={restoreVersion.isPending}
+                disabled={restoreVersion.isPending || detailLoading || !hasContent}
                 className="w-full gap-2 h-8"
                 size="sm"
               >
@@ -195,7 +217,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                 ) : (
                   <KbRotateCcwIcon className="h-4 w-4" />
                 )}
-                Restore this version
+                {hasContent ? "Restore this version" : "No content to restore"}
               </Button>
             </div>
           </div>

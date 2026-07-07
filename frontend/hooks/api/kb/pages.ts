@@ -72,7 +72,10 @@ export type KbPageVersion = {
   versionNumber: number;
   title: string;
   content: Record<string, unknown> | Record<string, unknown>[] | null;
+  contentText: string | null;
+  changeSummary: string | null;
   authorId: string | null;
+  authorName: string | null;
   createdAt: string;
 };
 
@@ -90,6 +93,7 @@ export type UpdateKbPageInput = {
   coverImage?: string | null;
   content?: unknown;
   contentText?: string;
+  changeSummary?: string;
   status?: "draft" | "in_review" | "published" | "archived";
   contentType?: string;
   ownerUserId?: string | null;
@@ -242,6 +246,18 @@ export function useHardDeleteKbPage() {
     mutationFn: (pageId: number) => apiClient.delete<void>(`/kb/pages/${pageId}/permanent`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTrash() });
+    },
+  });
+}
+
+export function useEmptyKbTrash() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["kb", "pages", "emptyTrash"],
+    mutationFn: () => apiClient.delete<{ purgedCount: number }>("/kb/pages/trash/empty"),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTrash() });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
     },
   });
 }

@@ -7,6 +7,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { Bug, Bookmark, Zap, CheckSquare, ChevronRight } from "lucide-react";
 import { getStatusDotClass } from "../shared/status-badge";
 import { formatTicketKey } from "../shared/format-ticket-key";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 interface Ticket {
   id: number;
@@ -17,7 +18,7 @@ interface Ticket {
   points?: number | null;
   ticketNumber?: number;
   sequenceId?: string | null;
-  assignee?: { id: string; firstName?: string | null; lastName?: string | null; image?: string | null } | null;
+  assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
 }
 
 interface ListViewProps {

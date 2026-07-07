@@ -23,6 +23,7 @@ import type { TicketComment, TicketUser, CommentReaction } from "@/types/project
 import { MentionTextarea, type MentionUser } from "@/features/projects/comments/mention-textarea";
 import { EmojiReactionBar, type ReactionGroup } from "@/features/projects/comments/emoji-reaction-bar";
 import { formatMentionText } from "@/lib/format-mention";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 function groupReactions(
   rawReactions: CommentReaction[],
@@ -179,8 +180,7 @@ function CommentItemComponent({
       <Avatar className="h-6 w-6 shrink-0 mt-0.5">
         <AvatarImage src={resolveImageUrl(user?.image)} />
         <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
-          {user?.firstName?.[0]}
-          {user?.lastName?.[0]}
+          {getUserInitials(user)}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">

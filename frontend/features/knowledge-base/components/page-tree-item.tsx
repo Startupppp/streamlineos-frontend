@@ -9,6 +9,16 @@ import {
   useAnimatedNavIconHover,
 } from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -53,6 +63,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const renameInputRef = useRef<HTMLInputElement>(null);
   const isActive = pathname === pageHref(node.id);
   const canCreate = useCan("kb:pages:create");
@@ -126,11 +137,20 @@ const PageTreeItem = memo(function PageTreeItemInner({
     );
   }
 
-  function handleDelete() {
+  function handleDeleteClick() {
+    setMenuOpen(false);
+    setDeleteDialogOpen(true);
+  }
+
+  function handleConfirmDelete() {
     deletePage.mutate(node.id, {
       onSuccess: () => toast.success("Page moved to trash"),
       onError: () => toast.error("Failed to delete page"),
     });
+  }
+
+  function handleDeleteDialogOpenChange(open: boolean) {
+    setDeleteDialogOpen(open);
   }
 
   function handleMoreClick(e: React.MouseEvent) {
@@ -194,134 +214,156 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const showChevron = node.hasChildren || children.length > 0;
 
   return (
-    <div>
-      <div
-        role="button"
-        tabIndex={0}
-        className={`group flex items-center gap-1 py-1 rounded-md cursor-pointer text-sm transition-colors select-none ${
-          isActive
-            ? "bg-blue-50 text-blue-700 font-medium"
-            : "text-foreground/80 hover:bg-muted"
-        }`}
-        style={{ paddingLeft: 8 + depth * 16, paddingRight: 4 }}
-        onClick={handleNavigate}
-        onKeyDown={handleKeyDown}
-        {...animatedNavHoverHandlers}
-      >
-        <button
-          className="shrink-0 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
-          onClick={handleToggleExpand}
-          aria-label={expanded ? "Collapse" : "Expand"}
-          tabIndex={-1}
+    <>
+      <div>
+        <div
+          role="button"
+          tabIndex={0}
+          className={`group flex items-center gap-1 py-1 rounded-md cursor-pointer text-sm transition-colors select-none ${
+            isActive
+              ? "bg-blue-50 text-blue-700 font-medium"
+              : "text-foreground/80 hover:bg-muted"
+          }`}
+          style={{ paddingLeft: 8 + depth * 16, paddingRight: 4 }}
+          onClick={handleNavigate}
+          onKeyDown={handleKeyDown}
+          {...animatedNavHoverHandlers}
         >
-          {showChevron ? (
-            expanded ? (
-              <KbChevronDownIcon className="h-3 w-3" />
-            ) : (
-              <KbChevronRightIcon className="h-3 w-3" />
-            )
-          ) : (
-            <span className="h-3 w-3" />
-          )}
-        </button>
-
-        <span className="shrink-0 text-base leading-none">
-          {node.icon ? (
-            node.icon
-          ) : (
-            <SidebarAnimatedNavIcon
-              icon={KbFileTextIcon}
-              iconRef={iconRef}
-              className="h-3.5 w-3.5 text-muted-foreground"
-            />
-          )}
-        </span>
-
-        {renaming ? (
-          <Input
-            ref={renameInputRef}
-            value={renameValue}
-            onChange={handleRenameInputChange}
-            onKeyDown={handleRenameKeyDown}
-            onBlur={handleRenameCommit}
-            onClick={handleRenameInputClick}
-            className="flex-1 h-6 text-sm py-0 px-1 min-w-0"
-          />
-        ) : (
-          <span className="flex-1 truncate min-w-0">{node.title || "Untitled"}</span>
-        )}
-
-        {!renaming && (
-          <span
-            className={`${menuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-0.5 shrink-0`}
+          <button
+            className="shrink-0 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
+            onClick={handleToggleExpand}
+            aria-label={expanded ? "Collapse" : "Expand"}
+            tabIndex={-1}
           >
-            {canCreate && (
-              <button
-                className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                onClick={handleAddChild}
-                tabIndex={-1}
-                aria-label="Add child page"
-              >
-                <KbPlusIcon className="h-3 w-3" />
-              </button>
+            {showChevron ? (
+              expanded ? (
+                <KbChevronDownIcon className="h-3 w-3" />
+              ) : (
+                <KbChevronRightIcon className="h-3 w-3" />
+              )
+            ) : (
+              <span className="h-3 w-3" />
             )}
-            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-              <DropdownMenuTrigger asChild>
+          </button>
+
+          <span className="shrink-0 text-base leading-none">
+            {node.icon ? (
+              node.icon
+            ) : (
+              <SidebarAnimatedNavIcon
+                icon={KbFileTextIcon}
+                iconRef={iconRef}
+                className="h-3.5 w-3.5 text-muted-foreground"
+              />
+            )}
+          </span>
+
+          {renaming ? (
+            <Input
+              ref={renameInputRef}
+              value={renameValue}
+              onChange={handleRenameInputChange}
+              onKeyDown={handleRenameKeyDown}
+              onBlur={handleRenameCommit}
+              onClick={handleRenameInputClick}
+              className="flex-1 h-6 text-sm py-0 px-1 min-w-0"
+            />
+          ) : (
+            <span className="flex-1 truncate min-w-0">{node.title || "Untitled"}</span>
+          )}
+
+          {!renaming && (
+            <span
+              className={`${menuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-0.5 shrink-0`}
+            >
+              {canCreate && (
                 <button
                   className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                  onClick={handleMoreClick}
+                  onClick={handleAddChild}
                   tabIndex={-1}
-                  aria-label="Page options"
+                  aria-label="Add child page"
                 >
-                  <KbMoreHorizontalIcon className="h-3 w-3" />
+                  <KbPlusIcon className="h-3 w-3" />
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="right">
-                <DropdownMenuItem onSelect={handleStartRename}>Rename</DropdownMenuItem>
-                {canCreate && (
-                  <DropdownMenuItem onSelect={handleDuplicate}>Duplicate</DropdownMenuItem>
-                )}
-                <DropdownMenuItem onSelect={handleAddToFavorites}>
-                  Add to favorites
-                </DropdownMenuItem>
-                {canDelete && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onSelect={handleDelete}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </span>
-        )}
+              )}
+              <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                    onClick={handleMoreClick}
+                    tabIndex={-1}
+                    aria-label="Page options"
+                  >
+                    <KbMoreHorizontalIcon className="h-3 w-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" side="right">
+                  <DropdownMenuItem onSelect={handleStartRename}>Rename</DropdownMenuItem>
+                  {canCreate && (
+                    <DropdownMenuItem onSelect={handleDuplicate}>Duplicate</DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onSelect={handleAddToFavorites}>
+                    Add to favorites
+                  </DropdownMenuItem>
+                  {canDelete && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onSelect={handleDeleteClick}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </span>
+          )}
+        </div>
+
+        <AnimatePresence initial={false}>
+          {expanded && children.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.15, ease: "easeOut" }}
+            >
+              {children.map((child) => (
+                <PageTreeItem
+                  key={child.id}
+                  node={child}
+                  allNodes={allNodes}
+                  depth={depth + 1}
+                  onCloseMobile={onCloseMobile}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <AnimatePresence initial={false}>
-        {expanded && children.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.15, ease: "easeOut" }}
-          >
-            {children.map((child) => (
-              <PageTreeItem
-                key={child.id}
-                node={child}
-                allNodes={allNodes}
-                depth={depth + 1}
-                onCloseMobile={onCloseMobile}
-              />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={handleDeleteDialogOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move page to trash?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{node.title || "Untitled"}&rdquo; will be moved to the Recycle Bin. You can restore it from the Recycle Bin.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deletePage.isPending}
+            >
+              Move to trash
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 });
 

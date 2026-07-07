@@ -5,14 +5,16 @@ export interface NamedUser {
   email?: string | null;
 }
 
-export function getUserDisplayName(user: NamedUser): string {
+export function getUserDisplayName(user: NamedUser | null | undefined): string {
+  if (!user) return "Unassigned";
   if (user.name && user.name.trim()) return user.name.trim();
   const full = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
   if (full) return full;
   return user.email?.trim() || "Unknown";
 }
 
-export function getUserInitials(user: NamedUser): string {
+export function getUserInitials(user: NamedUser | null | undefined): string {
+  if (!user) return "?";
   const first = user.firstName?.trim()?.[0] ?? "";
   const last = user.lastName?.trim()?.[0] ?? "";
   if (first || last) return `${first}${last}`.toUpperCase();

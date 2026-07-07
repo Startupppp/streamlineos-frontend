@@ -8,6 +8,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import { PriorityBadge } from "../shared/priority-badge";
 import type { KanbanTicket } from "../shared/types";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { motion } from "framer-motion";
 
 function getDueState(dueDate?: string | null): "overdue" | "soon" | "future" | null {

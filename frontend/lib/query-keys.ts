@@ -618,6 +618,7 @@ export const queryKeys = {
       range === undefined
         ? ([...base, "kb", "knowledgeGaps"] as const)
         : ([...base, "kb", "knowledgeGaps", range] as const),
+    settings: () => [...base, "kb", "settings"] as const,
   },
 
   roadmap: {

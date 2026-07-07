@@ -19,15 +19,19 @@ export interface KanbanTicket {
   timeSpent?: string | null;
   assignee?: {
     id: string;
+    name?: string | null;
     firstName?: string | null;
     lastName?: string | null;
+    email?: string | null;
     image?: string | null;
   } | null;
   assignees?: {
     user?: {
       id: string;
+      name?: string | null;
       firstName?: string | null;
       lastName?: string | null;
+      email?: string | null;
       image?: string | null;
     };
   }[];
