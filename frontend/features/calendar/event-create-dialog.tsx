@@ -26,6 +26,7 @@ import { EventFormFields } from "./event-form-fields";
 import type { TicketSearchResult } from "@/hooks/api/projects";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
 import { Input } from "@/components/ui/input";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Ticket, X, Link as LinkIcon, MapPin } from "lucide-react";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
@@ -489,8 +490,8 @@ export function EventCreateDialog({
         }
       }
       handleClose();
-    } catch {
-      toast.error(isEdit ? "Failed to update event" : "Failed to create event");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }, [form, showEndDate, isEdit, event, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket]);
 
