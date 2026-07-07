@@ -15,6 +15,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { KanbanTicketCard } from "./kanban-ticket-card";
 import { QuickAddInput } from "./kanban-quick-add";
+import { AddColumn } from "./kanban-add-column";
 import type { KanbanTicket, KanbanColumn } from "../shared/types";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -295,6 +296,7 @@ export function KanbanBoard({
             </div>
           );
         })}
+        <AddColumn projectId={projectId} />
       </div>
     </DragDropContext>
   );
