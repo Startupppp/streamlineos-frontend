@@ -143,6 +143,7 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/support/settings/sla": ["support:settings:manage"],
   "/support/settings/business-hours": ["support:settings:manage"],
   "/support/settings/channels": ["support:channels:manage"],
+  "/support/settings/custom-fields": ["support:settings:manage"],
   "/support/reports": ["support:reports:view"],
   "/settings/automations": ["settings:automations:view"],
   "/hr/settings/automations": ["settings:automations:view"],

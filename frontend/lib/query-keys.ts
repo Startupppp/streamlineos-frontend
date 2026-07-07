@@ -666,6 +666,13 @@ export const queryKeys = {
     list: () => [...base, "supportSlaPolicies", "list"] as const,
   },
 
+  supportCustomFields: {
+    all: [...base, "supportCustomFields"] as const,
+    list: (activeOnly?: boolean) => [...base, "supportCustomFields", "list", activeOnly ?? null] as const,
+    ticketValues: (ticketId: number) => [...base, "supportCustomFields", "ticketValues", ticketId] as const,
+    portalActive: () => [...base, "supportCustomFields", "portalActive"] as const,
+  },
+
   supportBusinessHours: {
     all: [...base, "supportBusinessHours"] as const,
     list: () => [...base, "supportBusinessHours", "list"] as const,
@@ -679,6 +686,11 @@ export const queryKeys = {
   supportChannels: {
     all: [...base, "supportChannels"] as const,
     list: () => [...base, "supportChannels", "list"] as const,
+  },
+
+  supportChatWidget: {
+    all: [...base, "supportChatWidget"] as const,
+    session: (orgId: string, token: string) => [...base, "supportChatWidget", "session", orgId, token] as const,
   },
 
   supportPortalTickets: {

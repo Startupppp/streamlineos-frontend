@@ -45,6 +45,7 @@ export interface CreatePortalTicketInput {
   category?: PortalTicketCategory;
   description: string;
   attachments?: SupportMessageAttachment[];
+  customFields?: { fieldId: number; value: string | null }[];
 }
 
 export interface ReplyPortalTicketInput {
