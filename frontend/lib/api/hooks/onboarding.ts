@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-export type PersonalDetailsPayload = {
+export interface PersonalDetailsPayload {
   phone: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
   dateOfBirth?: string;
@@ -15,7 +15,7 @@ export type PersonalDetailsPayload = {
   addressState?: string;
   addressPostalCode?: string;
   addressCountry?: string;
-};
+}
 
 export function usePersonalInfoMutation() {
   return useMutation({
@@ -25,14 +25,14 @@ export function usePersonalInfoMutation() {
   });
 }
 
-export type BankDetailsPayload = {
+export interface BankDetailsPayload {
   accountHolder: string;
   bankName: string;
   accountNumber: string;
   ifsc: string;
   branch?: string;
   taxId?: string;
-};
+}
 
 export function useBankDetailsMutation() {
   return useMutation({
