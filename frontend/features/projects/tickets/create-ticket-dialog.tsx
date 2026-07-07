@@ -84,7 +84,7 @@ export function CreateTicketDialog({
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-hidden p-0 flex flex-col"
+        className="w-full sm:max-w-none lg:w-3/4 lg:max-w-[75vw] overflow-hidden p-0 flex flex-col"
       >
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle>New Ticket</SheetTitle>
@@ -92,6 +92,44 @@ export function CreateTicketDialog({
         <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="E.g. Implement login page"
+                        {...field}
+                        className="text-base font-medium capitalize"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <TiptapEditorDynamic
+                        content={field.value ?? ""}
+                        onChangeHtml={(html) => field.onChange(html)}
+                        output="html"
+                        minHeightClassName="min-h-[120px]"
+                        placeholder="Describe the ticket…"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -141,77 +179,38 @@ export function CreateTicketDialog({
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="E.g. Implement login page"
-                        {...field}
-                        className="text-base font-medium capitalize"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <TiptapEditorDynamic
-                        content={field.value ?? ""}
-                        onChangeHtml={(html) => field.onChange(html)}
-                        output="html"
-                        minHeightClassName="min-h-[120px]"
-                        placeholder="Describe the ticket…"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormItem>
-                  <FormLabel>Assignees</FormLabel>
-                  <CreateTicketAssignees
-                    members={members}
-                    selectedAssignees={selectedAssignees}
-                    onSelectAssignee={handleAssigneeSelect}
-                    onRemoveAssignee={handleRemoveAssignee}
-                  />
-                  <FormMessage />
-                </FormItem>
-                <FormField
-                  control={form.control}
-                  name="link"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Link (Optional)</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            className="pl-9"
-                            placeholder="https://..."
-                            {...field}
-                            value={field.value ?? ""}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <FormItem className="gap-1">
+                <FormLabel>Assignees</FormLabel>
+                <CreateTicketAssignees
+                  members={members}
+                  selectedAssignees={selectedAssignees}
+                  onSelectAssignee={handleAssigneeSelect}
+                  onRemoveAssignee={handleRemoveAssignee}
                 />
-              </div>
+                <FormMessage />
+              </FormItem>
+
+              <FormField
+                control={form.control}
+                name="link"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Link (Optional)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          className="pl-9"
+                          placeholder="https://..."
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormItem className="pt-2">
                 <FormLabel>Attachments</FormLabel>

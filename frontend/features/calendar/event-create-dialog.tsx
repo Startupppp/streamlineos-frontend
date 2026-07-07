@@ -3,11 +3,13 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { format, parseISO, addHours, differenceInMinutes, endOfDay, startOfDay } from "date-fns";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/common/use-mobile";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -525,6 +527,7 @@ export function EventCreateDialog({
   }, [form, showEndDate, isEdit, event, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket]);
 
   const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
+  const isMobile = useIsMobile();
 
   const handleOpenTicketPicker = useCallback(() => {
     setTicketPickerOpen(true);
@@ -551,16 +554,23 @@ export function EventCreateDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent
-          showCloseButton={false}
-          className="flex flex-col gap-0 p-0 pb-0 md:pb-0 w-[calc(100%-1rem)] sm:w-full max-w-xl rounded-xl overflow-hidden shadow-2xl border bg-card max-h-[min(92dvh,48rem)]"
+      <Drawer
+        open={open}
+        onOpenChange={onOpenChange}
+        direction={isMobile ? "bottom" : "right"}
+      >
+        <DrawerContent
+          className={cn(
+            "flex flex-col gap-0 p-0 pb-0 overflow-hidden shadow-2xl border bg-card",
+            isMobile
+              ? "w-full max-h-[min(92dvh,48rem)] rounded-t-xl"
+              : "h-full w-full md:w-1/2 md:max-w-2xl lg:max-w-3xl",
+          )}
         >
-          {/* Header controls (New Event, Sizing controls, Close controls) */}
-          <DialogHeader className="px-4 py-2.5 border-b flex flex-row items-center justify-between shrink-0 select-none">
-            <DialogTitle className="text-base font-semibold text-foreground">
+          <DrawerHeader className="px-4 py-2.5 border-b flex flex-row items-center justify-between shrink-0 select-none">
+            <DrawerTitle className="text-base font-semibold text-foreground">
               {isEdit ? "Edit Event" : "New Event"}
-            </DialogTitle>
+            </DrawerTitle>
             <button
               type="button"
               onClick={handleClose}
@@ -570,10 +580,10 @@ export function EventCreateDialog({
             >
               <X className="h-4 w-4" />
             </button>
-          </DialogHeader>
+          </DrawerHeader>
 
           <ScrollArea className="flex-1 min-h-0">
-            <div className="px-4 py-3 space-y-3">
+            <div className="px-4 py-2 space-y-2">
               <EventFormFields
                 title={form.title}
                 description={form.description}
@@ -709,8 +719,8 @@ export function EventCreateDialog({
                 : "Save"}
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
       <TicketPickerDialog
         open={ticketPickerOpen}

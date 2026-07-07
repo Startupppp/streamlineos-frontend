@@ -106,7 +106,7 @@ export function EventFormFields({
   const selectedToolkit = activeConnections.find((c) => String(c.id) === syncConnectionId)?.toolkit;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center gap-2.5">
         <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
         <div className="flex-1">
@@ -122,73 +122,77 @@ export function EventFormFields({
       </div>
 
       <div className="space-y-1">
-        <div className="flex flex-row flex-wrap items-center gap-2">
-          <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-          <DatePicker
-            value={startDate}
-            onChange={onStartDateChange}
-            placeholder="Start date"
-            dateFormat="MMM d, yyyy"
-            className="h-8 text-xs min-w-[8.5rem]"
-          />
-          {!allDay && (
-            <Input
-              type="time"
-              className="h-8 text-xs w-[7.5rem] shrink-0"
-              value={startTime}
-              onChange={onStartTimeChange}
-            />
-          )}
-          {!showEndDate && (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={onShowEndDate}
-              aria-label="Add end date"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          {showEndDate && (
-            <DatePicker
-              value={endDate}
-              onChange={onEndDateChange}
-              fromDate={startDate ? new Date(startDate) : undefined}
-              placeholder="End date"
-              dateFormat="MMM d, yyyy"
-              className={cn("h-8 text-xs min-w-[8.5rem]", dateTimeError && "border-destructive")}
-            />
-          )}
-          {showEndDate && !allDay && (
-            <Input
-              type="time"
-              className={cn(
-                "h-8 text-xs w-[7.5rem] shrink-0",
-                dateTimeError && "border-destructive",
+        <div className="flex items-start gap-2.5">
+          <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <DatePicker
+                value={startDate}
+                onChange={onStartDateChange}
+                placeholder="Start date"
+                dateFormat="MMM d, yyyy"
+                className="h-8 min-w-0 flex-1 text-xs"
+              />
+              {!allDay && (
+                <Input
+                  type="time"
+                  className="h-8 w-20 shrink-0 text-xs"
+                  value={startTime}
+                  onChange={onStartTimeChange}
+                />
               )}
-              value={endTime}
-              onChange={onEndTimeChange}
-            />
-          )}
-          <div className="flex items-center gap-2 shrink-0">
-            <Switch
-              id="ev-allday"
-              checked={allDay}
-              onCheckedChange={onAllDayChange}
-            />
-            <Label
-              htmlFor="ev-allday"
-              className="text-xs text-muted-foreground cursor-pointer font-normal select-none"
-            >
-              All day
-            </Label>
+              {!showEndDate && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  className="shrink-0"
+                  onClick={onShowEndDate}
+                  aria-label="Add end date"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {showEndDate && (
+                <DatePicker
+                  value={endDate}
+                  onChange={onEndDateChange}
+                  fromDate={startDate ? new Date(startDate) : undefined}
+                  placeholder="End date"
+                  dateFormat="MMM d, yyyy"
+                  className={cn("h-8 min-w-0 flex-1 text-xs", dateTimeError && "border-destructive")}
+                />
+              )}
+              {showEndDate && !allDay && (
+                <Input
+                  type="time"
+                  className={cn(
+                    "h-8 w-20 shrink-0 text-xs",
+                    dateTimeError && "border-destructive",
+                  )}
+                  value={endTime}
+                  onChange={onEndTimeChange}
+                />
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Switch
+                id="ev-allday"
+                checked={allDay}
+                onCheckedChange={onAllDayChange}
+              />
+              <Label
+                htmlFor="ev-allday"
+                className="shrink-0 cursor-pointer select-none text-xs font-normal text-muted-foreground"
+              >
+                All day
+              </Label>
+            </div>
           </div>
         </div>
 
         {dateTimeError && (
-          <p className="text-[10px] text-destructive">{dateTimeError}</p>
+          <p className="text-[10px] text-destructive pl-6">{dateTimeError}</p>
         )}
       </div>
 

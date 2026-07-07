@@ -52,7 +52,7 @@ function SelectedChip({ member, onRemove }: SelectedChipProps) {
   }, [member.id, onRemove]);
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border bg-muted/50 py-0.5 pl-0.5 pr-1.5 text-xs">
+    <Badge variant="user" className="gap-1.5 py-0.5 pl-0.5 pr-1.5">
       <Avatar className="h-5 w-5 shrink-0">
         <AvatarImage src={resolveImageUrl(member.image)} />
         <AvatarFallback className="text-[9px]">
@@ -63,12 +63,12 @@ function SelectedChip({ member, onRemove }: SelectedChipProps) {
       <button
         type="button"
         onClick={handleRemove}
-        className="text-muted-foreground hover:text-foreground transition-colors"
+        className="text-accent/70 hover:text-destructive transition-colors"
         aria-label={`Remove ${name}`}
       >
         <X className="h-3 w-3" />
       </button>
-    </span>
+    </Badge>
   );
 }
 
@@ -162,7 +162,7 @@ export function EventAttendeesPicker({
   const showLoading = isFetching && debouncedSearch.trim().length > 0;
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <div className="flex items-center justify-between">
         <Label className="text-xs font-medium">Attendees</Label>
         {selectedIds.length > 0 && (

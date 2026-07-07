@@ -138,18 +138,18 @@ export function CreateTicketFromCalendarDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-full max-w-none p-0 sm:max-w-sm">
-        <DialogHeader className="px-5 pt-5 pb-0">
+      <DialogContent className="flex flex-col gap-0 p-0 pb-0 md:pb-0 w-full max-w-none sm:max-w-sm">
+        <DialogHeader className="px-4 py-3">
           <DialogTitle className="text-sm font-semibold">Add ticket due date</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="px-5 pb-0 space-y-3 pt-3">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="px-4 py-2 space-y-2">
             <FormField
               control={form.control}
               name="projectId"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="gap-1">
                   <FormLabel className="text-xs font-medium">Project</FormLabel>
                   <FormControl>
                     {projectsLoading ? (
@@ -192,7 +192,7 @@ export function CreateTicketFromCalendarDialog({
               control={form.control}
               name="title"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="gap-1">
                   <FormLabel className="text-xs font-medium">Title</FormLabel>
                   <FormControl>
                     <Input
@@ -211,7 +211,7 @@ export function CreateTicketFromCalendarDialog({
               control={form.control}
               name="dueDate"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="gap-1">
                   <FormLabel className="text-xs font-medium">Due date</FormLabel>
                   <FormControl>
                     <Input {...field} type="date" className="h-8 text-sm" />
@@ -225,7 +225,7 @@ export function CreateTicketFromCalendarDialog({
               control={form.control}
               name="priority"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="gap-1">
                   <FormLabel className="text-xs font-medium">Priority</FormLabel>
                   <FormControl>
                     <Select value={field.value} onValueChange={field.onChange}>
@@ -247,7 +247,7 @@ export function CreateTicketFromCalendarDialog({
           </form>
         </Form>
 
-        <DialogFooter className="px-5 py-4 border-t flex-row gap-2 justify-end">
+        <DialogFooter className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t flex-row gap-2 justify-end">
           <Button
             variant="outline"
             size="sm"

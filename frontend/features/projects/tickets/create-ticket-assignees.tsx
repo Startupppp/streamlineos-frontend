@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 
@@ -34,14 +35,17 @@ export function CreateTicketAssignees({
   return (
     <>
       {selectedAssignees.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-2">
+        <div className="flex flex-wrap gap-1">
           {selectedAssignees.map((id) => {
             const member = members?.find((m) => m.id === id);
             if (!member) return null;
+            const displayName =
+              member.name || `${member.firstName ?? ""} ${member.lastName ?? ""}`.trim();
             return (
-              <div
+              <Badge
                 key={id}
-                className="flex items-center gap-1.5 bg-muted rounded-full pl-1 pr-2 py-0.5"
+                variant="user"
+                className="gap-1.5 pl-0.5 pr-1.5 py-0.5"
               >
                 <Avatar className="h-5 w-5">
                   <AvatarImage src={resolveImageUrl(member.image)} />
@@ -49,18 +53,16 @@ export function CreateTicketAssignees({
                     {member.name?.[0] ?? "U"}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-xs truncate max-w-[100px]">
-                  {member.name || `${member.firstName ?? ""} ${member.lastName ?? ""}`}
-                </span>
+                <span className="truncate max-w-[100px]">{displayName}</span>
                 <button
                   type="button"
-                  className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                  className="text-accent/70 hover:text-destructive transition-colors"
                   onClick={() => onRemoveAssignee(id)}
-                  aria-label={`Remove ${member.name}`}
+                  aria-label={`Remove ${displayName}`}
                 >
                   <span className="text-xs font-bold">&times;</span>
                 </button>
-              </div>
+              </Badge>
             );
           })}
         </div>
