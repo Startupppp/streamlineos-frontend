@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -66,7 +66,20 @@ export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps)
   const numDays = viewportWidth < 640 ? 14 : viewportWidth < 1024 ? 21 : 28;
   const dayWidth = viewportWidth < 640 ? 28 : viewportWidth < 1024 ? 34 : 40;
   const rowHeight = 36;
+  const headerHeight = 40;
   const labelWidth = viewportWidth < 640 ? 120 : viewportWidth < 1024 ? 180 : 240;
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState(400);
+
+  useEffect(() => {
+    const el = chartContainerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerHeight(entry.contentRect.height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const days = useMemo(() => {
     const arr: Date[] = [];
@@ -144,11 +157,14 @@ export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps)
     [datedTickets, rowMap, startOfWeek, numDays, dayWidth, labelWidth, rowHeight]
   );
 
-  const svgHeight = Math.max(datedTickets.length * rowHeight + 40, 200);
+  const contentHeight = headerHeight + datedTickets.length * rowHeight;
+  const svgHeight = Math.max(contentHeight, containerHeight);
+  const bodyHeight = svgHeight - headerHeight;
+  const svgWidth = labelWidth + days.length * dayWidth;
 
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="flex shrink-0 items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-1.5">
           <Select value={String(displayMonth)} onValueChange={handleMonthChange}>
             <SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue /></SelectTrigger>
@@ -178,10 +194,14 @@ export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps)
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-max">
-          <svg width={labelWidth + days.length * dayWidth} height={svgHeight} className="text-foreground">
-            <rect x={0} y={0} width={labelWidth} height={40} className="fill-muted/50" />
+      <div
+        ref={chartContainerRef}
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border"
+      >
+        <div className="min-h-0 flex-1 overflow-auto">
+          <div className="min-w-max">
+            <svg width={svgWidth} height={svgHeight} className="text-foreground">
+            <rect x={0} y={0} width={labelWidth} height={headerHeight} className="fill-muted/50" />
             <text x={12} y={26} className="fill-muted-foreground text-xs" fontSize={12}>Work Item</text>
 
             {days.map((day, i) => {
@@ -191,12 +211,12 @@ export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps)
               return (
                 <g key={i}>
                   {isWeekend && (
-                    <rect x={x} y={40} width={dayWidth} height={datedTickets.length * rowHeight} className="fill-muted/30" />
+                    <rect x={x} y={headerHeight} width={dayWidth} height={bodyHeight} className="fill-muted/30" />
                   )}
                   {isToday && (
-                    <rect x={x} y={40} width={dayWidth} height={datedTickets.length * rowHeight} className="fill-primary/10" />
+                    <rect x={x} y={headerHeight} width={dayWidth} height={bodyHeight} className="fill-primary/10" />
                   )}
-                  <line x1={x} y1={0} x2={x} y2={datedTickets.length * rowHeight + 40} className="stroke-border" strokeWidth={0.5} />
+                  <line x1={x} y1={0} x2={x} y2={svgHeight} className="stroke-border" strokeWidth={0.5} />
                   <text x={x + dayWidth / 2} y={16} textAnchor="middle" className="fill-muted-foreground" fontSize={10}>
                     {day.toLocaleDateString("en-US", { weekday: "short" })}
                   </text>
@@ -207,7 +227,20 @@ export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps)
               );
             })}
 
-            <line x1={labelWidth} y1={40} x2={labelWidth + days.length * dayWidth} y2={40} className="stroke-border" />
+            <line x1={labelWidth} y1={headerHeight} x2={svgWidth} y2={headerHeight} className="stroke-border" />
+
+            {datedTickets.length === 0 && (
+              <text
+                x={svgWidth / 2}
+                y={headerHeight + bodyHeight / 2}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="fill-muted-foreground"
+                fontSize={13}
+              >
+                No work items with dates found. Set start/due dates to see them on the Gantt chart.
+              </text>
+            )}
 
             {datedTickets.map((ticket) => {
               const geo = barGeometries.get(ticket.id);
@@ -216,7 +249,7 @@ export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps)
               const isCp = criticalPathIds.has(ticket.id);
               return (
                 <g key={ticket.id} data-ticket-id={ticket.id} onClick={handleGanttRowClick} className="cursor-pointer">
-                  <line x1={0} y1={y} x2={labelWidth + days.length * dayWidth} y2={y} className="stroke-border" strokeWidth={0.5} />
+                  <line x1={0} y1={y} x2={svgWidth} y2={y} className="stroke-border" strokeWidth={0.5} />
                   <text x={8} y={y + rowHeight / 2 + 4} className="fill-foreground" fontSize={labelWidth < 180 ? 9 : 11}>
                     {(ticket.sequenceId ?? `#${ticket.ticketNumber}`)} {ticket.title.slice(0, labelWidth < 180 ? 12 : 25)}{ticket.title.length > (labelWidth < 180 ? 12 : 25) ? "…" : ""}
                   </text>
@@ -251,17 +284,12 @@ export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps)
               rowHeight={rowHeight}
             />
           </svg>
+          </div>
         </div>
       </div>
 
-      {datedTickets.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground text-sm">
-          No work items with dates found. Set start/due dates to see them on the Gantt chart.
-        </div>
-      )}
-
       {(cpData?.criticalPath.length ?? 0) > 0 && (
-        <div className="flex items-center gap-2 mt-2 px-1">
+        <div className="flex shrink-0 items-center gap-2 px-1">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-xs text-red-600">
             <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-400 border border-red-500" />
             Critical path

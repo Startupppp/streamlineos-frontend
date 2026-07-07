@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import { LayoutGrid, List, Table2, Calendar, BarChart3, Users } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 
 export type ViewType = "board" | "list" | "table" | "calendar" | "gantt" | "workload";
 
@@ -11,33 +11,23 @@ interface ViewSwitcherProps {
   onViewChange: (view: ViewType) => void;
 }
 
-const views: { type: ViewType; icon: typeof LayoutGrid; label: string }[] = [
-  { type: "board", icon: LayoutGrid, label: "Board" },
-  { type: "list", icon: List, label: "List" },
-  { type: "table", icon: Table2, label: "Table" },
-  { type: "calendar", icon: Calendar, label: "Calendar" },
-  { type: "gantt", icon: BarChart3, label: "Gantt" },
-  { type: "workload", icon: Users, label: "Workload" },
+const views: ViewOption<ViewType>[] = [
+  { value: "board", icon: LayoutGrid, label: "Board" },
+  { value: "list", icon: List, label: "List" },
+  { value: "table", icon: Table2, label: "Table" },
+  { value: "calendar", icon: Calendar, label: "Calendar" },
+  { value: "gantt", icon: BarChart3, label: "Gantt" },
+  { value: "workload", icon: Users, label: "Workload" },
 ];
 
 export const ViewSwitcher = memo(function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
   return (
-    <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
-      {views.map(({ type, icon: Icon, label }) => (
-        <button
-          key={type}
-          onClick={() => onViewChange(type)}
-          className={cn(
-            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
-            activeView === type
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted"
-          )}
-        >
-          <Icon className="h-3.5 w-3.5" />
-          {label}
-        </button>
-      ))}
-    </div>
+    <ViewToggle
+      value={activeView}
+      options={views}
+      onChange={onViewChange}
+      showLabel
+      className="bg-background"
+    />
   );
 });

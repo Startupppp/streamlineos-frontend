@@ -133,8 +133,8 @@ export const WorkloadView = memo(function WorkloadView({ tickets, members }: Wor
   ] as const;
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((stat) => (
           <div
             key={stat.label}
@@ -156,10 +156,10 @@ export const WorkloadView = memo(function WorkloadView({ tickets, members }: Wor
         ))}
       </div>
 
-      <div className="bg-card rounded-lg border border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <div className="min-w-max">
-            <div className="flex border-b bg-muted/50">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
+        <div className="min-h-0 flex-1 overflow-auto">
+          <div className="flex min-h-full min-w-max flex-col">
+            <div className="sticky top-0 z-10 flex shrink-0 border-b bg-muted/50">
               <div className="w-48 shrink-0 px-4 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Member
               </div>
@@ -192,7 +192,7 @@ export const WorkloadView = memo(function WorkloadView({ tickets, members }: Wor
             </div>
 
             {memberWorkload.length === 0 ? (
-              <div className="px-4 py-12 text-center text-muted-foreground text-sm">
+              <div className="flex flex-1 items-center justify-center px-4 py-12 text-center text-sm text-muted-foreground">
                 No team members with assigned tickets
               </div>
             ) : (

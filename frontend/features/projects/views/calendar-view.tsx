@@ -72,7 +72,7 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
   for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
   return (
-    <div className="p-4">
+    <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-1.5">
           <Select value={String(month)} onValueChange={handleMonthChange}>

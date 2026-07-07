@@ -8,8 +8,6 @@ import {
   ListTodo,
   Settings,
   KanbanSquare,
-  ChevronLeft,
-  ChevronRight,
   Menu,
   Layers,
   Calendar,
@@ -198,16 +196,6 @@ function DesktopSidebar({
     >
 
       <div className={cn("shrink-0 border-b", isCollapsed ? "p-1.5" : "px-3 py-2.5")}>
-        <Link
-          href="/projects"
-          className={cn(
-            "flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors",
-            isCollapsed ? "justify-center mb-1.5" : "mb-2"
-          )}
-        >
-          <ChevronLeft className="h-3 w-3 shrink-0" />
-          {!isCollapsed && <span className="ml-1">Projects</span>}
-        </Link>
         <div className={cn("flex items-center", isCollapsed ? "flex-col gap-1.5" : "gap-2")}>
           <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
             {getProjectInitials(projectKey, projectName)}
@@ -270,27 +258,6 @@ function DesktopSidebar({
           ))}
         </div>
       </ScrollArea>
-
-      <div className="shrink-0 border-t p-1.5">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleToggleCollapse}
-          className={cn(
-            "w-full h-7 text-muted-foreground hover:text-foreground",
-            isCollapsed ? "justify-center px-0" : "justify-start"
-          )}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-3.5 w-3.5" />
-          ) : (
-            <>
-              <ChevronLeft className="h-3.5 w-3.5 mr-1.5" />
-              <span className="text-xs">Collapse</span>
-            </>
-          )}
-        </Button>
-      </div>
     </div>
   );
 }
@@ -322,14 +289,6 @@ function MobileProjectNav({
           <div className="flex flex-col h-full">
 
             <div className="px-3 py-3 border-b">
-              <Link
-                href="/projects"
-                className="flex items-center text-xs text-muted-foreground hover:text-foreground mb-2"
-                onClick={() => setOpen(false)}
-              >
-                <ChevronLeft className="h-3 w-3 mr-1" />
-                Projects
-              </Link>
               <div className="flex items-center gap-2">
                 <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
                   {getProjectInitials(projectKey, projectName)}

@@ -260,14 +260,14 @@ export default function ProjectBoardPage({ params }: PageProps) {
         <>
           <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
           <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
-          <Button variant="ghost" size="sm" onClick={handleExportCsv} className="h-7 text-xs gap-1.5 shrink-0">
+          <Button variant="outline" size="sm" onClick={handleExportCsv} className="h-8 text-xs gap-1.5 shrink-0">
             <Download className="h-3.5 w-3.5" /> Export
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => { setSaveViewName(""); setSaveViewOpen(true); }}
-            className="h-7 text-xs gap-1.5 shrink-0"
+            className="h-8 text-xs gap-1.5 shrink-0"
           >
             <Bookmark className="h-3.5 w-3.5" /> Save view
           </Button>
@@ -323,27 +323,27 @@ export default function ProjectBoardPage({ params }: PageProps) {
         </div>
       )}
       {view === "list" && (
-        <div className="h-full overflow-y-auto px-4 py-2">
+        <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
           <ListView tickets={filteredTickets} onTicketClick={handleTicketSelect} groupBy="status" projectKey={data.key} />
         </div>
       )}
       {view === "table" && (
-        <div className="h-full overflow-y-auto px-4 py-2">
+        <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
           <TableView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectKey={data.key} />
         </div>
       )}
       {view === "calendar" && (
-        <div className="h-full overflow-y-auto px-4 py-2">
+        <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
           <CalendarView tickets={filteredTickets} onTicketClick={handleTicketSelect} />
         </div>
       )}
       {view === "gantt" && (
-        <div className="h-full overflow-auto px-4 py-2">
+        <div className="h-full min-h-0 flex flex-col overflow-hidden px-4 pb-2 pt-0">
           <GanttView tickets={filteredTickets} projectId={projectId} onTicketClick={handleTicketSelect} />
         </div>
       )}
       {view === "workload" && (
-        <div className="h-full overflow-y-auto">
+        <div className="h-full min-h-0 flex flex-col overflow-hidden px-4 pb-2 pt-0">
           <WorkloadView tickets={filteredTickets} projectId={projectId} members={members} />
         </div>
       )}
