@@ -45,7 +45,7 @@ interface ProjectListRowProps {
     description: string | null;
     startDate: Date | string | null;
     progress: { total: number; done: number; percentage: number };
-    members: { id: string; firstName: string | null; lastName: string | null; image: string | null }[];
+    members: { id: string; name?: string | null; firstName: string | null; lastName: string | null; email?: string | null; image: string | null }[];
   };
 }
 

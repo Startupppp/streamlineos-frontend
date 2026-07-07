@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Sprint } from "@/types/projects";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 
 interface Member {
   id: string;
@@ -74,7 +75,7 @@ export const BulkActionBar = memo(function BulkActionBar({
           <SelectContent>
             {members.map((m) => (
               <SelectItem key={m.id} value={m.id} className="text-xs">
-                {m.firstName ?? m.name ?? m.id}
+                {getUserDisplayName(m)}
               </SelectItem>
             ))}
           </SelectContent>

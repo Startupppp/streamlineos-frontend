@@ -186,7 +186,7 @@ function CommentItemComponent({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold">
-            {user?.firstName} {user?.lastName}
+            {getUserDisplayName(user)}
           </span>
           <span className="text-[11px] text-muted-foreground">{timeAgo}</span>
           {isEdited && (

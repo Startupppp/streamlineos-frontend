@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 interface WorkloadMember {
   id: string;
@@ -32,10 +33,6 @@ interface WorkloadViewProps {
 function getDays(count: number): Date[] {
   const today = new Date();
   return Array.from({ length: count }, (_, i) => addDays(today, i));
-}
-
-function getInitials(first?: string | null, last?: string | null): string {
-  return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase() || "?";
 }
 
 function getUtilizationClass(count: number): string {
@@ -226,11 +223,11 @@ export const WorkloadView = memo(function WorkloadView({ tickets, members }: Wor
                         <Avatar className="h-6 w-6 shrink-0">
                           <AvatarImage src={resolveImageUrl(member.image)} />
                           <AvatarFallback className="text-[9px]">
-                            {getInitials(member.firstName, member.lastName)}
+                            {getUserInitials(member)}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm font-medium truncate">
-                          {member.firstName ?? member.name ?? member.id}
+                          {getUserDisplayName(member)}
                         </span>
                         {overdue > 0 && (
                           <span className="ml-auto h-4 w-4 rounded-full bg-red-100 text-red-700 text-[9px] flex items-center justify-center font-bold shrink-0">

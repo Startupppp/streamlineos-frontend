@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 export interface AssigneeMember {
   id: string;
@@ -39,8 +40,7 @@ export function CreateTicketAssignees({
           {selectedAssignees.map((id) => {
             const member = members?.find((m) => m.id === id);
             if (!member) return null;
-            const displayName =
-              member.name || `${member.firstName ?? ""} ${member.lastName ?? ""}`.trim();
+            const displayName = getUserDisplayName(member);
             return (
               <Badge
                 key={id}
@@ -50,7 +50,7 @@ export function CreateTicketAssignees({
                 <Avatar className="h-5 w-5">
                   <AvatarImage src={resolveImageUrl(member.image)} />
                   <AvatarFallback className="text-[8px]">
-                    {member.name?.[0] ?? "U"}
+                    {getUserInitials(member)}
                   </AvatarFallback>
                 </Avatar>
                 <span className="truncate max-w-[100px]">{displayName}</span>
@@ -84,11 +84,11 @@ export function CreateTicketAssignees({
                   <Avatar className="h-7 w-7">
                     <AvatarImage src={resolveImageUrl(member.image)} />
                     <AvatarFallback className="text-[10px]">
-                      {member.name?.[0] ?? "U"}
+                      {getUserInitials(member)}
                     </AvatarFallback>
                   </Avatar>
                   <span className="truncate">
-                    {member.name || `${member.firstName ?? ""} ${member.lastName ?? ""}`}
+                    {getUserDisplayName(member)}
                   </span>
                 </div>
               </SelectItem>

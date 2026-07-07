@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ProjectMember } from "./types";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 interface WatcherListProps {
   projectId: number;
@@ -77,11 +78,10 @@ export function WatcherList({ projectId, ticketId, members }: WatcherListProps) 
       {watchers.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {watchers.map((w) => (
-            <Avatar key={w.userId} className="h-6 w-6" title={w.user?.firstName ?? w.userId}>
+            <Avatar key={w.userId} className="h-6 w-6" title={getUserDisplayName(w.user)}>
               <AvatarImage src={resolveImageUrl(w.user?.image)} />
               <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
-                {w.user?.firstName?.[0]}
-                {w.user?.lastName?.[0]}
+                {getUserInitials(w.user)}
               </AvatarFallback>
             </Avatar>
           ))}
@@ -99,7 +99,7 @@ export function WatcherList({ projectId, ticketId, members }: WatcherListProps) 
               <SelectItem key={m.id} value={m.id}>
                 <div className="flex items-center gap-2">
                   <Plus className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs">{m.firstName ?? m.name}</span>
+                  <span className="text-xs">{getUserDisplayName(m)}</span>
                 </div>
               </SelectItem>
             ))}

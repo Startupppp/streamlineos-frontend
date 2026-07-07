@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Search, SlidersHorizontal, X, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TicketPriority, TicketType } from "@/types/projects";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 
 const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
 const PRIORITIES: TicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
@@ -254,7 +255,7 @@ export function TicketFilterBar({
                   </SelectItem>
                   {members.map((m) => (
                     <SelectItem key={m.id} value={m.id} className="text-xs">
-                      {m.firstName ?? m.name ?? m.id}
+                      {getUserDisplayName(m)}
                     </SelectItem>
                   ))}
                 </SelectContent>

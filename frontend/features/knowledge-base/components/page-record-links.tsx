@@ -31,6 +31,10 @@ const TARGET_TYPE_LABELS: Record<string, string> = {
   hr_employee: "HR Employee",
 };
 
+const FIELD_CLASS = "h-9 w-full text-[13px] bg-card border-border shadow-xs";
+const ACTION_BTN_CLASS =
+  "h-9 w-full text-[13px] bg-card border border-border shadow-xs hover:bg-muted/50";
+
 const TARGET_TYPE_OPTIONS = Object.entries(TARGET_TYPE_LABELS).map(([value, label]) => ({
   value,
   label,
@@ -139,7 +143,7 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
       {canUpdate && (
         <div className="space-y-2 pt-1">
           <Select value={targetType} onValueChange={handleTargetTypeChange}>
-            <SelectTrigger className="h-8 text-[13px]">
+            <SelectTrigger className={FIELD_CLASS}>
               <SelectValue placeholder="Record type" />
             </SelectTrigger>
             <SelectContent>
@@ -154,18 +158,17 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
             placeholder="Label (e.g. Related lead)"
             value={label}
             onChange={handleLabelChange}
-            className="h-8 text-[13px]"
+            className={FIELD_CLASS}
           />
           <Input
             placeholder="Record ID"
             value={targetId}
             onChange={handleTargetIdChange}
-            className="h-8 text-[13px]"
+            className={FIELD_CLASS}
           />
           <Button
-            size="sm"
             variant="outline"
-            className="h-7 text-xs w-full"
+            className={ACTION_BTN_CLASS}
             onClick={handleAdd}
             disabled={!targetType || !targetId.trim() || !label.trim() || addLink.isPending}
           >

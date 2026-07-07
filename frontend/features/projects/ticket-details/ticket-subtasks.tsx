@@ -14,14 +14,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 interface Subtask {
   id: number;
   title?: string | null;
   status?: string | null;
   assignee?: {
+    name?: string | null;
     firstName?: string | null;
     lastName?: string | null;
+    email?: string | null;
     image?: string | null;
   } | null;
 }
@@ -128,11 +131,10 @@ export function TicketSubtasks({
               {sub.title}
             </span>
             {sub.assignee && (
-              <Avatar className="h-7 w-7">
+              <Avatar className="h-7 w-7" title={getUserDisplayName(sub.assignee)}>
                 <AvatarImage src={resolveImageUrl(sub.assignee.image)} />
                 <AvatarFallback className="text-[10px]">
-                  {sub.assignee.firstName?.[0]}
-                  {sub.assignee.lastName?.[0]}
+                  {getUserInitials(sub.assignee)}
                 </AvatarFallback>
               </Avatar>
             )}

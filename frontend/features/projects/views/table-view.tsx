@@ -98,11 +98,11 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
                         <Avatar className="h-5 w-5">
                           <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
                           <AvatarFallback className="text-[7px]">
-                            {ticket.assignee.firstName?.[0]}{ticket.assignee.lastName?.[0]}
+                            {getUserInitials(ticket.assignee)}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-[11px] truncate">
-                          {ticket.assignee.firstName} {ticket.assignee.lastName?.[0]}.
+                          {getUserDisplayName(ticket.assignee)}
                         </span>
                       </div>
                     ) : (

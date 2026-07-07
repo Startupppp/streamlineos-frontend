@@ -45,6 +45,10 @@ const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "arch
   { value: "archived", label: "Archived" },
 ];
 
+const FIELD_CLASS = "h-9 w-full text-[13px] bg-card border-border shadow-xs";
+const ACTION_BTN_CLASS =
+  "h-9 w-full text-[13px] bg-card border border-border shadow-xs hover:bg-muted/50";
+
 const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "note", label: "Note" },
   { value: "sop", label: "SOP" },
@@ -220,11 +224,13 @@ export default function PageMetadataSheet({
 
   const trustState = page.trustState ?? "unverified";
   const status = page.status ?? "draft";
+  const showPublish = status !== "published";
+  const statusActionCount = showPublish ? 2 : 1;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col">
-        <SheetHeader className="px-5 py-4 border-b shrink-0">
+      <SheetContent side="right" className="gap-0 sm:max-w-md p-0 flex flex-col bg-muted/30">
+        <SheetHeader className="px-5 py-4 border-b shrink-0 bg-background">
           <SheetTitle className="text-sm">Page settings</SheetTitle>
         </SheetHeader>
 
@@ -236,7 +242,7 @@ export default function PageMetadataSheet({
                 value={page.spaceId != null ? String(page.spaceId) : "none"}
                 onValueChange={handleSpaceChange}
               >
-                <SelectTrigger className="h-8 text-[13px]">
+                <SelectTrigger className={FIELD_CLASS}>
                   <SelectValue placeholder="No space" />
                 </SelectTrigger>
                 <SelectContent>
@@ -253,7 +259,7 @@ export default function PageMetadataSheet({
             <div className="space-y-2">
               <p className="text-[13px] font-medium text-foreground">Status</p>
               <Select value={status} onValueChange={handleStatusChange}>
-                <SelectTrigger className="h-8 text-[13px]">
+                <SelectTrigger className={FIELD_CLASS}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -265,12 +271,17 @@ export default function PageMetadataSheet({
                 </SelectContent>
               </Select>
               {canManage && (
-                <div className="flex items-center gap-2 pt-1">
-                  {status !== "published" && (
+                <div
+                  className={
+                    statusActionCount === 2
+                      ? "grid grid-cols-2 gap-2 pt-1"
+                      : "grid grid-cols-1 gap-2 pt-1"
+                  }
+                >
+                  {showPublish && (
                     <Button
                       variant="outline"
-                      size="sm"
-                      className="h-7 text-xs"
+                      className={ACTION_BTN_CLASS}
                       onClick={handlePublish}
                       disabled={publishPage.isPending}
                     >
@@ -279,9 +290,8 @@ export default function PageMetadataSheet({
                   )}
                   {status !== "archived" ? (
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs text-muted-foreground"
+                      variant="outline"
+                      className={ACTION_BTN_CLASS}
                       onClick={handleArchive}
                       disabled={archivePage.isPending}
                     >
@@ -289,9 +299,8 @@ export default function PageMetadataSheet({
                     </Button>
                   ) : (
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs text-muted-foreground"
+                      variant="outline"
+                      className={ACTION_BTN_CLASS}
                       onClick={handleUnarchive}
                       disabled={unarchivePage.isPending}
                     >
@@ -305,7 +314,7 @@ export default function PageMetadataSheet({
             <div className="space-y-2">
               <p className="text-[13px] font-medium text-foreground">Content type</p>
               <Select value={page.contentType ?? ""} onValueChange={handleContentTypeChange}>
-                <SelectTrigger className="h-8 text-[13px]">
+                <SelectTrigger className={FIELD_CLASS}>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -324,13 +333,13 @@ export default function PageMetadataSheet({
                 placeholder="Search users..."
                 value={ownerSearch}
                 onChange={handleOwnerSearchChange}
-                className="h-8 text-[13px]"
+                className={FIELD_CLASS}
               />
               <Select
                 value={page.ownerUserId ?? "__unassigned__"}
                 onValueChange={handleOwnerChange}
               >
-                <SelectTrigger className="h-8 text-[13px]">
+                <SelectTrigger className={FIELD_CLASS}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -380,54 +389,52 @@ export default function PageMetadataSheet({
                     Verified until {formatDate(page.verifiedUntil)}
                   </p>
                 )}
-                <div className="flex items-center gap-2">
-                  {!verifyFormOpen ? (
+                {!verifyFormOpen ? (
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
-                      size="sm"
-                      className="h-7 text-xs"
+                      className={ACTION_BTN_CLASS}
                       onClick={handleOpenVerifyForm}
                     >
                       Verify
                     </Button>
-                  ) : (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Input
-                        type="number"
-                        min={1}
-                        placeholder="Review interval (days)"
-                        value={intervalDays}
-                        onChange={handleIntervalDaysChange}
-                        className="h-7 text-xs w-40"
-                      />
+                    <Button
+                      variant="outline"
+                      className={ACTION_BTN_CLASS}
+                      onClick={handleMarkStale}
+                      disabled={markStalePage.isPending}
+                    >
+                      Mark stale
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="Review interval (days)"
+                      value={intervalDays}
+                      onChange={handleIntervalDaysChange}
+                      className={FIELD_CLASS}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
                       <Button
-                        size="sm"
-                        className="h-7 text-xs"
+                        className="h-9 w-full text-[13px]"
                         onClick={handleConfirmVerify}
                         disabled={verifyPage.isPending}
                       >
                         Confirm
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs"
+                        variant="outline"
+                        className={ACTION_BTN_CLASS}
                         onClick={handleCancelVerify}
                       >
                         Cancel
                       </Button>
                     </div>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-muted-foreground"
-                    onClick={handleMarkStale}
-                    disabled={markStalePage.isPending}
-                  >
-                    Mark stale
-                  </Button>
-                </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -441,8 +448,8 @@ export default function PageMetadataSheet({
           </div>
         </ScrollArea>
 
-        <SheetFooter className="px-5 py-4 border-t shrink-0">
-          <Button variant="outline" size="sm" className="w-full" onClick={handleClose}>
+        <SheetFooter className="px-5 py-4 border-t shrink-0 bg-background">
+          <Button variant="outline" className={ACTION_BTN_CLASS} onClick={handleClose}>
             Close
           </Button>
         </SheetFooter>

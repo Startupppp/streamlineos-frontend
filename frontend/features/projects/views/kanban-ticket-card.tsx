@@ -150,11 +150,10 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         </div>
 
         {primaryAssignee ? (
-          <Avatar className="h-5 w-5 border border-background shrink-0">
+          <Avatar className="h-5 w-5 border border-background shrink-0" title={getUserDisplayName(primaryAssignee)}>
             <AvatarImage src={resolveImageUrl(primaryAssignee.image)} />
             <AvatarFallback className="text-[7px] bg-primary/10 text-primary font-medium">
-              {primaryAssignee.firstName?.[0]}
-              {primaryAssignee.lastName?.[0]}
+              {getUserInitials(primaryAssignee)}
             </AvatarFallback>
           </Avatar>
         ) : (

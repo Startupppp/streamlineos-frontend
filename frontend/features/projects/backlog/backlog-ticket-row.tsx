@@ -89,11 +89,10 @@ export const BacklogTicketRow = memo(function BacklogTicketRow({
             <Avatar className="h-6 w-6">
               <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
               <AvatarFallback className="text-[8px]">
-                {ticket.assignee.firstName?.[0]}
-                {ticket.assignee.lastName?.[0]}
+                {getUserInitials(ticket.assignee)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-[11px] truncate">{ticket.assignee.firstName}</span>
+            <span className="text-[11px] truncate">{getUserDisplayName(ticket.assignee)}</span>
           </div>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>

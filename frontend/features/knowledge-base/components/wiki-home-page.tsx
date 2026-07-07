@@ -181,12 +181,12 @@ export default function WikiHomePage() {
               <motion.div key={node.id} variants={itemVariants}>
                 <Link
                   href={pageHref(node.id)}
-                  className="flex items-center justify-center gap-3 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
                 >
-                  <span className="text-base shrink-0 text-center">
+                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center leading-none">
                     {node.icon ?? <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />}
                   </span>
-                  <span className="text-sm text-center">{node.title || "Untitled"}</span>
+                  <span className="flex-1 truncate text-sm leading-normal">{node.title || "Untitled"}</span>
                 </Link>
               </motion.div>
             ))}

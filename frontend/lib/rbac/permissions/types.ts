@@ -126,6 +126,7 @@ export type PermissionKey =
   | "kb:pages:create"
   | "kb:pages:update"
   | "kb:pages:delete"
+  | "kb:pages:purge"
   | "kb:pages:manage"
   | "kb:templates:manage"
   | "kb:reviews:view"

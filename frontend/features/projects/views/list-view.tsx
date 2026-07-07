@@ -72,10 +72,10 @@ const ListViewItem = memo(function ListViewItem({ ticket, projectKey, onClick }:
         <Badge variant="outline" className="text-xs flex-shrink-0">{ticket.points}pt</Badge>
       )}
       {ticket.assignee && (
-        <Avatar className="h-6 w-6 flex-shrink-0">
+        <Avatar className="h-6 w-6 flex-shrink-0" title={getUserDisplayName(ticket.assignee)}>
           <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
           <AvatarFallback className="text-[8px]">
-            {ticket.assignee.firstName?.[0]}{ticket.assignee.lastName?.[0]}
+            {getUserInitials(ticket.assignee)}
           </AvatarFallback>
         </Avatar>
       )}
