@@ -6,7 +6,10 @@ import { randomUUID } from "crypto";
 import { SignJWT } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not set");
+}
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
 interface SessionData {

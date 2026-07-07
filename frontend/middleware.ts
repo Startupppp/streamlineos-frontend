@@ -29,7 +29,7 @@ function buildCsp(nonce: string, apiUrl?: string): string {
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com https://www.clarity.ms https://checkout.razorpay.com`,
+    `script-src 'self' 'nonce-${nonce}' https://www.googletagmanager.com https://www.clarity.ms https://checkout.razorpay.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://lh3.googleusercontent.com https://streamlineos.app https://images.unsplash.com https://www.googletagmanager.com",
     "font-src 'self' https://fonts.gstatic.com https://esm.sh",

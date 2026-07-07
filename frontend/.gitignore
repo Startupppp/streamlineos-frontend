@@ -64,6 +64,9 @@ ruvector.db
 # Workflow audit artifacts
 .auditui/
 
+# Superpowers / agentic planning artifacts (local only)
+docs/superpowers/
+
 # E2E UI audit artifacts + throwaway harnesses (local only)
 /e2e-artifacts/
 /scripts/e2e-*.mjs

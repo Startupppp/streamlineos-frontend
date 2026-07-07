@@ -1,7 +1,10 @@
 import { getErrorMessage } from "./get-error-message";
 
 const SAME_ORIGIN = "/api";
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not set");
+}
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const MIGRATED_PREFIXES = [
   "/contacts",

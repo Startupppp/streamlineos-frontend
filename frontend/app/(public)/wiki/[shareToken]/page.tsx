@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 
 const SHARE_TOKEN_RE = /^[A-Za-z0-9-]{8,64}$/;
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not set");
+}
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const GRADIENT_PRESETS: Array<{ key: string; css: string }> = [
   { key: "slate", css: "linear-gradient(135deg, #1e293b 0%, #334155 100%)" },

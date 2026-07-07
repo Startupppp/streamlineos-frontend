@@ -41,9 +41,7 @@ const nextConfig: NextConfig = {
           const hosts = urls.flatMap((u) => {
             try { return [new URL(u!).host]; } catch { return []; }
           });
-          return process.env.NODE_ENV === "development" && !hosts.length
-            ? ["localhost:1000"]
-            : hosts;
+          return hosts;
         })(),
       ],
     },
