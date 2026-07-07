@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { label: "Automations", href: "/support/settings/automations" },
+  { label: "SLA Policies", href: "/support/settings/sla" },
+  { label: "Business Hours", href: "/support/settings/business-hours" },
+  { label: "Channels", href: "/support/settings/channels" },
 ] as const;
 
 export default function SupportSettingsLayout({

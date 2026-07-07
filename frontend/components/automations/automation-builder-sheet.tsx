@@ -64,6 +64,14 @@ function defaultActionConfig(type: AutomationActionType): AutomationAction {
       return { type, config: { title: "", assigneeId: "", dueInDays: 1 } };
     case "webhook":
       return { type, config: { event: "" } };
+    case "support_assign_ticket":
+      return { type, config: { assigneeId: "" } };
+    case "support_set_priority":
+      return { type, config: { priority: "MEDIUM" } };
+    case "support_add_tag":
+      return { type, config: { tagId: 0 } };
+    case "support_internal_note":
+      return { type, config: { body: "" } };
     default:
       return { type: "notify_all", config: { title: "", message: "" } };
   }
@@ -206,6 +214,15 @@ export function AutomationBuilderSheet({
       }
       if (action.type === "webhook" && !action.config.event.trim()) {
         return "Webhook action needs an event name";
+      }
+      if (action.type === "support_assign_ticket" && !action.config.assigneeId.trim()) {
+        return "Assign ticket action needs an assignee user ID";
+      }
+      if (action.type === "support_add_tag" && action.config.tagId <= 0) {
+        return "Add ticket tag action needs a tag ID";
+      }
+      if (action.type === "support_internal_note" && !action.config.body.trim()) {
+        return "Add internal note action needs a body";
       }
     }
     return null;
@@ -529,6 +546,52 @@ export function AutomationBuilderSheet({
                           placeholder="Webhook event name (e.g. lead.hot)"
                           value={action.config.event}
                           onChange={(e) => handleActionConfig(index, { event: e.target.value })}
+                        />
+                      )}
+
+                      {action.type === "support_assign_ticket" && (
+                        <Input
+                          placeholder="Assignee user ID"
+                          value={action.config.assigneeId}
+                          onChange={(e) => handleActionConfig(index, { assigneeId: e.target.value })}
+                        />
+                      )}
+
+                      {action.type === "support_set_priority" && (
+                        <Select
+                          value={action.config.priority}
+                          onValueChange={(value) => handleActionConfig(index, { priority: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Priority" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="LOW">Low</SelectItem>
+                            <SelectItem value="MEDIUM">Medium</SelectItem>
+                            <SelectItem value="HIGH">High</SelectItem>
+                            <SelectItem value="URGENT">Urgent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+
+                      {action.type === "support_add_tag" && (
+                        <Input
+                          type="number"
+                          min={1}
+                          placeholder="Tag ID"
+                          value={action.config.tagId === 0 ? "" : String(action.config.tagId)}
+                          onChange={(e) =>
+                            handleActionConfig(index, { tagId: Number(e.target.value) || 0 })
+                          }
+                        />
+                      )}
+
+                      {action.type === "support_internal_note" && (
+                        <Textarea
+                          rows={2}
+                          placeholder="Internal note body"
+                          value={action.config.body}
+                          onChange={(e) => handleActionConfig(index, { body: e.target.value })}
                         />
                       )}
                     </div>

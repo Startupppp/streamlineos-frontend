@@ -658,6 +658,57 @@ export const queryKeys = {
   supportMacros: {
     all: [...base, "supportMacros"] as const,
     list: (params?: Record<string, unknown>) => [...base, "supportMacros", "list", params] as const,
+    usage: () => [...base, "supportMacros", "usage"] as const,
+  },
+
+  supportSlaPolicies: {
+    all: [...base, "supportSlaPolicies"] as const,
+    list: () => [...base, "supportSlaPolicies", "list"] as const,
+  },
+
+  supportBusinessHours: {
+    all: [...base, "supportBusinessHours"] as const,
+    list: () => [...base, "supportBusinessHours", "list"] as const,
+  },
+
+  supportTicketRisk: {
+    all: [...base, "supportTicketRisk"] as const,
+    detail: (ticketId: number) => [...base, "supportTicketRisk", "detail", ticketId] as const,
+  },
+
+  supportChannels: {
+    all: [...base, "supportChannels"] as const,
+    list: () => [...base, "supportChannels", "list"] as const,
+  },
+
+  supportPortalTickets: {
+    all: [...base, "supportPortalTickets"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "supportPortalTickets", "list", params] as const,
+    detail: (id: number) => [...base, "supportPortalTickets", "detail", id] as const,
+  },
+
+  supportCsat: {
+    all: [...base, "supportCsat"] as const,
+    report: () => [...base, "supportCsat", "report"] as const,
+    survey: (token: string) => [...base, "supportCsat", "survey", token] as const,
+  },
+
+  supportAiSuggestions: {
+    all: [...base, "supportAiSuggestions"] as const,
+    list: (ticketId: number) => [...base, "supportAiSuggestions", "list", ticketId] as const,
+  },
+
+  supportReports: {
+    all: [...base, "supportReports"] as const,
+    overview: (params?: Record<string, unknown>) => [...base, "supportReports", "overview", params] as const,
+    agentPerformance: (params?: Record<string, unknown>) =>
+      [...base, "supportReports", "agentPerformance", params] as const,
+    queuePerformance: (params?: Record<string, unknown>) =>
+      [...base, "supportReports", "queuePerformance", params] as const,
+    channelPerformance: (params?: Record<string, unknown>) =>
+      [...base, "supportReports", "channelPerformance", params] as const,
+    automationPerformance: (params?: Record<string, unknown>) =>
+      [...base, "supportReports", "automationPerformance", params] as const,
   },
 
   supportRouting: {
