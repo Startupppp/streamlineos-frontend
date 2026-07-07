@@ -1606,7 +1606,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   {
     key: "documents",
     label: "Documents",
-    href: "/knowledge/uploads",
+    href: "/knowledge",
     icon: Library,
   },
   { key: "surveys", label: "Surveys", href: "/surveys", icon: ClipboardList },

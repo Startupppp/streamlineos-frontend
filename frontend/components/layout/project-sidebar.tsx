@@ -45,7 +45,12 @@ import {
   Gavel,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCan } from "@/hooks/api/access";
 
@@ -78,6 +83,7 @@ function useSidebarSections(baseUrl: string): NavSection[] {
   const canMeetings = useCan("projects:meetings:view");
   const canWorkflow = useCan("projects:workflow:view");
   const canChat = useCan("projects:tickets:view");
+
   return [
     {
       label: "Planning",
@@ -86,8 +92,24 @@ function useSidebarSections(baseUrl: string): NavSection[] {
         { label: "Backlog", icon: LayoutListIcon, href: `${baseUrl}/backlog` },
         { label: "My Tickets", icon: UserIcon, href: `${baseUrl}/my-tickets` },
         { label: "Sprints", icon: Calendar, href: `${baseUrl}/sprints` },
-        ...(canMeetings ? [{ label: "Meetings", icon: CalendarClock, href: `${baseUrl}/meetings` }] : []),
-        ...(canChat ? [{ label: "Chat", icon: MessageCircleIcon, href: `${baseUrl}/chat` }] : []),
+        ...(canMeetings
+          ? [
+              {
+                label: "Meetings",
+                icon: CalendarClock,
+                href: `${baseUrl}/meetings`,
+              },
+            ]
+          : []),
+        ...(canChat
+          ? [
+              {
+                label: "Chat",
+                icon: MessageCircleIcon,
+                href: `${baseUrl}/chat`,
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -100,45 +122,107 @@ function useSidebarSections(baseUrl: string): NavSection[] {
         { label: "Milestones", icon: Diamond, href: `${baseUrl}/milestones` },
         { label: "Releases", icon: RocketIcon, href: `${baseUrl}/releases` },
         { label: "Workload", icon: UsersIcon, href: `${baseUrl}/workload` },
-        ...(canApprovals ? [{ label: "Approvals", icon: CircleCheckIcon, href: `${baseUrl}/approvals` }] : []),
+        ...(canApprovals
+          ? [
+              {
+                label: "Approvals",
+                icon: CircleCheckIcon,
+                href: `${baseUrl}/approvals`,
+              },
+            ]
+          : []),
       ],
     },
     {
       label: "Quality",
       items: [
-        ...(canQA ? [{ label: "QA / Tests", icon: FlaskConical, href: `${baseUrl}/qa` }] : []),
-        ...(canBugs ? [{ label: "Bugs", icon: Bug, href: `${baseUrl}/bugs` }] : []),
-        ...(canIncidents ? [{ label: "Incidents", icon: TriangleAlertIcon, href: `${baseUrl}/incidents` }] : []),
+        ...(canQA
+          ? [{ label: "QA / Tests", icon: FlaskConical, href: `${baseUrl}/qa` }]
+          : []),
+        ...(canBugs
+          ? [{ label: "Bugs", icon: Bug, href: `${baseUrl}/bugs` }]
+          : []),
+        ...(canIncidents
+          ? [
+              {
+                label: "Incidents",
+                icon: TriangleAlertIcon,
+                href: `${baseUrl}/incidents`,
+              },
+            ]
+          : []),
       ],
     },
     {
       label: "Client",
       items: [
-        ...(canChangerequests ? [{ label: "Change Requests", icon: FilePen, href: `${baseUrl}/change-requests` }] : []),
-        ...(canClientVisibility ? [{ label: "Client Portal", icon: GlobeIcon, href: `${baseUrl}/client-portal` }] : []),
+        ...(canChangerequests
+          ? [
+              {
+                label: "Change Requests",
+                icon: FilePen,
+                href: `${baseUrl}/change-requests`,
+              },
+            ]
+          : []),
+        ...(canClientVisibility
+          ? [
+              {
+                label: "Client Portal",
+                icon: GlobeIcon,
+                href: `${baseUrl}/client-portal`,
+              },
+            ]
+          : []),
       ],
     },
     {
       label: "Governance",
       items: [
-        ...(canRisks ? [{ label: "Risks", icon: ShieldXIcon, href: `${baseUrl}/risks` }] : []),
-        ...(canDecisions ? [{ label: "Decisions", icon: Gavel, href: `${baseUrl}/decisions` }] : []),
+        ...(canRisks
+          ? [{ label: "Risks", icon: ShieldXIcon, href: `${baseUrl}/risks` }]
+          : []),
+        ...(canDecisions
+          ? [{ label: "Decisions", icon: Gavel, href: `${baseUrl}/decisions` }]
+          : []),
       ],
     },
     {
       label: "More",
       items: [
-        ...(canForms ? [{ label: "Forms", icon: ClipboardIcon, href: `${baseUrl}/forms` }] : []),
-        ...(canWorkflow ? [{ label: "Workflow", icon: GitBranchIcon, href: `${baseUrl}/workflow` }] : []),
+        ...(canForms
+          ? [{ label: "Forms", icon: ClipboardIcon, href: `${baseUrl}/forms` }]
+          : []),
+        ...(canWorkflow
+          ? [
+              {
+                label: "Workflow",
+                icon: GitBranchIcon,
+                href: `${baseUrl}/workflow`,
+              },
+            ]
+          : []),
         { label: "Wiki", icon: BookOpenTextIcon, href: `${baseUrl}/pages` },
         { label: "Reports", icon: ChartBarIcon, href: `${baseUrl}/analytics` },
-        { label: "Agile Reports", icon: ActivityIcon, href: `${baseUrl}/reports` },
+        {
+          label: "Agile Reports",
+          icon: ActivityIcon,
+          href: `${baseUrl}/reports`,
+        },
         { label: "Whiteboard", icon: PenTool, href: `${baseUrl}/whiteboard` },
         { label: "Budget", icon: IndianRupeeIcon, href: `${baseUrl}/budget` },
         { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
         { label: "Automations", icon: ZapIcon, href: `${baseUrl}/automations` },
         { label: "Webhooks", icon: WebhookIcon, href: `${baseUrl}/webhooks` },
-        ...(canAI ? [{ label: "AI Assistant", icon: SparklesIcon, href: `${baseUrl}/ai` }] : []),
+        ...(canAI
+          ? [
+              {
+                label: "AI Assistant",
+                icon: SparklesIcon,
+                href: `${baseUrl}/ai`,
+              },
+            ]
+          : []),
         { label: "Settings", icon: SettingsIcon, href: `${baseUrl}/settings` },
       ],
     },
@@ -155,7 +239,10 @@ function useIsActive(baseUrl: string) {
 
 const SIDEBAR_COLLAPSED_KEY = "streamlineos:project-sidebar:collapsed";
 
-function getProjectInitials(projectKey: string | undefined, projectName: string | undefined): string {
+function getProjectInitials(
+  projectKey: string | undefined,
+  projectName: string | undefined,
+): string {
   const key = projectKey?.trim();
   if (key) return key.substring(0, 2).toUpperCase();
   const name = (projectName ?? "").trim();
@@ -194,17 +281,28 @@ function DesktopSidebar({
     <div
       className={cn(
         "h-full flex flex-col border-r border-border bg-card/50 transition-[width] duration-200 ease-out",
-        isCollapsed ? "w-[3.25rem]" : "w-52"
+        isCollapsed ? "w-[3.25rem]" : "w-52",
       )}
     >
-
-      <div className={cn("shrink-0 border-b", isCollapsed ? "p-1.5" : "px-3 py-2.5")}>
-        <div className={cn("flex items-center", isCollapsed ? "flex-col gap-1.5" : "gap-2")}>
+      <div
+        className={cn(
+          "shrink-0 border-b",
+          isCollapsed ? "p-1.5" : "px-3 py-2.5",
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center",
+            isCollapsed ? "flex-col gap-1.5" : "gap-2",
+          )}
+        >
           <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
             {getProjectInitials(projectKey, projectName)}
           </div>
           {!isCollapsed && (
-            <span className="text-sm font-semibold truncate flex-1 min-w-0">{projectName ?? "Project"}</span>
+            <span className="text-sm font-semibold truncate flex-1 min-w-0">
+              {projectName ?? "Project"}
+            </span>
           )}
           <Button
             variant="ghost"
@@ -240,15 +338,21 @@ function DesktopSidebar({
                     href={item.href}
                     className={cn(
                       "flex items-center rounded-md text-[13px] font-medium transition-colors group relative",
-                      isCollapsed ? "justify-center p-1.5 mx-auto" : "px-2 py-1.5",
+                      isCollapsed
+                        ? "justify-center p-1.5 mx-auto"
+                        : "px-2 py-1.5",
                       active
                         ? "bg-muted text-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                     title={isCollapsed ? item.label : undefined}
                   >
-                    <item.icon className={cn("h-4 w-4 shrink-0", !isCollapsed && "mr-2")} />
-                    {!isCollapsed && <span className="truncate">{item.label}</span>}
+                    <item.icon
+                      className={cn("h-4 w-4 shrink-0", !isCollapsed && "mr-2")}
+                    />
+                    {!isCollapsed && (
+                      <span className="truncate">{item.label}</span>
+                    )}
                     {isCollapsed && (
                       <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md shadow-md border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">
                         {item.label}
@@ -283,20 +387,26 @@ function MobileProjectNav({
     <div className="flex items-center gap-2 border-b px-3 py-2 bg-background">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Open project menu">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            aria-label="Open project menu"
+          >
             <MenuIcon className="h-4 w-4" />
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-64 p-0 bg-card/50">
           <SheetTitle className="sr-only">Project Navigation</SheetTitle>
           <div className="flex flex-col h-full">
-
             <div className="px-3 py-3 border-b">
               <div className="flex items-center gap-2">
                 <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
                   {getProjectInitials(projectKey, projectName)}
                 </div>
-                <span className="text-sm font-semibold truncate">{projectName ?? "Project"}</span>
+                <span className="text-sm font-semibold truncate">
+                  {projectName ?? "Project"}
+                </span>
               </div>
             </div>
 
@@ -319,7 +429,7 @@ function MobileProjectNav({
                             "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors",
                             active
                               ? "bg-muted text-foreground"
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground",
                           )}
                         >
                           <item.icon className="h-4 w-4 mr-2.5 shrink-0" />
@@ -336,13 +446,18 @@ function MobileProjectNav({
       </Sheet>
 
       <div className="flex items-center gap-1.5 min-w-0 text-sm">
-        <Link href={`/projects/${projectId}`} className="font-semibold text-foreground shrink-0">
+        <Link
+          href={`/projects/${projectId}`}
+          className="font-semibold text-foreground shrink-0"
+        >
           {projectKey}
         </Link>
         {current && pathname !== baseUrl && (
           <>
             <span className="text-muted-foreground">/</span>
-            <span className="text-muted-foreground truncate">{current.label}</span>
+            <span className="text-muted-foreground truncate">
+              {current.label}
+            </span>
           </>
         )}
       </div>
@@ -353,7 +468,6 @@ function MobileProjectNav({
 export function ProjectSidebar(props: ProjectSidebarProps) {
   return (
     <>
-
       <div className="hidden md:flex h-full">
         <DesktopSidebar {...props} />
       </div>
