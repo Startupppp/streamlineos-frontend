@@ -43,6 +43,7 @@ import {
   KbMoreHorizontalIcon,
   KbFileTextIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
+import { cn } from "@/lib/utils";
 
 interface PageTreeItemProps {
   node: KbPageTreeNode;
@@ -219,16 +220,27 @@ const PageTreeItem = memo(function PageTreeItemInner({
         <div
           role="button"
           tabIndex={0}
-          className={`group flex items-center gap-1 py-1 rounded-md cursor-pointer text-sm transition-colors select-none ${
+          aria-current={isActive ? "page" : undefined}
+          className={cn(
+            "group relative flex items-center gap-1 py-1 rounded-md cursor-pointer text-sm transition-colors select-none",
             isActive
-              ? "bg-blue-50 text-blue-700 font-medium"
-              : "text-foreground/80 hover:bg-muted"
-          }`}
+              ? "bg-muted text-foreground font-medium"
+              : "text-foreground/80 hover:bg-muted",
+          )}
           style={{ paddingLeft: 8 + depth * 16, paddingRight: 4 }}
           onClick={handleNavigate}
           onKeyDown={handleKeyDown}
           {...animatedNavHoverHandlers}
         >
+          <span
+            aria-hidden
+            className={cn(
+              "absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full transition-opacity",
+              isActive
+                ? "bg-blue-600 opacity-100 dark:bg-blue-500"
+                : "bg-slate-400 opacity-0 group-hover:opacity-100 dark:bg-slate-500",
+            )}
+          />
           <button
             className="shrink-0 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
             onClick={handleToggleExpand}
