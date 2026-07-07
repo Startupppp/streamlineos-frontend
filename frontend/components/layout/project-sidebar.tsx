@@ -238,6 +238,23 @@ function useIsActive(baseUrl: string) {
   };
 }
 
+type NavIconComponent = React.ForwardRefExoticComponent<
+  { className?: string } & React.RefAttributes<IconHandle>
+>;
+
+function SidebarNavIcon({
+  icon: Icon,
+  iconRef,
+  className,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  iconRef: React.RefObject<IconHandle | null>;
+  className?: string;
+}) {
+  const IconWithRef = Icon as NavIconComponent;
+  return <IconWithRef ref={iconRef} className={className} />;
+}
+
 function ProjectNavLink({
   href,
   label,
@@ -270,8 +287,9 @@ function ProjectNavLink({
       )}
       title={collapsed ? label : undefined}
     >
-      <Icon
-        ref={iconRef as React.Ref<IconHandle>}
+      <SidebarNavIcon
+        icon={Icon}
+        iconRef={iconRef}
         className={cn("h-4 w-4 shrink-0", !collapsed && "mr-2")}
       />
       {!collapsed && <span className="truncate">{label}</span>}
@@ -312,8 +330,9 @@ function MobileProjectNavLink({
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
-      <Icon
-        ref={iconRef as React.Ref<IconHandle>}
+      <SidebarNavIcon
+        icon={Icon}
+        iconRef={iconRef}
         className="h-4 w-4 mr-2.5 shrink-0"
       />
       {label}
