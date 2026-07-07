@@ -19,7 +19,7 @@ import { Send, Loader2, Link, Pencil, Trash2, X } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import type { TicketComment, TicketUser, CommentReaction } from "@/types/projects";
+import type { TicketComment, CommentReaction } from "@/types/projects";
 import { MentionTextarea, type MentionUser } from "@/features/projects/comments/mention-textarea";
 import { EmojiReactionBar, type ReactionGroup } from "@/features/projects/comments/emoji-reaction-bar";
 import { formatMentionText } from "@/lib/format-mention";
@@ -89,7 +89,7 @@ function CommentItemComponent({
   isSavingEdit,
   isDeletingComment,
 }: CommentItemProps) {
-  const user = comment.user as TicketUser | undefined;
+  const user = comment.user;
   const timeAgo = comment.createdAt
     ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
     : "";
