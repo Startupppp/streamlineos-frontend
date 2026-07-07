@@ -173,7 +173,7 @@ export function useWebRTCHuddle(
       })
       .catch((err: unknown) => {
         if (mounted) {
-          setMicError(err instanceof Error ? err.message : "Microphone access denied");
+          setMicError(getErrorMessage(err));
         }
       });
 

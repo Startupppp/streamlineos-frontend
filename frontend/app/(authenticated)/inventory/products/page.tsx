@@ -142,8 +142,7 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
       },
       onError: (err) => {
         setAlertOpen(false);
-        const msg = err instanceof Error ? err.message : "Failed to delete";
-        toast.error(msg, { description: "Consider archiving this product instead." });
+        toast.error(getErrorMessage(err), { description: "Consider archiving this product instead." });
       },
     });
   }

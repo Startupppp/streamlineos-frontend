@@ -212,7 +212,7 @@ export function CreateTicketDialog({ open, onOpenChange }: CreateTicketDialogPro
           }
         },
         onError: (e) =>
-          toast.error(e instanceof Error ? e.message : "Failed to create ticket"),
+          toast.error(getErrorMessage(e)),
       }
     );
   }, [create, addMessage, title, description, priority, category, pendingFiles, onOpenChange, resetForm]);

@@ -42,7 +42,7 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
         onChanged();
       },
       onError: (err) => {
-        toast.error(err instanceof Error ? err.message : "Failed to generate payroll");
+        toast.error(getErrorMessage(err));
       },
     });
   }
@@ -55,7 +55,7 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
         onChanged();
       },
       onError: (err) => {
-        toast.error(err instanceof Error ? err.message : "Failed to recalculate");
+        toast.error(getErrorMessage(err));
         setShowRecalcConfirm(false);
       },
     });

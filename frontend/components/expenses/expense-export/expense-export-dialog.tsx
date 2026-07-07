@@ -68,7 +68,7 @@ async function exportExpenses(params: {
     }
     return { success: true, format: "pdf", data: payload.data, filename: payload.filename };
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Export failed" };
+    return { success: false, error: getErrorMessage(err) };
   }
 }
 

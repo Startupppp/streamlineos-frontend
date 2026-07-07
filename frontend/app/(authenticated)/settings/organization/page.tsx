@@ -196,7 +196,7 @@ export default function OrganizationSettingsPage() {
       setLogoUrl(result.url);
       toast.success("Logo uploaded");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+      toast.error(getErrorMessage(err));
     } finally {
       setLogoUploading(false);
       if (logoInputRef.current) logoInputRef.current.value = "";
@@ -269,7 +269,7 @@ export default function OrganizationSettingsPage() {
       { mfaEnforced, passwordExpiryDays: expiryDaysNum, allowedEmailDomains, maxConcurrentSessions: maxSessionsNum },
       {
         onSuccess: () => toast.success("Security settings saved"),
-        onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to save security settings"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [mfaEnforced, passwordExpiryDays, maxConcurrentSessions, allowedEmailDomains, updateSecurity]);

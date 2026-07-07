@@ -151,7 +151,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
           toast.success("Branding saved");
           setIsEditing(false);
         },
-        onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to save"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [updateOrg]);

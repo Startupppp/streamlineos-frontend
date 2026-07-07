@@ -54,7 +54,7 @@ export function CategoriesManager() {
       }
       reset();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save category");
+      toast.error(getErrorMessage(err));
     }
   }
 

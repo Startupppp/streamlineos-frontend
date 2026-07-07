@@ -84,7 +84,7 @@ export function VendorFormSheet({ open, onOpenChange }: VendorFormSheetProps) {
       toast.success(`Vendor "${payload.name}" created`);
       handleClose();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create vendor");
+      toast.error(getErrorMessage(error));
     }
   }
 

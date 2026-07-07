@@ -126,7 +126,7 @@ export function useWebRTCMeeting(
           sendSignal.mutate({ huddleId, type: "offer", targetUserId: p.userId, payload: offer });
         }
       } catch (err) {
-        setMicError(err instanceof Error ? err.message : "Permission denied");
+        setMicError(getErrorMessage(err));
       }
     };
     init();

@@ -134,7 +134,7 @@ export function SettingsProfile() {
           setIsEditingName(false);
         },
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to update name");
+          toast.error(getErrorMessage(err));
         },
       }
     );

@@ -18,7 +18,7 @@ async function sendReply(
   } catch (err) {
     return {
       ok: false,
-      error: err instanceof Error ? err.message : "Failed to send reply.",
+      error: getErrorMessage(err),
     };
   }
 }

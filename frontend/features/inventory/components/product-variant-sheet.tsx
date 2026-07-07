@@ -286,8 +286,7 @@ export function EditVariantSheet({
       toast.success("Variant updated");
       onOpenChange(false);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update variant";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     }
   }
 

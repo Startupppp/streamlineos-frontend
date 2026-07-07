@@ -135,7 +135,7 @@ export function BlogPostForm({
       router.push("/blogs/admin");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save post");
+      toast.error(getErrorMessage(err));
     }
   }
 

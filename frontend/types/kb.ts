@@ -173,6 +173,12 @@ export type KbAskCitation =
       pageId: number;
       title: string;
       spaceId: number | null;
+    }
+  | {
+      kind: "source";
+      sourceId: number;
+      title: string;
+      spaceId: number | null;
     };
 
 export interface KbAskResponse {

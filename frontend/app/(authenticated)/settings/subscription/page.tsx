@@ -171,7 +171,7 @@ export default function SubscriptionPage() {
         });
         rzp.open();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to initiate payment");
+        toast.error(getErrorMessage(err));
         setUpgradingPlan(null);
       }
     },
